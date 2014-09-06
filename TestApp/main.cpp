@@ -31,9 +31,39 @@ Filter *select_filter(const char *filter)
 		return new BilinearFilter{};
 }
 
-uint8_t clamp_float(float x)
+void load_plane_u8(const uint8_t *src, float *dst, int width, int height, int src_stride, int dst_stride)
 {
-	return (uint8_t)std::min(std::max(x, 0.f), (float)UINT8_MAX);
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			dst[i * dst_stride + j] = (float)src[i * src_stride + j] / (float)UINT8_MAX;
+		}
+	}
+}
+
+void store_plane_u8(const float *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
+{
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			float x = std::round(src[i * src_stride + j] * (float)UINT8_MAX);
+			dst[i * dst_stride + j] = (uint8_t)std::min(std::max(x, 0.f), (float)UINT8_MAX);
+		}
+	}
+}
+
+void usage()
+{
+	std::cout << "TestApp infile outfile w h [--filter filter] [--shift-w shift] [--shift-h shift] [--sub-w w] [--sub-h h] [--times n] [--x86 | --no-x86]";
+	std::cout << "    infile              input BMP file\n";
+	std::cout << "    outfile             output BMP file\n";
+	std::cout << "    width               output width\n";
+	std::cout << "    height              output height\n";
+	std::cout << "    --filter            resampling filter\n";
+	std::cout << "    --shift-w           horizontal shift\n";
+	std::cout << "    --shift-h           vertical shift\n";
+	std::cout << "    --sub-w             subwindow width\n";
+	std::cout << "    --sub-h             subwindow height\n";
+	std::cout << "    --times             number of cycles\n";
+	std::cout << "    --x86 / --no-x86    toggle x86 optimizations\n";
 }
 
 } // namespace
@@ -42,59 +72,95 @@ uint8_t clamp_float(float x)
 int main(int argc, const char **argv)
 {
 	if (argc < 5) {
-		printf("%s: infile outfile width height [filter] [shift_w] [shift_h] [subwidth] [subheight]\n", argv[0]);
+		usage();
 		return -1;
 	}
 
-	const char *infile = argv[1];
-	const char *outfile = argv[2];
+	const char *ifile = argv[1];
+	const char *ofile = argv[2];
 	int width = std::atoi(argv[3]);
 	int height = std::atoi(argv[4]);
-	std::unique_ptr<Filter> filter{ select_filter(argc > 5 ? argv[5] : "bilinear") };
-	double shift_w = argc > 6 ? std::atof(argv[6]) : 0.0;
-	double shift_h = argc > 7 ? std::atof(argv[7]) : 0.0;
+	const char *filter_str = "bilinear";
+	double shift_w = 0.0;
+	double shift_h = 0.0;
+	double sub_w = -1.0;
+	double sub_h = -1.0;
+	int times = 1;
+	bool x86 = false;
+
+	for (int i = 5; i < argc; ++i) {
+		if (!strcmp(argv[i], "--filter") && i + 1 < argc) {
+			filter_str = argv[i + 1];
+			++i;
+		} else if (!strcmp(argv[i], "--shift-w") && i + 1 < argc) {
+			shift_w = std::atof(argv[i + 1]);
+			++i;
+		} else if (!strcmp(argv[i], "--shift-h") && i + 1 < argc) {
+			shift_h = std::atof(argv[i + 1]);
+			++i;
+		} else if (!strcmp(argv[i], "--sub-w") && i + 1 < argc) {
+			sub_w = std::atof(argv[i + 1]);
+			++i;
+		} else if (!strcmp(argv[i], "--sub-h") && i + 1 < argc) {
+			sub_h = std::atof(argv[i + 1]);
+			++i;
+		} else if (!strcmp(argv[i], "--times") && i + 1 < argc) {
+			times = std::atoi(argv[i + 1]);
+			++i;
+		} else if (!strcmp(argv[i], "--x86")) {
+			x86 = true;
+		} else if (!strcmp(argv[i], "--no-x86")) {
+			x86 = false;
+		} else {
+			std::cerr << "unknown argument: " << argv[i] << '\n';
+		}
+	}
 
 	try {
-		Bitmap in = read_bitmap(infile);
+		Bitmap in = read_bitmap(ifile);
 		Bitmap out{ width, height, in.planes() == 4 };
 
-		double subwidth = argc > 8 ? std::atof(argv[8]) : in.width();
-		double subheight = argc > 9 ? std::atof(argv[9]) : in.height();
+		if (sub_w < 0.0)
+			sub_w = in.width();
+		if (sub_h < 0.0)
+			sub_h = in.height();
 
-		Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, subwidth, subheight, false };
+		int in_stride = align(in.width(), 8);
+		int out_stride = align(width, 8);
 
-		int src_stride = align(in.width(), 8);
-		int dst_stride = align(width, 8);
+		AlignedVector<float> in_plane(in_stride * in.height());
+		AlignedVector<float> out_plane(out_stride * height);
 
-		AlignedVector<float> src_image(src_stride * in.height());
-		AlignedVector<float> dst_image(dst_stride * height);
+		std::unique_ptr<Filter> filter{ select_filter(filter_str) };
+		Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
 
 		AlignedVector<float> tmp(resize.tmp_size());
-		Timer t;
 
-		t.start();
-		for (int p = 0; p < in.planes(); ++p) {
-			for (int i = 0; i < in.height(); ++i) {
-				for (int j = 0; j < in.width(); ++j) {
-					src_image[i * src_stride + j] = in.data(p)[i * in.stride() + j];
-				}
+		double avg_time = 0.0;
+		for (int i = 0; i < times; ++i) {
+			Timer watch;
+			double elapsed = 0.0;
+
+			for (int p = 0; p < in.planes(); ++p) {
+				load_plane_u8(in.data(p), in_plane.data(), in.width(), in.height(), in.stride(), in_stride);
+
+				watch.start();
+				resize.process(in_plane.data(), out_plane.data(), tmp.data(), in_stride, out_stride);
+				watch.stop();
+
+				elapsed += watch.elapsed();
+
+				store_plane_u8(out_plane.data(), out.data(p), width, height, out_stride, out.stride());
 			}
 
-			resize.process(src_image.data(), dst_image.data(), tmp.data(), src_stride, dst_stride);
-
-			for (int i = 0; i < height; ++i) {
-				for (int j = 0; j < width; ++j) {
-					out.data(p)[i * out.stride() + j] = clamp_float(dst_image[i * dst_stride + j]);
-				}
-			}
+			std::cout << '#' << i << ": " << elapsed << '\n';
+			avg_time += elapsed;
 		}
-		t.stop();
+		std::cout << "average: " << avg_time / times << '\n';
 
-		std::cout << "elapsed: " << t.elapsed() << '\n';
-
-		write_bitmap(out, outfile);
+		write_bitmap(out, ofile);
 	} catch (std::exception &e) {
-		fprintf(stderr, "exception: %s\n", e.what());
+		std::cerr << e.what() << '\n';
 		return -1;
 	}
 

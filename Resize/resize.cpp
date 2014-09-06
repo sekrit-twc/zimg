@@ -37,6 +37,8 @@ size_t Resize::tmp_size() const
 
 	// Need a second buffer to hold the transpose.
 	if (!m_skip_h && !m_skip_v)
+		size *= 3;
+	else
 		size *= 2;
 
 	return size;
@@ -45,27 +47,27 @@ size_t Resize::tmp_size() const
 void Resize::process(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_stride, int dst_stride) const
 {
 	if (m_skip_h) {
-		m_impl->process_v(src, dst, tmp, m_src_width, src_stride, dst_stride);
+		m_impl->process_v(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else if (m_skip_v) {
-		m_impl->process_h(src, dst, tmp, m_src_height, src_stride, dst_stride);
+		m_impl->process_h(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else {
 		double xscale = (double)m_dst_width / (double)m_src_width;
 		double yscale = (double)m_dst_height / (double)m_src_height;
 
 		float *tmp1 = tmp;
-		float *tmp2 = tmp + tmp_size() / 2;
+		float *tmp2 = tmp + tmp_size() / 3;
 
 		// First execute the pass that results in the fewest pixels.
 		if (xscale < yscale) {
 			int tmp_stride = align(m_dst_width, 8);
 
-			m_impl->process_h(src, tmp1, tmp2, m_src_height, src_stride, tmp_stride);
-			m_impl->process_v(tmp1, dst, tmp2, m_dst_width, tmp_stride, dst_stride);
+			m_impl->process_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
 		} else {
 			int tmp_stride = align(m_src_width, 8);
 
-			m_impl->process_v(src, tmp1, tmp2, m_src_width, src_stride, tmp_stride);
-			m_impl->process_h(tmp1, dst, tmp2, m_dst_height, tmp_stride, dst_stride);
+			m_impl->process_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_h(tmp1, dst, tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
 		}
 	}
 }

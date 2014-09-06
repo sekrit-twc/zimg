@@ -41,5 +41,8 @@
     <ClCompile Include="resize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="resize_impl_x86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
