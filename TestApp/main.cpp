@@ -128,35 +128,41 @@ int main(int argc, const char **argv)
 		int in_stride = align(in.width(), 8);
 		int out_stride = align(width, 8);
 
-		AlignedVector<float> in_plane(in_stride * in.height());
-		AlignedVector<float> out_plane(out_stride * height);
+		AlignedVector<float> in_plane(in_stride * in.height() * in.planes());
+		AlignedVector<float> out_plane(out_stride * height * in.planes());
+
+		for (int p = 0; p < in.planes(); ++p) {
+			load_plane_u8(in.data(p), in_plane.data() + in_stride * in.height() * p, in.width(), in.height(), in.stride(), in_stride);
+		}
 
 		std::unique_ptr<Filter> filter{ select_filter(filter_str) };
 		Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
 
 		AlignedVector<float> tmp(resize.tmp_size());
 
+		double min_time = INFINITY;
 		double avg_time = 0.0;
 		for (int i = 0; i < times; ++i) {
 			Timer watch;
 			double elapsed = 0.0;
 
+			watch.start();
 			for (int p = 0; p < in.planes(); ++p) {
-				load_plane_u8(in.data(p), in_plane.data(), in.width(), in.height(), in.stride(), in_stride);
-
-				watch.start();
-				resize.process(in_plane.data(), out_plane.data(), tmp.data(), in_stride, out_stride);
-				watch.stop();
-
-				elapsed += watch.elapsed();
-
-				store_plane_u8(out_plane.data(), out.data(p), width, height, out_stride, out.stride());
+				resize.process(in_plane.data() + in_stride * in.height() * p, out_plane.data() + out_stride * height * p, tmp.data(), in_stride, out_stride);
 			}
+			watch.stop();
+			elapsed = watch.elapsed();
 
 			std::cout << '#' << i << ": " << elapsed << '\n';
-			avg_time += elapsed;
+			avg_time += elapsed / times;
+			min_time = std::min(elapsed, min_time);
 		}
-		std::cout << "average: " << avg_time / times << '\n';
+		std::cout << "average: " << avg_time << '\n';
+		std::cout << "min: " << min_time << '\n';
+
+		for (int p = 0; p < in.planes(); ++p) {
+			store_plane_u8(out_plane.data() + out_stride * height * p, out.data(p), width, height, out_stride, out.stride());
+		}
 
 		write_bitmap(out, ofile);
 	} catch (std::exception &e) {

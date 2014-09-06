@@ -41,15 +41,7 @@ FORCE_INLINE void transpose8_ps_avx(__m256 &row0, __m256 &row1, __m256 &row2, __
 	row7 = _mm256_permute2f128_ps(tt3, tt7, 0x31);
 }
 
-FORCE_INLINE float horizontal_sum_avx(__m256 x)
-{
-	__m256 t1 = _mm256_hadd_ps(x, x);
-	__m256 t2 = _mm256_hadd_ps(t1, t1);
-	__m128 t3 = _mm256_extractf128_ps(t2, 1);
-	__m128 t4 = _mm_add_ss(_mm256_castps256_ps128(t2), t3);
-	return _mm_cvtss_f32(t4);
-}
-
+template <bool DoLoop>
 void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
                         int src_width, int src_height, int src_stride, int dst_stride)
 {
@@ -69,7 +61,7 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 			if (left + filter.stride() > src_width)
 				break;
 
-			for (int k = 0; k < filter.width(); k += 8) {
+			for (int k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
 				__m256 coeff = _mm256_load_ps(filter_row + k);
 
 				x0 = _mm256_loadu_ps(src + (i + 0) * src_stride + left + k);
@@ -95,15 +87,6 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 
 				x7 = _mm256_loadu_ps(src + (i + 7) * src_stride + left + k);
 				x7 = _mm256_mul_ps(coeff, x7);
-
-				//dst[(i + 0) * dst_stride + j] = horizontal_sum_avx(x0);
-				//dst[(i + 1) * dst_stride + j] = horizontal_sum_avx(x1);
-				//dst[(i + 2) * dst_stride + j] = horizontal_sum_avx(x2);
-				//dst[(i + 3) * dst_stride + j] = horizontal_sum_avx(x3);
-				//dst[(i + 4) * dst_stride + j] = horizontal_sum_avx(x4);
-				//dst[(i + 5) * dst_stride + j] = horizontal_sum_avx(x5);
-				//dst[(i + 6) * dst_stride + j] = horizontal_sum_avx(x6);
-				//dst[(i + 7) * dst_stride + j] = horizontal_sum_avx(x7);
 
 				transpose8_ps_avx(x0, x1, x2, x3, x4, x5, x6, x7);
 
@@ -172,8 +155,8 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 	}
 }
 
-void filter_plane_v_avx(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
-                        int src_width, int src_height, int src_stride, int dst_stride)
+FORCE_INLINE void filter_plane_v_avx(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
+                                     int src_width, int src_height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < filter.height(); ++i) {
 		__m256 coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;
@@ -323,7 +306,10 @@ ResizeImplX86::ResizeImplX86(const EvaluatedFilter &filter_h, const EvaluatedFil
 void ResizeImplX86::process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
                               int src_width, int src_height, int src_stride, int dst_stride) const
 {
-	filter_plane_h_avx(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
+	if (m_filter_h.width() >= 8)
+		filter_plane_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
+	else
+		filter_plane_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
 }
 
 void ResizeImplX86::process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
