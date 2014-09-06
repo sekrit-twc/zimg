@@ -5,6 +5,11 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Resize", "Resize\Resize.vcxproj", "{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{B85E6CC0-ED80-487D-805A-DA3597A15CE6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD} = {B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,6 +26,14 @@ Global
 		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}.Release|Win32.Build.0 = Release|Win32
 		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}.Release|x64.ActiveCfg = Release|x64
 		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}.Release|x64.Build.0 = Release|x64
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Debug|Win32.Build.0 = Debug|Win32
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Debug|x64.ActiveCfg = Debug|x64
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Debug|x64.Build.0 = Debug|x64
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|Win32.ActiveCfg = Release|Win32
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|Win32.Build.0 = Release|Win32
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|x64.ActiveCfg = Release|x64
+		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

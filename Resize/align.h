@@ -12,8 +12,6 @@
   inline void _aligned_free(void *ptr) { free(ptr); }
 #endif
 
-namespace resize {;
-
 /**
  * 32-byte alignment allows the use of instructions up to AVX.
  */
@@ -60,7 +58,5 @@ struct AlignedAllocator {
  */
 template <class T>
 using AlignedVector = std::vector<T, AlignedAllocator<T>>;
-
-} // namespace resize
 
 #endif // ALIGN_H
