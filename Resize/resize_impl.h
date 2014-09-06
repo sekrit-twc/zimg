@@ -16,21 +16,32 @@ public:
 	virtual ~ResizeImpl() = 0;
 
 	virtual void process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-	                       int height, int src_stride, int dst_stride) const = 0;
+	                       int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	virtual void process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-	                       int width, int src_stride, int dst_stride) const = 0;
+	                       int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 };
 
-class ResizeImplC : public ResizeImpl {
+class ResizeImplC final : public ResizeImpl{
 public:
 	ResizeImplC(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
 
 	void process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-	               int height, int src_stride, int dst_stride) const override;
+	               int src_width, int src_height, int src_stride, int dst_stride) const override;
 
 	void process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-	               int width, int src_stride, int dst_stride) const override;
+	               int src_width, int src_height, int src_stride, int dst_stride) const override;
+};
+
+class ResizeImplX86 final : public ResizeImpl{
+public:
+	ResizeImplX86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
+
+	void process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	               int src_width, int src_height, int src_stride, int dst_stride) const override;
+
+	void process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	               int src_width, int src_height, int src_stride, int dst_stride) const override;
 };
 
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,

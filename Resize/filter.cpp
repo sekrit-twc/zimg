@@ -258,6 +258,8 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 		throw std::domain_error{ "window too far" };
 	if (src_dim <= support)
 		throw std::domain_error{ "filter too wide" };
+	if (width <= support)
+		throw std::domain_error{ "subwindow too small" };
 
 	double minpos = 0.5f;
 	double maxpos = (double)src_dim - 0.5f;

@@ -3,7 +3,8 @@
 namespace resize {;
 
 ResizeImpl::ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) :
-	m_filter_h{ filter_h }, m_filter_v{ filter_v }
+	m_filter_h{ filter_h },
+	m_filter_v{ filter_v }
 {
 }
 
@@ -17,11 +18,11 @@ ResizeImplC::ResizeImplC(const EvaluatedFilter &filter_h, const EvaluatedFilter 
 }
 
 void ResizeImplC::process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-                           int height, int src_stride, int dst_stride) const
+                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
 	const EvaluatedFilter &filter = m_filter_h;
 
-	for (int i = 0; i < height; ++i) {
+	for (int i = 0; i < src_height; ++i) {
 		for (int j = 0; j < filter.height(); ++j) {
 			int left = filter.left()[j];
 			float accum = 0.f;
@@ -37,12 +38,12 @@ void ResizeImplC::process_h(const float * RESTRICT src, float * RESTRICT dst, fl
 }
 
 void ResizeImplC::process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-                            int width, int src_stride, int dst_stride) const
+                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
 	const EvaluatedFilter &filter = m_filter_v;
 
 	for (int i = 0; i < filter.height(); ++i) {
-		for (int j = 0; j < width; ++j) {
+		for (int j = 0; j < src_width; ++j) {
 			int top = filter.left()[i];
 			float accum = 0.f;
 
@@ -56,14 +57,21 @@ void ResizeImplC::process_v(const float * RESTRICT src, float * RESTRICT dst, fl
 	}
 }
 
-
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
                                double shift_w, double shift_h, double subwidth, double subheight, bool x86)
 {
 	EvaluatedFilter filter_h = compute_filter(f, src_width, dst_width, shift_w, subwidth);
 	EvaluatedFilter filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
 
-	return new ResizeImplC(filter_h, filter_v);
+	if (x86) {
+#ifdef RESIZE_X86
+		return new ResizeImplX86(filter_h, filter_v);
+#else
+		throw std::runtime_error{ "x86 support not enabled" };
+#endif
+	} else {
+		return new ResizeImplC(filter_h, filter_v);
+	}
 }
 
 } // namespace resize
