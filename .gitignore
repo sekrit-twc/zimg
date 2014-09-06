@@ -1,0 +1,10 @@
+*.opensdf
+*.sdf
+*.suo
+*.user
+Resize/x64/
+Resize/Debug/
+Resize/Release/
+x64/
+Debug/
+Release/
