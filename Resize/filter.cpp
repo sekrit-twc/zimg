@@ -3,7 +3,6 @@
 #include <memory>
 #include <stdexcept>
 #include "filter.h"
-#include <cstdio>
 
 #define M_PI 3.14159265358979323846
 
@@ -295,26 +294,3 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 }
 
 } // namespace resize
-
-int main()
-{
-	using namespace resize;
-
-	const int src = 10;
-	const int dst = 20;
-	const double shift = 0.0;
-	const double width = 10.0;
-
-	BilinearFilter f;
-	EvaluatedFilter e{ compute_filter(f, src, dst, shift, width) };
-
-	for (int i = 0; i < e.height(); ++i) {
-		printf("left %d | ", e.left()[i]);
-		for (int j = 0; j < e.width(); ++j) {
-			printf("%.3f ", e.data()[i * e.stride() + j]);
-		}
-		puts("");
-	}
-
-	return 0;
-}
