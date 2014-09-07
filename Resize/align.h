@@ -30,6 +30,16 @@ inline int align(int x, int n) { return x % n ? x + n - (x % n) : x; }
 inline int mod(int x, int n) { return x - (x % n); }
 
 /**
+ * Helper struct that computes alignment in units of object count.
+ *
+ * @param T type of object
+ */
+template <class T>
+struct AlignmentOf {
+	static const int value = ALIGNMENT / sizeof(T);
+};
+
+/**
  * STL allocator class which returns aligned buffers.
  *
  * @param T type of object to allocate
