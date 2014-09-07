@@ -155,8 +155,8 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 	}
 }
 
-FORCE_INLINE void filter_plane_v_avx(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
-                                     int src_width, int src_height, int src_stride, int dst_stride)
+void filter_plane_v_avx(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
+                        int src_width, int src_height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < filter.height(); ++i) {
 		__m256 coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;

@@ -254,7 +254,7 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 	double support = (double)f.support() / step;
 	int filter_size = std::max((int)std::ceil(support * 2), 1);
 
-	if (-shift >= src_dim || shift + width >= 2 * src_dim)
+	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		throw std::domain_error{ "window too far" };
 	if (src_dim <= support)
 		throw std::domain_error{ "filter too wide" };
