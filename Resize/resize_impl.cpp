@@ -1,31 +1,9 @@
-#include <algorithm>
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
 namespace resize {;
 
 namespace {;
-
-int32_t unpack_u16(uint16_t x)
-{
-	// Convert to 16-bit signed and store in 32-bits.
-	return (int32_t)x + (int32_t)INT16_MIN;
-}
-
-int32_t round_shift(int32_t x, int32_t n)
-{
-	x += x < 0 ? -(1 << (n - 1)) : 1 << (n - 1);
-	return x >> n;
-}
-
-uint16_t pack_i30(int32_t x)
-{
-	// Reduce 16.14 fixed point to 16.0 and convert to unsigned.
-	x = round_shift(x, 14) - (int32_t)INT16_MIN;
-	x = std::max(x, (int32_t)0);
-	x = std::min(x, (int32_t)UINT16_MAX);
-	return (uint16_t)x;
-}
 
 class ResizeImplC final : public ResizeImpl {
 public:

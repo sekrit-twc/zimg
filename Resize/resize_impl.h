@@ -7,6 +7,34 @@
 namespace resize {;
 
 /**
+ * Convert 16.0 unsigned to 16.0 signed and store in 32-bit.
+ */
+inline FORCE_INLINE int32_t unpack_u16(uint16_t x)
+{
+	return (int32_t)x + (int32_t)INT16_MIN;
+}
+
+/**
+ * Arighmetic right shift of x by n with rounding.
+ */
+inline FORCE_INLINE int32_t round_shift(int32_t x, int32_t n)
+{
+	return (x + (1 << (n - 1))) >> n;
+}
+
+/**
+ * Convert 16.14 signed fixed point to 16.0 unsigned.
+ */
+inline FORCE_INLINE uint16_t pack_i30(int32_t x)
+{
+	// Reduce 16.14 fixed point to 16.0 and convert to unsigned.
+	x = round_shift(x, 14) - (int32_t)INT16_MIN;
+	x = x < 0 ? 0 : x;
+	x = x > UINT16_MAX ? UINT16_MAX : x;
+	return (uint16_t)x;
+}
+
+/**
  * Base class for implementations of resizing filter.
  */
 class ResizeImpl {
