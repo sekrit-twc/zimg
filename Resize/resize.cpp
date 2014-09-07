@@ -11,64 +11,104 @@ Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, in
 	m_dst_width{ dst_width },
 	m_dst_height{ dst_height },
 	m_skip_h{ src_width == dst_width && shift_w == 0.0 && subwidth == src_width },
-	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height }
-{
-	m_impl.reset(create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, x86));
-}
-
-Resize::~Resize()
+	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height },
+	m_impl{ create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, x86) }
 {
 }
 
-size_t Resize::tmp_size() const
+size_t Resize::max_frame_size(PixelType type) const
+{
+	int alignment = type == PixelType::FLOAT ? AlignmentOf<float>::value : AlignmentOf<uint16_t>::value;
+
+	size_t aligned_src_width = align(m_src_width, alignment);
+	size_t aligned_src_height = align(m_src_height, alignment);
+	size_t aligned_dst_width = align(m_dst_width, alignment);
+	size_t aligned_dst_height = align(m_dst_height, alignment);
+
+	return std::max(aligned_src_width, aligned_dst_width) * std::max(aligned_src_height, aligned_dst_height);
+}
+
+size_t Resize::tmp_size(PixelType type) const
 {
 	size_t size = 0;
 
-	size_t aligned_src_width = align(m_src_width, 8);
-	size_t aligned_src_height = align(m_src_height, 8);
-	size_t aligned_dst_width = align(m_dst_width, 8);
-	size_t aligned_dst_height = align(m_dst_height, 8);
-
 	// Need one temporary buffer to hold the partially resized image.
-	size += std::max(aligned_src_width, aligned_dst_width) * std::max(aligned_src_height, aligned_dst_height);
+	size += max_frame_size(type);
 
 	// Need a second buffer to hold the transpose.
 	if (!m_skip_h && !m_skip_v)
-		size *= 3;
-	else
 		size *= 2;
 
 	return size;
 }
 
-void Resize::process(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_stride, int dst_stride) const
+void Resize::copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const
+{
+	const char *src_byteptr = (const char *)src;
+	char *dst_byteptr = (char *)dst;
+
+	for (int i = 0; i < m_dst_height; ++i) {
+		std::copy(src_byteptr + i * src_stride_bytes, src_byteptr + i * src_stride_bytes + m_src_width, dst_byteptr + i * dst_stride_bytes);
+	}
+}
+
+void Resize::process_u16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp, int src_stride, int dst_stride) const
 {
 	if (m_skip_h && m_skip_v) {
-		for (int i = 0; i < m_dst_height; ++i) {
-			std::copy(src + i * src_stride, src + i * src_stride + m_src_width, dst + i * dst_stride);
-		}
+		copy_plane(src, dst, src_stride * sizeof(uint16_t), dst_stride * sizeof(uint16_t));
 	} else if (m_skip_h) {
-		m_impl->process_v(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
+		m_impl->process_u16_v(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else if (m_skip_v) {
-		m_impl->process_h(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
+		m_impl->process_u16_h(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
+	} else {
+		double xscale = (double)m_dst_width / (double)m_src_width;
+		double yscale = (double)m_dst_height / (double)m_src_height;
+
+		uint16_t *tmp1 = tmp;
+		uint16_t *tmp2 = tmp + max_frame_size(PixelType::WORD);
+
+		// First execute the pass that results in the fewest pixels.
+		if (xscale < yscale) {
+			int tmp_stride = align(m_dst_width, AlignmentOf<uint16_t>::value);
+
+			m_impl->process_u16_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_u16_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
+		}
+		else {
+			int tmp_stride = align(m_src_width, AlignmentOf<uint16_t>::value);
+
+			m_impl->process_u16_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_u16_h(tmp1, dst, tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
+		}
+	}
+}
+
+void Resize::process_f32(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_stride, int dst_stride) const
+{
+	if (m_skip_h && m_skip_v) {
+		copy_plane(src, dst, src_stride * sizeof(float), dst_stride * sizeof(float));
+	} else if (m_skip_h) {
+		m_impl->process_f32_v(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
+	} else if (m_skip_v) {
+		m_impl->process_f32_h(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else {
 		double xscale = (double)m_dst_width / (double)m_src_width;
 		double yscale = (double)m_dst_height / (double)m_src_height;
 
 		float *tmp1 = tmp;
-		float *tmp2 = tmp + tmp_size() / 3;
+		float *tmp2 = tmp + max_frame_size(PixelType::FLOAT);
 
 		// First execute the pass that results in the fewest pixels.
 		if (xscale < yscale) {
-			int tmp_stride = align(m_dst_width, 8);
+			int tmp_stride = align(m_dst_width, AlignmentOf<float>::value);
 
-			m_impl->process_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
+			m_impl->process_f32_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_f32_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
 		} else {
-			int tmp_stride = align(m_src_width, 8);
+			int tmp_stride = align(m_src_width, AlignmentOf<float>::value);
 
-			m_impl->process_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_h(tmp1, dst, tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
+			m_impl->process_f32_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_f32_h(tmp1, dst, tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
 		}
 	}
 }

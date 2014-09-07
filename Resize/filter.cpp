@@ -84,7 +84,11 @@ EvaluatedFilter compress_matrix(const Matrix &m)
 		}
 
 		for (int j = 0; j < width; ++j) {
-			e.data()[i * e.stride() + j] = (float)m.at(i, left + j);
+			float coeff = (float)m.at(i, left + j);
+			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
+
+			e.data()[i * e.stride() + j] = coeff;
+			e.data_i16()[i * e.stride_i16() + j] = coeff_i16;
 		}
 		e.left()[i] = left;
 	}
@@ -205,8 +209,10 @@ double LanczosFilter::operator()(double x) const
 EvaluatedFilter::EvaluatedFilter(int width, int height) :
 	m_width{ width },
 	m_height{ height },
-	m_stride{ align(width, 8) },
+	m_stride{ align(width, AlignmentOf<float>::value) },
+	m_stride_i16{ align(width, AlignmentOf<int16_t>::value) },
 	m_data(m_stride * height),
+	m_data_i16(m_stride_i16 * height),
 	m_left(height)
 {
 }
@@ -226,6 +232,11 @@ int EvaluatedFilter::stride() const
 	return m_stride;
 }
 
+int EvaluatedFilter::stride_i16() const
+{
+	return m_stride_i16;
+}
+
 float *EvaluatedFilter::data()
 {
 	return m_data.data();
@@ -234,6 +245,16 @@ float *EvaluatedFilter::data()
 const float *EvaluatedFilter::data() const
 {
 	return m_data.data();
+}
+
+int16_t *EvaluatedFilter::data_i16()
+{
+	return m_data_i16.data();
+}
+
+const int16_t *EvaluatedFilter::data_i16() const
+{
+	return m_data_i16.data();
 }
 
 int *EvaluatedFilter::left()

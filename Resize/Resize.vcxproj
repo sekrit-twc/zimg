@@ -129,6 +129,7 @@
     <ClInclude Include="osdep.h" />
     <ClInclude Include="resize.h" />
     <ClInclude Include="resize_impl.h" />
+    <ClInclude Include="resize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="filter.cpp" />

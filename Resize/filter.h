@@ -109,7 +109,9 @@ class EvaluatedFilter {
 	int m_width;
 	int m_height;
 	int m_stride;
+	int m_stride_i16;
 	AlignedVector<float> m_data;
+	AlignedVector<int16_t> m_data_i16;
 	AlignedVector<int> m_left;
 public:
 	/**
@@ -141,6 +143,11 @@ public:
 	int stride() const;
 
 	/**
+	 * @return distance between filter rows in 16-bit unsigned ints
+	 */
+	int stride_i16() const;
+
+	/**
 	 * @return pointer to filter coefficients
 	 */
 	float *data();
@@ -149,6 +156,16 @@ public:
 	 * @see EvaluatedFilter::data()
 	 */
 	const float *data() const;
+
+	/**
+	 * @return pointer to 16-bit (14-bit) signed filter coefficients
+	 */
+	int16_t *data_i16();
+
+	/**
+	 * @see EvaluatedFilter::data_i16()
+	 */
+	const int16_t *data_i16() const;
 
 	/**
 	 * @return pointer to row offsets in pixels

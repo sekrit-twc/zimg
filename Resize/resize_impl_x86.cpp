@@ -1,5 +1,6 @@
 #ifdef RESIZE_X86
 
+#include <algorithm>
 #include <intrin.h>
 #include "osdep.h"
 #include "resize_impl.h"
@@ -51,9 +52,7 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 		for (j = 0; j < mod(filter.height(), 8); ++j) {
 			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 			__m256 accum = _mm256_setzero_ps();
-
-			int dst_i = i + j % 8;
-			int dst_j = mod(j, 8);
+			__m256 cached[8];
 
 			const float *filter_row = filter.data() + j * filter.stride();
 			int left = filter.left()[j];
@@ -101,28 +100,21 @@ void filter_plane_h_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 				accum = _mm256_add_ps(accum, x0);
 				accum = _mm256_add_ps(accum, x1);
 			}
-			_mm256_store_ps(dst + dst_i * dst_stride + dst_j, accum);
+			cached[j % 8] = accum;
 
 			if (j % 8 == 7) {
-				x0 = _mm256_load_ps(dst + (i + 0) * dst_stride + dst_j);
-				x1 = _mm256_load_ps(dst + (i + 1) * dst_stride + dst_j);
-				x2 = _mm256_load_ps(dst + (i + 2) * dst_stride + dst_j);
-				x3 = _mm256_load_ps(dst + (i + 3) * dst_stride + dst_j);
-				x4 = _mm256_load_ps(dst + (i + 4) * dst_stride + dst_j);
-				x5 = _mm256_load_ps(dst + (i + 5) * dst_stride + dst_j);
-				x6 = _mm256_load_ps(dst + (i + 6) * dst_stride + dst_j);
-				x7 = _mm256_load_ps(dst + (i + 7) * dst_stride + dst_j);
+				int dst_j = mod(j, 8);
 
-				transpose8_ps_avx(x0, x1, x2, x3, x4, x5, x6, x7);
+				transpose8_ps_avx(cached[0], cached[1], cached[2], cached[3], cached[4], cached[5], cached[6], cached[7]);
 
-				_mm256_store_ps(dst + (i + 0) * dst_stride + dst_j, x0);
-				_mm256_store_ps(dst + (i + 1) * dst_stride + dst_j, x1);
-				_mm256_store_ps(dst + (i + 2) * dst_stride + dst_j, x2);
-				_mm256_store_ps(dst + (i + 3) * dst_stride + dst_j, x3);
-				_mm256_store_ps(dst + (i + 4) * dst_stride + dst_j, x4);
-				_mm256_store_ps(dst + (i + 5) * dst_stride + dst_j, x5);
-				_mm256_store_ps(dst + (i + 6) * dst_stride + dst_j, x6);
-				_mm256_store_ps(dst + (i + 7) * dst_stride + dst_j, x7);
+				_mm256_store_ps(dst + (i + 0) * dst_stride + dst_j, cached[0]);
+				_mm256_store_ps(dst + (i + 1) * dst_stride + dst_j, cached[1]);
+				_mm256_store_ps(dst + (i + 2) * dst_stride + dst_j, cached[2]);
+				_mm256_store_ps(dst + (i + 3) * dst_stride + dst_j, cached[3]);
+				_mm256_store_ps(dst + (i + 4) * dst_stride + dst_j, cached[4]);
+				_mm256_store_ps(dst + (i + 5) * dst_stride + dst_j, cached[5]);
+				_mm256_store_ps(dst + (i + 6) * dst_stride + dst_j, cached[6]);
+				_mm256_store_ps(dst + (i + 7) * dst_stride + dst_j, cached[7]);
 			}
 		}
 
@@ -295,31 +287,47 @@ void filter_plane_v_avx(const EvaluatedFilter &filter, const float * RESTRICT sr
 	}
 }
 
+class ResizeImplX86 final : public ResizeImpl {
+public:
+	ResizeImplX86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
+	{}
+
+	void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		throw std::runtime_error{ "u16 core not implemented" };
+	}
+
+	void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		throw std::runtime_error{ "u16 core not implemented" };
+	}
+
+	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		if (m_filter_h.width() >= 8)
+			filter_plane_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
+		else
+			filter_plane_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
+	}
+
+	void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		filter_plane_v_avx(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride);
+	}
+};
+
 } // namespace
 
 
-ResizeImplX86::ResizeImplX86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) :
-	ResizeImpl(filter_h, filter_v)
+ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v)
 {
-}
-
-void ResizeImplX86::process_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-                              int src_width, int src_height, int src_stride, int dst_stride) const
-{
-	if (m_filter_h.width() >= 8)
-		filter_plane_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
-	else
-		filter_plane_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
-}
-
-void ResizeImplX86::process_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-                              int src_width, int src_height, int src_stride, int dst_stride) const
-{
-	filter_plane_v_avx(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride);
+	return new ResizeImplX86{ filter_h, filter_v };
 }
 
 } // namespace resize;
-
-#include "resize_impl.h"
 
 #endif // RESIZE_X86
