@@ -32,12 +32,13 @@ size_t Resize::tmp_size(PixelType type) const
 {
 	size_t size = 0;
 
-	// Need one temporary buffer to hold the partially resized image.
-	size += max_frame_size(type);
-
-	// Need a second buffer to hold the transpose.
+	// Need temporary buffer to hold the partially scaled image.
 	if (!m_skip_h && !m_skip_v)
-		size *= 2;
+		size += max_frame_size(type);
+
+	// Need a line buffer to store cached accumulators.
+	if (type == PixelType::WORD && !m_skip_v)
+		size += m_dst_width * 2;
 
 	return size;
 }
@@ -73,8 +74,7 @@ void Resize::process_u16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst,
 
 			m_impl->process_u16_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
 			m_impl->process_u16_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
-		}
-		else {
+		} else {
 			int tmp_stride = align(m_src_width, AlignmentOf<uint16_t>::value);
 
 			m_impl->process_u16_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
@@ -95,20 +95,17 @@ void Resize::process_f32(const float * RESTRICT src, float * RESTRICT dst, float
 		double xscale = (double)m_dst_width / (double)m_src_width;
 		double yscale = (double)m_dst_height / (double)m_src_height;
 
-		float *tmp1 = tmp;
-		float *tmp2 = tmp + max_frame_size(PixelType::FLOAT);
-
 		// First execute the pass that results in the fewest pixels.
 		if (xscale < yscale) {
 			int tmp_stride = align(m_dst_width, AlignmentOf<float>::value);
 
-			m_impl->process_f32_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_f32_v(tmp1, dst, tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
+			m_impl->process_f32_h(src, tmp, nullptr, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_f32_v(tmp, dst, nullptr, m_dst_width, m_src_height, tmp_stride, dst_stride);
 		} else {
 			int tmp_stride = align(m_src_width, AlignmentOf<float>::value);
 
-			m_impl->process_f32_v(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_f32_h(tmp1, dst, tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
+			m_impl->process_f32_v(src, tmp, nullptr, m_src_width, m_src_height, src_stride, tmp_stride);
+			m_impl->process_f32_h(tmp, dst, nullptr, m_src_width, m_dst_height, tmp_stride, dst_stride);
 		}
 	}
 }

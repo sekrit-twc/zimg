@@ -143,7 +143,7 @@ public:
 	int stride() const;
 
 	/**
-	 * @return distance between filter rows in 16-bit unsigned ints
+	 * @return distance between filter rows in 16-bit ints
 	 */
 	int stride_i16() const;
 
