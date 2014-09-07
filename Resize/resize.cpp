@@ -13,9 +13,6 @@ Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, in
 	m_skip_h{ src_width == dst_width && shift_w == 0.0 && subwidth == src_width },
 	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height }
 {
-	if (m_skip_h && m_skip_v)
-		throw std::domain_error{ "no-op filter" };
-
 	m_impl.reset(create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, x86));
 }
 
@@ -46,7 +43,11 @@ size_t Resize::tmp_size() const
 
 void Resize::process(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_stride, int dst_stride) const
 {
-	if (m_skip_h) {
+	if (m_skip_h && m_skip_v) {
+		for (int i = 0; i < m_dst_height; ++i) {
+			std::copy(src + i * src_stride, src + i * src_stride + m_src_width, dst + i * dst_stride);
+		}
+	} else if (m_skip_h) {
 		m_impl->process_v(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else if (m_skip_v) {
 		m_impl->process_h(src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
