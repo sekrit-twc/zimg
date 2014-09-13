@@ -252,16 +252,16 @@ void filter_plane_u16_h_avx(const EvaluatedFilter &filter, const uint16_t * REST
 		}
 
 		for (int ii = i; ii < i + 8; ++ii) {
-			for (j = mod(j, 16); j < filter.height(); ++j) {
-				int left = filter.left()[j];
+			for (int jj = mod(j, 16); jj < filter.height(); ++jj) {
+				int left = filter.left()[jj];
 				int32_t accum = 0;
 
 				for (int k = 0; k < filter.width(); ++k) {
-					int32_t coeff = filter.data_i16()[j * filter.stride_i16() + k];
+					int32_t coeff = filter.data_i16()[jj * filter.stride_i16() + k];
 					int32_t x = unpack_u16(src[ii * src_stride + left + k]);
 					accum += coeff * x;
 				}
-				dst[ii * dst_stride + j] = pack_i30(accum);
+				dst[ii * dst_stride + jj] = pack_i30(accum);
 			}
 		}
 	}
