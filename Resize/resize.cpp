@@ -96,7 +96,7 @@ void Resize::process_f32(const float * RESTRICT src, float * RESTRICT dst, float
 		double yscale = (double)m_dst_height / (double)m_src_height;
 
 		// First execute the pass that results in the fewest pixels.
-		if (xscale < yscale) {
+		if ((xscale < 1.0 && xscale * 2.0 < yscale) || (xscale >= 1.0 && xscale < yscale)) {
 			int tmp_stride = align(m_dst_width, AlignmentOf<float>::value);
 
 			m_impl->process_f32_h(src, tmp, nullptr, m_src_width, m_src_height, src_stride, tmp_stride);
