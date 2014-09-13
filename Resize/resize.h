@@ -8,15 +8,17 @@
 namespace resize {;
 
 /**
-* Enum for supported input and output formats.
-*
-* BYTE = 8 bits
-* WORD = 16 bits
-* FLOAT = 32 bits
-*/
+ * Enum for supported input and output formats.
+ *
+ * BYTE = 8 bits
+ * WORD = 16 bits
+ * HALF = 16 bits
+ * FLOAT = 32 bits
+ */
 enum class PixelType {
 	BYTE,
 	WORD,
+	HALF,
 	FLOAT
 };
 
@@ -80,6 +82,17 @@ public:
 	 * @param dst_stride stride of output image
 	 */
 	void process_u16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp, int src_stride, int dst_stride) const;
+
+	/**
+	 * Process an half precision 16-bit image.
+	 *
+	 * @param src input image
+	 * @param dst output image
+	 * @param tmp temporary buffer (@see Resize::tmp_size)
+	 * @param src_stride stride of input image
+	 * @param dst_stride stride of output image
+	 */
+	void process_f16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp, int src_stride, int dst_stride) const;
 
 	/**
 	 * Process a single precision 32-bit image.

@@ -5,6 +5,7 @@
 #include <memory>
 #include "align.h"
 #include "bitmap.h"
+#include "f16util.h"
 #include "filter.h"
 #include "resize.h"
 #include "timer.h"
@@ -40,6 +41,13 @@ void load_plane_u8_u16(const uint8_t *src, uint16_t *dst, int width, int height,
 	}
 }
 
+void load_plane_u8_f16(const uint8_t *src, uint16_t *dst, int width, int height, int src_stride, int dst_stride)
+{
+	for (int i = 0; i < height; ++i) {
+		u8_to_f16(src + i * src_stride, dst + i * dst_stride, width);
+	}
+}
+
 void load_plane_u8_f32(const uint8_t *src, float *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
@@ -55,6 +63,13 @@ void store_plane_u16_u8(const uint16_t *src, uint8_t *dst, int width, int height
 		for (int j = 0; j < width; ++j) {
 			dst[i * dst_stride + j] = (uint8_t)(src[i * src_stride + j] >> 8);
 		}
+	}
+}
+
+void store_plane_f16_u8(const uint16_t *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
+{
+	for (int i = 0; i < height; ++i) {
+		f16_to_u8(src + i * src_stride, dst + i * dst_stride, width);
 	}
 }
 
@@ -82,6 +97,7 @@ void usage()
 	std::cout << "    --sub-h             subwindow height\n";
 	std::cout << "    --times             number of cycles\n";
 	std::cout << "    --u16               use 16-bit unsigned\n";
+	std::cout << "    --f16               use half precision float\n";
 	std::cout << "    --f32               use single precision float\n";
 	std::cout << "    --x86 / --no-x86    toggle x86 optimizations\n";
 }
@@ -131,6 +147,54 @@ void execute_u16(const Resize &resize, const Bitmap &in, Bitmap &out, int times,
 
 	for (int p = 0; p < planes; ++p) {
 		store_plane_u16_u8(out_planes.data() + p * dst_plane_size, out.data(p), dst_width, dst_height, dst_stride, out.stride());
+	}
+}
+
+void execute_f16(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86)
+{
+	int src_width = in.width();
+	int src_stride = align(in.width(), 16);
+	int src_height = in.height();
+	int src_plane_size = src_stride * src_height;
+	int dst_width = out.width();
+	int dst_stride = align(out.width(), 16);
+	int dst_height = out.height();
+	int dst_plane_size = dst_stride * dst_height;
+	int planes = in.planes();
+
+	AlignedVector<uint16_t> in_planes(src_stride * src_height * planes);
+	AlignedVector<uint16_t> out_planes(dst_stride * dst_height * planes);
+	AlignedVector<uint16_t> tmp(resize.tmp_size(PixelType::WORD));
+
+	for (int p = 0; p < planes; ++p) {
+		load_plane_u8_f16(in.data(p), in_planes.data() + p * src_plane_size, src_width, src_height, in.stride(), src_stride);
+	}
+
+	Timer timer;
+	double min_time = INFINITY;
+	double avg_time = 0.0;
+
+	for (int n = 0; n < times; ++n) {
+		timer.start();
+		for (int p = 0; p < planes; ++p) {
+			const uint16_t *src = in_planes.data() + p * src_plane_size;
+			uint16_t *dst = out_planes.data() + p * dst_plane_size;
+
+			resize.process_f16(src, dst, tmp.data(), src_stride, dst_stride);
+		}
+		timer.stop();
+
+		double elapsed = timer.elapsed();
+
+		std::cout << '#' << n << ": " << elapsed << '\n';
+		avg_time += elapsed / times;
+		min_time = std::min(min_time, elapsed);
+	}
+	std::cout << "average: " << avg_time << '\n';
+	std::cout << "min: " << min_time << '\n';
+
+	for (int p = 0; p < planes; ++p) {
+		store_plane_f16_u8(out_planes.data() + p * dst_plane_size, out.data(p), dst_width, dst_height, dst_stride, out.stride());
 	}
 }
 
@@ -226,6 +290,8 @@ int main(int argc, const char **argv)
 			++i;
 		} else if (!strcmp(argv[i], "--u16")) {
 			type = PixelType::WORD;
+		} else if (!strcmp(argv[i], "--f16")) {
+			type = PixelType::HALF;
 		} else if (!strcmp(argv[i], "--f32")) {
 			type = PixelType::FLOAT;
 		} else if (!strcmp(argv[i], "--x86")) {
@@ -251,6 +317,8 @@ int main(int argc, const char **argv)
 
 		if (type == PixelType::WORD)
 			execute_u16(resize, in, out, times, x86);
+		else if (type == PixelType::HALF)
+			execute_f16(resize, in, out, times, x86);
 		else if (type == PixelType::FLOAT)
 			execute_f32(resize, in, out, times, x86);
 		else
