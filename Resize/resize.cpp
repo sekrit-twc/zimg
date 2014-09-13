@@ -69,7 +69,7 @@ void Resize::process_u16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst,
 		uint16_t *tmp2 = tmp + max_frame_size(PixelType::WORD);
 
 		// First execute the pass that results in the fewest pixels.
-		if (xscale < yscale) {
+		if ((xscale < 1.0 && xscale * 2.0 < yscale) || (xscale >= 1.0 && xscale < yscale)) {
 			int tmp_stride = align(m_dst_width, AlignmentOf<uint16_t>::value);
 
 			m_impl->process_u16_h(src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
