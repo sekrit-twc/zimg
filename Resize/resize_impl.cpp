@@ -54,6 +54,18 @@ public:
 		}
 	}
 
+	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		throw std::runtime_error{ "f16 support requires x86" };
+	}
+
+	void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	{
+		throw std::runtime_error{ "f16 support requires x86" };
+	}
+
 	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
