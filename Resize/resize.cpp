@@ -38,7 +38,7 @@ size_t Resize::tmp_size(PixelType type) const
 
 	// Need a line buffer to store cached accumulators.
 	if (type == PixelType::WORD && !m_skip_v)
-		size += m_dst_width * 2;
+		size += m_src_width * 2;
 
 	return size;
 }
