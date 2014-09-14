@@ -54,7 +54,9 @@ public:
 	 * @param shift_h vertical shift in units of source pixels
 	 * @param subwidth active horizontal subwindow in units of source pixels
 	 * @param subheight active vertical subwindow in units of source pixels
-	 * @param x86 whether to create an x86-optimiezd kernel 
+	 * @param x86 whether to create an x86-optimized kernel
+	 * @throws ZimgIllegalArgument on unsupported parameter combinations
+	 * @throws ZimgOutOfMemory if out of memory
 	 */
 	Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
 	       double shift_w, double shift_h, double subwidth, double subheight, bool x86);
@@ -76,6 +78,7 @@ public:
 	 * @param tmp temporary buffer (@see Resize::tmp_size)
 	 * @param src_stride stride of input image
 	 * @param dst_stride stride of output image
+	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
 	void process(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp, int src_stride, int dst_stride) const;
 };

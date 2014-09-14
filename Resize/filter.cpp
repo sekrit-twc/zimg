@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <stdexcept>
+#include "except.h"
 #include "filter.h"
 
 const double M_PI = 3.14159265358979323846;
@@ -43,7 +43,7 @@ public:
 	double &at(int i, int j)
 	{
 		if (i > m_height || j > m_width || i < 0 || j < 0)
-			throw std::out_of_range{ "matrix index out of bounds" };
+			throw ZimgLogicError("index out of array bounds");
 
 		return m_matrix.at(i * m_width + j);
 	}
@@ -269,50 +269,54 @@ const int *EvaluatedFilter::left() const
 
 EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width)
 {
-	double scale = (double)dst_dim / width;
-	double step = std::min(scale, 1.0);
-	double support = (double)f.support() / step;
-	int filter_size = std::max((int)std::ceil(support * 2), 1);
+	try {
+		double scale = (double)dst_dim / width;
+		double step = std::min(scale, 1.0);
+		double support = (double)f.support() / step;
+		int filter_size = std::max((int)std::ceil(support * 2), 1);
 
-	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
-		throw std::domain_error{ "window too far" };
-	if (src_dim <= support)
-		throw std::domain_error{ "filter too wide" };
-	if (width <= support)
-		throw std::domain_error{ "subwindow too small" };
+		if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
+			throw ZimgIllegalArgument{ "window too far" };
+		if (src_dim <= support)
+			throw ZimgIllegalArgument{ "filter too wide" };
+		if (width <= support)
+			throw ZimgIllegalArgument{ "subwindow too small" };
 
-	double minpos = 0.5;
-	double maxpos = (double)src_dim - 0.5;
+		double minpos = 0.5;
+		double maxpos = (double)src_dim - 0.5;
 
-	Matrix m{ src_dim, dst_dim };
-	for (int i = 0; i < dst_dim; ++i) {
-		// Position of output sample on input grid.
-		double pos = (i + 0.5) / scale + shift;
-		double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
+		Matrix m{ src_dim, dst_dim };
+		for (int i = 0; i < dst_dim; ++i) {
+			// Position of output sample on input grid.
+			double pos = (i + 0.5) / scale + shift;
+			double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
 
-		double total = 0.0;
-		for (int j = 0; j < filter_size; ++j) {
-			double xpos = begin_pos + j;
-			total += f((xpos - pos) * step);
+			double total = 0.0;
+			for (int j = 0; j < filter_size; ++j) {
+				double xpos = begin_pos + j;
+				total += f((xpos - pos) * step);
+			}
+
+			for (int j = 0; j < filter_size; ++j) {
+				double xpos = begin_pos + j;
+				double real_pos;
+
+				// Mirror the position if it goes beyond image bounds.
+				if (xpos < minpos)
+					real_pos = 2.0 * minpos - xpos;
+				else if (xpos > maxpos)
+					real_pos = 2.0 * maxpos - xpos;
+				else
+					real_pos = xpos;
+
+				m.at(i, (int)std::floor(real_pos)) += f((xpos - pos) * step) / total;
+			}
 		}
 
-		for (int j = 0; j < filter_size; ++j) {
-			double xpos = begin_pos + j;
-			double real_pos;
-
-			// Mirror the position if it goes beyond image bounds.
-			if (xpos < minpos)
-				real_pos = 2.0 * minpos - xpos;
-			else if (xpos > maxpos)
-				real_pos = 2.0 * maxpos - xpos;
-			else
-				real_pos = xpos;
-
-			m.at(i, (int)std::floor(real_pos)) += f((xpos - pos) * step) / total;
-		}
+		return compress_matrix(m);
+	} catch (const std::bad_alloc &) {
+		throw ZimgOutOfMemory{};
 	}
-
-	return compress_matrix(m);
 }
 
 } // namespace resize

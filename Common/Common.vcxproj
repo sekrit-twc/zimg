@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="align.h" />
+    <ClInclude Include="except.h" />
     <ClInclude Include="osdep.h" />
     <ClInclude Include="pixel.h" />
     <ClInclude Include="x86util.h" />

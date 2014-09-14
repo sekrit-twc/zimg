@@ -10,6 +10,11 @@
 namespace zimg {;
 namespace resize {;
 
+/**
+ * Create an appropriate x86 optimized ResizeImpl for the running CPU.
+ *
+ * @see create_resize_impl
+ */
 ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
 
 } // namespace resize

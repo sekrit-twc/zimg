@@ -27,5 +27,8 @@
     <ClInclude Include="x86util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="except.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

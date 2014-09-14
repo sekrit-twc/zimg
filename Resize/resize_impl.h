@@ -75,6 +75,7 @@ public:
 	 * @param src_height height of input image (must match output image)
 	 * @param src_stride stride of input image
 	 * @param dst_stride stride of output image
+	 * @throws ZimgUnsupportedError if not supported
 	 */
 	virtual void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
@@ -89,6 +90,7 @@ public:
 	 * @param src_height height of input image (must match filter)
 	 * @param src_stride stride of input image
 	 * @param dst_stride stride of output image
+	 * @throws ZimgUnsupportedError if not supported
 	 */
 	virtual void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
@@ -126,6 +128,11 @@ public:
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 };
 
+/**
+ * Create a concrete ResizeImpl.
+
+ * @see Resize::Resize
+ */
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
                                double shift_w, double shift_h, double subwidth, double subheight, bool x86);
 

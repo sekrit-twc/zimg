@@ -1,3 +1,4 @@
+#include "except.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -58,13 +59,13 @@ public:
 	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		throw std::runtime_error{ "f16 support requires x86" };
+		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
 	void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		throw std::runtime_error{ "f16 support requires x86" };
+		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
 	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
@@ -111,9 +112,13 @@ public:
 } // namespace
 
 
-ResizeImpl::ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) :
-	m_filter_h{ filter_h }, m_filter_v{ filter_v }
+ResizeImpl::ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v)
+try :
+	m_filter_h{ filter_h },
+	m_filter_v{ filter_v }
 {
+} catch (const std::bad_alloc &) {
+	throw ZimgOutOfMemory{};
 }
 
 ResizeImpl::~ResizeImpl()
@@ -123,22 +128,31 @@ ResizeImpl::~ResizeImpl()
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
                                double shift_w, double shift_h, double subwidth, double subheight, bool x86)
 {
-	EvaluatedFilter filter_h; 
-	EvaluatedFilter filter_v;
+	try {
+		EvaluatedFilter filter_h;
+		EvaluatedFilter filter_v;
 
-	if (src_width != dst_width || shift_w != 0.0 || subwidth != src_width)
-		filter_h = compute_filter(f, src_width, dst_width, shift_w, subwidth);
-	if (src_height != dst_height || shift_h != 0.0 || subheight != src_height)
-		filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
+		if (src_width != dst_width || shift_w != 0.0 || subwidth != src_width)
+			filter_h = compute_filter(f, src_width, dst_width, shift_w, subwidth);
+		if (src_height != dst_height || shift_h != 0.0 || subheight != src_height)
+			filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
 
-	if (x86) {
-#ifdef RESIZE_X86
-		return create_resize_impl_x86(filter_h, filter_v);
+		if (x86) {
+#ifdef ZIMG_X86
+			ResizeImpl *ret = create_resize_impl_x86(filter_h, filter_v);
+
+			if (ret)
+				return ret;
+			else
+				return new ResizeImplC(filter_h, filter_v);
 #else
-		throw std::runtime_error{ "x86 support not enabled" };
+			return new ResizeImplC(filter_h, filter_v);
 #endif
-	} else {
-		return new ResizeImplC(filter_h, filter_v);
+		} else {
+			return new ResizeImplC(filter_h, filter_v);
+		}
+	} catch (const std::bad_alloc &) {
+		throw ZimgOutOfMemory{};
 	}
 }
 
