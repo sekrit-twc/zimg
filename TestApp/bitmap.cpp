@@ -1,4 +1,3 @@
-#define NOMINMAX
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
@@ -116,8 +115,8 @@ void write_bitmap(const Bitmap &bmp, const char *filename)
 	if (!f)
 		throw std::runtime_error("error opening file");
 
-	BITMAPFILEHEADER bfheader = {};
-	BITMAPINFOHEADER biheader = {};
+	BITMAPFILEHEADER bfheader = {0};
+	BITMAPINFOHEADER biheader = {0};
 
 	int planes = bmp.planes();
 	int stride = bmp.stride();

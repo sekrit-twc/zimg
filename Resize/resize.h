@@ -3,14 +3,15 @@
 #ifndef ZIMG_RESIZE_RESIZE_H_
 #define ZIMG_RESIZE_RESIZE_H_
 
+#include <cstddef>
 #include <memory>
-#include "filter.h"
 #include "osdep.h"
 #include "pixel.h"
 
 namespace zimg {;
 namespace resize {;
 
+class Filter;
 class ResizeImpl;
 
 /**

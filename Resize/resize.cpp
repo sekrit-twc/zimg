@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include "except.h"
 #include "resize.h"
 #include "resize_impl.h"

@@ -3,7 +3,7 @@
 #ifndef ZIMG_RESIZE_FILTER_H_
 #define ZIMG_RESIZE_FILTER_H_
 
-#include <cstddef>
+#include <cstdint>
 #include "align.h"
 
 namespace zimg {;
