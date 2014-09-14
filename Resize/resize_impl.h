@@ -3,6 +3,7 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_H_
 
+#include <algorithm>
 #include <cstdint>
 #include "filter.h"
 #include "osdep.h"
@@ -10,32 +11,85 @@
 namespace zimg {;
 namespace resize {;
 
-/**
- * Convert 16.0 unsigned to 16.0 signed and store in 32-bit.
- */
-inline FORCE_INLINE int32_t unpack_u16(uint16_t x)
+struct ScalarPolicy_U16 {
+	typedef int32_t num_type;
+
+	int32_t coeff(const EvaluatedFilter &filter, int row, int k)
+	{
+		return filter.data_i16()[row * filter.stride_i16() + k];
+	}
+
+	int32_t load(const uint16_t *src)
+	{
+		uint16_t x = *src;
+		return (int32_t)x + (int32_t)INT16_MIN; // Make signed.
+	}
+
+	void store(uint16_t *dst, int32_t x)
+	{
+		// Convert from 16.14 to 16.0.
+		x = ((x + (1 << 13)) >> 14) - (int32_t)INT16_MIN;
+
+		// Clamp out of range values.
+		x = std::max(std::min(x, (int32_t)UINT16_MAX), (int32_t)0);
+
+		*dst = (uint16_t)x;
+	}
+};
+
+struct ScalarPolicy_F32 {
+	typedef float num_type;
+
+	float coeff(const EvaluatedFilter &filter, int row, int k)
+	{
+		return filter.data()[row * filter.stride() + k];
+	}
+
+	float load(const float *src) { return *src; }
+
+	void store(float *dst, float x) { *dst = x; }
+};
+
+template <class T, class Policy>
+inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const T *src, T *dst,
+                                               int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
 {
-	return (int32_t)x + (int32_t)INT16_MIN;
+	for (int i = i_begin; i < i_end; ++i) {
+		for (int j = j_begin; j < j_end; ++j) {
+			int left = filter.left()[j];
+			Policy::num_type accum = 0;
+
+			for (int k = 0; k < filter.width(); ++k) {
+				Policy::num_type coeff = policy.coeff(filter, j, k);
+				Policy::num_type x = policy.load(src + i * src_stride + left + k);
+
+				accum += coeff * x;
+			}
+
+			policy.store(dst + i * dst_stride + j, accum);
+		}
+	}
 }
 
-/**
- * Arighmetic right shift of x by n with rounding.
- */
-inline FORCE_INLINE int32_t round_shift(int32_t x, int32_t n)
+template <class T, class Policy>
+inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const T *src, T *dst,
+                                               int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
 {
-	return (x + (1 << (n - 1))) >> n;
-}
+	for (int i = i_begin; i < i_end; ++i) {
+		for (int j = j_begin; j < j_end; ++j) {
+			int top = filter.left()[i];
+			Policy::num_type accum = 0;
 
-/**
- * Convert 16.14 signed fixed point to 16.0 unsigned.
- */
-inline FORCE_INLINE uint16_t pack_i30(int32_t x)
-{
-	// Reduce 16.14 fixed point to 16.0 and convert to unsigned.
-	x = round_shift(x, 14) - (int32_t)INT16_MIN;
-	x = x < 0 ? 0 : x;
-	x = x > UINT16_MAX ? UINT16_MAX : x;
-	return (uint16_t)x;
+			for (int k = 0; k < filter.width(); ++k) {
+				Policy::num_type coeff = policy.coeff(filter, i, k);
+				Policy::num_type x = policy.load(src + (top + k) * src_stride + j);
+
+				accum += coeff * x;
+			}
+
+			policy.store(dst + i * dst_stride + j, accum);
+		}
+	}
 }
 
 /**
