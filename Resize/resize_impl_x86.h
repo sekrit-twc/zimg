@@ -5,10 +5,11 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
-#include "resize_impl.h"
-
 namespace zimg {;
 namespace resize {;
+
+class EvaluatedFilter;
+class ResizeImpl;
 
 ResizeImpl *create_resize_impl_sse2(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
 
