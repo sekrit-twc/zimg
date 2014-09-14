@@ -15,31 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="filter.h">
+    <ClInclude Include="pixel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize.h">
+    <ClInclude Include="osdep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize_impl.h">
+    <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize_impl_x86.h">
+    <ClInclude Include="x86util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="filter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resize_impl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resize.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resize_impl_x86.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

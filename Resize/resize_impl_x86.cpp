@@ -1,10 +1,11 @@
-#ifdef RESIZE_X86
+#ifdef ZIMG_X86
 
 #include <algorithm>
 #include <intrin.h>
 #include "osdep.h"
 #include "resize_impl.h"
 
+namespace zimg {;
 namespace resize {;
 
 namespace {;
@@ -778,5 +779,6 @@ ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter_h, const Evalua
 }
 
 } // namespace resize;
+} // namespace zimg
 
-#endif // RESIZE_X86
+#endif // ZIMG_X86

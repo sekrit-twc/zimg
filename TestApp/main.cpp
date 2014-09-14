@@ -10,26 +10,26 @@
 #include "resize.h"
 #include "timer.h"
 
-using namespace resize;
+using namespace zimg;
 
 namespace {;
 
-Filter *select_filter(const char *filter)
+resize::Filter *select_filter(const char *filter)
 {
 	if (!strcmp(filter, "point"))
-		return new PointFilter{};
+		return new resize::PointFilter{};
 	else if (!strcmp(filter, "bilinear"))
-		return new BilinearFilter{};
+		return new resize::BilinearFilter{};
 	else if (!strcmp(filter, "bicubic"))
-		return new BicubicFilter(1.0 / 3.0, 1.0 / 3.0);
+		return new resize::BicubicFilter(1.0 / 3.0, 1.0 / 3.0);
 	else if (!strcmp(filter, "lanczos"))
-		return new LanczosFilter{ 4 };
+		return new resize::LanczosFilter{ 4 };
 	else if (!strcmp(filter, "spline16"))
-		return new Spline16Filter{};
+		return new resize::Spline16Filter{};
 	else if (!strcmp(filter, "spline36"))
-		return new Spline36Filter{};
+		return new resize::Spline36Filter{};
 	else
-		return new BilinearFilter{};
+		return new resize::BilinearFilter{};
 }
 
 void load_plane_u8_u16(const uint8_t *src, uint16_t *dst, int width, int height, int src_stride, int dst_stride)
@@ -105,7 +105,7 @@ void usage()
 	std::cout << "    --x86 / --no-x86    toggle x86 optimizations\n";
 }
 
-void execute(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86, PixelType type)
+void execute(const resize::Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86, PixelType type)
 {
 	int pxsize = pixel_size(type);
 
@@ -245,8 +245,8 @@ int main(int argc, const char **argv)
 		if (sub_h < 0.0)
 			sub_h = in.height();
 
-		std::unique_ptr<Filter> filter{ select_filter(filter_str) };
-		Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
+		std::unique_ptr<resize::Filter> filter{ select_filter(filter_str) };
+		resize::Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
 
 		execute(resize, in, out, times, x86, type);
 		write_bitmap(out, ofile);

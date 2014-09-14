@@ -1,16 +1,22 @@
-#ifndef ALIGN_H
-#define ALIGN_H
+#pragma once
+
+#ifndef ZIMG_ALIGN_H_
+#define ZIMG_ALIGN_H_
 
 #include <memory>
 #include <vector>
 
 #ifdef _WIN32
   #include <malloc.h>
+  inline void *zimg_aligned_malloc(size_t size, size_t alignment) { return _aligned_malloc(size, alignment); }
+  inline void zimg_aligned_free(void *ptr) { _aligned_free(ptr); }
 #else
   #include <stdlib.h>
-  inline void *_aligned_malloc(size_t size, int alignment) { void *p; if (posix_memalign(&p, alignment, size)) return nullptr; else return p; }
-  inline void _aligned_free(void *ptr) { free(ptr); }
+  inline void *zimg_aligned_malloc(size_t size, int alignment) { void *p; if (posix_memalign(&p, alignment, size)) return nullptr; else return p; }
+  inline void zimg_aligned_free(void *ptr) { free(ptr); }
 #endif
+
+namespace zimg {;
 
 /**
  * 32-byte alignment allows the use of instructions up to AVX.
@@ -48,15 +54,9 @@ template <class T>
 struct AlignedAllocator {
 	typedef T value_type;
 
-	T *allocate(size_t n) const
-	{
-		return (T *)_aligned_malloc(n * sizeof(T), ALIGNMENT);
-	}
+	T *allocate(size_t n) const { return (T *)zimg_aligned_malloc(n * sizeof(T), ALIGNMENT); }
 
-	void deallocate(void *ptr, size_t) const
-	{
-		_aligned_free(ptr);
-	}
+	void deallocate(void *ptr, size_t) const { zimg_aligned_free(ptr); }
 
 	bool operator==(const AlignedAllocator &) const { return true; }
 
@@ -69,4 +69,6 @@ struct AlignedAllocator {
 template <class T>
 using AlignedVector = std::vector<T, AlignedAllocator<T>>;
 
-#endif // ALIGN_H
+} // namespace zimg
+
+#endif // ZIMG_ALIGN_H_

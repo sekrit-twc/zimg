@@ -1,9 +1,12 @@
-#ifndef RESIZE_IMPL_H_
-#define RESIZE_IMPL_H_
+#pragma once
+
+#ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
+#define ZIMG_RESIZE_RESIZE_IMPL_H_
 
 #include "filter.h"
 #include "osdep.h"
 
+namespace zimg {;
 namespace resize {;
 
 /**
@@ -93,13 +96,7 @@ public:
 	/**
 	 * Execute horizontal filter pass on a half precision 16-bit image.
 	 *
-	 * @param src input image
-	 * @param dst output image
-	 * @param tmp temporary buffer (implementation defined size)
-	 * @param src_width width of input image (must match filter)
-	 * @param src_height height of input image (must match output image)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
+	 * @see ResizeImpl::process_u16_h
 	 */
 	virtual void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
@@ -107,13 +104,7 @@ public:
 	/**
 	 * Execute vertical filter pass on a half precision 16-bit image.
 	 *
-	 * @param src input image
-	 * @param dst output image
-	 * @param tmp temporary buffer (implementation defined size)
-	 * @param src_width width of input image (must match output image)
-	 * @param src_height height of input image (must match filter)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
+	 *  @see ResizeImpl::process_u16_v
 	 */
 	virtual void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
@@ -139,5 +130,6 @@ ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, i
                                double shift_w, double shift_h, double subwidth, double subheight, bool x86);
 
 } // namespace resize
+} // namespace zimg
 
-#endif // RESIZE_IMPL_H_
+#endif // ZIMG_RESIZE_RESIZE_IMPL_H_

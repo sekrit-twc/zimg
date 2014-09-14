@@ -1,6 +1,7 @@
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
+namespace zimg {;
 namespace resize {;
 
 namespace {;
@@ -142,3 +143,4 @@ ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, i
 }
 
 } // namespace resize
+} // namespace zimg
