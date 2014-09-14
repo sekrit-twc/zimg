@@ -5,6 +5,7 @@
 #include <memory>
 #include "align.h"
 #include "bitmap.h"
+#include "except.h"
 #include "f16util.h"
 #include "filter.h"
 #include "resize.h"
@@ -250,7 +251,10 @@ int main(int argc, const char **argv)
 
 		execute(resize, in, out, times, x86, type);
 		write_bitmap(out, ofile);
-	} catch (std::exception &e) {
+	} catch (const ZimgException &e) {
+		std::cerr << e.what() << '\n';
+		return -1;
+	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
 	}

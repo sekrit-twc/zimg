@@ -190,7 +190,8 @@ public:
  * @param shift shift to apply in units of source pixels
  * @param width active subwindow in units of source pixels
  * @return the computed filter
- * @throws std::domain_error on unsupported parameter combinations
+ * @throws ZimgIllegalArgument on unsupported parameter combinations
+ * @throws ZimgOutOfMemory if out of memory
  */
 EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
 

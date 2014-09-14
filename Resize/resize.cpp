@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "except.h"
 #include "resize.h"
 #include "resize_impl.h"
 
@@ -6,7 +7,8 @@ namespace zimg {;
 namespace resize {;
 
 Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-               double shift_w, double shift_h, double subwidth, double subheight, bool x86) :
+               double shift_w, double shift_h, double subwidth, double subheight, bool x86)
+try :
 	m_src_width{ src_width },
 	m_src_height{ src_height },
 	m_dst_width{ dst_width },
@@ -15,6 +17,8 @@ Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, in
 	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height },
 	m_impl{ create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, x86) }
 {
+} catch (const std::bad_alloc &) {
+	throw ZimgOutOfMemory{};
 }
 
 size_t Resize::max_frame_size(PixelType type) const
@@ -57,42 +61,36 @@ void Resize::copy_plane(const void * RESTRICT src, void * RESTRICT dst, int src_
 void Resize::invoke_impl_h(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
-	auto impl_u16 = &ResizeImpl::process_u16_h;
-	auto impl_f16 = &ResizeImpl::process_f16_h;
-	auto impl_f32 = &ResizeImpl::process_f32_h;
-
 	switch (type) {
 	case PixelType::WORD:
-		((*m_impl).*impl_u16)((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_u16_h((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
 	case PixelType::HALF:
-		((*m_impl).*impl_f16)((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_f16_h((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
 	case PixelType::FLOAT:
-		((*m_impl).*impl_f32)((const float *)src, (float *)dst, (float *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_f32_h((const float *)src, (float *)dst, (float *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
 	default:
-		throw std::runtime_error{ "unsupported pixel type" };
+		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };
 	}
 }
 
 void Resize::invoke_impl_v(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
-	auto impl_u16 = &ResizeImpl::process_u16_v;
-	auto impl_f16 = &ResizeImpl::process_f16_v;
-	auto impl_f32 = &ResizeImpl::process_f32_v;
-
 	switch (type) {
 	case PixelType::WORD:
-		((*m_impl).*impl_u16)((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_u16_v((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
 	case PixelType::HALF:
-		((*m_impl).*impl_f16)((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_f16_v((const uint16_t *)src, (uint16_t *)dst, (uint16_t *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
 	case PixelType::FLOAT:
-		((*m_impl).*impl_f32)((const float *)src, (float *)dst, (float *)tmp, src_width, src_height, src_stride, dst_stride);
+		m_impl->process_f32_v((const float *)src, (float *)dst, (float *)tmp, src_width, src_height, src_stride, dst_stride);
 		break;
+	default:
+		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };
 	}
 }
 
