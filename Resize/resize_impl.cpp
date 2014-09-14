@@ -16,44 +16,14 @@ public:
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
-
-		for (int i = 0; i < src_height; ++i) {
-			for (int j = 0; j < filter.height(); ++j) {
-				int left = filter.left()[j];
-				int32_t accum = 0;
-
-				for (int k = 0; k < filter.width(); ++k) {
-					int32_t coeff = filter.data_i16()[j * filter.stride_i16() + k];
-					int32_t x = unpack_u16(src[i * src_stride + left + k]);
-
-					accum += coeff * x;
-				}
-
-				dst[i * dst_stride + j] = pack_i30(accum);
-			}
-		}
+		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_U16{});
 	}
 
 	void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
-
-		for (int i = 0; i < filter.height(); ++i) {
-			for (int j = 0; j < src_width; ++j) {
-				int top = filter.left()[i];
-				int32_t accum = 0;
-
-				for (int k = 0; k < filter.width(); ++k) {
-					int32_t coeff = filter.data_i16()[i * filter.stride_i16() + k];
-					int32_t x = unpack_u16(src[(top + k) * src_stride + j]);
-
-					accum += coeff * x;
-				}
-
-				dst[i * dst_stride + j] = pack_i30(accum);
-			}
-		}
+		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_U16{});
 	}
 
 	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
@@ -72,40 +42,14 @@ public:
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
-
-		for (int i = 0; i < src_height; ++i) {
-			for (int j = 0; j < filter.height(); ++j) {
-				int left = filter.left()[j];
-				float accum = 0.f;
-
-				for (int k = 0; k < filter.width(); ++k) {
-					float coeff = filter.data()[j * filter.stride() + k];
-					float x = src[i * src_stride + left + k];
-					accum += coeff * x;
-				}
-				dst[i * dst_stride + j] = accum;
-			}
-		};
+		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_F32{});
 	}
 
 	void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
-
-		for (int i = 0; i < filter.height(); ++i) {
-			for (int j = 0; j < src_width; ++j) {
-				int top = filter.left()[i];
-				float accum = 0.f;
-
-				for (int k = 0; k < filter.width(); ++k) {
-					float coeff = filter.data()[i * filter.stride() + k];
-					float x = src[(top + k) * src_stride + j];
-					accum += coeff * x;
-				}
-				dst[i * dst_stride + j] = accum;
-			}
-		}
+		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_F32{});
 	}
 };
 

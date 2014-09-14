@@ -137,6 +137,8 @@
     <ClCompile Include="filter.cpp" />
     <ClCompile Include="resize.cpp" />
     <ClCompile Include="resize_impl.cpp" />
+    <ClCompile Include="resize_impl_avx2.cpp" />
+    <ClCompile Include="resize_impl_sse2.cpp" />
     <ClCompile Include="resize_impl_x86.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
