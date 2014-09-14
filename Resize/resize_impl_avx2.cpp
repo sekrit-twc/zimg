@@ -4,12 +4,13 @@
  * The functions in this file require the Intel Advanced Vector Extensions 2 instruction set.
  * This instruction set was first available on the Haswell processor family.
  */
-
+#include <cstdint>
 #include <emmintrin.h> // SSE2, F16C
 #include <immintrin.h> // AVX, AVX2, FMA
 #include "filter.h"
 #include "osdep.h"
 #include "resize_impl.h"
+#include "resize_impl_x86.h"
 
 namespace zimg {;
 namespace resize {;
