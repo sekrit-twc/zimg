@@ -1,7 +1,12 @@
 #ifdef ZIMG_X86
 
-#include <emmintrin.h>
-#include <immintrin.h>
+/**
+ * The functions in this file require the Intel Advanced Vector Extensions 2 instruction set.
+ * This instruction set was first available on the Haswell processor family.
+ */
+
+#include <emmintrin.h> // SSE2, F16C
+#include <immintrin.h> // AVX, AVX2, FMA
 #include "filter.h"
 #include "osdep.h"
 #include "resize_impl.h"
