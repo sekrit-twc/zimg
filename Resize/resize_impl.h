@@ -3,6 +3,7 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_H_
 
+#include <cstdint>
 #include "filter.h"
 #include "osdep.h"
 

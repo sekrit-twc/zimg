@@ -1,15 +1,15 @@
 #include <algorithm>
 #include <cmath>
-#include <memory>
+#include <vector>
 #include "except.h"
 #include "filter.h"
-
-const double M_PI = 3.14159265358979323846;
 
 namespace zimg {;
 namespace resize {;
 
 namespace {;
+
+const double M_PI = 3.14159265358979323846;
 
 double sinc(double x)
 {
@@ -48,10 +48,7 @@ public:
 		return m_matrix.at(i * m_width + j);
 	}
 
-	double at(int i, int j) const
-	{
-		return const_cast<Matrix *>(this)->at(i, j);
-	}
+	double at(int i, int j) const { return const_cast<Matrix *>(this)->at(i, j); }
 };
 
 EvaluatedFilter compress_matrix(const Matrix &m)

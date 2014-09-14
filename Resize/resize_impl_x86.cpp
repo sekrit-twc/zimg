@@ -1,7 +1,8 @@
 #ifdef ZIMG_X86
 
-#include <algorithm>
-#include <intrin.h>
+#include <emmintrin.h>
+#include <immintrin.h>
+#include "filter.h"
 #include "osdep.h"
 #include "resize_impl.h"
 
@@ -710,22 +711,6 @@ void filter_plane_fp_v_avx(const EvaluatedFilter &filter, const T * RESTRICT src
 }
 
 class ResizeImplX86 final : public ResizeImpl {
-	template <class T, class MemoryManager>
-	void process_fp_h(const T * RESTRICT src, T * RESTRICT dst, T * RESTRICT tmp,
-	                  int src_width, int src_height, int src_stride, int dst_stride, MemoryManager mem) const
-	{
-		if (m_filter_h.width() >= 8)
-			filter_plane_fp_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, mem);
-		else
-			filter_plane_fp_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, mem);
-	}
-
-	template <class T, class MemoryManager>
-	void process_fp_v(const T * RESTRICT src, T * RESTRICT dst, T * RESTRICT tmp,
-	                  int src_width, int src_height, int src_stride, int dst_stride, MemoryManager mem) const
-	{
-		filter_plane_fp_v_avx(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride, mem);
-	}
 public:
 	ResizeImplX86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
@@ -748,25 +733,31 @@ public:
 	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		process_fp_h(src, dst, tmp, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF16{});
+		if (m_filter_h.width() >= 8)
+			filter_plane_fp_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF16{});
+		else
+			filter_plane_fp_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF16{});
 	}
 
 	void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		process_fp_v(src, dst, tmp, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF16{});
+		filter_plane_fp_v_avx(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF16{});
 	}
 
 	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		process_fp_h(src, dst, tmp, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF32{});
+		if (m_filter_h.width() >= 8)
+			filter_plane_fp_h_avx<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF32{});
+		else
+			filter_plane_fp_h_avx<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF32{});
 	}
 
 	void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		process_fp_v(src, dst, tmp, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF32{});
+		filter_plane_fp_v_avx(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride, LoadStoreManagerF32{});
 	}
 };
 

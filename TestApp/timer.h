@@ -24,7 +24,6 @@ public:
 
 #else
 
-#define NOMINMAX
 #include <Windows.h>
 
 class Timer {

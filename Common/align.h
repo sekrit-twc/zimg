@@ -3,7 +3,6 @@
 #ifndef ZIMG_ALIGN_H_
 #define ZIMG_ALIGN_H_
 
-#include <memory>
 #include <vector>
 
 #ifdef _WIN32

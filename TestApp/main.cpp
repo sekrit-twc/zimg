@@ -1,6 +1,5 @@
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include "align.h"
