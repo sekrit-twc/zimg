@@ -35,51 +35,54 @@ Filter *select_filter(const char *filter)
 void load_plane_u8_u16(const uint8_t *src, uint16_t *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			dst[i * dst_stride + j] = (uint16_t)(src[i * src_stride + j] << 8);
-		}
+		std::transform(src, src + width, dst, [](uint8_t x) { return x << 8; });
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
 void load_plane_u8_f16(const uint8_t *src, uint16_t *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		u8_to_f16(src + i * src_stride, dst + i * dst_stride, width);
+		std::transform(src, src + width, dst, cvt_u8_to_f16);
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
 void load_plane_u8_f32(const uint8_t *src, float *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			dst[i * dst_stride + j] = (float)src[i * src_stride + j] / (float)UINT8_MAX;
-		}
+		std::transform(src, src + width, dst, [](uint8_t x) { return (float)x / (float)UINT8_MAX; });
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
 void store_plane_u16_u8(const uint16_t *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			dst[i * dst_stride + j] = (uint8_t)(src[i * src_stride + j] >> 8);
-		}
+		std::transform(src, src + width, dst, [](uint16_t x) { return x >> 8; });
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
 void store_plane_f16_u8(const uint16_t *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		f16_to_u8(src + i * src_stride, dst + i * dst_stride, width);
+		std::transform(src, src + width, dst, cvt_f16_to_u8);
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
 void store_plane_f32_u8(const float *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
 {
 	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			float x = std::round(src[i * src_stride + j] * (float)UINT8_MAX);
-			dst[i * dst_stride + j] = (uint8_t)std::min(std::max(x, 0.f), (float)UINT8_MAX);
-		}
+		std::transform(src, src + width, dst, [](float x) { return (uint8_t)std::max(std::min(std::round(x * 255.f), 255.f), 0.f); });
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
@@ -102,24 +105,38 @@ void usage()
 	std::cout << "    --x86 / --no-x86    toggle x86 optimizations\n";
 }
 
-void execute_u16(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86)
+void execute(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86, PixelType type)
 {
+	int pxsize = pixel_size(type);
+
 	int src_width = in.width();
-	int src_stride = align(in.width(), 16);
+	int src_stride = align(in.width(), ALIGNMENT / pxsize);
 	int src_height = in.height();
 	int src_plane_size = src_stride * src_height;
 	int dst_width = out.width();
-	int dst_stride = align(out.width(), 16);
+	int dst_stride = align(out.width(), ALIGNMENT / pxsize);
 	int dst_height = out.height();
 	int dst_plane_size = dst_stride * dst_height;
 	int planes = in.planes();
 
-	AlignedVector<uint16_t> in_planes(src_stride * src_height * planes);
-	AlignedVector<uint16_t> out_planes(dst_stride * dst_height * planes);
-	AlignedVector<uint16_t> tmp(resize.tmp_size(PixelType::WORD));
+	AlignedVector<char> in_planes(src_stride * src_height * planes * pxsize);
+	AlignedVector<char> out_planes(dst_stride * dst_height * planes * pxsize);
+	AlignedVector<char> tmp(resize.tmp_size(type) * pxsize);
 
 	for (int p = 0; p < planes; ++p) {
-		load_plane_u8_u16(in.data(p), in_planes.data() + p * src_plane_size, src_width, src_height, in.stride(), src_stride);
+		switch (type) {
+		case PixelType::WORD:
+			load_plane_u8_u16(in.data(p), (uint16_t *)(in_planes.data() + p * src_plane_size * pxsize), src_width, src_height, in.stride(), src_stride);
+			break;
+		case PixelType::HALF:
+			load_plane_u8_f16(in.data(p), (uint16_t *)(in_planes.data() + p * src_plane_size * pxsize), src_width, src_height, in.stride(), src_stride);
+			break;
+		case PixelType::FLOAT:
+			load_plane_u8_f32(in.data(p), (float *)(in_planes.data() + p * src_plane_size * pxsize), src_width, src_height, in.stride(), src_stride);
+			break;
+		default:
+			throw std::runtime_error{ "unsupported pixel type" };
+		}
 	}
 
 	Timer timer;
@@ -129,10 +146,10 @@ void execute_u16(const Resize &resize, const Bitmap &in, Bitmap &out, int times,
 	for (int n = 0; n < times; ++n) {
 		timer.start();
 		for (int p = 0; p < planes; ++p) {
-			const uint16_t *src = in_planes.data() + p * src_plane_size;
-			uint16_t *dst = out_planes.data() + p * dst_plane_size;
+			const char *src = in_planes.data() + p * src_plane_size * pxsize;
+			char *dst = out_planes.data() + p * dst_plane_size * pxsize;
 
-			resize.process_u16(src, dst, tmp.data(), src_stride, dst_stride);
+			resize.process(type, src, dst, tmp.data(), src_stride, dst_stride);
 		}
 		timer.stop();
 
@@ -146,103 +163,19 @@ void execute_u16(const Resize &resize, const Bitmap &in, Bitmap &out, int times,
 	std::cout << "min: " << min_time << '\n';
 
 	for (int p = 0; p < planes; ++p) {
-		store_plane_u16_u8(out_planes.data() + p * dst_plane_size, out.data(p), dst_width, dst_height, dst_stride, out.stride());
-	}
-}
-
-void execute_f16(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86)
-{
-	int src_width = in.width();
-	int src_stride = align(in.width(), 16);
-	int src_height = in.height();
-	int src_plane_size = src_stride * src_height;
-	int dst_width = out.width();
-	int dst_stride = align(out.width(), 16);
-	int dst_height = out.height();
-	int dst_plane_size = dst_stride * dst_height;
-	int planes = in.planes();
-
-	AlignedVector<uint16_t> in_planes(src_stride * src_height * planes);
-	AlignedVector<uint16_t> out_planes(dst_stride * dst_height * planes);
-	AlignedVector<uint16_t> tmp(resize.tmp_size(PixelType::WORD));
-
-	for (int p = 0; p < planes; ++p) {
-		load_plane_u8_f16(in.data(p), in_planes.data() + p * src_plane_size, src_width, src_height, in.stride(), src_stride);
-	}
-
-	Timer timer;
-	double min_time = INFINITY;
-	double avg_time = 0.0;
-
-	for (int n = 0; n < times; ++n) {
-		timer.start();
-		for (int p = 0; p < planes; ++p) {
-			const uint16_t *src = in_planes.data() + p * src_plane_size;
-			uint16_t *dst = out_planes.data() + p * dst_plane_size;
-
-			resize.process_f16(src, dst, tmp.data(), src_stride, dst_stride);
+		switch (type) {
+		case PixelType::WORD:
+			store_plane_u16_u8((const uint16_t *)(out_planes.data() + p * dst_plane_size * pxsize), out.data(p), dst_width, dst_height, dst_stride, out.stride());
+			break;
+		case PixelType::HALF:
+			store_plane_f16_u8((const uint16_t *)(out_planes.data() + p * dst_plane_size * pxsize), out.data(p), dst_width, dst_height, dst_stride, out.stride());
+			break;
+		case PixelType::FLOAT:
+			store_plane_f32_u8((const float *)(out_planes.data() + p * dst_plane_size * pxsize), out.data(p), dst_width, dst_height, dst_stride, out.stride());
+			break;
+		default:
+			throw std::runtime_error{ "unsupported pixel type" };
 		}
-		timer.stop();
-
-		double elapsed = timer.elapsed();
-
-		std::cout << '#' << n << ": " << elapsed << '\n';
-		avg_time += elapsed / times;
-		min_time = std::min(min_time, elapsed);
-	}
-	std::cout << "average: " << avg_time << '\n';
-	std::cout << "min: " << min_time << '\n';
-
-	for (int p = 0; p < planes; ++p) {
-		store_plane_f16_u8(out_planes.data() + p * dst_plane_size, out.data(p), dst_width, dst_height, dst_stride, out.stride());
-	}
-}
-
-void execute_f32(const Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86)
-{
-	int src_width = in.width();
-	int src_stride = align(in.width(), 8);
-	int src_height = in.height();
-	int src_plane_size = src_stride * src_height;
-	int dst_width = out.width();
-	int dst_stride = align(out.width(), 8);
-	int dst_height = out.height();
-	int dst_plane_size = dst_stride * dst_height;
-	int planes = in.planes();
-
-	AlignedVector<float> in_planes(src_stride * src_height * planes);
-	AlignedVector<float> out_planes(dst_stride * dst_height * planes);
-	AlignedVector<float> tmp(resize.tmp_size(PixelType::WORD));
-
-	for (int p = 0; p < planes; ++p) {
-		load_plane_u8_f32(in.data(p), in_planes.data() + p * src_plane_size, src_width, src_height, in.stride(), src_stride);
-	}
-
-	Timer timer;
-	double min_time = INFINITY;
-	double avg_time = 0.0;
-
-	for (int n = 0; n < times; ++n) {
-		timer.start();
-		for (int p = 0; p < planes; ++p) {
-			const float *src = in_planes.data() + p * src_plane_size;
-			float *dst = out_planes.data() + p * dst_plane_size;
-
-			resize.process_f32(src, dst, tmp.data(), src_stride, dst_stride);
-		}
-		timer.stop();
-
-		double elapsed = timer.elapsed();
-
-		std::cout << '#' << n << ": " << elapsed << '\n';
-		avg_time += elapsed / times;
-		min_time = std::min(min_time, elapsed);
-	}
-	std::cout << "average: " << avg_time << '\n';
-	std::cout << "min: " << min_time << '\n';
-
-	for (int p = 0; p < planes; ++p) {
-		store_plane_f32_u8(out_planes.data() + p * dst_plane_size, out.data(p), dst_width, dst_height, dst_stride, out.stride());
 	}
 }
 
@@ -315,15 +248,7 @@ int main(int argc, const char **argv)
 		std::unique_ptr<Filter> filter{ select_filter(filter_str) };
 		Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
 
-		if (type == PixelType::WORD)
-			execute_u16(resize, in, out, times, x86);
-		else if (type == PixelType::HALF)
-			execute_f16(resize, in, out, times, x86);
-		else if (type == PixelType::FLOAT)
-			execute_f32(resize, in, out, times, x86);
-		else
-			throw std::runtime_error{ "unrecognized pixel type" };
-
+		execute(resize, in, out, times, x86, type);
 		write_bitmap(out, ofile);
 	} catch (std::exception &e) {
 		std::cerr << e.what() << '\n';

@@ -40,7 +40,13 @@ class Resize {
 
 	size_t max_frame_size(PixelType type) const;
 
-	void copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const;
+	void copy_plane(const void * RESTRICT src, void * RESTRICT dst, int src_stride_bytes, int dst_stride_bytes) const;
+
+	void invoke_impl_h(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const;
+
+	void invoke_impl_v(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+	                   int src_width, int src_height, int src_stride, int dst_stride) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.
@@ -73,34 +79,19 @@ public:
 	size_t tmp_size(PixelType type) const;
 
 	/**
-	 * Process an unsigned 16-bit image.
+	 * Process an image. The input and output pixel formats must match.
 	 *
+	 * @param type pixel type of image
 	 * @param src input image
 	 * @param dst output image
 	 * @param tmp temporary buffer (@see Resize::tmp_size)
 	 * @param src_stride stride of input image
 	 * @param dst_stride stride of output image
 	 */
-	void process_u16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp, int src_stride, int dst_stride) const;
-
-	/**
-	 * Process an half precision 16-bit image.
-	 *
-	 * @param src input image
-	 * @param dst output image
-	 * @param tmp temporary buffer (@see Resize::tmp_size)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
-	 */
-	void process_f16(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp, int src_stride, int dst_stride) const;
-
-	/**
-	 * Process a single precision 32-bit image.
-	 *
-	 * @see Resize::process_u16
-	 */
-	void process_f32(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_stride, int dst_stride) const;
+	void process(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp, int src_stride, int dst_stride) const;
 };
+
+int pixel_size(PixelType type);
 
 } // namespace resize
 
