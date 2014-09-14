@@ -2,6 +2,7 @@
 #include "resize.h"
 #include "resize_impl.h"
 
+namespace zimg {;
 namespace resize {;
 
 Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
@@ -127,19 +128,5 @@ void Resize::process(PixelType type, const void * RESTRICT src, void * RESTRICT 
 	}
 }
 
-int pixel_size(PixelType type)
-{
-	switch (type) {
-	case PixelType::BYTE:
-		return 1;
-	case PixelType::WORD:
-	case PixelType::HALF:
-		return sizeof(uint16_t);
-	case PixelType::FLOAT:
-		return sizeof(float);
-	default:
-		return 0;
-	}
-}
-
 } // namespace resize
+} // namespace zimg

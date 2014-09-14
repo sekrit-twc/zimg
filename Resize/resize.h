@@ -1,26 +1,15 @@
-#ifndef RESIZE_H_
-#define RESIZE_H_
+#pragma once
+
+#ifndef ZIMG_RESIZE_RESIZE_H_
+#define ZIMG_RESIZE_RESIZE_H_
 
 #include <memory>
 #include "filter.h"
 #include "osdep.h"
+#include "pixel.h"
 
+namespace zimg {;
 namespace resize {;
-
-/**
- * Enum for supported input and output formats.
- *
- * BYTE = 8 bits
- * WORD = 16 bits
- * HALF = 16 bits
- * FLOAT = 32 bits
- */
-enum class PixelType {
-	BYTE,
-	WORD,
-	HALF,
-	FLOAT
-};
 
 class ResizeImpl;
 
@@ -91,8 +80,7 @@ public:
 	void process(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp, int src_stride, int dst_stride) const;
 };
 
-int pixel_size(PixelType type);
-
 } // namespace resize
+} // namespace zimg
 
-#endif // RESIZE_H_
+#endif // ZIMG_RESIZE_RESIZE_H_

@@ -4,15 +4,16 @@
 #include <stdexcept>
 #include "filter.h"
 
-#define M_PI 3.14159265358979323846
+const double M_PI = 3.14159265358979323846;
+
+namespace zimg {;
+namespace resize {;
 
 namespace {;
 
-using namespace resize;
-
 double sinc(double x)
 {
-	return std::abs(x) < 0.0001 ? 1.0 : std::sin(x * (double)M_PI) / (x * (double)M_PI);
+	return std::abs(x) < 0.0001 ? 1.0 : std::sin(x * M_PI) / (x * M_PI);
 }
 
 double sq(double x)
@@ -96,10 +97,8 @@ EvaluatedFilter compress_matrix(const Matrix &m)
 	return e;
 }
 
-}; // namespace
+} // namespace
 
-
-namespace resize {;
 
 int PointFilter::support() const
 {
@@ -282,14 +281,14 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 	if (width <= support)
 		throw std::domain_error{ "subwindow too small" };
 
-	double minpos = 0.5f;
-	double maxpos = (double)src_dim - 0.5f;
+	double minpos = 0.5;
+	double maxpos = (double)src_dim - 0.5;
 
 	Matrix m{ src_dim, dst_dim };
 	for (int i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
-		double pos = (i + 0.5f) / scale + shift;
-		double begin_pos = std::floor(pos + support - filter_size + 0.5f) + 0.5f;
+		double pos = (i + 0.5) / scale + shift;
+		double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
 
 		double total = 0.0;
 		for (int j = 0; j < filter_size; ++j) {
@@ -309,7 +308,7 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 			else
 				real_pos = xpos;
 
-			m.at(i, (int)real_pos) += f((xpos - pos) * step) / total;
+			m.at(i, (int)std::floor(real_pos)) += f((xpos - pos) * step) / total;
 		}
 	}
 
@@ -317,3 +316,4 @@ EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double
 }
 
 } // namespace resize
+} // namespace zimg

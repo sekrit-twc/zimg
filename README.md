@@ -1,4 +1,4 @@
-Resize
+zimg
 ======
 
-do resizing
+not like cimg

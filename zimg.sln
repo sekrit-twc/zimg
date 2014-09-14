@@ -4,11 +4,22 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Resize", "Resize\Resize.vcxproj", "{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5} = {2A42B5D3-4208-4043-A44F-D4A46FF584A5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{B85E6CC0-ED80-487D-805A-DA3597A15CE6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD} = {B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99} = {32C3BCFE-513E-4682-9E98-3450A7FE7F99}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Colorspace", "Colorspace\Colorspace.vcxproj", "{32C3BCFE-513E-4682-9E98-3450A7FE7F99}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5} = {2A42B5D3-4208-4043-A44F-D4A46FF584A5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{2A42B5D3-4208-4043-A44F-D4A46FF584A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +45,22 @@ Global
 		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|Win32.Build.0 = Release|Win32
 		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|x64.ActiveCfg = Release|x64
 		{B85E6CC0-ED80-487D-805A-DA3597A15CE6}.Release|x64.Build.0 = Release|x64
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Debug|Win32.ActiveCfg = Debug|Win32
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Debug|Win32.Build.0 = Debug|Win32
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Debug|x64.ActiveCfg = Debug|x64
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Debug|x64.Build.0 = Debug|x64
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Release|Win32.ActiveCfg = Release|Win32
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Release|Win32.Build.0 = Release|Win32
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Release|x64.ActiveCfg = Release|x64
+		{32C3BCFE-513E-4682-9E98-3450A7FE7F99}.Release|x64.Build.0 = Release|x64
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Debug|Win32.Build.0 = Debug|Win32
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Debug|x64.ActiveCfg = Debug|x64
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Debug|x64.Build.0 = Debug|x64
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Release|Win32.ActiveCfg = Release|Win32
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Release|Win32.Build.0 = Release|Win32
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Release|x64.ActiveCfg = Release|x64
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

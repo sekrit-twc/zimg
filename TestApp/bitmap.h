@@ -1,5 +1,5 @@
-#ifndef BITMAP_H
-#define BITMAP_H
+#ifndef BITMAP_H_
+#define BITMAP_H_
 
 #include <cstdint>
 #include <vector>
@@ -77,4 +77,4 @@ Bitmap read_bitmap(const char *filename);
  */
 void write_bitmap(const Bitmap &bmp, const char *filename);
 
-#endif // BITMAP_H
+#endif // BITMAP_H_

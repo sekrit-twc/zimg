@@ -6,6 +6,8 @@
 #include "align.h"
 #include "bitmap.h"
 
+using namespace zimg;
+
 namespace {;
 
 // STL deleter for FILE pointers.

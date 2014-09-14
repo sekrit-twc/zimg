@@ -1,10 +1,12 @@
-#ifndef FILTER_H_
-#define FILTER_H_
+#pragma once
+
+#ifndef ZIMG_RESIZE_FILTER_H_
+#define ZIMG_RESIZE_FILTER_H_
 
 #include <cstddef>
-#include <vector>
 #include "align.h"
 
+namespace zimg {;
 namespace resize {;
 
 /**
@@ -193,5 +195,6 @@ public:
 EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
 
 } // namespace resize
+} // namespace zimg
 
-#endif // FILTER_H_
+#endif // ZIMG_RESIZE_FILTER_H_
