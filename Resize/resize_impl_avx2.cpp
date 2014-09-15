@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <emmintrin.h> // SSE2, F16C
 #include <immintrin.h> // AVX, AVX2, FMA
+#include "align.h"
 #include "filter.h"
 #include "osdep.h"
 #include "resize_impl.h"
@@ -428,11 +429,8 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 				accum0h = _mm256_add_epi32(accum0h, accum1h);
 
 				if (k) {
-					__m256i cachel = _mm256_load_si256((const __m256i *)(tmp + j * 2 + 0));
-					__m256i cacheh = _mm256_load_si256((const __m256i *)(tmp + j * 2 + 16));
-
-					accum0l = _mm256_add_epi32(accum0l, cachel);
-					accum0h = _mm256_add_epi32(accum0h, cacheh);
+					accum0l = _mm256_add_epi32(accum0l, _mm256_load_si256((const __m256i *)(tmp + j * 2 + 0)));
+					accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)(tmp + j * 2 + 16)));
 				}
 
 				if (k == filter.width() - 8) {					

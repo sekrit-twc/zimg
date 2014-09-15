@@ -73,6 +73,8 @@ ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, i
                                double shift_w, double shift_h, double subwidth, double subheight, bool x86)
 {
 	try {
+		ResizeImpl *ret = nullptr;
+
 		EvaluatedFilter filter_h;
 		EvaluatedFilter filter_v;
 
@@ -81,20 +83,14 @@ ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, i
 		if (src_height != dst_height || shift_h != 0.0 || subheight != src_height)
 			filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
 
-		if (x86) {
 #ifdef ZIMG_X86
-			ResizeImpl *ret = create_resize_impl_x86(filter_h, filter_v);
-
-			if (ret)
-				return ret;
-			else
-				return new ResizeImplC(filter_h, filter_v);
-#else
-			return new ResizeImplC(filter_h, filter_v);
+		if (x86)
+			ret = create_resize_impl_x86(filter_h, filter_v);
 #endif
-		} else {
-			return new ResizeImplC(filter_h, filter_v);
-		}
+		if (!ret)
+			ret = new ResizeImplC(filter_h, filter_v);
+
+		return ret;
 	} catch (const std::bad_alloc &) {
 		throw ZimgOutOfMemory{};
 	}
