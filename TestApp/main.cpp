@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <memory>
@@ -18,12 +19,12 @@ namespace {;
 CPUClass select_cpu(const char *cpu)
 {
 #ifdef ZIMG_X86
-	if (!strcmp(cpu, "sse2"))
+	if (!strcmp(cpu, "auto"))
+		return CPUClass::CPU_X86_AUTO;
+	else if (!strcmp(cpu, "sse2"))
 		return CPUClass::CPU_X86_SSE2;
 	else if (!strcmp(cpu, "avx2"))
 		return CPUClass::CPU_X86_AVX2;
-	else if (!strcmp(cpu, "auto"))
-		return CPUClass::CPU_X86_AUTO;
 	else
 		return CPUClass::CPU_NONE;
 #else
@@ -255,9 +256,7 @@ int main(int argc, const char **argv)
 	try {
 		Bitmap in = read_bitmap(ifile);
 		Bitmap out{ width, height, in.planes() == 4 };
-		CPUClass cpu = CPUClass::CPU_NONE;
-
-		cpu = select_cpu(cpu_str);
+		CPUClass cpu = select_cpu(cpu_str);
 
 		if (sub_w < 0.0)
 			sub_w = in.width();

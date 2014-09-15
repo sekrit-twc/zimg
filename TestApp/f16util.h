@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <intrin.h>
+#include <emmintrin.h>
 
 inline uint16_t cvt_u8_to_f16(uint8_t x)
 {

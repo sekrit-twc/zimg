@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef ZIMG_CPUINFO_H_
-#define ZIMG_CPINFO_H_
+#define ZIMG_CPUINFO_H_
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -89,4 +89,4 @@ inline X86Capabilities query_x86_capabilities()
 
 } // namespace zimg
 
-#endif // ZIMG_CPINFO_H_
+#endif // ZIMG_CPUINFO_H_
