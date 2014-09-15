@@ -657,7 +657,7 @@ public:
 	void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		if (m_filter_h.width() >= 16)
+		if (m_filter_h.width() > 16)
 			filter_plane_u16_h<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
 		else
 			filter_plane_u16_h<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
@@ -672,7 +672,7 @@ public:
 	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
-		if (m_filter_h.width() >= 8)
+		if (m_filter_h.width() > 8)
 			filter_plane_fp_h<true>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, MemoryPolicyF16{});
 		else
 			filter_plane_fp_h<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride, MemoryPolicyF16{});
