@@ -5,6 +5,8 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
+#include "cpuinfo.h"
+
 namespace zimg {;
 namespace resize {;
 
@@ -20,7 +22,7 @@ ResizeImpl *create_resize_impl_avx2(const EvaluatedFilter &filter_h, const Evalu
  *
  * @see create_resize_impl
  */
-ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
+ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

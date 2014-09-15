@@ -116,10 +116,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="align.h" />
+    <ClInclude Include="cpuinfo.h" />
     <ClInclude Include="except.h" />
     <ClInclude Include="osdep.h" />
     <ClInclude Include="pixel.h" />
-    <ClInclude Include="x86util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <memory>
+#include "cpuinfo.h"
 #include "osdep.h"
 #include "pixel.h"
 
@@ -55,12 +56,12 @@ public:
 	 * @param shift_h vertical shift in units of source pixels
 	 * @param subwidth active horizontal subwindow in units of source pixels
 	 * @param subheight active vertical subwindow in units of source pixels
-	 * @param x86 whether to create an x86-optimized kernel
+	 * @param cpu create kernel optimized for given cpu
 	 * @throws ZimgIllegalArgument on unsupported parameter combinations
 	 * @throws ZimgOutOfMemory if out of memory
 	 */
 	Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-	       double shift_w, double shift_h, double subwidth, double subheight, bool x86);
+	       double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 
 	/**
 	 * Get the size of the temporary buffer required by the filter.

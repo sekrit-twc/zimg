@@ -24,10 +24,10 @@
     <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="x86util.h">
+    <ClInclude Include="except.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="except.h">
+    <ClInclude Include="cpuinfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
