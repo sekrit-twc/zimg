@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_X86_UTIL_H_
-#define ZIMG_X86_UTIL_H_
+#ifndef ZIMG_CPUINFO_H_
+#define ZIMG_CPINFO_H_
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -9,6 +9,9 @@
 
 namespace zimg {;
 
+/**
+ * Enum for CPU type.
+ */
 enum class CPUClass {
 	CPU_NONE,
 #ifdef ZIMG_X86
@@ -20,6 +23,9 @@ enum class CPUClass {
 
 #ifdef ZIMG_X86
 
+/**
+ * Bitfield of selected x86 feature flags.
+ */
 struct X86Capabilities {
 	unsigned sse   : 1;
 	unsigned sse2  : 1;
@@ -33,6 +39,13 @@ struct X86Capabilities {
 	unsigned avx2  : 1;
 };
 
+/**
+ * Execute the CPUID instruction.
+ *
+ * @param regs array to receive eax, ebx, ecx, edx
+ * @param eax argument to instruction
+ * @param ecx argument to instruction
+ */
 inline void do_cpuid(int regs[4], int eax, int ecx)
 {
 #ifdef _WIN32
@@ -45,6 +58,11 @@ inline void do_cpuid(int regs[4], int eax, int ecx)
 #endif // _WIN32
 }
 
+/**
+ * Get the x86 feature flags on the current CPU.
+ *
+ * @return capabilities
+ */
 inline X86Capabilities query_x86_capabilities()
 {
 	X86Capabilities caps = { 0 };
@@ -71,4 +89,4 @@ inline X86Capabilities query_x86_capabilities()
 
 } // namespace zimg
 
-#endif // ZIMG_X86_UTIL_H_
+#endif // ZIMG_CPINFO_H_

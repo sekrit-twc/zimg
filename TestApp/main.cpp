@@ -38,7 +38,7 @@ resize::Filter *select_filter(const char *filter)
 	else if (!strcmp(filter, "bilinear"))
 		return new resize::BilinearFilter{};
 	else if (!strcmp(filter, "bicubic"))
-		return new resize::BicubicFilter(1.0 / 3.0, 1.0 / 3.0);
+		return new resize::BicubicFilter{ 1.0 / 3.0, 1.0 / 3.0 };
 	else if (!strcmp(filter, "lanczos"))
 		return new resize::LanczosFilter{ 4 };
 	else if (!strcmp(filter, "spline16"))
