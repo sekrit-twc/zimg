@@ -9,7 +9,7 @@ namespace zimg {;
 namespace resize {;
 
 Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-               double shift_w, double shift_h, double subwidth, double subheight, bool x86)
+               double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 try :
 	m_src_width{ src_width },
 	m_src_height{ src_height },
@@ -17,7 +17,7 @@ try :
 	m_dst_height{ dst_height },
 	m_skip_h{ src_width == dst_width && shift_w == 0.0 && subwidth == src_width },
 	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height },
-	m_impl{ create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, x86) }
+	m_impl{ create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, cpu) }
 {
 } catch (const std::bad_alloc &) {
 	throw ZimgOutOfMemory{};

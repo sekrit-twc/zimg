@@ -1,0 +1,74 @@
+#pragma once
+
+#ifndef ZIMG_X86_UTIL_H_
+#define ZIMG_X86_UTIL_H_
+
+#ifdef _WIN32
+#include <intrin.h>
+#endif // _WIN32
+
+namespace zimg {;
+
+enum class CPUClass {
+	CPU_NONE,
+#ifdef ZIMG_X86
+	CPU_X86_AUTO,
+	CPU_X86_SSE2,
+	CPU_X86_AVX2
+#endif // ZIMG_X86
+};
+
+#ifdef ZIMG_X86
+
+struct X86Capabilities {
+	unsigned sse   : 1;
+	unsigned sse2  : 1;
+	unsigned sse3  : 1;
+	unsigned ssse3 : 1;
+	unsigned fma   : 1;
+	unsigned sse41 : 1;
+	unsigned sse42 : 1;
+	unsigned avx   : 1;
+	unsigned f16c  : 1;
+	unsigned avx2  : 1;
+};
+
+inline void do_cpuid(int regs[4], int eax, int ecx)
+{
+#ifdef _WIN32
+	__cpuidex(regs, eax, ecx);
+#else
+	regs[0] = 0;
+	regs[1] = 0;
+	regs[2] = 0;
+	regs[3] = 0;
+#endif // _WIN32
+}
+
+inline X86Capabilities query_x86_capabilities()
+{
+	X86Capabilities caps = { 0 };
+	int regs[4];
+
+	do_cpuid(regs, 1, 0);
+	caps.sse   = !!(regs[3] & (1 << 25));
+	caps.sse2  = !!(regs[3] & (1 << 26));
+	caps.sse3  = !!(regs[2] & (1 << 0));
+	caps.ssse3 = !!(regs[2] & (1 << 9));
+	caps.fma   = !!(regs[2] & (1 << 12));
+	caps.sse41 = !!(regs[2] & (1 << 19));
+	caps.sse42 = !!(regs[2] & (1 << 20));
+	caps.avx   = !!(regs[2] & (1 << 28));
+	caps.f16c  = !!(regs[2] & (1 << 29));
+
+	do_cpuid(regs, 7, 0);
+	caps.avx2 = !!(regs[1] & (1 << 5));
+
+	return caps;
+}
+
+#endif ZIMG_X86
+
+} // namespace zimg
+
+#endif // ZIMG_X86_UTIL_H_

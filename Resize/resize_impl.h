@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include "cpuinfo.h"
 #include "filter.h"
 #include "osdep.h"
 
@@ -189,7 +190,7 @@ public:
  * @see Resize::Resize
  */
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-                               double shift_w, double shift_h, double subwidth, double subheight, bool x86);
+                               double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

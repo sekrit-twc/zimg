@@ -4,6 +4,7 @@
 #include <memory>
 #include "align.h"
 #include "bitmap.h"
+#include "cpuinfo.h"
 #include "except.h"
 #include "f16util.h"
 #include "filter.h"
@@ -13,6 +14,22 @@
 using namespace zimg;
 
 namespace {;
+
+CPUClass select_cpu(const char *cpu)
+{
+#ifdef ZIMG_X86
+	if (!strcmp(cpu, "sse2"))
+		return CPUClass::CPU_X86_SSE2;
+	else if (!strcmp(cpu, "avx2"))
+		return CPUClass::CPU_X86_AVX2;
+	else if (!strcmp(cpu, "auto"))
+		return CPUClass::CPU_X86_AUTO;
+	else
+		return CPUClass::CPU_NONE;
+#else
+	return CPUClass::CPU_NONE;
+#endif // ZIMG_X86
+}
 
 resize::Filter *select_filter(const char *filter)
 {
@@ -99,13 +116,13 @@ void usage()
 	std::cout << "    --sub-w             subwindow width\n";
 	std::cout << "    --sub-h             subwindow height\n";
 	std::cout << "    --times             number of cycles\n";
+	std::cout << "    --cpu               select CPU type\n";
 	std::cout << "    --u16               use 16-bit unsigned\n";
 	std::cout << "    --f16               use half precision float\n";
 	std::cout << "    --f32               use single precision float\n";
-	std::cout << "    --x86 / --no-x86    toggle x86 optimizations\n";
 }
 
-void execute(const resize::Resize &resize, const Bitmap &in, Bitmap &out, int times, bool x86, PixelType type)
+void execute(const resize::Resize &resize, const Bitmap &in, Bitmap &out, int times, PixelType type)
 {
 	int pxsize = pixel_size(type);
 
@@ -199,7 +216,7 @@ int main(int argc, const char **argv)
 	double sub_w = -1.0;
 	double sub_h = -1.0;
 	int times = 1;
-	bool x86 = false;
+	const char *cpu_str = "none";
 	PixelType type = PixelType::FLOAT;
 
 	for (int i = 5; i < argc; ++i) {
@@ -221,16 +238,15 @@ int main(int argc, const char **argv)
 		} else if (!strcmp(argv[i], "--times") && i + 1 < argc) {
 			times = std::atoi(argv[i + 1]);
 			++i;
+		} else if (!strcmp(argv[i], "--cpu")) {
+			cpu_str = argv[i + 1];
+			++i;
 		} else if (!strcmp(argv[i], "--u16")) {
 			type = PixelType::WORD;
 		} else if (!strcmp(argv[i], "--f16")) {
 			type = PixelType::HALF;
 		} else if (!strcmp(argv[i], "--f32")) {
 			type = PixelType::FLOAT;
-		} else if (!strcmp(argv[i], "--x86")) {
-			x86 = true;
-		} else if (!strcmp(argv[i], "--no-x86")) {
-			x86 = false;
 		} else {
 			std::cerr << "unknown argument: " << argv[i] << '\n';
 		}
@@ -239,6 +255,9 @@ int main(int argc, const char **argv)
 	try {
 		Bitmap in = read_bitmap(ifile);
 		Bitmap out{ width, height, in.planes() == 4 };
+		CPUClass cpu = CPUClass::CPU_NONE;
+
+		cpu = select_cpu(cpu_str);
 
 		if (sub_w < 0.0)
 			sub_w = in.width();
@@ -246,9 +265,9 @@ int main(int argc, const char **argv)
 			sub_h = in.height();
 
 		std::unique_ptr<resize::Filter> filter{ select_filter(filter_str) };
-		resize::Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, x86 };
+		resize::Resize resize{ *filter, in.width(), in.height(), width, height, shift_w, shift_h, sub_w, sub_h, cpu };
 
-		execute(resize, in, out, times, x86, type);
+		execute(resize, in, out, times, type);
 		write_bitmap(out, ofile);
 	} catch (const ZimgException &e) {
 		std::cerr << e.what() << '\n';

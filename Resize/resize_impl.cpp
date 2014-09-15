@@ -1,3 +1,4 @@
+#include "cpuinfo.h"
 #include "except.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
@@ -70,7 +71,7 @@ ResizeImpl::~ResizeImpl()
 }
 
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-                               double shift_w, double shift_h, double subwidth, double subheight, bool x86)
+                               double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
 	try {
 		ResizeImpl *ret = nullptr;
@@ -84,8 +85,7 @@ ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, i
 			filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
 
 #ifdef ZIMG_X86
-		if (x86)
-			ret = create_resize_impl_x86(filter_h, filter_v);
+		ret = create_resize_impl_x86(filter_h, filter_v, cpu);
 #endif
 		if (!ret)
 			ret = new ResizeImplC(filter_h, filter_v);
