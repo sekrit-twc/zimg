@@ -113,8 +113,8 @@ void Resize::process(PixelType type, const void * RESTRICT src, void * RESTRICT 
 		char *tmp1 = (char *)tmp;
 		char *tmp2 = tmp1 + max_frame_size(type) * pxsize;
 
-		// First execute the pass that results in the fewest pixels.
-		if ((xscale < 1.0 && xscale * 2.0 < yscale) || (xscale >= 1.0 && xscale < yscale)) {
+		// Minimize the number of pixels encountered by the horizontal pass.
+		if ((xscale < 1.0 && xscale * 2.0 < yscale) || (xscale >= 1.0 && xscale > yscale)) {
 			int tmp_stride = align(m_dst_width, ALIGNMENT / pxsize);
 
 			invoke_impl_h(type, src, tmp1, tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
