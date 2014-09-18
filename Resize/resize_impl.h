@@ -52,7 +52,7 @@ struct ScalarPolicy_F32 {
 };
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const T *src, T *dst,
+inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
                                                int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
 {
 	for (int i = i_begin; i < i_end; ++i) {
@@ -73,7 +73,7 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 }
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const T *src, T *dst,
+inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
                                                int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
 {
 	for (int i = i_begin; i < i_end; ++i) {
@@ -133,7 +133,7 @@ public:
 	 * @param dst_stride stride of output image
 	 * @throws ZimgUnsupportedError if not supported
 	 */
-	virtual void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	virtual void process_u16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	/**
@@ -148,7 +148,7 @@ public:
 	 * @param dst_stride stride of output image
 	 * @throws ZimgUnsupportedError if not supported
 	 */
-	virtual void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	virtual void process_u16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	/**
@@ -156,7 +156,7 @@ public:
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	virtual void process_f16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	/**
@@ -164,7 +164,7 @@ public:
 	 *
 	 *  @see ResizeImpl::process_u16_v
 	 */
-	virtual void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	virtual void process_f16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	/**
@@ -172,7 +172,7 @@ public:
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	virtual void process_f32_h(const float *src, float *dst, float *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
 	/**
@@ -180,7 +180,7 @@ public:
 	 *
 	 * @see ResizeImpl::process_u16_v
 	 */
-	virtual void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	virtual void process_f32_v(const float *src, float *dst, float *tmp,
 	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 };
 

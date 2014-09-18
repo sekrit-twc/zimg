@@ -429,7 +429,7 @@ public:
 	ResizeImplSSE2(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
 
-	void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_u16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		if (m_filter_h.width() > 8)
@@ -438,25 +438,25 @@ public:
 			filter_plane_u16_h<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
 	}
 
-	void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_u16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		filter_plane_u16_v(m_filter_v, src, dst, tmp, src_width, src_height, src_stride, dst_stride);
 	}
 
-	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_f16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
 	}
 
-	void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_f16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
 	}
 
-	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	void process_f32_h(const float *src, float *dst, float *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		if (m_filter_h.width() > 4)
@@ -465,7 +465,7 @@ public:
 			filter_plane_fp_h<false>(m_filter_h, src, dst, src_width, src_height, src_stride, dst_stride);
 	}
 
-	void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	void process_f32_v(const float *src, float *dst, float *tmp,
 		int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		filter_plane_fp_v(m_filter_v, src, dst, src_width, src_height, src_stride, dst_stride);

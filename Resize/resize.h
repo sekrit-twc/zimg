@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <memory>
 #include "Common/cpuinfo.h"
-#include "Common/osdep.h"
 #include "Common/pixel.h"
 
 namespace zimg {;
@@ -31,12 +30,12 @@ class Resize {
 
 	size_t max_frame_size(PixelType type) const;
 
-	void copy_plane(const void * RESTRICT src, void * RESTRICT dst, int src_stride_bytes, int dst_stride_bytes) const;
+	void copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const;
 
-	void invoke_impl_h(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+	void invoke_impl_h(PixelType type, const void *src, void *dst, void *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const;
 
-	void invoke_impl_v(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+	void invoke_impl_v(PixelType type, const void *src, void *dst, void *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const;
 public:
 	/**
@@ -82,7 +81,7 @@ public:
 	 * @param dst_stride stride of output image
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp, int src_stride, int dst_stride) const;
+	void process(PixelType type, const void *src, void *dst, void *tmp, int src_stride, int dst_stride) const;
 };
 
 } // namespace resize
