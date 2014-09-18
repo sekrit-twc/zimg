@@ -15,30 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitmap.cpp">
+    <ClCompile Include="bilinear.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resizeapp.cpp">
+    <ClCompile Include="matrix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="unresize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="unresizeapp.cpp">
+    <ClCompile Include="unresize_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unresize_impl_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitmap.h">
+    <ClInclude Include="bilinear.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="timer.h">
+    <ClInclude Include="matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="f16util.h">
+    <ClInclude Include="unresize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="apps.h">
+    <ClInclude Include="unresize_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

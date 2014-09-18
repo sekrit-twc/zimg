@@ -32,7 +32,7 @@ public:
 
 	/**
 	 * Return the image stride. Stride is the distance between adjacent rows.
-	 * All planes have the same stride, which will be a multiple of 32 bytes.
+	 * All planes have the same stride, which will be a multiple of 4 bytes.
 	 *
 	 * @return the image stride
 	 */

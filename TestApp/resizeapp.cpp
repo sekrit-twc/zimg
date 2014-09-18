@@ -8,6 +8,7 @@
 #include "Common/except.h"
 #include "Resize/filter.h"
 #include "Resize/resize.h"
+#include "apps.h"
 #include "bitmap.h"
 #include "f16util.h"
 #include "timer.h"
@@ -106,7 +107,7 @@ void store_plane_f32_u8(const float *src, uint8_t *dst, int width, int height, i
 
 void usage()
 {
-	std::cout << "TestApp infile outfile w h [--filter filter] [--shift-w shift] [--shift-h shift] [--sub-w w] [--sub-h h] [--times n] [--cpu cpu] [--u16 | --f16 | --f32]\n";
+	std::cout << "resize infile outfile w h [--filter filter] [--shift-w shift] [--shift-h shift] [--sub-w w] [--sub-h h] [--times n] [--cpu cpu] [--u16 | --f16 | --f32]\n";
 	std::cout << "    infile              input BMP file\n";
 	std::cout << "    outfile             output BMP file\n";
 	std::cout << "    width               output width\n";
