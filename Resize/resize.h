@@ -5,9 +5,9 @@
 
 #include <cstddef>
 #include <memory>
-#include "cpuinfo.h"
-#include "osdep.h"
-#include "pixel.h"
+#include "Common/cpuinfo.h"
+#include "Common/osdep.h"
+#include "Common/pixel.h"
 
 namespace zimg {;
 namespace resize {;

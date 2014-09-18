@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <emmintrin.h> // SSE2
-#include "align.h"
-#include "except.h"
-#include "osdep.h"
+#include "Common/align.h"
+#include "Common/except.h"
+#include "Common/osdep.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 

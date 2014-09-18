@@ -2,7 +2,7 @@
 #include <memory>
 #include <stdexcept>
 #include <Windows.h>
-#include "align.h"
+#include "Common/align.h"
 #include "bitmap.h"
 
 using namespace zimg;

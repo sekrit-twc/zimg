@@ -1,5 +1,5 @@
-#include "cpuinfo.h"
-#include "except.h"
+#include "Common/cpuinfo.h"
+#include "Common/except.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
