@@ -50,7 +50,7 @@ size_t Resize::tmp_size(PixelType type) const
 	return size;
 }
 
-void Resize::copy_plane(const void * RESTRICT src, void * RESTRICT dst, int src_stride_bytes, int dst_stride_bytes) const
+void Resize::copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const
 {
 	const char *src_byteptr = (const char *)src;
 	char *dst_byteptr = (char *)dst;
@@ -60,7 +60,7 @@ void Resize::copy_plane(const void * RESTRICT src, void * RESTRICT dst, int src_
 	}
 }
 
-void Resize::invoke_impl_h(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+void Resize::invoke_impl_h(PixelType type, const void *src, void *dst, void *tmp,
                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
 	switch (type) {
@@ -78,7 +78,7 @@ void Resize::invoke_impl_h(PixelType type, const void * RESTRICT src, void * RES
 	}
 }
 
-void Resize::invoke_impl_v(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp,
+void Resize::invoke_impl_v(PixelType type, const void *src, void *dst, void *tmp,
                            int src_width, int src_height, int src_stride, int dst_stride) const
 {
 	switch (type) {
@@ -96,7 +96,7 @@ void Resize::invoke_impl_v(PixelType type, const void * RESTRICT src, void * RES
 	}
 }
 
-void Resize::process(PixelType type, const void * RESTRICT src, void * RESTRICT dst, void * RESTRICT tmp, int src_stride, int dst_stride) const
+void Resize::process(PixelType type, const void *src, void *dst, void *tmp, int src_stride, int dst_stride) const
 {
 	int pxsize = pixel_size(type);
 

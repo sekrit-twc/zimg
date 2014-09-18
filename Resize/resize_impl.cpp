@@ -1,5 +1,6 @@
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
+#include "Common/osdep.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -13,40 +14,40 @@ public:
 	ResizeImplC(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
 
-	void process_u16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_u16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
 		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_U16{});
 	}
 
-	void process_u16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_u16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
 		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_U16{});
 	}
 
-	void process_f16_h(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_f16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f16_v(const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
+	void process_f16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f32_h(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	void process_f32_h(const float *src, float *dst, float *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
 		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_F32{});
 	}
 
-	void process_f32_v(const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+	void process_f32_v(const float *src, float *dst, float *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
