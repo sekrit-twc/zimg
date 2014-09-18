@@ -5,9 +5,9 @@
 
 #include <algorithm>
 #include <cstdint>
-#include "cpuinfo.h"
+#include "Common/cpuinfo.h"
+#include "Common/osdep.h"
 #include "filter.h"
-#include "osdep.h"
 
 namespace zimg {;
 namespace resize {;

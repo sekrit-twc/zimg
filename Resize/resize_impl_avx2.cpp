@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <emmintrin.h> // SSE2, F16C
 #include <immintrin.h> // AVX, AVX2, FMA
-#include "align.h"
+#include "Common/align.h"
+#include "Common/osdep.h"
 #include "filter.h"
-#include "osdep.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 

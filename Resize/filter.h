@@ -4,7 +4,7 @@
 #define ZIMG_RESIZE_FILTER_H_
 
 #include <cstdint>
-#include "align.h"
+#include "Common/align.h"
 
 namespace zimg {;
 namespace resize {;

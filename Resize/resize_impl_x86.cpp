@@ -1,6 +1,6 @@
 #ifdef ZIMG_X86
 
-#include "cpuinfo.h"
+#include "Common/cpuinfo.h"
 #include "resize_impl_x86.h"
 
 namespace zimg {;
