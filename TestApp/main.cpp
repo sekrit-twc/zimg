@@ -21,7 +21,9 @@ int main(int argc, const char **argv)
 	}
 
 	if (!strcmp(argv[1], "resize")) {
-		return resize_main(argc, argv + 1);
+		return resize_main(argc - 1, argv + 1);
+	} else if (!strcmp(argv[1], "unresize")) {
+		return unresize_main(argc - 1, argv + 1);
 	} else {
 		usage();
 		return -1;

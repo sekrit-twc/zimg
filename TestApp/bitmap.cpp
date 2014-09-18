@@ -2,12 +2,14 @@
 #include <memory>
 #include <stdexcept>
 #include <Windows.h>
-#include "Common/align.h"
 #include "bitmap.h"
 
-using namespace zimg;
-
 namespace {;
+
+inline int align(int x, int n)
+{
+	return x % n ? x + n - (x % n) : x;
+}
 
 // STL deleter for FILE pointers.
 struct FileCloser {
@@ -21,7 +23,7 @@ typedef std::unique_ptr<FILE, FileCloser> PFILE;
 
 
 Bitmap::Bitmap(int width, int height, bool four_planes)
-: m_planes(four_planes ? 4 : 3), m_stride(align(width, ALIGNMENT)), m_width(width), m_height(height)
+: m_planes(four_planes ? 4 : 3), m_stride(align(width, 4)), m_width(width), m_height(height)
 {
 	for (int i = 0; i < m_planes; ++i) {
 		m_data[i].resize(m_stride * m_height);
