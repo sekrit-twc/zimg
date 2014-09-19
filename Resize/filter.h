@@ -3,6 +3,7 @@
 #ifndef ZIMG_RESIZE_FILTER_H_
 #define ZIMG_RESIZE_FILTER_H_
 
+#include <cstddef>
 #include <cstdint>
 #include "Common/align.h"
 
@@ -110,8 +111,8 @@ public:
 class EvaluatedFilter {
 	int m_width;
 	int m_height;
-	int m_stride;
-	int m_stride_i16;
+	ptrdiff_t m_stride;
+	ptrdiff_t m_stride_i16;
 	AlignedVector<float> m_data;
 	AlignedVector<int16_t> m_data_i16;
 	AlignedVector<int> m_left;
@@ -142,12 +143,12 @@ public:
 	/**
 	 * @return distance betwen filter rows in floats
 	 */
-	int stride() const;
+	ptrdiff_t stride() const;
 
 	/**
 	 * @return distance between filter rows in 16-bit ints
 	 */
-	int stride_i16() const;
+	ptrdiff_t stride_i16() const;
 
 	/**
 	 * @return pointer to filter coefficients

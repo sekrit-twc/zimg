@@ -1,5 +1,6 @@
 #ifdef ZIMG_X86
 
+#include <cstddef>
 #include <cstdint>
 #include <emmintrin.h> // SSE2
 #include "Common/align.h"
@@ -86,12 +87,12 @@ FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
 
 template <bool DoLoop>
 void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT src, uint16_t * RESTRICT dst,
-                        int src_width, int src_height, int src_stride, int dst_stride)
+                        ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
-	for (int i = 0; i < mod(src_height, 4); i += 4) {
-		int j;
+	for (ptrdiff_t i = 0; i < mod(src_height, 4); i += 4) {
+		ptrdiff_t j;
 
 		for (j = 0; j < mod(filter.height(), 8); ++j) {
 			__m128i x0, x1, x2, x3;
@@ -99,12 +100,12 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			__m128i cached[8];
 
 			const int16_t *filter_row = filter.data_i16() + j * filter.stride_i16();
-			int left = filter.left()[j];
+			ptrdiff_t left = filter.left()[j];
 
 			if (left + filter.stride_i16() > src_width)
 				break;
 
-			for (int k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
 				__m128i coeff = _mm_load_si128((const __m128i *)(filter_row + k));
 
 				x0 = _mm_loadu_si128((const __m128i *)(src + (i + 0) * src_stride + left + k));
@@ -135,7 +136,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 			if (j % 8 == 7) {
 				__m128i packed;
-				int dst_j = mod(j, 8);
+				ptrdiff_t dst_j = mod(j, 8);
 
 				transpose4_epi32(cached[0], cached[1], cached[2], cached[3]);
 				transpose4_epi32(cached[4], cached[5], cached[6], cached[7]);
@@ -164,10 +165,10 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 template <bool DoLoop>
 void filter_plane_fp_h(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
-                       int src_width, int src_height, int src_stride, int dst_stride)
+                       ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
-	for (int i = 0; i < mod(src_height, 4); i += 4) {
-		int j;
+	for (ptrdiff_t i = 0; i < mod(src_height, 4); i += 4) {
+		ptrdiff_t j;
 
 		for (j = 0; j < mod(filter.height(), 4); ++j) {
 			__m128 x0, x1, x2, x3;
@@ -175,12 +176,12 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const float * RESTRICT src
 			__m128 cached[4];
 
 			const float *filter_row = filter.data() + j * filter.stride();
-			int left = filter.left()[j];
+			ptrdiff_t left = filter.left()[j];
 
 			if (left + filter.stride() > src_width)
 				break;
 
-			for (int k = 0; k < (DoLoop ? filter.width() : 4); k += 4) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 4); k += 4) {
 				__m128 coeff = _mm_load_ps(filter_row + k);
 				
 				x0 = _mm_loadu_ps(src + (i + 0) * src_stride + left + k);
@@ -206,7 +207,7 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const float * RESTRICT src
 			cached[j % 4] = accum;
 
 			if (j % 4 == 3) {
-				int dst_j = mod(j, 4);
+				ptrdiff_t dst_j = mod(j, 4);
 
 				transpose4_ps(cached[0], cached[1], cached[2], cached[3]);
 
@@ -222,11 +223,11 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const float * RESTRICT src
 }
 
 void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
-                        int src_width, int src_height, int src_stride, int dst_stride)
+                        ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
-	for (int i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
 		__m128i coeff0, coeff1, coeff2, coeff3;
 		__m128i x0, x1, x2, x3;
 		__m128i accum0l, accum0h, accum1l, accum1h;
@@ -235,7 +236,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 		const uint16_t *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3;
 		uint16_t *dst_ptr = dst + i * dst_stride;
 
-		for (int k = 0; k < mod(filter.width(), 4); k += 4) {
+		for (ptrdiff_t k = 0; k < mod(filter.width(), 4); k += 4) {
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr2 = src + (filter.left()[i] + k + 2) * src_stride;
@@ -246,7 +247,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			coeff2 = _mm_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 2]);
 			coeff3 = _mm_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 3]);
 
-			for (int j = 0; j < mod(src_width, 8); j += 8) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				accum0l = _mm_setzero_si128();
 				accum0h = _mm_setzero_si128();
 				accum1l = _mm_setzero_si128();
@@ -288,8 +289,8 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			}
 		}
 		if (filter.width() % 4) {
-			int m = filter.width() % 4;
-			int k = filter.width() - m;
+			ptrdiff_t m = filter.width() % 4;
+			ptrdiff_t k = filter.width() - m;
 
 			coeff2 = _mm_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 2]);
 			coeff1 = _mm_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 1]);
@@ -299,7 +300,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 
-			for (int j = 0; j < mod(src_width, 8); j += 8) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				accum0l = _mm_setzero_si128();
 				accum0h = _mm_setzero_si128();
 				accum1l = _mm_setzero_si128();
@@ -339,9 +340,9 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 }
 
 void filter_plane_fp_v(const EvaluatedFilter &filter, const float * RESTRICT src, float * RESTRICT dst,
-                       int src_width, int src_height, int src_stride, int dst_stride)
+                       ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
-	for (int i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
 		__m128 coeff0, coeff1, coeff2, coeff3;
 		__m128 x0, x1, x2, x3;
 		__m128 accum0, accum1;
@@ -349,7 +350,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const float * RESTRICT src
 		const float *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3;
 		float *dst_ptr = dst + i * dst_stride;
 
-		for (int k = 0; k < mod(filter.width(), 4); k += 4) {
+		for (ptrdiff_t k = 0; k < mod(filter.width(), 4); k += 4) {
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr2 = src + (filter.left()[i] + k + 2) * src_stride;
@@ -360,7 +361,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const float * RESTRICT src
 			coeff2 = _mm_set_ps1(filter.data()[i * filter.stride() + k + 2]);
 			coeff3 = _mm_set_ps1(filter.data()[i * filter.stride() + k + 3]);
 
-			for (int j = 0; j < mod(src_width, 4); j += 4) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				x0 = _mm_load_ps(src_ptr0 + j);
 				accum0 = _mm_mul_ps(coeff0, x0);
 
@@ -384,8 +385,8 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const float * RESTRICT src
 			}
 		}
 		if (filter.width() % 4) {
-			int m = filter.width() % 4;
-			int k = filter.width() - m;
+			ptrdiff_t m = filter.width() % 4;
+			ptrdiff_t k = filter.width() - m;
 
 			coeff2 = _mm_set_ps1(filter.data()[i * filter.stride() + k + 2]);
 			coeff1 = _mm_set_ps1(filter.data()[i * filter.stride() + k + 1]);
@@ -395,7 +396,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const float * RESTRICT src
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 
-			for (int j = 0; j < mod(src_width, 4); j += 4) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				accum0 = _mm_setzero_ps();
 				accum1 = _mm_setzero_ps();
 

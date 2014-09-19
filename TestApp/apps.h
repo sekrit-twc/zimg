@@ -24,6 +24,8 @@ struct AppOption {
 
 int width_to_stride(int width, zimg::PixelType type);
 
+size_t image_plane_size(int stride, int height, zimg::PixelType type);
+
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type);
 
 zimg::AlignedVector<char> allocate_frame(int stride, int height, int planes, zimg::PixelType type);

@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
@@ -95,13 +96,13 @@ Bitmap read_bitmap(const char *filename)
 	Bitmap bmp(width, height, planes == 4);
 	std::unique_ptr<uint8_t[]> buf(new uint8_t[bmp_stride]);
 
-	for (int i = height - 1; i>= 0; --i) {
+	for (ptrdiff_t i = height - 1; i >= 0; --i) {
 		if (fread(buf.get(), 1, bmp_stride, f) != bmp_stride)
 			throw std::runtime_error("error reading bitmap data");
 
-		for (int j = 0; j < width; ++j) {
-			for (int k = 0; k < planes; ++k) {
-				bmp.data(k)[bmp.stride() * i + j] = buf[j * planes + k];
+		for (ptrdiff_t j = 0; j < width; ++j) {
+			for (int p = 0; p < planes; ++p) {
+				bmp.data(p)[bmp.stride() * i + j] = buf[j * planes + p];
 			}
 		}
 	}
@@ -126,7 +127,7 @@ void write_bitmap(const Bitmap &bmp, const char *filename)
 	int height = bmp.height();
 
 	int bmp_stride = align(width * planes, 4);
-	int bmp_data_size = bmp_stride *height;
+	int bmp_data_size = bmp_stride * height;
 
 	bfheader.bfType = 'MB';
 	bfheader.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + bmp_data_size;
@@ -144,10 +145,10 @@ void write_bitmap(const Bitmap &bmp, const char *filename)
 		throw std::runtime_error("error writing bitmap info header");
 
 	std::unique_ptr<uint8_t[]> buf(new uint8_t[bmp_stride]());
-	for (int i = height - 1; i >= 0; --i) {
-		for (int j = 0; j < width; ++j) {
-			for (int k = 0; k < planes; ++k) {
-				buf[j * planes + k] = bmp.data(k)[i * stride + j];
+	for (ptrdiff_t i = height - 1; i >= 0; --i) {
+		for (ptrdiff_t j = 0; j < width; ++j) {
+			for (int p = 0; p < planes; ++p) {
+				buf[j * planes + p] = bmp.data(p)[i * stride + j];
 			}
 		}
 		if (fwrite(buf.get(), 1, bmp_stride, f) != bmp_stride)

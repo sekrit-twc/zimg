@@ -4,6 +4,7 @@
 #define ZIMG_RESIZE_RESIZE_IMPL_H_
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include "Common/cpuinfo.h"
 #include "Common/osdep.h"
@@ -15,7 +16,7 @@ namespace resize {;
 struct ScalarPolicy_U16 {
 	typedef int32_t num_type;
 
-	int32_t coeff(const EvaluatedFilter &filter, int row, int k)
+	int32_t coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data_i16()[row * filter.stride_i16() + k];
 	}
@@ -41,7 +42,7 @@ struct ScalarPolicy_U16 {
 struct ScalarPolicy_F32 {
 	typedef float num_type;
 
-	float coeff(const EvaluatedFilter &filter, int row, int k)
+	float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data()[row * filter.stride() + k];
 	}
@@ -53,11 +54,11 @@ struct ScalarPolicy_F32 {
 
 template <class T, class Policy>
 inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                                               int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
+                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, ptrdiff_t src_stride, ptrdiff_t dst_stride, Policy policy)
 {
-	for (int i = i_begin; i < i_end; ++i) {
-		for (int j = j_begin; j < j_end; ++j) {
-			int left = filter.left()[j];
+	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
+		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
+			ptrdiff_t left = filter.left()[j];
 			Policy::num_type accum = 0;
 
 			for (int k = 0; k < filter.width(); ++k) {
@@ -74,14 +75,14 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 
 template <class T, class Policy>
 inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                                               int i_begin, int i_end, int j_begin, int j_end, int src_stride, int dst_stride, Policy policy)
+                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, ptrdiff_t src_stride, ptrdiff_t dst_stride, Policy policy)
 {
-	for (int i = i_begin; i < i_end; ++i) {
-		for (int j = j_begin; j < j_end; ++j) {
-			int top = filter.left()[i];
+	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
+		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
+			ptrdiff_t top = filter.left()[i];
 			Policy::num_type accum = 0;
 
-			for (int k = 0; k < filter.width(); ++k) {
+			for (ptrdiff_t k = 0; k < filter.width(); ++k) {
 				Policy::num_type coeff = policy.coeff(filter, i, k);
 				Policy::num_type x = policy.load(src + (top + k) * src_stride + j);
 
