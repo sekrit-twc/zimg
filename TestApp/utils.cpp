@@ -68,7 +68,12 @@ int required_args(OptionType type)
 
 int width_to_stride(int width, zimg::PixelType type)
 {
-	return align(width, 32 / pixel_size(type));
+	return align(width, ALIGNMENT / pixel_size(type));
+}
+
+size_t image_plane_size(int stride, int height, zimg::PixelType type)
+{
+	return (size_t)stride * height * pixel_size(type);
 }
 
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type)

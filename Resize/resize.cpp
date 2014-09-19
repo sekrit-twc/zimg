@@ -56,7 +56,10 @@ void Resize::copy_plane(const void *src, void *dst, int src_stride_bytes, int ds
 	char *dst_byteptr = (char *)dst;
 
 	for (int i = 0; i < m_dst_height; ++i) {
-		std::copy(src_byteptr + i * src_stride_bytes, src_byteptr + i * src_stride_bytes + m_src_width, dst_byteptr + i * dst_stride_bytes);
+		std::copy(src_byteptr, src_byteptr + m_src_width, dst_byteptr);
+
+		src_byteptr += src_stride_bytes;
+		dst_byteptr += dst_stride_bytes;
 	}
 }
 

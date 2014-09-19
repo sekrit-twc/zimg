@@ -4,9 +4,10 @@
  * The functions in this file require the Intel Advanced Vector Extensions 2 instruction set.
  * This instruction set was first available on the Haswell processor family.
  */
+#include <cstddef>
 #include <cstdint>
-#include <emmintrin.h> // SSE2, F16C
-#include <immintrin.h> // AVX, AVX2, FMA
+#include <emmintrin.h> // SSE2
+#include <immintrin.h> // AVX, F16C, AVX2, FMA
 #include "Common/align.h"
 #include "Common/osdep.h"
 #include "filter.h"
@@ -21,7 +22,7 @@ namespace {;
 struct ScalarPolicy_F16 {
 	typedef float num_type;
 
-	float coeff(const EvaluatedFilter &filter, int row, int k)
+	float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data()[row * filter.stride() + k];
 	}
@@ -161,12 +162,12 @@ FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
 
 template <bool DoLoop>
 void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT src, uint16_t * RESTRICT dst,
-                        int src_width, int src_height, int src_stride, int dst_stride)
+                        ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
 
-	for (int i = 0; i < mod(src_height, 8); i += 8) {
-		int j;
+	for (ptrdiff_t i = 0; i < mod(src_height, 8); i += 8) {
+		ptrdiff_t j;
 
 		for (j = 0; j < mod(filter.height(), 16); ++j) {
 			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
@@ -174,12 +175,12 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			__m256i cached[16];
 
 			const int16_t *filter_row = filter.data_i16() + j * filter.stride_i16();
-			int left = filter.left()[j];
+			ptrdiff_t left = filter.left()[j];
 
 			if (left + filter.stride_i16() > src_width)
 				break;
 
-			for (int k = 0; k < (DoLoop ? filter.width() : 16); k += 16) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 16); k += 16) {
 				__m256i coeff = _mm256_load_si256((const __m256i *)(filter_row + k));
 
 				x0 = _mm256_loadu_si256((const __m256i *)(src + (i + 0) * src_stride + left + k));
@@ -231,7 +232,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 			if (j % 16 == 15) {
 				__m256i packed;
-				int dst_j = mod(j, 16);
+				ptrdiff_t dst_j = mod(j, 16);
 
 				transpose8_epi32(cached[0], cached[1], cached[2], cached[3], cached[8], cached[9], cached[10], cached[11]);
 				transpose8_epi32(cached[4], cached[5], cached[6], cached[7], cached[12], cached[13], cached[14], cached[15]);
@@ -276,10 +277,10 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 template <bool DoLoop, class T, class MemoryPolicy>
 void filter_plane_fp_h(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                       int src_width, int src_height, int src_stride, int dst_stride, MemoryPolicy mem)
+                       ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride, MemoryPolicy mem)
 {
-	for (int i = 0; i < mod(src_height, 8); i += 8) {
-		int j;
+	for (ptrdiff_t i = 0; i < mod(src_height, 8); i += 8) {
+		ptrdiff_t j;
 
 		for (j = 0; j < mod(filter.height(), 8); ++j) {
 			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
@@ -287,12 +288,12 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 			__m256 cached[8];
 
 			const float *filter_row = filter.data() + j * filter.stride();
-			int left = filter.left()[j];
+			ptrdiff_t left = filter.left()[j];
 
 			if (left + filter.stride() > src_width)
 				break;
 
-			for (int k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
 				__m256 coeff = _mm256_load_ps(filter_row + k);
 
 				x0 = mem.loadu_8(src + (i + 0) * src_stride + left + k);
@@ -335,7 +336,7 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 			cached[j % 8] = accum;
 
 			if (j % 8 == 7) {
-				int dst_j = mod(j, 8);
+				ptrdiff_t dst_j = mod(j, 8);
 
 				transpose8_ps(cached[0], cached[1], cached[2], cached[3], cached[4], cached[5], cached[6], cached[7]);
 
@@ -355,11 +356,11 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 }
 
 void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, uint16_t * RESTRICT tmp,
-                        int src_width, int src_height, int src_stride, int dst_stride)
+                        ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
 
-	for (int i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
 		__m256i coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;
 		__m256i x0, x1, x2, x3, x4, x5, x6, x7;
 		__m256i accum0l, accum0h, accum1l, accum1h;
@@ -368,7 +369,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 		const uint16_t *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3, *src_ptr4, *src_ptr5, *src_ptr6, *src_ptr7;
 		uint16_t *dst_ptr = dst + i * dst_stride;
 
-		for (int k = 0; k < mod(filter.width(), 8); k += 8) {
+		for (ptrdiff_t k = 0; k < mod(filter.width(), 8); k += 8) {
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr2 = src + (filter.left()[i] + k + 2) * src_stride;
@@ -387,7 +388,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			coeff6 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 6]);
 			coeff7 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 7]);
 
-			for (int j = 0; j < mod(src_width, 16); j += 16) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 16); j += 16) {
 				accum0l = _mm256_setzero_si256();
 				accum0h = _mm256_setzero_si256();
 				accum1l = _mm256_setzero_si256();
@@ -445,8 +446,8 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			}
 		}
 		if (filter.width() % 8) {
-			int m = filter.width() % 8;
-			int k = filter.width() - m;
+			ptrdiff_t m = filter.width() % 8;
+			ptrdiff_t k = filter.width() - m;
 
 			coeff6 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 6]);
 			coeff5 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 5]);
@@ -464,7 +465,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 
-			for (int j = 0; j < mod(src_width, 16); j += 16) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 16); j += 16) {
 				accum0l = _mm256_setzero_si256();
 				accum0h = _mm256_setzero_si256();
 				accum1l = _mm256_setzero_si256();
@@ -521,9 +522,9 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 template <class T, class MemoryPolicy>
 void filter_plane_fp_v(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                       int src_width, int src_height, int src_stride, int dst_stride, MemoryPolicy mem)
+                       ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride, MemoryPolicy mem)
 {
-	for (int i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
 		__m256 coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;
 		__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 		__m256 accum0, accum1, accum2, accum3;
@@ -531,7 +532,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 		const T *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3, *src_ptr4, *src_ptr5, *src_ptr6, *src_ptr7;
 		T *dst_ptr = dst + i * dst_stride;
 
-		for (int k = 0; k < mod(filter.width(), 8); k += 8) {
+		for (ptrdiff_t k = 0; k < mod(filter.width(), 8); k += 8) {
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr2 = src + (filter.left()[i] + k + 2) * src_stride;
@@ -550,7 +551,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 			coeff6 = _mm256_broadcast_ss(filter.data() + i * filter.stride() + k + 6);
 			coeff7 = _mm256_broadcast_ss(filter.data() + i * filter.stride() + k + 7);
 
-			for (int j = 0; j < mod(src_width, 8); j += 8) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				x0 = mem.load_8(src_ptr0 + j);
 				accum0 = _mm256_mul_ps(coeff0, x0);
 
@@ -586,8 +587,8 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 			}
 		}
 		if (filter.width() % 8) {
-			int m = filter.width() % 8;
-			int k = filter.width() - m;
+			ptrdiff_t m = filter.width() % 8;
+			ptrdiff_t k = filter.width() - m;
 
 			coeff6 = _mm256_broadcast_ss(filter.data() + i * filter.stride() + k + 6);
 			coeff5 = _mm256_broadcast_ss(filter.data() + i * filter.stride() + k + 5);
@@ -605,7 +606,7 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const T * RESTRICT src, T 
 			src_ptr1 = src + (filter.left()[i] + k + 1) * src_stride;
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
 
-			for (int j = 0; j < mod(src_width, 8); j += 8) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				accum0 = _mm256_setzero_ps();
 				accum1 = _mm256_setzero_ps();
 				accum2 = _mm256_setzero_ps();

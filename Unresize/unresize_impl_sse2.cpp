@@ -1,4 +1,5 @@
 #ifdef ZIMG_X86
+#include <cstddef>
 #include <emmintrin.h>
 #include "Common/osdep.h"
 #include "unresize_impl.h"
@@ -27,22 +28,23 @@ void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 	x3 = _mm_castpd_ps(o3);
 }
 
-void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp, int src_width, int src_height, int src_stride, int dst_stride)
+void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
+                         ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
 	const float *pu = ctx.lu_u.data();
 
-	for (int i = 0; i < mod(src_height, 4); i += 4) {
+	for (ptrdiff_t i = 0; i < mod(src_height, 4); i += 4) {
 		__m128 w, z, f, c, l;
-		int j;
+		ptrdiff_t j;
 
 		z = _mm_setzero_ps();
 
 		// Input, matrix-vector product, and forward substitution loop.
 		for (j = 0; j < ctx.dst_width; ++j) {
 			const float *matrix_row = &ctx.matrix_coefficients[i * ctx.matrix_row_stride];
-			int left = ctx.matrix_row_offsets[i];
+			ptrdiff_t left = ctx.matrix_row_offsets[i];
 
 			if (left + ctx.matrix_row_stride > ctx.dst_width)
 				break;
@@ -50,7 +52,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			// Matrix-vector product.
 			__m128 accum0 = _mm_setzero_ps();
 			__m128 accum1 = _mm_setzero_ps();
-			for (int k = 0; k < ctx.matrix_row_size; k += 4) {
+			for (ptrdiff_t k = 0; k < ctx.matrix_row_size; k += 4) {
 				__m128 coeffs = _mm_loadu_ps(&matrix_row[k]);
 				__m128 v0, v1, v2, v3;
 
@@ -88,11 +90,11 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 		// Handle remainder of line.
 		for (; j < ctx.dst_width; ++j) {
 			const float *matrix_row = &ctx.matrix_coefficients[i * ctx.matrix_row_stride];
-			int left = ctx.matrix_row_offsets[i];
+			ptrdiff_t left = ctx.matrix_row_offsets[i];
 
-			for (int ii = 0; ii < 4; ++ii) {
+			for (ptrdiff_t ii = 0; ii < 4; ++ii) {
 				float accum = 0;
-				for (int k = 0; k < ctx.matrix_row_size; ++k) {
+				for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
 					accum += matrix_row[k] * src[(i + ii) * src_stride + left + k];
 				}
 
@@ -103,17 +105,17 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 		w = _mm_setzero_ps();
 
 		// Backward substitution and output loop.
-		for (int j = ctx.dst_width; j > mod(ctx.dst_width, 4); --j) {
+		for (ptrdiff_t j = ctx.dst_width; j > mod(ctx.dst_width, 4); --j) {
 			float w_buf[4];
 
 			_mm_storeu_ps(w_buf, w);
-			for (int ii = 0; ii < 4; ++ii) {
+			for (ptrdiff_t ii = 0; ii < 4; ++ii) {
 				w_buf[ii] = tmp[(j - 1) * 4 + ii] - pu[j - 1] * w_buf[ii];
 				dst[(i + ii) * dst_stride + j - 1] = w_buf[ii];
 			}
 			w = _mm_loadu_ps(w_buf);
 		}
-		for (int j = mod(ctx.dst_width, 4); j > 0; j -= 4) {
+		for (ptrdiff_t j = mod(ctx.dst_width, 4); j > 0; j -= 4) {
 			__m128 u0, u1, u2, u3;
 			__m128 z0, z1, z2, z3;
 			__m128 w0, w1, w2, w3;
@@ -153,7 +155,8 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 	}
 }
 
-void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst, int src_width, int src_height, int src_stride, int dst_stride)
+void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst,
+                         ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
@@ -161,19 +164,19 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 
 	__m128 w, z, f, c, l, u;
 
-	for (int i = 0; i < ctx.dst_width; ++i) {
+	for (ptrdiff_t i = 0; i < ctx.dst_width; ++i) {
 		__m128 coeff0, coeff1, coeff2, coeff3;
 		__m128 x0, x1, x2, x3;
 		__m128 accum0, accum1;
 
 		const float *row = &ctx.matrix_coefficients.data()[i * ctx.matrix_row_stride];
-		int top = ctx.matrix_row_offsets[i];
+		ptrdiff_t top = ctx.matrix_row_offsets[i];
 
 		const float *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3;
 		float *dst_ptr = &dst[i * dst_stride];
 
 		// Matrix-vector product.
-		for (int k = 0; k < mod(ctx.matrix_row_size, 4); k += 4) {
+		for (ptrdiff_t k = 0; k < mod(ctx.matrix_row_size, 4); k += 4) {
 			src_ptr0 = &src[(i + 0) * src_stride];
 			src_ptr1 = &src[(i + 1) * src_stride];
 			src_ptr2 = &src[(i + 2) * src_stride];
@@ -184,7 +187,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			coeff2 = _mm_load_ss(&row[k + 2]);
 			coeff3 = _mm_load_ss(&row[k + 3]);
 				
-			for (int j = 0; j < mod(src_width, 4); j += 4) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				x0 = _mm_load_ps(&src_ptr0[j]);
 				accum0 = _mm_mul_ps(coeff0, x0);
 
@@ -208,8 +211,8 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			}
 		}
 		if (ctx.matrix_row_size % 4) {
-			int m = ctx.matrix_row_size % 4;
-			int k = ctx.matrix_row_size - m;
+			ptrdiff_t m = ctx.matrix_row_size % 4;
+			ptrdiff_t k = ctx.matrix_row_size - m;
 
 			coeff2 = _mm_load_ps1(&row[k + 2]);
 			coeff1 = _mm_load_ps1(&row[k + 1]);
@@ -219,7 +222,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			src_ptr1 = &src[(top + k + 1) * src_stride];
 			src_ptr0 = &src[(top + k + 0) * src_stride];
 
-			for (int j = 0; j < mod(src_width, 4); j += 4) {
+			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				accum0 = _mm_setzero_ps();
 				accum1 = _mm_setzero_ps();
 
@@ -249,7 +252,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 		l = _mm_load_ps1(&pl[i]);
 
 		// Forward substitution.
-		for (int j = 0; j < mod(src_width, 4); j += 4) {
+		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 			z = i ? _mm_load_ps(&dst[(i - 1) * dst_stride + j]) : _mm_setzero_ps();
 			f = _mm_load_ps(&dst[i * src_stride + j]);
 
@@ -264,10 +267,10 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 	}
 
 	// Back substitution.
-	for (int i = ctx.dst_width; i > 0; --i) {
+	for (ptrdiff_t i = ctx.dst_width; i > 0; --i) {
 		u = _mm_load_ps1(&pu[i]);
 
-		for (int j = 0; j < mod(src_width, 4); j += 4) {
+		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 			w = i < ctx.dst_width ? _mm_load_ps(&dst[i * dst_stride + j]) : _mm_setzero_ps();
 			z = _mm_load_ps(&dst[(i - 1) * dst_stride + j]);
 			w = _mm_mul_ps(u, w);

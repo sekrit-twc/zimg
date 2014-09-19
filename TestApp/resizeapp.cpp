@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -88,13 +89,14 @@ void execute(const resize::Resize &resize, const Bitmap &in, Bitmap &out, int ti
 	int src_width = in.width();
 	int src_height = in.height();
 	int src_stride = width_to_stride(in.width(), type);
-	int src_plane_size = src_stride * src_height * pxsize;
 	int planes = in.planes();
 
 	int dst_width = out.width();
 	int dst_height = out.height();
 	int dst_stride = width_to_stride(out.width(), type);
-	int dst_plane_size = dst_stride * dst_height * pxsize;
+
+	size_t src_plane_size = image_plane_size(src_stride, src_height, type);
+	size_t dst_plane_size = image_plane_size(dst_stride, dst_height, type);
 
 	auto in_planes = allocate_frame(src_stride, src_height, planes, type);
 	auto out_planes = allocate_frame(dst_stride, dst_height, planes, type);

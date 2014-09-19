@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <cmath>
 #include <vector>
 #include "Common/except.h"
@@ -33,7 +34,7 @@ class Matrix {
 public:
 	Matrix() = default;
 
-	Matrix(int width, int height) : m_width{ width }, m_height{ height }, m_matrix(width * height)
+	Matrix(int width, int height) : m_width{ width }, m_height{ height }, m_matrix((size_t)width * height)
 	{}
 
 	int width() const { return m_width; }
@@ -45,7 +46,7 @@ public:
 		if (i > m_height || j > m_width || i < 0 || j < 0)
 			throw ZimgLogicError("index out of array bounds");
 
-		return m_matrix.at(i * m_width + j);
+		return m_matrix.at((ptrdiff_t)i * m_width + j);
 	}
 
 	double at(int i, int j) const { return const_cast<Matrix *>(this)->at(i, j); }
@@ -85,8 +86,8 @@ EvaluatedFilter compress_matrix(const Matrix &m)
 			float coeff = (float)m.at(i, left + j);
 			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
 
-			e.data()[i * e.stride() + j] = coeff;
-			e.data_i16()[i * e.stride_i16() + j] = coeff_i16;
+			e.data()[(ptrdiff_t)i * e.stride() + j] = coeff;
+			e.data_i16()[(ptrdiff_t)i * e.stride_i16() + j] = coeff_i16;
 		}
 		e.left()[i] = left;
 	}
@@ -207,8 +208,8 @@ EvaluatedFilter::EvaluatedFilter(int width, int height) :
 	m_height{ height },
 	m_stride{ align(width, AlignmentOf<float>::value) },
 	m_stride_i16{ align(width, AlignmentOf<int16_t>::value) },
-	m_data(m_stride * height),
-	m_data_i16(m_stride_i16 * height),
+	m_data((size_t)m_stride * height),
+	m_data_i16((size_t)m_stride_i16 * height),
 	m_left(height)
 {
 }
@@ -223,12 +224,12 @@ int EvaluatedFilter::height() const
 	return m_height;
 }
 
-int EvaluatedFilter::stride() const
+ptrdiff_t EvaluatedFilter::stride() const
 {
 	return m_stride;
 }
 
-int EvaluatedFilter::stride_i16() const
+ptrdiff_t EvaluatedFilter::stride_i16() const
 {
 	return m_stride_i16;
 }
