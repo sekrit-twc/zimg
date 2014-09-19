@@ -136,11 +136,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="resizeapp.cpp" />
     <ClCompile Include="unresizeapp.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="apps.h" />
     <ClInclude Include="bitmap.h" />
-    <ClInclude Include="f16util.h" />
+    <ClInclude Include="floatutil.h" />
     <ClInclude Include="timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

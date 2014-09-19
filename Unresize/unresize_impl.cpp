@@ -1,3 +1,4 @@
+#include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "Common/osdep.h"
 #include "unresize_impl.h"
@@ -117,6 +118,7 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 {
 	BilinearContext hcontext;
 	BilinearContext vcontext;
+	UnresizeImpl *ret = nullptr;
 
 	if (dst_width == src_width && dst_height == src_height)
 		throw ZimgIllegalArgument("input dimensions must differ from output");
@@ -133,47 +135,54 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 	else
 		vcontext.matrix_row_size = 0;
 
-	if (x86) {
 #ifdef ZIMG_X86
+	if (x86) {
 		int hwidth = hcontext.matrix_row_size;
 		int vwidth = vcontext.matrix_row_size;
+		X86Capabilities caps = query_x86_capabilities();
 
-		if (hwidth == 4) {
-			if (vwidth == 4)
-				return new UnresizeImplX86<4, 4>(hcontext, vcontext);
-			else if (vwidth == 8)
-				return new UnresizeImplX86<4, 8>(hcontext, vcontext);
-			else if (vwidth == 12)
-				return new UnresizeImplX86<4, 12>(hcontext, vcontext);
-			else
-				return new UnresizeImplX86<4, 0>(hcontext, vcontext);
-		} else if (hwidth == 8) {
-			if (vwidth == 4)
-				return new UnresizeImplX86<8, 4>(hcontext, vcontext);
-			else if (vwidth == 8)
-				return new UnresizeImplX86<8, 8>(hcontext, vcontext);
-			else if (vwidth == 12)
-				return new UnresizeImplX86<8, 12>(hcontext, vcontext);
-			else
-				return new UnresizeImplX86<8, 0>(hcontext, vcontext);
-		} else if (hwidth == 12) {
-			if (vwidth == 4)
-				return new UnresizeImplX86<12, 4>(hcontext, vcontext);
-			else if (vwidth == 8)
-				return new UnresizeImplX86<12, 8>(hcontext, vcontext);
-			else if (vwidth == 12)
-				return new UnresizeImplX86<12, 12>(hcontext, vcontext);
-			else
-				return new UnresizeImplX86<12, 0>(hcontext, vcontext);
-		} else {
-			return new UnresizeImplX86<0, 0>(hcontext, vcontext);
+		if (caps.sse2) {
+			switch (hwidth) {
+			case 4:
+				if (vwidth == 4)
+					ret = new UnresizeImplX86<4, 4>(hcontext, vcontext);
+				else if (vwidth == 8)
+					ret = new UnresizeImplX86<4, 8>(hcontext, vcontext);
+				else if (vwidth == 12)
+					ret = new UnresizeImplX86<4, 12>(hcontext, vcontext);
+				else
+					ret = new UnresizeImplX86<4, 0>(hcontext, vcontext);
+				break;
+			case 8:
+				if (vwidth == 4)
+					ret = new UnresizeImplX86<8, 4>(hcontext, vcontext);
+				else if (vwidth == 8)
+					ret = new UnresizeImplX86<8, 8>(hcontext, vcontext);
+				else if (vwidth == 12)
+					ret = new UnresizeImplX86<8, 12>(hcontext, vcontext);
+				else
+					ret = new UnresizeImplX86<8, 0>(hcontext, vcontext);
+				break;
+			case 12:
+				if (vwidth == 4)
+					ret = new UnresizeImplX86<12, 4>(hcontext, vcontext);
+				else if (vwidth == 8)
+					ret = new UnresizeImplX86<12, 8>(hcontext, vcontext);
+				else if (vwidth == 12)
+					ret = new UnresizeImplX86<12, 12>(hcontext, vcontext);
+				else
+					ret = new UnresizeImplX86<12, 0>(hcontext, vcontext);
+				break;
+			default:
+				ret = new UnresizeImplX86<0, 0>(hcontext, vcontext);
+			}
 		}
-#else
-		throw ZimgUnsupportedError{ "x86 support not enabled" };
-#endif
-	} else {
-		return new UnresizeImplC(hcontext, vcontext);
 	}
+#endif
+	if (!ret)
+		ret = new UnresizeImplC(hcontext, vcontext);
+
+	return ret;
 }
 
 } // namespace unresize

@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include "Common/align.h"
 #include "Unresize/unresize.h"
 #include "apps.h"
 #include "bitmap.h"
@@ -10,36 +9,22 @@ using namespace zimg;
 
 namespace {;
 
-struct AlignedDelete {
-	void operator()(void *p) { _aligned_free(p); }
-};
-
-template <class T>
-std::unique_ptr<T, AlignedDelete> allocate_array(size_t n)
-{
-	void *p = _aligned_malloc(n * sizeof(T), ALIGNMENT);
-	if (!p)
-		throw std::bad_alloc();
-
-	return std::unique_ptr<T, AlignedDelete>((T *)p);
-}
-
 void process(Bitmap &dst, const Bitmap &src, float shift_w, float shift_h, int times, bool x86)
 {
 	unresize::Unresize u(src.width(), src.height(), dst.width(), dst.height(), shift_w, shift_h, x86);
-	AlignedVector<uint8_t> src_planes;
-	AlignedVector<uint8_t> dst_planes;
-	int src_stride = align(src.width(), AlignmentOf<uint8_t>::value);
-	int dst_stride = align(dst.width(), AlignmentOf<uint8_t>::value);
+
+	int src_stride = width_to_stride(src.width(), PixelType::BYTE);
+	int dst_stride = width_to_stride(dst.width(), PixelType::BYTE);
 	int src_plane_size = src_stride * src.height();
 	int dst_plane_size = dst_stride * dst.height();
 
-	src_planes.resize(src_stride * src.height() * 3);
-	dst_planes.resize(dst_stride * dst.height() * 3);
+	auto src_planes = allocate_frame(src_stride, src.height(), 3, PixelType::BYTE);
+	auto dst_planes = allocate_frame(dst_stride, dst.height(), 3, PixelType::BYTE);
+	auto tmp = allocate_buffer(u.tmp_size(PixelType::BYTE, PixelType::BYTE), PixelType::FLOAT);
 
 	for (int p = 0; p < 3; ++p) {
 		const uint8_t *src_p = src.data(p);
-		uint8_t *src_plane_p = src_planes.data() + p * src_plane_size;
+		uint8_t *src_plane_p = (uint8_t *)(src_planes.data() + p * src_plane_size);
 
 		for (int i = 0; i < src.height(); ++i) {
 			std::copy(src_p, src_p + src.width(), src_plane_p);
@@ -48,19 +33,18 @@ void process(Bitmap &dst, const Bitmap &src, float shift_w, float shift_h, int t
 		}
 	}
 
-	for (int z = 0; z < times; ++z) {
-		auto tmp = allocate_array<float>(u.tmp_size(PixelType::BYTE, PixelType::BYTE));
-
+	measure_time(times, [&]()
+	{
 		for (int p = 0; p < 3; ++p) {
-			const uint8_t *src_p = src_planes.data() + p * src_plane_size;
-			uint8_t *dst_p = dst_planes.data() + p * dst_plane_size;
+			const uint8_t *src_p = (const uint8_t *)(src_planes.data() + p * src_plane_size);
+			uint8_t *dst_p = (uint8_t *)(dst_planes.data() + p * dst_plane_size);
 
-			u.process(src_p, dst_p, tmp.get(), src_stride, dst_stride, PixelType::BYTE, PixelType::BYTE);
+			u.process(src_p, dst_p, (float *)tmp.data(), src_stride, dst_stride, PixelType::BYTE, PixelType::BYTE);
 		}
-	}
+	});
 
 	for (int p = 0; p < 3; ++p) {
-		const uint8_t *dst_plane_p = dst_planes.data() + p * dst_plane_size;
+		const uint8_t *dst_plane_p = (const uint8_t *)(dst_planes.data() + p * dst_plane_size);
 		uint8_t *dst_p = dst.data(p);
 
 		for (int i = 0; i < dst.height(); ++i) {

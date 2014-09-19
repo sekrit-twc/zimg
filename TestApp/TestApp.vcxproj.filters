@@ -27,6 +27,9 @@
     <ClCompile Include="unresizeapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h">
@@ -35,10 +38,10 @@
     <ClInclude Include="timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="f16util.h">
+    <ClInclude Include="apps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="apps.h">
+    <ClInclude Include="floatutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
