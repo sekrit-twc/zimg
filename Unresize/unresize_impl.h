@@ -1,30 +1,85 @@
 #ifndef ZIMG_UNRESIZE_IMPL_H_
 #define ZING_UNRESIZE_IMPL_H_
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
+#include "Common/osdep.h"
 #include "bilinear.h"
 
 namespace zimg {;
 namespace unresize {;
 
-/**
- * Convert numeric types with saturation.
- *
- * @param T output type
- * @param x value
- * @return x as T
- */
-template <class T>
-T clamp_float(float x)
+FORCE_INLINE inline void filter_scanline_h_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT tmp, int src_stride,
+                                                   int i, int j_begin, int j_end)
 {
-	return static_cast<T>(std::min(std::max(x, 0.0f), 1.0f) * static_cast<float>(std::numeric_limits<T>::max()));
+	const float *c = ctx.lu_c.data();
+	const float *l = ctx.lu_l.data();
+
+	float z = j_begin ? src[i * src_stride + j_begin - 1] : 0;
+
+	// Matrix-vector product, and forward substitution loop.
+	for (int j = j_begin; j < j_end; ++j) {
+		const float *row = ctx.matrix_coefficients.data() + j * ctx.matrix_row_stride;
+		int left = ctx.matrix_row_offsets[j];
+
+		float accum = 0;
+		for (int k = 0; k < ctx.matrix_row_size; ++k) {
+			accum += row[k] * src[i * src_stride + left + k];
+		}
+
+		z = (accum - c[j] * z) * l[j];
+		tmp[j] = z;
+	}
 }
 
+FORCE_INLINE inline void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, float * RESTRICT dst, int dst_stride,
+                                                int i, int j_begin, int j_end)
+{
+	const float *u = ctx.lu_u.data();
+	float w = j_begin < ctx.dst_width ? dst[i * dst_stride + j_begin] : 0;
+
+	// Backward substitution.
+	for (int j = j_begin; j > j_end; --j) {
+		w = tmp[j - 1] - u[j - 1] * w;
+		dst[i * dst_stride + j - 1] = w;
+	}
+}
+
+FORCE_INLINE inline void filter_scanline_v_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst, int src_stride, int dst_stride,
+                                                   int i, int j_begin, int j_end)
+{
+	const float *c = ctx.lu_c.data();
+	const float *l = ctx.lu_l.data();
+
+	const float *row = ctx.matrix_coefficients.data() + i * ctx.matrix_row_stride;
+	int top = ctx.matrix_row_offsets[i];
+
+	for (int j = j_begin; j < j_end; ++j) {
+		float z = i ? dst[(i - 1) * dst_stride + j] : 0;
+
+		float accum = 0;
+		for (int k = 0; k < ctx.matrix_row_size; ++k) {
+			accum += row[k] * src[(top + k) * src_stride + j];
+		}
+
+		z = (accum - c[i] * z) * l[i];
+		dst[i * dst_stride + j] = z;
+	}
+}
+
+FORCE_INLINE inline void filter_scanline_v_back(const BilinearContext &ctx, float * RESTRICT dst, int dst_stride, int i, int j_begin, int j_end)
+{
+	const float *u = ctx.lu_u.data();
+
+	for (int j = j_begin; j < j_end; ++j) {
+		float w = i < ctx.dst_width ? dst[i * dst_stride + j] : 0;
+
+		w = dst[(i - 1) * dst_stride + j] - u[i - 1] * w;
+		dst[(i - 1) * dst_stride + j] = w;
+	}
+}
+
+
 /**
- * Base class for unresize kernel implementations.
- * All pointers passed to member functions must be 32-byte aligned.
+ * Base class for implementations of unresizing filter.
  */
 class UnresizeImpl {
 protected:
@@ -51,145 +106,12 @@ public:
 	 */
 	virtual ~UnresizeImpl() = 0;
 
-	/**
-	 * Process a single scanline using scalar code.
-	 *
-	 * @param src input buffer
-	 * @param dst output buffer
-	 * @param tmp temporary buffer with sufficient space for one line/column
-	 * @param horizontal use horizontal context if true, else vertical context
-	 */
-	void unresize_scanline(const float *src, float *dst, float *tmp, bool horizontal) const;
+	virtual void process_f32_h(const float *src, float *dst, float *tmp,
+	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 
-	/**
-	 * Process 4 scanlines using horizontal context.
-	 *
-	 * @param src input buffer containing 4 scanlines
-	 * @param dst output buffer to receive 4 scanlines
-	 * @param tmp temporary buffer with sufficient space for 4 scanlines
-	 * @param src_stride stride of input buffer
-	 * @param dst_stride stride of output buffer
-	 */
-	virtual void unresize_scanline4_h(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const = 0;
-
-	/**
-	 * Process 4 columns using vertical context.
-	 * The image columns must first be transposed as scanlines.
-	 *
-	 * @see UnresizeImpl::unresize_scanline4_h
-	 */
-	virtual void unresize_scanline4_v(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const = 0;
-
-	/**
-	 * Transpose an image plane.
-	 *
-	 * @param src input buffer
-	 * @param dst output buffer with sufficient space for transposed image
-	 * @param src_width width of input plane
-	 * @param src_height height of input plane
-	 * @param src_stride stride of input plane
-	 * @param dst_stride stride to use in output buffer
-	 */
-	virtual void transpose_plane(const float *src, float *dst, int src_width, int src_height, int src_stride, int dst_stride) const = 0;
-
-	/**
-	 * Convert a scanline from byte to float.
-	 *
-	 * @param src input buffer
-	 * @param dst output buffer
-	 * @param width scanline width
-	 */
-	virtual void load_scanline_u8(const uint8_t *src, float *dst, int width) const = 0;
-
-	/**
-	 * Convert a scanline from word to float.
-	 *
-	 * @see UnresizeImpl::load_scanline_u8
-	 */
-	virtual void load_scanline_u16(const uint16_t *src, float *dst, int width) const = 0;
-
-	/**
-	 * Convert a scanline from float to byte.
-	 *
-	 * @param dst output buffer
-	 * @param src input buffer
-	 * @param width scanline width
-	 */
-	virtual void store_scanline_u8(const float *src, uint8_t *dst, int width) const = 0;
-
-	/**
-	 * Convert a scanline from float to word.
-	 *
-	 * @see UnresizeImpl::store_scanline_u8
-	 */
-	virtual void store_scanline_u16(const float *src, uint16_t *dst, int width) const = 0;
+	virtual void process_f32_v(const float *src, float *dst, float *tmp,
+	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
 };
-
-/**
- * Concrete implementation of UnresizeImpl using scalar processing.
- */
-class UnresizeImplC final : public UnresizeImpl {
-public:
-	/**
-	 * @see: UnresizeImpl::UnresizeImpl
-	 */
-	UnresizeImplC(const BilinearContext &hcontext, const BilinearContext &vcontext);
-
-	void unresize_scanline4_h(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const override;
-
-	void unresize_scanline4_v(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const override;
-
-	void transpose_plane(const float *src, float *dst, int src_width, int src_height, int src_stride, int dst_stride) const override;
-
-	void load_scanline_u8(const uint8_t *src, float *dst, int width) const override;
-
-	void load_scanline_u16(const uint16_t *src, float *dst, int width) const override;
-
-	void store_scanline_u8(const float *src, uint8_t *dst, int width) const override;
-
-	void store_scanline_u16(const float *src, uint16_t *dst, int width) const override;
-};
-
-#ifdef ZIMG_X86
-/**
- * Concrete implementation of UnresizeImpl using SSE2 intrinsics.
- *
- * @param HWIDTH matrix_row_width of horizontal context
- * @param VWIDTH matrix_row_width of vertical context
- */
-template <int HWIDTH, int VWIDTH>
-class UnresizeImplX86 final : public UnresizeImpl {
-private:
-	/**
-	 * Template for implementation of unresize_scanline4_h and unresize_scanline4_v.
-	 *
-	 * @param WIDTH matrix_row_width of context
-	 * @param ctx context
-	 * @see UnresizeImpl::unresize_scanline4
-	 */
-	template <int WIDTH>
-	void unresize_scanline4(const BilinearContext &ctx, const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const;
-public:
-	/**
-	* @see: UnresizeImpl::UnresizeImpl
-	*/
-	UnresizeImplX86(const BilinearContext &hcontext, const BilinearContext &vcontext);
-
-	void unresize_scanline4_h(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const override;
-
-	void unresize_scanline4_v(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const override;
-
-	void transpose_plane(const float *src, float *dst, int src_width, int src_height, int src_stride, int dst_stride) const override;
-
-	void load_scanline_u8(const uint8_t *src, float *dst, int width) const override;
-
-	void load_scanline_u16(const uint16_t *src, float *dst, int width) const override;
-
-	void store_scanline_u8(const float *src, uint8_t *dst, int width) const override;
-
-	void store_scanline_u16(const float *src, uint16_t *dst, int width) const override;
-};
-#endif // ZIMG_X86
 
 /**
  * Create and allocate a execution kernel.
