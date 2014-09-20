@@ -77,16 +77,18 @@ BilinearContext create_bilinear_context(int in, int out, float shift)
 	for (int i = 0; i < rows; ++i) {
 		rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
 	}
-	rowsize = align(rowsize, 4);
+	rowsize;
+	int rowstride = align(rowsize, 8);
 
-	ctx.matrix_coefficients.resize(rowsize * rows);
+	ctx.matrix_coefficients.resize(rowstride * rows);
 	ctx.matrix_row_offsets.resize(rows);
 	ctx.matrix_row_size = rowsize;
+	ctx.matrix_row_stride = rowstride;
 	for (int i = 0; i < rows; ++i) {
 		int left = std::max(std::min(transpose_m.row_left(i), cols - rowsize), 0);
 
 		for (int j = 0; j < transpose_m.row_right(i) - left; ++j) {
-			ctx.matrix_coefficients[i * rowsize + j] = transpose_m[i][left + j];
+			ctx.matrix_coefficients[i * rowstride + j] = transpose_m[i][left + j];
 		}
 		ctx.matrix_row_offsets[i] = left;
 	}

@@ -95,8 +95,9 @@ class Unresize {
 	int m_src_height;
 	int m_dst_width;
 	int m_dst_height;
-
 	std::shared_ptr<UnresizeImpl> m_impl;
+
+	size_t max_frame_size(PixelType type) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.
@@ -125,29 +126,25 @@ public:
 	~Unresize();
 
 	/**
-	 * @param dst output format
-	 * @param src input format
-	 * @return the size of the required temporary buffer in floats
-	 */
-	size_t tmp_size(PixelType src, PixelType dst) const;
-
-	/**
-	 * Process an image. All pointers must be 32-byte aligned.
+	 * Get the size of the temporary buffer required by the filter.
 	 *
-	 * @param dst pointer to output buffer
-	 * @param src pointer to input buffer
-	 * @param dst_stride stride of output buffer
-	 * @param src_stride stride of input buffer
-	 * @param dst_type format of output
-	 * @param src_type format of input
-	 * @param tmp pointer to temporay buffer of sufficient size (@see Unresize::tmp_size)
+	 * @param type pixel type to process
+	 * @return the size of temporary buffer in units of pixels
 	 */
-	void process(const uint8_t *src, uint8_t *dst, float *tmp, int src_stride, int dst_stride, PixelType src_type, PixelType dst_type) const;
+	size_t tmp_size(PixelType type) const;
 
 	/**
-	 * @see Unresize::process(uint8_t*, const uint8_t*, int, int, PixelType, PixelType, float*) const
+	 * Process an image. The input and output pixel formats must match.
+	 *
+	 * @param type pixel type of image
+	 * @param src input image
+	 * @param dst output image
+	 * @param tmp temporary buffer (@see Unresize::tmp_size)
+	 * @param src_stride stride of input image
+	 * @param dst_stride stride of output image
+	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(const float *src, float *dst, float *tmp, int src_stride, int dst_stride) const;
+	void process(PixelType type, const void *src, void *dst, void *tmp, int src_stride, int dst_stride) const;
 };
 
 } // namespace unresize

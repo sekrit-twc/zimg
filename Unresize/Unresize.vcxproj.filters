@@ -27,6 +27,9 @@
     <ClCompile Include="unresize_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="unresize_impl_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="unresize_impl_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="unresize_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="unresize_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

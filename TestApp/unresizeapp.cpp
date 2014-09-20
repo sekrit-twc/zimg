@@ -9,28 +9,21 @@ using namespace zimg;
 
 namespace {;
 
-void process(Bitmap &dst, const Bitmap &src, float shift_w, float shift_h, int times, bool x86)
+void process(const Bitmap &in, Bitmap &out, float shift_w, float shift_h, int times, bool x86)
 {
-	unresize::Unresize u(src.width(), src.height(), dst.width(), dst.height(), shift_w, shift_h, x86);
+	unresize::Unresize u(in.width(), in.height(), out.width(), out.height(), shift_w, shift_h, x86);
 
-	int src_stride = width_to_stride(src.width(), PixelType::BYTE);
-	int dst_stride = width_to_stride(dst.width(), PixelType::BYTE);
-	int src_plane_size = src_stride * src.height();
-	int dst_plane_size = dst_stride * dst.height();
+	int src_stride = width_to_stride(in.width(), PixelType::FLOAT);
+	int dst_stride = width_to_stride(out.width(), PixelType::FLOAT);
+	int src_plane_size = (int)image_plane_size(src_stride, in.height(), PixelType::FLOAT);
+	int dst_plane_size = (int)image_plane_size(dst_stride, out.height(), PixelType::FLOAT);
 
-	auto src_planes = allocate_frame(src_stride, src.height(), 3, PixelType::BYTE);
-	auto dst_planes = allocate_frame(dst_stride, dst.height(), 3, PixelType::BYTE);
-	auto tmp = allocate_buffer(u.tmp_size(PixelType::BYTE, PixelType::BYTE), PixelType::FLOAT);
+	auto src_planes = allocate_frame(src_stride, in.height(), 3, PixelType::FLOAT);
+	auto dst_planes = allocate_frame(dst_stride, out.height(), 3, PixelType::FLOAT);
+	auto tmp = allocate_buffer(u.tmp_size(PixelType::FLOAT), PixelType::FLOAT);
 
 	for (int p = 0; p < 3; ++p) {
-		const uint8_t *src_p = src.data(p);
-		uint8_t *src_plane_p = (uint8_t *)(src_planes.data() + p * src_plane_size);
-
-		for (int i = 0; i < src.height(); ++i) {
-			std::copy(src_p, src_p + src.width(), src_plane_p);
-			src_p += src.stride();
-			src_plane_p += src_stride;
-		}
+		convert_from_byte(PixelType::FLOAT, in.data(p), src_planes.data() + src_plane_size * p, in.width(), in.height(), in.stride(), src_stride);
 	}
 
 	measure_time(times, [&]()
@@ -39,19 +32,12 @@ void process(Bitmap &dst, const Bitmap &src, float shift_w, float shift_h, int t
 			const uint8_t *src_p = (const uint8_t *)(src_planes.data() + p * src_plane_size);
 			uint8_t *dst_p = (uint8_t *)(dst_planes.data() + p * dst_plane_size);
 
-			u.process(src_p, dst_p, (float *)tmp.data(), src_stride, dst_stride, PixelType::BYTE, PixelType::BYTE);
+			u.process(PixelType::FLOAT, src_p, dst_p, tmp.data(), src_stride, dst_stride);
 		}
 	});
 
 	for (int p = 0; p < 3; ++p) {
-		const uint8_t *dst_plane_p = (const uint8_t *)(dst_planes.data() + p * dst_plane_size);
-		uint8_t *dst_p = dst.data(p);
-
-		for (int i = 0; i < dst.height(); ++i) {
-			std::copy(dst_plane_p, dst_plane_p + dst.width(), dst_p);
-			dst_p += dst.stride();
-			dst_plane_p += dst_stride;
-		}
+		convert_to_byte(PixelType::FLOAT, dst_planes.data() + dst_plane_size * p, out.data(p), out.width(), out.height(), dst_stride, out.stride());
 	}
 }
 
@@ -107,16 +93,11 @@ int unresize_main(int argc, const char **argv)
 		}
 	}
 
-	try {
-		Bitmap bmp = read_bitmap(ifile);
-		Bitmap out(dst_width, dst_height, false);
+	Bitmap in = read_bitmap(ifile);
+	Bitmap out(dst_width, dst_height, false);
 
-		process(out, bmp, shift_w, shift_h, times, x86);
-		write_bitmap(out, ofile);
-	} catch (std::exception &e) {
-		std::cerr << e.what() << '\n';
-		return -1;
-	}
+	process(in, out, shift_w, shift_h, times, x86);
+	write_bitmap(out, ofile);
 
 	return 0;
 }

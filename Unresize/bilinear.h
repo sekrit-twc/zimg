@@ -37,6 +37,7 @@ struct BilinearContext {
 	AlignedVector<float> matrix_coefficients;
 	AlignedVector<int> matrix_row_offsets;
 	int matrix_row_size;
+	int matrix_row_stride;
 
 	/**
 	 * LU decomposition of (A' A) stored as three arrays of dimension (N).
