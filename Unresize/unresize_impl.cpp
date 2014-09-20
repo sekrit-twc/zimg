@@ -46,7 +46,7 @@ UnresizeImpl::UnresizeImpl(const BilinearContext &hcontext, const BilinearContex
 UnresizeImpl::~UnresizeImpl()
 {}
 
-UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, bool x86)
+UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu)
 {
 	BilinearContext hcontext;
 	BilinearContext vcontext;
@@ -68,8 +68,7 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 		vcontext.matrix_row_size = 0;
 
 #ifdef ZIMG_X86
-	if (x86)
-		ret = create_unresize_impl_x86(hcontext, vcontext);
+	ret = create_unresize_impl_x86(hcontext, vcontext, cpu);
 #endif
 
 	if (!ret)

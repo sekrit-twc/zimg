@@ -5,6 +5,8 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_IMPL_X86_H_
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_X86_H_
 
+#include <Common/cpuinfo.h>
+
 namespace zimg {;
 namespace unresize {;
 
@@ -18,7 +20,7 @@ UnresizeImpl *create_unresize_impl_sse2(const BilinearContext &hcontext, const B
 *
 * @see create_resize_impl
 */
-UnresizeImpl *create_unresize_impl_x86(const BilinearContext &hcontext, const BilinearContext &vcontext);
+UnresizeImpl *create_unresize_impl_x86(const BilinearContext &hcontext, const BilinearContext &vcontext, CPUClass cpu);
 
 } // namespace unresize
 } // namespace zimg

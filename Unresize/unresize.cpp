@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Common/align.h"
+#include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "unresize.h"
 #include "unresize_impl.h"
@@ -7,12 +8,12 @@
 namespace zimg {;
 namespace unresize {;
 
-Unresize::Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, bool x86) try :
+Unresize::Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu) try :
 	m_src_width(src_width),
 	m_src_height(src_height),
 	m_dst_width(dst_width),
 	m_dst_height(dst_height),
-	m_impl(create_unresize_impl(src_width, src_height, dst_width, dst_height, shift_w, shift_h, x86))
+	m_impl(create_unresize_impl(src_width, src_height, dst_width, dst_height, shift_w, shift_h, cpu))
 {
 }
 catch (const std::bad_alloc &) {
@@ -38,10 +39,12 @@ size_t Unresize::tmp_size(PixelType type) const
 	size_t size = 0;
 	
 	// Temporary image.
-	size += 2 * max_frame_size(type);
+	if (m_src_width != m_dst_width && m_src_height != m_dst_height)
+		size += max_frame_size(type);
 
-	// Line buffer for scanline_4.
-	size += m_dst_width * 4;
+	// Line buffer for horizontal pass.
+	if (m_src_width != m_dst_width)
+		size += m_dst_width * 4;
 
 	return size;
 }
