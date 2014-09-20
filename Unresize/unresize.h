@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 
 namespace zimg {;
@@ -113,12 +114,11 @@ public:
 	 * @param src_height input image height
 	 * @param shift_w horizontal center shift relative to upsampled image
 	 * @param shift_h vertical center shift relative to upsampled image
-	 * @param x86 whether to create an x86-optimized kernel
+	 * @param cpu create kernel optimized for given cpu
 	 * @throws ZimgIllegalArgument on invalid dimensions
-	 * @throws ZimgUnsupportedError if not supported
 	 * @throws ZimgOutOfMemory if out of memory
 	 */
-	Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, bool x86);
+	Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu);
 
 	/**
 	 * Destroy context.

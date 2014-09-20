@@ -6,13 +6,20 @@
 namespace zimg {;
 namespace unresize {;
 
-UnresizeImpl *create_unresize_impl_x86(const BilinearContext &hcontext, const BilinearContext &vcontext)
+UnresizeImpl *create_unresize_impl_x86(const BilinearContext &hcontext, const BilinearContext &vcontext, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	UnresizeImpl *ret = nullptr;
+	UnresizeImpl *ret;
 
-	if (caps.sse2) {
+	if (cpu == CPUClass::CPU_X86_AUTO) {
+		if (caps.sse2)
+			ret = create_unresize_impl_sse2(hcontext, vcontext);
+		else
+			ret = nullptr;
+	} else if (cpu >= CPUClass::CPU_X86_SSE2) {
 		ret = create_unresize_impl_sse2(hcontext, vcontext);
+	} else {
+		ret = nullptr;
 	}
 
 	return ret;

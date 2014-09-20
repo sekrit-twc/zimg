@@ -2,14 +2,15 @@
 #define ZING_UNRESIZE_IMPL_H_
 
 #include <cstddef>
+#include "Common/cpuinfo.h"
 #include "Common/osdep.h"
 #include "bilinear.h"
 
 namespace zimg {;
 namespace unresize {;
 
-FORCE_INLINE inline void filter_scanline_h_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT tmp,
-                                                    ptrdiff_t src_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT tmp,
+                                                   ptrdiff_t src_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
@@ -31,7 +32,7 @@ FORCE_INLINE inline void filter_scanline_h_forward(const BilinearContext &ctx, c
 	}
 }
 
-FORCE_INLINE inline void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, float * RESTRICT dst, 
+inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, float * RESTRICT dst,
                                                 ptrdiff_t dst_stride,ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float *u = ctx.lu_u.data();
@@ -44,7 +45,7 @@ FORCE_INLINE inline void filter_scanline_h_back(const BilinearContext &ctx, cons
 	}
 }
 
-FORCE_INLINE inline void filter_scanline_v_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst,
+inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst,
                                                    ptrdiff_t src_stride, ptrdiff_t dst_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float *c = ctx.lu_c.data();
@@ -66,7 +67,7 @@ FORCE_INLINE inline void filter_scanline_v_forward(const BilinearContext &ctx, c
 	}
 }
 
-FORCE_INLINE inline void filter_scanline_v_back(const BilinearContext &ctx, float * RESTRICT dst, ptrdiff_t dst_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, float * RESTRICT dst, ptrdiff_t dst_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float *u = ctx.lu_u.data();
 
@@ -123,12 +124,12 @@ public:
  * @param dst_height unresized image height
  * @param shift_w horizontal center shift relative to upsampled image
  * @param shift_h vertical center shift relative to upsampled image
- * @param x86 whether to create an x86-optimized kernel
+ * @param cpu create kernel optimized for given cpu
  * @return a pointer to the allocated kernel
  * @throws ZimgIllegalArgument on invalid dimensions
  * @throws ZimgUnsupportedError if not supported
  */
-UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, bool x86);
+UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu);
 
 } // namespace unresize
 } // namespace zimg

@@ -133,16 +133,18 @@ int resize_main(int argc, const char **argv)
 
 	AppContext c{};
 
-	c.infile = argv[1];
+	c.infile  = argv[1];
 	c.outfile = argv[2];
-	c.width = std::stoi(argv[3]);
-	c.height = std::stoi(argv[4]);
+	c.width   = std::stoi(argv[3]);
+	c.height  = std::stoi(argv[4]);
 
-	c.sub_w = -1.0;
-	c.sub_h = -1.0;
-	c.times = 1;
+	c.shift_h = 0.0;
+	c.shift_w = 0.0;
+	c.sub_w   = -1.0;
+	c.sub_h   = -1.0;
+	c.times   = 1;
 	c.pixtype = PixelType::FLOAT;
-	c.cpu = CPUClass::CPU_NONE;
+	c.cpu     = CPUClass::CPU_NONE;
 
 	parse_opts(argv + 5, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
 
