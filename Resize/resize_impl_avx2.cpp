@@ -120,18 +120,17 @@ FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, 
 	row7 = _mm256_castps_si256(tmp7);
 }
 
-FORCE_INLINE void fmadd_epi16_epi32(__m256i a, __m256i b, __m256i &accum0, __m256i &accum1)
+// Performs accum[0,1] += x * unpack[lo,hi](a,b)
+FORCE_INLINE void fmadd_epi16_2(__m256i x, __m256i a, __m256i b, __m256i &accum0, __m256i &accum1)
 {
-	__m256i lo, hi, uplo, uphi;
+	__m256i tmplo, tmphi;
 
-	lo = _mm256_mullo_epi16(a, b);
-	hi = _mm256_mulhi_epi16(a, b);
-
-	uplo = _mm256_unpacklo_epi16(lo, hi);
-	uphi = _mm256_unpackhi_epi16(lo, hi);
-
-	accum0 = _mm256_add_epi32(accum0, uplo);
-	accum1 = _mm256_add_epi32(accum1, uphi);
+	tmplo = _mm256_unpacklo_epi16(a, b);
+	tmphi = _mm256_unpackhi_epi16(a, b);
+	tmplo = _mm256_madd_epi16(x, tmplo);
+	tmphi = _mm256_madd_epi16(x, tmphi);
+	accum0 = _mm256_add_epi32(accum0, tmplo);
+	accum1 = _mm256_add_epi32(accum1, tmphi);
 }
 
 FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
@@ -346,15 +345,20 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
                         ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
+	ptrdiff_t i;
 
-	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
+	for (i = 0; i < filter.height(); ++i) {
 		__m256i coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;
+		__m256i coeff01, coeff23, coeff45, coeff67;
 		__m256i x0, x1, x2, x3, x4, x5, x6, x7;
 		__m256i accum0l, accum0h, accum1l, accum1h;
 		__m256i packed;
 
 		const uint16_t *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3, *src_ptr4, *src_ptr5, *src_ptr6, *src_ptr7;
 		uint16_t *dst_ptr = dst + i * dst_stride;
+
+		if (filter.left()[i] + align(filter.width(), 2) > src_height)
+			break;
 
 		for (ptrdiff_t k = 0; k < mod(filter.width(), 8); k += 8) {
 			src_ptr0 = src + (filter.left()[i] + k + 0) * src_stride;
@@ -375,6 +379,11 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			coeff6 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 6]);
 			coeff7 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 7]);
 
+			coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
+			coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
+			coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
+			coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
+
 			for (ptrdiff_t j = 0; j < mod(src_width, 16); j += 16) {
 				accum0l = _mm256_setzero_si256();
 				accum0h = _mm256_setzero_si256();
@@ -383,35 +392,27 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 				x0 = _mm256_load_si256((const __m256i *)(src_ptr0 + j));
 				x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff0, x0, accum0l, accum0h);
-
 				x1 = _mm256_load_si256((const __m256i *)(src_ptr1 + j));
 				x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff1, x1, accum1l, accum1h);
+				fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
 
 				x2 = _mm256_load_si256((const __m256i *)(src_ptr2 + j));
 				x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff2, x2, accum0l, accum0h);
-
 				x3 = _mm256_load_si256((const __m256i *)(src_ptr3 + j));
 				x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff3, x3, accum1l, accum1h);
+				fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
 
 				x4 = _mm256_load_si256((const __m256i *)(src_ptr4 + j));
 				x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff4, x4, accum0l, accum0h);
-
 				x5 = _mm256_load_si256((const __m256i *)(src_ptr5 + j));
 				x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff5, x5, accum1l, accum1h);
+				fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
 
 				x6 = _mm256_load_si256((const __m256i *)(src_ptr6 + j));
 				x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff6, x6, accum0l, accum0h);
-
 				x7 = _mm256_load_si256((const __m256i *)(src_ptr7 + j));
 				x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff7, x7, accum1l, accum1h);
+				fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
 
 				accum0l = _mm256_add_epi32(accum0l, accum1l);
 				accum0h = _mm256_add_epi32(accum0h, accum1h);
@@ -436,6 +437,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			ptrdiff_t m = filter.width() % 8;
 			ptrdiff_t k = filter.width() - m;
 
+			coeff7 = _mm256_setzero_si256();
 			coeff6 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 6]);
 			coeff5 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 5]);
 			coeff4 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 4]);
@@ -443,6 +445,11 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 			coeff2 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 2]);
 			coeff1 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 1]);
 			coeff0 = _mm256_set1_epi16(filter.data_i16()[i * filter.stride_i16() + k + 0]);
+
+			coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
+			coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
+			coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
+			coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
 
 			src_ptr6 = src + (filter.left()[i] + k + 6) * src_stride;
 			src_ptr5 = src + (filter.left()[i] + k + 5) * src_stride;
@@ -460,33 +467,31 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 				switch (m) {
 				case 7:
+					x7 = INT16_MIN_EPI16;
 					x6 = _mm256_load_si256((const __m256i *)(src_ptr6 + j));
 					x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff6, x6, accum0l, accum0h);
+					fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
 				case 6:
+				case 5:
 					x5 = _mm256_load_si256((const __m256i *)(src_ptr5 + j));
 					x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff5, x5, accum1l, accum1h);
-				case 5:
 					x4 = _mm256_load_si256((const __m256i *)(src_ptr4 + j));
 					x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff4, x4, accum0l, accum0h);
+					fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
 				case 4:
+				case 3:
 					x3 = _mm256_load_si256((const __m256i *)(src_ptr3 + j));
 					x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff3, x3, accum1l, accum1h);
-				case 3:
 					x2 = _mm256_load_si256((const __m256i *)(src_ptr2 + j));
 					x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff2, x2, accum0l, accum0h);
+					fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
 				case 2:
+				case 1:
 					x1 = _mm256_load_si256((const __m256i *)(src_ptr1 + j));
 					x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff1, x1, accum1l, accum1h);
-				case 1:
 					x0 = _mm256_load_si256((const __m256i *)(src_ptr0 + j));
 					x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-					fmadd_epi16_epi32(coeff0, x0, accum0l, accum0h);
+					fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
 				}
 
 				accum0l = _mm256_add_epi32(accum0l, accum1l);
@@ -505,6 +510,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 		}
 		filter_plane_v_scalar(filter, src, dst, i, i + 1, mod(src_width, 16), src_width, src_stride, dst_stride, ScalarPolicy_U16{});
 	}
+	filter_plane_v_scalar(filter, src, dst, i, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_U16{});
 }
 
 template <class T, class MemoryPolicy>
