@@ -24,8 +24,8 @@ RowMatrix bilinear_weights(int in, int out, float shift)
 	float rightmost = in - 0.5f + shift;
 
 	// Indices corresponding to the samples stored at leftmost and rightmost.
-	int leftmost_idx = std::max((int)leftmost, 0);
-	int rightmost_idx = std::min((int)rightmost, in - 1);
+	int leftmost_idx = (int)std::max(std::floor(leftmost), 0.0f);
+	int rightmost_idx = (int)std::min(std::floor(rightmost), (float)in - 1.0f);
 
 	for (int i = 0; i < out; ++i) {
 		// Position of output sample on input grid.
@@ -38,7 +38,7 @@ RowMatrix bilinear_weights(int in, int out, float shift)
 			m[i][rightmost_idx] = 1.f;
 		} else {
 			// Index of nearest input pixels to output position.
-			int left_idx = (int)(position - leftmost);
+			int left_idx = (int)std::floor(position - leftmost);
 			int right_idx = left_idx + 1;
 
 			// Distance between output position and left input.
