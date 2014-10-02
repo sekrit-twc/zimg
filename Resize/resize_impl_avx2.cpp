@@ -120,19 +120,6 @@ FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, 
 	row7 = _mm256_castps_si256(tmp7);
 }
 
-FORCE_INLINE __m256i mhadd_epi16_epi32(__m256i a, __m256i b)
-{
-	__m256i lo, hi, uplo, uphi;
-
-	lo = _mm256_mullo_epi16(a, b);
-	hi = _mm256_mulhi_epi16(a, b);
-
-	uplo = _mm256_unpacklo_epi16(lo, hi);
-	uphi = _mm256_unpackhi_epi16(lo, hi);
-
-	return _mm256_add_epi32(uplo, uphi);
-}
-
 FORCE_INLINE void fmadd_epi16_epi32(__m256i a, __m256i b, __m256i &accum0, __m256i &accum1)
 {
 	__m256i lo, hi, uplo, uphi;
@@ -185,35 +172,35 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const uint16_t * RESTRICT
 
 				x0 = _mm256_loadu_si256((const __m256i *)(src + (i + 0) * src_stride + left + k));
 				x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-				x0 = mhadd_epi16_epi32(coeff, x0);
+				x0 = _mm256_madd_epi16(coeff, x0);
 
 				x1 = _mm256_loadu_si256((const __m256i *)(src + (i + 1) * src_stride + left + k));
 				x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-				x1 = mhadd_epi16_epi32(coeff, x1);
+				x1 = _mm256_madd_epi16(coeff, x1);
 
 				x2 = _mm256_loadu_si256((const __m256i *)(src + (i + 2) * src_stride + left + k));
 				x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-				x2 = mhadd_epi16_epi32(coeff, x2);
+				x2 = _mm256_madd_epi16(coeff, x2);
 
 				x3 = _mm256_loadu_si256((const __m256i *)(src + (i + 3) * src_stride + left + k));
 				x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-				x3 = mhadd_epi16_epi32(coeff, x3);
+				x3 = _mm256_madd_epi16(coeff, x3);
 
 				x4 = _mm256_loadu_si256((const __m256i *)(src + (i + 4) * src_stride + left + k));
 				x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-				x4 = mhadd_epi16_epi32(coeff, x4);
+				x4 = _mm256_madd_epi16(coeff, x4);
 
 				x5 = _mm256_loadu_si256((const __m256i *)(src + (i + 5) * src_stride + left + k));
 				x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-				x5 = mhadd_epi16_epi32(coeff, x5);
+				x5 = _mm256_madd_epi16(coeff, x5);
 
 				x6 = _mm256_loadu_si256((const __m256i *)(src + (i + 6) * src_stride + left + k));
 				x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-				x6 = mhadd_epi16_epi32(coeff, x6);
+				x6 = _mm256_madd_epi16(coeff, x6);
 
 				x7 = _mm256_loadu_si256((const __m256i *)(src + (i + 7) * src_stride + left + k));
 				x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
-				x7 = mhadd_epi16_epi32(coeff, x7);
+				x7 = _mm256_madd_epi16(coeff, x7);
 
 				transpose8_epi32(x0, x1, x2, x3, x4, x5, x6, x7);
 
