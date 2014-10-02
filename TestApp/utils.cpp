@@ -202,6 +202,14 @@ void parse_opts(const char **first, const char **last, const AppOption *options_
 			*(const char **)dst_out = first[1];
 			first += 2;
 			break;
+		case OptionType::OPTION_FALSE:
+			*(int *)dst_out = 0;
+			first += 1;
+			break;
+		case OptionType::OPTION_TRUE:
+			*(int *)dst_out = 1;
+			first += 1;
+			break;
 		case OptionType::OPTION_CPUCLASS:
 			*(CPUClass *)dst_out = select_cpu(first[1]);
 			first += 2;

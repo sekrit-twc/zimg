@@ -12,6 +12,8 @@ enum class OptionType {
 	OPTION_INTEGER,
 	OPTION_FLOAT,
 	OPTION_STRING,
+	OPTION_FALSE,
+	OPTION_TRUE,
 	OPTION_CPUCLASS,
 	OPTION_PIXELTYPE,
 	OPTION_SPECIAL
@@ -43,5 +45,7 @@ void parse_opts(const char **first, const char **last, const AppOption *options_
 int resize_main(int argc, const char **argv);
 
 int unresize_main(int argc, const char **argv);
+
+int colorspace_main(int argc, const char **argv);
 
 #endif // APPS_H_

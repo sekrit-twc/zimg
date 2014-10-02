@@ -10,8 +10,9 @@ namespace {;
 void usage()
 {
 	std::cout << "TestApp subapp [args]\n";
-	std::cout << "    resize   - resize images\n";
-	std::cout << "    unresize - unresize images\n";
+	std::cout << "    resize     - resize images\n";
+	std::cout << "    unresize   - unresize images\n";
+	std::cout << "    colorspace - change colorspace\n";
 }
 
 } // namespace
@@ -29,6 +30,8 @@ int main(int argc, const char **argv)
 			return resize_main(argc - 1, argv + 1);
 		} else if (!strcmp(argv[1], "unresize")) {
 			return unresize_main(argc - 1, argv + 1);
+		} else if (!strcmp(argv[1], "colorspace")) {
+			return colorspace_main(argc - 1, argv + 1);
 		} else {
 			usage();
 			return -1;
