@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef ZIMG_UNRESIZE_IMPL_H_
 #define ZING_UNRESIZE_IMPL_H_
 
