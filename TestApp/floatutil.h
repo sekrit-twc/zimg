@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef FLOATUTIL_H_
 #define FLOATUTIL_H_
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef ZIMG_BILINEAR_H_
 #define ZIMG_BILINEAR_H_
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef ZIMG_MATRIX_H_
 #define ZIMG_MATRIX_H_
 
