@@ -15,22 +15,39 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pixel.h">
+    <ClCompile Include="dither.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dither_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="error_diffusion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="depth_convert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="depth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dither.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="osdep.h">
+    <ClInclude Include="quantize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="align.h">
+    <ClInclude Include="dither_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="except.h">
+    <ClInclude Include="error_diffusion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cpuinfo.h">
+    <ClInclude Include="depth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="plane.h">
+    <ClInclude Include="depth_convert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

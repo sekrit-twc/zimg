@@ -16,14 +16,6 @@ namespace {;
 const float TRANSFER_ALPHA = 1.09929682680944f;
 const float TRANSFER_BETA = 0.018053968510807f;
 
-const double UINT16_MAX_F = (double)UINT16_MAX;
-
-const float TV_OFFSET = (float)((16 << 8) / UINT16_MAX_F);
-const float Y_TV_SCALE = (float)((219 << 8) / UINT16_MAX_F);
-const float Y_TV_SCALE_INV = (float)(UINT16_MAX_F / (219 << 8));
-const float UV_TV_SCALE = (float)((224 << 8) / UINT16_MAX_F);
-const float UV_TV_SCALE_INV = (float)(UINT16_MAX_F / (224 << 8));
-
 float rec_709_gamma(float x)
 {
 	if (x < TRANSFER_BETA)
@@ -45,43 +37,9 @@ float rec_709_inverse_gamma(float x)
 }
 
 class PixelAdapaterC : public PixelAdapater {
-	void u16_to_f32(const uint16_t *src, float *dst, int width, bool tv, bool chroma) const override
-	{
-		float offset = tv ? TV_OFFSET : 0.0f;
-		float scale = tv ? (chroma ? UV_TV_SCALE_INV : Y_TV_SCALE_INV) : 1.0f;
-		float bias = chroma ? 0.5f : 0.0f;
-
-		for (int i = 0; i < width; ++i) {
-			float x = (float)src[i] / (float)UINT16_MAX;
-
-			x -= offset;
-			x *= scale;
-			x -= bias;
-
-			dst[i] = x;
-		}
-	}
-
 	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
-	}
-
-	void u16_from_f32(const float *src, uint16_t *dst, int width, bool tv, bool chroma) const override
-	{
-		float offset = tv ? TV_OFFSET : 0.0f;
-		float scale = tv ? (chroma ? UV_TV_SCALE : Y_TV_SCALE) : 1.0f;
-		float bias = chroma ? 0.5f : 0.0f;
-
-		for (int i = 0; i < width; ++i) {
-			float x = src[i];
-
-			x += bias;
-			x *= scale;
-			x += offset;
-
-			dst[i] = (uint16_t)(std::min(std::max(x, 0.0f), 1.0f) * UINT16_MAX);
-		}
 	}
 
 	void f16_from_f32(const float *src, uint16_t *dst, int width) const override

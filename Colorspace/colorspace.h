@@ -26,11 +26,9 @@ struct ColorspaceDefinition;
 class ColorspaceConversion {
 	std::unique_ptr<PixelAdapater> m_pixel_adapter;
 	std::vector<std::unique_ptr<Operation>> m_operations;
-	bool m_input_is_yuv;
-	bool m_output_is_yuv;
 
-	void load_line(const void *src, float *dst, int width, bool tv, bool chroma, PixelType type) const;
-	void store_line(const float *src, void *dst, int width, bool tv, bool chroma, PixelType type) const;
+	void load_line(const void *src, float *dst, int width, PixelType type) const;
+	void store_line(const float *src, void *dst, int width, PixelType type) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.
@@ -66,11 +64,9 @@ public:
 	 * @param height height of image
 	 * @param src_stride stride of each input plane
 	 * @param dst_stride stride of each output plane
-	 * @param tv_in whether input is TV range, only applicable to integer pixel formats
-	 * @param tv_out whether output is TV range, only applicable to integer pixel formats
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(PixelType type, const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride, bool tv_in, bool tv_out) const;
+	void process(PixelType type, const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride) const;
 };
 
 } // namespace colorspace
