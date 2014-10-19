@@ -6,7 +6,8 @@
 #include "Common/pixel.h"
 #include "Unresize/unresize.h"
 #include "apps.h"
-#include "bitmap.h"
+#include "frame.h"
+#include "utils.h"
 
 using namespace zimg;
 
@@ -35,44 +36,40 @@ void usage()
 	std::cout << "unresize infile outfile width height [--shift-w shift] [--shift-h shift] [--times n] [--cpu cpu]\n";
 	std::cout << "    infile              input BMP file\n";
 	std::cout << "    outfile             output BMP file\n";
-	std::cout << "    width               output width\n";
-	std::cout << "    height              output height\n";
+	std::cout << "    w                   output width\n";
+	std::cout << "    h                   output height\n";
 	std::cout << "    --shift-w           horizontal shift\n";
 	std::cout << "    --shift-h           vertical shift\n";
 	std::cout << "    --times             number of cycles\n";
 	std::cout << "    --cpu               select CPU type\n";
 }
 
-void execute(const Bitmap &in, Bitmap &out, float shift_w, float shift_h, int times, CPUClass cpu)
+void execute(const unresize::Unresize &unresize, const Frame &in, Frame &out, int times)
 {
-	unresize::Unresize u(in.width(), in.height(), out.width(), out.height(), shift_w, shift_h, cpu);
+	PixelType pxtype = PixelType::FLOAT;
+	int pxsize = pixel_size(pxtype);
+	int planes = in.planes();
 
-	int src_stride = width_to_stride(in.width(), PixelType::FLOAT);
-	int dst_stride = width_to_stride(out.width(), PixelType::FLOAT);
-	size_t src_plane_size = image_plane_size(src_stride, in.height(), PixelType::FLOAT);
-	size_t dst_plane_size = image_plane_size(dst_stride, out.height(), PixelType::FLOAT);
+	Frame src{ in.width(), in.height(), pxsize, planes };
+	Frame dst{ out.width(), out.height(), pxsize, planes };
+	auto tmp = allocate_buffer(unresize.tmp_size(pxtype), pxtype);
 
-	auto src_planes = allocate_frame(src_stride, in.height(), 3, PixelType::FLOAT);
-	auto dst_planes = allocate_frame(dst_stride, out.height(), 3, PixelType::FLOAT);
-	auto tmp = allocate_buffer(u.tmp_size(PixelType::FLOAT), PixelType::FLOAT);
-
-	for (int p = 0; p < 3; ++p) {
-		convert_from_byte(PixelType::FLOAT, in.data(p), src_planes.data() + src_plane_size * p, in.width(), in.height(), in.stride(), src_stride);
-	}
+	convert_frame(in, src, PixelType::BYTE, pxtype, false, false);
 
 	measure_time(times, [&]()
 	{
-		for (int p = 0; p < 3; ++p) {
-			const void *src_p = src_planes.data() + p * src_plane_size;
-			void *dst_p = dst_planes.data() + p * dst_plane_size;
+		int src_stride = src.stride();
+		int dst_stride = dst.stride();
 
-			u.process(PixelType::FLOAT, src_p, dst_p, tmp.data(), src_stride, dst_stride);
+		for (int p = 0; p < src.planes(); ++p) {
+			const void *src_p = src.data(p);
+			void *dst_p = dst.data(p);
+
+			unresize.process(pxtype, src_p, dst_p, tmp.data(), src_stride, dst_stride);
 		}
 	});
 
-	for (int p = 0; p < 3; ++p) {
-		convert_to_byte(PixelType::FLOAT, dst_planes.data() + dst_plane_size * p, out.data(p), out.width(), out.height(), dst_stride, out.stride());
-	}
+	convert_frame(dst, out, pxtype, PixelType::BYTE, false, false);
 }
 
 } // namespace
@@ -91,7 +88,6 @@ int unresize_main(int argc, const char **argv)
 	c.outfile = argv[2];
 	c.width   = std::stoi(argv[3]);
 	c.height  = std::stoi(argv[4]);
-
 	c.shift_w = 0.0;
 	c.shift_h = 0.0;
 	c.times   = 1;
@@ -99,11 +95,12 @@ int unresize_main(int argc, const char **argv)
 
 	parse_opts(argv + 5, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
 
-	Bitmap in = read_bitmap(c.infile);
-	Bitmap out(c.width, c.height, false);
+	Frame in{ read_frame_bmp(c.infile) };
+	Frame out{ c.width, c.height, 1, in.planes() };
 
-	execute(in, out, (float)c.shift_w, (float)c.shift_h, c.times, c.cpu);
-	write_bitmap(out, c.outfile);
+	unresize::Unresize unresize{ in.width(), in.height(), out.width(), out.height(), (float)c.shift_w, (float)c.shift_h, c.cpu };
+	execute(unresize, in, out, c.times);
+	write_frame_bmp(out, c.outfile);
 
 	return 0;
 }

@@ -23,6 +23,16 @@ enum class PixelType {
 };
 
 /**
+ * Struct defining the set of parameters required to convert between pixel types.
+ */
+struct PixelFormat {
+	PixelType type;
+	int depth;
+	bool tv;
+	bool chroma;
+};
+
+/**
  * Get the size in bytes of a pixel.
  *
  * @param type type of pixel
@@ -41,6 +51,17 @@ inline int pixel_size(PixelType type)
 	default:
 		return 0;
 	}
+}
+
+/**
+ * Get a default pixel format for a given pixel type.
+ *
+ * @param type type of pixel
+ * @return default format
+ */
+inline PixelFormat default_pixel_format(PixelType type)
+{
+	return{ type, pixel_size(type) * 8, true, false };
 }
 
 } // namespace zimg

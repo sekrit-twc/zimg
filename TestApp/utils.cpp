@@ -3,21 +3,35 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include "Common/align.h"
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "apps.h"
-#include "floatutil.h"
+#include "Common/plane.h"
+#include "Depth/depth.h"
+#include "frame.h"
+#include "utils.h"
 #include "timer.h"
 
 using namespace zimg;
 
 namespace {;
 
-CPUClass select_cpu(const char *cpu)
+int required_args(OptionType type)
+{
+	if (type == OptionType::OPTION_SPECIAL || type == OptionType::OPTION_TRUE || type == OptionType::OPTION_FALSE)
+		return 1;
+	else
+		return 2;
+}
+
+} // namespace
+
+
+zimg::CPUClass select_cpu(const char *cpu)
 {
 #ifdef ZIMG_X86
 	if (!strcmp(cpu, "auto"))
@@ -33,7 +47,7 @@ CPUClass select_cpu(const char *cpu)
 #endif // ZIMG_X86
 }
 
-PixelType select_pixel_type(const char *pixtype)
+zimg::PixelType select_pixel_type(const char *pixtype)
 {
 	if (!strcmp(pixtype, "u8"))
 		return PixelType::BYTE;
@@ -47,86 +61,34 @@ PixelType select_pixel_type(const char *pixtype)
 		throw std::invalid_argument{ "unknown pixel type" };
 }
 
-uint16_t u8_to_u16(uint8_t x) { return x << 8; }
-float    u8_to_f32(uint8_t x) { return normalize_float(x, UINT8_MAX); }
-uint16_t u8_to_f16(uint8_t x) { return float_to_half(u8_to_f32(x)); }
-
-uint8_t u16_to_u8(uint16_t x) { return (uint8_t)(x >> 8); }
-uint8_t f32_to_u8(float x)    { return (uint8_t)std::round(denormalize_float(x, UINT8_MAX)); }
-uint8_t f16_to_u8(uint16_t x) { return f32_to_u8(half_to_float(x)); }
-
-int required_args(OptionType type)
-{
-	if (type == OptionType::OPTION_SPECIAL)
-		return 1;
-	else
-		return 2;
-}
-
-} // namespace
-
-
-int width_to_stride(int width, zimg::PixelType type)
-{
-	return align(width, ALIGNMENT / pixel_size(type));
-}
-
-size_t image_plane_size(int stride, int height, zimg::PixelType type)
-{
-	return (size_t)stride * height * pixel_size(type);
-}
-
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type)
 {
-	return zimg::AlignedVector<char>(count * pixel_size(type));
+	return AlignedVector<char>(count * pixel_size(type));
 }
 
-zimg::AlignedVector<char> allocate_frame(int stride, int height, int planes, zimg::PixelType type)
+void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool tv, bool yuv)
 {
-	return allocate_buffer((size_t)stride * height * planes, type);
-}
+	std::unique_ptr<depth::Depth> convert{ new depth::Depth{ depth::DitherType::DITHER_NONE, CPUClass::CPU_NONE } };
+	int width = in.width();
+	int height = in.height();
+	int planes = in.planes();
 
-void convert_from_byte(zimg::PixelType dst_pixel, const uint8_t *src, void *dst, int width, int height, int src_stride, int dst_stride)
-{
-	char *dst_byteptr = (char *)dst;
-	int dst_bytestride = dst_stride * pixel_size(dst_pixel);
+	for (int p = 0; p < planes; ++p) {
+		bool plane_tv = tv && p != 3; // Always treat alpha as fullrange.
+		bool plane_chroma = yuv && (p == 1 || p == 2); // Chroma planes.
 
-	for (int i = 0; i < height; ++i) {
-		if (dst_pixel == PixelType::BYTE)
-			std::copy(src, src + width, (uint8_t *)dst_byteptr);
-		else if (dst_pixel == PixelType::WORD)
-			std::transform(src, src + width, (uint16_t *)dst_byteptr, u8_to_u16);
-		else if (dst_pixel == PixelType::HALF)
-			std::transform(src, src + width, (uint16_t *)dst_byteptr, u8_to_f16);
-		else if (dst_pixel == PixelType::FLOAT)
-			std::transform(src, src + width, (float *)dst_byteptr, u8_to_f32);
-		else
-			throw std::invalid_argument{ "unknown pixel type" };
+		PixelFormat src_fmt = default_pixel_format(pxl_in);
+		PixelFormat dst_fmt = default_pixel_format(pxl_out);
 
-		src += src_stride;
-		dst_byteptr += dst_bytestride;
-	}
-}
+		src_fmt.tv = plane_tv;
+		src_fmt.chroma = plane_chroma;
+		dst_fmt.tv = plane_tv;
+		dst_fmt.chroma = plane_chroma;
 
-void convert_to_byte(zimg::PixelType src_pixel, const void *src, uint8_t *dst, int width, int height, int src_stride, int dst_stride)
-{
-	const char *src_byteptr = (const char *)src;
-	int src_bytestride = src_stride * pixel_size(src_pixel);
+		ImagePlane<void> src_plane{ in.data(p), width, height, in.stride(), src_fmt };
+		ImagePlane<void> dst_plane{ out.data(p), width, height, out.stride(), dst_fmt };
 
-	for (int i = 0; i < height; ++i) {
-		if (src_pixel == PixelType::BYTE)
-			std::copy((const uint8_t *)src_byteptr, (const uint8_t *)src_byteptr + width, dst);
-		else if (src_pixel == PixelType::WORD)
-			std::transform((const uint16_t *)src_byteptr, (const uint16_t *)src_byteptr + width, dst, u16_to_u8);
-		else if (src_pixel == PixelType::HALF)
-			std::transform((const uint16_t *)src_byteptr, (const uint16_t *)src_byteptr + width, dst, f16_to_u8);
-		else if (src_pixel == PixelType::FLOAT)
-			std::transform((const float *)src_byteptr, (const float *)src_byteptr + width, dst, f32_to_u8);
-		else
-			throw std::invalid_argument{ "unknown pixel type" };
-
-		src_byteptr += src_bytestride;
-		dst += dst_stride;
+		convert->process(src_plane, dst_plane, nullptr);
 	}
 }
 
@@ -182,47 +144,44 @@ void parse_opts(const char **first, const char **last, const AppOption *options_
 		}
 
 		const AppOption *cur = it->second;
-		char *dst_out = dst_byteptr + cur->offset;
+		int nargs = required_args(cur->type);
 
-		if (last - first < required_args(cur->type)) {
+		if (last - first < nargs) {
 			std::cerr << "insufficient arguments to option: " << o << '\n';
 			throw std::invalid_argument{ "insufficient arguments" };
 		}
 
+		char *dst_out = dst_byteptr + cur->offset;
+
 		switch (cur->type) {
 		case OptionType::OPTION_INTEGER:
 			*(int *)dst_out = std::stoi(first[1]);
-			first += 2;
 			break;
 		case OptionType::OPTION_FLOAT:
 			*(double *)dst_out = std::stod(first[1]);
-			first += 2;
 			break;
 		case OptionType::OPTION_STRING:
 			*(const char **)dst_out = first[1];
-			first += 2;
 			break;
 		case OptionType::OPTION_FALSE:
 			*(int *)dst_out = 0;
-			first += 1;
 			break;
 		case OptionType::OPTION_TRUE:
 			*(int *)dst_out = 1;
-			first += 1;
 			break;
 		case OptionType::OPTION_CPUCLASS:
 			*(CPUClass *)dst_out = select_cpu(first[1]);
-			first += 2;
 			break;
 		case OptionType::OPTION_PIXELTYPE:
 			*(PixelType *)dst_out = select_pixel_type(first[1]);
-			first += 2;
 			break;
 		case OptionType::OPTION_SPECIAL:
-			first += cur->func(first, last, dst, user);
+			nargs = cur->func(first, last, dst, user);
 			break;
 		default:
 			throw std::invalid_argument{ "unknown option type" };
 		}
+
+		first += nargs;
 	}
 }

@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitmap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="resizeapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,18 +30,24 @@
     <ClCompile Include="colorspaceapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="depthapp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitmap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="apps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="floatutil.h">
+    <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,17 +26,6 @@ public:
 	virtual ~PixelAdapater() = 0;
 
 	/**
-	 * Convert from unsigned 16-bit to single precision.
-	 *
-	 * @param src input samples
-	 * @param dst output samples
-	 * @param width number of samples
-	 * @param tv whether input is limited (Y: 4096-60160 / UV: 4096-61440) or full range (0-65535)
-	 * @param chroma whether samples are from a chroma (UV) plane
-	 */
-	virtual void u16_to_f32(const uint16_t *src, float *dst, int width, bool tv, bool chroma) const = 0;
-
-	/**
 	 * Convert from half precision to full precision.
 	 *
 	 * @param src input samples
@@ -44,13 +33,6 @@ public:
 	 * @param width number of samples
 	 */
 	virtual void f16_to_f32(const uint16_t *src, float *dst, int width) const = 0;
-
-	/**
-	 * Convert from single precision to unsigned 16-bit.
-	 *
-	 * @see PixelAdapter::u16_to_f32
-	 */
-	virtual void u16_from_f32(const float *src, uint16_t *dst, int width, bool tv, bool chroma) const = 0;
 
 	/**
 	 * Convert from single precision to half precision.

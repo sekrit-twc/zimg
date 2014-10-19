@@ -1,5 +1,4 @@
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -7,13 +6,13 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include "Common/align.h"
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Colorspace/colorspace_param.h"
 #include "Colorspace/colorspace.h"
+#include "Colorspace/colorspace_param.h"
 #include "apps.h"
-#include "bitmap.h"
+#include "frame.h"
+#include "utils.h"
 
 using namespace zimg;
 
@@ -26,19 +25,19 @@ struct AppContext {
 	int height;
 	colorspace::ColorspaceDefinition csp_in;
 	colorspace::ColorspaceDefinition csp_out;
+	bool tv_in;
+	bool tv_out;
 	const char *visualise;
-	int tv_in;
-	int tv_out;
 	int times;
 	CPUClass cpu;
 	PixelType pixtype;
 };
 
 const AppOption OPTIONS[] = {
-	{ "pc-in",     OptionType::OPTION_FALSE,     offsetof(AppContext, tv_in) },
 	{ "tv-in",     OptionType::OPTION_TRUE,      offsetof(AppContext, tv_in) },
+	{ "pc-in",     OptionType::OPTION_FALSE,     offsetof(AppContext, tv_in) },
+	{ "tv-out",    OptionType::OPTION_TRUE,      offsetof(AppContext, tv_out) },
 	{ "pc-out",    OptionType::OPTION_FALSE,     offsetof(AppContext, tv_out) },
-	{ "tv-out",    OptionType::OPTION_TRUE,      offsetof(AppContext, tv_out) }, 
 	{ "visualise", OptionType::OPTION_STRING,    offsetof(AppContext, visualise) },
 	{ "times",     OptionType::OPTION_INTEGER,   offsetof(AppContext, times) },
 	{ "cpu",       OptionType::OPTION_CPUCLASS,  offsetof(AppContext, cpu) },
@@ -47,15 +46,15 @@ const AppOption OPTIONS[] = {
 
 void usage()
 {
-	std::cout << "colorspace infile outfile w h csp_in csp_out [--pc-in | --tv-in] [--pc-out | --tv-out] [--visualise path] [--times n] [--cpu cpu] [--pixtype type] \n";
+	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--pixtype type]\n";
 	std::cout << "    infile               input file\n";
 	std::cout << "    outfile              output file\n";
-	std::cout << "    width                image width\n";
-	std::cout << "    height               image height\n";
+	std::cout << "    w                    image width\n";
+	std::cout << "    h                    image height\n";
 	std::cout << "    csp_in               input colorspace\n";
 	std::cout << "    csp_out              output colorspace\n";
-	std::cout << "    --pc-in | --tv-in    specify PC or TV range input (integer only)\n";
-	std::cout << "    --pc-out | --tv-out  specify PC or TV range output (integer only)\n";
+	std::cout << "    --tv-in | --pc-in    toggle TV vs PC range for input\n";
+	std::cout << "    --tv-out | --pc-out  toggle TV vs PC range for output\n";
 	std::cout << "    --visualise          path to BMP file for visualisation\n";
 	std::cout << "    --times              number of cycles\n";
 	std::cout << "    --cpu                select CPU type\n";
@@ -132,72 +131,38 @@ colorspace::ColorspaceDefinition parse_csp(const char *str)
 	return csp;
 }
 
-void read_frame(const char *path, void *dst, int width, int height, PixelType type)
+void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Frame &out, int times, bool tv_in, bool tv_out, bool yuv_in, bool yuv_out, PixelType type)
 {
-	int stride = width_to_stride(width, type);
-	uint8_t *byteptr = (uint8_t *)dst;
+	int width = in.width();
+	int height = in.height();
+	PixelType pxfloat = PixelType::FLOAT;
 
-	std::unique_ptr<FILE, decltype(&fclose)> file{ fopen(path, "rb"), fclose };
+	Frame in_conv{ width, height, pixel_size(pxfloat), 3 };
+	Frame out_conv{ width, height, pixel_size(pxfloat), 3 };
 
-	if (!file)
-		throw std::runtime_error{ "error opening file" };
+	convert_frame(in, in_conv, type, pxfloat, tv_in, yuv_in);
+
+	const void *src_p[3];
+	void *dst_p[3];
+	int in_stride[3];
+	int out_stride[3];
 
 	for (int p = 0; p < 3; ++p) {
-		for (int i = 0; i < height; ++i) {
-			if (fread(byteptr, pixel_size(type), width, file.get()) != width)
-				throw std::runtime_error{ "read error" };
+		src_p[p] = in_conv.data(p);
+		dst_p[p] = out_conv.data(p);
 
-			byteptr += stride * pixel_size(type);
-		}
+		in_stride[p] = in_conv.stride();
+		out_stride[p] = out_conv.stride();
 	}
-}
 
-void write_frame(const char *path, const void *src, int width, int height, PixelType type)
-{
-	int stride = width_to_stride(width, type);
-	const uint8_t *byteptr = (const uint8_t *)src;
-
-	std::unique_ptr<FILE, decltype(&fclose)> file{ fopen(path, "wb"), fclose };
-
-	if (!file)
-		throw std::runtime_error{ "error opening file" };
-
-	for (int p = 0; p < 3; ++p) {
-		for (int i = 0; i < height; ++i) {
-			if (fwrite(byteptr, pixel_size(type), width, file.get()) != width)
-				throw std::runtime_error{ "write error" };
-
-			byteptr += stride * pixel_size(type);
-		}
-	}
-}
-
-void execute(const colorspace::ColorspaceConversion &conv, const void *in, void *out, Bitmap *bmp, int width, int height, bool tv_in, bool tv_out, int times, PixelType type)
-{
-	int stride = width_to_stride(width, type);
-	size_t plane_size = image_plane_size(stride, height, type);
-	auto tmp = allocate_buffer(conv.tmp_size(width), PixelType::FLOAT);
-
-	int stride_array[3] = { stride, stride, stride };
-	const void *in_p[3];
-	void *out_p[3];
-
-	for (int p = 0; p < 3; ++p) {
-		in_p[p] = (const char *)in + p * plane_size;
-		out_p[p] = (char *)out + p * plane_size;
-	}
+	auto tmp = allocate_buffer(conv.tmp_size(in.width()), PixelType::FLOAT);
 
 	measure_time(times, [&]()
 	{
-		conv.process(type, in_p, out_p, tmp.data(), width, height, stride_array, stride_array, tv_in, tv_out);
+		conv.process(pxfloat, src_p, dst_p, tmp.data(), in.width(), in.height(), in_stride, out_stride);
 	});
 
-	if (bmp) {
-		for (int p = 0; p < 3; ++p) {
-			// Handle inverted RGB order.
-			convert_to_byte(type, out_p[p], bmp->data(2 - p), width, height, stride, bmp->stride());
-		}
-	}
+	convert_frame(out_conv, out, pxfloat, type, tv_out, yuv_out);
 }
 
 } // namespace
@@ -218,8 +183,8 @@ int colorspace_main(int argc, const char **argv)
 	c.height    = std::stoi(argv[4]);
 	c.csp_in    = parse_csp(argv[5]);
 	c.csp_out   = parse_csp(argv[6]);
-	c.tv_in     = 0;
-	c.tv_out    = 0;
+	c.tv_in     = false;
+	c.tv_out    = false;
 	c.visualise = nullptr;
 	c.times     = 1;
 	c.pixtype   = PixelType::FLOAT;
@@ -227,19 +192,31 @@ int colorspace_main(int argc, const char **argv)
 
 	parse_opts(argv + 7, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
 
-	auto in = allocate_frame(c.width, c.height, 3, c.pixtype);
-	auto out = allocate_frame(c.width, c.height, 3, c.pixtype);
-	Bitmap bmp = c.visualise ? Bitmap{ c.width, c.height, false } : Bitmap{ 0, 0, false };
+	int width = c.width;
+	int height = c.height;
+	int pxsize = pixel_size(c.pixtype);
 
-	read_frame(c.infile, in.data(), c.width, c.height, c.pixtype);
+	bool tv_in = c.tv_in;
+	bool tv_out = c.tv_out;
+	bool yuv_in = c.csp_in.matrix != colorspace::MatrixCoefficients::MATRIX_RGB;
+	bool yuv_out = c.csp_out.matrix != colorspace::MatrixCoefficients::MATRIX_RGB;
+
+	Frame in{ width, height, pxsize, 3 };
+	Frame out{ width, height, pxsize, 3 };
+
+	read_frame_raw(in, c.infile);
 
 	colorspace::ColorspaceConversion conv{ c.csp_in, c.csp_out, c.cpu };
+	execute(conv, in, out, c.times, tv_in, tv_out, yuv_in, yuv_out, c.pixtype);
 
-	execute(conv, in.data(), out.data(), c.visualise ? &bmp : nullptr, c.width, c.height, !!c.tv_in, !!c.tv_out, c.times, c.pixtype);
-	write_frame(c.outfile, out.data(), c.width, c.height, c.pixtype);
+	write_frame_raw(out, c.outfile);
 
-	if (c.visualise)
-		write_bitmap(bmp, c.visualise);
+	if (c.visualise) {
+		Frame bmp{ width, height, 1, 3 };
+
+		convert_frame(out, bmp, c.pixtype, PixelType::BYTE, tv_out, yuv_out);
+		write_frame_bmp(bmp, c.visualise);
+	}
 
 	return 0;
 }

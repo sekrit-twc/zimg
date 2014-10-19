@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Resize", "Resize\Resize.vcxproj", "{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -10,6 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Resize", "Resize\Resize.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{B85E6CC0-ED80-487D-805A-DA3597A15CE6}"
 	ProjectSection(ProjectDependencies) = postProject
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB} = {6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}
 		{B708EE05-508C-4382-B7EF-2E6C5DE0C4BD} = {B708EE05-508C-4382-B7EF-2E6C5DE0C4BD}
 		{2F8C83D1-EE46-4739-A6BB-55451B425024} = {2F8C83D1-EE46-4739-A6BB-55451B425024}
 		{2A42B5D3-4208-4043-A44F-D4A46FF584A5} = {2A42B5D3-4208-4043-A44F-D4A46FF584A5}
@@ -24,6 +25,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{2A42B5D3-4208-4043-A44F-D4A46FF584A5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Unresize", "Unresize\Unresize.vcxproj", "{2F8C83D1-EE46-4739-A6BB-55451B425024}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A42B5D3-4208-4043-A44F-D4A46FF584A5} = {2A42B5D3-4208-4043-A44F-D4A46FF584A5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Depth", "Depth\Depth.vcxproj", "{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2A42B5D3-4208-4043-A44F-D4A46FF584A5} = {2A42B5D3-4208-4043-A44F-D4A46FF584A5}
 	EndProjectSection
@@ -76,6 +82,14 @@ Global
 		{2F8C83D1-EE46-4739-A6BB-55451B425024}.Release|Win32.Build.0 = Release|Win32
 		{2F8C83D1-EE46-4739-A6BB-55451B425024}.Release|x64.ActiveCfg = Release|x64
 		{2F8C83D1-EE46-4739-A6BB-55451B425024}.Release|x64.Build.0 = Release|x64
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Debug|Win32.Build.0 = Debug|Win32
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Debug|x64.ActiveCfg = Debug|x64
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Debug|x64.Build.0 = Debug|x64
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Release|Win32.ActiveCfg = Release|Win32
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Release|Win32.Build.0 = Release|Win32
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Release|x64.ActiveCfg = Release|x64
+		{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
