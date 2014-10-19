@@ -30,15 +30,15 @@ const AppOption OPTIONS[] = {
 
 void usage()
 {
-	std::cerr << "unresize infile outfile width height [--shift-w shift] [--shift-h shift] [--times n] [--x86 | --no-x86]\n";
-	std::cerr << "    infile              input BMP file\n";
-	std::cerr << "    outfile             output BMP file\n";
-	std::cerr << "    width               output width\n";
-	std::cerr << "    height              output height\n";
-	std::cerr << "    --shift-w           horizontal shift\n";
-	std::cerr << "    --shift-h           vertical shift\n";
-	std::cerr << "    --times             number of cycles\n";
-	std::cerr << "    --x86 / --no-x86    toggle x86 optimizations\n";
+	std::cout << "unresize infile outfile width height [--shift-w shift] [--shift-h shift] [--times n] [--cpu cpu]\n";
+	std::cout << "    infile              input BMP file\n";
+	std::cout << "    outfile             output BMP file\n";
+	std::cout << "    width               output width\n";
+	std::cout << "    height              output height\n";
+	std::cout << "    --shift-w           horizontal shift\n";
+	std::cout << "    --shift-h           vertical shift\n";
+	std::cout << "    --times             number of cycles\n";
+	std::cout << "    --cpu               select CPU type\n";
 }
 
 void execute(const Bitmap &in, Bitmap &out, float shift_w, float shift_h, int times, CPUClass cpu)

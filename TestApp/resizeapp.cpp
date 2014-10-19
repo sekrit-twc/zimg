@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -67,7 +68,7 @@ const AppOption OPTIONS[] = {
 
 void usage()
 {
-	std::cout << "resize infile outfile w h [--filter filter] [--shift-w shift] [--shift-h shift] [--sub-w w] [--sub-h h] [--times n] [--cpu cpu] [--u16 | --f16 | --f32]\n";
+	std::cout << "resize infile outfile w h [--filter filter] [--shift-w shift] [--shift-h shift] [--sub-w w] [--sub-h h] [--times n] [--cpu cpu] [--pixtype type]\n";
 	std::cout << "    infile              input BMP file\n";
 	std::cout << "    outfile             output BMP file\n";
 	std::cout << "    width               output width\n";
