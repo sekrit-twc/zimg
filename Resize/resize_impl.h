@@ -6,11 +6,13 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include "Common/cpuinfo.h"
 #include "Common/osdep.h"
 #include "filter.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace resize {;
 
 struct ScalarPolicy_U16 {

@@ -4,11 +4,13 @@
 #define ZING_UNRESIZE_IMPL_H_
 
 #include <cstddef>
-#include "Common/cpuinfo.h"
 #include "Common/osdep.h"
 #include "bilinear.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace unresize {;
 
 inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT tmp,

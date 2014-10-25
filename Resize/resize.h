@@ -5,10 +5,12 @@
 
 #include <cstddef>
 #include <memory>
-#include "Common/cpuinfo.h"
-#include "Common/pixel.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+enum class PixelType;
+
 namespace resize {;
 
 class Filter;

@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include "Common/cpuinfo.h"
 #include "Common/except.h"
+#include "Common/pixel.h"
 #include "resize.h"
 #include "resize_impl.h"
 

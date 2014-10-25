@@ -6,15 +6,17 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <tuple>
 #include <vector>
-#include "Common/cpuinfo.h"
-#include "Common/pixel.h"
-#include "colorspace_param.h"
 #include "operation.h"
 
 namespace zimg {;
+
+enum class PixelType;
+enum class CPUClass;
+
 namespace colorspace {;
+
+struct ColorspaceDefinition;
 
 /**
  * ColorspaceConversion: converts between colorspaces.

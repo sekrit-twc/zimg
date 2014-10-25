@@ -4,7 +4,9 @@
 #include <vector>
 #include "Common/align.h"
 #include "Common/except.h"
+#include "Common/pixel.h"
 #include "colorspace.h"
+#include "colorspace_param.h"
 #include "graph.h"
 
 namespace zimg {;

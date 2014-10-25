@@ -5,6 +5,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include "Common/cpuinfo.h"
+#include "Common/pixel.h"
 #include "Resize/filter.h"
 #include "Resize/resize.h"
 #include "apps.h"

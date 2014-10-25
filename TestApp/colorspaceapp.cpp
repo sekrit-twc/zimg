@@ -8,10 +8,10 @@
 #include <stdexcept>
 #include <string>
 #include "Common/align.h"
+#include "Common/cpuinfo.h"
+#include "Common/pixel.h"
 #include "Colorspace/colorspace_param.h"
 #include "Colorspace/colorspace.h"
-#include "Colorspace/matrix3.h"
-#include "Common/cpuinfo.h"
 #include "apps.h"
 #include "bitmap.h"
 

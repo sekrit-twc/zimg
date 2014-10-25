@@ -4,11 +4,16 @@
 #define ZIMG_COLORSPACE_OPERATION_H_
 
 #include <cstdint>
-#include "Common/cpuinfo.h"
-#include "colorspace_param.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace colorspace {;
+
+enum class MatrixCoefficients;
+enum class TransferCharacteristics;
+enum class ColorPrimaries;
 
 /**
  * Base class for implementations of pixel format conversion.

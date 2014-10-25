@@ -4,9 +4,16 @@
 #define APPS_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include "Common/align.h"
-#include "Common/pixel.h"
+
+namespace zimg {;
+
+enum class PixelType;
+
+} // namespace zimg
+
 
 enum class OptionType {
 	OPTION_INTEGER,
