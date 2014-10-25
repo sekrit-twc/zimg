@@ -77,6 +77,7 @@ bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
  * Obtain 3x3 matrix for converting from YUV to RGB.
  *
  * @param matrix matrix coefficients
+ * @return conversion function as matrix
  * @throws ZimgIllegalArgument on unsupported matrix
  */
 Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix);
@@ -92,6 +93,8 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix);
  * Obtain 3x3 matrix for converting from RGB to XYZ.
  *
  * @param primaries primaries
+ * @param conversion function as matrix
+ * @throws ZimgIllegalArgument on unsupported primaries
  */
 Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries);
 
