@@ -49,7 +49,7 @@ public:
 	ColorspaceConversion(const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
 
 	/**
-	 * Get the size of the temporary buffer required by the convesion.
+	 * Get the size of the temporary buffer required by the conversion.
 	 *
 	 * @param width width of image line.
 	 */
