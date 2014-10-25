@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include "Common/cpuinfo.h"
+#include "Common/pixel.h"
 #include "Unresize/unresize.h"
 #include "apps.h"
 #include "bitmap.h"

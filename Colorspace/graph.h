@@ -5,12 +5,14 @@
 
 #include <functional>
 #include <vector>
-#include "Common/cpuinfo.h"
-#include "colorspace_param.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace colorspace {;
 
+struct ColorspaceDefinition;
 class Operation;
 
 typedef std::function<Operation *(CPUClass)> OperationFactory;

@@ -5,9 +5,10 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
-#include "Common/cpuinfo.h"
-
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace resize {;
 
 class EvaluatedFilter;

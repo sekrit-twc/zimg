@@ -2,6 +2,7 @@
 #include "Common/align.h"
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
+#include "Common/pixel.h"
 #include "unresize.h"
 #include "unresize_impl.h"
 

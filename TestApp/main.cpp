@@ -3,8 +3,6 @@
 #include "Common/except.h"
 #include "apps.h"
 
-using namespace zimg;
-
 namespace {;
 
 void usage()
@@ -36,7 +34,7 @@ int main(int argc, const char **argv)
 			usage();
 			return -1;
 		}
-	} catch (const ZimgException &e) {
+	} catch (const zimg::ZimgException &e) {
 		std::cerr << e.what() << '\n';
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';

@@ -5,9 +5,10 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_IMPL_X86_H_
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_X86_H_
 
-#include <Common/cpuinfo.h>
-
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace unresize {;
 
 class UnresizeImpl;
