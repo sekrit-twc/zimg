@@ -52,13 +52,13 @@ size_t Resize::tmp_size(PixelType type) const
 	return size;
 }
 
-void Resize::copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const
+void Resize::copy_plane(const void *src, void *dst, int width_bytes, int height, int src_stride_bytes, int dst_stride_bytes) const
 {
 	const char *src_byteptr = (const char *)src;
 	char *dst_byteptr = (char *)dst;
 
-	for (int i = 0; i < m_dst_height; ++i) {
-		std::copy_n(src_byteptr, m_src_width, dst_byteptr);
+	for (int i = 0; i < height; ++i) {
+		std::copy_n(src_byteptr, width_bytes, dst_byteptr);
 
 		src_byteptr += src_stride_bytes;
 		dst_byteptr += dst_stride_bytes;
@@ -106,7 +106,7 @@ void Resize::process(PixelType type, const void *src, void *dst, void *tmp, int 
 	int pxsize = pixel_size(type);
 
 	if (m_skip_h && m_skip_v) {
-		copy_plane(src, dst, src_stride * pxsize, dst_stride * pxsize);
+		copy_plane(src, dst, m_src_width * pxsize, m_src_height, src_stride * pxsize, dst_stride * pxsize);
 	} else if (m_skip_h) {
 		invoke_impl_v(type, src, dst, tmp, m_src_width, m_src_height, src_stride, dst_stride);
 	} else if (m_skip_v) {
