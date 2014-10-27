@@ -32,7 +32,7 @@ class Resize {
 
 	size_t max_frame_size(PixelType type) const;
 
-	void copy_plane(const void *src, void *dst, int src_stride_bytes, int dst_stride_bytes) const;
+	void copy_plane(const void *src, void *dst, int width_bytes, int height, int src_stride_bytes, int dst_stride_bytes) const;
 
 	void invoke_impl_h(PixelType type, const void *src, void *dst, void *tmp,
 	                   int src_width, int src_height, int src_stride, int dst_stride) const;
