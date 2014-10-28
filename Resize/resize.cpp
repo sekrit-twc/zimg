@@ -10,6 +10,24 @@
 namespace zimg {;
 namespace resize {;
 
+namespace {;
+
+void copy_plane(const void *src, void *dst, int width_bytes, int height, int src_stride_bytes, int dst_stride_bytes)
+{
+	const char *src_byteptr = (const char *)src;
+	char *dst_byteptr = (char *)dst;
+
+	for (int i = 0; i < height; ++i) {
+		std::copy_n(src_byteptr, width_bytes, dst_byteptr);
+
+		src_byteptr += src_stride_bytes;
+		dst_byteptr += dst_stride_bytes;
+	}
+}
+
+} // namespace
+
+
 Resize::Resize(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
                double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 try :
@@ -50,19 +68,6 @@ size_t Resize::tmp_size(PixelType type) const
 		size += m_src_width * 2;
 
 	return size;
-}
-
-void Resize::copy_plane(const void *src, void *dst, int width_bytes, int height, int src_stride_bytes, int dst_stride_bytes) const
-{
-	const char *src_byteptr = (const char *)src;
-	char *dst_byteptr = (char *)dst;
-
-	for (int i = 0; i < height; ++i) {
-		std::copy_n(src_byteptr, width_bytes, dst_byteptr);
-
-		src_byteptr += src_stride_bytes;
-		dst_byteptr += dst_stride_bytes;
-	}
 }
 
 void Resize::invoke_impl_h(PixelType type, const void *src, void *dst, void *tmp,
