@@ -1,6 +1,6 @@
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
-#include "Common/osdep.h"
+#include "Common/plane.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -14,44 +14,38 @@ public:
 	ResizeImplC(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
 
-	void process_u16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_u16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
-		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_U16{});
+		filter_plane_h_scalar(filter, src, dst, 0, src.height(), 0, filter.height(), ScalarPolicy_U16{});
 	}
 
-	void process_u16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_u16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
-		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_U16{});
+		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src.width(), ScalarPolicy_U16{});
 	}
 
-	void process_f16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f32_h(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
-		filter_plane_h_scalar(filter, src, dst, 0, src_height, 0, filter.height(), src_stride, dst_stride, ScalarPolicy_F32{});
+		filter_plane_h_scalar(filter, src, dst, 0, src.height(), 0, filter.height(), ScalarPolicy_F32{});
 	}
 
-	void process_f32_v(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
-		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src_width, src_stride, dst_stride, ScalarPolicy_F32{});
+		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src.width(), ScalarPolicy_F32{});
 	}
 };
 

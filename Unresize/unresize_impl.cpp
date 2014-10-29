@@ -14,23 +14,21 @@ public:
 	UnresizeImplC(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
-	void process_f32_h(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
 	{
-		for (int i = 0; i < src_height; ++i) {
-			filter_scanline_h_forward(m_hcontext, src, tmp, src_stride, i, 0, m_hcontext.dst_width);
-			filter_scanline_h_back(m_hcontext, tmp, dst, dst_stride, i, m_hcontext.dst_width, 0);
+		for (int i = 0; i < src.height(); ++i) {
+			filter_scanline_h_forward(m_hcontext, src, tmp, i, 0, m_hcontext.dst_width);
+			filter_scanline_h_back(m_hcontext, tmp, dst, i, m_hcontext.dst_width, 0);
 		}
 	}
 
-	void process_f32_v(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const override
+	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
 	{
 		for (int i = 0; i < m_vcontext.dst_width; ++i) {
-			filter_scanline_v_forward(m_vcontext, src, dst, src_stride, dst_stride, i, 0, src_width);
+			filter_scanline_v_forward(m_vcontext, src, dst, i, 0, src.width());
 		}
 		for (int i = m_vcontext.dst_width; i > 0; --i) {
-			filter_scanline_v_back(m_vcontext, dst, dst_stride, i, 0, src_width);
+			filter_scanline_v_back(m_vcontext, dst, i, 0, src.width());
 		}
 	}
 };

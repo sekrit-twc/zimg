@@ -3,6 +3,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "Common/pixel.h"
+#include "Common/plane.h"
 #include "unresize.h"
 #include "unresize_impl.h"
 
@@ -50,17 +51,18 @@ size_t Unresize::tmp_size(PixelType type) const
 	return size;
 }
 
-void Unresize::process(PixelType type, const void *src, void *dst, void *tmp, int src_stride, int dst_stride) const
+void Unresize::process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const
 {
+	PixelType type = src.format().type;
 	int pxsize = pixel_size(type);
 
 	if (type != PixelType::FLOAT)
 		throw ZimgUnsupportedError{ "only f32 supported" };
 
 	if (m_src_width == m_dst_width) {
-		m_impl->process_f32_v((const float *)src, (float *)dst, (float *)tmp, m_src_width, m_src_height, src_stride, dst_stride);
+		m_impl->process_f32_v(plane_cast<float>(src), plane_cast<float>(dst), (float *)tmp);
 	} else if (m_src_height == m_dst_height) {
-		m_impl->process_f32_h((const float *)src, (float *)dst, (float *)tmp, m_src_width, m_src_height, src_stride, dst_stride);
+		m_impl->process_f32_h(plane_cast<float>(src), plane_cast<float>(dst), (float *)tmp);
 	} else {
 		double xscale = (double)m_dst_width / (double)m_src_width;
 		double yscale = (double)m_dst_height / (double)m_src_height;
@@ -75,14 +77,16 @@ void Unresize::process(PixelType type, const void *src, void *dst, void *tmp, in
 
 		if (h_first_cost < v_first_cost) {
 			int tmp_stride = align(m_dst_width, ALIGNMENT / pxsize);
+			ImagePlane<void> tmp_plane{ tmp1, m_dst_width, m_src_height, tmp_stride, type };
 
-			m_impl->process_f32_h((const float *)src, (float *)tmp1, (float *)tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_f32_v((const float *)tmp1, (float *)dst, (float *)tmp2, m_dst_width, m_src_height, tmp_stride, dst_stride);
+			m_impl->process_f32_h(plane_cast<float>(src), plane_cast<float>(tmp_plane), (float *)tmp2);
+			m_impl->process_f32_v(plane_cast<float>(tmp_plane), plane_cast<float>(dst), (float *)tmp2);
 		} else {
 			int tmp_stride = align(m_src_width, ALIGNMENT / pxsize);
+			ImagePlane<void> tmp_plane{ tmp1, m_src_width, m_dst_height, tmp_stride, type };
 
-			m_impl->process_f32_v((const float *)src, (float *)tmp1, (float *)tmp2, m_src_width, m_src_height, src_stride, tmp_stride);
-			m_impl->process_f32_h((const float *)tmp1, (float *)dst, (float *)tmp2, m_src_width, m_dst_height, tmp_stride, dst_stride);
+			m_impl->process_f32_v(plane_cast<float>(src), plane_cast<float>(tmp_plane), (float *)tmp2);
+			m_impl->process_f32_h(plane_cast<float>(tmp_plane), plane_cast<float>(dst), (float *)tmp2);
 		}
 	}
 }

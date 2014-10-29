@@ -28,9 +28,14 @@ void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 	x3 = _mm_castpd_ps(o3);
 }
 
-void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst, float * RESTRICT tmp,
-                         ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
+void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp)
 {
+	const float * RESTRICT src_p = src.data();
+	float * RESTRICT dst_p = dst.data();
+	int src_height = src.height();
+	int src_stride = src.stride();
+	int dst_stride = dst.stride();
+
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
 	const float *pu = ctx.lu_u.data();
@@ -56,16 +61,16 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 				__m128 coeffs = _mm_loadu_ps(&matrix_row[k]);
 				__m128 v0, v1, v2, v3;
 
-				v0 = _mm_loadu_ps(&src[(i + 0) * src_stride + left + k]);
+				v0 = _mm_loadu_ps(&src_p[(i + 0) * src_stride + left + k]);
 				v0 = _mm_mul_ps(coeffs, v0);
 
-				v1 = _mm_loadu_ps(&src[(i + 1) * src_stride + left + k]);
+				v1 = _mm_loadu_ps(&src_p[(i + 1) * src_stride + left + k]);
 				v1 = _mm_mul_ps(coeffs, v1);
 
-				v2 = _mm_loadu_ps(&src[(i + 2) * src_stride + left + k]);
+				v2 = _mm_loadu_ps(&src_p[(i + 2) * src_stride + left + k]);
 				v2 = _mm_mul_ps(coeffs, v2);
 
-				v3 = _mm_loadu_ps(&src[(i + 3) * src_stride + left + k]);
+				v3 = _mm_loadu_ps(&src_p[(i + 3) * src_stride + left + k]);
 				v3 = _mm_mul_ps(coeffs, v3);
 
 				transpose4_ps(v0, v1, v2, v3);
@@ -95,7 +100,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			for (ptrdiff_t ii = 0; ii < 4; ++ii) {
 				float accum = 0;
 				for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-					accum += matrix_row[k] * src[(i + ii) * src_stride + left + k];
+					accum += matrix_row[k] * src_p[(i + ii) * src_stride + left + k];
 				}
 
 				tmp[j * 4 + ii] = (accum - pc[j] * tmp[(j - 1) * 4 + ii]) * pl[j];
@@ -111,7 +116,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			_mm_storeu_ps(w_buf, w);
 			for (ptrdiff_t ii = 0; ii < 4; ++ii) {
 				w_buf[ii] = tmp[(j - 1) * 4 + ii] - pu[j - 1] * w_buf[ii];
-				dst[(i + ii) * dst_stride + j - 1] = w_buf[ii];
+				dst_p[(i + ii) * dst_stride + j - 1] = w_buf[ii];
 			}
 			w = _mm_loadu_ps(w_buf);
 		}
@@ -147,17 +152,23 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 
 			transpose4_ps(w0, w1, w2, w3);
 
-			_mm_store_ps(&dst[i + 0 * dst_stride + j - 4], w0);
-			_mm_store_ps(&dst[i + 1 * dst_stride + j - 4], w1);
-			_mm_store_ps(&dst[i + 2 * dst_stride + j - 4], w2);
-			_mm_store_ps(&dst[i + 3 * dst_stride + j - 4], w3);
+			_mm_store_ps(&dst_p[i + 0 * dst_stride + j - 4], w0);
+			_mm_store_ps(&dst_p[i + 1 * dst_stride + j - 4], w1);
+			_mm_store_ps(&dst_p[i + 2 * dst_stride + j - 4], w2);
+			_mm_store_ps(&dst_p[i + 3 * dst_stride + j - 4], w3);
 		}
 	}
 }
 
-void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst,
-                         ptrdiff_t src_width, ptrdiff_t src_height, ptrdiff_t src_stride, ptrdiff_t dst_stride)
+void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst)
 {
+	const float * RESTRICT src_p = src.data();
+	float * RESTRICT dst_p = dst.data();
+	int src_width = src.width();
+	int src_height = src.height();
+	int src_stride = src.stride();
+	int dst_stride = dst.stride();
+
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
 	const float *pu = ctx.lu_u.data();
@@ -173,14 +184,14 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 		ptrdiff_t top = ctx.matrix_row_offsets[i];
 
 		const float *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3;
-		float *dst_ptr = &dst[i * dst_stride];
+		float *dst_ptr = &dst_p[i * dst_stride];
 
 		// Matrix-vector product.
 		for (ptrdiff_t k = 0; k < mod(ctx.matrix_row_size, 4); k += 4) {
-			src_ptr0 = &src[(i + 0) * src_stride];
-			src_ptr1 = &src[(i + 1) * src_stride];
-			src_ptr2 = &src[(i + 2) * src_stride];
-			src_ptr3 = &src[(i + 3) * src_stride];
+			src_ptr0 = &src_p[(i + 0) * src_stride];
+			src_ptr1 = &src_p[(i + 1) * src_stride];
+			src_ptr2 = &src_p[(i + 2) * src_stride];
+			src_ptr3 = &src_p[(i + 3) * src_stride];
 
 			coeff0 = _mm_load_ss(&row[k]);
 			coeff1 = _mm_load_ss(&row[k + 1]);
@@ -218,9 +229,9 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 			coeff1 = _mm_load_ps1(&row[k + 1]);
 			coeff0 = _mm_load_ps1(&row[k + 0]);
 
-			src_ptr2 = &src[(top + k + 2) * src_stride];
-			src_ptr1 = &src[(top + k + 1) * src_stride];
-			src_ptr0 = &src[(top + k + 0) * src_stride];
+			src_ptr2 = &src_p[(top + k + 2) * src_stride];
+			src_ptr1 = &src_p[(top + k + 1) * src_stride];
+			src_ptr0 = &src_p[(top + k + 0) * src_stride];
 
 			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				accum0 = _mm_setzero_ps();
@@ -253,17 +264,17 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 
 		// Forward substitution.
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
-			z = i ? _mm_load_ps(&dst[(i - 1) * dst_stride + j]) : _mm_setzero_ps();
-			f = _mm_load_ps(&dst[i * src_stride + j]);
+			z = i ? _mm_load_ps(&dst_p[(i - 1) * dst_stride + j]) : _mm_setzero_ps();
+			f = _mm_load_ps(&dst_p[i * src_stride + j]);
 
 			z = _mm_mul_ps(c, z);
 			z = _mm_sub_ps(f, z);
 			z = _mm_mul_ps(z, l);
 
-			_mm_store_ps(&dst[i * dst_stride + j], z);
+			_mm_store_ps(&dst_p[i * dst_stride + j], z);
 		}
 		
-		filter_scanline_v_forward(ctx, src, dst, src_stride, dst_stride, i, mod(src_width, 4), src_width);
+		filter_scanline_v_forward(ctx, src, dst, i, mod(src_width, 4), src_width);
 	}
 
 	// Back substitution.
@@ -271,14 +282,14 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const float * RESTRICT src,
 		u = _mm_load_ps1(&pu[i]);
 
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
-			w = i < ctx.dst_width ? _mm_load_ps(&dst[i * dst_stride + j]) : _mm_setzero_ps();
-			z = _mm_load_ps(&dst[(i - 1) * dst_stride + j]);
+			w = i < ctx.dst_width ? _mm_load_ps(&dst_p[i * dst_stride + j]) : _mm_setzero_ps();
+			z = _mm_load_ps(&dst_p[(i - 1) * dst_stride + j]);
 			w = _mm_mul_ps(u, w);
 			w = _mm_sub_ps(z, w);
 
-			_mm_store_ps(&dst[(i - 1) * dst_stride + j], w);
+			_mm_store_ps(&dst_p[(i - 1) * dst_stride + j], w);
 		}
-		filter_scanline_v_back(ctx, dst, dst_stride, i, mod(src_width, 4), src_width);
+		filter_scanline_v_back(ctx, dst, i, mod(src_width, 4), src_width);
 	}
 }
 
@@ -287,16 +298,14 @@ public:
 	UnresizeImplX86(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
-	void process_f32_h(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const
+	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const
 	{
-		filter_plane_h_sse2(m_hcontext, src, dst, tmp, src_width, src_height, src_stride, dst_stride);
+		filter_plane_h_sse2(m_hcontext, src, dst, tmp);
 	}
 
-	void process_f32_v(const float *src, float *dst, float *tmp,
-	                   int src_width, int src_height, int src_stride, int dst_stride) const
+	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const
 	{
-		filter_plane_v_sse2(m_vcontext, src, dst, src_width, src_height, src_stride, dst_stride);
+		filter_plane_v_sse2(m_vcontext, src, dst);
 	}
 };
 

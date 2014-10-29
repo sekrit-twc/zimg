@@ -7,6 +7,7 @@
 #include <string>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
+#include "Common/plane.h"
 #include "Resize/filter.h"
 #include "Resize/resize.h"
 #include "apps.h"
@@ -89,27 +90,22 @@ void usage()
 
 void execute(const resize::Resize &resize, const Frame &in, Frame &out, int times, PixelType type)
 {
-	int width = in.width();
-	int height = in.height();
 	int pxsize = pixel_size(type);
 	int planes = in.planes();
 
-	Frame src{ width, height, pxsize, planes };
-	Frame dst{ width, height, pxsize, planes };
+	Frame src{ in.width(), in.height(), pxsize, planes };
+	Frame dst{ out.width(), out.height(), pxsize, planes };
 	auto tmp = allocate_buffer(resize.tmp_size(type), type);
 
 	convert_frame(in, src, PixelType::BYTE, type, false, false);
 
 	measure_time(times, [&]()
 	{
-		int src_stride = src.stride();
-		int dst_stride = dst.stride();
-
 		for (int p = 0; p < planes; ++p) {
-			const void *src_p = src.data(p);
-			void *dst_p = dst.data(p);
+			ImagePlane<void> src_p{ src.data(p), src.width(), src.height(), src.stride(), type };
+			ImagePlane<void> dst_p{ dst.data(p), dst.width(), dst.height(), dst.stride(), type };
 
-			resize.process(type, src_p, dst_p, tmp.data(), src_stride, dst_stride);
+			resize.process(src_p, dst_p, tmp.data());
 		}
 	});
 
