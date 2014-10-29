@@ -8,6 +8,7 @@
 #include <string>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
+#include "Common/plane.h"
 #include "Colorspace/colorspace.h"
 #include "Colorspace/colorspace_param.h"
 #include "apps.h"
@@ -140,26 +141,21 @@ void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Fram
 	Frame in_conv{ width, height, pixel_size(pxfloat), 3 };
 	Frame out_conv{ width, height, pixel_size(pxfloat), 3 };
 
+	ImagePlane<void> in_planes[3];
+	ImagePlane<void> out_planes[3];
+
 	convert_frame(in, in_conv, type, pxfloat, tv_in, yuv_in);
 
-	const void *src_p[3];
-	void *dst_p[3];
-	int in_stride[3];
-	int out_stride[3];
-
 	for (int p = 0; p < 3; ++p) {
-		src_p[p] = in_conv.data(p);
-		dst_p[p] = out_conv.data(p);
-
-		in_stride[p] = in_conv.stride();
-		out_stride[p] = out_conv.stride();
+		in_planes[p] = ImagePlane<void>{ in_conv.data(p), width, height, in_conv.stride(), pxfloat };
+		out_planes[p] = ImagePlane<void>{ out_conv.data(p), width, height, out_conv.stride(), pxfloat };
 	}
 
 	auto tmp = allocate_buffer(conv.tmp_size(in.width()), PixelType::FLOAT);
 
 	measure_time(times, [&]()
 	{
-		conv.process(pxfloat, src_p, dst_p, tmp.data(), in.width(), in.height(), in_stride, out_stride);
+		conv.process(in_planes, out_planes, tmp.data());
 	});
 
 	convert_frame(out_conv, out, pxfloat, type, tv_out, yuv_out);

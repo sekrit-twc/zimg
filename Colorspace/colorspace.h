@@ -14,6 +14,9 @@ namespace zimg {;
 enum class PixelType;
 enum class CPUClass;
 
+template <class T>
+class ImagePlane;
+
 namespace colorspace {;
 
 struct ColorspaceDefinition;
@@ -56,17 +59,12 @@ public:
 	/**
 	 * Process an image. The input and output pixel formats must match.
 	 *
-	 * @param type pixel type of image
-	 * @param src pointer to three input planes pointers
-	 * @param dst pointer to three output planes pointers
+	 * @param src pointer to three input planes
+	 * @param dst pointer to three output planes
 	 * @param tmp temporary buffer (@see ColorspaceConversion::tmp_size)
-	 * @param width width of image
-	 * @param height height of image
-	 * @param src_stride stride of each input plane
-	 * @param dst_stride stride of each output plane
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(PixelType type, const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride) const;
+	void process(const ImagePlane<void> *src, ImagePlane<void> *dst, void *tmp) const;
 };
 
 } // namespace colorspace

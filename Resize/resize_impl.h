@@ -7,11 +7,15 @@
 #include <cstddef>
 #include <cstdint>
 #include "Common/osdep.h"
+#include "Common/plane.h"
 #include "filter.h"
 
 namespace zimg {;
 
 enum class CPUClass;
+
+template <class T>
+class ImagePlane;
 
 namespace resize {;
 
@@ -55,9 +59,15 @@ struct ScalarPolicy_F32 {
 };
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, ptrdiff_t src_stride, ptrdiff_t dst_stride, Policy policy)
+inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const ImagePlane<T> &src, ImagePlane<T> &dst,
+                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
+	const T * RESTRICT src_p = src.data();
+	T * RESTRICT dst_p = dst.data();
+
+	int src_stride = src.stride();
+	int dst_stride = dst.stride();
+
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t left = filter.left()[j];
@@ -65,20 +75,26 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 
 			for (int k = 0; k < filter.width(); ++k) {
 				Policy::num_type coeff = policy.coeff(filter, j, k);
-				Policy::num_type x = policy.load(src + i * src_stride + left + k);
+				Policy::num_type x = policy.load(src_p + i * src_stride + left + k);
 
 				accum += coeff * x;
 			}
 
-			policy.store(dst + i * dst_stride + j, accum);
+			policy.store(dst_p + i * dst_stride + j, accum);
 		}
 	}
 }
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const T * RESTRICT src, T * RESTRICT dst,
-                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, ptrdiff_t src_stride, ptrdiff_t dst_stride, Policy policy)
+inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const ImagePlane<T> &src, ImagePlane<T> &dst,
+                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
+	const T * RESTRICT src_p = src.data();
+	T * RESTRICT dst_p = dst.data();
+
+	int src_stride = src.stride();
+	int dst_stride = dst.stride();
+
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t top = filter.left()[i];
@@ -86,12 +102,12 @@ inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, co
 
 			for (ptrdiff_t k = 0; k < filter.width(); ++k) {
 				Policy::num_type coeff = policy.coeff(filter, i, k);
-				Policy::num_type x = policy.load(src + (top + k) * src_stride + j);
+				Policy::num_type x = policy.load(src_p + (top + k) * src_stride + j);
 
 				accum += coeff * x;
 			}
 
-			policy.store(dst + i * dst_stride + j, accum);
+			policy.store(dst_p + i * dst_stride + j, accum);
 		}
 	}
 }
@@ -127,64 +143,47 @@ public:
 	/**
 	 * Execute horizontal filter pass on an unsigned 16-bit image.
 	 *
-	 * @param src input image
-	 * @param dst output image
+	 * @param src input plane
+	 * @param dst output plane
 	 * @param tmp temporary buffer (implementation defined size)
-	 * @param src_width width of input image (must match filter)
-	 * @param src_height height of input image (must match output image)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
 	 * @throws ZimgUnsupportedError if not supported
 	 */
-	virtual void process_u16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_u16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on an unsigned 16-bit image.
 	 *
-	 * @param src input image
-	 * @param dst output image
-	 * @param tmp temporary buffer (implementation defined size)
-	 * @param src_width width of input image (must match output image)
-	 * @param src_height height of input image (must match filter)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
-	 * @throws ZimgUnsupportedError if not supported
+	 * @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_u16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_u16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute horizontal filter pass on a half precision 16-bit image.
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f16_h(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on a half precision 16-bit image.
 	 *
-	 *  @see ResizeImpl::process_u16_v
+	 *  @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_f16_v(const uint16_t *src, uint16_t *dst, uint16_t *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute horizontal filter pass on a single precision 32-bit image.
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f32_h(const float *src, float *dst, float *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on a single precision 32-bit image.
 	 *
-	 * @see ResizeImpl::process_u16_v
+	 * @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_f32_v(const float *src, float *dst, float *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
 };
 
 /**

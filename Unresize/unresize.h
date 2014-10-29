@@ -11,6 +11,9 @@ namespace zimg {;
 enum class CPUClass;
 enum class PixelType;
 
+template <class T>
+class ImagePlane;
+
 namespace unresize {;
 
 class UnresizeImpl;
@@ -140,15 +143,12 @@ public:
 	/**
 	 * Process an image. The input and output pixel formats must match.
 	 *
-	 * @param type pixel type of image
 	 * @param src input image
 	 * @param dst output image
 	 * @param tmp temporary buffer (@see Unresize::tmp_size)
-	 * @param src_stride stride of input image
-	 * @param dst_stride stride of output image
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(PixelType type, const void *src, void *dst, void *tmp, int src_stride, int dst_stride) const;
+	void process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const;
 };
 
 } // namespace unresize

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include "Common/osdep.h"
+#include "Common/plane.h"
 #include "bilinear.h"
 
 namespace zimg {;
@@ -13,13 +14,16 @@ enum class CPUClass;
 
 namespace unresize {;
 
-inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT tmp,
-                                                   ptrdiff_t src_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const ImagePlane<float> &src, float * RESTRICT tmp,
+                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
+	const float * RESTRICT src_p = src.data();
+	int src_stride = src.stride();
+
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
 
-	float z = j_begin ? src[i * src_stride + j_begin - 1] : 0;
+	float z = j_begin ? src_p[i * src_stride + j_begin - 1] : 0;
 
 	// Matrix-vector product, and forward substitution loop.
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
@@ -28,7 +32,7 @@ inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, c
 
 		float accum = 0;
 		for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-			accum += row[k] * src[i * src_stride + left + k];
+			accum += row[k] * src_p[i * src_stride + left + k];
 		}
 
 		z = (accum - c[j] * z) * l[j];
@@ -36,22 +40,30 @@ inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, c
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, float * RESTRICT dst,
-                                                ptrdiff_t dst_stride,ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, ImagePlane<float> &dst,
+                                                ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
+	float * RESTRICT dst_p = dst.data();
+	int dst_stride = dst.stride();
+
 	const float *u = ctx.lu_u.data();
-	float w = j_begin < ctx.dst_width ? dst[i * dst_stride + j_begin] : 0;
+	float w = j_begin < ctx.dst_width ? dst_p[i * dst_stride + j_begin] : 0;
 
 	// Backward substitution.
 	for (ptrdiff_t j = j_begin; j > j_end; --j) {
 		w = tmp[j - 1] - u[j - 1] * w;
-		dst[i * dst_stride + j - 1] = w;
+		dst_p[i * dst_stride + j - 1] = w;
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const float * RESTRICT src, float * RESTRICT dst,
-                                                   ptrdiff_t src_stride, ptrdiff_t dst_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst,
+                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
+	const float * RESTRICT src_p = src.data();
+	float * RESTRICT dst_p = dst.data();
+	int src_stride = src.stride();
+	int dst_stride = dst.stride();
+
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
 
@@ -59,27 +71,30 @@ inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, c
 	ptrdiff_t top = ctx.matrix_row_offsets[i];
 
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-		float z = i ? dst[(i - 1) * dst_stride + j] : 0;
+		float z = i ? dst_p[(i - 1) * dst_stride + j] : 0;
 
 		float accum = 0;
 		for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-			accum += row[k] * src[(top + k) * src_stride + j];
+			accum += row[k] * src_p[(top + k) * src_stride + j];
 		}
 
 		z = (accum - c[i] * z) * l[i];
-		dst[i * dst_stride + j] = z;
+		dst_p[i * dst_stride + j] = z;
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, float * RESTRICT dst, ptrdiff_t dst_stride, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, ImagePlane<float> &dst, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
+	float * RESTRICT dst_p = dst.data();
+	int dst_stride = dst.stride();
+
 	const float *u = ctx.lu_u.data();
 
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-		float w = i < ctx.dst_width ? dst[i * dst_stride + j] : 0;
+		float w = i < ctx.dst_width ? dst_p[i * dst_stride + j] : 0;
 
-		w = dst[(i - 1) * dst_stride + j] - u[i - 1] * w;
-		dst[(i - 1) * dst_stride + j] = w;
+		w = dst_p[(i - 1) * dst_stride + j] - u[i - 1] * w;
+		dst_p[(i - 1) * dst_stride + j] = w;
 	}
 }
 
@@ -112,11 +127,9 @@ public:
 	 */
 	virtual ~UnresizeImpl() = 0;
 
-	virtual void process_f32_h(const float *src, float *dst, float *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
 
-	virtual void process_f32_v(const float *src, float *dst, float *tmp,
-	                           int src_width, int src_height, int src_stride, int dst_stride) const = 0;
+	virtual void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
 };
 
 /**

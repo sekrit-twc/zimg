@@ -5,6 +5,7 @@
 #include "Common/align.h"
 #include "Common/except.h"
 #include "Common/pixel.h"
+#include "Common/plane.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
 #include "graph.h"
@@ -69,41 +70,42 @@ size_t ColorspaceConversion::tmp_size(int width) const
 	return 3 * align(width, AlignmentOf<float>::value);
 }
 
-void ColorspaceConversion::process(PixelType type, const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride) const
+void ColorspaceConversion::process(const ImagePlane<void> *src, ImagePlane<void> *dst, void *tmp) const
 {
-	const void *src_p[3] = { src[0], src[1], src[2] };
-	void *dst_p[3] = { dst[0], dst[1], dst[2] };
-	float *buf[3];
+	PixelType src_type = src[0].format().type;
+	PixelType dst_type = dst[0].format().type;
+	size_t src_pxsize = pixel_size(src_type);
+	size_t dst_pxsize = pixel_size(dst_type);
+
+	int width = src[0].width();
+	int height = src[1].height();
+
 	ptrdiff_t tmp_stride = align(width, AlignmentOf<float>::value);
-	size_t pxsize = pixel_size(type);
+	float *tmp_f = (float *)tmp;
 
-	buf[0] = (float *)tmp;
-	buf[1] = buf[0] + tmp_stride;
-	buf[2] = buf[1] + tmp_stride;
-
-	std::fill_n(buf[0], tmp_stride, 0.0f);
-	std::fill_n(buf[1], tmp_stride, 0.0f);
-	std::fill_n(buf[2], tmp_stride, 0.0f);
+	const void *src_p[3] = { src[0].data(), src[1].data(), src[2].data() };
+	void *dst_p[3] = { dst[0].data(), dst[1].data(), dst[2].data() };
+	float *buf[3] = { tmp_f, tmp_f + tmp_stride, tmp_f + 2 * tmp_stride };
 
 	for (int i = 0; i < height; ++i) {
-		load_line(src_p[0], buf[0], width, type);
-		load_line(src_p[1], buf[1], width, type);
-		load_line(src_p[2], buf[2], width, type);
+		load_line(src_p[0], buf[0], width, src_type);
+		load_line(src_p[1], buf[1], width, src_type);
+		load_line(src_p[2], buf[2], width, src_type);
 
 		for (auto &o : m_operations) {
 			o->process(buf, width);
 		}
 
-		store_line(buf[0], dst_p[0], width, type);
-		store_line(buf[1], dst_p[1], width, type);
-		store_line(buf[2], dst_p[2], width, type);
+		store_line(buf[0], dst_p[0], width, dst_type);
+		store_line(buf[1], dst_p[1], width, dst_type);
+		store_line(buf[2], dst_p[2], width, dst_type);
 
-		src_p[0] = (const char *)src_p[0] + src_stride[0] * pxsize;
-		src_p[1] = (const char *)src_p[1] + src_stride[1] * pxsize;
-		src_p[2] = (const char *)src_p[2] + src_stride[2] * pxsize;
-		dst_p[0] = (char *)dst_p[0] + dst_stride[0] * pxsize;
-		dst_p[1] = (char *)dst_p[1] + dst_stride[1] * pxsize;
-		dst_p[2] = (char *)dst_p[2] + dst_stride[2] * pxsize;
+		src_p[0] = (const char *)src_p[0] + src[0].stride() * src_pxsize;
+		src_p[1] = (const char *)src_p[1] + src[1].stride() * src_pxsize;
+		src_p[2] = (const char *)src_p[2] + src[2].stride() * src_pxsize;
+		dst_p[0] = (char *)dst_p[0] + dst[0].stride() * dst_pxsize;
+		dst_p[1] = (char *)dst_p[1] + dst[1].stride() * dst_pxsize;
+		dst_p[2] = (char *)dst_p[2] + dst[2].stride() * dst_pxsize;
 	}
 }
 
