@@ -32,6 +32,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 {
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
+	int src_width = src.width();
 	int src_height = src.height();
 	int src_stride = src.stride();
 	int dst_stride = dst.stride();
@@ -48,10 +49,10 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 
 		// Input, matrix-vector product, and forward substitution loop.
 		for (j = 0; j < ctx.dst_width; ++j) {
-			const float *matrix_row = &ctx.matrix_coefficients[i * ctx.matrix_row_stride];
-			ptrdiff_t left = ctx.matrix_row_offsets[i];
+			const float *matrix_row = &ctx.matrix_coefficients[j * ctx.matrix_row_stride];
+			ptrdiff_t left = ctx.matrix_row_offsets[j];
 
-			if (left + ctx.matrix_row_stride > ctx.dst_width)
+			if (left + ctx.matrix_row_stride > src_width)
 				break;
 
 			// Matrix-vector product.
@@ -78,13 +79,13 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 				accum0 = _mm_add_ps(accum0, v0);
 				accum1 = _mm_add_ps(accum1, v1);
 				accum0 = _mm_add_ps(accum0, v2);
-				accum1 = _mm_add_ps(accum0, v3);
+				accum1 = _mm_add_ps(accum1, v3);
 			}
 
 			// Forward substitution.
 			f = _mm_add_ps(accum0, accum1);
-			c = _mm_load_ps1(&pc[j]);
-			l = _mm_load_ps1(&pl[j]);
+			c = _mm_set_ps1(pc[j]);
+			l = _mm_set_ps1(pl[j]);
 
 			z = _mm_mul_ps(c, z);
 			z = _mm_sub_ps(f, z);
@@ -94,8 +95,8 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 		}
 		// Handle remainder of line.
 		for (; j < ctx.dst_width; ++j) {
-			const float *matrix_row = &ctx.matrix_coefficients[i * ctx.matrix_row_stride];
-			ptrdiff_t left = ctx.matrix_row_offsets[i];
+			const float *matrix_row = &ctx.matrix_coefficients[j * ctx.matrix_row_stride];
+			ptrdiff_t left = ctx.matrix_row_offsets[j];
 
 			for (ptrdiff_t ii = 0; ii < 4; ++ii) {
 				float accum = 0;
@@ -130,32 +131,32 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 			z2 = _mm_load_ps(&tmp[(j - 2) * 4]);
 			z3 = _mm_load_ps(&tmp[(j - 1) * 4]);
 
-			u3 = _mm_load_ps1(&pu[j - 4]);
+			u3 = _mm_set_ps1(pu[j - 4]);
 			w = _mm_mul_ps(u3, w);
 			w = _mm_sub_ps(z3, w);
 			w3 = w;
 
-			u2 = _mm_load_ps1(&pu[j - 3]);
+			u2 = _mm_set_ps1(pu[j - 3]);
 			w = _mm_mul_ps(u2, w);
 			w = _mm_sub_ps(z2, w);
 			w2 = w;
 
-			u1 = _mm_load_ps1(&pu[j - 2]);
+			u1 = _mm_set_ps1(pu[j - 2]);
 			w = _mm_mul_ps(u1, w);
 			w = _mm_sub_ps(z1, w);
 			w1 = w;
 
-			u0 = _mm_load_ps1(&pu[j - 1]);
+			u0 = _mm_set_ps1(pu[j - 1]);
 			w = _mm_mul_ps(u0, w);
 			w = _mm_sub_ps(z0, w);
 			w0 = w;
 
 			transpose4_ps(w0, w1, w2, w3);
 
-			_mm_store_ps(&dst_p[i + 0 * dst_stride + j - 4], w0);
-			_mm_store_ps(&dst_p[i + 1 * dst_stride + j - 4], w1);
-			_mm_store_ps(&dst_p[i + 2 * dst_stride + j - 4], w2);
-			_mm_store_ps(&dst_p[i + 3 * dst_stride + j - 4], w3);
+			_mm_store_ps(&dst_p[(i + 0) * dst_stride + j - 4], w0);
+			_mm_store_ps(&dst_p[(i + 1) * dst_stride + j - 4], w1);
+			_mm_store_ps(&dst_p[(i + 2) * dst_stride + j - 4], w2);
+			_mm_store_ps(&dst_p[(i + 3) * dst_stride + j - 4], w3);
 		}
 	}
 }
@@ -188,15 +189,15 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 
 		// Matrix-vector product.
 		for (ptrdiff_t k = 0; k < mod(ctx.matrix_row_size, 4); k += 4) {
-			src_ptr0 = &src_p[(i + 0) * src_stride];
-			src_ptr1 = &src_p[(i + 1) * src_stride];
-			src_ptr2 = &src_p[(i + 2) * src_stride];
-			src_ptr3 = &src_p[(i + 3) * src_stride];
+			src_ptr0 = &src_p[(top + k + 0) * src_stride];
+			src_ptr1 = &src_p[(top + k + 1) * src_stride];
+			src_ptr2 = &src_p[(top + k + 2) * src_stride];
+			src_ptr3 = &src_p[(top + k + 3) * src_stride];
 
-			coeff0 = _mm_load_ss(&row[k]);
-			coeff1 = _mm_load_ss(&row[k + 1]);
-			coeff2 = _mm_load_ss(&row[k + 2]);
-			coeff3 = _mm_load_ss(&row[k + 3]);
+			coeff0 = _mm_set_ps1(row[k]);
+			coeff1 = _mm_set_ps1(row[k + 1]);
+			coeff2 = _mm_set_ps1(row[k + 2]);
+			coeff3 = _mm_set_ps1(row[k + 3]);
 				
 			for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 				x0 = _mm_load_ps(&src_ptr0[j]);
@@ -225,9 +226,9 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 			ptrdiff_t m = ctx.matrix_row_size % 4;
 			ptrdiff_t k = ctx.matrix_row_size - m;
 
-			coeff2 = _mm_load_ps1(&row[k + 2]);
-			coeff1 = _mm_load_ps1(&row[k + 1]);
-			coeff0 = _mm_load_ps1(&row[k + 0]);
+			coeff2 = _mm_set_ps1(row[k + 2]);
+			coeff1 = _mm_set_ps1(row[k + 1]);
+			coeff0 = _mm_set_ps1(row[k + 0]);
 
 			src_ptr2 = &src_p[(top + k + 2) * src_stride];
 			src_ptr1 = &src_p[(top + k + 1) * src_stride];
@@ -259,8 +260,8 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 			}
 		}
 
-		c = _mm_load_ps1(&pc[i]);
-		l = _mm_load_ps1(&pl[i]);
+		c = _mm_set_ps1(pc[i]);
+		l = _mm_set_ps1(pl[i]);
 
 		// Forward substitution.
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
@@ -279,7 +280,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 
 	// Back substitution.
 	for (ptrdiff_t i = ctx.dst_width; i > 0; --i) {
-		u = _mm_load_ps1(&pu[i]);
+		u = _mm_set_ps1(pu[i]);
 
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 			w = i < ctx.dst_width ? _mm_load_ps(&dst_p[i * dst_stride + j]) : _mm_setzero_ps();
