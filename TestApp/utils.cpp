@@ -87,7 +87,7 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 		dst_fmt.tv = plane_tv;
 		dst_fmt.chroma = plane_chroma;
 
-		ImagePlane<void> src_plane{ in.data(p), width, height, in.stride(), src_fmt };
+		ImagePlane<const void> src_plane{ in.data(p), width, height, in.stride(), src_fmt };
 		ImagePlane<void> dst_plane{ out.data(p), width, height, out.stride(), dst_fmt };
 
 		convert->process(src_plane, dst_plane, nullptr);

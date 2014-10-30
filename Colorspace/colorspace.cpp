@@ -70,7 +70,7 @@ size_t ColorspaceConversion::tmp_size(int width) const
 	return 3 * align(width, AlignmentOf<float>::value);
 }
 
-void ColorspaceConversion::process(const ImagePlane<void> *src, ImagePlane<void> *dst, void *tmp) const
+void ColorspaceConversion::process(const ImagePlane<const void> *src, const ImagePlane<void> *dst, void *tmp) const
 {
 	PixelType src_type = src[0].format().type;
 	PixelType dst_type = dst[0].format().type;

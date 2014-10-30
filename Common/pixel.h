@@ -55,6 +55,7 @@ inline int pixel_size(PixelType type)
 
 /**
  * Get a default pixel format for a given pixel type.
+ * The default format is TV-range, non-chroma, and uses all available bits.
  *
  * @param type type of pixel
  * @return default format

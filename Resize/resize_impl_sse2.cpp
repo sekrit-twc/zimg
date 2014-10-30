@@ -87,7 +87,7 @@ FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
 }
 
 template <bool DoLoop>
-void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst)
+void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
@@ -171,7 +171,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<uint16_t
 }
 
 template <bool DoLoop>
-void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<float> &src, ImagePlane<float> &dst)
+void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
 {
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
@@ -235,7 +235,7 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<float> &s
 	filter_plane_h_scalar(filter, src, dst, mod(src_height, 4), src_height, 0, filter.height(), ScalarPolicy_F32{});
 }
 
-void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t * RESTRICT tmp)
+void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t * RESTRICT tmp)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
@@ -358,7 +358,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<uint16_t
 	}
 }
 
-void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<float> &src, ImagePlane<float> &dst)
+void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
 {
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
@@ -455,7 +455,7 @@ public:
 	ResizeImplSSE2(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
 
-	void process_u16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_u16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		if (m_filter_h.width() > 8)
 			filter_plane_u16_h<true>(m_filter_h, src, dst);
@@ -463,22 +463,22 @@ public:
 			filter_plane_u16_h<false>(m_filter_h, src, dst);
 	}
 
-	void process_u16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_u16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		filter_plane_u16_v(m_filter_v, src, dst, tmp);
 	}
 
-	void process_f16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
 	}
 
-	void process_f16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
 	}
 
-	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		if (m_filter_h.width() > 4)
 			filter_plane_fp_h<true>(m_filter_h, src, dst);
@@ -486,7 +486,7 @@ public:
 			filter_plane_fp_h<false>(m_filter_h, src, dst);
 	}
 
-	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		filter_plane_fp_v(m_filter_v, src, dst);
 	}

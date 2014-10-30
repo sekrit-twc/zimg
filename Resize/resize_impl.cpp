@@ -14,35 +14,35 @@ public:
 	ResizeImplC(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) : ResizeImpl(filter_h, filter_v)
 	{}
 
-	void process_u16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_u16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
 		filter_plane_h_scalar(filter, src, dst, 0, src.height(), 0, filter.height(), ScalarPolicy_U16{});
 	}
 
-	void process_u16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_u16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
 		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src.width(), ScalarPolicy_U16{});
 	}
 
-	void process_f16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 
-	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_h;
 		filter_plane_h_scalar(filter, src, dst, 0, src.height(), 0, filter.height(), ScalarPolicy_F32{});
 	}
 
-	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		const EvaluatedFilter &filter = m_filter_v;
 		filter_plane_v_scalar(filter, src, dst, 0, filter.height(), 0, src.width(), ScalarPolicy_F32{});

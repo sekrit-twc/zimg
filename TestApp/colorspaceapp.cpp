@@ -144,13 +144,13 @@ void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Fram
 	Frame in_conv{ width, height, pixel_size(type), 3 };
 	Frame out_conv{ width, height, pixel_size(type), 3 };
 
-	ImagePlane<void> in_planes[3];
+	ImagePlane<const void> in_planes[3];
 	ImagePlane<void> out_planes[3];
 
 	convert_frame(in, in_conv, filetype, type, tv_in, yuv_in);
 
 	for (int p = 0; p < 3; ++p) {
-		in_planes[p] = ImagePlane<void>{ in_conv.data(p), width, height, in_conv.stride(), type };
+		in_planes[p] = ImagePlane<const void>{ in_conv.data(p), width, height, in_conv.stride(), type };
 		out_planes[p] = ImagePlane<void>{ out_conv.data(p), width, height, out_conv.stride(), type };
 	}
 

@@ -28,7 +28,7 @@ void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 	x3 = _mm_castpd_ps(o3);
 }
 
-void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp)
+void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp)
 {
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
@@ -161,7 +161,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<float> &sr
 	}
 }
 
-void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst)
+void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
 {
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
@@ -299,12 +299,12 @@ public:
 	UnresizeImplX86(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
-	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const
+	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		filter_plane_h_sse2(m_hcontext, src, dst, tmp);
 	}
 
-	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const
+	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		filter_plane_v_sse2(m_vcontext, src, dst);
 	}

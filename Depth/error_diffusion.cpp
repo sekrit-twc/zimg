@@ -25,7 +25,7 @@ FloatToInteger<T> make_float_to_integer(const PixelFormat &fmt)
 
 class ErrorDiffusionC : public DitherConvert {
 	template <class T, class U, class Unpack, class Quant, class Dequant>
-	void dither(const ImagePlane<T> &src, ImagePlane<U> &dst, float *tmp, Unpack unpack, Quant quant, Dequant dequant) const
+	void dither(const ImagePlane<const T> &src, const ImagePlane<U> &dst, float *tmp, Unpack unpack, Quant quant, Dequant dequant) const
 	{
 		const T *src_p = src.data();
 		U *dst_p = dst.data();
@@ -67,7 +67,7 @@ class ErrorDiffusionC : public DitherConvert {
 		}
 	}
 public:
-	void byte_to_byte(const ImagePlane<uint8_t> &src, ImagePlane<uint8_t> &dst, float *tmp) const override
+	void byte_to_byte(const ImagePlane<const uint8_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       make_integer_to_float<uint8_t>(src.format()),
@@ -75,7 +75,7 @@ public:
 		       make_integer_to_float<uint8_t>(dst.format()));
 	}
 
-	void byte_to_word(const ImagePlane<uint8_t> &src, ImagePlane<uint16_t> &dst, float *tmp) const override
+	void byte_to_word(const ImagePlane<const uint8_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       make_integer_to_float<uint8_t>(src.format()),
@@ -83,7 +83,7 @@ public:
 		       make_integer_to_float<uint16_t>(dst.format()));
 	}
 
-	void word_to_byte(const ImagePlane<uint16_t> &src, ImagePlane<uint8_t> &dst, float *tmp) const override
+	void word_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       make_integer_to_float<uint16_t>(src.format()),
@@ -91,7 +91,7 @@ public:
 		       make_integer_to_float<uint8_t>(dst.format()));
 	}
 
-	void word_to_word(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, float *tmp) const override
+	void word_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       make_integer_to_float<uint16_t>(src.format()),
@@ -99,7 +99,7 @@ public:
 		       make_integer_to_float<uint16_t>(dst.format()));
 	}
 
-	void half_to_byte(const ImagePlane<uint16_t> &src, ImagePlane<uint8_t> &dst, float *tmp) const override
+	void half_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       depth::half_to_float,
@@ -107,7 +107,7 @@ public:
 		       make_integer_to_float<uint8_t>(dst.format()));
 	}
 
-	void half_to_word(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, float *tmp) const override
+	void half_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       depth::half_to_float,
@@ -115,7 +115,7 @@ public:
 		       make_integer_to_float<uint16_t>(dst.format()));
 	}
 
-	void float_to_byte(const ImagePlane<float> &src, ImagePlane<uint8_t> &dst, float *tmp) const override
+	void float_to_byte(const ImagePlane<const float> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       identity<float>,
@@ -123,7 +123,7 @@ public:
 		       make_integer_to_float<uint8_t>(dst.format()));
 	}
 
-	void float_to_word(const ImagePlane<float> &src, ImagePlane<uint16_t> &dst, float *tmp) const override
+	void float_to_word(const ImagePlane<const float> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
 	{
 		dither(src, dst, tmp,
 		       identity<float>,

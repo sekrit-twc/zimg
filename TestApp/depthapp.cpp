@@ -108,7 +108,7 @@ void execute(const depth::Depth &depth, const Frame &in, Frame &out, int times,
 			PixelFormat src_format{ pxl_in, bits_in, tv_in, chroma };
 			PixelFormat dst_format{ pxl_out, bits_out, tv_out, chroma };
 
-			ImagePlane<void> src_plane{ in.data(p), width, height, src_stride, src_format };
+			ImagePlane<const void> src_plane{ in.data(p), width, height, src_stride, src_format };
 			ImagePlane<void> dst_plane{ out.data(p), width, height, dst_stride, dst_format };
 
 			depth.process(src_plane, dst_plane, tmp.data());
@@ -133,7 +133,7 @@ void export_for_bmp(const Frame &in, Frame &out, PixelType type, int bits, bool 
 		PixelFormat src_format{ type, bits, tv, chroma };
 		PixelFormat dst_format{ PixelType::BYTE, 8, tv, chroma };
 
-		ImagePlane<void> src_plane{ in.data(p), width, height, src_stride, src_format };
+		ImagePlane<const void> src_plane{ in.data(p), width, height, src_stride, src_format };
 		ImagePlane<void> dst_plane{ out.data(p), width, height, dst_stride, dst_format };
 
 		depth.process(src_plane, dst_plane, tmp.data());
