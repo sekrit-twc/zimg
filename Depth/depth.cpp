@@ -13,7 +13,7 @@ namespace depth {;
 namespace {;
 
 template <class Func, class T, class U, class... Args>
-void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<T> &src, ImagePlane<U> &dst, Args... arg)
+void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<const T> &src, const ImagePlane<U> &dst, Args... arg)
 {
 	int src_stride = src.stride();
 	int dst_stride = dst.stride();
@@ -28,11 +28,11 @@ void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<T> &src
 	}
 }
 
-void convert_dithered(const DitherConvert &dither, const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp)
+void convert_dithered(const DitherConvert &dither, const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp)
 {
-	ImagePlane<uint8_t> src_b = plane_cast<uint8_t>(src);
-	ImagePlane<uint16_t> src_w = plane_cast<uint16_t>(src);
-	ImagePlane<float> src_f = plane_cast<float>(src);
+	ImagePlane<const uint8_t> src_b = plane_cast<const uint8_t>(src);
+	ImagePlane<const uint16_t> src_w = plane_cast<const uint16_t>(src);
+	ImagePlane<const float> src_f = plane_cast<const float>(src);
 
 	ImagePlane<uint8_t> dst_b = plane_cast<uint8_t>(dst);
 	ImagePlane<uint16_t> dst_w = plane_cast<uint16_t>(dst);
@@ -61,11 +61,11 @@ void convert_dithered(const DitherConvert &dither, const ImagePlane<void> &src, 
 		throw ZimgUnsupportedError{ "no conversion found between pixel types" };
 }
 
-void convert_depth(const DepthConvert &depth, const ImagePlane<void> &src, ImagePlane<void> &dst)
+void convert_depth(const DepthConvert &depth, const ImagePlane<const void> &src, const ImagePlane<void> &dst)
 {
-	ImagePlane<uint8_t> src_b = plane_cast<uint8_t>(src);
-	ImagePlane<uint16_t> src_w = plane_cast<uint16_t>(src);
-	ImagePlane<float> src_f = plane_cast<float>(src);
+	ImagePlane<const uint8_t> src_b = plane_cast<const uint8_t>(src);
+	ImagePlane<const uint16_t> src_w = plane_cast<const uint16_t>(src);
+	ImagePlane<const float> src_f = plane_cast<const float>(src);
 
 	ImagePlane<uint8_t> dst_b = plane_cast<uint8_t>(dst);
 	ImagePlane<uint16_t> dst_w = plane_cast<uint16_t>(dst);
@@ -109,7 +109,7 @@ size_t Depth::tmp_size(int width) const
 	return m_error_diffusion ? (width + 2) * 2 : 0;
 }
 
-void Depth::process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const
+void Depth::process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const
 {
 	if (dst.format().type >= PixelType::HALF)
 		convert_depth(*m_depth, src, dst);

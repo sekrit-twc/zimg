@@ -53,41 +53,41 @@ size_t Resize::tmp_size(PixelType type) const
 	return size;
 }
 
-void Resize::invoke_impl_h(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const
+void Resize::invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const
 {
 	switch (src.format().type) {
 	case PixelType::WORD:
-		m_impl->process_u16_h(plane_cast<uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl->process_u16_h(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::HALF:
-		m_impl->process_f16_h(plane_cast<uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl->process_f16_h(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::FLOAT:
-		m_impl->process_f32_h(plane_cast<float>(src), plane_cast<float>(dst), (float *)tmp);
+		m_impl->process_f32_h(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
 		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };
 	}
 }
 
-void Resize::invoke_impl_v(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const
+void Resize::invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const
 {
 	switch (src.format().type) {
 	case PixelType::WORD:
-		m_impl->process_u16_v(plane_cast<uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl->process_u16_v(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::HALF:
-		m_impl->process_f16_v(plane_cast<uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl->process_f16_v(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::FLOAT:
-		m_impl->process_f32_v(plane_cast<float>(src), plane_cast<float>(dst), (float *)tmp);
+		m_impl->process_f32_v(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
 		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };
 	}
 }
 
-void Resize::process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const
+void Resize::process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const
 {
 	PixelType type = src.format().type;
 	int pxsize = pixel_size(type);

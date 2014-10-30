@@ -102,7 +102,7 @@ void execute(const resize::Resize &resize, const Frame &in, Frame &out, int time
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < planes; ++p) {
-			ImagePlane<void> src_p{ src.data(p), src.width(), src.height(), src.stride(), type };
+			ImagePlane<const void> src_p{ src.data(p), src.width(), src.height(), src.stride(), type };
 			ImagePlane<void> dst_p{ dst.data(p), dst.width(), dst.height(), dst.stride(), type };
 
 			resize.process(src_p, dst_p, tmp.data());

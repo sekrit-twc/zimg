@@ -59,7 +59,7 @@ struct ScalarPolicy_F32 {
 };
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const ImagePlane<T> &src, ImagePlane<T> &dst,
+inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
 	const T * RESTRICT src_p = src.data();
@@ -86,7 +86,7 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 }
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const ImagePlane<T> &src, ImagePlane<T> &dst,
+inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
 	const T * RESTRICT src_p = src.data();
@@ -148,42 +148,42 @@ public:
 	 * @param tmp temporary buffer (implementation defined size)
 	 * @throws ZimgUnsupportedError if not supported
 	 */
-	virtual void process_u16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_u16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on an unsigned 16-bit image.
 	 *
 	 * @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_u16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_u16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute horizontal filter pass on a half precision 16-bit image.
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f16_h(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on a half precision 16-bit image.
 	 *
 	 *  @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_f16_v(const ImagePlane<uint16_t> &src, ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
 	 * Execute horizontal filter pass on a single precision 32-bit image.
 	 *
 	 * @see ResizeImpl::process_u16_h
 	 */
-	virtual void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 
 	/**
 	 * Execute vertical filter pass on a single precision 32-bit image.
 	 *
 	 * @see ResizeImpl::procss_u16_h
 	 */
-	virtual void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 };
 
 /**

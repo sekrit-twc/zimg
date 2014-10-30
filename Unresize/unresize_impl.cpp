@@ -14,7 +14,7 @@ public:
 	UnresizeImplC(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
-	void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		for (int i = 0; i < src.height(); ++i) {
 			filter_scanline_h_forward(m_hcontext, src, tmp, i, 0, m_hcontext.dst_width);
@@ -22,7 +22,7 @@ public:
 		}
 	}
 
-	void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const override
+	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		for (int i = 0; i < m_vcontext.dst_width; ++i) {
 			filter_scanline_v_forward(m_vcontext, src, dst, i, 0, src.width());

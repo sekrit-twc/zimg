@@ -60,7 +60,7 @@ void execute(const unresize::Unresize &unresize, const Frame &in, Frame &out, in
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < src.planes(); ++p) {
-			ImagePlane<void> src_p{ src.data(p), src.width(), src.height(), src.stride(), pxtype };
+			ImagePlane<const void> src_p{ src.data(p), src.width(), src.height(), src.stride(), pxtype };
 			ImagePlane<void> dst_p{ dst.data(p), dst.width(), dst.height(), dst.stride(), pxtype };
 
 			unresize.process(src_p, dst_p, tmp.data());

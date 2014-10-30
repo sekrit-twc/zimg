@@ -148,7 +148,7 @@ public:
 	 * @param tmp temporary buffer (@see Unresize::tmp_size)
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const;
+	void process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 };
 
 } // namespace unresize

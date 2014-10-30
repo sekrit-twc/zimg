@@ -14,7 +14,7 @@ enum class CPUClass;
 
 namespace unresize {;
 
-inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const ImagePlane<float> &src, float * RESTRICT tmp,
+inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const ImagePlane<const float> &src, float * RESTRICT tmp,
                                                    ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float * RESTRICT src_p = src.data();
@@ -40,7 +40,7 @@ inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, c
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, ImagePlane<float> &dst,
+inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, const ImagePlane<float> &dst,
                                                 ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	float * RESTRICT dst_p = dst.data();
@@ -56,7 +56,7 @@ inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, cons
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const ImagePlane<float> &src, ImagePlane<float> &dst,
+inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst,
                                                    ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	const float * RESTRICT src_p = src.data();
@@ -83,7 +83,7 @@ inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, c
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, ImagePlane<float> &dst, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, const ImagePlane<float> &dst, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
 {
 	float * RESTRICT dst_p = dst.data();
 	int dst_stride = dst.stride();
@@ -127,9 +127,9 @@ public:
 	 */
 	virtual ~UnresizeImpl() = 0;
 
-	virtual void process_f32_h(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 
-	virtual void process_f32_v(const ImagePlane<float> &src, ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 };
 
 /**

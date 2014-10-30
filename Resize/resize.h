@@ -35,9 +35,9 @@ class Resize {
 
 	size_t max_frame_size(PixelType type) const;
 
-	void invoke_impl_h(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const;
+	void invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 
-	void invoke_impl_v(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const;
+	void invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.
@@ -79,7 +79,7 @@ public:
 	 * @param tmp temporary buffer (@see Resize::tmp_size)
 	 * @throws ZimgUnsupportedError if pixel type not supported
 	 */
-	void process(const ImagePlane<void> &src, ImagePlane<void> &dst, void *tmp) const;
+	void process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 };
 
 } // namespace resize
