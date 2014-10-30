@@ -135,16 +135,7 @@ public:
 /**
  * Create and allocate a execution kernel.
  *
- * @param src_width upsampled image width
- * @param src_height upsampled image height
- * @param dst_width unresized image width
- * @param dst_height unresized image height
- * @param shift_w horizontal center shift relative to upsampled image
- * @param shift_h vertical center shift relative to upsampled image
- * @param cpu create kernel optimized for given cpu
- * @return a pointer to the allocated kernel
- * @throws ZimgIllegalArgument on invalid dimensions
- * @throws ZimgUnsupportedError if not supported
+ * @see Unresize::Unresize
  */
 UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu);
 

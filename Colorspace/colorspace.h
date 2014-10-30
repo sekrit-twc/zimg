@@ -53,6 +53,7 @@ public:
 	 * Get the size of the temporary buffer required by the conversion.
 	 *
 	 * @param width width of image line.
+	 * @return the size of the temporary buffer in units of floats
 	 */
 	size_t tmp_size(int width) const;
 
