@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include "Common/pixel.h"
 
 namespace zimg {;
@@ -32,27 +33,27 @@ T clamp(T x, T low, T high)
 	return std::min(std::max(x, low), high);
 }
 
-inline uint32_t numeric_max(int bits)
+inline int32_t numeric_max(int bits)
 {
-	return (1UL << bits) - 1;
+	return (1L << bits) - 1;
 }
 
-inline uint32_t integer_offset(int bits, bool tv, bool chroma)
+inline int32_t integer_offset(int bits, bool tv, bool chroma)
 {
 	if (chroma)
-		return 1UL << (bits - 1);
+		return 1L << (bits - 1);
 	else if (tv)
-		return 16UL << (bits - 8);
+		return 16L << (bits - 8);
 	else
 		return 0;
 }
 
-inline uint32_t integer_range(int bits, bool tv, bool chroma)
+inline int32_t integer_range(int bits, bool tv, bool chroma)
 {
 	if (tv && chroma)
-		return 224UL << (bits - 8);
+		return 224L << (bits - 8);
 	else if (tv)
-		return 219UL << (bits - 8);
+		return 219L << (bits - 8);
 	else
 		return numeric_max(bits);
 }
@@ -118,35 +119,35 @@ inline uint16_t float_to_half(float x)
 
 template <class T>
 class IntegerToFloat {
-	uint32_t offset;
+	float offset;
 	float scale;
 public:
 	IntegerToFloat(int bits, bool tv, bool chroma) :
-		offset{ integer_offset(bits, tv, chroma) },
+		offset{ (float)integer_offset(bits, tv, chroma) },
 		scale{ 1.0f / (float)integer_range(bits, tv, chroma) }
 	{}
 
 	float operator()(T x) const
 	{
-		return (static_cast<float>(x) - (float)offset) * scale;
+		return (static_cast<float>(x) - offset) * scale;
 	}
 };
 
 template <class T>
 class FloatToInteger {
-	uint32_t offset;
-	float high;
+	float offset;
 	float scale;
 public:
 	FloatToInteger(int bits, bool tv, bool chroma) :
-		offset{ integer_offset(bits, tv, chroma) },
-		high{ (float)numeric_max(bits) },
+		offset{ (float)integer_offset(bits, tv, chroma) },
 		scale{ (float)integer_range(bits, tv, chroma) }
 	{}
 
 	T operator()(float x) const
 	{
-		return static_cast<T>(clamp(std::round(x * scale + (float)offset), 0.0f, high));
+		int32_t u = (int32_t)(x * scale + offset + 0.5f);
+
+		return static_cast<T>(clamp(u, (int32_t)0, (int32_t)std::numeric_limits<T>::max()));
 	}
 };
 
