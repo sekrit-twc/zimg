@@ -18,12 +18,12 @@ enum class ColorPrimaries;
 /**
  * Base class for implementations of pixel format conversion.
  */
-class PixelAdapater {
+class PixelAdapter {
 public:
 	/**
 	 * Destroy implementation.
 	 */
-	virtual ~PixelAdapater() = 0;
+	virtual ~PixelAdapter() = 0;
 
 	/**
 	 * Convert from half precision to full precision.
@@ -66,7 +66,7 @@ public:
  *
  * @param cpu create adapter optimized for given cpu
  */
-PixelAdapater *create_pixel_adapter(CPUClass cpu);
+PixelAdapter *create_pixel_adapter(CPUClass cpu);
 
 /**
  * Create an operation converting from YUV to RGB via a 3x3 matrix.

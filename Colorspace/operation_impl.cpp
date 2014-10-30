@@ -36,7 +36,7 @@ float rec_709_inverse_gamma(float x)
 	return x;
 }
 
-class PixelAdapaterC : public PixelAdapater {
+class PixelAdapterC : public PixelAdapter {
 	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
@@ -194,9 +194,9 @@ class Rec2020CLToYUVOperationC : public Operation {
 } // namespace
 
 
-PixelAdapater *create_pixel_adapter(CPUClass cpu)
+PixelAdapter *create_pixel_adapter(CPUClass cpu)
 {
-	return new PixelAdapaterC{};
+	return new PixelAdapterC{};
 }
 
 Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
