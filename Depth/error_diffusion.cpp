@@ -49,12 +49,12 @@ class ErrorDiffusionC : public DitherConvert {
 				float x = unpack(src_p[i * src_stride + j]);
 				float err = 0;
 
-				err += curr_line[j - 1] * 7.0f;
-				err += prev_line[j + 1] * 3.0f;
-				err += prev_line[j + 0] * 5.0f;
-				err += prev_line[j - 1] * 1.0f;
+				err += curr_line[j - 1] * (7.0f / 16.0f);
+				err += prev_line[j + 1] * (3.0f / 16.0f);
+				err += prev_line[j + 0] * (5.0f / 16.0f);
+				err += prev_line[j - 1] * (1.0f / 16.0f);
 
-				x += err / 16.0f;
+				x += err;
 
 				U q = quant(x);
 				float y = dequant(q);
