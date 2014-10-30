@@ -7,6 +7,7 @@
 #include "matrix3.h"
 #include "operation.h"
 #include "operation_impl.h"
+#include "operation_impl_x86.h"
 
 namespace zimg {;
 namespace colorspace {;
@@ -37,6 +38,7 @@ float rec_709_inverse_gamma(float x)
 }
 
 class PixelAdapterC : public PixelAdapter {
+public:
 	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
 	{
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
@@ -196,7 +198,14 @@ class Rec2020CLToYUVOperationC : public Operation {
 
 PixelAdapter *create_pixel_adapter(CPUClass cpu)
 {
-	return new PixelAdapterC{};
+	PixelAdapter *ret = nullptr;
+#ifdef ZIMG_X86
+	ret = create_pixel_adapter_x86(cpu);
+#endif
+	if (!ret)
+		ret = new PixelAdapterC{};
+
+	return ret;
 }
 
 Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
