@@ -7,7 +7,7 @@
 namespace zimg {;
 namespace colorspace {;
 
-PixelAdapater::~PixelAdapater()
+PixelAdapter::~PixelAdapter()
 {
 }
 
