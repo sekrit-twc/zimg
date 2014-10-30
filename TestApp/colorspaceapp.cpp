@@ -31,6 +31,7 @@ struct AppContext {
 	const char *visualise;
 	int times;
 	CPUClass cpu;
+	PixelType filetype;
 	PixelType pixtype;
 };
 
@@ -42,6 +43,7 @@ const AppOption OPTIONS[] = {
 	{ "visualise", OptionType::OPTION_STRING,    offsetof(AppContext, visualise) },
 	{ "times",     OptionType::OPTION_INTEGER,   offsetof(AppContext, times) },
 	{ "cpu",       OptionType::OPTION_CPUCLASS,  offsetof(AppContext, cpu) },
+    { "filetype",  OptionType::OPTION_PIXELTYPE, offsetof(AppContext, filetype) },
 	{ "pixtype",   OptionType::OPTION_PIXELTYPE, offsetof(AppContext, pixtype) }
 };
 
@@ -59,7 +61,8 @@ void usage()
 	std::cout << "    --visualise          path to BMP file for visualisation\n";
 	std::cout << "    --times              number of cycles\n";
 	std::cout << "    --cpu                select CPU type\n";
-	std::cout << "    --pixtype            select pixel format\n";
+	std::cout << "    --filetype           pixel format of input/output files\n";
+	std::cout << "    --pixtype            select working pixel format\n";
 }
 
 colorspace::MatrixCoefficients parse_matrix(const char *matrix)
@@ -132,23 +135,23 @@ colorspace::ColorspaceDefinition parse_csp(const char *str)
 	return csp;
 }
 
-void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Frame &out, int times, bool tv_in, bool tv_out, bool yuv_in, bool yuv_out, PixelType type)
+void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Frame &out, int times,
+             bool tv_in, bool tv_out, bool yuv_in, bool yuv_out, PixelType filetype, PixelType type)
 {
 	int width = in.width();
 	int height = in.height();
-	PixelType pxfloat = PixelType::FLOAT;
 
-	Frame in_conv{ width, height, pixel_size(pxfloat), 3 };
-	Frame out_conv{ width, height, pixel_size(pxfloat), 3 };
+	Frame in_conv{ width, height, pixel_size(type), 3 };
+	Frame out_conv{ width, height, pixel_size(type), 3 };
 
 	ImagePlane<void> in_planes[3];
 	ImagePlane<void> out_planes[3];
 
-	convert_frame(in, in_conv, type, pxfloat, tv_in, yuv_in);
+	convert_frame(in, in_conv, filetype, type, tv_in, yuv_in);
 
 	for (int p = 0; p < 3; ++p) {
-		in_planes[p] = ImagePlane<void>{ in_conv.data(p), width, height, in_conv.stride(), pxfloat };
-		out_planes[p] = ImagePlane<void>{ out_conv.data(p), width, height, out_conv.stride(), pxfloat };
+		in_planes[p] = ImagePlane<void>{ in_conv.data(p), width, height, in_conv.stride(), type };
+		out_planes[p] = ImagePlane<void>{ out_conv.data(p), width, height, out_conv.stride(), type };
 	}
 
 	auto tmp = allocate_buffer(conv.tmp_size(in.width()), PixelType::FLOAT);
@@ -158,7 +161,7 @@ void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Fram
 		conv.process(in_planes, out_planes, tmp.data());
 	});
 
-	convert_frame(out_conv, out, pxfloat, type, tv_out, yuv_out);
+	convert_frame(out_conv, out, type, filetype, tv_out, yuv_out);
 }
 
 } // namespace
@@ -183,6 +186,7 @@ int colorspace_main(int argc, const char **argv)
 	c.tv_out    = false;
 	c.visualise = nullptr;
 	c.times     = 1;
+	c.filetype  = PixelType::FLOAT;
 	c.pixtype   = PixelType::FLOAT;
 	c.cpu       = CPUClass::CPU_NONE;
 
@@ -190,7 +194,7 @@ int colorspace_main(int argc, const char **argv)
 
 	int width = c.width;
 	int height = c.height;
-	int pxsize = pixel_size(c.pixtype);
+	int pxsize = pixel_size(c.filetype);
 
 	bool tv_in = c.tv_in;
 	bool tv_out = c.tv_out;
@@ -203,14 +207,14 @@ int colorspace_main(int argc, const char **argv)
 	read_frame_raw(in, c.infile);
 
 	colorspace::ColorspaceConversion conv{ c.csp_in, c.csp_out, c.cpu };
-	execute(conv, in, out, c.times, tv_in, tv_out, yuv_in, yuv_out, c.pixtype);
+	execute(conv, in, out, c.times, tv_in, tv_out, yuv_in, yuv_out, c.filetype, c.pixtype);
 
 	write_frame_raw(out, c.outfile);
 
 	if (c.visualise) {
 		Frame bmp{ width, height, 1, 3 };
 
-		convert_frame(out, bmp, c.pixtype, PixelType::BYTE, tv_out, yuv_out);
+		convert_frame(out, bmp, c.filetype, PixelType::BYTE, tv_out, yuv_out);
 		write_frame_bmp(bmp, c.visualise);
 	}
 
