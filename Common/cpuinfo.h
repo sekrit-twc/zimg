@@ -17,6 +17,7 @@ enum class CPUClass {
 #ifdef ZIMG_X86
 	CPU_X86_AUTO,
 	CPU_X86_SSE2,
+	CPU_X86_F16C,
 	CPU_X86_AVX2
 #endif // ZIMG_X86
 };
