@@ -19,7 +19,7 @@ ResizeImpl *create_resize_impl_sse2(const EvaluatedFilter &filter_h, const Evalu
 ResizeImpl *create_resize_impl_avx2(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
 
 /**
- * Create an appropriate x86 optimized ResizeImpl for the running CPU.
+ * Create an appropriate x86 optimized ResizeImpl for the given CPU.
  *
  * @see create_resize_impl
  */
