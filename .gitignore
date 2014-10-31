@@ -1,3 +1,6 @@
+*.bin
+*.bmp
+*.yuv
 *.opensdf
 *.sdf
 *.suo
