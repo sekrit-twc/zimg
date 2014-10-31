@@ -78,7 +78,7 @@ void ColorspaceConversion::process(const ImagePlane<const void> *src, const Imag
 	size_t dst_pxsize = pixel_size(dst_type);
 
 	int width = src[0].width();
-	int height = src[1].height();
+	int height = src[0].height();
 
 	ptrdiff_t tmp_stride = align(width, AlignmentOf<float>::value);
 	float *tmp_f = (float *)tmp;
