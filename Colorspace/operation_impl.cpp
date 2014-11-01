@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
@@ -13,29 +12,6 @@ namespace zimg {;
 namespace colorspace {;
 
 namespace {;
-
-const float TRANSFER_ALPHA = 1.09929682680944f;
-const float TRANSFER_BETA = 0.018053968510807f;
-
-float rec_709_gamma(float x)
-{
-	if (x < TRANSFER_BETA)
-		x = x * 4.5f;
-	else
-		x = TRANSFER_ALPHA * std::pow(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
-
-	return x;
-}
-
-float rec_709_inverse_gamma(float x)
-{
-	if (x < 4.5f * TRANSFER_BETA)
-		x = x / 4.5f;
-	else
-		x = std::pow((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
-
-	return x;
-}
 
 class PixelAdapterC : public PixelAdapter {
 public:
@@ -98,6 +74,7 @@ public:
 };
 
 class Rec709InverseGammaOperationC : public Operation {
+public:
 	void process(float * const *ptr, int width) const override
 	{
 		for (int p = 0; p < 3; ++p) {
@@ -111,6 +88,7 @@ class Rec709InverseGammaOperationC : public Operation {
 };
 
 class Rec2020CLToRGBOperationC : public Operation {
+public:
 	void process(float * const *ptr, int width) const override
 	{
 		float kr = (float)REC_2020_KR;
@@ -154,6 +132,7 @@ class Rec2020CLToRGBOperationC : public Operation {
 };
 
 class Rec2020CLToYUVOperationC : public Operation {
+public:
 	void process(float * const *ptr, int width) const override
 	{
 		float kr = (float)REC_2020_KR;
@@ -222,12 +201,26 @@ Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 
 Operation *create_rec709_gamma_operation(CPUClass cpu)
 {
-	return new Rec709GammaOperationC{};
+	Operation *ret = nullptr;
+#ifdef ZIMG_X86
+	ret = create_rec709_gamma_operation_x86(cpu);
+#endif
+	if (!ret)
+		ret = new Rec709GammaOperationC{};
+
+	return ret;
 }
 
 Operation *create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
-	return new Rec709InverseGammaOperationC{};
+	Operation *ret = nullptr;
+#ifdef ZIMG_X86
+	ret = create_rec709_inverse_gamma_operation_x86(cpu);
+#endif
+	if (!ret)
+		ret = new Rec709InverseGammaOperationC{};
+
+	return ret;
 }
 
 Operation *create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)

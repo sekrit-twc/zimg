@@ -21,6 +21,9 @@ PixelAdapter *create_pixel_adapter_f16c();
 Operation *create_matrix_operation_sse2(const Matrix3x3 &m);
 Operation *create_matrix_operation_avx2(const Matrix3x3 &m);
 
+Operation *create_rec709_gamma_operation_f16c();
+Operation *create_rec709_inverse_gamma_operation_f16c();
+
 /**
  * Create an appropriate x86 optimized PixelAdapter for the given CPU.
  *
@@ -31,8 +34,25 @@ PixelAdapter *create_pixel_adapter_x86(CPUClass cpu);
 
 /**
  * Create an appropriate x86 optimized matrix operation for the given CPU.
+ *
+ * @param m matrix
+ * @param cpu create operation for given cpu
  */
 Operation *create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu);
+
+/**
+ * Create an appropriate x86 optimized Rec.709 operation.
+ *
+ * @param cpu create operation for given cpu
+ */
+Operation *create_rec709_gamma_operation_x86(CPUClass cpu);
+
+/**
+ * Create an appropriate x86 optimized inverse Rec.709 operation.
+ *
+ * @param cpu create operation for given cpu
+ */
+Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu);
 
 } // namespace colorspace
 } // namespace zimg

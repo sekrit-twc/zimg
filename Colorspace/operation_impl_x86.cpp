@@ -48,6 +48,44 @@ Operation *create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu)
 	return ret;
 }
 
+Operation *create_rec709_gamma_operation_x86(CPUClass cpu)
+{
+	X86Capabilities caps = query_x86_capabilities();
+	Operation *ret;
+
+	if (cpu == CPUClass::CPU_X86_AUTO) {
+		if (caps.f16c)
+			ret = create_rec709_gamma_operation_f16c();
+		else
+			ret = nullptr;
+	} else if (cpu >= CPUClass::CPU_X86_F16C) {
+		ret = create_rec709_gamma_operation_f16c();
+	} else {
+		ret = nullptr;
+	}
+
+	return ret;
+}
+
+Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu)
+{
+	X86Capabilities caps = query_x86_capabilities();
+	Operation *ret;
+
+	if (cpu == CPUClass::CPU_X86_AUTO) {
+		if (caps.f16c)
+			ret = create_rec709_inverse_gamma_operation_f16c();
+		else
+			ret = nullptr;
+	} else if (cpu >= CPUClass::CPU_X86_F16C) {
+		ret = create_rec709_inverse_gamma_operation_f16c();
+	} else {
+		ret = nullptr;
+	}
+
+	return ret;
+}
+
 } // namespace colorspace
 } // namespace zimg
 
