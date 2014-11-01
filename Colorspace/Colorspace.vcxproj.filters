@@ -62,5 +62,11 @@
     <ClCompile Include="operation_impl_f16c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="operation_impl_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="operation_impl_avx2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -25,6 +25,29 @@ PixelAdapter *create_pixel_adapter_x86(CPUClass cpu)
 	return ret;
 }
 
+Operation *create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu)
+{
+	X86Capabilities caps = query_x86_capabilities();
+	Operation *ret;
+
+	if (cpu == CPUClass::CPU_X86_AUTO) {
+		if (caps.avx2)
+			ret = create_matrix_operation_avx2(m);
+		else if (caps.sse2)
+			ret = create_matrix_operation_sse2(m);
+		else
+			ret = nullptr;
+	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
+		ret = create_matrix_operation_avx2(m);
+	} else if (cpu >= CPUClass::CPU_X86_SSE2) {
+		ret = create_matrix_operation_sse2(m);
+	} else {
+		ret = nullptr;
+	}
+
+	return ret;
+}
+
 } // namespace colorspace
 } // namespace zimg
 
