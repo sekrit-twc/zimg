@@ -494,6 +494,8 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 
 		void *tmp = 0;
 		size_t tmp_size = zimg_resize_tmp_size(data->resize_ctx_y, pixel_type);
+		size_t tmp_size_uv = data->resize_ctx_uv ? zimg_resize_tmp_size(data->resize_ctx_uv, pixel_type) : 0;
+		tmp_size = tmp_size_uv > tmp_size ? tmp_size_uv : tmp_size;
 
 		VS_ALIGNED_MALLOC(&tmp, tmp_size, 32);
 		if (!tmp) {
@@ -625,11 +627,11 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 
 	filter_param_a = vsapi->propGetFloat(in, "filter_param_a_uv", 0, &err);
 	if (err)
-		filter_param_a_uv = !strcmp(filter, filter_uv) ? filter_param_a : 0.0;
+		filter_param_a_uv = !strcmp(filter, filter_uv) ? filter_param_a : NAN;
 
 	filter_param_b = vsapi->propGetFloat(in, "filter_param_b", 0, &err);
 	if (err)
-		filter_param_b_uv = !strcmp(filter, filter_uv) ? filter_param_b : 0.0;
+		filter_param_b_uv = !strcmp(filter, filter_uv) ? filter_param_b : NAN;
 
 	subsample_w = (int)vsapi->propGetInt(in, "subsample_w", 0, &err);
 	if (err)
