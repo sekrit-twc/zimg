@@ -210,7 +210,14 @@ PixelAdapter *create_pixel_adapter(CPUClass cpu)
 
 Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
-	return new MatrixOperationC{ m };
+	Operation *ret = nullptr;
+#ifdef ZIMG_X86
+	ret = create_matrix_operation_x86(m, cpu);
+#endif
+	if (!ret)
+		ret = new MatrixOperationC{ m };
+
+	return ret;
 }
 
 Operation *create_rec709_gamma_operation(CPUClass cpu)
