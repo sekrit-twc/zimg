@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <type_traits>
+#include <cstddef>
 #include "pixel.h"
 
 namespace zimg {;

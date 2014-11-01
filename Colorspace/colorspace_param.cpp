@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 #include "Common/except.h"
 #include "colorspace_param.h"
 

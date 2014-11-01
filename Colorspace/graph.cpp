@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Common/except.h"
 #include "colorspace_param.h"
 #include "graph.h"
