@@ -55,7 +55,7 @@ void execute(const unresize::Unresize &unresize, const Frame &in, Frame &out, in
 	Frame dst{ out.width(), out.height(), pxsize, planes };
 	auto tmp = allocate_buffer(unresize.tmp_size(pxtype), pxtype);
 
-	convert_frame(in, src, PixelType::BYTE, pxtype, false, false);
+	convert_frame(in, src, PixelType::BYTE, pxtype, true, false);
 
 	measure_time(times, [&]()
 	{
@@ -67,7 +67,7 @@ void execute(const unresize::Unresize &unresize, const Frame &in, Frame &out, in
 		}
 	});
 
-	convert_frame(dst, out, pxtype, PixelType::BYTE, false, false);
+	convert_frame(dst, out, pxtype, PixelType::BYTE, true, false);
 }
 
 } // namespace

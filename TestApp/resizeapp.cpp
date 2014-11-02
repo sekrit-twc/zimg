@@ -97,7 +97,7 @@ void execute(const resize::Resize &resize, const Frame &in, Frame &out, int time
 	Frame dst{ out.width(), out.height(), pxsize, planes };
 	auto tmp = allocate_buffer(resize.tmp_size(type), type);
 
-	convert_frame(in, src, PixelType::BYTE, type, false, false);
+	convert_frame(in, src, PixelType::BYTE, type, true, false);
 
 	measure_time(times, [&]()
 	{
@@ -109,7 +109,7 @@ void execute(const resize::Resize &resize, const Frame &in, Frame &out, int time
 		}
 	});
 
-	convert_frame(dst, out, type, PixelType::BYTE, false, false);
+	convert_frame(dst, out, type, PixelType::BYTE, true, false);
 }
 
 } // namespace

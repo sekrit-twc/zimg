@@ -68,7 +68,7 @@ zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type)
 	return AlignedVector<char>(count * pixel_size(type));
 }
 
-void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool tv, bool yuv)
+void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool fullrange, bool yuv)
 {
 	std::unique_ptr<depth::Depth> convert{ new depth::Depth{ depth::DitherType::DITHER_NONE, CPUClass::CPU_NONE } };
 	int width = in.width();
@@ -76,15 +76,15 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 	int planes = in.planes();
 
 	for (int p = 0; p < planes; ++p) {
-		bool plane_tv = tv && p != 3; // Always treat alpha as fullrange.
+		bool plane_fullrange = fullrange || p == 3; // Always treat alpha as fullrange.
 		bool plane_chroma = yuv && (p == 1 || p == 2); // Chroma planes.
 
 		PixelFormat src_fmt = default_pixel_format(pxl_in);
 		PixelFormat dst_fmt = default_pixel_format(pxl_out);
 
-		src_fmt.tv = plane_tv;
+		src_fmt.fullrange = plane_fullrange;
 		src_fmt.chroma = plane_chroma;
-		dst_fmt.tv = plane_tv;
+		dst_fmt.fullrange = plane_fullrange;
 		dst_fmt.chroma = plane_chroma;
 
 		ImagePlane<const void> src_plane{ in.data(p), width, height, in.stride(), src_fmt };

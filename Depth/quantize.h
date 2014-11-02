@@ -38,21 +38,21 @@ inline int32_t numeric_max(int bits)
 	return (1L << bits) - 1;
 }
 
-inline int32_t integer_offset(int bits, bool tv, bool chroma)
+inline int32_t integer_offset(int bits, bool fullrange, bool chroma)
 {
 	if (chroma)
 		return 1L << (bits - 1);
-	else if (tv)
+	else if (!fullrange)
 		return 16L << (bits - 8);
 	else
 		return 0;
 }
 
-inline int32_t integer_range(int bits, bool tv, bool chroma)
+inline int32_t integer_range(int bits, bool fullrange, bool chroma)
 {
-	if (tv && chroma)
+	if (!fullrange && chroma)
 		return 224L << (bits - 8);
-	else if (tv)
+	else if (!fullrange)
 		return 219L << (bits - 8);
 	else
 		return numeric_max(bits);
@@ -122,9 +122,9 @@ class IntegerToFloat {
 	float offset;
 	float scale;
 public:
-	IntegerToFloat(int bits, bool tv, bool chroma) :
-		offset{ (float)integer_offset(bits, tv, chroma) },
-		scale{ 1.0f / (float)integer_range(bits, tv, chroma) }
+	IntegerToFloat(int bits, bool fullrange, bool chroma) :
+		offset{ (float)integer_offset(bits, fullrange, chroma) },
+		scale{ 1.0f / (float)integer_range(bits, fullrange, chroma) }
 	{}
 
 	float operator()(T x) const
@@ -138,9 +138,9 @@ class FloatToInteger {
 	float offset;
 	float scale;
 public:
-	FloatToInteger(int bits, bool tv, bool chroma) :
-		offset{ (float)integer_offset(bits, tv, chroma) },
-		scale{ (float)integer_range(bits, tv, chroma) }
+	FloatToInteger(int bits, bool fullrange, bool chroma) :
+		offset{ (float)integer_offset(bits, fullrange, chroma) },
+		scale{ (float)integer_range(bits, fullrange, chroma) }
 	{}
 
 	T operator()(float x) const

@@ -28,7 +28,7 @@ enum class PixelType {
 struct PixelFormat {
 	PixelType type;
 	int depth;
-	bool tv;
+	bool fullrange;
 	bool chroma;
 };
 
@@ -62,7 +62,7 @@ inline int pixel_size(PixelType type)
  */
 inline PixelFormat default_pixel_format(PixelType type)
 {
-	return{ type, pixel_size(type) * 8, true, false };
+	return{ type, pixel_size(type) * 8, false, false };
 }
 
 } // namespace zimg

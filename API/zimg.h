@@ -103,7 +103,7 @@ size_t zimg_depth_tmp_size(zimg_depth_context *ctx, int width);
 /* Process a plane. On success, 0 is returned, else a corresponding error code. */
 int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void *tmp,
                        int width, int height, int src_stride, int dst_stride,
-                       int pixel_in, int pixel_out, int depth_in, int depth_out, int tv_in, int tv_out, int chroma);
+                       int pixel_in, int pixel_out, int depth_in, int depth_out, int fullrange_in, int fullrange_out, int chroma);
 
 /* Delete the context. */
 void zimg_depth_delete(zimg_depth_context *ctx);
