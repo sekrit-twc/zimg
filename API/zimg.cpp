@@ -305,7 +305,7 @@ size_t zimg_depth_tmp_size(zimg_depth_context *ctx, int width)
 
 int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void *tmp,
                        int width, int height, int src_stride, int dst_stride,
-					   int pixel_in, int pixel_out, int depth_in, int depth_out, int tv_in, int tv_out, int chroma)
+					   int pixel_in, int pixel_out, int depth_in, int depth_out, int fullrange_in, int fullrange_out, int chroma)
 {
 	zimg_clear_last_error();
 
@@ -318,12 +318,12 @@ int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void
 
 		src_format.type = get_pixel_type(pixel_in);
 		src_format.depth = depth_in;
-		src_format.tv = !!tv_in;
+		src_format.fullrange = !!fullrange_in;
 		src_format.chroma = !!chroma;
 
 		dst_format.type = get_pixel_type(pixel_out);
 		dst_format.depth = depth_out;
-		dst_format.tv = !!tv_out;
+		dst_format.fullrange = !!fullrange_out;
 		dst_format.chroma = !!chroma;
 
 		src_pxsize = pixel_size(src_format.type);

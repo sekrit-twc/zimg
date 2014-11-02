@@ -41,7 +41,7 @@ zimg::PixelType select_pixel_type(const char *pixtype);
 
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type);
 
-void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool tv, bool yuv);
+void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool fullrange, bool yuv);
 
 void measure_time(int times, std::function<void(void)> f);
 

@@ -390,13 +390,13 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	if (err)
 		depth = preset_fmt->bitsPerSample;
 
-	tv_in = !!vsapi->propGetInt(in, "tv_in", 0, &err);
+	tv_in = !!vsapi->propGetInt(in, "fullrange_in", 0, &err);
 	if (err)
-		tv_in = preset_fmt->colorFamily != cmRGB;
+		tv_in = preset_fmt->colorFamily == cmRGB;
 
-	tv_out = !!vsapi->propGetInt(in, "tv_out", 0, &err);
+	tv_out = !!vsapi->propGetInt(in, "fullrange_out", 0, &err);
 	if (err)
-		tv_out = preset_fmt->colorFamily != cmRGB;
+		tv_out = preset_fmt->colorFamily == cmRGB;
 
 	if (sample != stInteger && sample != stFloat) {
 		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
@@ -736,8 +736,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                      "format:int:opt;"
 	                      "sample:int:opt;"
 	                      "depth:int:opt;"
-	                      "tv_in:int:opt;"
-	                      "tv_out:int:opt", vs_depth_create, 0, plugin);
+	                      "fullrange_in:int:opt;"
+	                      "fullrange_out:int:opt", vs_depth_create, 0, plugin);
 	registerFunc("Resize", "clip:clip;"
 	                       "width:int;"
 	                       "height:int;"

@@ -14,13 +14,13 @@ namespace {
 template <class T>
 IntegerToFloat<T> make_integer_to_float(const PixelFormat &fmt)
 {
-	return{ fmt.depth, fmt.tv, fmt.chroma };
+	return{ fmt.depth, fmt.fullrange, fmt.chroma };
 }
 
 template <class T>
 FloatToInteger<T> make_float_to_integer(const PixelFormat &fmt)
 {
-	return{ fmt.depth, fmt.tv, fmt.chroma };
+	return{ fmt.depth, fmt.fullrange, fmt.chroma };
 }
 
 class ErrorDiffusionC : public DitherConvert {
