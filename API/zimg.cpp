@@ -133,7 +133,7 @@ resize::Filter *create_filter(int filter_type, double filter_param_a, double fil
 	case ZIMG_RESIZE_SPLINE36:
 		return new resize::Spline36Filter{};
 	case ZIMG_RESIZE_LANCZOS:
-		filter_param_a = std::isfinite(filter_param_a) ? 3.0 : std::floor(filter_param_a);
+		filter_param_a = std::isfinite(filter_param_a) ? std::floor(filter_param_a) : 3.0;
 		return new resize::LanczosFilter{ (int)filter_param_a };
 	default:
 		throw ZimgIllegalArgument{ "unknown resampling filter" };

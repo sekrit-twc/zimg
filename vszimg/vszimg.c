@@ -625,11 +625,11 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 	if (err)
 		filter_uv = filter;
 
-	filter_param_a = vsapi->propGetFloat(in, "filter_param_a_uv", 0, &err);
+	filter_param_a_uv = vsapi->propGetFloat(in, "filter_param_a_uv", 0, &err);
 	if (err)
 		filter_param_a_uv = !strcmp(filter, filter_uv) ? filter_param_a : NAN;
 
-	filter_param_b = vsapi->propGetFloat(in, "filter_param_b", 0, &err);
+	filter_param_b_uv = vsapi->propGetFloat(in, "filter_param_b_uv", 0, &err);
 	if (err)
 		filter_param_b_uv = !strcmp(filter, filter_uv) ? filter_param_b : NAN;
 
