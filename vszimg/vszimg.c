@@ -392,11 +392,11 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 
 	tv_in = !!vsapi->propGetInt(in, "tv_in", 0, &err);
 	if (err)
-		tv_in = 1;
+		tv_in = preset_fmt->colorFamily != cmRGB;
 
 	tv_out = !!vsapi->propGetInt(in, "tv_out", 0, &err);
 	if (err)
-		tv_out = 1;
+		tv_out = preset_fmt->colorFamily != cmRGB;
 
 	if (sample != stInteger && sample != stFloat) {
 		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
