@@ -66,8 +66,8 @@ inline void do_cpuid(int regs[4], int eax, int ecx)
  */
 inline X86Capabilities query_x86_capabilities()
 {
-	X86Capabilities caps = { 0 };
-	int regs[4];
+	X86Capabilities caps = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	int regs[4] = { 0 };
 
 	do_cpuid(regs, 1, 0);
 	caps.sse   = !!(regs[3] & (1 << 25));
@@ -86,7 +86,7 @@ inline X86Capabilities query_x86_capabilities()
 	return caps;
 }
 
-#endif ZIMG_X86
+#endif // ZIMG_X86
 
 } // namespace zimg
 

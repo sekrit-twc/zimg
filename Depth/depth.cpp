@@ -67,7 +67,7 @@ void convert_depth(const DepthConvert &depth, const ImagePlane<const void> &src,
 	ImagePlane<const uint16_t> src_w = plane_cast<const uint16_t>(src);
 	ImagePlane<const float> src_f = plane_cast<const float>(src);
 
-	ImagePlane<uint8_t> dst_b = plane_cast<uint8_t>(dst);
+	//ImagePlane<uint8_t> dst_b = plane_cast<uint8_t>(dst);
 	ImagePlane<uint16_t> dst_w = plane_cast<uint16_t>(dst);
 	ImagePlane<float> dst_f = plane_cast<float>(dst);
 

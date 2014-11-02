@@ -91,7 +91,7 @@ inline uint16_t float_to_half(float x)
 {
 	float magic = bit_cast<float>(15UL << 23);
 	uint32_t inf = 255UL << 23;
-	uint32_t f16inf = 31UL << 23;
+	//uint32_t f16inf = 31UL << 23;
 	uint32_t sign_mask = 0x80000000UL;
 	uint32_t round_mask = ~0x0FFFU;
 
