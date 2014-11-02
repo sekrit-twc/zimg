@@ -98,6 +98,10 @@ EvaluatedFilter compress_matrix(const Matrix &m)
 } // namespace
 
 
+Filter::~Filter()
+{
+}
+
 int PointFilter::support() const
 {
 	return 0;

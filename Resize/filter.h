@@ -16,6 +16,11 @@ namespace resize {;
 class Filter {
 public:
 	/**
+	 * Destroy filter.
+	 */
+	virtual ~Filter() = 0;
+
+	/**
 	 * @return filter support
 	 */
 	virtual int support() const = 0;
