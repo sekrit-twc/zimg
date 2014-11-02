@@ -75,7 +75,6 @@ public:
 	}
 };
 
-
 class ZimgResizeContext {
 	zimg_resize_context *m_ctx;
 public:
