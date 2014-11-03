@@ -242,7 +242,6 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 	const uint16_t * RESTRICT src_p = src.data();
 	uint16_t * RESTRICT dst_p = dst.data();
 	int src_width = src.width();
-	int src_height = src.height();
 	int src_stride = src.stride();
 	int dst_stride = dst.stride();
 
