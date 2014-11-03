@@ -17,7 +17,7 @@ public:
 
 	virtual ~ZimgException() {}
 
-	virtual const char *what() const { return std::runtime_error::what(); }
+	using std::runtime_error::what;
 };
 
 #define ZIMG_DECLARE_EXCEPTION(x) \
