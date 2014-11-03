@@ -10,7 +10,9 @@ namespace resize {;
 
 namespace {;
 
+#ifndef M_PI // may or may not be defined in <cmath>
 const double M_PI = 3.14159265358979323846;
+#endif
 
 double sinc(double x)
 {
