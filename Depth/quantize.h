@@ -21,6 +21,8 @@ T identity(T x)
 template <class T, class U>
 T bit_cast(const U &x)
 {
+	static_assert(sizeof(T) == sizeof(U), "object sizes must match");
+
 	T ret;
 
 	std::memcpy(&ret, &x, sizeof(ret));
@@ -109,6 +111,9 @@ inline uint16_t float_to_half(float x)
 		f &= round_mask;
 		f = bit_cast<uint32_t>(bit_cast<float>(f) * magic);
 		f -= round_mask;
+
+		if (bit_cast<uint32_t>(f) > f16inf)
+			f = f16inf;
 
 		ret = (uint16_t)(f >> 13);
 	}
