@@ -71,11 +71,11 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t left = filter.left()[j];
-			Policy::num_type accum = 0;
+			typename Policy::num_type accum = 0;
 
 			for (int k = 0; k < filter.width(); ++k) {
-				Policy::num_type coeff = policy.coeff(filter, j, k);
-				Policy::num_type x = policy.load(src_p + i * src_stride + left + k);
+				typename Policy::num_type coeff = policy.coeff(filter, j, k);
+				typename Policy::num_type x = policy.load(src_p + i * src_stride + left + k);
 
 				accum += coeff * x;
 			}
@@ -98,11 +98,11 @@ inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, co
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t top = filter.left()[i];
-			Policy::num_type accum = 0;
+			typename Policy::num_type accum = 0;
 
 			for (ptrdiff_t k = 0; k < filter.width(); ++k) {
-				Policy::num_type coeff = policy.coeff(filter, i, k);
-				Policy::num_type x = policy.load(src_p + (top + k) * src_stride + j);
+				typename Policy::num_type coeff = policy.coeff(filter, i, k);
+				typename Policy::num_type x = policy.load(src_p + (top + k) * src_stride + j);
 
 				accum += coeff * x;
 			}
