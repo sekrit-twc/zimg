@@ -92,7 +92,7 @@ inline X86Capabilities query_x86_capabilities()
 	return caps;
 }
 
-#endif ZIMG_X86
+#endif // ZIMG_X86
 
 } // namespace zimg
 
