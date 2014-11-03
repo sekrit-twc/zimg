@@ -4,6 +4,7 @@
 #define ZIMG_COMMON_PLANE_H_
 
 #include <algorithm>
+#include <cstddef>
 #include <type_traits>
 #include "pixel.h"
 
