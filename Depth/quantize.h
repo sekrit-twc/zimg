@@ -69,7 +69,7 @@ inline int32_t integer_range(int bits, bool fullrange, bool chroma)
  */
 inline float half_to_float(uint16_t x)
 {
-	float magic = bit_cast<float>(133UL << 23);
+	float magic = bit_cast<float>((uint32_t)133 << 23);
 	uint32_t shift_exp = 0x7C00UL << 13;
 	uint32_t exp;
 	uint32_t ret;
@@ -91,7 +91,7 @@ inline float half_to_float(uint16_t x)
 
 inline uint16_t float_to_half(float x)
 {
-	float magic = bit_cast<float>(15UL << 23);
+	float magic = bit_cast<float>((uint32_t)15 << 23);
 	uint32_t inf = 255UL << 23;
 	uint32_t f16inf = 31UL << 23;
 	uint32_t sign_mask = 0x80000000UL;
