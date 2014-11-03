@@ -10,8 +10,6 @@ namespace resize {;
 
 namespace {;
 
-const double M_PI = 3.14159265358979323846;
-
 double sinc(double x)
 {
 	return std::abs(x) < 0.0001 ? 1.0 : std::sin(x * M_PI) / (x * M_PI);
