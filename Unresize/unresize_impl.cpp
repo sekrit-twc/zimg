@@ -15,21 +15,31 @@ public:
 	UnresizeImplC(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
+	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	{
+		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
+	}
+
+	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	{
+		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
+	}
+
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		for (int i = 0; i < src.height(); ++i) {
-			filter_scanline_h_forward(m_hcontext, src, tmp, i, 0, m_hcontext.dst_width);
-			filter_scanline_h_back(m_hcontext, tmp, dst, i, m_hcontext.dst_width, 0);
+			filter_scanline_h_forward(m_hcontext, src, tmp, i, 0, m_hcontext.dst_width, ScalarPolicy_F32{});
+			filter_scanline_h_back(m_hcontext, tmp, dst, i, m_hcontext.dst_width, 0, ScalarPolicy_F32{});
 		}
 	}
 
 	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
 		for (int i = 0; i < m_vcontext.dst_width; ++i) {
-			filter_scanline_v_forward(m_vcontext, src, dst, i, 0, src.width());
+			filter_scanline_v_forward(m_vcontext, src, dst, i, 0, src.width(), ScalarPolicy_F32{});
 		}
 		for (int i = m_vcontext.dst_width; i > 0; --i) {
-			filter_scanline_v_back(m_vcontext, dst, i, 0, src.width());
+			filter_scanline_v_back(m_vcontext, dst, i, 0, src.width(), ScalarPolicy_F32{});
 		}
 	}
 };
