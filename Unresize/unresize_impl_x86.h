@@ -15,6 +15,7 @@ class UnresizeImpl;
 struct BilinearContext;
 
 UnresizeImpl *create_unresize_impl_sse2(const BilinearContext &hcontext, const BilinearContext &vcontext);
+UnresizeImpl *create_unresize_impl_avx2(const BilinearContext &hcontext, const BilinearContext &vcontext);
 
 /**
 * Create an appropriate x86 optimized ResizeImpl for the given CPU.
