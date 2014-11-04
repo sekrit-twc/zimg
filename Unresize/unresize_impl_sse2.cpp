@@ -295,9 +295,9 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 	}
 }
 
-class UnresizeImplX86 : public UnresizeImpl {
+class UnresizeImplSSE2 : public UnresizeImpl {
 public:
-	UnresizeImplX86(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
+	UnresizeImplSSE2(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
@@ -317,7 +317,7 @@ public:
 
 UnresizeImpl *create_unresize_impl_sse2(const BilinearContext &hcontext, const BilinearContext &vcontext)
 {
-	return new UnresizeImplX86{ hcontext, vcontext };
+	return new UnresizeImplSSE2{ hcontext, vcontext };
 }
 
 } // namespace unresize
