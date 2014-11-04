@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <emmintrin.h>
 #include "Common/osdep.h"
+#include "bilinear.h"
 #include "unresize_impl.h"
 #include "unresize_impl_x86.h"
 
