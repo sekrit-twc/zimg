@@ -106,6 +106,10 @@ class Unresize {
 	std::shared_ptr<UnresizeImpl> m_impl;
 
 	size_t max_frame_size(PixelType type) const;
+
+	void invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
+
+	void invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.

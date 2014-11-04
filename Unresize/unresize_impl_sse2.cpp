@@ -1,6 +1,7 @@
 #ifdef ZIMG_X86
 #include <cstddef>
 #include <emmintrin.h>
+#include "Common/except.h"
 #include "Common/osdep.h"
 #include "bilinear.h"
 #include "unresize_impl.h"
@@ -161,8 +162,8 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 		}
 	}
 	for (ptrdiff_t i = mod(src_height, 4); i < src_height; ++i) {
-		filter_scanline_h_forward(ctx, src, tmp, i, 0, ctx.dst_width);
-		filter_scanline_h_back(ctx, tmp, dst, i, ctx.dst_width, 0);
+		filter_scanline_h_forward(ctx, src, tmp, i, 0, ctx.dst_width, ScalarPolicy_F32{});
+		filter_scanline_h_back(ctx, tmp, dst, i, ctx.dst_width, 0, ScalarPolicy_F32{});
 	}
 }
 
@@ -280,7 +281,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 			_mm_store_ps(&dst_p[i * dst_stride + j], z);
 		}
 		
-		filter_scanline_v_forward(ctx, src, dst, i, mod(src_width, 4), src_width);
+		filter_scanline_v_forward(ctx, src, dst, i, mod(src_width, 4), src_width, ScalarPolicy_F32{});
 	}
 
 	// Back substitution.
@@ -295,7 +296,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 
 			_mm_store_ps(&dst_p[(i - 1) * dst_stride + j], w);
 		}
-		filter_scanline_v_back(ctx, dst, i, mod(src_width, 4), src_width);
+		filter_scanline_v_back(ctx, dst, i, mod(src_width, 4), src_width, ScalarPolicy_F32{});
 	}
 }
 
@@ -303,6 +304,16 @@ class UnresizeImplSSE2 : public UnresizeImpl {
 public:
 	UnresizeImplSSE2(const BilinearContext &hcontext, const BilinearContext &vcontext) : UnresizeImpl(hcontext, vcontext)
 	{}
+
+	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	{
+		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
+	}
+
+	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	{
+		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
+	}
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{

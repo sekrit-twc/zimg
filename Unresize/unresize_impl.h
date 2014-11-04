@@ -14,16 +14,29 @@ enum class CPUClass;
 
 namespace unresize {;
 
-inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const ImagePlane<const float> &src, float * RESTRICT tmp,
-                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+struct ScalarPolicy_F32 {
+	float load(const float *src)
+	{
+		return *src;
+	}
+
+	void store(float *dst, float x)
+	{
+		*dst = x;
+	}
+};
+
+template <class T, class Policy>
+inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, const ImagePlane<const T> &src, T * RESTRICT tmp,
+                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	const float * RESTRICT src_p = src.data();
+	const T * RESTRICT src_p = src.data();
 	int src_stride = src.stride();
 
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
 
-	float z = j_begin ? src_p[i * src_stride + j_begin - 1] : 0;
+	float z = j_begin ? policy.load(&src_p[i * src_stride + j_begin - 1]) : 0;
 
 	// Matrix-vector product, and forward substitution loop.
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
@@ -32,35 +45,39 @@ inline FORCE_INLINE void filter_scanline_h_forward(const BilinearContext &ctx, c
 
 		float accum = 0;
 		for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-			accum += row[k] * src_p[i * src_stride + left + k];
+			float coeff = row[k];
+			float x = policy.load(&src_p[i * src_stride + left + k]);
+			accum += coeff * x;
 		}
 
 		z = (accum - c[j] * z) * l[j];
-		tmp[j] = z;
+		policy.store(&tmp[j], z);
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const float * RESTRICT tmp, const ImagePlane<float> &dst,
-                                                ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+template <class T, class Policy>
+inline FORCE_INLINE void filter_scanline_h_back(const BilinearContext &ctx, const T * RESTRICT tmp, const ImagePlane<T> &dst,
+                                                ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	float * RESTRICT dst_p = dst.data();
+	T * RESTRICT dst_p = dst.data();
 	int dst_stride = dst.stride();
 
 	const float *u = ctx.lu_u.data();
-	float w = j_begin < ctx.dst_width ? dst_p[i * dst_stride + j_begin] : 0;
+	float w = j_begin < ctx.dst_width ? policy.load(&dst_p[i * dst_stride + j_begin]) : 0;
 
 	// Backward substitution.
 	for (ptrdiff_t j = j_begin; j > j_end; --j) {
-		w = tmp[j - 1] - u[j - 1] * w;
-		dst_p[i * dst_stride + j - 1] = w;
+		w = policy.load(&tmp[j - 1]) - u[j - 1] * w;
+		policy.store(&dst_p[i * dst_stride + j - 1], w);
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst,
-                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+template <class T, class Policy>
+inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
+                                                   ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	const float * RESTRICT src_p = src.data();
-	float * RESTRICT dst_p = dst.data();
+	const T * RESTRICT src_p = src.data();
+	T * RESTRICT dst_p = dst.data();
 	int src_stride = src.stride();
 	int dst_stride = dst.stride();
 
@@ -71,30 +88,33 @@ inline FORCE_INLINE void filter_scanline_v_forward(const BilinearContext &ctx, c
 	ptrdiff_t top = ctx.matrix_row_offsets[i];
 
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-		float z = i ? dst_p[(i - 1) * dst_stride + j] : 0;
+		float z = i ? policy.load(&dst_p[(i - 1) * dst_stride + j]) : 0;
 
 		float accum = 0;
 		for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-			accum += row[k] * src_p[(top + k) * src_stride + j];
+			float coeff = row[k];
+			float x = policy.load(&src_p[(top + k) * src_stride + j]);
+			accum += coeff * x;
 		}
 
 		z = (accum - c[i] * z) * l[i];
-		dst_p[i * dst_stride + j] = z;
+		policy.store(&dst_p[i * dst_stride + j], z);
 	}
 }
 
-inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, const ImagePlane<float> &dst, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end)
+template <class T, class Policy>
+inline FORCE_INLINE void filter_scanline_v_back(const BilinearContext &ctx, const ImagePlane<T> &dst, ptrdiff_t i, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	float * RESTRICT dst_p = dst.data();
+	T * RESTRICT dst_p = dst.data();
 	int dst_stride = dst.stride();
 
 	const float *u = ctx.lu_u.data();
 
 	for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-		float w = i < ctx.dst_width ? dst_p[i * dst_stride + j] : 0;
+		float w = i < ctx.dst_width ? policy.load(&dst_p[i * dst_stride + j]) : 0;
 
-		w = dst_p[(i - 1) * dst_stride + j] - u[i - 1] * w;
-		dst_p[(i - 1) * dst_stride + j] = w;
+		w = policy.load(&dst_p[(i - 1) * dst_stride + j]) - u[i - 1] * w;
+		policy.store(&dst_p[(i - 1) * dst_stride + j], w);
 	}
 }
 
@@ -126,6 +146,10 @@ public:
 	 * Destroy implementation
 	 */
 	virtual ~UnresizeImpl() = 0;
+
+	virtual void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+
+	virtual void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	virtual void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 
