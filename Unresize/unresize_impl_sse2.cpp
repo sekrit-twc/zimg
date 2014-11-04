@@ -160,6 +160,10 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 			_mm_store_ps(&dst_p[(i + 3) * dst_stride + j - 4], w3);
 		}
 	}
+	for (ptrdiff_t i = mod(src_height, 4); i < src_height; ++i) {
+		filter_scanline_h_forward(ctx, src, tmp, i, 0, ctx.dst_width);
+		filter_scanline_h_back(ctx, tmp, dst, i, ctx.dst_width, 0);
+	}
 }
 
 void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
@@ -281,7 +285,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 
 	// Back substitution.
 	for (ptrdiff_t i = ctx.dst_width; i > 0; --i) {
-		u = _mm_set_ps1(pu[i]);
+		u = _mm_set_ps1(pu[i - 1]);
 
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 			w = i < ctx.dst_width ? _mm_load_ps(&dst_p[i * dst_stride + j]) : _mm_setzero_ps();
