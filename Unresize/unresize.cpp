@@ -46,7 +46,7 @@ size_t Unresize::tmp_size(PixelType type) const
 
 	// Line buffer for horizontal pass.
 	if (m_src_width != m_dst_width)
-		size += m_dst_width * 4;
+		size += m_dst_width * 8;
 
 	return size;
 }

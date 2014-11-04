@@ -33,6 +33,9 @@
     <ClCompile Include="unresize_impl_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="unresize_impl_avx2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bilinear.h">
