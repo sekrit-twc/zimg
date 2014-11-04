@@ -3,9 +3,13 @@
 #ifndef ZIMG_CPUINFO_H_
 #define ZIMG_CPUINFO_H_
 
-#ifdef _WIN32
-#include <intrin.h>
-#endif // _WIN32
+#ifdef ZIMG_X86
+  #if defined(_WIN32)
+    #include <intrin.h>
+  #elif defined(__GNUC__)
+    #include <cpuid.h>
+  #endif
+#endif // ZIMG_X86
 
 namespace zimg {;
 
@@ -22,11 +26,8 @@ enum class CPUClass {
 #endif // ZIMG_X86
 };
 
-#ifdef ZIMG_X86
 
-#ifdef __GNUC__
-#include <cpuid.h>
-#endif
+#ifdef ZIMG_X86
 
 /**
  * Bitfield of selected x86 feature flags.
@@ -56,13 +57,13 @@ inline void do_cpuid(int regs[4], int eax, int ecx)
 #if defined(_WIN32)
 	__cpuidex(regs, eax, ecx);
 #elif defined(__GNUC__)
-	__get_cpuid(eax, (unsigned int *)&regs[0], (unsigned int *)&regs[1], (unsigned int *)&regs[2], (unsigned int *)&regs[3]);
+	__get_cpuid(eax, (unsigned int *)(regs + 0), (unsigned int *)(regs + 1), (unsigned int *)(regs + 2), (unsigned int *)(regs + 3);
 #else
 	regs[0] = 0;
 	regs[1] = 0;
 	regs[2] = 0;
 	regs[3] = 0;
-#endif // _WIN32
+#endif
 }
 
 /**
