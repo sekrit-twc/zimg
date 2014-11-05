@@ -36,6 +36,24 @@ inline float rec_709_inverse_gamma(float x)
 }
 
 /**
+ * Base class for matrix operation implementations.
+ */
+class MatrixOperationImpl : public Operation {
+protected:
+	/**
+	 * Transformation matrix.
+	 */
+	float m_matrix[3][3];
+
+	/**
+	 * Initialize the implementation with the given matrix.
+	 *
+	 * @param m transformation matrix
+	 */
+	MatrixOperationImpl(const Matrix3x3 &matrix);
+};
+
+/**
  * Create operation consisting of applying a 3x3 matrix to each pixel triplet.
  *
  * @param m matrix

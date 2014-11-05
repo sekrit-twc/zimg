@@ -26,17 +26,10 @@ public:
 	}
 };
 
-class MatrixOperationC : public Operation {
-	float m_matrix[3][3];
+class MatrixOperationC : public MatrixOperationImpl {
 public:
-	explicit MatrixOperationC(const Matrix3x3 &matrix)
-	{
-		for (int i = 0; i < 3; ++i) {
-			for (int j = 0; j < 3; ++j) {
-				m_matrix[i][j] = (float)matrix[i][j];
-			}
-		}
-	}
+	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m)
+	{}
 
 	void process(float * const *ptr, int width) const override
 	{
@@ -174,6 +167,15 @@ public:
 
 } // namespace
 
+
+MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
+{
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			m_matrix[i][j] = (float)m[i][j];
+		}
+	}
+}
 
 PixelAdapter *create_pixel_adapter(CPUClass cpu)
 {

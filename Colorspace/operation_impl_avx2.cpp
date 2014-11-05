@@ -5,6 +5,7 @@
 #include "Common/osdep.h"
 #include "matrix3.h"
 #include "operation.h"
+#include "operation_impl.h"
 #include "operation_impl_x86.h"
 
 namespace zimg {;
@@ -12,17 +13,10 @@ namespace colorspace {;
 
 namespace {;
 
-class MatrixOperationAVX2 : public Operation {
-	float m_matrix[3][3];
+class MatrixOperationAVX2 : public MatrixOperationImpl {
 public:
-	explicit MatrixOperationAVX2(const Matrix3x3 &matrix)
-	{
-		for (int i = 0; i < 3; ++i) {
-			for (int j = 0; j < 3; ++j) {
-				m_matrix[i][j] = (float)matrix[i][j];
-			}
-		}
-	}
+	explicit MatrixOperationAVX2(const Matrix3x3 &m) : MatrixOperationImpl(m)
+	{}
 
 	void process(float * const *ptr, int width) const override
 	{
