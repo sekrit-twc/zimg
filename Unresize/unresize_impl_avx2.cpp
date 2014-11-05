@@ -87,7 +87,7 @@ FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256
 	row7 = _mm256_permute2f128_ps(tt3, tt7, 0x31);
 }
 
-template <class T, class Policy>
+template <bool DoLoop, class T, class Policy>
 void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &src, const ImagePlane<T> &dst, T *tmp, Policy policy)
 {
 	const T * RESTRICT src_p = src.data();
@@ -121,7 +121,7 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			__m256 accum2 = _mm256_setzero_ps();
 			__m256 accum3 = _mm256_setzero_ps();
 
-			for (ptrdiff_t k = 0; k < ctx.matrix_row_size; k += 8) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? ctx.matrix_row_size : 8); k += 8) {
 				__m256 coeffs = _mm256_loadu_ps(&matrix_row[k]);
 				__m256 v0, v1, v2, v3, v4, v5, v6, v7;
 
@@ -448,7 +448,10 @@ public:
 
 	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		filter_plane_h_avx2(m_hcontext, src, dst, tmp, VectorPolicy_F16{});
+		if (m_hcontext.matrix_row_size > 8)
+			filter_plane_h_avx2<true>(m_hcontext, src, dst, tmp, VectorPolicy_F16{});
+		else
+			filter_plane_h_avx2<false>(m_hcontext, src, dst, tmp, VectorPolicy_F16{});
 	}
 
 	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
@@ -458,7 +461,10 @@ public:
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
-		filter_plane_h_avx2(m_hcontext, src, dst, tmp, VectorPolicy_F32{});
+		if (m_hcontext.matrix_row_size > 8)
+			filter_plane_h_avx2<true>(m_hcontext, src, dst, tmp, VectorPolicy_F32{});
+		else
+			filter_plane_h_avx2<false>(m_hcontext, src, dst, tmp, VectorPolicy_F32{});
 	}
 
 	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
