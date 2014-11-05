@@ -3,6 +3,7 @@
 #include <climits>
 #include <immintrin.h>
 #include "Common/align.h"
+#include "Common/osdep.h"
 #include "operation.h"
 #include "operation_impl.h"
 #include "operation_impl_x86.h"
@@ -11,6 +12,20 @@ namespace zimg {;
 namespace colorspace {;
 
 namespace {;
+
+FORCE_INLINE uint16_t float_to_half(float x)
+{
+	__m128 f32 = _mm_set_ps1(x);
+	__m128i f16 = _mm_cvtps_ph(f32, 0);
+	return _mm_extract_epi16(f16, 0);
+}
+
+FORCE_INLINE float half_to_float(uint16_t x)
+{
+	__m128i f16 = _mm_set1_epi16(x);
+	__m128 f32 = _mm_cvtph_ps(f16);
+	return _mm_cvtss_f32(f32);
+}
 
 class PixelAdapterF16C : public PixelAdapter {
 public:
@@ -22,9 +37,7 @@ public:
 			_mm256_store_ps(dst + i, f32);
 		}
 		for (int i = mod(width, 8); i < width; ++i) {
-			__m128i f16 = _mm_set1_epi16(src[i]);
-			__m128 f32 = _mm_cvtph_ps(f16);
-			_mm_store_ss(dst + i, f32);
+			dst[i] = half_to_float(src[i]);
 		}
 	}
 
@@ -36,9 +49,7 @@ public:
 			_mm_store_si128((__m128i *)(dst + i), f16);
 		}
 		for (int i = mod(width, 8); i < width; ++i) {
-			__m128 f32 = _mm_load_ss(src + i);
-			__m128i f16 = _mm_cvtps_ph(f32, 0);
-			dst[i] = _mm_extract_epi16(f16, 0);
+			dst[i] = float_to_half(src[i]);
 		}
 	}
 };
@@ -50,9 +61,7 @@ public:
 	explicit LookupTableOperationF6C(Proc proc)
 	{
 		for (uint32_t i = 0; i < UINT16_MAX + 1; ++i) {
-			float x;
-
-			_mm_store_ss(&x, _mm_cvtph_ps(_mm_set1_epi16(i)));
+			float x = half_to_float(i);
 			m_lut[i] = proc(x);
 		}
 	}
@@ -70,7 +79,7 @@ public:
 				}
 			}
 			for (int i = mod(width, 8); i < width; ++i) {
-				uint16_t half = _mm_extract_epi16(_mm_cvtps_ph(_mm_load_ss(ptr[p] + i), 0), 0);
+				uint16_t half = float_to_half(ptr[p][i]);
 				ptr[p][i] = m_lut[half];
 			}
 		}
