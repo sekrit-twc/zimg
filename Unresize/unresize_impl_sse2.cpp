@@ -30,6 +30,7 @@ void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 	x3 = _mm_castpd_ps(o3);
 }
 
+template <bool DoLoop>
 void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp)
 {
 	const float * RESTRICT src_p = src.data();
@@ -60,7 +61,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 			// Matrix-vector product.
 			__m128 accum0 = _mm_setzero_ps();
 			__m128 accum1 = _mm_setzero_ps();
-			for (ptrdiff_t k = 0; k < ctx.matrix_row_size; k += 4) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? ctx.matrix_row_size : 4); k += 4) {
 				__m128 coeffs = _mm_loadu_ps(&matrix_row[k]);
 				__m128 v0, v1, v2, v3;
 
@@ -317,7 +318,10 @@ public:
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
-		filter_plane_h_sse2(m_hcontext, src, dst, tmp);
+		if (m_hcontext.matrix_row_size > 4)
+			filter_plane_h_sse2<true>(m_hcontext, src, dst, tmp);
+		else
+			filter_plane_h_sse2<false>(m_hcontext, src, dst, tmp);
 	}
 
 	void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
