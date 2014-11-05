@@ -207,44 +207,44 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			__m256 z0, z1, z2, z3, z4, z5, z6, z7;
 			__m256 w0, w1, w2, w3, w4, w5, w6, w7;
 
-			z0 = policy.load_8(&tmp[(j - 8) * 8]);
-			z1 = policy.load_8(&tmp[(j - 7) * 8]);
-			z2 = policy.load_8(&tmp[(j - 6) * 8]);
-			z3 = policy.load_8(&tmp[(j - 5) * 8]);
-			z4 = policy.load_8(&tmp[(j - 4) * 8]);
-			z5 = policy.load_8(&tmp[(j - 3) * 8]);
-			z6 = policy.load_8(&tmp[(j - 2) * 8]);
 			z7 = policy.load_8(&tmp[(j - 1) * 8]);
+			z6 = policy.load_8(&tmp[(j - 2) * 8]);
+			z5 = policy.load_8(&tmp[(j - 3) * 8]);
+			z4 = policy.load_8(&tmp[(j - 4) * 8]);
+			z3 = policy.load_8(&tmp[(j - 5) * 8]);
+			z2 = policy.load_8(&tmp[(j - 6) * 8]);
+			z1 = policy.load_8(&tmp[(j - 7) * 8]);
+			z0 = policy.load_8(&tmp[(j - 8) * 8]);
 
-			u7 = _mm256_broadcast_ss(pu + j - 8);
+			u7 = _mm256_broadcast_ss(pu + j - 1);
 			w = _mm256_fnmadd_ps(u7, w, z7);
 			w7 = w;
 
-			u6 = _mm256_broadcast_ss(pu + j - 7);
+			u6 = _mm256_broadcast_ss(pu + j - 2);
 			w = _mm256_fnmadd_ps(u6, w, z6);
 			w6 = w;
 
-			u5 = _mm256_broadcast_ss(pu + j - 6);
+			u5 = _mm256_broadcast_ss(pu + j - 3);
 			w = _mm256_fnmadd_ps(u5, w, z5);
 			w5 = w;
 
-			u4 = _mm256_broadcast_ss(pu + j - 5);
+			u4 = _mm256_broadcast_ss(pu + j - 4);
 			w = _mm256_fnmadd_ps(u4, w, z4);
 			w4 = w;
 
-			u3 = _mm256_broadcast_ss(pu + j - 4);
+			u3 = _mm256_broadcast_ss(pu + j - 5);
 			w = _mm256_fnmadd_ps(u3, w, z3);
 			w3 = w;
 
-			u2 = _mm256_broadcast_ss(pu + j - 3);
+			u2 = _mm256_broadcast_ss(pu + j - 6);
 			w = _mm256_fnmadd_ps(u2, w, z2);
 			w2 = w;
 
-			u1 = _mm256_broadcast_ss(pu + j - 2);
+			u1 = _mm256_broadcast_ss(pu + j - 7);
 			w = _mm256_fnmadd_ps(u1, w, z1);
 			w1 = w;
 
-			u0 = _mm256_broadcast_ss(pu + j - 1);
+			u0 = _mm256_broadcast_ss(pu + j - 8);
 			w = _mm256_fnmadd_ps(u0, w, z0);
 			w0 = w;
 

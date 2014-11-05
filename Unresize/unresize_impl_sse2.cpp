@@ -128,27 +128,27 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 			__m128 z0, z1, z2, z3;
 			__m128 w0, w1, w2, w3;
 
-			z0 = _mm_load_ps(&tmp[(j - 4) * 4]);
-			z1 = _mm_load_ps(&tmp[(j - 3) * 4]);
-			z2 = _mm_load_ps(&tmp[(j - 2) * 4]);
 			z3 = _mm_load_ps(&tmp[(j - 1) * 4]);
+			z2 = _mm_load_ps(&tmp[(j - 2) * 4]);
+			z1 = _mm_load_ps(&tmp[(j - 3) * 4]);
+			z0 = _mm_load_ps(&tmp[(j - 4) * 4]);
 
-			u3 = _mm_set_ps1(pu[j - 4]);
+			u3 = _mm_set_ps1(pu[j - 1]);
 			w = _mm_mul_ps(u3, w);
 			w = _mm_sub_ps(z3, w);
 			w3 = w;
 
-			u2 = _mm_set_ps1(pu[j - 3]);
+			u2 = _mm_set_ps1(pu[j - 2]);
 			w = _mm_mul_ps(u2, w);
 			w = _mm_sub_ps(z2, w);
 			w2 = w;
 
-			u1 = _mm_set_ps1(pu[j - 2]);
+			u1 = _mm_set_ps1(pu[j - 3]);
 			w = _mm_mul_ps(u1, w);
 			w = _mm_sub_ps(z1, w);
 			w1 = w;
 
-			u0 = _mm_set_ps1(pu[j - 1]);
+			u0 = _mm_set_ps1(pu[j - 4]);
 			w = _mm_mul_ps(u0, w);
 			w = _mm_sub_ps(z0, w);
 			w0 = w;
