@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_UNRESIZE_H_
-#define ZIMG_UNRESIZE_H_
+#ifndef ZIMG_UNRESIZE_UNRESIZE_H_
+#define ZIMG_UNRESIZE_UNRESIZE_H_
 
 #include <cstdint>
 #include <memory>
@@ -158,4 +158,4 @@ public:
 } // namespace unresize
 } // namespace zimg
 
-#endif // ZIMG_UNRESIZE_H_
+#endif // ZIMG_UNRESIZE_UNRESIZE_H_
