@@ -37,7 +37,7 @@ Vector3 xy_to_xyz(double x, double y)
 	Vector3 ret;
 
 	ret[0] = x / y;
-	ret[1] = 1.0f;
+	ret[1] = 1.0;
 	ret[2] = (1.0 - x - y) / y;
 
 	return ret;

@@ -7,7 +7,7 @@
 namespace zimg {;
 namespace colorspace {;
 
-namespace {
+namespace {;
 
 template <class T>
 class EnumRange {
