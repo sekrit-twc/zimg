@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_MATRIX_H_
-#define ZIMG_MATRIX_H_
+#ifndef ZIMG_UNRESIZE_MATRIX_H_
+#define ZIMG_UNRESIZE_MATRIX_H_
 
 #include <vector>
 
@@ -223,4 +223,4 @@ TridiagonalLU tridiagonal_decompose(const RowMatrix &r);
 } // namespace unresize
 } // namespace zimg
 
-#endif // ZIMG_MATRIX_H_
+#endif // ZIMG_UNRESIZE_MATRIX_H_

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_BILINEAR_H_
-#define ZIMG_BILINEAR_H_
+#ifndef ZIMG_UNRESIZE_BILINEAR_H_
+#define ZIMG_UNRESIZE_BILINEAR_H_
 
 #include "Common/align.h"
 
@@ -71,4 +71,4 @@ BilinearContext create_bilinear_context(int in, int out, float shift);
 } // namespace unresize
 } // namespace zimg
 
-#endif // ZIMG_BILINEAR_H_
+#endif // ZIMG_UNRESIZE_BILINEAR_H_

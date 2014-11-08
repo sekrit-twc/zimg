@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_UNRESIZE_IMPL_H_
-#define ZING_UNRESIZE_IMPL_H_
+#ifndef ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
+#define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
 #include <cstddef>
 #include "Common/osdep.h"
@@ -166,4 +166,4 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 } // namespace unresize
 } // namespace zimg
 
-#endif // UNRESIZE_IMPL_H
+#endif // ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
