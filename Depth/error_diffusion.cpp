@@ -39,7 +39,7 @@ class ErrorDiffusionC : public DitherConvert {
 		float *line1 = line0 + width + 2;
 		bool even = false;
 
-		std::fill_n(tmp, (width + 2) * 2, static_cast<T>(0));
+		std::fill_n(tmp, ((size_t)width + 2) * 2, static_cast<T>(0));
 
 		for (ptrdiff_t i = 0; i < height; ++i) {
 			float *prev_line = even ? line1 : line0;

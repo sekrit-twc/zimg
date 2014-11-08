@@ -76,10 +76,10 @@ inline float half_to_float(uint16_t x)
 
 	ret = ((uint32_t)x & 0x7FFF) << 13;
 	exp = shift_exp & ret;
-	ret += (127 - 15) << 23;
+	ret += (127UL - 15UL) << 23;
 
 	if (exp == shift_exp) {
-		ret += (128 - 16) << 23;
+		ret += (127UL - 15UL) << 23;
 	} else if (!exp) {
 		ret += 1UL << 23;
 		ret = bit_cast<uint32_t>(bit_cast<float>(ret) - magic);
