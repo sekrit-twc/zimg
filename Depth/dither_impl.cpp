@@ -92,21 +92,21 @@ class OrderedDitherC : public OrderedDither {
 
 		auto dither_pixel = [=](T x, float d) { return from_float(to_float(x) + d * scale); };
 
-		for (int i = 0; i < height; ++i) {
+		for (ptrdiff_t i = 0; i < height; ++i) {
 			int loop_end = mod(width, hperiod);
-			int m, j;
+			int m;
 
 			const float *dith = m_dither.data() + (i % vperiod) * hperiod;
 
-			for (j = 0; j < loop_end; j += hperiod) {
+			for (ptrdiff_t j = 0; j < loop_end; j += hperiod) {
 				m = 0;
-				for (int jj = j; jj < j + hperiod; ++jj) {
+				for (ptrdiff_t jj = j; jj < j + hperiod; ++jj) {
 					dst_p[i * dst_stride + jj] = dither_pixel(src_p[i * src_stride + jj], dith[m++]);
 				}
 			}
 
 			m = 0;
-			for (; j < width; ++j) {
+			for (ptrdiff_t j = loop_end; j < width; ++j) {
 				dst_p[i * dst_stride + j] = dither_pixel(src_p[i * src_stride + j], dith[m++]);
 			}
 		}

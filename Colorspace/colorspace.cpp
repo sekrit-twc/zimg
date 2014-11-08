@@ -67,7 +67,7 @@ void ColorspaceConversion::store_line(const float *src, void *dst, int width, Pi
 
 size_t ColorspaceConversion::tmp_size(int width) const
 {
-	return 3 * align(width, AlignmentOf<float>::value);
+	return 3 * align((size_t)width, AlignmentOf<float>::value);
 }
 
 void ColorspaceConversion::process(const ImagePlane<const void> *src, const ImagePlane<void> *dst, void *tmp) const

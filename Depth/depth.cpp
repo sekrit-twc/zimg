@@ -105,7 +105,7 @@ catch (const std::bad_alloc &)
 
 size_t Depth::tmp_size(int width) const
 {
-	return m_error_diffusion ? (width + 2) * 2 : 0;
+	return m_error_diffusion ? ((size_t)width + 2) * 2 : 0;
 }
 
 void Depth::process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const
