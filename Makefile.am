@@ -31,7 +31,7 @@ libzimg_la_LDFLAGS = -no-undefined -version-info 0
 
 vszimg_la_SOURCES = vszimg/vszimg.c
 
-vszimg_la_CFLAGS = $(AM_CFLAGS) -IAPI
+vszimg_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/API
 
 vszimg_la_LIBADD = libzimg.la
 
