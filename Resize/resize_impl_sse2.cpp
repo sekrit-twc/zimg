@@ -362,7 +362,6 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<const flo
 	const float * RESTRICT src_p = src.data();
 	float * RESTRICT dst_p = dst.data();
 	int src_width = src.width();
-	int src_height = src.height();
 	int src_stride = src.stride();
 	int dst_stride = dst.stride();
 
