@@ -15,16 +15,8 @@ namespace {;
 template <class Func, class T, class U, class... Args>
 void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<const T> &src, const ImagePlane<U> &dst, Args... arg)
 {
-	int src_stride = src.stride();
-	int dst_stride = dst.stride();
-	const T *src_p = src.data();
-	U *dst_p = dst.data();
-
 	for (int i = 0; i < src.height(); ++i) {
-		(depth.*func)(src_p, dst_p, src.width(), std::forward<Args>(arg)...);
-
-		src_p += src_stride;
-		dst_p += dst_stride;
+		(depth.*func)(src[i], dst[i], src.width(), std::forward<Args>(arg)...);
 	}
 }
 

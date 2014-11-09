@@ -62,12 +62,6 @@ template <class T, class Policy>
 inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	const T * RESTRICT src_p = src.data();
-	T * RESTRICT dst_p = dst.data();
-
-	int src_stride = src.stride();
-	int dst_stride = dst.stride();
-
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t left = filter.left()[j];
@@ -75,12 +69,12 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 
 			for (int k = 0; k < filter.width(); ++k) {
 				typename Policy::num_type coeff = policy.coeff(filter, j, k);
-				typename Policy::num_type x = policy.load(src_p + i * src_stride + left + k);
+				typename Policy::num_type x = policy.load(&src[i][left + k]);
 
 				accum += coeff * x;
 			}
 
-			policy.store(dst_p + i * dst_stride + j, accum);
+			policy.store(&dst[i][j], accum);
 		}
 	}
 }
@@ -89,12 +83,6 @@ template <class T, class Policy>
 inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
-	const T * RESTRICT src_p = src.data();
-	T * RESTRICT dst_p = dst.data();
-
-	int src_stride = src.stride();
-	int dst_stride = dst.stride();
-
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
 			ptrdiff_t top = filter.left()[i];
@@ -102,12 +90,12 @@ inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, co
 
 			for (ptrdiff_t k = 0; k < filter.width(); ++k) {
 				typename Policy::num_type coeff = policy.coeff(filter, i, k);
-				typename Policy::num_type x = policy.load(src_p + (top + k) * src_stride + j);
+				typename Policy::num_type x = policy.load(&src[top + k][j]);
 
 				accum += coeff * x;
 			}
 
-			policy.store(dst_p + i * dst_stride + j, accum);
+			policy.store(&dst[i][j], accum);
 		}
 	}
 }

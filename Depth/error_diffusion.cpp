@@ -26,14 +26,9 @@ FloatToInteger<T> make_float_to_integer(const PixelFormat &fmt)
 class ErrorDiffusionC : public DitherConvert {
 	template <class T, class U, class Unpack, class Quant, class Dequant>
 	void dither(const ImagePlane<const T> &src, const ImagePlane<U> &dst, float *tmp, Unpack unpack, Quant quant, Dequant dequant) const
-	{
-		const T *src_p = src.data();
-		U *dst_p = dst.data();
-		
+	{		
 		int width = src.width();
 		int height = src.height();
-		int src_stride = src.stride();
-		int dst_stride = dst.stride();
 
 		float *line0 = tmp + 1;
 		float *line1 = line0 + width + 2;
@@ -46,7 +41,7 @@ class ErrorDiffusionC : public DitherConvert {
 			float *curr_line = even ? line0 : line1;
 
 			for (ptrdiff_t j = 0; j < width; ++j) {
-				float x = unpack(src_p[i * src_stride + j]);
+				float x = unpack(src[i][j]);
 				float err = 0;
 
 				err += curr_line[j - 1] * (7.0f / 16.0f);
@@ -59,7 +54,7 @@ class ErrorDiffusionC : public DitherConvert {
 				U q = quant(x);
 				float y = dequant(q);
 
-				dst_p[i * dst_stride + j] = q;
+				dst[i][j] = q;
 				curr_line[j] = x - y;
 			}
 
