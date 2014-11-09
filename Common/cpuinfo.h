@@ -57,7 +57,7 @@ inline void do_cpuid(int regs[4], int eax, int ecx)
 #if defined(_WIN32)
 	__cpuidex(regs, eax, ecx);
 #elif defined(__GNUC__)
-	__get_cpuid(eax, (unsigned int *)(regs + 0), (unsigned int *)(regs + 1), (unsigned int *)(regs + 2), (unsigned int *)(regs + 3);
+	__get_cpuid(eax, (unsigned int *)(regs + 0), (unsigned int *)(regs + 1), (unsigned int *)(regs + 2), (unsigned int *)(regs + 3));
 #else
 	regs[0] = 0;
 	regs[1] = 0;
