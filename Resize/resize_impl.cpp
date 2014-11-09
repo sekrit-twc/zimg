@@ -52,13 +52,10 @@ public:
 } // namespace
 
 
-ResizeImpl::ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v)
-try :
+ResizeImpl::ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v) :
 	m_filter_h{ filter_h },
 	m_filter_v{ filter_v }
 {
-} catch (const std::bad_alloc &) {
-	throw ZimgOutOfMemory{};
 }
 
 ResizeImpl::~ResizeImpl()
@@ -68,27 +65,23 @@ ResizeImpl::~ResizeImpl()
 ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
                                double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
-	try {
-		ResizeImpl *ret = nullptr;
+	ResizeImpl *ret = nullptr;
 
-		EvaluatedFilter filter_h;
-		EvaluatedFilter filter_v;
+	EvaluatedFilter filter_h;
+	EvaluatedFilter filter_v;
 
-		if (src_width != dst_width || shift_w != 0.0 || subwidth != src_width)
-			filter_h = compute_filter(f, src_width, dst_width, shift_w, subwidth);
-		if (src_height != dst_height || shift_h != 0.0 || subheight != src_height)
-			filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
+	if (src_width != dst_width || shift_w != 0.0 || subwidth != src_width)
+		filter_h = compute_filter(f, src_width, dst_width, shift_w, subwidth);
+	if (src_height != dst_height || shift_h != 0.0 || subheight != src_height)
+		filter_v = compute_filter(f, src_height, dst_height, shift_h, subheight);
 
 #ifdef ZIMG_X86
-		ret = create_resize_impl_x86(filter_h, filter_v, cpu);
+	ret = create_resize_impl_x86(filter_h, filter_v, cpu);
 #endif
-		if (!ret)
-			ret = new ResizeImplC(filter_h, filter_v);
+	if (!ret)
+		ret = new ResizeImplC(filter_h, filter_v);
 
-		return ret;
-	} catch (const std::bad_alloc &) {
-		throw ZimgOutOfMemory{};
-	}
+	return ret;
 }
 
 } // namespace resize
