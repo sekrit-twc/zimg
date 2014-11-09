@@ -124,7 +124,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bilinear.cpp" />
-    <ClCompile Include="matrix.cpp" />
     <ClCompile Include="unresize.cpp" />
     <ClCompile Include="unresize_impl.cpp" />
     <ClCompile Include="unresize_impl_avx2.cpp">
@@ -143,7 +142,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bilinear.h" />
-    <ClInclude Include="matrix.h" />
     <ClInclude Include="unresize.h" />
     <ClInclude Include="unresize_impl.h" />
     <ClInclude Include="unresize_impl_x86.h" />

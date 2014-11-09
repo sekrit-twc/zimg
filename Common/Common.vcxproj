@@ -118,6 +118,7 @@
     <ClInclude Include="align.h" />
     <ClInclude Include="cpuinfo.h" />
     <ClInclude Include="except.h" />
+    <ClInclude Include="matrix.h" />
     <ClInclude Include="osdep.h" />
     <ClInclude Include="pixel.h" />
     <ClInclude Include="plane.h" />

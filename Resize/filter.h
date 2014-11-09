@@ -197,7 +197,6 @@ public:
  * @param width active subwindow in units of source pixels
  * @return the computed filter
  * @throws ZimgIllegalArgument on unsupported parameter combinations
- * @throws ZimgOutOfMemory if out of memory
  */
 EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
 
