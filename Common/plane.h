@@ -15,10 +15,10 @@ namespace zimg {;
  */
 template <class T>
 class ImagePlane {
-	mutable T *m_data;
+	T *m_data;
 	int m_width;
 	int m_height;
-	int m_stride;
+	int m_byte_stride;
 	PixelFormat m_format;
 public:
 	/**
@@ -59,7 +59,7 @@ public:
 	 * @param format pixel format
 	 */
 	ImagePlane(T *data, int width, int height, int stride, const PixelFormat &format) :
-		m_data{ data }, m_width{ width }, m_height{ height }, m_stride{ stride }, m_format(format)
+		m_data{ data }, m_width{ width }, m_height{ height }, m_byte_stride{ stride * pixel_size(format.type) }, m_format(format)
 	{}
 
 	/**
@@ -83,7 +83,7 @@ public:
 	 */
 	int stride() const
 	{
-		return m_stride;
+		return m_byte_stride / pixel_size(m_format.type);
 	}
 
 	/**
@@ -102,12 +102,12 @@ public:
 		return m_data;
 	}
 
-	/**
-	 * @return const pointer to image data
-	 */
-	const T *cdata() const
+	T *operator[](size_t i) const
 	{
-		return m_data;
+		const char *byte_ptr = reinterpret_cast<const char *>(m_data);
+		const char *line_ptr = byte_ptr + i  * m_byte_stride;
+
+		return reinterpret_cast<T *>(const_cast<char *>(line_ptr));
 	}
 };
 
@@ -134,19 +134,10 @@ ImagePlane<T> plane_cast(const ImagePlane<U> &x)
 template <class T>
 inline void copy_image_plane(const ImagePlane<const T> &src, const ImagePlane<T> &dst)
 {
-	int pxsize = pixel_size(src.format().type);
-	ptrdiff_t byte_width = pxsize * src.width();
-	ptrdiff_t src_stride = pxsize * src.stride();
-	ptrdiff_t dst_stride = pxsize * dst.stride();
-
-	const char *src_p = static_cast<const char *>(src.cdata());
-	char *dst_p = static_cast<char *>(dst.data());
+	size_t byte_width = (size_t)src.width() * pixel_size(src.format().type);
 
 	for (int i = 0; i < src.height(); ++i) {
-		std::copy_n(src_p, byte_width, dst_p);
-
-		src_p += src_stride;
-		dst_p += dst_stride;
+		std::copy_n((const char *)src[i], byte_width, (char *)dst[i]);
 	}
 }
 

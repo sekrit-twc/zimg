@@ -79,12 +79,8 @@ class OrderedDitherC : public OrderedDither {
 	template <class T, class U, class ToFloat, class FromFloat>
 	void dither(const ImagePlane<const T> &src, const ImagePlane<U> &dst, float *tmp, int depth, ToFloat to_float, FromFloat from_float) const
 	{
-		const T *src_p = src.data();
-		U *dst_p = dst.data();
 		int width = src.width();
 		int height = dst.height();
-		int src_stride = src.stride();
-		int dst_stride = dst.stride();
 
 		int hperiod = m_period;
 		int vperiod = (int)(m_dither.size() / hperiod);
@@ -101,13 +97,13 @@ class OrderedDitherC : public OrderedDither {
 			for (ptrdiff_t j = 0; j < loop_end; j += hperiod) {
 				m = 0;
 				for (ptrdiff_t jj = j; jj < j + hperiod; ++jj) {
-					dst_p[i * dst_stride + jj] = dither_pixel(src_p[i * src_stride + jj], dith[m++]);
+					dst[i][jj] = dither_pixel(src[i][jj], dith[m++]);
 				}
 			}
 
 			m = 0;
 			for (ptrdiff_t j = loop_end; j < width; ++j) {
-				dst_p[i * dst_stride + j] = dither_pixel(src_p[i * src_stride + j], dith[m++]);
+				dst[i][j] = dither_pixel(src[i][j], dith[m++]);
 			}
 		}
 	}

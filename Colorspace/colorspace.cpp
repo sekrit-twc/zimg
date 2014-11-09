@@ -82,30 +82,20 @@ void ColorspaceConversion::process(const ImagePlane<const void> *src, const Imag
 
 	ptrdiff_t tmp_stride = align(width, AlignmentOf<float>::value);
 	float *tmp_f = (float *)tmp;
-
-	const void *src_p[3] = { src[0].data(), src[1].data(), src[2].data() };
-	void *dst_p[3] = { dst[0].data(), dst[1].data(), dst[2].data() };
 	float *buf[3] = { tmp_f, tmp_f + tmp_stride, tmp_f + 2 * tmp_stride };
 
 	for (int i = 0; i < height; ++i) {
-		load_line(src_p[0], buf[0], width, src_type);
-		load_line(src_p[1], buf[1], width, src_type);
-		load_line(src_p[2], buf[2], width, src_type);
+		load_line(src[0][i], buf[0], width, src_type);
+		load_line(src[1][i], buf[1], width, src_type);
+		load_line(src[2][i], buf[2], width, src_type);
 
 		for (auto &o : m_operations) {
 			o->process(buf, width);
 		}
 
-		store_line(buf[0], dst_p[0], width, dst_type);
-		store_line(buf[1], dst_p[1], width, dst_type);
-		store_line(buf[2], dst_p[2], width, dst_type);
-
-		src_p[0] = (const char *)src_p[0] + src[0].stride() * src_pxsize;
-		src_p[1] = (const char *)src_p[1] + src[1].stride() * src_pxsize;
-		src_p[2] = (const char *)src_p[2] + src[2].stride() * src_pxsize;
-		dst_p[0] = (char *)dst_p[0] + dst[0].stride() * dst_pxsize;
-		dst_p[1] = (char *)dst_p[1] + dst[1].stride() * dst_pxsize;
-		dst_p[2] = (char *)dst_p[2] + dst[2].stride() * dst_pxsize;
+		store_line(buf[0], dst[0][i], width, dst_type);
+		store_line(buf[1], dst[1][i], width, dst_type);
+		store_line(buf[2], dst[2][i], width, dst_type);
 	}
 }
 
