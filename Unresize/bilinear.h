@@ -31,9 +31,8 @@ struct BilinearContext {
 	 * matrix_row_offsets stores the original column index of row band in (A').
 	 *
 	 * The relationship to the original matrix (A') is given by the following.
-	 * The row size is always a multiple of 4 for SIMD reasons.
 	 *
-	 * matrix_coefficients(i * matrix_row_size, j) = A'(i, matrix_row_offsets(i) + j)
+	 * matrix_coefficients(i, j) = A'(i, matrix_row_offsets(i) + j)
 	 *
 	 */
 	AlignedVector<float> matrix_coefficients;

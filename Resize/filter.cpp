@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include "Common/except.h"
+#include "Common/matrix.h"
 #include "filter.h"
 
 namespace zimg {;
@@ -27,63 +28,21 @@ double cube(double x)
 	return x * x * x;
 }
 
-class Matrix {
-	int m_width;
-	int m_height;
-	std::vector<double> m_matrix;
-public:
-	Matrix() = default;
-
-	Matrix(int width, int height) : m_width{ width }, m_height{ height }, m_matrix((size_t)width * height)
-	{}
-
-	int width() const { return m_width; }
-
-	int height() const { return m_height; }
-
-	double &at(int i, int j)
-	{
-		if (i > m_height || j > m_width || i < 0 || j < 0)
-			throw ZimgLogicError("index out of array bounds");
-
-		return m_matrix.at((ptrdiff_t)i * m_width + j);
-	}
-
-	double at(int i, int j) const { return const_cast<Matrix *>(this)->at(i, j); }
-};
-
-EvaluatedFilter compress_matrix(const Matrix &m)
+EvaluatedFilter matrix_to_filter(const RowMatrix<double> &m)
 {
-	int width = 0;
+	size_t width = 0;
 
-	for (int i = 0; i < m.height(); ++i) {
-		int left;
-		int right;
-
-		for (left = 0; left < m.width(); ++left) {
-			if (m.at(i, left))
-				break;
-		}
-		for (right = m.width(); right > left; --right) {
-			if (m.at(i, right - 1))
-				break;
-		}
-
-		width = std::max(width, right - left);
+	for (size_t i = 0; i < m.rows(); ++i) {
+		width = std::max(width, m.row_right(i) - m.row_left(i));
 	}
 
-	EvaluatedFilter e{ width, m.height() };
+	EvaluatedFilter e{ (int)width, (int)m.rows() };
 
-	for (int i = 0; i < m.height(); ++i) {
-		int left;
+	for (size_t i = 0; i < m.rows(); ++i) {
+		int left = (int)std::min(m.row_left(i), m.cols() - width);
 
-		for (left = 0; left < m.width() - width; ++left) {
-			if (m.at(i, left))
-				break;
-		}
-
-		for (int j = 0; j < width; ++j) {
-			float coeff = (float)m.at(i, left + j);
+		for (size_t j = 0; j < width; ++j) {
+			float coeff = (float)m[i][left + j];
 			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
 
 			e.data()[(ptrdiff_t)i * e.stride() + j] = coeff;
@@ -271,54 +230,50 @@ const int *EvaluatedFilter::left() const
 
 EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width)
 {
-	try {
-		double scale = (double)dst_dim / width;
-		double step = std::min(scale, 1.0);
-		double support = (double)f.support() / step;
-		int filter_size = std::max((int)std::ceil(support * 2), 1);
+	double scale = (double)dst_dim / width;
+	double step = std::min(scale, 1.0);
+	double support = (double)f.support() / step;
+	int filter_size = std::max((int)std::ceil(support * 2), 1);
 
-		if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
-			throw ZimgIllegalArgument{ "window too far" };
-		if (src_dim <= support)
-			throw ZimgIllegalArgument{ "filter too wide" };
-		if (width <= support)
-			throw ZimgIllegalArgument{ "subwindow too small" };
+	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
+		throw ZimgIllegalArgument{ "window too far" };
+	if (src_dim <= support)
+		throw ZimgIllegalArgument{ "filter too wide" };
+	if (width <= support)
+		throw ZimgIllegalArgument{ "subwindow too small" };
 
-		double minpos = 0.5;
-		double maxpos = (double)src_dim - 0.5;
+	double minpos = 0.5;
+	double maxpos = (double)src_dim - 0.5;
 
-		Matrix m{ src_dim, dst_dim };
-		for (int i = 0; i < dst_dim; ++i) {
-			// Position of output sample on input grid.
-			double pos = (i + 0.5) / scale + shift;
-			double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
+	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
+	for (int i = 0; i < dst_dim; ++i) {
+		// Position of output sample on input grid.
+		double pos = (i + 0.5) / scale + shift;
+		double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
 
-			double total = 0.0;
-			for (int j = 0; j < filter_size; ++j) {
-				double xpos = begin_pos + j;
-				total += f((xpos - pos) * step);
-			}
-
-			for (int j = 0; j < filter_size; ++j) {
-				double xpos = begin_pos + j;
-				double real_pos;
-
-				// Mirror the position if it goes beyond image bounds.
-				if (xpos < minpos)
-					real_pos = 2.0 * minpos - xpos;
-				else if (xpos > maxpos)
-					real_pos = 2.0 * maxpos - xpos;
-				else
-					real_pos = xpos;
-
-				m.at(i, (int)std::floor(real_pos)) += f((xpos - pos) * step) / total;
-			}
+		double total = 0.0;
+		for (int j = 0; j < filter_size; ++j) {
+			double xpos = begin_pos + j;
+			total += f((xpos - pos) * step);
 		}
 
-		return compress_matrix(m);
-	} catch (const std::bad_alloc &) {
-		throw ZimgOutOfMemory{};
+		for (int j = 0; j < filter_size; ++j) {
+			double xpos = begin_pos + j;
+			double real_pos;
+
+			// Mirror the position if it goes beyond image bounds.
+			if (xpos < minpos)
+				real_pos = 2.0 * minpos - xpos;
+			else if (xpos > maxpos)
+				real_pos = 2.0 * maxpos - xpos;
+			else
+				real_pos = xpos;
+
+			m[i][(size_t)std::floor(real_pos)] += f((xpos - pos) * step) / total;
+		}
 	}
+
+	return matrix_to_filter(m);
 }
 
 } // namespace resize
