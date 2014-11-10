@@ -90,29 +90,45 @@ FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256
 template <bool DoLoop, class T, class Policy>
 void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &src, const ImagePlane<T> &dst, T *tmp, Policy policy)
 {
-	const T * RESTRICT src_p = src.data();
-	T * RESTRICT dst_p = dst.data();
+	const float *matrix_data = ctx.matrix_coefficients.data();
+	const int *matrix_left = ctx.matrix_row_offsets.data();
+	ptrdiff_t matrix_stride = ctx.matrix_row_stride;
+
 	int src_width = src.width();
 	int src_height = src.height();
-	int src_stride = src.stride();
-	int dst_stride = dst.stride();
 
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
 	const float *pu = ctx.lu_u.data();
 
 	for (ptrdiff_t i = 0; i < mod(src_height, 8); i += 8) {
-		__m256 w, z, f, c, l;
+		const T *src_ptr0 = src[i + 0];
+		const T *src_ptr1 = src[i + 1];
+		const T *src_ptr2 = src[i + 2];
+		const T *src_ptr3 = src[i + 3];
+		const T *src_ptr4 = src[i + 4];
+		const T *src_ptr5 = src[i + 5];
+		const T *src_ptr6 = src[i + 6];
+		const T *src_ptr7 = src[i + 7];
+
+		T *dst_ptr0 = dst[i + 0];
+		T *dst_ptr1 = dst[i + 1];
+		T *dst_ptr2 = dst[i + 2];
+		T *dst_ptr3 = dst[i + 3];
+		T *dst_ptr4 = dst[i + 4];
+		T *dst_ptr5 = dst[i + 5];
+		T *dst_ptr6 = dst[i + 6];
+		T *dst_ptr7 = dst[i + 7];
+
 		ptrdiff_t j;
 
-		z = _mm256_setzero_ps();
-
 		// Input, matrix-vector product, and forward substitution loop.
+		__m256 z = _mm256_setzero_ps();
 		for (j = 0; j < ctx.dst_width; ++j) {
-			const float *matrix_row = &ctx.matrix_coefficients[j * ctx.matrix_row_stride];
-			ptrdiff_t left = ctx.matrix_row_offsets[j];
+			const float *matrix_row = &matrix_data[j * matrix_stride];
+			ptrdiff_t left = matrix_left[j];
 
-			if (left + ctx.matrix_row_stride > src_width)
+			if (left + matrix_stride > src_width)
 				break;
 
 			// Matrix-vector product.
@@ -125,28 +141,28 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 				__m256 coeffs = _mm256_loadu_ps(&matrix_row[k]);
 				__m256 v0, v1, v2, v3, v4, v5, v6, v7;
 
-				v0 = policy.loadu_8(&src_p[(i + 0) * src_stride + left + k]);
+				v0 = policy.loadu_8(&src_ptr0[left + k]);
 				v0 = _mm256_mul_ps(coeffs, v0);
 
-				v1 = policy.loadu_8(&src_p[(i + 1) * src_stride + left + k]);
+				v1 = policy.loadu_8(&src_ptr1[left + k]);
 				v1 = _mm256_mul_ps(coeffs, v1);
 
-				v2 = policy.loadu_8(&src_p[(i + 2) * src_stride + left + k]);
+				v2 = policy.loadu_8(&src_ptr2[left + k]);
 				v2 = _mm256_mul_ps(coeffs, v2);
 
-				v3 = policy.loadu_8(&src_p[(i + 3) * src_stride + left + k]);
+				v3 = policy.loadu_8(&src_ptr3[left + k]);
 				v3 = _mm256_mul_ps(coeffs, v3);
 
-				v4 = policy.loadu_8(&src_p[(i + 4) * src_stride + left + k]);
+				v4 = policy.loadu_8(&src_ptr4[left + k]);
 				v4 = _mm256_mul_ps(coeffs, v4);
 
-				v5 = policy.loadu_8(&src_p[(i + 5) * src_stride + left + k]);
+				v5 = policy.loadu_8(&src_ptr5[left + k]);
 				v5 = _mm256_mul_ps(coeffs, v5);
 
-				v6 = policy.loadu_8(&src_p[(i + 6) * src_stride + left + k]);
+				v6 = policy.loadu_8(&src_ptr6[left + k]);
 				v6 = _mm256_mul_ps(coeffs, v6);
 
-				v7 = policy.loadu_8(&src_p[(i + 7) * src_stride + left + k]);
+				v7 = policy.loadu_8(&src_ptr7[left + k]);
 				v7 = _mm256_mul_ps(coeffs, v7);
 
 				transpose8_ps(v0, v1, v2, v3, v4, v5, v6, v7);
@@ -165,9 +181,9 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			accum0 = _mm256_add_ps(accum0, accum2);
 			accum1 = _mm256_add_ps(accum1, accum3);
 
-			f = _mm256_add_ps(accum0, accum1);
-			c = _mm256_broadcast_ss(&pc[j]);
-			l = _mm256_broadcast_ss(&pl[j]);
+			__m256 f = _mm256_add_ps(accum0, accum1);
+			__m256 c = _mm256_broadcast_ss(&pc[j]);
+			__m256 l = _mm256_broadcast_ss(&pl[j]);
 
 			z = _mm256_fnmadd_ps(c, z, f);
 			z = _mm256_mul_ps(z, l);
@@ -176,29 +192,28 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 		}
 		// Handle remainder of line.
 		for (; j < ctx.dst_width; ++j) {
-			const float *matrix_row = &ctx.matrix_coefficients[j * ctx.matrix_row_stride];
-			ptrdiff_t left = ctx.matrix_row_offsets[j];
+			const float *matrix_row = &matrix_data[j * matrix_stride];
+			ptrdiff_t left = matrix_left[j];
 
 			for (ptrdiff_t ii = 0; ii < 8; ++ii) {
 				float accum = 0;
-				for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
-					accum += matrix_row[k] * policy.load(&src_p[(i + ii) * src_stride + left + k]);
-				}
 
+				for (ptrdiff_t k = 0; k < ctx.matrix_row_size; ++k) {
+					accum += matrix_row[k] * policy.load(&src[i + ii][left + k]);
+				}
 				policy.store(&tmp[j * 8 + ii], (accum - pc[j] * policy.load(&tmp[(j - 1) * 8 + ii])) * pl[j]);
 			}
 		}
 
-		w = _mm256_setzero_ps();
-
 		// Backward substitution and output loop.
+		__m256 w = _mm256_setzero_ps();
 		for (ptrdiff_t j = ctx.dst_width; j > mod(ctx.dst_width, 8); --j) {
 			float w_buf[8];
 
 			_mm256_storeu_ps(w_buf, w);
 			for (ptrdiff_t ii = 0; ii < 8; ++ii) {
 				w_buf[ii] = policy.load(&tmp[(j - 1) * 8 + ii]) - pu[j - 1] * w_buf[ii];
-				policy.store(&dst_p[(i + ii) * dst_stride + j - 1], w_buf[ii]);
+				policy.store(&dst[i + ii][j - 1], w_buf[ii]);
 			}
 			w = _mm256_loadu_ps(w_buf);
 		}
@@ -216,48 +231,48 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			z1 = policy.load_8(&tmp[(j - 7) * 8]);
 			z0 = policy.load_8(&tmp[(j - 8) * 8]);
 
-			u7 = _mm256_broadcast_ss(pu + j - 1);
+			u7 = _mm256_broadcast_ss(&pu[j - 1]);
 			w = _mm256_fnmadd_ps(u7, w, z7);
 			w7 = w;
 
-			u6 = _mm256_broadcast_ss(pu + j - 2);
+			u6 = _mm256_broadcast_ss(&pu[j - 2]);
 			w = _mm256_fnmadd_ps(u6, w, z6);
 			w6 = w;
 
-			u5 = _mm256_broadcast_ss(pu + j - 3);
+			u5 = _mm256_broadcast_ss(&pu[j - 3]);
 			w = _mm256_fnmadd_ps(u5, w, z5);
 			w5 = w;
 
-			u4 = _mm256_broadcast_ss(pu + j - 4);
+			u4 = _mm256_broadcast_ss(&pu[j - 4]);
 			w = _mm256_fnmadd_ps(u4, w, z4);
 			w4 = w;
 
-			u3 = _mm256_broadcast_ss(pu + j - 5);
+			u3 = _mm256_broadcast_ss(&pu[j - 5]);
 			w = _mm256_fnmadd_ps(u3, w, z3);
 			w3 = w;
 
-			u2 = _mm256_broadcast_ss(pu + j - 6);
+			u2 = _mm256_broadcast_ss(&pu[j - 6]);
 			w = _mm256_fnmadd_ps(u2, w, z2);
 			w2 = w;
 
-			u1 = _mm256_broadcast_ss(pu + j - 7);
+			u1 = _mm256_broadcast_ss(&pu[j - 7]);
 			w = _mm256_fnmadd_ps(u1, w, z1);
 			w1 = w;
 
-			u0 = _mm256_broadcast_ss(pu + j - 8);
+			u0 = _mm256_broadcast_ss(&pu[j - 8]);
 			w = _mm256_fnmadd_ps(u0, w, z0);
 			w0 = w;
 
 			transpose8_ps(w0, w1, w2, w3, w4, w5, w6, w7);
 
-			policy.store_8(&dst_p[(i + 0) * dst_stride + j - 8], w0);
-			policy.store_8(&dst_p[(i + 1) * dst_stride + j - 8], w1);
-			policy.store_8(&dst_p[(i + 2) * dst_stride + j - 8], w2);
-			policy.store_8(&dst_p[(i + 3) * dst_stride + j - 8], w3);
-			policy.store_8(&dst_p[(i + 4) * dst_stride + j - 8], w4);
-			policy.store_8(&dst_p[(i + 5) * dst_stride + j - 8], w5);
-			policy.store_8(&dst_p[(i + 6) * dst_stride + j - 8], w6);
-			policy.store_8(&dst_p[(i + 7) * dst_stride + j - 8], w7);
+			policy.store_8(&dst_ptr0[j - 8], w0);
+			policy.store_8(&dst_ptr1[j - 8], w1);
+			policy.store_8(&dst_ptr2[j - 8], w2);
+			policy.store_8(&dst_ptr3[j - 8], w3);
+			policy.store_8(&dst_ptr4[j - 8], w4);
+			policy.store_8(&dst_ptr5[j - 8], w5);
+			policy.store_8(&dst_ptr6[j - 8], w6);
+			policy.store_8(&dst_ptr7[j - 8], w7);
 		}
 	}
 	for (ptrdiff_t i = mod(src_height, 8); i < src_height; ++i) {
@@ -269,51 +284,47 @@ void filter_plane_h_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 template <class T, class Policy>
 void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &src, const ImagePlane<T> &dst, Policy policy)
 {
-	const T * RESTRICT src_p = src.data();
-	T * RESTRICT dst_p = dst.data();
+	const float *matrix_data = ctx.matrix_coefficients.data();
+	const int *matrix_left = ctx.matrix_row_offsets.data();
+	ptrdiff_t matrix_stride = ctx.matrix_row_stride;
+
 	int src_width = src.width();
 	int src_height = src.height();
-	int src_stride = src.stride();
-	int dst_stride = dst.stride();
 
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
 	const float *pu = ctx.lu_u.data();
 
-	__m256 w, z, f, c, l, u;
-
 	for (ptrdiff_t i = 0; i < ctx.dst_width; ++i) {
-		__m256 coeff0, coeff1, coeff2, coeff3, coeff4, coeff5, coeff6, coeff7;
-		__m256 x0, x1, x2, x3, x4, x5, x6, x7;
-		__m256 accum0, accum1, accum2, accum3;
+		const float *matrix_row = &matrix_data[i * matrix_stride];
+		ptrdiff_t top = matrix_left[i];
 
-		const float *row = &ctx.matrix_coefficients.data()[i * ctx.matrix_row_stride];
-		ptrdiff_t top = ctx.matrix_row_offsets[i];
-
-		const T *src_ptr0, *src_ptr1, *src_ptr2, *src_ptr3, *src_ptr4, *src_ptr5, *src_ptr6, *src_ptr7;
-		T *dst_ptr = &dst_p[i * dst_stride];
+		T *dst_ptr = dst[i];
 
 		// Matrix-vector product.
 		for (ptrdiff_t k = 0; k < mod(ctx.matrix_row_size, 8); k += 8) {
-			src_ptr0 = &src_p[(top + k + 0) * src_stride];
-			src_ptr1 = &src_p[(top + k + 1) * src_stride];
-			src_ptr2 = &src_p[(top + k + 2) * src_stride];
-			src_ptr3 = &src_p[(top + k + 3) * src_stride];
-			src_ptr4 = &src_p[(top + k + 4) * src_stride];
-			src_ptr5 = &src_p[(top + k + 5) * src_stride];
-			src_ptr6 = &src_p[(top + k + 6) * src_stride];
-			src_ptr7 = &src_p[(top + k + 7) * src_stride];
+			const T *src_ptr0 = src[top + k + 0];
+			const T *src_ptr1 = src[top + k + 1];
+			const T *src_ptr2 = src[top + k + 2];
+			const T *src_ptr3 = src[top + k + 3];
+			const T *src_ptr4 = src[top + k + 4];
+			const T *src_ptr5 = src[top + k + 5];
+			const T *src_ptr6 = src[top + k + 6];
+			const T *src_ptr7 = src[top + k + 7];
 
-			coeff0 = _mm256_broadcast_ss(row + k + 0);
-			coeff1 = _mm256_broadcast_ss(row + k + 1);
-			coeff2 = _mm256_broadcast_ss(row + k + 2);
-			coeff3 = _mm256_broadcast_ss(row + k + 3);
-			coeff4 = _mm256_broadcast_ss(row + k + 4);
-			coeff5 = _mm256_broadcast_ss(row + k + 5);
-			coeff6 = _mm256_broadcast_ss(row + k + 6);
-			coeff7 = _mm256_broadcast_ss(row + k + 7);
+			__m256 coeff0 = _mm256_broadcast_ss(&matrix_row[k + 0]);
+			__m256 coeff1 = _mm256_broadcast_ss(&matrix_row[k + 1]);
+			__m256 coeff2 = _mm256_broadcast_ss(&matrix_row[k + 2]);
+			__m256 coeff3 = _mm256_broadcast_ss(&matrix_row[k + 3]);
+			__m256 coeff4 = _mm256_broadcast_ss(&matrix_row[k + 4]);
+			__m256 coeff5 = _mm256_broadcast_ss(&matrix_row[k + 5]);
+			__m256 coeff6 = _mm256_broadcast_ss(&matrix_row[k + 6]);
+			__m256 coeff7 = _mm256_broadcast_ss(&matrix_row[k + 7]);
 				
 			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
+				__m256 x0, x1, x2, x3, x4, x5, x6, x7;
+				__m256 accum0, accum1, accum2, accum3;
+
 				x0 = policy.load_8(&src_ptr0[j]);
 				accum0 = _mm256_mul_ps(coeff0, x0);
 
@@ -352,27 +363,29 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			ptrdiff_t m = ctx.matrix_row_size % 8;
 			ptrdiff_t k = ctx.matrix_row_size - m;
 
-			coeff6 = _mm256_broadcast_ss(row + k + 6);
-			coeff5 = _mm256_broadcast_ss(row + k + 5);
-			coeff4 = _mm256_broadcast_ss(row + k + 4);
-			coeff3 = _mm256_broadcast_ss(row + k + 3);
-			coeff2 = _mm256_broadcast_ss(row + k + 2);
-			coeff1 = _mm256_broadcast_ss(row + k + 1);
-			coeff0 = _mm256_broadcast_ss(row + k + 0);
+			const T *src_ptr0 = src[top + k + 0];
+			const T *src_ptr1 = src[top + k + 1];
+			const T *src_ptr2 = src[top + k + 2];
+			const T *src_ptr3 = src[top + k + 3];
+			const T *src_ptr4 = src[top + k + 4];
+			const T *src_ptr5 = src[top + k + 5];
+			const T *src_ptr6 = src[top + k + 6];
 
-			src_ptr6 = &src_p[(top + k + 6) * src_stride];
-			src_ptr5 = &src_p[(top + k + 5) * src_stride];
-			src_ptr4 = &src_p[(top + k + 4) * src_stride];
-			src_ptr3 = &src_p[(top + k + 3) * src_stride];
-			src_ptr2 = &src_p[(top + k + 2) * src_stride];
-			src_ptr1 = &src_p[(top + k + 1) * src_stride];
-			src_ptr0 = &src_p[(top + k + 0) * src_stride];
+			__m256 coeff0 = _mm256_broadcast_ss(&matrix_row[k + 0]);
+			__m256 coeff1 = _mm256_broadcast_ss(&matrix_row[k + 1]);
+			__m256 coeff2 = _mm256_broadcast_ss(&matrix_row[k + 2]);
+			__m256 coeff3 = _mm256_broadcast_ss(&matrix_row[k + 3]);
+			__m256 coeff4 = _mm256_broadcast_ss(&matrix_row[k + 4]);
+			__m256 coeff5 = _mm256_broadcast_ss(&matrix_row[k + 5]);
+			__m256 coeff6 = _mm256_broadcast_ss(&matrix_row[k + 6]);
 
 			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
-				accum0 = _mm256_setzero_ps();
-				accum1 = _mm256_setzero_ps();
-				accum2 = _mm256_setzero_ps();
-				accum3 = _mm256_setzero_ps();
+				__m256 x0, x1, x2, x3, x4, x5, x6;
+
+				__m256 accum0 = _mm256_setzero_ps();
+				__m256 accum1 = _mm256_setzero_ps();
+				__m256 accum2 = _mm256_setzero_ps();
+				__m256 accum3 = _mm256_setzero_ps();
 
 				switch (m) {
 				case 7:
@@ -409,18 +422,20 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			}
 		}
 
-		c = _mm256_broadcast_ss(pc + i);
-		l = _mm256_broadcast_ss(pl + i);
-
 		// Forward substitution.
+		__m256 c = _mm256_broadcast_ss(&pc[i]);
+		__m256 l = _mm256_broadcast_ss(&pl[i]);
+
+		const T *dst_prev = i ? dst[i - 1] : nullptr;
+
 		for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
-			z = i ? policy.load_8(&dst_p[(i - 1) * dst_stride + j]) : _mm256_setzero_ps();
-			f = policy.load_8(&dst_p[i * src_stride + j]);
+			__m256 z = i ? policy.load_8(&dst_prev[j]) : _mm256_setzero_ps();
+			__m256 f = policy.load_8(&dst_ptr[j]);
 
 			z = _mm256_fnmadd_ps(c, z, f);
 			z = _mm256_mul_ps(z, l);
 
-			policy.store_8(&dst_p[i * dst_stride + j], z);
+			policy.store_8(&dst_ptr[j], z);
 		}
 		
 		filter_scanline_v_forward(ctx, src, dst, i, mod(src_width, 8), src_width, policy);
@@ -428,14 +443,17 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 
 	// Back substitution.
 	for (ptrdiff_t i = ctx.dst_width; i > 0; --i) {
-		u = _mm256_broadcast_ss(pu + i - 1);
+		__m256 u = _mm256_broadcast_ss(pu + i - 1);
+
+		const T *dst_prev = i < ctx.dst_width ? dst[i] : nullptr;
+		T *dst_ptr = dst[i - 1];
 
 		for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
-			w = i < ctx.dst_width ? policy.load_8(&dst_p[i * dst_stride + j]) : _mm256_setzero_ps();
-			z = policy.load_8(&dst_p[(i - 1) * dst_stride + j]);
-			w = _mm256_fnmadd_ps(u, w, z);
+			__m256 w = i < ctx.dst_width ? policy.load_8(&dst_prev[j]) : _mm256_setzero_ps();
+			__m256 z = policy.load_8(&dst_ptr[j]);
 
-			policy.store_8(&dst_p[(i - 1) * dst_stride + j], w);
+			w = _mm256_fnmadd_ps(u, w, z);
+			policy.store_8(&dst_ptr[j], w);
 		}
 		filter_scanline_v_back(ctx, dst, i, mod(src_width, 8), src_width, policy);
 	}
