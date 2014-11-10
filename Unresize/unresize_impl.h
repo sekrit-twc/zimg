@@ -15,15 +15,9 @@ enum class CPUClass;
 namespace unresize {;
 
 struct ScalarPolicy_F32 {
-	float load(const float *src)
-	{
-		return *src;
-	}
+	FORCE_INLINE float load(const float *src) { return *src; }
 
-	void store(float *dst, float x)
-	{
-		*dst = x;
-	}
+	FORCE_INLINE void store(float *dst, float x) { *dst = x; }
 };
 
 template <class T, class Policy>

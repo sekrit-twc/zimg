@@ -11,47 +11,21 @@ namespace unresize {;
 namespace {;
 
 struct VectorPolicy_F16 {
-	__m256 loadu_8(const uint16_t *src)
-	{
-		return _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)src));
-	}
+	FORCE_INLINE __m256 load_8(const uint16_t *src) { return _mm256_cvtph_ps(_mm_load_si128((const __m128i *)src)); }
+	FORCE_INLINE __m256 loadu_8(const uint16_t *src) { return _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)src)); }
 
-	__m256 load_8(const uint16_t *src)
-	{
-		return _mm256_cvtph_ps(_mm_load_si128((const __m128i *)src));
-	}
+	FORCE_INLINE void store_8(uint16_t *dst, __m256 x) { _mm_store_si128((__m128i *)dst, _mm256_cvtps_ph(x, 0)); }
 
-	void store_8(uint16_t *dst, __m256 x)
-	{
-		_mm_store_si128((__m128i *)dst, _mm256_cvtps_ph(x, 0));
-	}
+	FORCE_INLINE float load(const uint16_t *src) { return _mm_cvtss_f32(_mm_cvtph_ps(_mm_set1_epi16(*src))); }
 
-	float load(const uint16_t *src)
-	{
-		return _mm_cvtss_f32(_mm_cvtph_ps(_mm_set1_epi16(*src)));
-	}
-
-	void store(uint16_t *dst, float x)
-	{
-		*dst = _mm_extract_epi16(_mm_cvtps_ph(_mm_set_ps1(x), 0), 0);
-	}
+	FORCE_INLINE void store(uint16_t *dst, float x) { *dst = _mm_extract_epi16(_mm_cvtps_ph(_mm_set_ps1(x), 0), 0); }
 };
 
 struct VectorPolicy_F32 : public ScalarPolicy_F32 {
-	__m256 loadu_8(const float *src)
-	{
-		return _mm256_loadu_ps(src);
-	}
+	FORCE_INLINE __m256 load_8(const float *src) { return _mm256_load_ps(src); }
+	FORCE_INLINE __m256 loadu_8(const float *src) { return _mm256_loadu_ps(src); }
 
-	__m256 load_8(const float *src)
-	{
-		return _mm256_load_ps(src);
-	}
-
-	void store_8(float *dst, __m256 x)
-	{
-		_mm256_store_ps(dst, x);
-	}
+	FORCE_INLINE void store_8(float *dst, __m256 x) { _mm256_store_ps(dst, x); }
 };
 
 FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)

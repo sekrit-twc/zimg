@@ -18,24 +18,14 @@ namespace {;
 struct ScalarPolicy_F16 {
 	typedef float num_type;
 
-	float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data()[row * filter.stride() + k];
 	}
 
-	float load(const uint16_t *src)
-	{
-		__m128i sh = _mm_set1_epi16(*src);
-		__m128  ss = _mm_cvtph_ps(sh);
-		return _mm_cvtss_f32(ss);
-	}
+	FORCE_INLINE float load(const uint16_t *src) { return _mm_cvtss_f32(_mm_cvtph_ps(_mm_set1_epi16(*src))); }
 
-	void store(uint16_t *dst, float x)
-	{
-		__m128  ss = _mm_set_ps1(x);
-		__m128i sh = _mm_cvtps_ph(ss, 0);
-		*dst = _mm_extract_epi16(sh, 0);
-	}
+	FORCE_INLINE void store(uint16_t *dst, float x) { *dst = _mm_extract_epi16(_mm_cvtps_ph(_mm_set_ps1(x), 0), 0); }
 };
 
 struct VectorPolicy_F16 : public ScalarPolicy_F16 {
@@ -43,7 +33,6 @@ struct VectorPolicy_F16 : public ScalarPolicy_F16 {
 	FORCE_INLINE __m256 loadu_8(const uint16_t *p) { return _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)p)); }
 
 	FORCE_INLINE void store_8(uint16_t *p, __m256 x) { _mm_store_si128((__m128i *)p, _mm256_cvtps_ph(x, 0)); }
-	FORCE_INLINE void storeu_8(uint16_t *p, __m256 x) { _mm_storeu_si128((__m128i *)p, _mm256_cvtps_ph(x, 0)); }
 };
 
 struct VectorPolicy_F32 : public ScalarPolicy_F32 {
@@ -51,7 +40,6 @@ struct VectorPolicy_F32 : public ScalarPolicy_F32 {
 	FORCE_INLINE __m256 loadu_8(const float *p) { return _mm256_loadu_ps(p); }
 
 	FORCE_INLINE void store_8(float *p, __m256 x) { _mm256_store_ps(p, x); }
-	FORCE_INLINE void storeu_8(float *p, __m256 x) { _mm256_storeu_ps(p, x); }
 };
 
 FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
