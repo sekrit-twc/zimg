@@ -22,18 +22,18 @@ namespace resize {;
 struct ScalarPolicy_U16 {
 	typedef int32_t num_type;
 
-	int32_t coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE int32_t coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data_i16()[row * filter.stride_i16() + k];
 	}
 
-	int32_t load(const uint16_t *src)
+	FORCE_INLINE int32_t load(const uint16_t *src)
 	{
 		uint16_t x = *src;
 		return (int32_t)x + (int32_t)INT16_MIN; // Make signed.
 	}
 
-	void store(uint16_t *dst, int32_t x)
+	FORCE_INLINE void store(uint16_t *dst, int32_t x)
 	{
 		// Convert from 16.14 to 16.0.
 		x = ((x + (1 << 13)) >> 14) - (int32_t)INT16_MIN;
@@ -48,14 +48,14 @@ struct ScalarPolicy_U16 {
 struct ScalarPolicy_F32 {
 	typedef float num_type;
 
-	float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
 	{
 		return filter.data()[row * filter.stride() + k];
 	}
 
-	float load(const float *src) { return *src; }
+	FORCE_INLINE float load(const float *src) { return *src; }
 
-	void store(float *dst, float x) { *dst = x; }
+	FORCE_INLINE void store(float *dst, float x) { *dst = x; }
 };
 
 template <class T, class Policy>
