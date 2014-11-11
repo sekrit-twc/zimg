@@ -26,7 +26,7 @@ include_HEADERS = API/zimg.h \
 				  API/zimg++.hpp
 
 
-libzimg_la_LDFLAGS = -no-undefined -version-info 0
+libzimg_la_LDFLAGS = -no-undefined -version-info 0 -export-symbols-regex '^zimg_'
 
 
 vszimg_la_SOURCES = vszimg/vszimg.c
