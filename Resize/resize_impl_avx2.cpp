@@ -378,7 +378,6 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 	ptrdiff_t filter_stride = filter.stride_i16();
 
 	int src_width = src.width();
-	int src_height = src.height();
 
 	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
 		const int16_t *filter_row = &filter_data[i * filter_stride];
