@@ -74,8 +74,6 @@ void ColorspaceConversion::process(const ImagePlane<const void> *src, const Imag
 {
 	PixelType src_type = src[0].format().type;
 	PixelType dst_type = dst[0].format().type;
-	size_t src_pxsize = pixel_size(src_type);
-	size_t dst_pxsize = pixel_size(dst_type);
 
 	int width = src[0].width();
 	int height = src[0].height();
