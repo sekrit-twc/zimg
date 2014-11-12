@@ -26,8 +26,8 @@ struct AppContext {
 	int height;
 	colorspace::ColorspaceDefinition csp_in;
 	colorspace::ColorspaceDefinition csp_out;
-	bool fullrange_in;
-	bool fullrange_out;
+	int fullrange_in;
+	int fullrange_out;
 	const char *visualise;
 	int times;
 	CPUClass cpu;
@@ -182,8 +182,8 @@ int colorspace_main(int argc, const char **argv)
 	c.height           = std::stoi(argv[4]);
 	c.csp_in           = parse_csp(argv[5]);
 	c.csp_out          = parse_csp(argv[6]);
-	c.fullrange_in     = false;
-	c.fullrange_out    = false;
+	c.fullrange_in     = 0;
+	c.fullrange_out    = 0;
 	c.visualise        = nullptr;
 	c.times            = 1;
 	c.filetype         = PixelType::FLOAT;
@@ -205,14 +205,14 @@ int colorspace_main(int argc, const char **argv)
 	read_frame_raw(in, c.infile);
 
 	colorspace::ColorspaceConversion conv{ c.csp_in, c.csp_out, c.cpu };
-	execute(conv, in, out, c.times, c.fullrange_in, c.fullrange_out, yuv_in, yuv_out, c.filetype, c.pixtype);
+	execute(conv, in, out, c.times, !!c.fullrange_in, !!c.fullrange_out, yuv_in, yuv_out, c.filetype, c.pixtype);
 
 	write_frame_raw(out, c.outfile);
 
 	if (c.visualise) {
 		Frame bmp{ width, height, 1, 3 };
 
-		convert_frame(out, bmp, c.filetype, PixelType::BYTE, c.fullrange_out, yuv_out);
+		convert_frame(out, bmp, c.filetype, PixelType::BYTE, !!c.fullrange_out, yuv_out);
 		write_frame_bmp(bmp, c.visualise);
 	}
 

@@ -24,9 +24,9 @@ struct AppContext {
 	depth::DitherType dither;
 	int bits_in;
 	int bits_out;
-	bool fullrange_in;
-	bool fullrange_out;
-	bool yuv;
+	int fullrange_in;
+	int fullrange_out;
+	int yuv;
 	const char *visualise;
 	int times;
 	CPUClass cpu;
@@ -161,9 +161,9 @@ int depth_main(int argc, const char **argv)
 	c.bits_in       = -1;
 	c.bits_out      = -1;
 	c.dither        = depth::DitherType::DITHER_NONE;
-	c.fullrange_in  = false;
-	c.fullrange_out = false;
-	c.yuv           = false;
+	c.fullrange_in  = 0;
+	c.fullrange_out = 0;
+	c.yuv           = 0;
 	c.visualise     = nullptr;
 	c.times         = 1;
 	c.cpu           = CPUClass::CPU_NONE;
@@ -182,14 +182,14 @@ int depth_main(int argc, const char **argv)
 	read_frame_raw(in, c.infile);
 
 	depth::Depth depth{ c.dither, c.cpu };
-	execute(depth, in, out, c.times, c.pixtype_in, c.pixtype_out, c.bits_in, c.bits_out, c.fullrange_in, c.fullrange_out, c.yuv);
+	execute(depth, in, out, c.times, c.pixtype_in, c.pixtype_out, c.bits_in, c.bits_out, !!c.fullrange_in, !!c.fullrange_out, !!c.yuv);
 
 	write_frame_raw(out, c.outfile);
 
 	if (c.visualise) {
 		Frame bmp{ width, height, 1, 3 };
 
-		export_for_bmp(out, bmp, c.pixtype_out, c.bits_out, c.fullrange_out, c.yuv);
+		export_for_bmp(out, bmp, c.pixtype_out, c.bits_out, !!c.fullrange_out, !!c.yuv);
 		write_frame_bmp(bmp, c.visualise);
 	}
 
