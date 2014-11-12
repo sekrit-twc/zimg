@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_DEPTH_DEPTH_QUANTIZE_H_
-#define ZIMG_DEPTH_DEPTH_QUANTIZE_H_
+#ifndef ZIMG_DEPTH_QUANTIZE_H_
+#define ZIMG_DEPTH_QUANTIZE_H_
 
 #include <cmath>
 #include <cstdint>
@@ -159,4 +159,4 @@ public:
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DEPTH_QUANTIZE_H_
+#endif // ZIMG_DEPTH_QUANTIZE_H_
