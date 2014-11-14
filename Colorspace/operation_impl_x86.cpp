@@ -12,12 +12,12 @@ PixelAdapter *create_pixel_adapter_x86(CPUClass cpu)
 	PixelAdapter *ret;
 
 	if (cpu == CPUClass::CPU_X86_AUTO) {
-		if (caps.f16c)
-			ret = create_pixel_adapter_f16c();
+		if (caps.avx2)
+			ret = create_pixel_adapter_avx2();
 		else
 			ret = nullptr;
-	} else if (cpu >= CPUClass::CPU_X86_F16C) {
-		ret = create_pixel_adapter_f16c();
+	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
+		ret = create_pixel_adapter_avx2();
 	} else {
 		ret = nullptr;
 	}
@@ -54,12 +54,12 @@ Operation *create_rec709_gamma_operation_x86(CPUClass cpu)
 	Operation *ret;
 
 	if (cpu == CPUClass::CPU_X86_AUTO) {
-		if (caps.f16c)
-			ret = create_rec709_gamma_operation_f16c();
+		if (caps.avx2)
+			ret = create_rec709_gamma_operation_avx2();
 		else
 			ret = nullptr;
-	} else if (cpu >= CPUClass::CPU_X86_F16C) {
-		ret = create_rec709_gamma_operation_f16c();
+	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
+		ret = create_rec709_gamma_operation_avx2();
 	} else {
 		ret = nullptr;
 	}
@@ -73,12 +73,12 @@ Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu)
 	Operation *ret;
 
 	if (cpu == CPUClass::CPU_X86_AUTO) {
-		if (caps.f16c)
-			ret = create_rec709_inverse_gamma_operation_f16c();
+		if (caps.avx2)
+			ret = create_rec709_inverse_gamma_operation_avx2();
 		else
 			ret = nullptr;
-	} else if (cpu >= CPUClass::CPU_X86_F16C) {
-		ret = create_rec709_inverse_gamma_operation_f16c();
+	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
+		ret = create_rec709_inverse_gamma_operation_avx2();
 	} else {
 		ret = nullptr;
 	}
