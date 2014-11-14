@@ -16,13 +16,13 @@ class Operation;
 
 struct Matrix3x3;
 
-PixelAdapter *create_pixel_adapter_f16c();
+PixelAdapter *create_pixel_adapter_avx2();
 
 Operation *create_matrix_operation_sse2(const Matrix3x3 &m);
 Operation *create_matrix_operation_avx2(const Matrix3x3 &m);
 
-Operation *create_rec709_gamma_operation_f16c();
-Operation *create_rec709_inverse_gamma_operation_f16c();
+Operation *create_rec709_gamma_operation_avx2();
+Operation *create_rec709_inverse_gamma_operation_avx2();
 
 /**
  * Create an appropriate x86 optimized PixelAdapter for the given CPU.

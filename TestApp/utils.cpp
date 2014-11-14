@@ -38,8 +38,6 @@ zimg::CPUClass select_cpu(const char *cpu)
 		return CPUClass::CPU_X86_AUTO;
 	else if (!strcmp(cpu, "sse2"))
 		return CPUClass::CPU_X86_SSE2;
-	else if (!strcmp(cpu, "f16c"))
-		return CPUClass::CPU_X86_F16C;
 	else if (!strcmp(cpu, "avx2"))
 		return CPUClass::CPU_X86_AVX2;
 	else

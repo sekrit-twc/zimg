@@ -13,6 +13,83 @@ namespace colorspace {;
 
 namespace {;
 
+FORCE_INLINE uint16_t float_to_half(float x)
+{
+	__m128 f32 = _mm_set_ps1(x);
+	__m128i f16 = _mm_cvtps_ph(f32, 0);
+	return _mm_extract_epi16(f16, 0);
+}
+
+FORCE_INLINE float half_to_float(uint16_t x)
+{
+	__m128i f16 = _mm_set1_epi16(x);
+	__m128 f32 = _mm_cvtph_ps(f16);
+	return _mm_cvtss_f32(f32);
+}
+
+class PixelAdapterAVX2 : public PixelAdapter {
+public:
+	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
+	{
+		for (int i = 0; i < mod(width, 8); i += 8) {
+			__m128i f16 = _mm_load_si128((const __m128i *)(src + i));
+			__m256 f32 = _mm256_cvtph_ps(f16);
+			_mm256_store_ps(dst + i, f32);
+		}
+		for (int i = mod(width, 8); i < width; ++i) {
+			dst[i] = half_to_float(src[i]);
+		}
+	}
+
+	void f16_from_f32(const float *src, uint16_t *dst, int width) const override
+	{
+		for (int i = 0; i < mod(width, 8); i += 8) {
+			__m256 f32 = _mm256_load_ps(src + i);
+			__m128i f16 = _mm256_cvtps_ph(f32, 0);
+			_mm_store_si128((__m128i *)(dst + i), f16);
+		}
+		for (int i = mod(width, 8); i < width; ++i) {
+			dst[i] = float_to_half(src[i]);
+		}
+	}
+};
+
+class LookupTableOperationAVX2 : public Operation {
+	float m_lut[1L << 16];
+public:
+	template <class Proc>
+	explicit LookupTableOperationAVX2(Proc proc)
+	{
+		for (uint32_t i = 0; i < UINT16_MAX + 1; ++i) {
+			float x = half_to_float(i);
+			m_lut[i] = proc(x);
+		}
+	}
+
+	void process(float * const *ptr, int width) const override
+	{
+		__m128i zero = _mm_set1_epi16(0);
+
+		for (int p = 0; p < 3; ++p) {
+			for (int i = 0; i < mod(width, 8); i += 8) {
+				__m256 f32 = _mm256_load_ps(&ptr[p][i]);
+				__m128i half = _mm256_cvtps_ph(f32, 0);
+				__m128i lo = _mm_unpacklo_epi16(half, zero);
+				__m128i hi = _mm_unpackhi_epi16(half, zero);
+
+				__m256i idx = _mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1);
+				__m256 result = _mm256_i32gather_ps(m_lut, idx, sizeof(float));
+
+				_mm256_store_ps(&ptr[p][i], result);
+			}
+			for (int i = mod(width, 8); i < width; ++i) {
+				uint16_t half = float_to_half(ptr[p][i]);
+				ptr[p][i] = m_lut[half];
+			}
+		}
+	}
+};
+
 class MatrixOperationAVX2 : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationAVX2(const Matrix3x3 &m) : MatrixOperationImpl(m)
@@ -73,6 +150,21 @@ public:
 
 } // namespace
 
+
+PixelAdapter *create_pixel_adapter_avx2()
+{
+	return new PixelAdapterAVX2{};
+}
+
+Operation *create_rec709_gamma_operation_avx2()
+{
+	return new LookupTableOperationAVX2{ rec_709_gamma };
+}
+
+Operation *create_rec709_inverse_gamma_operation_avx2()
+{
+	return new LookupTableOperationAVX2{ rec_709_inverse_gamma };
+}
 
 Operation *create_matrix_operation_avx2(const Matrix3x3 &m)
 {
