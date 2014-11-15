@@ -113,8 +113,6 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 		const VSFrameRef *frame_order[3] = { src_frame, src_frame, src_frame };
 		const int plane_order[3] = { 0, 1, 2 };
 
-		dst_frame = vsapi->newVideoFrame2(data->vi.format, width, height, frame_order, plane_order, src_frame, core);
-
 		const void *src_plane[3];
 		void *dst_plane[3];
 		int src_stride[3];
@@ -122,6 +120,8 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 
 		size_t tmp_size;
 		void *tmp = 0;
+
+		dst_frame = vsapi->newVideoFrame2(data->vi.format, width, height, frame_order, plane_order, src_frame, core);
 		
 		for (p = 0; p < 3; ++p) {
 			src_plane[p] = vsapi->getReadPtr(src_frame, p);
