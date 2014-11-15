@@ -17,23 +17,20 @@ class OrderedDither : public DitherConvert {
 protected:	
 	/**
 	 * Array of fixed dither offsets to add (range -0.5 to 0.5).
-	 * This is a n x m array, where the width is given by m_period.
+	 * This is a 64x64 array.
 	 */
 	AlignedVector<float> m_dither;
 
 	/**
-	 * Number of consecutive horizontal dithers.
-	 */
-	int m_period;
-
-	/**
 	 * Initialize the implementation with the given coefficients.
 	 *
-	 * @param first first dither
-	 * @param last last dither
-	 * @param period number of consecutive horizontal dithers.
+	 * @param dither coefficient table
 	 */
-	OrderedDither(const float *first, const float *last, int period);
+	OrderedDither(const float *dither);
+public:
+	static const int NUM_DITHERS = 64 * 64;
+	static const int NUM_DITHERS_H = 64;
+	static const int NUM_DITHERS_V = 64;
 };
 
 /**
