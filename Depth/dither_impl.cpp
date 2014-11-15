@@ -58,18 +58,6 @@ void get_random_dithers(float *p)
 	std::generate_n(p, OrderedDither::NUM_DITHERS, [&]() { return normalize_dither(mt(), mt_min, mt_max) * 0.25; });
 }
 
-template <class T>
-IntegerToFloat<T> make_integer_to_float(const PixelFormat &fmt)
-{
-	return{ fmt.depth, fmt.fullrange, fmt.chroma };
-}
-
-template <class T>
-FloatToInteger<T> make_float_to_integer(const PixelFormat &fmt)
-{
-	return{ fmt.depth, fmt.fullrange, fmt.chroma };
-}
-
 class OrderedDitherC : public OrderedDither {
 	template <class T, class U, class ToFloat, class FromFloat>
 	void dither(const ImagePlane<const T> &src, const ImagePlane<U> &dst, float *tmp, int depth, ToFloat to_float, FromFloat from_float) const
