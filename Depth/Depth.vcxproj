@@ -22,15 +22,21 @@
     <ClInclude Include="depth.h" />
     <ClInclude Include="depth_convert.h" />
     <ClInclude Include="dither_impl.h" />
+    <ClInclude Include="dither_impl_x86.h" />
     <ClInclude Include="error_diffusion.h" />
     <ClInclude Include="quantize.h" />
     <ClInclude Include="dither.h" />
+    <ClInclude Include="quantize_sse2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="depth.cpp" />
     <ClCompile Include="depth_convert.cpp" />
+    <ClCompile Include="depth_convert_sse2.cpp" />
+    <ClCompile Include="depth_convert_x86.cpp" />
     <ClCompile Include="dither.cpp" />
     <ClCompile Include="dither_impl.cpp" />
+    <ClCompile Include="dither_impl_sse2.cpp" />
+    <ClCompile Include="dither_impl_x86.cpp" />
     <ClCompile Include="error_diffusion.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -87,7 +93,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -99,7 +105,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,7 +119,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <Link>
@@ -130,7 +136,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <Link>

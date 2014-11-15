@@ -30,6 +30,18 @@
     <ClCompile Include="depth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dither_impl_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="depth_convert_x86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="depth_convert_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dither_impl_x86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dither.h">
@@ -48,6 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="depth_convert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="quantize_sse2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dither_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
