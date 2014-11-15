@@ -8,6 +8,7 @@
 #include "Common/plane.h"
 #include "depth.h"
 #include "dither_impl.h"
+#include "dither_impl_x86.h"
 #include "quantize.h"
 
 namespace zimg {;
@@ -163,7 +164,13 @@ DitherConvert *create_ordered_dither(DitherType type, CPUClass cpu)
 		throw ZimgIllegalArgument{ "unrecognized ordered dither type" };
 	}
 
-	return new OrderedDitherC{ dither };
+#ifdef ZIMG_X86
+	ret = create_ordered_dither_x86(dither, cpu);
+#endif
+	if (!ret)
+		ret = new OrderedDitherC{ dither };
+
+	return ret;
 }
 
 } // namespace depth

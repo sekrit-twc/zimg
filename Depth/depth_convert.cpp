@@ -3,6 +3,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "depth_convert.h"
+#include "depth_convert_x86.h"
 #include "quantize.h"
 
 namespace zimg {;
@@ -56,7 +57,15 @@ DepthConvert::~DepthConvert()
 
 DepthConvert *create_depth_convert(CPUClass cpu)
 {
-	return new DepthConvertC{};
+	DepthConvert *ret = nullptr;
+
+#ifdef ZIMG_X86
+	ret = create_depth_convert_x86(cpu);
+#endif
+	if (!ret)
+		ret = new DepthConvertC{};
+
+	return ret;
 }
 
 } // namespace depth

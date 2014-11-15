@@ -7,8 +7,11 @@
 #include "Common/align.h"
 #include "dither.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg {;
+
+enum class CPUClass;
+
+namespace depth {;
 
 /**
  * Base class for ordered dither implementations.

@@ -60,7 +60,6 @@ inline int32_t integer_range(int bits, bool fullrange, bool chroma)
 		return numeric_max(bits);
 }
 
-
 /**
  * Half precision conversion routines adapted from public domain code:
  * https://gist.github.com/rygorous/2156668
@@ -79,7 +78,7 @@ inline float half_to_float(uint16_t x)
 	ret += (127UL - 15UL) << 23;
 
 	if (exp == shift_exp) {
-		ret += (127UL - 15UL) << 23;
+		ret += (127UL - 16UL) << 23;
 	} else if (!exp) {
 		ret += 1UL << 23;
 		ret = bit_cast<uint32_t>(bit_cast<float>(ret) - magic);
