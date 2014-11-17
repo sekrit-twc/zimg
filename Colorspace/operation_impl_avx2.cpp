@@ -78,7 +78,7 @@ public:
 				__m128i hi = _mm_unpackhi_epi16(half, zero);
 
 				__m256i idx = _mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1);
-				__m256 result = _mm256_i32gather_ps(m_lut, idx, sizeof(float));
+				__m256 result = _mm256_i32gather_ps(m_lut, idx, 4);
 
 				_mm256_store_ps(&ptr[p][i], result);
 			}
