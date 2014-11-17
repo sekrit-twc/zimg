@@ -13,7 +13,7 @@
 namespace zimg {;
 namespace depth {;
 
-FORCE_INLINE __m128i blend_sse2(__m128i a, __m128i b, __m128i mask)
+inline FORCE_INLINE __m128i blend_sse2(__m128i a, __m128i b, __m128i mask)
 {
 	a = _mm_and_si128(mask, a);
 	b = _mm_andnot_si128(mask, b);
@@ -21,13 +21,13 @@ FORCE_INLINE __m128i blend_sse2(__m128i a, __m128i b, __m128i mask)
 	return _mm_or_si128(a, b);
 }
 
-FORCE_INLINE __m128i min_epi32_sse2(__m128i a, __m128i b)
+inline FORCE_INLINE __m128i min_epi32_sse2(__m128i a, __m128i b)
 {
 	__m128i mask = _mm_cmplt_epi32(a, b);
 	return blend_sse2(a, b, mask);
 }
 
-FORCE_INLINE __m128i packus_epi32_sse2(__m128i a, __m128i b)
+inline FORCE_INLINE __m128i packus_epi32_sse2(__m128i a, __m128i b)
 {
 	a = _mm_slli_epi32(a, 16);
 	a = _mm_srai_epi32(a, 16);
@@ -38,7 +38,7 @@ FORCE_INLINE __m128i packus_epi32_sse2(__m128i a, __m128i b)
 	return _mm_packs_epi32(a, b);
 }
 
-FORCE_INLINE __m128 half_to_float_sse2(__m128i x)
+inline FORCE_INLINE __m128 half_to_float_sse2(__m128i x)
 {
 	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32((uint32_t)113 << 23));
 	__m128i shift_exp = _mm_set1_epi32(0x7C00UL << 13);
@@ -73,7 +73,7 @@ FORCE_INLINE __m128 half_to_float_sse2(__m128i x)
 	return _mm_castsi128_ps(ret);
 }
 
-FORCE_INLINE __m128i float_to_half_sse2(__m128 x)
+inline FORCE_INLINE __m128i float_to_half_sse2(__m128 x)
 {
 	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32((uint32_t)15 << 23));
 	__m128i inf = _mm_set1_epi32((uint32_t)255UL << 23);
