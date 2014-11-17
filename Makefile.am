@@ -41,13 +41,17 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 if X86SIMD
-noinst_LTLIBRARIES = libsse2.la libavx2.la libf16c.la
+noinst_LTLIBRARIES = libsse2.la libavx2.la
 
 libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
+					  Depth/depth_convert_x86.cpp \
+					  Depth/dither_impl_x86.cpp \
 					  Resize/resize_impl_x86.cpp
 
 
 libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
+					 Depth/depth_convert_sse2.cpp \
+					 Depth/dither_impl_sse2.cpp \
 					 Resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
@@ -59,10 +63,5 @@ libavx2_la_SOURCES = Colorspace/operation_impl_avx2.cpp \
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
 
 
-libf16c_la_SOURCES = Colorspace/operation_impl_f16c.cpp
-
-libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mf16c
-
-
-libzimg_la_LIBADD = libsse2.la libavx2.la libf16c.la
+libzimg_la_LIBADD = libsse2.la libavx2.la
 endif
