@@ -1,5 +1,8 @@
 AC_INIT([zimg], [1], [https://github.com/sekrit-twc/zimg/pulls], [zimg], [https://github.com/sekrit-twc/zimg])
 
+: ${CFLAGS=""}
+: ${CXXFLAGS=""}
+
 AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz subdir-objects no-define])
 AM_SILENT_RULES([yes])
 
