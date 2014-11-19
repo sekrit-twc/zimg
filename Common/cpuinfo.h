@@ -4,7 +4,7 @@
 #define ZIMG_CPUINFO_H_
 
 #ifdef ZIMG_X86
-  #if defined(_WIN32)
+  #if defined(_MSC_VER)
     #include <intrin.h>
   #elif defined(__GNUC__)
     #include <cpuid.h>
@@ -53,10 +53,10 @@ struct X86Capabilities {
  */
 inline void do_cpuid(int regs[4], int eax, int ecx)
 {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 	__cpuidex(regs, eax, ecx);
 #elif defined(__GNUC__)
-	__get_cpuid(eax, (unsigned int *)(regs + 0), (unsigned int *)(regs + 1), (unsigned int *)(regs + 2), (unsigned int *)(regs + 3));
+	__cpuid_count(eax, ecx, regs[0], regs[1], regs[2], regs[3]);
 #else
 	regs[0] = 0;
 	regs[1] = 0;
