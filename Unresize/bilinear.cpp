@@ -117,7 +117,7 @@ BilinearContext create_bilinear_context(int in, int out, float shift)
 	ctx.dst_width = in;
 
 	size_t rowsize = 0;
-	for (int i = 0; i < rows; ++i) {
+	for (size_t i = 0; i < rows; ++i) {
 		rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
 	}
 	size_t rowstride = (int)align(rowsize, 8);
@@ -138,7 +138,7 @@ BilinearContext create_bilinear_context(int in, int out, float shift)
 	ctx.lu_c.resize(rows);
 	ctx.lu_l.resize(rows);
 	ctx.lu_u.resize(rows);
-	for (int i = 0; i < rows; ++i) {
+	for (size_t i = 0; i < rows; ++i) {
 		ctx.lu_c[i] = (float)lu.c[i];
 		ctx.lu_l[i] = (float)(1.0 / (lu.l[i] + epsilon<float>())); // Pre-invert this value, as it is used in division.
 		ctx.lu_u[i] = (float)lu.u[i];
