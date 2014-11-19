@@ -68,5 +68,8 @@
     <ClInclude Include="dither_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="depth_convert_x86.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

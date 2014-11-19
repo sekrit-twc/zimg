@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="depth.h" />
     <ClInclude Include="depth_convert.h" />
+    <ClInclude Include="depth_convert_x86.h" />
     <ClInclude Include="dither_impl.h" />
     <ClInclude Include="dither_impl_x86.h" />
     <ClInclude Include="error_diffusion.h" />
