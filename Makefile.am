@@ -50,7 +50,13 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Resize/resize.cpp \
 					 Resize/resize.h \
 					 Resize/resize_impl.cpp \
-					 Resize/resize_impl.h
+					 Resize/resize_impl.h \
+					 Unresize/bilinear.cpp \
+					 Unresize/bilinear.h \
+					 Unresize/unresize.cpp \
+					 Unresize/unresize.h \
+					 Unresize/unresize_impl.cpp \
+					 Unresize/unresize_impl.h
 
 include_HEADERS = API/zimg.h \
 				  API/zimg++.hpp
@@ -82,20 +88,24 @@ libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
 					  Depth/dither_impl_x86.cpp \
 					  Depth/dither_impl_x86.h \
 					  Resize/resize_impl_x86.cpp \
-					  Resize/resize_impl_x86.h
+					  Resize/resize_impl_x86.h \
+					  Unresize/unresize_impl_x86.cpp \
+					  Unresize/unresize_impl_x86.h
 
 
 libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
 					 Depth/depth_convert_sse2.cpp \
 					 Depth/dither_impl_sse2.cpp \
 					 Depth/quantize_sse2.h \
-					 Resize/resize_impl_sse2.cpp
+					 Resize/resize_impl_sse2.cpp \
+					 Unresize/unresize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 
 
 libavx2_la_SOURCES = Colorspace/operation_impl_avx2.cpp \
-					 Resize/resize_impl_avx2.cpp
+					 Resize/resize_impl_avx2.cpp \
+					 Unresize/unresize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
 
