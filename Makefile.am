@@ -104,6 +104,9 @@ libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 
 
 libavx2_la_SOURCES = Colorspace/operation_impl_avx2.cpp \
+					 Depth/depth_convert_avx2.cpp \
+					 Depth/dither_impl_avx2.cpp \
+					 Depth/quantize_avx2.h \
 					 Resize/resize_impl_avx2.cpp \
 					 Unresize/unresize_impl_avx2.cpp
 

@@ -12,10 +12,14 @@ DitherConvert *create_ordered_dither_x86(const float *dither, CPUClass cpu)
 	DitherConvert *ret;
 
 	if (cpu == CPUClass::CPU_X86_AUTO) {
-		if (caps.sse2)
+		if (caps.avx2)
+			ret = create_ordered_dither_avx2(dither);
+		else if (caps.sse2)
 			ret = create_ordered_dither_sse2(dither);
 		else
 			ret = nullptr;
+	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
+		ret = create_ordered_dither_avx2(dither);
 	} else if (cpu >= CPUClass::CPU_X86_SSE2) {
 		ret = create_ordered_dither_sse2(dither);
 	} else {

@@ -27,15 +27,28 @@
     <ClInclude Include="error_diffusion.h" />
     <ClInclude Include="quantize.h" />
     <ClInclude Include="dither.h" />
+    <ClInclude Include="quantize_avx2.h" />
     <ClInclude Include="quantize_sse2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="depth.cpp" />
     <ClCompile Include="depth_convert.cpp" />
+    <ClCompile Include="depth_convert_avx2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="depth_convert_sse2.cpp" />
     <ClCompile Include="depth_convert_x86.cpp" />
     <ClCompile Include="dither.cpp" />
     <ClCompile Include="dither_impl.cpp" />
+    <ClCompile Include="dither_impl_avx2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="dither_impl_sse2.cpp" />
     <ClCompile Include="dither_impl_x86.cpp" />
     <ClCompile Include="error_diffusion.cpp" />
