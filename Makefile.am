@@ -3,6 +3,13 @@ commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
 AM_CXXFLAGS = -std=c++11 $(commonflags)
 AM_CFLAGS = $(commonflags)
 
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = zimg.pc
+
+EXTRA_DIST = zimg.pc.in
+
+
 lib_LTLIBRARIES = libzimg.la
 
 pkglib_LTLIBRARIES = vszimg.la

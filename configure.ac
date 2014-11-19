@@ -54,5 +54,5 @@ AS_CASE(
    ]
 )
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile zimg.pc])
 AC_OUTPUT
