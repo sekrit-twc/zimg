@@ -1,4 +1,5 @@
-commonflags = -O2 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
+warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
+commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
 AM_CXXFLAGS = -std=c++11 $(commonflags)
 AM_CFLAGS = $(commonflags)
 
