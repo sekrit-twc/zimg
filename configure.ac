@@ -13,6 +13,15 @@ AC_PROG_CXX
 AC_CANONICAL_HOST
 
 
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable compilation options required for debugging. (default=no)]))
+AS_IF(
+      [test "x$enable_debug" = "xyes"],
+      [
+       AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])
+      ]
+)
+
+
 AC_ARG_ENABLE([x86simd], AS_HELP_STRING([--enable-x86simd], [Enable optimisations for x86 CPUs.]))
 
 AS_IF([test "x$enable_x86simd" = "xyes"], [AC_DEFINE([ZIMG_X86])])
