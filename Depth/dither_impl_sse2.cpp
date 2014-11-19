@@ -25,8 +25,8 @@ class OrderedDitherSSE2 : public OrderedDither {
 	void process(const ImagePlane<const T> &src, const ImagePlane<U> &dst, Unpack unpack, Pack pack,
 	             ToFloat to_float, FromFloat from_float, ToFloatScalar to_float_scalar, FromFloatScalar from_float_scalar) const
 	{
-		typedef typename Unpack::unpacked_type src_unpacked_type;
-		typedef typename Pack::unpacked_type dst_unpacked_type;
+		typedef typename Unpack::type src_vector_type;
+		typedef typename Pack::type dst_vector_type;
 
 		typedef Max<Unpack::loop_step, Pack::loop_step> loop_step;
 		typedef Div<loop_step::value, Unpack::loop_step> loop_unroll_unpack;
@@ -47,12 +47,12 @@ class OrderedDitherSSE2 : public OrderedDither {
 			const float *dither_row = &dither_data[(i % NUM_DITHERS_V) * NUM_DITHERS_H];
 			int m = 0;
 
-			src_unpacked_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
-			dst_unpacked_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
+			src_vector_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
+			dst_vector_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
 
 			for (ptrdiff_t j = 0; j < mod(width, loop_step::value); j += loop_step::value) {
 				for (ptrdiff_t k = 0; k < loop_unroll_unpack::value; ++k) {
-					unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], unpack.load_packed(&src_row[j + k * Unpack::loop_step]));
+					unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], &src_row[j + k * Unpack::loop_step]);
 				}
 
 				for (ptrdiff_t k = 0; k < loop_unroll_pack::value * Pack::unpacked_count; ++k) {
@@ -68,7 +68,7 @@ class OrderedDitherSSE2 : public OrderedDither {
 				}
 
 				for (ptrdiff_t k = 0; k < loop_unroll_pack::value; ++k) {
-					pack.store_packed(&dst_row[j + k * Pack::loop_step], pack.pack(&dst_unpacked[k * Pack::unpacked_count]));
+					pack.pack(&dst_row[j + k * Pack::loop_step], &dst_unpacked[k * Pack::unpacked_count]);
 				}
 
 				m %= NUM_DITHERS_H;

@@ -113,17 +113,12 @@ struct UnpackByteSSE2 {
 	static const int loop_step = 16;
 	static const int unpacked_count = 4;
 
-	typedef __m128i packed_type;
-	typedef __m128i unpacked_type;
+	typedef __m128i type;
 
-	FORCE_INLINE __m128i load_packed(const uint8_t *ptr) const
-	{
-		return _mm_load_si128((const __m128i *)ptr);
-	}
-
-	FORCE_INLINE void unpack(__m128i dst[unpacked_count], __m128i x) const
+	FORCE_INLINE void unpack(__m128i dst[unpacked_count], const uint8_t *ptr) const
 	{
 		__m128i zero = _mm_setzero_si128();
+		__m128i x = _mm_load_si128((const __m128i *)ptr);
 
 		__m128i lo_w = _mm_unpacklo_epi8(x, zero);
 		__m128i hi_w = _mm_unpackhi_epi8(x, zero);
@@ -139,17 +134,13 @@ struct UnpackWordSSE2 {
 	static const int loop_step = 8;
 	static const int unpacked_count = 2;
 
-	typedef __m128i packed_type;
-	typedef __m128i unpacked_type;
+	typedef __m128i type;
 
-	FORCE_INLINE __m128i load_packed(const uint16_t *ptr) const
-	{
-		return _mm_load_si128((const __m128i *)ptr);
-	}
-
-	FORCE_INLINE void unpack(__m128i dst[unpacked_count], __m128i x) const
+	FORCE_INLINE void unpack(__m128i dst[unpacked_count], const uint16_t *ptr) const
 	{
 		__m128i zero = _mm_setzero_si128();
+		__m128i x = _mm_load_si128((const __m128i *)ptr);
+
 		dst[0] = _mm_unpacklo_epi16(x, zero);
 		dst[1] = _mm_unpackhi_epi16(x, zero);
 	}
@@ -159,17 +150,11 @@ struct UnpackFloatSSE2 {
 	static const int loop_step = 4;
 	static const int unpacked_count = 1;
 
-	typedef __m128 packed_type;
-	typedef __m128 unpacked_type;
+	typedef __m128 type;
 
-	FORCE_INLINE __m128 load_packed(const float *ptr) const
+	FORCE_INLINE void unpack(__m128 dst[unpacked_count], const float *ptr) const
 	{
-		return _mm_load_ps(ptr);
-	}
-
-	FORCE_INLINE void unpack(__m128 dst[unpacked_count], __m128 x) const
-	{
-		dst[0] = x;
+		dst[0] = _mm_load_ps(ptr);
 	}
 };
 
@@ -177,20 +162,15 @@ struct PackByteSSE2 {
 	static const int loop_step = 16;
 	static const int unpacked_count = 4;
 
-	typedef __m128i packed_type;
-	typedef __m128i unpacked_type;
+	typedef __m128i type;
 
-	FORCE_INLINE void store_packed(uint8_t *ptr, __m128i x) const
-	{
-		_mm_store_si128((__m128i *)ptr, x);
-	}
-
-	FORCE_INLINE __m128i pack(const __m128i src[unpacked_count]) const
+	FORCE_INLINE void pack(uint8_t *ptr, const __m128i src[unpacked_count]) const
 	{
 		__m128i lo = packus_epi32_sse2(src[0], src[1]);
 		__m128i hi = packus_epi32_sse2(src[2], src[3]);
+		__m128i x = _mm_packus_epi16(lo, hi);
 
-		return _mm_packus_epi16(lo, hi);
+		_mm_store_si128((__m128i *)ptr, x);
 	}
 };
 
@@ -198,17 +178,12 @@ struct PackWordSSE2 {
 	static const int loop_step = 8;
 	static const int unpacked_count = 2;
 
-	typedef __m128i packed_type;
-	typedef __m128i unpacked_type;
+	typedef __m128i type;
 
-	FORCE_INLINE void store_packed(uint16_t *ptr, __m128i x) const
+	FORCE_INLINE void pack(uint16_t *ptr, const __m128i src[unpacked_count]) const
 	{
+		__m128i x = packus_epi32_sse2(src[0], src[1]);
 		_mm_store_si128((__m128i *)ptr, x);
-	}
-
-	FORCE_INLINE __m128i pack(const __m128i src[unpacked_count]) const
-	{
-		return packus_epi32_sse2(src[0], src[1]);
 	}
 };
 
@@ -216,17 +191,11 @@ struct PackFloatSSE2 {
 	static const int loop_step = 4;
 	static const int unpacked_count = 1;
 
-	typedef __m128 packed_type;
-	typedef __m128 unpacked_type;
+	typedef __m128 type;
 
-	FORCE_INLINE void store_packed(float *ptr, __m128 x) const
+	FORCE_INLINE void pack(float *ptr, const __m128 src[unpacked_count]) const
 	{
-		_mm_store_ps(ptr, x);
-	}
-
-	FORCE_INLINE __m128 pack(const __m128 src[unpacked_count]) const
-	{
-		return src[0];
+		_mm_store_ps(ptr, src[0]);
 	}
 };
 

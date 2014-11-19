@@ -28,19 +28,19 @@ class DepthConvertSSE2 : public DepthConvert {
 	template <class T, class U, class Unpack, class Pack, class VectorOp, class ScalarOp>
 	void process(const T *src, U *dst, int width, Unpack unpack, Pack pack, VectorOp op, ScalarOp scalar_op) const
 	{
-		typedef typename Unpack::unpacked_type src_unpacked_type;
-		typedef typename Pack::unpacked_type dst_unpacked_type;
+		typedef typename Unpack::type src_vector_type;
+		typedef typename Pack::type dst_vector_type;
 
 		typedef Max<Unpack::loop_step, Pack::loop_step> loop_step;
 		typedef Div<loop_step::value, Unpack::loop_step> loop_unroll_unpack;
 		typedef Div<loop_step::value, Pack::loop_step> loop_unroll_pack;
 
-		src_unpacked_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
-		dst_unpacked_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
+		src_vector_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
+		dst_vector_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
 
 		for (int i = 0; i < mod(width, loop_step::value); i += loop_step::value) {
 			for (int k = 0; k < loop_unroll_unpack::value; ++k) {
-				unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], unpack.load_packed(&src[i + k * Unpack::loop_step]));
+				unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], &src[i + k * Unpack::loop_step]);
 			}
 
 			for (int k = 0; k < loop_unroll_pack::value * Pack::unpacked_count; ++k) {
@@ -48,7 +48,7 @@ class DepthConvertSSE2 : public DepthConvert {
 			}
 
 			for (int k = 0; k < loop_unroll_pack::value; ++k) {
-				pack.store_packed(&dst[i + k * Pack::loop_step], pack.pack(&dst_unpacked[k * Pack::unpacked_count]));
+				pack.pack(&dst[i + k * Pack::loop_step], &dst_unpacked[k * Pack::unpacked_count]);
 			}
 		}
 		for (int i = mod(width, loop_step::value); i < width; ++i) {
