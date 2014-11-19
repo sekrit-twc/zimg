@@ -112,3 +112,22 @@ libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
 
 libzimg_la_LIBADD = libsse2.la libavx2.la
 endif
+
+
+if TESTAPP
+bin_PROGRAMS = zimg-test
+
+zimg_test_SOURCES = TestApp/apps.h \
+					TestApp/colorspaceapp.cpp \
+					TestApp/depthapp.cpp \
+					TestApp/frame.cpp \
+					TestApp/frame.h \
+					TestApp/main.cpp \
+					TestApp/resizeapp.cpp \
+					TestApp/timer.h \
+					TestApp/unresizeapp.cpp \
+					TestApp/utils.cpp \
+					TestApp/utils.h
+
+zimg_test_LDADD = libzimg.la
+endif # TESTAPP

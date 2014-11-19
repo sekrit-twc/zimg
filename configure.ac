@@ -13,6 +13,10 @@ AC_PROG_CXX
 AC_CANONICAL_HOST
 
 
+AC_ARG_ENABLE([testapp], AS_HELP_STRING([--enable-testapp], [Compile the test application. (default=no)]))
+AM_CONDITIONAL([TESTAPP], [test "x$enable_testapp" = "xyes"])
+
+
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable compilation options required for debugging. (default=no)]))
 AS_IF(
       [test "x$enable_debug" = "xyes"],
