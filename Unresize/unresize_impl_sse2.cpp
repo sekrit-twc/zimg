@@ -182,7 +182,6 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 	ptrdiff_t matrix_stride = ctx.matrix_row_stride;
 
 	int src_width = src.width();
-	int src_height = src.height();
 
 	const float *pc = ctx.lu_c.data();
 	const float *pl = ctx.lu_l.data();
