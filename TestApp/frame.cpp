@@ -1,8 +1,41 @@
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
-#include <Windows.h>
 #include "frame.h"
+
+// From Windows.h
+#define DWORD uint32_t
+#define WORD  uint16_t
+#define LONG  int32_t
+
+#define BMP_MAGIC 0x4d42
+
+#pragma pack(push, 2)
+typedef struct tagBITMAPFILEHEADER {
+	WORD  bfType;
+	DWORD bfSize;
+	WORD  bfReserved1;
+	WORD  bfReserved2;
+	DWORD bfOffBits;
+} BITMAPFILEHEADER, *PBITMAPFILEHEADER;
+
+typedef struct tagBITMAPINFOHEADER {
+	DWORD biSize;
+	LONG  biWidth;
+	LONG  biHeight;
+	WORD  biPlanes;
+	WORD  biBitCount;
+	DWORD biCompression;
+	DWORD biSizeImage;
+	LONG  biXPelsPerMeter;
+	LONG  biYPelsPerMeter;
+	DWORD biClrUsed;
+	DWORD biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+#pragma pack(pop)
+
 
 using namespace zimg;
 
@@ -91,7 +124,7 @@ Frame read_frame_bmp(const char *filename)
 	if (fread(&biheader, sizeof(BITMAPINFOHEADER), 1, file) != 1)
 		throw std::runtime_error{ "error reading BITMAPINFOHEADER" };
 
-	if (bfheader.bfType != 'MB')
+	if (bfheader.bfType != BMP_MAGIC)
 		throw std::runtime_error{ "incorrect bitmap magic bytes" };
 	if (biheader.biBitCount != 24 && biheader.biBitCount != 32)
 		throw std::runtime_error{ "unsupported bit depth" };
@@ -104,7 +137,7 @@ Frame read_frame_bmp(const char *filename)
 	int width = biheader.biWidth;
 	int height = biheader.biHeight;
 	int channels = biheader.biBitCount == 32 ? 4 : 3;
-	int bmp_rowsize = align(width * channels, 4);
+	size_t bmp_rowsize = align(width * channels, 4);
 
 	Frame frame{ width, height, 1, channels };
 	AlignedVector<uint8_t> buf(bmp_rowsize);
@@ -130,6 +163,7 @@ void read_frame_raw(Frame &frame, const char *filename)
 {
 	std::unique_ptr<FILE, FileCloser> handle{ fopen(filename, "rb") };
 	FILE *file = handle.get();
+	size_t width = frame.width();
 
 	if (!file)
 		throw std::runtime_error{ "error opening file" };
@@ -138,7 +172,7 @@ void read_frame_raw(Frame &frame, const char *filename)
 		for (int i = 0; i < frame.height(); ++i) {
 			void *dst = frame.row_ptr(p, i);
 
-			if (fread(dst, frame.pxsize(), frame.width(), file) != frame.width())
+			if (fread(dst, frame.pxsize(), width, file) != width)
 				throw std::runtime_error{ "error reading frame" };
 		}
 	}
@@ -163,7 +197,7 @@ void write_frame_bmp(const Frame &frame, const char *filename)
 	DWORD bmp_rowsize = align(frame.width() * frame.planes(), 4);
 	DWORD bmp_datasize = bmp_rowsize * frame.height();
 
-	bfheader.bfType = 'MB';
+	bfheader.bfType = BMP_MAGIC;
 	bfheader.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + bmp_datasize;
 	bfheader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 
@@ -198,6 +232,7 @@ void write_frame_raw(const Frame &frame, const char *filename)
 {
 	std::unique_ptr<FILE, FileCloser> handle{ fopen(filename, "wb") };
 	FILE *file = handle.get();
+	size_t width = frame.width();
 
 	if (!file)
 		throw std::runtime_error{ "error opening file" };
@@ -206,7 +241,7 @@ void write_frame_raw(const Frame &frame, const char *filename)
 		for (int i = 0; i < frame.height(); ++i) {
 			const void *src = frame.row_ptr(p, i);
 
-			if (fwrite(src, frame.pxsize(), frame.width(), file) != frame.width())
+			if (fwrite(src, frame.pxsize(), width, file) != width)
 				throw std::runtime_error{ "error writing frame" };
 		}
 	}
