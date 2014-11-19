@@ -29,7 +29,7 @@ protected:
 	 *
 	 * @param dither coefficient table
 	 */
-	OrderedDither(const float *dither);
+	explicit OrderedDither(const float *dither);
 public:
 	static const int NUM_DITHERS = 64 * 64;
 	static const int NUM_DITHERS_H = 64;

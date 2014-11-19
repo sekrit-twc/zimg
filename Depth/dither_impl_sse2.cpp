@@ -85,7 +85,7 @@ class OrderedDitherSSE2 : public OrderedDither {
 		}
 	}
 public:
-	OrderedDitherSSE2(const float *dither) : OrderedDither(dither)
+	explicit OrderedDitherSSE2(const float *dither) : OrderedDitherX86(dither)
 	{}
 
 	void byte_to_byte(const ImagePlane<const uint8_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override

@@ -89,7 +89,7 @@ class OrderedDitherC : public OrderedDither {
 		}
 	}
 public:
-	OrderedDitherC(const float *dither) : OrderedDither(dither)
+	explicit OrderedDitherC(const float *dither) : OrderedDither(dither)
 	{}
 
 	void byte_to_byte(const ImagePlane<const uint8_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
