@@ -16,19 +16,41 @@ pkglib_LTLIBRARIES = vszimg.la
 
 libzimg_la_SOURCES = API/zimg.cpp \
 					 Colorspace/colorspace.cpp \
+					 Colorspace/colorspace.h \
 					 Colorspace/colorspace_param.cpp \
+					 Colorspace/colorspace_param.h \
 					 Colorspace/graph.cpp \
+					 Colorspace/graph.h \
 					 Colorspace/matrix3.cpp \
+					 Colorspace/matrix3.h \
 					 Colorspace/operation.cpp \
+					 Colorspace/operation.h \
 					 Colorspace/operation_impl.cpp \
+					 Colorspace/operation_impl.h \
+					 Common/align.h \
+					 Common/cpuinfo.h \
+					 Common/except.h \
+					 Common/matrix.h \
+					 Common/osdep.h \
+					 Common/pixel.h \
+					 Common/plane.h \
 					 Depth/depth_convert.cpp \
+					 Depth/depth_convert.h \
 					 Depth/depth.cpp \
+					 Depth/depth.h \
 					 Depth/dither.cpp \
+					 Depth/dither.h \
 					 Depth/dither_impl.cpp \
+					 Depth/dither_impl.h \
 					 Depth/error_diffusion.cpp \
+					 Depth/error_diffusion.h \
+					 Depth/quantize.h \
 					 Resize/filter.cpp \
+					 Resize/filter.h \
 					 Resize/resize.cpp \
-					 Resize/resize_impl.cpp
+					 Resize/resize.h \
+					 Resize/resize_impl.cpp \
+					 Resize/resize_impl.h
 
 include_HEADERS = API/zimg.h \
 				  API/zimg++.hpp
@@ -37,7 +59,9 @@ include_HEADERS = API/zimg.h \
 libzimg_la_LDFLAGS = -no-undefined -version-info 0 -export-symbols-regex '^zimg_'
 
 
-vszimg_la_SOURCES = vszimg/vszimg.c
+vszimg_la_SOURCES = vszimg/vszimg.c \
+					vszimg/VapourSynth.h \
+					vszimg/VSHelper.h
 
 vszimg_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/API
 
@@ -52,14 +76,19 @@ if X86SIMD
 noinst_LTLIBRARIES = libsse2.la libavx2.la
 
 libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
+					  Colorspace/operation_impl_x86.h \
 					  Depth/depth_convert_x86.cpp \
+					  Depth/depth_convert_x86.h \
 					  Depth/dither_impl_x86.cpp \
-					  Resize/resize_impl_x86.cpp
+					  Depth/dither_impl_x86.h \
+					  Resize/resize_impl_x86.cpp \
+					  Resize/resize_impl_x86.h
 
 
 libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
 					 Depth/depth_convert_sse2.cpp \
 					 Depth/dither_impl_sse2.cpp \
+					 Depth/quantize_sse2.h \
 					 Resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
