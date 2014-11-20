@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <vector>
 #include "Common/matrix.h"
