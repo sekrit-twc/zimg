@@ -32,6 +32,19 @@ void zimg_clear_last_error(void);
 #define ZIMG_CPU_NONE 0
 #define ZIMG_CPU_AUTO 1
 
+#if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
+  #define ZIMG_CPU_X86_MMX   1000
+  #define ZIMG_CPU_X86_SSE   1001
+  #define ZIMG_CPU_X86_SSE2  1002
+  #define ZIMG_CPU_X86_SSE3  1003
+  #define ZIMG_CPU_X86_SSSE3 1004
+  #define ZIMG_CPU_X86_SSE41 1005
+  #define ZIMG_CPU_X86_SSE42 1006
+  #define ZIMG_CPU_X86_AVX   1007
+  #define ZIMG_CPU_X86_F16C  1008
+  #define ZIMG_CPU_X86_AVX2  1009
+#endif
+
 /**
  * Set the desired CPU type to [cpu]. The result is set globally.
  * This function is thread-safe.

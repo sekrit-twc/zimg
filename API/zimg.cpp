@@ -30,6 +30,16 @@ CPUClass get_cpu_class(int cpu)
 #ifdef ZIMG_X86
 	case ZIMG_CPU_AUTO:
 		return CPUClass::CPU_X86_AUTO;
+	case ZIMG_CPU_X86_SSE2:
+	case ZIMG_CPU_X86_SSE3:
+	case ZIMG_CPU_X86_SSSE3:
+	case ZIMG_CPU_X86_SSE41:
+	case ZIMG_CPU_X86_SSE42:
+	case ZIMG_CPU_X86_AVX:
+	case ZIMG_CPU_X86_F16C:
+		return CPUClass::CPU_X86_SSE2;
+	case ZIMG_CPU_X86_AVX2:
+		return CPUClass::CPU_X86_AVX2;
 #endif
 	default:
 		return CPUClass::CPU_NONE;

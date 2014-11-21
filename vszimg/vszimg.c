@@ -717,6 +717,40 @@ fail:
 	return;
 }
 
+static void VS_CC vs_set_cpu(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
+{
+	const char *cpu = vsapi->propGetData(in, "cpu", 0, 0);
+
+	if (!strcmp(cpu, "none"))
+		zimg_set_cpu(ZIMG_CPU_NONE);
+	else if (!strcmp(cpu, "auto"))
+		zimg_set_cpu(ZIMG_CPU_AUTO);
+#if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
+	else if (!strcmp(cpu, "mmx"))
+		zimg_set_cpu(ZIMG_CPU_X86_MMX);
+	else if (!strcmp(cpu, "sse"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSE);
+	else if (!strcmp(cpu, "sse2"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSE2);
+	else if (!strcmp(cpu, "sse3"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSE3);
+	else if (!strcmp(cpu, "ssse3"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSSE3);
+	else if (!strcmp(cpu, "sse41"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSE41);
+	else if (!strcmp(cpu, "sse42"))
+		zimg_set_cpu(ZIMG_CPU_X86_SSE42);
+	else if (!strcmp(cpu, "avx"))
+		zimg_set_cpu(ZIMG_CPU_X86_AVX);
+	else if (!strcmp(cpu, "f16c"))
+		zimg_set_cpu(ZIMG_CPU_X86_F16C);
+	else if (!strcmp(cpu, "avx2"))
+		zimg_set_cpu(ZIMG_CPU_X86_AVX2);
+#endif
+	else
+		zimg_set_cpu(ZIMG_CPU_NONE);
+}
+
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin)
 {
 	if (!zimg_check_api_version(ZIMG_API_VERSION))
@@ -755,6 +789,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                       "subsample_h:int:opt;"
 	                       "chroma_loc_in:data:opt;"
 	                       "chroma_loc_out:data:opt;", vs_resize_create, 0, plugin);
+
+	registerFunc("SetCPU", "cpu:data", vs_set_cpu, 0, plugin);
 
 	zimg_set_cpu(ZIMG_CPU_AUTO);
 }
