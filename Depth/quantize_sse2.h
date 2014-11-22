@@ -200,41 +200,45 @@ struct PackFloatSSE2 {
 };
 
 class IntegerToFloatSSE2 {
-	__m128 offset;
-	__m128 scale;
+	float offset;
+	float scale;
 public:
 	IntegerToFloatSSE2(int bits, bool fullrange, bool chroma)
 	{
 		float offset_ = (float)integer_offset(bits, fullrange, chroma);
 		float scale_ = (float)integer_range(bits, fullrange, chroma);
 
-		offset = _mm_set_ps1(-offset_ / scale_);
-		scale = _mm_set_ps1(1.0f / scale_);
+		offset = -offset_ / scale_;
+		scale = 1.0f / scale_;
 	}
 
 	FORCE_INLINE __m128 operator()(__m128i x) const
 	{
+		__m128 s = _mm_set_ps1(offset);
+		__m128 o = _mm_set_ps1(scale);
 		__m128 f = _mm_cvtepi32_ps(x);
-		f = _mm_mul_ps(f, scale);
-		f = _mm_add_ps(f, offset);
+		f = _mm_mul_ps(f, s);
+		f = _mm_add_ps(f, o);
 		return f;
 	}
 };
 
 class FloatToIntegerSSE2 {
-	__m128 offset;
-	__m128 scale;
+	float offset;
+	float scale;
 public:
 	FloatToIntegerSSE2(int bits, bool fullrange, bool chroma)
 	{
-		offset = _mm_set_ps1((float)integer_offset(bits, fullrange, chroma));
-		scale = _mm_set_ps1((float)integer_range(bits, fullrange, chroma));
+		offset = (float)integer_offset(bits, fullrange, chroma);
+		scale = (float)integer_range(bits, fullrange, chroma);
 	}
 
 	FORCE_INLINE __m128i operator()(__m128 x) const
 	{
-		x = _mm_mul_ps(x, scale);
-		x = _mm_add_ps(x, offset);
+		__m128 s = _mm_set_ps1(offset);
+		__m128 o = _mm_set_ps1(scale);
+		x = _mm_mul_ps(x, s);
+		x = _mm_add_ps(x, o);
 		return _mm_cvtps_epi32(x);
 	}
 };
@@ -253,4 +257,5 @@ inline FloatToIntegerSSE2 make_float_to_integer_sse2(const PixelFormat &fmt)
 } // namespace zimg
 
 #endif // ZIMG_DEPTH_QUANTIZE_SSE2_H_
+
 #endif // ZIMG_X86

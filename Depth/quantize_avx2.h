@@ -149,37 +149,43 @@ struct PackFloatAVX2 {
 };
 
 class IntegerToFloatAVX2 {
-	__m256 offset;
-	__m256 scale;
+	float offset;
+	float scale;
 public:
 	IntegerToFloatAVX2(int bits, bool fullrange, bool chroma)
 	{
 		float offset_ = (float)integer_offset(bits, fullrange, chroma);
 		float scale_ = (float)integer_range(bits, fullrange, chroma);
 
-		offset = _mm256_set1_ps(-offset_ / scale_);
-		scale = _mm256_set1_ps(1.0f / scale_);
+		offset = -offset_ / scale_;
+		scale = 1.0f / scale_;
 	}
 
 	FORCE_INLINE __m256 operator()(__m256i x) const
 	{
-		return _mm256_fmadd_ps(_mm256_cvtepi32_ps(x), scale, offset);
+		__m256 s = _mm256_broadcast_ss(&scale);
+		__m256 o = _mm256_broadcast_ss(&offset);
+
+		return _mm256_fmadd_ps(_mm256_cvtepi32_ps(x), s, o);
 	}
 };
 
 class FloatToIntegerAVX2 {
-	__m256 offset;
-	__m256 scale;
+	float offset;
+	float scale;
 public:
 	FloatToIntegerAVX2(int bits, bool fullrange, bool chroma)
 	{
-		offset = _mm256_set1_ps((float)integer_offset(bits, fullrange, chroma));
-		scale = _mm256_set1_ps((float)integer_range(bits, fullrange, chroma));
+		offset = (float)integer_offset(bits, fullrange, chroma);
+		scale = (float)integer_range(bits, fullrange, chroma);
 	}
 
 	FORCE_INLINE __m256i operator()(__m256 x) const
 	{
-		return _mm256_cvtps_epi32(_mm256_fmadd_ps(x, scale, offset));
+		__m256 s = _mm256_broadcast_ss(&scale);
+		__m256 o = _mm256_broadcast_ss(&offset);
+
+		return _mm256_cvtps_epi32(_mm256_fmadd_ps(x, s, o));
 	}
 };
 
