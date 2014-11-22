@@ -501,23 +501,23 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 					x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
 					fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
 				case 6:
-				case 5:
 					x5 = _mm256_load_si256((const __m256i *)&src_ptr5[j]);
 					x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
+				case 5:
 					x4 = _mm256_load_si256((const __m256i *)&src_ptr4[j]);
 					x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
 					fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
 				case 4:
-				case 3:
 					x3 = _mm256_load_si256((const __m256i *)&src_ptr3[j]);
 					x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
+				case 3:
 					x2 = _mm256_load_si256((const __m256i *)&src_ptr2[j]);
 					x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
 					fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
 				case 2:
-				case 1:
 					x1 = _mm256_load_si256((const __m256i *)&src_ptr1[j]);
 					x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
+				case 1:
 					x0 = _mm256_load_si256((const __m256i *)&src_ptr0[j]);
 					x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
 					fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
