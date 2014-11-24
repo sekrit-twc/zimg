@@ -110,9 +110,6 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 		int height = vsapi->getFrameHeight(src_frame, 0);
 		int pixel_type = translate_pixel(vsapi->getFrameFormat(src_frame));
 
-		const VSFrameRef *frame_order[3] = { src_frame, src_frame, src_frame };
-		const int plane_order[3] = { 0, 1, 2 };
-
 		const void *src_plane[3];
 		void *dst_plane[3];
 		int src_stride[3];
