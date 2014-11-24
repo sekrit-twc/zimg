@@ -121,7 +121,7 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 		size_t tmp_size;
 		void *tmp = 0;
 
-		dst_frame = vsapi->newVideoFrame2(data->vi.format, width, height, frame_order, plane_order, src_frame, core);
+		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
 		
 		for (p = 0; p < 3; ++p) {
 			src_plane[p] = vsapi->getReadPtr(src_frame, p);
