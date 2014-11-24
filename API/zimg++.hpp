@@ -37,7 +37,7 @@ public:
 		return zimg_colorspace_tmp_size(m_ctx, width);
 	}
 
-	void process(const void **src, void **dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
+	void process(const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
 	{
 		if (zimg_colorspace_process(m_ctx, src, dst, tmp, width, height, src_stride, dst_stride, pixel_type))
 			throw ZimgError{};
@@ -68,9 +68,9 @@ public:
 	}
 
 	void process(const void *src, void *dst, void *tmp, int width, int height, int src_stride, int dst_stride,
-	             int pixel_in, int pixel_out, int depth_in, int depth_out, int tv_in, int tv_out, int chroma)
+	             int pixel_in, int pixel_out, int depth_in, int depth_out, int fullrange_in, int fullrange_out, int chroma)
 	{
-		if (zimg_depth_process(m_ctx, src, dst, tmp, width, height, src_stride, dst_stride, pixel_in, pixel_out, depth_in, depth_out, tv_in, tv_out, chroma))
+		if (zimg_depth_process(m_ctx, src, dst, tmp, width, height, src_stride, dst_stride, pixel_in, pixel_out, depth_in, depth_out, fullrange_in, fullrange_out, chroma))
 			throw ZimgError{};
 	}
 };
