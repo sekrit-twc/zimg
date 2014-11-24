@@ -32,9 +32,9 @@ public:
 		for (int i = 0; i < mod(width, 4); i += 4) {
 			__m128 tmp0, tmp1;
 
-			__m128 a = _mm_load_ps(ptr[0] + i);
-			__m128 b = _mm_load_ps(ptr[1] + i);
-			__m128 c = _mm_load_ps(ptr[2] + i);
+			__m128 a = _mm_load_ps(&ptr[0][i]);
+			__m128 b = _mm_load_ps(&ptr[1][i]);
+			__m128 c = _mm_load_ps(&ptr[2][i]);
 
 			__m128 x = _mm_mul_ps(c00, a);
 			__m128 y = _mm_mul_ps(c10, a);
@@ -55,9 +55,9 @@ public:
 			z = _mm_add_ps(z, tmp0);
 			z = _mm_add_ps(z, tmp1);
 
-			_mm_store_ps(ptr[0] + i, x);
-			_mm_store_ps(ptr[1] + i, y);
-			_mm_store_ps(ptr[2] + i, z);
+			_mm_store_ps(&ptr[0][i], x);
+			_mm_store_ps(&ptr[1][i], y);
+			_mm_store_ps(&ptr[2][i], z);
 		}
 		for (int i = mod(width, 4); i < width; ++i) {
 			float a, b, c;

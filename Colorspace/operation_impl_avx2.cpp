@@ -32,9 +32,9 @@ public:
 	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
 	{
 		for (int i = 0; i < mod(width, 8); i += 8) {
-			__m128i f16 = _mm_load_si128((const __m128i *)(src + i));
+			__m128i f16 = _mm_load_si128((const __m128i *)&src[i]);
 			__m256 f32 = _mm256_cvtph_ps(f16);
-			_mm256_store_ps(dst + i, f32);
+			_mm256_store_ps(&dst[i], f32);
 		}
 		for (int i = mod(width, 8); i < width; ++i) {
 			dst[i] = half_to_float(src[i]);
@@ -44,9 +44,9 @@ public:
 	void f16_from_f32(const float *src, uint16_t *dst, int width) const override
 	{
 		for (int i = 0; i < mod(width, 8); i += 8) {
-			__m256 f32 = _mm256_load_ps(src + i);
+			__m256 f32 = _mm256_load_ps(&src[i]);
 			__m128i f16 = _mm256_cvtps_ph(f32, 0);
-			_mm_store_si128((__m128i *)(dst + i), f16);
+			_mm_store_si128((__m128i *)&dst[i], f16);
 		}
 		for (int i = mod(width, 8); i < width; ++i) {
 			dst[i] = float_to_half(src[i]);
@@ -108,9 +108,9 @@ public:
 		__m256 c22 = _mm256_set1_ps(m_matrix[2][2]);
 
 		for (int i = 0; i < mod(width, 8); i += 8) {
-			__m256 a = _mm256_load_ps(ptr[0] + i);
-			__m256 b = _mm256_load_ps(ptr[1] + i);
-			__m256 c = _mm256_load_ps(ptr[2] + i);
+			__m256 a = _mm256_load_ps(&ptr[0][i]);
+			__m256 b = _mm256_load_ps(&ptr[1][i]);
+			__m256 c = _mm256_load_ps(&ptr[2][i]);
 
 			__m256 x = _mm256_mul_ps(c00, a);
 			__m256 y = _mm256_mul_ps(c10, a);
@@ -125,9 +125,9 @@ public:
 			z = _mm256_fmadd_ps(c21, b, z);
 			z = _mm256_fmadd_ps(c22, c, z);
 
-			_mm256_store_ps(ptr[0] + i, x);
-			_mm256_store_ps(ptr[1] + i, y);
-			_mm256_store_ps(ptr[2] + i, z);
+			_mm256_store_ps(&ptr[0][i], x);
+			_mm256_store_ps(&ptr[1][i], y);
+			_mm256_store_ps(&ptr[2][i], z);
 		}
 		for (int i = mod(width, 8); i < width; ++i) {
 			float a, b, c;
