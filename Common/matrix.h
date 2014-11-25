@@ -20,11 +20,11 @@ class RowMatrix {
 	size_t m_cols;
 
 	class ElementProxy {
-		RowMatrix &matrix;
+		RowMatrix *matrix;
 		size_t i;
 		size_t j;
 	public:
-		ElementProxy(RowMatrix &matrix, size_t i, size_t j) : matrix{ matrix }, i{ i }, j{ j }
+		ElementProxy(RowMatrix *matrix, size_t i, size_t j) : matrix{ matrix }, i{ i }, j{ j }
 		{}
 
 		T operator=(const ElementProxy &val)
@@ -34,8 +34,8 @@ class RowMatrix {
 
 		T operator=(T val)
 		{
-			if (val != matrix.element_val(i, j))
-				matrix.element_ref(i, j) = val;
+			if (val != matrix->element_val(i, j))
+				matrix->element_ref(i, j) = val;
 
 			return val;
 		}
@@ -47,28 +47,28 @@ class RowMatrix {
 
 		operator T() const
 		{
-			return matrix.element_val(i, j);
+			return matrix->element_val(i, j);
 		}
 	};
 
 	class RowConstProxy {
-		const RowMatrix &matrix;
+		const RowMatrix *matrix;
 		size_t i;
 	public:
-		RowConstProxy(const RowMatrix &matrix, size_t i) : matrix{ matrix }, i{ i }
+		RowConstProxy(const RowMatrix *matrix, size_t i) : matrix{ matrix }, i{ i }
 		{}
 
 		T operator[](size_t j) const
 		{
-			return matrix.element_val(i, j);
+			return matrix->element_val(i, j);
 		}
 	};
 
 	class RowProxy {
-		RowMatrix &matrix;
+		RowMatrix *matrix;
 		size_t i;
 	public:
-		RowProxy(RowMatrix &matrix, size_t i) : matrix{ matrix }, i{ i }
+		RowProxy(RowMatrix *matrix, size_t i) : matrix{ matrix }, i{ i }
 		{}
 
 		ElementProxy operator[](size_t j)
@@ -142,12 +142,12 @@ public:
 
 	RowProxy operator[](size_t i)
 	{
-		return{ *this, i };
+		return{ this, i };
 	}
 
 	RowConstProxy operator[](size_t i) const
 	{
-		return{ *this, i };
+		return{ this, i };
 	}
 
 	size_t row_left(size_t i) const
