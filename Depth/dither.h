@@ -41,42 +41,42 @@ public:
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void byte_to_word(const ImagePlane<const uint8_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from word to word.
 	 *
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void word_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from word to word.
 	 *
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void word_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from half precision to byte.
 	 *
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void half_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from half precision to word.
 	 *
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void half_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from single precision to byte.
 	 *
 	 * @see DitherConvert::byte_to_byte
 	 */
 	virtual void float_to_byte(const ImagePlane<const float> &src, const ImagePlane<uint8_t> &dst, float *tmp) const = 0;
-	
+
 	/**
 	 * Convert from single precision to word.
 	 *

@@ -664,7 +664,7 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 	out_vi.numFrames = node_vi->numFrames;
 	out_vi.flags = 0;
 
-	resize_ctx_y = zimg_resize_create(translate_filter(filter), node_vi->width, node_vi->height, 
+	resize_ctx_y = zimg_resize_create(translate_filter(filter), node_vi->width, node_vi->height,
 	                                  width, height, shift_w, shift_h, subwidth, subheight, filter_param_a, filter_param_b);
 	if (!resize_ctx_y) {
 		zimg_get_last_error(fail_str, sizeof(fail_str));
@@ -754,7 +754,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 		return;
 
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
-	
+
 	registerFunc("Colorspace", "clip:clip;"
 	                           "matrix_in:int;"
 	                           "transfer_in:int;"

@@ -81,4 +81,4 @@ Operation *create_rec709_inverse_gamma_operation(CPUClass cpu);
 } // namespace zimg
 
 #endif // ZIMG_COLORSPACE_OPERATION_IMPL_H_
-	
+

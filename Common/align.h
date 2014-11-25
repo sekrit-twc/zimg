@@ -56,7 +56,7 @@ struct AlignedAllocator {
 	typedef T value_type;
 
 	T *allocate(size_t n) const
-	{ 
+	{
 		T *ptr = (T *)zimg_aligned_malloc(n * sizeof(T), ALIGNMENT);
 
 		if (!ptr)

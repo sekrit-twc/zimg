@@ -86,7 +86,7 @@ void filter_plane_h_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 				v3 = _mm_mul_ps(coeffs, v3);
 
 				transpose4_ps(v0, v1, v2, v3);
-	
+
 				accum0 = _mm_add_ps(accum0, v0);
 				accum1 = _mm_add_ps(accum1, v1);
 				accum0 = _mm_add_ps(accum0, v2);

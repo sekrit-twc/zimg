@@ -150,7 +150,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 
 		uint16_t *dst_ptr0 = dst[i + 0];
 		uint16_t *dst_ptr1 = dst[i + 1];
-		uint16_t *dst_ptr2 = dst[i + 2]; 
+		uint16_t *dst_ptr2 = dst[i + 2];
 		uint16_t *dst_ptr3 = dst[i + 3];
 		uint16_t *dst_ptr4 = dst[i + 4];
 		uint16_t *dst_ptr5 = dst[i + 5];

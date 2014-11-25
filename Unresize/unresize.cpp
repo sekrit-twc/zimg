@@ -67,7 +67,7 @@ void Unresize::invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane
 size_t Unresize::tmp_size(PixelType type) const
 {
 	size_t size = 0;
-	
+
 	// Temporary image.
 	if (m_src_width != m_dst_width && m_src_height != m_dst_height)
 		size += max_frame_size(type);
