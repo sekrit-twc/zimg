@@ -13,14 +13,14 @@ namespace colorspace {;
 
 namespace {;
 
-FORCE_INLINE uint16_t float_to_half(float x)
+inline FORCE_INLINE uint16_t float_to_half(float x)
 {
 	__m128 f32 = _mm_set_ps1(x);
 	__m128i f16 = _mm_cvtps_ph(f32, 0);
 	return _mm_extract_epi16(f16, 0);
 }
 
-FORCE_INLINE float half_to_float(uint16_t x)
+inline FORCE_INLINE float half_to_float(uint16_t x)
 {
 	__m128i f16 = _mm_set1_epi16(x);
 	__m128 f32 = _mm_cvtph_ps(f16);

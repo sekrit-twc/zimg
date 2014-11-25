@@ -28,7 +28,7 @@ struct VectorPolicy_F32 : public ScalarPolicy_F32 {
 	FORCE_INLINE void store_8(float *dst, __m256 x) { _mm256_store_ps(dst, x); }
 };
 
-FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
+inline FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
 {
 	__m256 t0, t1, t2, t3, t4, t5, t6, t7;
 	__m256 tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;

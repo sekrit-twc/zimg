@@ -42,7 +42,7 @@ struct VectorPolicy_F32 : public ScalarPolicy_F32 {
 	FORCE_INLINE void store_8(float *p, __m256 x) { _mm256_store_ps(p, x); }
 };
 
-FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
+inline FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
 {
 	__m256 t0, t1, t2, t3, t4, t5, t6, t7;
 	__m256 tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
@@ -75,7 +75,7 @@ FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256
 	row7 = _mm256_permute2f128_ps(tt3, tt7, 0x31);
 }
 
-FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, __m256i &row3, __m256i &row4, __m256i &row5, __m256i &row6, __m256i &row7)
+inline FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, __m256i &row3, __m256i &row4, __m256i &row5, __m256i &row6, __m256i &row7)
 {
 	__m256 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 
@@ -101,7 +101,7 @@ FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, 
 }
 
 // Performs accum[0,1] += x * unpack[lo,hi](a,b)
-FORCE_INLINE void fmadd_epi16_2(__m256i x, __m256i a, __m256i b, __m256i &accum0, __m256i &accum1)
+inline FORCE_INLINE void fmadd_epi16_2(__m256i x, __m256i a, __m256i b, __m256i &accum0, __m256i &accum1)
 {
 	__m256i tmplo, tmphi;
 
@@ -113,7 +113,7 @@ FORCE_INLINE void fmadd_epi16_2(__m256i x, __m256i a, __m256i b, __m256i &accum0
 	accum1 = _mm256_add_epi32(accum1, tmphi);
 }
 
-FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
+inline FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
 {
 	__m256i offset = _mm256_set1_epi32(1 << 13);
 

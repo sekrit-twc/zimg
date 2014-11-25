@@ -12,7 +12,7 @@ namespace unresize {;
 
 namespace {;
 
-FORCE_INLINE void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
+inline FORCE_INLINE void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 {
 	__m128d t0 = _mm_castps_pd(_mm_unpacklo_ps(x0, x1));
 	__m128d t1 = _mm_castps_pd(_mm_unpacklo_ps(x2, x3));

@@ -15,7 +15,7 @@ namespace resize {;
 
 namespace {;
 
-void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
+inline FORCE_INLINE void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 {
 	__m128d t0 = _mm_castps_pd(_mm_unpacklo_ps(x0, x1));
 	__m128d t1 = _mm_castps_pd(_mm_unpacklo_ps(x2, x3));
@@ -31,7 +31,7 @@ void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
 	x3 = _mm_castpd_ps(o3);
 }
 
-void transpose4_epi32(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3)
+inline FORCE_INLINE void transpose4_epi32(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3)
 {
 	__m128 tmp0 = _mm_castsi128_ps(x0);
 	__m128 tmp1 = _mm_castsi128_ps(x1);
@@ -46,7 +46,7 @@ void transpose4_epi32(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3)
 	x3 = _mm_castps_si128(tmp3);
 }
 
-FORCE_INLINE __m128i mhadd_epi16_epi32(__m128i a, __m128i b)
+inline FORCE_INLINE __m128i mhadd_epi16_epi32(__m128i a, __m128i b)
 {
 	__m128i lo, hi, uplo, uphi;
 
@@ -59,7 +59,7 @@ FORCE_INLINE __m128i mhadd_epi16_epi32(__m128i a, __m128i b)
 	return _mm_add_epi32(uplo, uphi);
 }
 
-FORCE_INLINE void fmadd_epi16_epi32(__m128i a, __m128i b, __m128i &accum0, __m128i &accum1)
+inline FORCE_INLINE void fmadd_epi16_epi32(__m128i a, __m128i b, __m128i &accum0, __m128i &accum1)
 {
 	__m128i lo, hi, uplo, uphi;
 
@@ -73,7 +73,7 @@ FORCE_INLINE void fmadd_epi16_epi32(__m128i a, __m128i b, __m128i &accum0, __m12
 	accum1 = _mm_add_epi32(accum1, uphi);
 }
 
-FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
+inline FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
 {
 	__m128i offset = _mm_set1_epi32(1 << 13);
 
