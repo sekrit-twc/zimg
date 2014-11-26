@@ -27,8 +27,8 @@ struct ColorspaceDefinition;
  * Each instance is applicable only for its given set of source and destination colorspace.
  */
 class ColorspaceConversion {
-	std::unique_ptr<PixelAdapter> m_pixel_adapter;
-	std::vector<std::unique_ptr<Operation>> m_operations;
+	std::shared_ptr<PixelAdapter> m_pixel_adapter;
+	std::vector<std::shared_ptr<Operation>> m_operations;
 
 	void load_line(const void *src, float *dst, int width, PixelType type) const;
 	void store_line(const float *src, void *dst, int width, PixelType type) const;
