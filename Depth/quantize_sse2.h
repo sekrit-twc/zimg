@@ -214,8 +214,8 @@ public:
 
 	FORCE_INLINE __m128 operator()(__m128i x) const
 	{
-		__m128 s = _mm_set_ps1(offset);
-		__m128 o = _mm_set_ps1(scale);
+		__m128 s = _mm_set_ps1(scale);
+		__m128 o = _mm_set_ps1(offset);
 		__m128 f = _mm_cvtepi32_ps(x);
 		f = _mm_mul_ps(f, s);
 		f = _mm_add_ps(f, o);
@@ -235,8 +235,8 @@ public:
 
 	FORCE_INLINE __m128i operator()(__m128 x) const
 	{
-		__m128 s = _mm_set_ps1(offset);
-		__m128 o = _mm_set_ps1(scale);
+		__m128 s = _mm_set_ps1(scale);
+		__m128 o = _mm_set_ps1(offset);
 		x = _mm_mul_ps(x, s);
 		x = _mm_add_ps(x, o);
 		return _mm_cvtps_epi32(x);
