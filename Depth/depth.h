@@ -54,7 +54,7 @@ public:
 	Depth(DitherType type, CPUClass cpu);
 
 	/**
-	 * Get the size of the temporary.
+	 * Get the size of the temporary buffer required by the conversion.
 	 *
 	 * @param width width of image line.
 	 * @return the size of the temporary buffer in units of floats
