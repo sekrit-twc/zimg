@@ -93,7 +93,7 @@ size_t zimg_colorspace_tmp_size(zimg_colorspace_context *ctx, int width);
  * Process a frame. The input and output must contain 3 planes.
  * On success, 0 is returned, else a corresponding error code.
  */
-int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const *src, void * const *dst, void *tmp,
+int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src[3], void * const dst[3], void *tmp,
                             int width, int height, const int *src_stride, const int *dst_stride, int pixel_type);
 
 /* Delete the context. */

@@ -37,7 +37,7 @@ public:
 		return zimg_colorspace_tmp_size(m_ctx, width);
 	}
 
-	void process(const void * const *src, void * const *dst, void *tmp, int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
+	void process(const void * const src[3], void * const dst[3], void *tmp, int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
 	{
 		if (zimg_colorspace_process(m_ctx, src, dst, tmp, width, height, src_stride, dst_stride, pixel_type))
 			throw ZimgError{};

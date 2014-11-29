@@ -261,7 +261,7 @@ size_t zimg_colorspace_tmp_size(zimg_colorspace_context *ctx, int width)
 	return ctx->p.tmp_size(width) * pixel_size(PixelType::FLOAT);
 }
 
-int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const *src, void * const *dst, void *tmp,
+int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src[3], void * const dst[3], void *tmp,
                             int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
 {
 	zimg_clear_last_error();
