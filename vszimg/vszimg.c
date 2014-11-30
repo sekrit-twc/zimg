@@ -5,6 +5,10 @@
 #include "VapourSynth.h"
 #include "VSHelper.h"
 
+#if ZIMG_API_VERSION < 1
+  #error zAPI v1 or greater required
+#endif
+
 typedef enum chroma_location {
 	CHROMA_LOC_MPEG1,
 	CHROMA_LOC_MPEG2
@@ -750,9 +754,6 @@ static void VS_CC vs_set_cpu(const VSMap *in, VSMap *out, void *userData, VSCore
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin)
 {
-	if (!zimg_check_api_version(ZIMG_API_VERSION))
-		return;
-
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
 
 	registerFunc("Colorspace", "clip:clip;"

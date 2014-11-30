@@ -7,11 +7,7 @@ extern "C" {;
 
 #include <stddef.h>
 
-#define ZIMG_API_VERSION 0
-
-/* Returns 1 if compatible with API version [ver], else 0. */
-int zimg_check_api_version(int ver);
-
+#define ZIMG_API_VERSION 1
 
 #define ZIMG_ERROR_UNKNOWN           -1
 #define ZIMG_ERROR_LOGIC            100
@@ -20,7 +16,7 @@ int zimg_check_api_version(int ver);
 #define ZIMG_ERROR_UNSUPPORTED      400
 
 /**
- * Return the last error code.
+ * Return the last error code. Error information is thread-local.
  * A descriptive error message is placed in the [n]-byte buffer located at [err_msg].
  */
 int zimg_get_last_error(char *err_msg, size_t n);
