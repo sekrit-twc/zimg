@@ -346,13 +346,11 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	VSNodeRef *node = 0;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
-	const VSFormat *preset_fmt;
 
 	VSVideoInfo out_vi;
 	const VSFormat *out_fmt;
 
 	const char *dither;
-	int format;
 	int sample;
 	int depth;
 	int tv_in;
@@ -369,35 +367,25 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 		goto fail;
 	}
 
-	format = (int)vsapi->propGetInt(in, "format", 0, &err);
-	if (err)
-		format = node_fmt->id;
-
-	preset_fmt = vsapi->getFormatPreset(format, core);
-	if (!preset_fmt) {
-		strcpy(fail_str, "invalid format preset provided");
-		goto fail;
-	}
-
 	dither = vsapi->propGetData(in, "dither", 0, &err);
 	if (err)
 		dither = "none";
 
 	sample = (int)vsapi->propGetInt(in, "sample", 0, &err);
 	if (err)
-		sample = preset_fmt->sampleType;
+		sample = node_fmt->sampleType;
 
 	depth = (int)vsapi->propGetInt(in, "depth", 0, &err);
 	if (err)
-		depth = preset_fmt->bitsPerSample;
+		depth = node_fmt->bitsPerSample;
 
 	tv_in = !!vsapi->propGetInt(in, "fullrange_in", 0, &err);
 	if (err)
-		tv_in = preset_fmt->colorFamily == cmRGB;
+		tv_in = node_fmt->colorFamily == cmRGB;
 
 	tv_out = !!vsapi->propGetInt(in, "fullrange_out", 0, &err);
 	if (err)
-		tv_out = preset_fmt->colorFamily == cmRGB;
+		tv_out = node_fmt->colorFamily == cmRGB;
 
 	if (sample != stInteger && sample != stFloat) {
 		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
@@ -412,18 +400,7 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 		goto fail;
 	}
 
-	if (preset_fmt->colorFamily != node_fmt->colorFamily) {
-		strcpy(fail_str, "cannot change color family with depth filter");
-		goto fail;
-	}
-	if (preset_fmt->subSamplingW != node_fmt->subSamplingW ||
-	    preset_fmt->subSamplingH != node_fmt->subSamplingH)
-	{
-		strcpy(fail_str, "cannot change chroma subsampling with depth filter");
-		goto fail;
-	}
-
-	out_fmt = vsapi->registerFormat(preset_fmt->colorFamily, sample, depth, preset_fmt->subSamplingW, preset_fmt->subSamplingH, core);
+	out_fmt = vsapi->registerFormat(node_fmt->colorFamily, sample, depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
 	out_vi.format = out_fmt;
 	out_vi.fpsNum = node_vi->fpsNum;
 	out_vi.fpsDen = node_vi->fpsDen;
@@ -765,7 +742,6 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                           "primaries_out:int:opt", vs_colorspace_create, 0, plugin);
 	registerFunc("Depth", "clip:clip;"
 	                      "dither:data:opt;"
-	                      "format:int:opt;"
 	                      "sample:int:opt;"
 	                      "depth:int:opt;"
 	                      "fullrange_in:int:opt;"
