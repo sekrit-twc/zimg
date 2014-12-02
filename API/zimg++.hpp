@@ -37,7 +37,7 @@ public:
 		return zimg_colorspace_tmp_size(m_ctx, width);
 	}
 
-	void process(const void * const src[3], void * const dst[3], void *tmp, int width, int height, const int *src_stride, const int *dst_stride, int pixel_type)
+	void process(const void * const src[3], void * const dst[3], void *tmp, int width, int height, const int src_stride[3], const int dst_stride[3], int pixel_type)
 	{
 		if (zimg_colorspace_process(m_ctx, src, dst, tmp, width, height, src_stride, dst_stride, pixel_type))
 			throw ZimgError{};
@@ -98,12 +98,7 @@ public:
 
 	size_t tmp_size(int pixel_type)
 	{
-		size_t ret;
-		
-		if (!(ret = zimg_resize_tmp_size(m_ctx, pixel_type)))
-			throw ZimgError{};
-
-		return ret;
+		return zimg_resize_tmp_size(m_ctx, pixel_type);
 	}
 
 	void process(const void *src, void *dst, void *tmp, int src_width, int src_height, int dst_width, int dst_height, int src_stride, int dst_stride, int pixel_type)
