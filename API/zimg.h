@@ -155,7 +155,7 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 void zimg_resize_delete(zimg_resize_context *ctx);
 
 #ifdef __cplusplus
-} // extern "C"
+} /* extern "C" */
 #endif
 
-#endif // ZIMG_H_
+#endif /* ZIMG_H_ */
