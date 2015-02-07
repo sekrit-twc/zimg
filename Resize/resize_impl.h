@@ -106,22 +106,16 @@ inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, co
 class ResizeImpl {
 protected:
 	/**
-	 * Filter coefficients for horizontal pass.
+	 * Filter coefficients.
 	 */
-	EvaluatedFilter m_filter_h;
-
-	/**
-	 * Filter coefficients for vertical pass.
-	 */
-	EvaluatedFilter m_filter_v;
+	EvaluatedFilter m_filter;
 
 	/**
 	 * Initialize the implementation with the given coefficients.
 	 *
-	 * @param filter_h horizontal coefficients
-	 * @param filter_v vertical coefficients
+	 * @param filter coefficients
 	 */
-	ResizeImpl(const EvaluatedFilter &filter_h, const EvaluatedFilter &filter_v);
+	ResizeImpl(const EvaluatedFilter &filter);
 public:
 	/**
 	 * Destroy implementation.
@@ -129,58 +123,41 @@ public:
 	virtual ~ResizeImpl() = 0;
 
 	/**
-	 * Execute horizontal filter pass on an unsigned 16-bit image.
+	 * Execute filter pass on an unsigned 16-bit image.
 	 *
 	 * @param src input plane
 	 * @param dst output plane
 	 * @param tmp temporary buffer (implementation defined size)
 	 * @throws ZimgUnsupportedError if not supported
 	 */
-	virtual void process_u16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
-	 * Execute vertical filter pass on an unsigned 16-bit image.
+	 * Execute filter pass on a half precision 16-bit image.
 	 *
-	 * @see ResizeImpl::procss_u16_h
+	 * @see ResizeImpl::process_u16
 	 */
-	virtual void process_u16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
 
 	/**
-	 * Execute horizontal filter pass on a half precision 16-bit image.
+	 * Execute filter pass on a single precision 32-bit image.
 	 *
-	 * @see ResizeImpl::process_u16_h
+	 * @see ResizeImpl::process_u16
 	 */
-	virtual void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
-
-	/**
-	 * Execute vertical filter pass on a half precision 16-bit image.
-	 *
-	 *  @see ResizeImpl::procss_u16_h
-	 */
-	virtual void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
-
-	/**
-	 * Execute horizontal filter pass on a single precision 32-bit image.
-	 *
-	 * @see ResizeImpl::process_u16_h
-	 */
-	virtual void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
-
-	/**
-	 * Execute vertical filter pass on a single precision 32-bit image.
-	 *
-	 * @see ResizeImpl::procss_u16_h
-	 */
-	virtual void process_f32_v(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
 };
 
 /**
  * Create a concrete ResizeImpl.
-
- * @see Resize::Resize
+ *
+ * @param f filter
+ * @param horizontal whether filter is horizontal
+ * @param src_dim input dimension
+ * @param dst_dim output dimension
+ * @param shift input shift
+ * @param subwidth input window size
  */
-ResizeImpl *create_resize_impl(const Filter &f, int src_width, int src_height, int dst_width, int dst_height,
-                               double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
+ResizeImpl *create_resize_impl(const Filter &f, bool horizontal, int src_dim, int dst_dim, double shift, double subwidth, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

@@ -20,7 +20,8 @@ try :
 	m_dst_height{ dst_height },
 	m_skip_h{ src_width == dst_width && shift_w == 0.0 && subwidth == src_width },
 	m_skip_v{ src_height == dst_height && shift_h == 0.0 && subheight == src_height },
-	m_impl{ create_resize_impl(f, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, cpu) }
+	m_impl_h{ create_resize_impl(f, true, src_width, dst_width, shift_w, subwidth, cpu) },
+	m_impl_v{ create_resize_impl(f, false, src_height, dst_height, shift_h, subheight, cpu) }
 {
 } catch (const std::bad_alloc &) {
 	throw ZimgOutOfMemory{};
@@ -57,13 +58,13 @@ void Resize::invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<v
 {
 	switch (src.format().type) {
 	case PixelType::WORD:
-		m_impl->process_u16_h(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl_h->process_u16(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::HALF:
-		m_impl->process_f16_h(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl_h->process_f16(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::FLOAT:
-		m_impl->process_f32_h(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
+		m_impl_h->process_f32(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
 		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };
@@ -74,13 +75,13 @@ void Resize::invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<v
 {
 	switch (src.format().type) {
 	case PixelType::WORD:
-		m_impl->process_u16_v(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl_h->process_u16(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::HALF:
-		m_impl->process_f16_v(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
+		m_impl_h->process_f16(plane_cast<const uint16_t>(src), plane_cast<uint16_t>(dst), (uint16_t *)tmp);
 		break;
 	case PixelType::FLOAT:
-		m_impl->process_f32_v(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
+		m_impl_h->process_f32(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
 		throw ZimgUnsupportedError{ "only WORD, HALF, and FLOAT are supported for resize" };

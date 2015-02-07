@@ -31,7 +31,8 @@ class Resize {
 	int m_dst_height;
 	bool m_skip_h;
 	bool m_skip_v;
-	std::shared_ptr<ResizeImpl> m_impl;
+	std::shared_ptr<ResizeImpl> m_impl_h;
+	std::shared_ptr<ResizeImpl> m_impl_v;
 
 	size_t max_frame_size(PixelType type) const;
 
