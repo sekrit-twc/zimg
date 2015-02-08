@@ -11,12 +11,12 @@ namespace {;
 
 class ResizeImplC_H final : public ResizeImpl {
 public:
-	ResizeImplC_H(const EvaluatedFilter &filter) : ResizeImpl(filter)
+	ResizeImplC_H(const FilterContext &filter) : ResizeImpl(filter)
 	{}
 
 	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		filter_plane_h_scalar(m_filter, src, dst, 0, src.height(), 0, m_filter.height(), ScalarPolicy_U16{});
+		filter_plane_h_scalar(m_filter, src, dst, 0, src.height(), 0, m_filter.filter_rows, ScalarPolicy_U16{});
 	}
 
 	void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
@@ -26,18 +26,18 @@ public:
 
 	void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
-		filter_plane_h_scalar(m_filter, src, dst, 0, src.height(), 0, m_filter.height(), ScalarPolicy_F32{});
+		filter_plane_h_scalar(m_filter, src, dst, 0, src.height(), 0, m_filter.filter_rows, ScalarPolicy_F32{});
 	}
 };
 
 class ResizeImplC_V final : public ResizeImpl {
 public:
-	ResizeImplC_V(const EvaluatedFilter &filter) : ResizeImpl(filter)
+	ResizeImplC_V(const FilterContext &filter) : ResizeImpl(filter)
 	{}
 
 	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		filter_plane_v_scalar(m_filter, src, dst, 0, m_filter.height(), 0, src.width(), ScalarPolicy_U16{});
+		filter_plane_v_scalar(m_filter, src, dst, 0, m_filter.filter_rows, 0, src.width(), ScalarPolicy_U16{});
 	}
 
 	void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
@@ -47,11 +47,11 @@ public:
 
 	void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
-		filter_plane_v_scalar(m_filter, src, dst, 0, m_filter.height(), 0, src.width(), ScalarPolicy_F32{});
+		filter_plane_v_scalar(m_filter, src, dst, 0, m_filter.filter_rows, 0, src.width(), ScalarPolicy_F32{});
 	}
 };
 
-ResizeImpl *create_resize_impl_c(const EvaluatedFilter &filter, bool horizontal)
+ResizeImpl *create_resize_impl_c(const FilterContext &filter, bool horizontal)
 {
 	if (horizontal)
 		return new ResizeImplC_H{ filter };
@@ -62,7 +62,7 @@ ResizeImpl *create_resize_impl_c(const EvaluatedFilter &filter, bool horizontal)
 } // namespace
 
 
-ResizeImpl::ResizeImpl(const EvaluatedFilter &filter) : m_filter{ filter }
+ResizeImpl::ResizeImpl(const FilterContext &filter) : m_filter(filter)
 {
 }
 
@@ -75,7 +75,7 @@ ResizeImpl *create_resize_impl(const Filter &f, bool horizontal, int src_dim, in
 	ResizeImpl *ret = nullptr;
 
 	if (src_dim != dst_dim || shift != 0.0 || subwidth != src_dim) {
-		EvaluatedFilter filter = compute_filter(f, src_dim, dst_dim, shift, subwidth);
+		FilterContext filter = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 
 #ifdef ZIMG_X86
 		ret = create_resize_impl_x86(filter, horizontal, cpu);

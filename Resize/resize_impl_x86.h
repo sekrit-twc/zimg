@@ -11,19 +11,19 @@ enum class CPUClass;
 
 namespace resize {;
 
-class EvaluatedFilter;
+struct FilterContext;
 class ResizeImpl;
 
-ResizeImpl *create_resize_impl_sse2(const EvaluatedFilter &filter, bool horizontal);
+ResizeImpl *create_resize_impl_sse2(const FilterContext &filter, bool horizontal);
 
-ResizeImpl *create_resize_impl_avx2(const EvaluatedFilter &filter, bool horizontal);
+ResizeImpl *create_resize_impl_avx2(const FilterContext &filter, bool horizontal);
 
 /**
  * Create an appropriate x86 optimized ResizeImpl for the given CPU.
  *
  * @see create_resize_impl
  */
-ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter, bool horizontal, CPUClass cpu);
+ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

@@ -22,9 +22,9 @@ namespace resize {;
 struct ScalarPolicy_U16 {
 	typedef int32_t num_type;
 
-	FORCE_INLINE int32_t coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE int32_t coeff(const FilterContext &filter, ptrdiff_t row, ptrdiff_t k)
 	{
-		return filter.data_i16()[row * filter.stride_i16() + k];
+		return filter.data_i16[row * filter.stride_i16 + k];
 	}
 
 	FORCE_INLINE int32_t load(const uint16_t *src)
@@ -48,9 +48,9 @@ struct ScalarPolicy_U16 {
 struct ScalarPolicy_F32 {
 	typedef float num_type;
 
-	FORCE_INLINE float coeff(const EvaluatedFilter &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE float coeff(const FilterContext &filter, ptrdiff_t row, ptrdiff_t k)
 	{
-		return filter.data()[row * filter.stride() + k];
+		return filter.data[row * filter.stride + k];
 	}
 
 	FORCE_INLINE float load(const float *src) { return *src; }
@@ -59,15 +59,15 @@ struct ScalarPolicy_F32 {
 };
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
+inline FORCE_INLINE void filter_plane_h_scalar(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-			ptrdiff_t left = filter.left()[j];
+			ptrdiff_t left = filter.left[j];
 			typename Policy::num_type accum = 0;
 
-			for (int k = 0; k < filter.width(); ++k) {
+			for (int k = 0; k < filter.filter_width; ++k) {
 				typename Policy::num_type coeff = policy.coeff(filter, j, k);
 				typename Policy::num_type x = policy.load(&src[i][left + k]);
 
@@ -80,15 +80,15 @@ inline FORCE_INLINE void filter_plane_h_scalar(const EvaluatedFilter &filter, co
 }
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_v_scalar(const EvaluatedFilter &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
+inline FORCE_INLINE void filter_plane_v_scalar(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
                                                ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
 {
 	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
 		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-			ptrdiff_t top = filter.left()[i];
+			ptrdiff_t top = filter.left[i];
 			typename Policy::num_type accum = 0;
 
-			for (ptrdiff_t k = 0; k < filter.width(); ++k) {
+			for (ptrdiff_t k = 0; k < filter.filter_width; ++k) {
 				typename Policy::num_type coeff = policy.coeff(filter, i, k);
 				typename Policy::num_type x = policy.load(&src[top + k][j]);
 
@@ -108,14 +108,14 @@ protected:
 	/**
 	 * Filter coefficients.
 	 */
-	EvaluatedFilter m_filter;
+	FilterContext m_filter;
 
 	/**
 	 * Initialize the implementation with the given coefficients.
 	 *
 	 * @param filter coefficients
 	 */
-	ResizeImpl(const EvaluatedFilter &filter);
+	ResizeImpl(const FilterContext &filter);
 public:
 	/**
 	 * Destroy implementation.

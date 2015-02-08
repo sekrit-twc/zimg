@@ -113,77 +113,33 @@ public:
 /**
  * Computed filter taps for a given scale and shift.
  */
-class EvaluatedFilter {
-	int m_width;
-	int m_height;
-	ptrdiff_t m_stride;
-	ptrdiff_t m_stride_i16;
-	AlignedVector<float> m_data;
-	AlignedVector<int16_t> m_data_i16;
-	AlignedVector<int> m_left;
-public:
+struct FilterContext {
 	/**
-	 * Initialize an empty EvaluatedFilter.
+	 * Number of coefficients in a filter row.
 	 */
-	EvaluatedFilter() = default;
+	int filter_width;
 
 	/**
-	 * Initialize an EvaluatedFilter with a given width and height.
-	 *
-	 * @param width filter (not matrix) width
-	 * @param height matrix height
+	 * Total number of filter rows.
 	 */
-	EvaluatedFilter(int width, int height);
+	int filter_rows;
 
 	/**
-	 * @return filter width
+	 * Distance between filter rows in units of coefficients.
 	 */
-	int width() const;
+	ptrdiff_t stride;
+	ptrdiff_t stride_i16;
 
 	/**
-	 * @return matrix height
+	 * Filter data.
 	 */
-	int height() const;
+	AlignedVector<float> data;
+	AlignedVector<int16_t> data_i16;
 
 	/**
-	 * @return distance betwen filter rows in floats
+	 * Indices of leftmost non-zero coefficients.
 	 */
-	ptrdiff_t stride() const;
-
-	/**
-	 * @return distance between filter rows in 16-bit ints
-	 */
-	ptrdiff_t stride_i16() const;
-
-	/**
-	 * @return pointer to filter coefficients
-	 */
-	float *data();
-
-	/**
-	 * @see EvaluatedFilter::data()
-	 */
-	const float *data() const;
-
-	/**
-	 * @return pointer to 16-bit (14-bit) signed filter coefficients
-	 */
-	int16_t *data_i16();
-
-	/**
-	 * @see EvaluatedFilter::data_i16()
-	 */
-	const int16_t *data_i16() const;
-
-	/**
-	 * @return pointer to row offsets in pixels
-	 */
-	int *left();
-
-	/**
-	 * @see EvaluatedFilter::left()
-	 */
-	const int *left() const;
+	AlignedVector<int> left;
 };
 
 /**
@@ -198,7 +154,7 @@ public:
  * @return the computed filter
  * @throws ZimgIllegalArgument on unsupported parameter combinations
  */
-EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
+FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
 
 } // namespace resize
 } // namespace zimg

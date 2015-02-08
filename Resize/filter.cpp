@@ -28,7 +28,7 @@ double cube(double x)
 	return x * x * x;
 }
 
-EvaluatedFilter matrix_to_filter(const RowMatrix<double> &m)
+FilterContext matrix_to_filter(const RowMatrix<double> &m)
 {
 	size_t width = 0;
 
@@ -36,7 +36,15 @@ EvaluatedFilter matrix_to_filter(const RowMatrix<double> &m)
 		width = std::max(width, m.row_right(i) - m.row_left(i));
 	}
 
-	EvaluatedFilter e{ (int)width, (int)m.rows() };
+	FilterContext e{};
+
+	e.filter_width = (unsigned)width;
+	e.filter_rows = (unsigned)m.rows();
+	e.stride = (unsigned)align(width, AlignmentOf<float>::value);
+	e.stride_i16 = (unsigned)align(width, AlignmentOf<uint16_t>::value);
+	e.data.resize((size_t)e.stride * e.filter_rows);
+	e.data_i16.resize((size_t)e.stride_i16 * e.filter_rows);
+	e.left.resize(e.filter_rows);
 
 	for (size_t i = 0; i < m.rows(); ++i) {
 		int left = (int)std::min(m.row_left(i), m.cols() - width);
@@ -45,10 +53,10 @@ EvaluatedFilter matrix_to_filter(const RowMatrix<double> &m)
 			float coeff = (float)m[i][left + j];
 			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
 
-			e.data()[(ptrdiff_t)i * e.stride() + j] = coeff;
-			e.data_i16()[(ptrdiff_t)i * e.stride_i16() + j] = coeff_i16;
+			e.data[(ptrdiff_t)i * e.stride + j] = coeff;
+			e.data_i16[(ptrdiff_t)i * e.stride_i16 + j] = coeff_i16;
 		}
-		e.left()[i] = left;
+		e.left[i] = left;
 	}
 
 	return e;
@@ -165,70 +173,7 @@ double LanczosFilter::operator()(double x) const
 	return x < taps ? sinc(x) * sinc(x / taps) : 0.0;
 }
 
-
-EvaluatedFilter::EvaluatedFilter(int width, int height) :
-	m_width{ width },
-	m_height{ height },
-	m_stride{ align(width, AlignmentOf<float>::value) },
-	m_stride_i16{ align(width, AlignmentOf<int16_t>::value) },
-	m_data((size_t)m_stride * height),
-	m_data_i16((size_t)m_stride_i16 * height),
-	m_left(height)
-{
-}
-
-int EvaluatedFilter::width() const
-{
-	return m_width;
-}
-
-int EvaluatedFilter::height() const
-{
-	return m_height;
-}
-
-ptrdiff_t EvaluatedFilter::stride() const
-{
-	return m_stride;
-}
-
-ptrdiff_t EvaluatedFilter::stride_i16() const
-{
-	return m_stride_i16;
-}
-
-float *EvaluatedFilter::data()
-{
-	return m_data.data();
-}
-
-const float *EvaluatedFilter::data() const
-{
-	return m_data.data();
-}
-
-int16_t *EvaluatedFilter::data_i16()
-{
-	return m_data_i16.data();
-}
-
-const int16_t *EvaluatedFilter::data_i16() const
-{
-	return m_data_i16.data();
-}
-
-int *EvaluatedFilter::left()
-{
-	return m_left.data();
-}
-
-const int *EvaluatedFilter::left() const
-{
-	return m_left.data();
-}
-
-
-EvaluatedFilter compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width)
+FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width)
 {
 	double scale = (double)dst_dim / width;
 	double step = std::min(scale, 1.0);

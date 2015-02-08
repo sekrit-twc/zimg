@@ -87,13 +87,13 @@ inline FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
 }
 
 template <bool DoLoop>
-void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst)
+void filter_plane_u16_h(const FilterContext &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
-	const int16_t *filter_data = filter.data_i16();
-	const int *filter_left = filter.left();
-	ptrdiff_t filter_stride = filter.stride_i16();
+	const int16_t *filter_data = filter.data_i16.data();
+	const int *filter_left = filter.left.data();
+	ptrdiff_t filter_stride = filter.stride_i16;
 
 	int src_width = src.width();
 	int src_height = src.height();
@@ -113,7 +113,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 
 		ptrdiff_t j;
 
-		for (j = 0; j < filter.height(); ++j) {
+		for (j = 0; j < filter.filter_rows; ++j) {
 			__m128i accum = _mm_setzero_si128();
 
 			const int16_t *filter_row = &filter_data[j * filter_stride];
@@ -122,7 +122,7 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 			if (left + filter_stride > src_width)
 				break;
 
-			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 8); k += 8) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.filter_width : 8); k += 8) {
 				__m128i coeff = _mm_load_si128((const __m128i *)&filter_row[k]);
 				__m128i x0, x1, x2, x3;
 
@@ -176,17 +176,17 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 				_mm_store_si128((__m128i *)&dst_p3[dst_j], packed);
 			}
 		}
-		filter_plane_h_scalar(filter, src, dst, i, i + 4, mod(j, 8), filter.height(), ScalarPolicy_U16{});
+		filter_plane_h_scalar(filter, src, dst, i, i + 4, mod(j, 8), filter.filter_rows, ScalarPolicy_U16{});
 	}
-	filter_plane_h_scalar(filter, src, dst, mod(src_height, 4), src_height, 0, filter.height(), ScalarPolicy_U16{});
+	filter_plane_h_scalar(filter, src, dst, mod(src_height, 4), src_height, 0, filter.filter_rows, ScalarPolicy_U16{});
 }
 
 template <bool DoLoop>
-void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
+void filter_plane_fp_h(const FilterContext &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
 {
-	const float *filter_data = filter.data();
-	const int *filter_left = filter.left();
-	ptrdiff_t filter_stride = filter.stride();
+	const float *filter_data = filter.data.data();
+	const int *filter_left = filter.left.data();
+	ptrdiff_t filter_stride = filter.stride;
 
 	int src_width = src.width();
 	int src_height = src.height();
@@ -206,7 +206,7 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const flo
 
 		ptrdiff_t j;
 
-		for (j = 0; j < filter.height(); ++j) {
+		for (j = 0; j < filter.filter_rows; ++j) {
 			__m128 accum = _mm_setzero_ps();
 
 			const float *filter_row = &filter_data[j * filter_stride];
@@ -215,7 +215,7 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const flo
 			if (left + filter_stride > src_width)
 				break;
 
-			for (ptrdiff_t k = 0; k < (DoLoop ? filter.width() : 4); k += 4) {
+			for (ptrdiff_t k = 0; k < (DoLoop ? filter.filter_width : 4); k += 4) {
 				__m128 coeff = _mm_load_ps(filter_row + k);
 				__m128 x0, x1, x2, x3;
 
@@ -252,27 +252,27 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const flo
 				_mm_store_ps(&dst_p3[dst_j], cached[3]);
 			}
 		}
-		filter_plane_h_scalar(filter, src, dst, i, i + 4, mod(j, 4), filter.height(), ScalarPolicy_F32{});
+		filter_plane_h_scalar(filter, src, dst, i, i + 4, mod(j, 4), filter.filter_rows, ScalarPolicy_F32{});
 	}
-	filter_plane_h_scalar(filter, src, dst, mod(src_height, 4), src_height, 0, filter.height(), ScalarPolicy_F32{});
+	filter_plane_h_scalar(filter, src, dst, mod(src_height, 4), src_height, 0, filter.filter_rows, ScalarPolicy_F32{});
 }
 
-void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp)
+void filter_plane_u16_v(const FilterContext &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
-	const int16_t *filter_data = filter.data_i16();
-	const int *filter_left = filter.left();
-	ptrdiff_t filter_stride = filter.stride_i16();
+	const int16_t *filter_data = filter.data_i16.data();
+	const int *filter_left = filter.left.data();
+	ptrdiff_t filter_stride = filter.stride_i16;
 
 	int src_width = src.width();
 
-	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.filter_rows; ++i) {
 		const int16_t *filter_row = &filter_data[i * filter_stride];
 		int top = filter_left[i];
 		uint16_t *dst_ptr = dst[i];
 
-		for (ptrdiff_t k = 0; k < mod(filter.width(), 4); k += 4) {
+		for (ptrdiff_t k = 0; k < mod(filter.filter_rows, 4); k += 4) {
 			const uint16_t *src_ptr0 = src[top + k + 0];
 			const uint16_t *src_ptr1 = src[top + k + 1];
 			const uint16_t *src_ptr2 = src[top + k + 2];
@@ -316,7 +316,7 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 					accum0h = _mm_add_epi32(accum0h, _mm_load_si128((const __m128i *)&tmp[j * 2 + 8]));
 				}
 
-				if (k == filter.width() - 4) {
+				if (k == filter.filter_width - 4) {
 					packed = pack_i30_epi32(accum0l, accum0h);
 					packed = _mm_sub_epi16(packed, INT16_MIN_EPI16);
 					_mm_store_si128((__m128i *)&dst_ptr[j], packed);
@@ -326,9 +326,9 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 				}
 			}
 		}
-		if (filter.width() % 4) {
-			ptrdiff_t m = filter.width() % 4;
-			ptrdiff_t k = filter.width() - m;
+		if (filter.filter_width % 4) {
+			ptrdiff_t m = filter.filter_width % 4;
+			ptrdiff_t k = filter.filter_width - m;
 
 			const uint16_t *src_ptr0 = src[top + k + 0];
 			const uint16_t *src_ptr1 = src[top + k + 1];
@@ -380,20 +380,20 @@ void filter_plane_u16_v(const EvaluatedFilter &filter, const ImagePlane<const ui
 	}
 }
 
-void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
+void filter_plane_fp_v(const FilterContext &filter, const ImagePlane<const float> &src, const ImagePlane<float> &dst)
 {
-	const float *filter_data = filter.data();
-	const int *filter_left = filter.left();
-	ptrdiff_t filter_stride = filter.stride();
+	const float *filter_data = filter.data.data();
+	const int *filter_left = filter.left.data();
+	ptrdiff_t filter_stride = filter.stride;
 
 	int src_width = src.width();
 
-	for (ptrdiff_t i = 0; i < filter.height(); ++i) {
+	for (ptrdiff_t i = 0; i < filter.filter_rows; ++i) {
 		const float *filter_row = &filter_data[i * filter_stride];
 		int top = filter_left[i];
 		float *dst_ptr = dst[i];
 
-		for (ptrdiff_t k = 0; k < mod(filter.width(), 4); k += 4) {
+		for (ptrdiff_t k = 0; k < mod(filter.filter_width, 4); k += 4) {
 			const float *src_ptr0 = src[top + k + 0];
 			const float *src_ptr1 = src[top + k + 1];
 			const float *src_ptr2 = src[top + k + 2];
@@ -430,9 +430,9 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<const flo
 				_mm_store_ps(&dst_ptr[j], accum0);
 			}
 		}
-		if (filter.width() % 4) {
-			ptrdiff_t m = filter.width() % 4;
-			ptrdiff_t k = filter.width() - m;
+		if (filter.filter_width % 4) {
+			ptrdiff_t m = filter.filter_width % 4;
+			ptrdiff_t k = filter.filter_width - m;
 
 			const float *src_ptr0 = src[top + k + 0];
 			const float *src_ptr1 = src[top + k + 1];
@@ -475,12 +475,12 @@ void filter_plane_fp_v(const EvaluatedFilter &filter, const ImagePlane<const flo
 
 class ResizeImplSSE2_H : public ResizeImpl {
 public:
-	ResizeImplSSE2_H(const EvaluatedFilter &filter) : ResizeImpl(filter)
+	ResizeImplSSE2_H(const FilterContext &filter) : ResizeImpl(filter)
 	{}
 
 	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		if (m_filter.width() > 8)
+		if (m_filter.filter_width > 8)
 			filter_plane_u16_h<true>(m_filter, src, dst);
 		else
 			filter_plane_u16_h<false>(m_filter, src, dst);
@@ -493,7 +493,7 @@ public:
 
 	void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
 	{
-		if (m_filter.width() > 4)
+		if (m_filter.filter_width > 4)
 			filter_plane_fp_h<true>(m_filter, src, dst);
 		else
 			filter_plane_fp_h<false>(m_filter, src, dst);
@@ -502,7 +502,7 @@ public:
 
 class ResizeImplSSE2_V : public ResizeImpl {
 public:
-	ResizeImplSSE2_V(const EvaluatedFilter &filter) : ResizeImpl(filter)
+	ResizeImplSSE2_V(const FilterContext &filter) : ResizeImpl(filter)
 	{}
 
 	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
@@ -524,7 +524,7 @@ public:
 } // namespace
 
 
-ResizeImpl *create_resize_impl_sse2(const EvaluatedFilter &filter, bool horizontal)
+ResizeImpl *create_resize_impl_sse2(const FilterContext &filter, bool horizontal)
 {
 	if (horizontal)
 		return new ResizeImplSSE2_H{ filter };

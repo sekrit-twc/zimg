@@ -6,7 +6,7 @@
 namespace zimg {;
 namespace resize {;
 
-ResizeImpl *create_resize_impl_x86(const EvaluatedFilter &filter, bool horizontal, CPUClass cpu)
+ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
 	ResizeImpl *ret;
