@@ -36,5 +36,11 @@
     <ClInclude Include="matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="linebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="alloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
