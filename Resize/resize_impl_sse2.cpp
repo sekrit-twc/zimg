@@ -99,6 +99,8 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 	int src_height = src.height();
 
 	for (ptrdiff_t i = 0; i < mod(src_height, 4); i += 4) {
+		__m128i cached[8];
+
 		const uint16_t *src_p0 = src[i + 0];
 		const uint16_t *src_p1 = src[i + 1];
 		const uint16_t *src_p2 = src[i + 2];
@@ -113,7 +115,6 @@ void filter_plane_u16_h(const EvaluatedFilter &filter, const ImagePlane<const ui
 
 		for (j = 0; j < filter.height(); ++j) {
 			__m128i accum = _mm_setzero_si128();
-			__m128i cached[8];
 
 			const int16_t *filter_row = &filter_data[j * filter_stride];
 			ptrdiff_t left = filter_left[j];
@@ -191,6 +192,8 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const flo
 	int src_height = src.height();
 
 	for (ptrdiff_t i = 0; i < mod(src_height, 4); i += 4) {
+		__m128 cached[4];
+
 		const float *src_p0 = src[i + 0];
 		const float *src_p1 = src[i + 1];
 		const float *src_p2 = src[i + 2];
@@ -205,7 +208,6 @@ void filter_plane_fp_h(const EvaluatedFilter &filter, const ImagePlane<const flo
 
 		for (j = 0; j < filter.height(); ++j) {
 			__m128 accum = _mm_setzero_ps();
-			__m128 cached[4];
 
 			const float *filter_row = &filter_data[j * filter_stride];
 			ptrdiff_t left = filter_left[j];
