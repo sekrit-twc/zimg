@@ -17,8 +17,7 @@ Unresize::Unresize(int src_width, int src_height, int dst_width, int dst_height,
 	m_dst_height(dst_height),
 	m_impl(create_unresize_impl(src_width, src_height, dst_width, dst_height, shift_w, shift_h, cpu))
 {
-}
-catch (const std::bad_alloc &) {
+} catch (const std::bad_alloc &) {
 	throw ZimgOutOfMemory{};
 }
 

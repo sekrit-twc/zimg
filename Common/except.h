@@ -9,11 +9,11 @@ namespace zimg {;
 
 class ZimgException : private std::runtime_error {
 public:
-	ZimgException() : std::runtime_error("") {}
+	ZimgException() : std::runtime_error{ "" } {}
 
-	explicit ZimgException(const char *msg) : std::runtime_error{msg} {}
+	explicit ZimgException(const char *msg) : std::runtime_error{ msg } {}
 
-	explicit ZimgException(const std::string &msg) : std::runtime_error{msg} {}
+	explicit ZimgException(const std::string &msg) : std::runtime_error{ msg } {}
 
 	virtual ~ZimgException() {}
 

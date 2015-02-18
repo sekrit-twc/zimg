@@ -89,9 +89,7 @@ Depth::Depth(DitherType type, CPUClass cpu) try :
 	m_dither{ create_dither_convert(type, cpu) },
 	m_error_diffusion{ type == DitherType::DITHER_ERROR_DIFFUSION }
 {
-}
-catch (const std::bad_alloc &)
-{
+} catch (const std::bad_alloc &) {
 	throw ZimgOutOfMemory{};
 }
 
