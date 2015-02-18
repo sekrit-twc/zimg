@@ -47,14 +47,14 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 	e.left.resize(e.filter_rows);
 
 	for (size_t i = 0; i < m.rows(); ++i) {
-		int left = (int)std::min(m.row_left(i), m.cols() - width);
+		unsigned left = (unsigned)std::min(m.row_left(i), m.cols() - width);
 
 		for (size_t j = 0; j < width; ++j) {
 			float coeff = (float)m[i][left + j];
 			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
 
-			e.data[(ptrdiff_t)i * e.stride + j] = coeff;
-			e.data_i16[(ptrdiff_t)i * e.stride_i16 + j] = coeff_i16;
+			e.data[i * e.stride + j] = coeff;
+			e.data_i16[i * e.stride_i16 + j] = coeff_i16;
 		}
 		e.left[i] = left;
 	}

@@ -117,21 +117,21 @@ struct FilterContext {
 	/**
 	 * Number of coefficients in a filter row.
 	 */
-	int filter_width;
+	unsigned filter_width;
 
 	/**
 	 * Total number of filter rows.
 	 */
-	int filter_rows;
+	unsigned filter_rows;
 
 	/**
 	 * Distance between filter rows in units of coefficients.
 	 */
-	ptrdiff_t stride;
-	ptrdiff_t stride_i16;
+	unsigned stride;
+	unsigned stride_i16;
 
 	/**
-	 * Filter data.
+	 * Filter data. Integer data is signed 1.14 fixed point.
 	 */
 	AlignedVector<float> data;
 	AlignedVector<int16_t> data_i16;
@@ -139,7 +139,7 @@ struct FilterContext {
 	/**
 	 * Indices of leftmost non-zero coefficients.
 	 */
-	AlignedVector<int> left;
+	AlignedVector<unsigned> left;
 };
 
 /**

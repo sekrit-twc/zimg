@@ -19,26 +19,29 @@ namespace resize {;
 class Filter;
 class ResizeImpl;
 
+struct ResizeContext;
+
 /**
  * Resize: applies a resizing filter.
  *
  * Each instance is applicable only for its given set of resizing parameters.
  */
 class Resize {
-	int m_src_width;
-	int m_src_height;
-	int m_dst_width;
-	int m_dst_height;
+	unsigned m_src_width;
+	unsigned m_src_height;
+	unsigned m_dst_width;
+	unsigned m_dst_height;
 	bool m_skip_h;
 	bool m_skip_v;
 	std::shared_ptr<ResizeImpl> m_impl_h;
 	std::shared_ptr<ResizeImpl> m_impl_v;
 
-	size_t max_frame_size(PixelType type) const;
+	template <class Alloc>
+	ResizeContext get_context(Alloc &alloc, PixelType type) const;
 
-	void invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
+	void process1d(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 
-	void invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
+	void process2d(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 public:
 	/**
 	 * Initialize a null context. Cannot be used for execution.

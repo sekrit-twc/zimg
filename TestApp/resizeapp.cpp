@@ -95,7 +95,7 @@ void execute(const resize::Resize &resize, const Frame &in, Frame &out, int time
 
 	Frame src{ in.width(), in.height(), pxsize, planes };
 	Frame dst{ out.width(), out.height(), pxsize, planes };
-	auto tmp = allocate_buffer(resize.tmp_size(type), type);
+	auto tmp = allocate_buffer(resize.tmp_size(type), PixelType::BYTE);
 
 	convert_frame(in, src, PixelType::BYTE, type, true, false);
 

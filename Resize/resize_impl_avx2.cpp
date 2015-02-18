@@ -4,8 +4,9 @@
 #include <cstdint>
 #include <immintrin.h>
 #include "Common/align.h"
+#include "Common/linebuffer.h"
 #include "Common/osdep.h"
-#include "Common/plane.h"
+#include "Common/pixel.h"
 #include "filter.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
@@ -18,7 +19,7 @@ namespace {;
 struct ScalarPolicy_F16 {
 	typedef float num_type;
 
-	FORCE_INLINE float coeff(const FilterContext &filter, ptrdiff_t row, ptrdiff_t k)
+	FORCE_INLINE float coeff(const FilterContext &filter, unsigned row, unsigned k)
 	{
 		return filter.data[row * filter.stride + k];
 	}
@@ -127,607 +128,611 @@ inline FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
 }
 
 template <bool DoLoop>
-void filter_plane_u16_h(const FilterContext &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst)
+void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
+	__m256i cached[16];
 
 	const int16_t *filter_data = filter.data_i16.data();
-	const int *filter_left = filter.left.data();
-	ptrdiff_t filter_stride = filter.stride_i16;
+	const unsigned *filter_left = filter.left.data();
+	unsigned filter_stride = filter.stride_i16;
 
-	int src_width = src.width();
-	int src_height = src.height();
+	unsigned src_width = src.right();
+	unsigned dst_left = dst.left();
+	unsigned dst_right = dst.right();
 
-	for (ptrdiff_t i = 0; i < mod(src_height, 8); i += 8) {
-		__m256i cached[16];
+	const uint16_t *src_ptr0 = src[n + 0];
+	const uint16_t *src_ptr1 = src[n + 1];
+	const uint16_t *src_ptr2 = src[n + 2];
+	const uint16_t *src_ptr3 = src[n + 3];
+	const uint16_t *src_ptr4 = src[n + 4];
+	const uint16_t *src_ptr5 = src[n + 5];
+	const uint16_t *src_ptr6 = src[n + 6];
+	const uint16_t *src_ptr7 = src[n + 7];
 
-		const uint16_t *src_ptr0 = src[i + 0];
-		const uint16_t *src_ptr1 = src[i + 1];
-		const uint16_t *src_ptr2 = src[i + 2];
-		const uint16_t *src_ptr3 = src[i + 3];
-		const uint16_t *src_ptr4 = src[i + 4];
-		const uint16_t *src_ptr5 = src[i + 5];
-		const uint16_t *src_ptr6 = src[i + 6];
-		const uint16_t *src_ptr7 = src[i + 7];
+	uint16_t *dst_ptr0 = dst[n + 0];
+	uint16_t *dst_ptr1 = dst[n + 1];
+	uint16_t *dst_ptr2 = dst[n + 2];
+	uint16_t *dst_ptr3 = dst[n + 3];
+	uint16_t *dst_ptr4 = dst[n + 4];
+	uint16_t *dst_ptr5 = dst[n + 5];
+	uint16_t *dst_ptr6 = dst[n + 6];
+	uint16_t *dst_ptr7 = dst[n + 7];
 
-		uint16_t *dst_ptr0 = dst[i + 0];
-		uint16_t *dst_ptr1 = dst[i + 1];
-		uint16_t *dst_ptr2 = dst[i + 2];
-		uint16_t *dst_ptr3 = dst[i + 3];
-		uint16_t *dst_ptr4 = dst[i + 4];
-		uint16_t *dst_ptr5 = dst[i + 5];
-		uint16_t *dst_ptr6 = dst[i + 6];
-		uint16_t *dst_ptr7 = dst[i + 7];
+	unsigned j;
 
-		ptrdiff_t j;
+	for (j = dst_left; j < dst_right; ++j) {
+		__m256i accum = _mm256_setzero_si256();
 
-		for (j = 0; j < filter.filter_rows; ++j) {
-			__m256i accum = _mm256_setzero_si256();
+		const int16_t *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
 
-			const int16_t *filter_row = &filter_data[j * filter_stride];
-			ptrdiff_t left = filter_left[j];
+		if (left + filter_stride > src_width)
+			break;
 
-			if (left + filter_stride > src_width)
-				break;
+		for (unsigned k = 0; k < (DoLoop ? filter.filter_width : 16); k += 16) {
+			__m256i coeff = _mm256_load_si256((const __m256i *)&filter_row[k]);
+			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
 
-			for (ptrdiff_t k = 0; k < (DoLoop ? filter.filter_width : 16); k += 16) {
-				__m256i coeff = _mm256_load_si256((const __m256i *)&filter_row[k]);
-				__m256i x0, x1, x2, x3, x4, x5, x6, x7;
+			x0 = _mm256_loadu_si256((const __m256i *)&src_ptr0[left + k]);
+			x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
+			x0 = _mm256_madd_epi16(coeff, x0);
 
-				x0 = _mm256_loadu_si256((const __m256i *)&src_ptr0[left + k]);
-				x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-				x0 = _mm256_madd_epi16(coeff, x0);
+			x1 = _mm256_loadu_si256((const __m256i *)&src_ptr1[left + k]);
+			x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
+			x1 = _mm256_madd_epi16(coeff, x1);
 
-				x1 = _mm256_loadu_si256((const __m256i *)&src_ptr1[left + k]);
-				x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-				x1 = _mm256_madd_epi16(coeff, x1);
+			x2 = _mm256_loadu_si256((const __m256i *)&src_ptr2[left + k]);
+			x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
+			x2 = _mm256_madd_epi16(coeff, x2);
 
-				x2 = _mm256_loadu_si256((const __m256i *)&src_ptr2[left + k]);
-				x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-				x2 = _mm256_madd_epi16(coeff, x2);
+			x3 = _mm256_loadu_si256((const __m256i *)&src_ptr3[left + k]);
+			x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
+			x3 = _mm256_madd_epi16(coeff, x3);
 
-				x3 = _mm256_loadu_si256((const __m256i *)&src_ptr3[left + k]);
-				x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-				x3 = _mm256_madd_epi16(coeff, x3);
+			x4 = _mm256_loadu_si256((const __m256i *)&src_ptr4[left + k]);
+			x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
+			x4 = _mm256_madd_epi16(coeff, x4);
 
-				x4 = _mm256_loadu_si256((const __m256i *)&src_ptr4[left + k]);
-				x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-				x4 = _mm256_madd_epi16(coeff, x4);
+			x5 = _mm256_loadu_si256((const __m256i *)&src_ptr5[left + k]);
+			x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
+			x5 = _mm256_madd_epi16(coeff, x5);
 
-				x5 = _mm256_loadu_si256((const __m256i *)&src_ptr5[left + k]);
-				x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-				x5 = _mm256_madd_epi16(coeff, x5);
+			x6 = _mm256_loadu_si256((const __m256i *)&src_ptr6[left + k]);
+			x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
+			x6 = _mm256_madd_epi16(coeff, x6);
 
-				x6 = _mm256_loadu_si256((const __m256i *)&src_ptr6[left + k]);
-				x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-				x6 = _mm256_madd_epi16(coeff, x6);
+			x7 = _mm256_loadu_si256((const __m256i *)&src_ptr7[left + k]);
+			x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
+			x7 = _mm256_madd_epi16(coeff, x7);
 
-				x7 = _mm256_loadu_si256((const __m256i *)&src_ptr7[left + k]);
-				x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
-				x7 = _mm256_madd_epi16(coeff, x7);
+			transpose8_epi32(x0, x1, x2, x3, x4, x5, x6, x7);
 
-				transpose8_epi32(x0, x1, x2, x3, x4, x5, x6, x7);
+			x0 = _mm256_add_epi32(x0, x4);
+			x1 = _mm256_add_epi32(x1, x5);
+			x2 = _mm256_add_epi32(x2, x6);
+			x3 = _mm256_add_epi32(x3, x7);
 
-				x0 = _mm256_add_epi32(x0, x4);
-				x1 = _mm256_add_epi32(x1, x5);
-				x2 = _mm256_add_epi32(x2, x6);
-				x3 = _mm256_add_epi32(x3, x7);
+			x0 = _mm256_add_epi32(x0, x2);
+			x1 = _mm256_add_epi32(x1, x3);
 
-				x0 = _mm256_add_epi32(x0, x2);
-				x1 = _mm256_add_epi32(x1, x3);
-
-				accum = _mm256_add_epi32(accum, x0);
-				accum = _mm256_add_epi32(accum, x1);
-			}
-			cached[j % 16] = accum;
-
-			if (j % 16 == 15) {
-				ptrdiff_t dst_j = mod(j, 16);
-				__m256i packed;
-
-				transpose8_epi32(cached[0], cached[1], cached[2], cached[3], cached[8], cached[9], cached[10], cached[11]);
-				transpose8_epi32(cached[4], cached[5], cached[6], cached[7], cached[12], cached[13], cached[14], cached[15]);
-
-				packed = pack_i30_epi32(cached[0], cached[4]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr0[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[1], cached[5]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr1[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[2], cached[6]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr2[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[3], cached[7]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr3[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[8], cached[12]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr4[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[9], cached[13]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr5[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[10], cached[14]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr6[dst_j], packed);
-
-				packed = pack_i30_epi32(cached[11], cached[15]);
-				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm256_store_si256((__m256i *)&dst_ptr7[dst_j], packed);
-			}
+			accum = _mm256_add_epi32(accum, x0);
+			accum = _mm256_add_epi32(accum, x1);
 		}
-		filter_plane_h_scalar(filter, src, dst, i, i + 8, mod(j, 16), filter.filter_rows, ScalarPolicy_U16{});
+		cached[j % 16] = accum;
+
+		if (j % 16 == 15) {
+			unsigned dst_j = mod(j, 16);
+			__m256i packed;
+
+			transpose8_epi32(cached[0], cached[1], cached[2], cached[3], cached[8], cached[9], cached[10], cached[11]);
+			transpose8_epi32(cached[4], cached[5], cached[6], cached[7], cached[12], cached[13], cached[14], cached[15]);
+
+			packed = pack_i30_epi32(cached[0], cached[4]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr0[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[1], cached[5]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr1[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[2], cached[6]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr2[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[3], cached[7]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr3[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[8], cached[12]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr4[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[9], cached[13]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr5[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[10], cached[14]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr6[dst_j], packed);
+
+			packed = pack_i30_epi32(cached[11], cached[15]);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+			_mm256_store_si256((__m256i *)&dst_ptr7[dst_j], packed);
+		}
 	}
-	filter_plane_h_scalar(filter, src, dst, mod(src_height, 8), src_height, 0, filter.filter_rows, ScalarPolicy_U16{});
+	filter_line_h_scalar(filter, src, dst, n, n + 8, mod(j, 16), dst_right, ScalarPolicy_U16{});
 }
 
 template <bool DoLoop, class T, class Policy>
-void filter_plane_fp_h(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst, Policy policy)
+void filter_line_fp_h(const FilterContext &filter, const LineBuffer<T> &src, LineBuffer<T> &dst, unsigned n, Policy policy)
 {
+	__m256 cached[8];
+
 	const float *filter_data = filter.data.data();
-	const int *filter_left = filter.left.data();
-	ptrdiff_t filter_stride = filter.stride;
+	const unsigned *filter_left = filter.left.data();
+	unsigned filter_stride = filter.stride;
 
-	int src_width = src.width();
-	int src_height = src.height();
+	unsigned src_width = src.right();
+	unsigned dst_left = dst.left();
+	unsigned dst_right = dst.right();
 
-	for (ptrdiff_t i = 0; i < mod(src_height, 8); i += 8) {
-		__m256 cached[8];
+	const T *src_ptr0 = src[n + 0];
+	const T *src_ptr1 = src[n + 1];
+	const T *src_ptr2 = src[n + 2];
+	const T *src_ptr3 = src[n + 3];
+	const T *src_ptr4 = src[n + 4];
+	const T *src_ptr5 = src[n + 5];
+	const T *src_ptr6 = src[n + 6];
+	const T *src_ptr7 = src[n + 7];
 
-		const T *src_ptr0 = src[i + 0];
-		const T *src_ptr1 = src[i + 1];
-		const T *src_ptr2 = src[i + 2];
-		const T *src_ptr3 = src[i + 3];
-		const T *src_ptr4 = src[i + 4];
-		const T *src_ptr5 = src[i + 5];
-		const T *src_ptr6 = src[i + 6];
-		const T *src_ptr7 = src[i + 7];
+	T *dst_ptr0 = dst[n + 0];
+	T *dst_ptr1 = dst[n + 1];
+	T *dst_ptr2 = dst[n + 2];
+	T *dst_ptr3 = dst[n + 3];
+	T *dst_ptr4 = dst[n + 4];
+	T *dst_ptr5 = dst[n + 5];
+	T *dst_ptr6 = dst[n + 6];
+	T *dst_ptr7 = dst[n + 7];
 
-		T *dst_ptr0 = dst[i + 0];
-		T *dst_ptr1 = dst[i + 1];
-		T *dst_ptr2 = dst[i + 2];
-		T *dst_ptr3 = dst[i + 3];
-		T *dst_ptr4 = dst[i + 4];
-		T *dst_ptr5 = dst[i + 5];
-		T *dst_ptr6 = dst[i + 6];
-		T *dst_ptr7 = dst[i + 7];
+	unsigned j;
 
-		ptrdiff_t j;
+	for (j = dst_left; j < dst_right; ++j) {
+		__m256 accum = _mm256_setzero_ps();
 
-		for (j = 0; j < filter.filter_rows; ++j) {
-			__m256 accum = _mm256_setzero_ps();
+		const float *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
 
-			const float *filter_row = &filter_data[j * filter_stride];
-			ptrdiff_t left = filter_left[j];
+		if (left + filter_stride > src_width)
+			break;
 
-			if (left + filter_stride > src_width)
-				break;
+		for (unsigned k = 0; k < (DoLoop ? filter.filter_width : 8); k += 8) {
+			__m256 coeff = _mm256_load_ps(filter_row + k);
+			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 
-			for (ptrdiff_t k = 0; k < (DoLoop ? filter.filter_width : 8); k += 8) {
-				__m256 coeff = _mm256_load_ps(filter_row + k);
-				__m256 x0, x1, x2, x3, x4, x5, x6, x7;
-
-				x0 = policy.loadu_8(&src_ptr0[left + k]);
-				x0 = _mm256_mul_ps(coeff, x0);
+			x0 = policy.loadu_8(&src_ptr0[left + k]);
+			x0 = _mm256_mul_ps(coeff, x0);
 				
-				x1 = policy.loadu_8(&src_ptr1[left + k]);
-				x1 = _mm256_mul_ps(coeff, x1);
+			x1 = policy.loadu_8(&src_ptr1[left + k]);
+			x1 = _mm256_mul_ps(coeff, x1);
 
-				x2 = policy.loadu_8(&src_ptr2[left + k]);
-				x2 = _mm256_mul_ps(coeff, x2);
+			x2 = policy.loadu_8(&src_ptr2[left + k]);
+			x2 = _mm256_mul_ps(coeff, x2);
 
-				x3 = policy.loadu_8(&src_ptr3[left + k]);
-				x3 = _mm256_mul_ps(coeff, x3);
+			x3 = policy.loadu_8(&src_ptr3[left + k]);
+			x3 = _mm256_mul_ps(coeff, x3);
 
-				x4 = policy.loadu_8(&src_ptr4[left + k]);
-				x4 = _mm256_mul_ps(coeff, x4);
+			x4 = policy.loadu_8(&src_ptr4[left + k]);
+			x4 = _mm256_mul_ps(coeff, x4);
 
-				x5 = policy.loadu_8(&src_ptr5[left + k]);
-				x5 = _mm256_mul_ps(coeff, x5);
+			x5 = policy.loadu_8(&src_ptr5[left + k]);
+			x5 = _mm256_mul_ps(coeff, x5);
 
-				x6 = policy.loadu_8(&src_ptr6[left + k]);
-				x6 = _mm256_mul_ps(coeff, x6);
+			x6 = policy.loadu_8(&src_ptr6[left + k]);
+			x6 = _mm256_mul_ps(coeff, x6);
 
-				x7 = policy.loadu_8(&src_ptr7[left + k]);
-				x7 = _mm256_mul_ps(coeff, x7);
+			x7 = policy.loadu_8(&src_ptr7[left + k]);
+			x7 = _mm256_mul_ps(coeff, x7);
 
-				transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
+			transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
-				x0 = _mm256_add_ps(x0, x4);
-				x1 = _mm256_add_ps(x1, x5);
-				x2 = _mm256_add_ps(x2, x6);
-				x3 = _mm256_add_ps(x3, x7);
+			x0 = _mm256_add_ps(x0, x4);
+			x1 = _mm256_add_ps(x1, x5);
+			x2 = _mm256_add_ps(x2, x6);
+			x3 = _mm256_add_ps(x3, x7);
 
-				x0 = _mm256_add_ps(x0, x2);
-				x1 = _mm256_add_ps(x1, x3);
+			x0 = _mm256_add_ps(x0, x2);
+			x1 = _mm256_add_ps(x1, x3);
 
-				accum = _mm256_add_ps(accum, x0);
-				accum = _mm256_add_ps(accum, x1);
-			}
-			cached[j % 8] = accum;
-
-			if (j % 8 == 7) {
-				ptrdiff_t dst_j = mod(j, 8);
-
-				transpose8_ps(cached[0], cached[1], cached[2], cached[3], cached[4], cached[5], cached[6], cached[7]);
-
-				policy.store_8(&dst_ptr0[dst_j], cached[0]);
-				policy.store_8(&dst_ptr1[dst_j], cached[1]);
-				policy.store_8(&dst_ptr2[dst_j], cached[2]);
-				policy.store_8(&dst_ptr3[dst_j], cached[3]);
-				policy.store_8(&dst_ptr4[dst_j], cached[4]);
-				policy.store_8(&dst_ptr5[dst_j], cached[5]);
-				policy.store_8(&dst_ptr6[dst_j], cached[6]);
-				policy.store_8(&dst_ptr7[dst_j], cached[7]);
-			}
+			accum = _mm256_add_ps(accum, x0);
+			accum = _mm256_add_ps(accum, x1);
 		}
-		filter_plane_h_scalar(filter, src, dst, i, i + 8, mod(j, 8), filter.filter_rows, policy);
+		cached[j % 8] = accum;
+
+		if (j % 8 == 7) {
+			unsigned dst_j = mod(j, 8);
+
+			transpose8_ps(cached[0], cached[1], cached[2], cached[3], cached[4], cached[5], cached[6], cached[7]);
+
+			policy.store_8(&dst_ptr0[dst_j], cached[0]);
+			policy.store_8(&dst_ptr1[dst_j], cached[1]);
+			policy.store_8(&dst_ptr2[dst_j], cached[2]);
+			policy.store_8(&dst_ptr3[dst_j], cached[3]);
+			policy.store_8(&dst_ptr4[dst_j], cached[4]);
+			policy.store_8(&dst_ptr5[dst_j], cached[5]);
+			policy.store_8(&dst_ptr6[dst_j], cached[6]);
+			policy.store_8(&dst_ptr7[dst_j], cached[7]);
+		}
 	}
-	filter_plane_h_scalar(filter, src, dst, mod(src_height, 8), src_height, 0, filter.filter_rows, policy);
+	filter_line_h_scalar(filter, src, dst, n, n + 8, mod(j, 8), dst_right, policy);
 }
 
-void filter_plane_u16_v(const FilterContext &filter, const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp)
+void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
 
 	const int16_t *filter_data = filter.data_i16.data();
-	const int *filter_left = filter.left.data();
-	ptrdiff_t filter_stride = filter.stride_i16;
+	const unsigned *filter_left = filter.left.data();
+	unsigned filter_stride = filter.stride_i16;
 
-	int src_width = src.width();
+	unsigned left = dst.left();
+	unsigned right = dst.right();
 
-	for (ptrdiff_t i = 0; i < filter.filter_rows; ++i) {
-		const int16_t *filter_row = &filter_data[i * filter_stride];
-		int top = filter_left[i];
-		uint16_t *dst_ptr = dst[i];
+	const int16_t *filter_row = &filter_data[n * filter_stride];
+	unsigned top = filter_left[n];
+	uint16_t *dst_ptr = dst[n];
+	uint32_t *accum_tmp = (uint32_t *)tmp;
 
-		for (ptrdiff_t k = 0; k < mod(filter.filter_width, 8); k += 8) {
-			const uint16_t *src_ptr0 = src[top + k + 0];
-			const uint16_t *src_ptr1 = src[top + k + 1];
-			const uint16_t *src_ptr2 = src[top + k + 2];
-			const uint16_t *src_ptr3 = src[top + k + 3];
-			const uint16_t *src_ptr4 = src[top + k + 4];
-			const uint16_t *src_ptr5 = src[top + k + 5];
-			const uint16_t *src_ptr6 = src[top + k + 6];
-			const uint16_t *src_ptr7 = src[top + k + 7];
+	for (unsigned k = 0; k < mod(filter.filter_width, 8); k += 8) {
+		const uint16_t *src_ptr0 = src[top + k + 0];
+		const uint16_t *src_ptr1 = src[top + k + 1];
+		const uint16_t *src_ptr2 = src[top + k + 2];
+		const uint16_t *src_ptr3 = src[top + k + 3];
+		const uint16_t *src_ptr4 = src[top + k + 4];
+		const uint16_t *src_ptr5 = src[top + k + 5];
+		const uint16_t *src_ptr6 = src[top + k + 6];
+		const uint16_t *src_ptr7 = src[top + k + 7];
 
-			__m256i coeff0 = _mm256_set1_epi16(filter_row[k + 0]);
-			__m256i coeff1 = _mm256_set1_epi16(filter_row[k + 1]);
-			__m256i coeff2 = _mm256_set1_epi16(filter_row[k + 2]);
-			__m256i coeff3 = _mm256_set1_epi16(filter_row[k + 3]);
-			__m256i coeff4 = _mm256_set1_epi16(filter_row[k + 4]);
-			__m256i coeff5 = _mm256_set1_epi16(filter_row[k + 5]);
-			__m256i coeff6 = _mm256_set1_epi16(filter_row[k + 6]);
-			__m256i coeff7 = _mm256_set1_epi16(filter_row[k + 7]);
+		__m256i coeff0 = _mm256_set1_epi16(filter_row[k + 0]);
+		__m256i coeff1 = _mm256_set1_epi16(filter_row[k + 1]);
+		__m256i coeff2 = _mm256_set1_epi16(filter_row[k + 2]);
+		__m256i coeff3 = _mm256_set1_epi16(filter_row[k + 3]);
+		__m256i coeff4 = _mm256_set1_epi16(filter_row[k + 4]);
+		__m256i coeff5 = _mm256_set1_epi16(filter_row[k + 5]);
+		__m256i coeff6 = _mm256_set1_epi16(filter_row[k + 6]);
+		__m256i coeff7 = _mm256_set1_epi16(filter_row[k + 7]);
 
-			__m256i coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
-			__m256i coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
-			__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
-			__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
+		__m256i coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
+		__m256i coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
+		__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
+		__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
 
-			for (ptrdiff_t j = 0; j < mod(src_width, 16); j += 16) {
-				__m256i x0, x1, x2, x3, x4, x5, x6, x7;
-				__m256i packed;
+		for (unsigned j = left; j < mod(right, 16); j += 16) {
+			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
+			__m256i packed;
 
-				__m256i accum0l = _mm256_setzero_si256();
-				__m256i accum0h = _mm256_setzero_si256();
-				__m256i accum1l = _mm256_setzero_si256();
-				__m256i accum1h = _mm256_setzero_si256();
+			__m256i accum0l = _mm256_setzero_si256();
+			__m256i accum0h = _mm256_setzero_si256();
+			__m256i accum1l = _mm256_setzero_si256();
+			__m256i accum1h = _mm256_setzero_si256();
 
-				x0 = _mm256_load_si256((const __m256i *)&src_ptr0[j]);
-				x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-				x1 = _mm256_load_si256((const __m256i *)&src_ptr1[j]);
-				x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-				fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
+			x0 = _mm256_load_si256((const __m256i *)&src_ptr0[j]);
+			x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
+			x1 = _mm256_load_si256((const __m256i *)&src_ptr1[j]);
+			x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
+			fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
 
-				x2 = _mm256_load_si256((const __m256i *)&src_ptr2[j]);
-				x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-				x3 = _mm256_load_si256((const __m256i *)&src_ptr3[j]);
-				x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-				fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
+			x2 = _mm256_load_si256((const __m256i *)&src_ptr2[j]);
+			x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
+			x3 = _mm256_load_si256((const __m256i *)&src_ptr3[j]);
+			x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
+			fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
 
-				x4 = _mm256_load_si256((const __m256i *)&src_ptr4[j]);
-				x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-				x5 = _mm256_load_si256((const __m256i *)&src_ptr5[j]);
-				x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-				fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
+			x4 = _mm256_load_si256((const __m256i *)&src_ptr4[j]);
+			x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
+			x5 = _mm256_load_si256((const __m256i *)&src_ptr5[j]);
+			x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
+			fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
 
-				x6 = _mm256_load_si256((const __m256i *)&src_ptr6[j]);
-				x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-				x7 = _mm256_load_si256((const __m256i *)&src_ptr7[j]);
-				x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
-				fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
+			x6 = _mm256_load_si256((const __m256i *)&src_ptr6[j]);
+			x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
+			x7 = _mm256_load_si256((const __m256i *)&src_ptr7[j]);
+			x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
+			fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
 
-				accum0l = _mm256_add_epi32(accum0l, accum1l);
-				accum0h = _mm256_add_epi32(accum0h, accum1h);
+			accum0l = _mm256_add_epi32(accum0l, accum1l);
+			accum0h = _mm256_add_epi32(accum0h, accum1h);
 
-				if (k) {
-					accum0l = _mm256_add_epi32(accum0l, _mm256_load_si256((const __m256i *)&tmp[j * 2 + 0]));
-					accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&tmp[j * 2 + 16]));
-				}
-
-				if (k == filter.filter_width - 8) {					
-					packed = pack_i30_epi32(accum0l, accum0h);
-					packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-					_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
-				} else {
-					_mm256_store_si256((__m256i *)&tmp[j * 2 + 0], accum0l);
-					_mm256_store_si256((__m256i *)&tmp[j * 2 + 16], accum0h);
-				}
+			if (k) {
+				accum0l = _mm256_add_epi32(accum0l, _mm256_load_si256((const __m256i *)&accum_tmp[j + 0]));
+				accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&accum_tmp[j + 8]));
 			}
-		}
-		if (filter.filter_width % 8) {
-			ptrdiff_t m = filter.filter_width % 8;
-			ptrdiff_t k = filter.filter_width - m;
 
-			const uint16_t *src_ptr0 = src[top + k + 0];
-			const uint16_t *src_ptr1 = src[top + k + 1];
-			const uint16_t *src_ptr2 = src[top + k + 2];
-			const uint16_t *src_ptr3 = src[top + k + 3];
-			const uint16_t *src_ptr4 = src[top + k + 4];
-			const uint16_t *src_ptr5 = src[top + k + 5];
-			const uint16_t *src_ptr6 = src[top + k + 6];
-
-			__m256i coeff0 = _mm256_set1_epi16(filter_row[k + 0]);
-			__m256i coeff1 = _mm256_set1_epi16(filter_row[k + 1]);
-			__m256i coeff2 = _mm256_set1_epi16(filter_row[k + 2]);
-			__m256i coeff3 = _mm256_set1_epi16(filter_row[k + 3]);
-			__m256i coeff4 = _mm256_set1_epi16(filter_row[k + 4]);
-			__m256i coeff5 = _mm256_set1_epi16(filter_row[k + 5]);
-			__m256i coeff6 = _mm256_set1_epi16(filter_row[k + 6]);
-			__m256i coeff7 = _mm256_setzero_si256();
-
-			__m256i coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
-			__m256i coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
-			__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
-			__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
-
-			for (ptrdiff_t j = 0; j < mod(src_width, 16); j += 16) {
-				__m256i x0, x1, x2, x3, x4, x5, x6, x7;
-				__m256i packed;
-
-				__m256i accum0l = _mm256_setzero_si256();
-				__m256i accum0h = _mm256_setzero_si256();
-				__m256i accum1l = _mm256_setzero_si256();
-				__m256i accum1h = _mm256_setzero_si256();
-
-				switch (m) {
-				case 7:
-					x7 = INT16_MIN_EPI16;
-					x6 = _mm256_load_si256((const __m256i *)&src_ptr6[j]);
-					x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-					fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
-				case 6:
-					x5 = _mm256_load_si256((const __m256i *)&src_ptr5[j]);
-					x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-				case 5:
-					x4 = _mm256_load_si256((const __m256i *)&src_ptr4[j]);
-					x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-					fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
-				case 4:
-					x3 = _mm256_load_si256((const __m256i *)&src_ptr3[j]);
-					x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-				case 3:
-					x2 = _mm256_load_si256((const __m256i *)&src_ptr2[j]);
-					x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-					fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
-				case 2:
-					x1 = _mm256_load_si256((const __m256i *)&src_ptr1[j]);
-					x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-				case 1:
-					x0 = _mm256_load_si256((const __m256i *)&src_ptr0[j]);
-					x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-					fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
-				}
-
-				accum0l = _mm256_add_epi32(accum0l, accum1l);
-				accum0h = _mm256_add_epi32(accum0h, accum1h);
-
-				if (k) {
-					accum0l = _mm256_add_epi32(accum0l, _mm256_load_si256((const __m256i *)&tmp[j * 2 + 0]));
-					accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&tmp[j * 2 + 16]));
-				}
-
+			if (k == filter.filter_width - 8) {					
 				packed = pack_i30_epi32(accum0l, accum0h);
 				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-
 				_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
+			} else {
+				_mm256_store_si256((__m256i *)&accum_tmp[j + 0], accum0l);
+				_mm256_store_si256((__m256i *)&accum_tmp[j + 8], accum0h);
 			}
 		}
-		filter_plane_v_scalar(filter, src, dst, i, i + 1, mod(src_width, 16), src_width, ScalarPolicy_U16{});
 	}
+	if (filter.filter_width % 8) {
+		unsigned m = filter.filter_width % 8;
+		unsigned k = filter.filter_width - m;
+
+		const uint16_t *src_ptr0 = src[top + k + 0];
+		const uint16_t *src_ptr1 = src[top + k + 1];
+		const uint16_t *src_ptr2 = src[top + k + 2];
+		const uint16_t *src_ptr3 = src[top + k + 3];
+		const uint16_t *src_ptr4 = src[top + k + 4];
+		const uint16_t *src_ptr5 = src[top + k + 5];
+		const uint16_t *src_ptr6 = src[top + k + 6];
+
+		__m256i coeff0 = _mm256_set1_epi16(filter_row[k + 0]);
+		__m256i coeff1 = _mm256_set1_epi16(filter_row[k + 1]);
+		__m256i coeff2 = _mm256_set1_epi16(filter_row[k + 2]);
+		__m256i coeff3 = _mm256_set1_epi16(filter_row[k + 3]);
+		__m256i coeff4 = _mm256_set1_epi16(filter_row[k + 4]);
+		__m256i coeff5 = _mm256_set1_epi16(filter_row[k + 5]);
+		__m256i coeff6 = _mm256_set1_epi16(filter_row[k + 6]);
+		__m256i coeff7 = _mm256_setzero_si256();
+
+		__m256i coeff01 = _mm256_unpacklo_epi16(coeff0, coeff1);
+		__m256i coeff23 = _mm256_unpacklo_epi16(coeff2, coeff3);
+		__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
+		__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
+
+		for (unsigned j = left; j < mod(right, 16); j += 16) {
+			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
+			__m256i packed;
+
+			__m256i accum0l = _mm256_setzero_si256();
+			__m256i accum0h = _mm256_setzero_si256();
+			__m256i accum1l = _mm256_setzero_si256();
+			__m256i accum1h = _mm256_setzero_si256();
+
+			switch (m) {
+			case 7:
+				x7 = INT16_MIN_EPI16;
+				x6 = _mm256_load_si256((const __m256i *)&src_ptr6[j]);
+				x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
+				fmadd_epi16_2(coeff67, x6, x7, accum1l, accum1h);
+			case 6:
+				x5 = _mm256_load_si256((const __m256i *)&src_ptr5[j]);
+				x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
+			case 5:
+				x4 = _mm256_load_si256((const __m256i *)&src_ptr4[j]);
+				x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
+				fmadd_epi16_2(coeff45, x4, x5, accum0l, accum0h);
+			case 4:
+				x3 = _mm256_load_si256((const __m256i *)&src_ptr3[j]);
+				x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
+			case 3:
+				x2 = _mm256_load_si256((const __m256i *)&src_ptr2[j]);
+				x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
+				fmadd_epi16_2(coeff23, x2, x3, accum1l, accum1h);
+			case 2:
+				x1 = _mm256_load_si256((const __m256i *)&src_ptr1[j]);
+				x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
+			case 1:
+				x0 = _mm256_load_si256((const __m256i *)&src_ptr0[j]);
+				x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
+				fmadd_epi16_2(coeff01, x0, x1, accum0l, accum0h);
+			}
+
+			accum0l = _mm256_add_epi32(accum0l, accum1l);
+			accum0h = _mm256_add_epi32(accum0h, accum1h);
+
+			if (k) {
+				accum0l = _mm256_add_epi32(accum0l, _mm256_load_si256((const __m256i *)&accum_tmp[j + 0]));
+				accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&accum_tmp[j + 8]));
+			}
+
+			packed = pack_i30_epi32(accum0l, accum0h);
+			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
+
+			_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
+		}
+	}
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 16), right, ScalarPolicy_U16{});
 }
 
 template <class T, class Policy>
-void filter_plane_fp_v(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst, Policy policy)
+void filter_line_fp_v(const FilterContext &filter, const LineBuffer<T> &src, LineBuffer<T> &dst, unsigned n, Policy policy)
 {
 	const float *filter_data = filter.data.data();
-	const int *filter_left = filter.left.data();
-	ptrdiff_t filter_stride = filter.stride;
+	const unsigned *filter_left = filter.left.data();
+	unsigned filter_stride = filter.stride;
 
-	int src_width = src.width();
+	unsigned left = dst.left();
+	unsigned right = dst.right();
 
-	for (ptrdiff_t i = 0; i < filter.filter_rows; ++i) {
-		const float *filter_row = &filter_data[i * filter_stride];
-		int top = filter_left[i];
-		T *dst_ptr = dst[i];
+	const float *filter_row = &filter_data[n * filter_stride];
+	unsigned top = filter_left[n];
+	T *dst_ptr = dst[n];
 
-		for (ptrdiff_t k = 0; k < mod(filter.filter_width, 8); k += 8) {
-			const T *src_ptr0 = src[top + k + 0];
-			const T *src_ptr1 = src[top + k + 1];
-			const T *src_ptr2 = src[top + k + 2];
-			const T *src_ptr3 = src[top + k + 3];
-			const T *src_ptr4 = src[top + k + 4];
-			const T *src_ptr5 = src[top + k + 5];
-			const T *src_ptr6 = src[top + k + 6];
-			const T *src_ptr7 = src[top + k + 7];
+	for (unsigned k = 0; k < mod(filter.filter_width, 8); k += 8) {
+		const T *src_ptr0 = src[top + k + 0];
+		const T *src_ptr1 = src[top + k + 1];
+		const T *src_ptr2 = src[top + k + 2];
+		const T *src_ptr3 = src[top + k + 3];
+		const T *src_ptr4 = src[top + k + 4];
+		const T *src_ptr5 = src[top + k + 5];
+		const T *src_ptr6 = src[top + k + 6];
+		const T *src_ptr7 = src[top + k + 7];
 
-			__m256 coeff0 = _mm256_broadcast_ss(&filter_row[k + 0]);
-			__m256 coeff1 = _mm256_broadcast_ss(&filter_row[k + 1]);
-			__m256 coeff2 = _mm256_broadcast_ss(&filter_row[k + 2]);
-			__m256 coeff3 = _mm256_broadcast_ss(&filter_row[k + 3]);
-			__m256 coeff4 = _mm256_broadcast_ss(&filter_row[k + 4]);
-			__m256 coeff5 = _mm256_broadcast_ss(&filter_row[k + 5]);
-			__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
-			__m256 coeff7 = _mm256_broadcast_ss(&filter_row[k + 7]);
+		__m256 coeff0 = _mm256_broadcast_ss(&filter_row[k + 0]);
+		__m256 coeff1 = _mm256_broadcast_ss(&filter_row[k + 1]);
+		__m256 coeff2 = _mm256_broadcast_ss(&filter_row[k + 2]);
+		__m256 coeff3 = _mm256_broadcast_ss(&filter_row[k + 3]);
+		__m256 coeff4 = _mm256_broadcast_ss(&filter_row[k + 4]);
+		__m256 coeff5 = _mm256_broadcast_ss(&filter_row[k + 5]);
+		__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
+		__m256 coeff7 = _mm256_broadcast_ss(&filter_row[k + 7]);
 
-			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
-				__m256 x0, x1, x2, x3, x4, x5, x6, x7;
-				__m256 accum0, accum1, accum2, accum3;
+		for (unsigned j = left; j < mod(right, 8); j += 8) {
+			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
+			__m256 accum0, accum1, accum2, accum3;
 
-				x0 = policy.load_8(&src_ptr0[j]);
-				accum0 = _mm256_mul_ps(coeff0, x0);
+			x0 = policy.load_8(&src_ptr0[j]);
+			accum0 = _mm256_mul_ps(coeff0, x0);
 
-				x1 = policy.load_8(&src_ptr1[j]);
-				accum1 = _mm256_mul_ps(coeff1, x1);
+			x1 = policy.load_8(&src_ptr1[j]);
+			accum1 = _mm256_mul_ps(coeff1, x1);
 
-				x2 = policy.load_8(&src_ptr2[j]);
-				accum2 = _mm256_mul_ps(coeff2, x2);
+			x2 = policy.load_8(&src_ptr2[j]);
+			accum2 = _mm256_mul_ps(coeff2, x2);
 
+			x3 = policy.load_8(&src_ptr3[j]);
+			accum3 = _mm256_mul_ps(coeff3, x3);
+
+			x4 = policy.load_8(&src_ptr4[j]);
+			accum0 = _mm256_fmadd_ps(coeff4, x4, accum0);
+
+			x5 = policy.load_8(&src_ptr5[j]);
+			accum1 = _mm256_fmadd_ps(coeff5, x5, accum1);
+
+			x6 = policy.load_8(&src_ptr6[j]);
+			accum2 = _mm256_fmadd_ps(coeff6, x6, accum2);
+
+			x7 = policy.load_8(&src_ptr7[j]);
+			accum3 = _mm256_fmadd_ps(coeff7, x7, accum3);
+
+			accum0 = _mm256_add_ps(accum0, accum2);
+			accum1 = _mm256_add_ps(accum1, accum3);
+			accum0 = _mm256_add_ps(accum0, accum1);
+
+			if (k)
+				accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
+
+			policy.store_8(&dst_ptr[j], accum0);
+		}
+	}
+	if (filter.filter_width % 8) {
+		unsigned m = filter.filter_width % 8;
+		unsigned k = filter.filter_width - m;
+
+		const T *src_ptr0 = src[top + k + 0];
+		const T *src_ptr1 = src[top + k + 1];
+		const T *src_ptr2 = src[top + k + 2];
+		const T *src_ptr3 = src[top + k + 3];
+		const T *src_ptr4 = src[top + k + 4];
+		const T *src_ptr5 = src[top + k + 5];
+		const T *src_ptr6 = src[top + k + 6];
+
+		__m256 coeff0 = _mm256_broadcast_ss(&filter_row[k + 0]);
+		__m256 coeff1 = _mm256_broadcast_ss(&filter_row[k + 1]);
+		__m256 coeff2 = _mm256_broadcast_ss(&filter_row[k + 2]);
+		__m256 coeff3 = _mm256_broadcast_ss(&filter_row[k + 3]);
+		__m256 coeff4 = _mm256_broadcast_ss(&filter_row[k + 4]);
+		__m256 coeff5 = _mm256_broadcast_ss(&filter_row[k + 5]);
+		__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
+
+		for (unsigned j = left; j < mod(right, 8); j += 8) {
+			__m256 x0, x1, x2, x3, x4, x5, x6;
+
+			__m256 accum0 = _mm256_setzero_ps();
+			__m256 accum1 = _mm256_setzero_ps();
+			__m256 accum2 = _mm256_setzero_ps();
+			__m256 accum3 = _mm256_setzero_ps();
+
+			switch (m) {
+			case 7:
+				x6 = policy.load_8(&src_ptr6[j]);
+				accum2 = _mm256_mul_ps(coeff6, x6);
+			case 6:
+				x5 = policy.load_8(&src_ptr5[j]);
+				accum1 = _mm256_mul_ps(coeff5, x5);
+			case 5:
+				x4 = policy.load_8(&src_ptr4[j]);
+				accum0 = _mm256_mul_ps(coeff4, x4);
+			case 4:
 				x3 = policy.load_8(&src_ptr3[j]);
 				accum3 = _mm256_mul_ps(coeff3, x3);
-
-				x4 = policy.load_8(&src_ptr4[j]);
-				accum0 = _mm256_fmadd_ps(coeff4, x4, accum0);
-
-				x5 = policy.load_8(&src_ptr5[j]);
-				accum1 = _mm256_fmadd_ps(coeff5, x5, accum1);
-
-				x6 = policy.load_8(&src_ptr6[j]);
-				accum2 = _mm256_fmadd_ps(coeff6, x6, accum2);
-
-				x7 = policy.load_8(&src_ptr7[j]);
-				accum3 = _mm256_fmadd_ps(coeff7, x7, accum3);
-
-				accum0 = _mm256_add_ps(accum0, accum2);
-				accum1 = _mm256_add_ps(accum1, accum3);
-				accum0 = _mm256_add_ps(accum0, accum1);
-
-				if (k)
-					accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
-
-				policy.store_8(&dst_ptr[j], accum0);
+			case 3:
+				x2 = policy.load_8(&src_ptr2[j]);
+				accum2 = _mm256_fmadd_ps(coeff2, x2, accum2);
+			case 2:
+				x1 = policy.load_8(&src_ptr1[j]);
+				accum1 = _mm256_fmadd_ps(coeff1, x1, accum1);
+			case 1:
+				x0 = policy.load_8(&src_ptr0[j]);
+				accum0 = _mm256_fmadd_ps(coeff0, x0, accum0);
 			}
+
+			accum0 = _mm256_add_ps(accum0, accum2);
+			accum1 = _mm256_add_ps(accum1, accum3);
+			accum0 = _mm256_add_ps(accum0, accum1);
+
+			if (k)
+				accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
+
+			policy.store_8(&dst_ptr[j], accum0);
 		}
-		if (filter.filter_width % 8) {
-			ptrdiff_t m = filter.filter_width % 8;
-			ptrdiff_t k = filter.filter_width - m;
-
-			const T *src_ptr0 = src[top + k + 0];
-			const T *src_ptr1 = src[top + k + 1];
-			const T *src_ptr2 = src[top + k + 2];
-			const T *src_ptr3 = src[top + k + 3];
-			const T *src_ptr4 = src[top + k + 4];
-			const T *src_ptr5 = src[top + k + 5];
-			const T *src_ptr6 = src[top + k + 6];
-
-			__m256 coeff0 = _mm256_broadcast_ss(&filter_row[k + 0]);
-			__m256 coeff1 = _mm256_broadcast_ss(&filter_row[k + 1]);
-			__m256 coeff2 = _mm256_broadcast_ss(&filter_row[k + 2]);
-			__m256 coeff3 = _mm256_broadcast_ss(&filter_row[k + 3]);
-			__m256 coeff4 = _mm256_broadcast_ss(&filter_row[k + 4]);
-			__m256 coeff5 = _mm256_broadcast_ss(&filter_row[k + 5]);
-			__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
-
-			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
-				__m256 x0, x1, x2, x3, x4, x5, x6;
-
-				__m256 accum0 = _mm256_setzero_ps();
-				__m256 accum1 = _mm256_setzero_ps();
-				__m256 accum2 = _mm256_setzero_ps();
-				__m256 accum3 = _mm256_setzero_ps();
-
-				switch (m) {
-				case 7:
-					x6 = policy.load_8(&src_ptr6[j]);
-					accum2 = _mm256_mul_ps(coeff6, x6);
-				case 6:
-					x5 = policy.load_8(&src_ptr5[j]);
-					accum1 = _mm256_mul_ps(coeff5, x5);
-				case 5:
-					x4 = policy.load_8(&src_ptr4[j]);
-					accum0 = _mm256_mul_ps(coeff4, x4);
-				case 4:
-					x3 = policy.load_8(&src_ptr3[j]);
-					accum3 = _mm256_mul_ps(coeff3, x3);
-				case 3:
-					x2 = policy.load_8(&src_ptr2[j]);
-					accum2 = _mm256_fmadd_ps(coeff2, x2, accum2);
-				case 2:
-					x1 = policy.load_8(&src_ptr1[j]);
-					accum1 = _mm256_fmadd_ps(coeff1, x1, accum1);
-				case 1:
-					x0 = policy.load_8(&src_ptr0[j]);
-					accum0 = _mm256_fmadd_ps(coeff0, x0, accum0);
-				}
-
-				accum0 = _mm256_add_ps(accum0, accum2);
-				accum1 = _mm256_add_ps(accum1, accum3);
-				accum0 = _mm256_add_ps(accum0, accum1);
-
-				if (k)
-					accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
-
-				policy.store_8(&dst_ptr[j], accum0);
-			}
-		}
-		filter_plane_v_scalar(filter, src, dst, i, i + 1, mod(src_width, 8), src_width, policy);
 	}
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 8), right, policy);
 }
 
 class ResizeImplAVX2_H final : public ResizeImpl {
 public:
-	ResizeImplAVX2_H(const FilterContext &filter) : ResizeImpl(filter)
+	ResizeImplAVX2_H(const FilterContext &filter) : ResizeImpl(filter, true)
 	{}
 
-	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	unsigned output_buffering(PixelType type) const override
+	{
+		return 8;
+	}
+
+	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
 		if (m_filter.filter_width > 16)
-			filter_plane_u16_h<true>(m_filter, src, dst);
+			filter_line_u16_h<true>(m_filter, src, dst, n);
 		else
-			filter_plane_u16_h<false>(m_filter, src, dst);
+			filter_line_u16_h<false>(m_filter, src, dst, n);
 	}
 
-	void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
 		if (m_filter.filter_width > 8)
-			filter_plane_fp_h<true>(m_filter, src, dst, VectorPolicy_F16{});
+			filter_line_fp_h<true>(m_filter, src, dst, n, VectorPolicy_F16{});
 		else
-			filter_plane_fp_h<false>(m_filter, src, dst, VectorPolicy_F16{});
+			filter_line_fp_h<false>(m_filter, src, dst, n, VectorPolicy_F16{});
 	}
 
-	void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
+	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
 	{
-		if (m_filter.filter_width >= 8)
-			filter_plane_fp_h<true>(m_filter, src, dst, VectorPolicy_F32{});
+		if (m_filter.filter_width > 8)
+			filter_line_fp_h<true>(m_filter, src, dst, n, VectorPolicy_F32{});
 		else
-			filter_plane_fp_h<false>(m_filter, src, dst, VectorPolicy_F32{});
+			filter_line_fp_h<false>(m_filter, src, dst, n, VectorPolicy_F32{});
 	}
 };
 
 class ResizeImplAVX2_V final : public ResizeImpl {
 public:
-	ResizeImplAVX2_V(const FilterContext &filter) : ResizeImpl(filter)
+	ResizeImplAVX2_V(const FilterContext &filter) : ResizeImpl(filter, false)
 	{}
 
-	void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	size_t tmp_size(PixelType type, unsigned width) const override
 	{
-		filter_plane_u16_v(m_filter, src, dst, tmp);
+		return type == PixelType::WORD ? sizeof(uint32_t) * width : 0;
 	}
 
-	void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
+	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		filter_plane_fp_v(m_filter, src, dst, VectorPolicy_F16{});
+		filter_line_u16_v(m_filter, src, dst, n, tmp);
 	}
 
-	void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
+	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		filter_plane_fp_v(m_filter, src, dst, VectorPolicy_F32{});
+		filter_line_fp_v(m_filter, src, dst, n, VectorPolicy_F16{});
+	}
+
+	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
+	{
+		filter_line_fp_v(m_filter, src, dst, n, VectorPolicy_F32{});
 	}
 };
 

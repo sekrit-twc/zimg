@@ -6,16 +6,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include "Common/linebuffer.h"
 #include "Common/osdep.h"
-#include "Common/plane.h"
 #include "filter.h"
 
 namespace zimg {;
 
 enum class CPUClass;
-
-template <class T>
-class ImagePlane;
+enum class PixelType;
 
 namespace resize {;
 
@@ -59,17 +57,19 @@ struct ScalarPolicy_F32 {
 };
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_h_scalar(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
-                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
+inline FORCE_INLINE void filter_line_h_scalar(const FilterContext &filter, const LineBuffer<T> &src, LineBuffer<T> &dst,
+											  unsigned i_begin, unsigned i_end, unsigned j_begin, unsigned j_end, Policy policy)
 {
-	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
-		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-			ptrdiff_t left = filter.left[j];
-			typename Policy::num_type accum = 0;
+	typedef typename Policy::num_type num_type;
 
-			for (int k = 0; k < filter.filter_width; ++k) {
-				typename Policy::num_type coeff = policy.coeff(filter, j, k);
-				typename Policy::num_type x = policy.load(&src[i][left + k]);
+	for (unsigned i = i_begin; i < i_end; ++i) {
+		for (unsigned j = j_begin; j < j_end; ++j) {
+			unsigned left = filter.left[j];
+			num_type accum = 0;
+
+			for (unsigned k = 0; k < filter.filter_width; ++k) {
+				num_type coeff = policy.coeff(filter, j, k);
+				num_type x = policy.load(&src[i][left + k]);
 
 				accum += coeff * x;
 			}
@@ -80,17 +80,20 @@ inline FORCE_INLINE void filter_plane_h_scalar(const FilterContext &filter, cons
 }
 
 template <class T, class Policy>
-inline FORCE_INLINE void filter_plane_v_scalar(const FilterContext &filter, const ImagePlane<const T> &src, const ImagePlane<T> &dst,
-                                               ptrdiff_t i_begin, ptrdiff_t i_end, ptrdiff_t j_begin, ptrdiff_t j_end, Policy policy)
+inline FORCE_INLINE void filter_line_v_scalar(const FilterContext &filter, const LineBuffer<T> &src, LineBuffer<T> &dst,
+											  unsigned i_begin, unsigned i_end, unsigned j_begin, unsigned j_end, Policy policy)
 {
-	for (ptrdiff_t i = i_begin; i < i_end; ++i) {
-		for (ptrdiff_t j = j_begin; j < j_end; ++j) {
-			ptrdiff_t top = filter.left[i];
-			typename Policy::num_type accum = 0;
+	typedef typename Policy::num_type num_type;
 
-			for (ptrdiff_t k = 0; k < filter.filter_width; ++k) {
-				typename Policy::num_type coeff = policy.coeff(filter, i, k);
-				typename Policy::num_type x = policy.load(&src[top + k][j]);
+	for (unsigned i = i_begin; i < i_end; ++i) {
+		unsigned top = filter.left[i];
+
+		for (unsigned j = j_begin; j < j_end; ++j) {
+			num_type accum = 0;
+
+			for (unsigned k = 0; k < filter.filter_width; ++k) {
+				num_type coeff = policy.coeff(filter, i, k);
+				num_type x = policy.load(&src[top + k][j]);
 
 				accum += coeff * x;
 			}
@@ -100,51 +103,30 @@ inline FORCE_INLINE void filter_plane_v_scalar(const FilterContext &filter, cons
 	}
 }
 
-/**
- * Base class for implementations of resizing filter.
- */
 class ResizeImpl {
+	bool m_horizontal;
 protected:
-	/**
-	 * Filter coefficients.
-	 */
 	FilterContext m_filter;
 
-	/**
-	 * Initialize the implementation with the given coefficients.
-	 *
-	 * @param filter coefficients
-	 */
-	ResizeImpl(const FilterContext &filter);
+	ResizeImpl(const FilterContext &filter, bool horizontal);
 public:
-	/**
-	 * Destroy implementation.
-	 */
 	virtual ~ResizeImpl() = 0;
 
-	/**
-	 * Execute filter pass on an unsigned 16-bit image.
-	 *
-	 * @param src input plane
-	 * @param dst output plane
-	 * @param tmp temporary buffer (implementation defined size)
-	 * @throws ZimgUnsupportedError if not supported
-	 */
-	virtual void process_u16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual bool pixel_supported(PixelType type) const;
 
-	/**
-	 * Execute filter pass on a half precision 16-bit image.
-	 *
-	 * @see ResizeImpl::process_u16
-	 */
-	virtual void process_f16(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const = 0;
+	virtual size_t tmp_size(PixelType type, unsigned width) const;
 
-	/**
-	 * Execute filter pass on a single precision 32-bit image.
-	 *
-	 * @see ResizeImpl::process_u16
-	 */
-	virtual void process_f32(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const = 0;
+	virtual unsigned input_buffering(PixelType type) const;
+
+	virtual unsigned output_buffering(PixelType type) const;
+
+	unsigned dependent_line(unsigned n) const;
+
+	virtual void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const = 0;
+
+	virtual void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const = 0;
+
+	virtual void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const = 0;
 };
 
 /**
