@@ -40,6 +40,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 	e.filter_width = (unsigned)width;
 	e.filter_rows = (unsigned)m.rows();
+	e.input_width = (unsigned)m.cols();
 	e.stride = (unsigned)align(width, AlignmentOf<float>::value);
 	e.stride_i16 = (unsigned)align(width, AlignmentOf<uint16_t>::value);
 	e.data.resize((size_t)e.stride * e.filter_rows);

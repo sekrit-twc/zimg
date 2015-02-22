@@ -76,29 +76,239 @@ inline FORCE_INLINE void transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2,
 	row7 = _mm256_permute2f128_ps(tt3, tt7, 0x31);
 }
 
-inline FORCE_INLINE void transpose8_epi32(__m256i &row0, __m256i &row1, __m256i &row2, __m256i &row3, __m256i &row4, __m256i &row5, __m256i &row6, __m256i &row7)
+inline FORCE_INLINE void transpose16x8_epi16(__m256i &row0, __m256i &row1, __m256i &row2, __m256i &row3, __m256i &row4, __m256i &row5, __m256i &row6, __m256i &row7)
 {
-	__m256 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+	__m256i t0, t1, t2, t3, t4, t5, t6, t7;
+	__m256i tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
 
-	tmp0 = _mm256_castsi256_ps(row0);
-	tmp1 = _mm256_castsi256_ps(row1);
-	tmp2 = _mm256_castsi256_ps(row2);
-	tmp3 = _mm256_castsi256_ps(row3);
-	tmp4 = _mm256_castsi256_ps(row4);
-	tmp5 = _mm256_castsi256_ps(row5);
-	tmp6 = _mm256_castsi256_ps(row6);
-	tmp7 = _mm256_castsi256_ps(row7);
+	t0 = _mm256_unpacklo_epi16(row0, row1);
+	t1 = _mm256_unpacklo_epi16(row2, row3);
+	t2 = _mm256_unpacklo_epi16(row4, row5);
+	t3 = _mm256_unpacklo_epi16(row6, row7);
+	t4 = _mm256_unpackhi_epi16(row0, row1);
+	t5 = _mm256_unpackhi_epi16(row2, row3);
+	t6 = _mm256_unpackhi_epi16(row4, row5);
+	t7 = _mm256_unpackhi_epi16(row6, row7);
 
-	transpose8_ps(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
+	tt0 = _mm256_unpacklo_epi32(t0, t1);
+	tt1 = _mm256_unpackhi_epi32(t0, t1);
+	tt2 = _mm256_unpacklo_epi32(t2, t3);
+	tt3 = _mm256_unpackhi_epi32(t2, t3);
+	tt4 = _mm256_unpacklo_epi32(t4, t5);
+	tt5 = _mm256_unpackhi_epi32(t4, t5);
+	tt6 = _mm256_unpacklo_epi32(t6, t7);
+	tt7 = _mm256_unpackhi_epi32(t6, t7);
 
-	row0 = _mm256_castps_si256(tmp0);
-	row1 = _mm256_castps_si256(tmp1);
-	row2 = _mm256_castps_si256(tmp2);
-	row3 = _mm256_castps_si256(tmp3);
-	row4 = _mm256_castps_si256(tmp4);
-	row5 = _mm256_castps_si256(tmp5);
-	row6 = _mm256_castps_si256(tmp6);
-	row7 = _mm256_castps_si256(tmp7);
+	t0 = _mm256_unpacklo_epi64(tt0, tt2);
+	t1 = _mm256_unpackhi_epi64(tt0, tt2);
+	t2 = _mm256_unpacklo_epi64(tt1, tt3);
+	t3 = _mm256_unpackhi_epi64(tt1, tt3);
+	t4 = _mm256_unpacklo_epi64(tt4, tt6);
+	t5 = _mm256_unpackhi_epi64(tt4, tt6);
+	t6 = _mm256_unpacklo_epi64(tt5, tt7);
+	t7 = _mm256_unpackhi_epi64(tt5, tt7);
+
+	row0 = _mm256_permute2x128_si256(t0, t1, 0x20);
+	row1 = _mm256_permute2x128_si256(t2, t3, 0x20);
+	row2 = _mm256_permute2x128_si256(t4, t5, 0x20);
+	row3 = _mm256_permute2x128_si256(t6, t7, 0x20);
+	row4 = _mm256_permute2x128_si256(t0, t1, 0x31);
+	row5 = _mm256_permute2x128_si256(t2, t3, 0x31);
+	row6 = _mm256_permute2x128_si256(t4, t5, 0x31);
+	row7 = _mm256_permute2x128_si256(t6, t7, 0x31);
+}
+
+inline FORCE_INLINE void transpose8x16_epi16(__m256i &row01, __m256i &row23, __m256i &row45, __m256i &row67, __m256i &row89, __m256i &rowab, __m256i &rowcd, __m256i &rowef)
+{
+	__m256i t0, t1, t2, t3, t4, t5, t6, t7;
+	__m256i tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
+
+	tt0 = _mm256_permute2x128_si256(row01, row89, 0x20);
+	tt1 = _mm256_permute2x128_si256(row01, row89, 0x31);
+	tt2 = _mm256_permute2x128_si256(row23, rowab, 0x20);
+	tt3 = _mm256_permute2x128_si256(row23, rowab, 0x31);
+	tt4 = _mm256_permute2x128_si256(row45, rowcd, 0x20);
+	tt5 = _mm256_permute2x128_si256(row45, rowcd, 0x31);
+	tt6 = _mm256_permute2x128_si256(row67, rowef, 0x20);
+	tt7 = _mm256_permute2x128_si256(row67, rowef, 0x31);
+
+	t0 = _mm256_unpacklo_epi16(tt0, tt1);
+	t1 = _mm256_unpacklo_epi16(tt2, tt3);
+	t2 = _mm256_unpacklo_epi16(tt4, tt5);
+	t3 = _mm256_unpacklo_epi16(tt6, tt7);
+	t4 = _mm256_unpackhi_epi16(tt0, tt1);
+	t5 = _mm256_unpackhi_epi16(tt2, tt3);
+	t6 = _mm256_unpackhi_epi16(tt4, tt5);
+	t7 = _mm256_unpackhi_epi16(tt6, tt7);
+
+	tt0 = _mm256_unpacklo_epi32(t0, t1);
+	tt1 = _mm256_unpackhi_epi32(t0, t1);
+	tt2 = _mm256_unpacklo_epi32(t2, t3);
+	tt3 = _mm256_unpackhi_epi32(t2, t3);
+	tt4 = _mm256_unpacklo_epi32(t4, t5);
+	tt5 = _mm256_unpackhi_epi32(t4, t5);
+	tt6 = _mm256_unpacklo_epi32(t6, t7);
+	tt7 = _mm256_unpackhi_epi32(t6, t7);
+
+	row01 = _mm256_unpacklo_epi64(tt0, tt2);
+	row23 = _mm256_unpackhi_epi64(tt0, tt2);
+	row45 = _mm256_unpacklo_epi64(tt1, tt3);
+	row67 = _mm256_unpackhi_epi64(tt1, tt3);
+	row89 = _mm256_unpacklo_epi64(tt4, tt6);
+	rowab = _mm256_unpackhi_epi64(tt4, tt6);
+	rowcd = _mm256_unpacklo_epi64(tt5, tt7);
+	rowef = _mm256_unpackhi_epi64(tt5, tt7);
+}
+
+inline FORCE_INLINE void transpose_line_8x8_ps(const float *p0, const float *p1, const float *p2, const float *p3, const float *p4, const float *p5, const float *p6, const float *p7, float *dst, unsigned n)
+{
+	for (unsigned j = 0; j < mod(n, 8); j += 8) {
+		__m256 x0, x1, x2, x3, x4, x5, x6, x7;
+
+		x0 = _mm256_load_ps(&p0[j]);
+		x1 = _mm256_load_ps(&p1[j]);
+		x2 = _mm256_load_ps(&p2[j]);
+		x3 = _mm256_load_ps(&p3[j]);
+		x4 = _mm256_load_ps(&p4[j]);
+		x5 = _mm256_load_ps(&p5[j]);
+		x6 = _mm256_load_ps(&p6[j]);
+		x7 = _mm256_load_ps(&p7[j]);
+
+		transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
+
+		_mm256_store_ps(&dst[(j + 0) * 8], x0);
+		_mm256_store_ps(&dst[(j + 1) * 8], x1);
+		_mm256_store_ps(&dst[(j + 2) * 8], x2);
+		_mm256_store_ps(&dst[(j + 3) * 8], x3);
+		_mm256_store_ps(&dst[(j + 4) * 8], x4);
+		_mm256_store_ps(&dst[(j + 5) * 8], x5);
+		_mm256_store_ps(&dst[(j + 6) * 8], x6);
+		_mm256_store_ps(&dst[(j + 7) * 8], x7);
+	}
+	for (unsigned j = mod(n, 8); j < n; ++j) {
+		dst[j * 8 + 0] = p0[j];
+		dst[j * 8 + 1] = p1[j];
+		dst[j * 8 + 2] = p2[j];
+		dst[j * 8 + 3] = p3[j];
+		dst[j * 8 + 4] = p4[j];
+		dst[j * 8 + 5] = p5[j];
+		dst[j * 8 + 6] = p6[j];
+		dst[j * 8 + 7] = p7[j];
+	}
+}
+
+inline FORCE_INLINE void transpose_line_16x8_epi16(const uint16_t *p0, const uint16_t *p1, const uint16_t *p2, const uint16_t *p3, const uint16_t *p4, const uint16_t *p5, const uint16_t *p6, const uint16_t *p7, uint16_t *dst, unsigned n)
+{
+	for (unsigned j = 0; j < mod(n, 16); j += 16) {
+		__m256i x0, x1, x2, x3, x4, x5, x6, x7;
+
+		x0 = _mm256_load_si256((const __m256i *)&p0[j]);
+		x1 = _mm256_load_si256((const __m256i *)&p1[j]);
+		x2 = _mm256_load_si256((const __m256i *)&p2[j]);
+		x3 = _mm256_load_si256((const __m256i *)&p3[j]);
+		x4 = _mm256_load_si256((const __m256i *)&p4[j]);
+		x5 = _mm256_load_si256((const __m256i *)&p5[j]);
+		x6 = _mm256_load_si256((const __m256i *)&p6[j]);
+		x7 = _mm256_load_si256((const __m256i *)&p7[j]);
+
+		transpose16x8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
+
+		_mm256_store_si256((__m256i *)&dst[(j + 0) * 8], x0);
+		_mm256_store_si256((__m256i *)&dst[(j + 2) * 8], x1);
+		_mm256_store_si256((__m256i *)&dst[(j + 4) * 8], x2);
+		_mm256_store_si256((__m256i *)&dst[(j + 6) * 8], x3);
+		_mm256_store_si256((__m256i *)&dst[(j + 8) * 8], x4);
+		_mm256_store_si256((__m256i *)&dst[(j + 10) * 8], x5);
+		_mm256_store_si256((__m256i *)&dst[(j + 12) * 8], x6);
+		_mm256_store_si256((__m256i *)&dst[(j + 14) * 8], x7);
+	}
+	for (unsigned j = mod(n, 16); j < n; ++j) {
+		dst[j * 8 + 0] = p0[j];
+		dst[j * 8 + 1] = p1[j];
+		dst[j * 8 + 2] = p2[j];
+		dst[j * 8 + 3] = p3[j];
+		dst[j * 8 + 4] = p4[j];
+		dst[j * 8 + 5] = p5[j];
+		dst[j * 8 + 6] = p6[j];
+		dst[j * 8 + 7] = p7[j];
+	}
+}
+
+inline FORCE_INLINE void transpose_block_8x8_ps(const float cache[8 * 8], float *p0, float *p1, float *p2, float *p3, float *p4, float *p5, float *p6, float *p7)
+{
+	__m256 x0, x1, x2, x3, x4, x5, x6, x7;
+
+	x0 = _mm256_load_ps(&cache[0 * 8]);
+	x1 = _mm256_load_ps(&cache[1 * 8]);
+	x2 = _mm256_load_ps(&cache[2 * 8]);
+	x3 = _mm256_load_ps(&cache[3 * 8]);
+	x4 = _mm256_load_ps(&cache[4 * 8]);
+	x5 = _mm256_load_ps(&cache[5 * 8]);
+	x6 = _mm256_load_ps(&cache[6 * 8]);
+	x7 = _mm256_load_ps(&cache[7 * 8]);
+
+	transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
+
+	_mm256_store_ps(p0, x0);
+	_mm256_store_ps(p1, x1);
+	_mm256_store_ps(p2, x2);
+	_mm256_store_ps(p3, x3);
+	_mm256_store_ps(p4, x4);
+	_mm256_store_ps(p5, x5);
+	_mm256_store_ps(p6, x6);
+	_mm256_store_ps(p7, x7);
+}
+
+inline FORCE_INLINE void transpose_block_8x16_epi16(const uint16_t cache[8 * 16], uint16_t *p0, uint16_t *p1, uint16_t *p2, uint16_t *p3, uint16_t *p4, uint16_t *p5, uint16_t *p6, uint16_t *p7)
+{
+	__m256i x0, x1, x2, x3, x4, x5, x6, x7;
+
+	x0 = _mm256_load_si256((const __m256i *)&cache[0 * 16]);
+	x1 = _mm256_load_si256((const __m256i *)&cache[1 * 16]);
+	x2 = _mm256_load_si256((const __m256i *)&cache[2 * 16]);
+	x3 = _mm256_load_si256((const __m256i *)&cache[3 * 16]);
+	x4 = _mm256_load_si256((const __m256i *)&cache[4 * 16]);
+	x5 = _mm256_load_si256((const __m256i *)&cache[5 * 16]);
+	x6 = _mm256_load_si256((const __m256i *)&cache[6 * 16]);
+	x7 = _mm256_load_si256((const __m256i *)&cache[7 * 16]);
+
+	transpose8x16_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
+
+	_mm256_store_si256((__m256i *)p0, x0);
+	_mm256_store_si256((__m256i *)p1, x1);
+	_mm256_store_si256((__m256i *)p2, x2);
+	_mm256_store_si256((__m256i *)p3, x3);
+	_mm256_store_si256((__m256i *)p4, x4);
+	_mm256_store_si256((__m256i *)p5, x5);
+	_mm256_store_si256((__m256i *)p6, x6);
+	_mm256_store_si256((__m256i *)p7, x7);
+}
+
+inline FORCE_INLINE void scatter_ps(__m256 x, float *p0, float *p1, float *p2, float *p3, float *p4, float *p5, float *p6, float *p7)
+{
+	ALIGNED float tmp[8];
+
+	_mm256_store_ps(tmp, x);
+	*p0 = tmp[0];
+	*p1 = tmp[1];
+	*p2 = tmp[2];
+	*p3 = tmp[3];
+	*p4 = tmp[4];
+	*p5 = tmp[5];
+	*p6 = tmp[6];
+	*p7 = tmp[7];
+}
+
+inline FORCE_INLINE void scatter_epi16(__m128i x, uint16_t *p0, uint16_t *p1, uint16_t *p2, uint16_t *p3, uint16_t *p4, uint16_t *p5, uint16_t *p6, uint16_t *p7)
+{
+	*p0 = _mm_extract_epi16(x, 0);
+	*p1 = _mm_extract_epi16(x, 1);
+	*p2 = _mm_extract_epi16(x, 2);
+	*p3 = _mm_extract_epi16(x, 3);
+	*p4 = _mm_extract_epi16(x, 4);
+	*p5 = _mm_extract_epi16(x, 5);
+	*p6 = _mm_extract_epi16(x, 6);
+	*p7 = _mm_extract_epi16(x, 7);
 }
 
 // Performs accum[0,1] += x * unpack[lo,hi](a,b)
@@ -124,14 +334,37 @@ inline FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
 	lo = _mm256_srai_epi32(lo, 14);
 	hi = _mm256_srai_epi32(hi, 14);
 
-	return  _mm256_packs_epi32(lo, hi);
+	return _mm256_packs_epi32(lo, hi);
 }
 
-template <bool DoLoop>
-void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n)
+inline FORCE_INLINE __m256i interleave_lanes_epi16(__m256i x)
+{
+	__m256i MASK = _mm256_set_epi8(15, 14, 7, 6, 13, 12, 5, 4, 11, 10, 3, 2, 9, 8, 1, 0,
+	                               15, 14, 7, 6, 13, 12, 5, 4, 11, 10, 3, 2, 9, 8, 1, 0);
+
+	x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(3, 1, 2, 0));
+	x = _mm256_shuffle_epi8(x, MASK);
+
+	return x;
+}
+
+inline FORCE_INLINE __m128i pack1_i30_to_u16(__m256i x)
+{
+	__m256i offset = _mm256_set1_epi32(1 << 13);
+
+	x = _mm256_add_epi32(x, offset);
+	x = _mm256_srai_epi32(x, 14);
+	x = _mm256_packs_epi32(x, x);
+
+	x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(3, 1, 2, 0));
+
+	return _mm256_castsi256_si128(x);
+}
+
+template <unsigned N>
+void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
 {
 	__m256i INT16_MIN_EPI16 = _mm256_set1_epi16(INT16_MIN);
-	__m256i cached[16];
 
 	const int16_t *filter_data = filter.data_i16.data();
 	const unsigned *filter_left = filter.left.data();
@@ -140,15 +373,6 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	unsigned src_width = src.right();
 	unsigned dst_left = dst.left();
 	unsigned dst_right = dst.right();
-
-	const uint16_t *src_ptr0 = src[n + 0];
-	const uint16_t *src_ptr1 = src[n + 1];
-	const uint16_t *src_ptr2 = src[n + 2];
-	const uint16_t *src_ptr3 = src[n + 3];
-	const uint16_t *src_ptr4 = src[n + 4];
-	const uint16_t *src_ptr5 = src[n + 5];
-	const uint16_t *src_ptr6 = src[n + 6];
-	const uint16_t *src_ptr7 = src[n + 7];
 
 	uint16_t *dst_ptr0 = dst[n + 0];
 	uint16_t *dst_ptr1 = dst[n + 1];
@@ -159,116 +383,79 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	uint16_t *dst_ptr6 = dst[n + 6];
 	uint16_t *dst_ptr7 = dst[n + 7];
 
-	unsigned j;
+	uint16_t *ttmp = (uint16_t *)tmp;
+	ALIGNED uint16_t cache[8 * 16];
 
-	for (j = dst_left; j < dst_right; ++j) {
-		__m256i accum = _mm256_setzero_si256();
+	transpose_line_16x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
+	for (unsigned j = dst_left; j < mod(dst_right, 16); ++j) {
 		const int16_t *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
+		__m256i accum = _mm256_setzero_si256();
+		__m256i x, c;
+		__m128i result;
 
-		if (left + filter_stride > src_width)
-			break;
+#define ITER(xiter) \
+  do { \
+    x = _mm256_loadu_si256((const __m256i *)&ttmp[(left + (xiter)) * 8]); \
+    c = _mm256_broadcastd_epi32(_mm_loadu_si128((const __m128i *)&filter_row[xiter])); \
+    x = _mm256_add_epi16(x, INT16_MIN_EPI16); \
+    x = interleave_lanes_epi16(x); \
+    x = _mm256_madd_epi16(c, x); \
+    accum = _mm256_add_epi32(accum, x); \
+  } while (0);
 
-		for (unsigned k = 0; k < (DoLoop ? filter.filter_width : 16); k += 16) {
-			__m256i coeff = _mm256_load_si256((const __m256i *)&filter_row[k]);
-			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
-
-			x0 = _mm256_loadu_si256((const __m256i *)&src_ptr0[left + k]);
-			x0 = _mm256_add_epi16(x0, INT16_MIN_EPI16);
-			x0 = _mm256_madd_epi16(coeff, x0);
-
-			x1 = _mm256_loadu_si256((const __m256i *)&src_ptr1[left + k]);
-			x1 = _mm256_add_epi16(x1, INT16_MIN_EPI16);
-			x1 = _mm256_madd_epi16(coeff, x1);
-
-			x2 = _mm256_loadu_si256((const __m256i *)&src_ptr2[left + k]);
-			x2 = _mm256_add_epi16(x2, INT16_MIN_EPI16);
-			x2 = _mm256_madd_epi16(coeff, x2);
-
-			x3 = _mm256_loadu_si256((const __m256i *)&src_ptr3[left + k]);
-			x3 = _mm256_add_epi16(x3, INT16_MIN_EPI16);
-			x3 = _mm256_madd_epi16(coeff, x3);
-
-			x4 = _mm256_loadu_si256((const __m256i *)&src_ptr4[left + k]);
-			x4 = _mm256_add_epi16(x4, INT16_MIN_EPI16);
-			x4 = _mm256_madd_epi16(coeff, x4);
-
-			x5 = _mm256_loadu_si256((const __m256i *)&src_ptr5[left + k]);
-			x5 = _mm256_add_epi16(x5, INT16_MIN_EPI16);
-			x5 = _mm256_madd_epi16(coeff, x5);
-
-			x6 = _mm256_loadu_si256((const __m256i *)&src_ptr6[left + k]);
-			x6 = _mm256_add_epi16(x6, INT16_MIN_EPI16);
-			x6 = _mm256_madd_epi16(coeff, x6);
-
-			x7 = _mm256_loadu_si256((const __m256i *)&src_ptr7[left + k]);
-			x7 = _mm256_add_epi16(x7, INT16_MIN_EPI16);
-			x7 = _mm256_madd_epi16(coeff, x7);
-
-			transpose8_epi32(x0, x1, x2, x3, x4, x5, x6, x7);
-
-			x0 = _mm256_add_epi32(x0, x4);
-			x1 = _mm256_add_epi32(x1, x5);
-			x2 = _mm256_add_epi32(x2, x6);
-			x3 = _mm256_add_epi32(x3, x7);
-
-			x0 = _mm256_add_epi32(x0, x2);
-			x1 = _mm256_add_epi32(x1, x3);
-
-			accum = _mm256_add_epi32(accum, x0);
-			accum = _mm256_add_epi32(accum, x1);
+		if (N) {
+			switch (N) {
+			case 8: case 7: ITER(6);
+			case 6: case 5: ITER(4);
+			case 4: case 3: ITER(2);
+			case 2: case 1: ITER(0);
+			}
+		} else {
+			for (unsigned k = 0; k < filter.filter_width; k += 2) {
+				ITER(k);
+			}
 		}
-		cached[j % 16] = accum;
+#undef ITER
+
+		result = pack1_i30_to_u16(accum);
+		result = _mm_sub_epi16(result, _mm256_castsi256_si128(INT16_MIN_EPI16));
+
+		_mm_store_si128((__m128i *)&cache[(j % 16) * 8], result);
 
 		if (j % 16 == 15) {
-			unsigned dst_j = mod(j, 16);
-			__m256i packed;
-
-			transpose8_epi32(cached[0], cached[1], cached[2], cached[3], cached[8], cached[9], cached[10], cached[11]);
-			transpose8_epi32(cached[4], cached[5], cached[6], cached[7], cached[12], cached[13], cached[14], cached[15]);
-
-			packed = pack_i30_epi32(cached[0], cached[4]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr0[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[1], cached[5]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr1[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[2], cached[6]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr2[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[3], cached[7]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr3[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[8], cached[12]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr4[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[9], cached[13]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr5[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[10], cached[14]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr6[dst_j], packed);
-
-			packed = pack_i30_epi32(cached[11], cached[15]);
-			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
-			_mm256_store_si256((__m256i *)&dst_ptr7[dst_j], packed);
+			unsigned dst_j = j - 15;
+			transpose_block_8x16_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	filter_line_h_scalar(filter, src, dst, n, n + 8, mod(j, 16), dst_right, ScalarPolicy_U16{});
+	for (unsigned j = mod(dst_right, 16); j < dst_right; ++j) {
+		const int16_t *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
+		__m256i accum = _mm256_setzero_si256();
+		__m128i result;
+
+		for (unsigned k = 0; k < filter.filter_width; k += 2) {
+			__m256i x = _mm256_loadu_si256((const __m256i *)&ttmp[(left + k) * 8]);
+			__m256i c = _mm256_broadcastd_epi32(_mm_set1_epi32(*(const int32_t *)&filter_row[k]));
+
+			x = _mm256_add_epi16(x, INT16_MIN_EPI16);
+			x = interleave_lanes_epi16(x);
+			x = _mm256_madd_epi16(c, x);
+
+			accum = _mm256_add_epi32(accum, x);
+		}
+
+		result = pack1_i30_to_u16(accum);
+		result = _mm_sub_epi16(result, _mm256_castsi256_si128(INT16_MIN_EPI16));
+
+		scatter_epi16(result, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
+	}
 }
 
-template <bool DoLoop, class T, class Policy>
-void filter_line_fp_h(const FilterContext &filter, const LineBuffer<T> &src, LineBuffer<T> &dst, unsigned n, Policy policy)
+template <unsigned N>
+void filter_line_f16_h(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
 {
-	__m256 cached[8];
-
 	const float *filter_data = filter.data.data();
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
@@ -277,94 +464,165 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<T> &src, Lin
 	unsigned dst_left = dst.left();
 	unsigned dst_right = dst.right();
 
-	const T *src_ptr0 = src[n + 0];
-	const T *src_ptr1 = src[n + 1];
-	const T *src_ptr2 = src[n + 2];
-	const T *src_ptr3 = src[n + 3];
-	const T *src_ptr4 = src[n + 4];
-	const T *src_ptr5 = src[n + 5];
-	const T *src_ptr6 = src[n + 6];
-	const T *src_ptr7 = src[n + 7];
+	uint16_t *dst_ptr0 = dst[n + 0];
+	uint16_t *dst_ptr1 = dst[n + 1];
+	uint16_t *dst_ptr2 = dst[n + 2];
+	uint16_t *dst_ptr3 = dst[n + 3];
+	uint16_t *dst_ptr4 = dst[n + 4];
+	uint16_t *dst_ptr5 = dst[n + 5];
+	uint16_t *dst_ptr6 = dst[n + 6];
+	uint16_t *dst_ptr7 = dst[n + 7];
 
-	T *dst_ptr0 = dst[n + 0];
-	T *dst_ptr1 = dst[n + 1];
-	T *dst_ptr2 = dst[n + 2];
-	T *dst_ptr3 = dst[n + 3];
-	T *dst_ptr4 = dst[n + 4];
-	T *dst_ptr5 = dst[n + 5];
-	T *dst_ptr6 = dst[n + 6];
-	T *dst_ptr7 = dst[n + 7];
+	uint16_t *ttmp = (uint16_t *)tmp;
+	ALIGNED uint16_t cache[8 * 16];
 
-	unsigned j;
+	transpose_line_16x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
-	for (j = dst_left; j < dst_right; ++j) {
-		__m256 accum = _mm256_setzero_ps();
-
+	for (unsigned j = dst_left; j < mod(dst_right, 16); ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
+		__m256 accum0 = _mm256_setzero_ps();
+		__m256 accum1 = _mm256_setzero_ps();
+		__m256 x, c;
 
-		if (left + filter_stride > src_width)
-			break;
+#define ITER(xiter) \
+  do { \
+    x = _mm256_cvtph_ps(_mm_load_si128((const __m128i *)&ttmp[(left + (xiter)) * 8])); \
+    c = _mm256_broadcast_ss(&filter_row[xiter]); \
+    if ((xiter) % 2) accum1 = _mm256_fmadd_ps(c, x, accum1); else accum0 = _mm256_fmadd_ps(c, x, accum0); \
+  } while (0);
 
-		for (unsigned k = 0; k < (DoLoop ? filter.filter_width : 8); k += 8) {
-			__m256 coeff = _mm256_load_ps(filter_row + k);
-			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
-
-			x0 = policy.loadu_8(&src_ptr0[left + k]);
-			x0 = _mm256_mul_ps(coeff, x0);
-				
-			x1 = policy.loadu_8(&src_ptr1[left + k]);
-			x1 = _mm256_mul_ps(coeff, x1);
-
-			x2 = policy.loadu_8(&src_ptr2[left + k]);
-			x2 = _mm256_mul_ps(coeff, x2);
-
-			x3 = policy.loadu_8(&src_ptr3[left + k]);
-			x3 = _mm256_mul_ps(coeff, x3);
-
-			x4 = policy.loadu_8(&src_ptr4[left + k]);
-			x4 = _mm256_mul_ps(coeff, x4);
-
-			x5 = policy.loadu_8(&src_ptr5[left + k]);
-			x5 = _mm256_mul_ps(coeff, x5);
-
-			x6 = policy.loadu_8(&src_ptr6[left + k]);
-			x6 = _mm256_mul_ps(coeff, x6);
-
-			x7 = policy.loadu_8(&src_ptr7[left + k]);
-			x7 = _mm256_mul_ps(coeff, x7);
-
-			transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
-
-			x0 = _mm256_add_ps(x0, x4);
-			x1 = _mm256_add_ps(x1, x5);
-			x2 = _mm256_add_ps(x2, x6);
-			x3 = _mm256_add_ps(x3, x7);
-
-			x0 = _mm256_add_ps(x0, x2);
-			x1 = _mm256_add_ps(x1, x3);
-
-			accum = _mm256_add_ps(accum, x0);
-			accum = _mm256_add_ps(accum, x1);
+		if (N) {
+			switch (N) {
+			case 8: ITER(7);
+			case 7: ITER(6);
+			case 6: ITER(5);
+			case 5: ITER(4);
+			case 4: ITER(3);
+			case 3: ITER(2);
+			case 2: ITER(1);
+			case 1: ITER(0);
+			}
+		} else {
+			for (unsigned k = 0; k < filter.filter_width; k += 4) {
+				ITER(k + 3);
+				ITER(k + 2);
+				ITER(k + 1);
+				ITER(k + 0);
+			}
 		}
-		cached[j % 8] = accum;
+#undef ITER
 
-		if (j % 8 == 7) {
-			unsigned dst_j = mod(j, 8);
+		if (N != 1)
+			accum0 = _mm256_add_ps(accum0, accum1);
 
-			transpose8_ps(cached[0], cached[1], cached[2], cached[3], cached[4], cached[5], cached[6], cached[7]);
+		_mm_store_si128((__m128i *)&cache[(j % 16) * 8], _mm256_cvtps_ph(accum0, 0));
 
-			policy.store_8(&dst_ptr0[dst_j], cached[0]);
-			policy.store_8(&dst_ptr1[dst_j], cached[1]);
-			policy.store_8(&dst_ptr2[dst_j], cached[2]);
-			policy.store_8(&dst_ptr3[dst_j], cached[3]);
-			policy.store_8(&dst_ptr4[dst_j], cached[4]);
-			policy.store_8(&dst_ptr5[dst_j], cached[5]);
-			policy.store_8(&dst_ptr6[dst_j], cached[6]);
-			policy.store_8(&dst_ptr7[dst_j], cached[7]);
+		if (j % 16 == 15) {
+			unsigned dst_j = j - 15;
+			transpose_block_8x16_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	filter_line_h_scalar(filter, src, dst, n, n + 8, mod(j, 8), dst_right, policy);
+	for (unsigned j = mod(dst_right, 16); j < dst_right; ++j) {
+		const float *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
+		__m256 accum = _mm256_setzero_ps();
+
+		for (unsigned k = 0; k < filter.filter_width; ++k) {
+			__m256 x = _mm256_cvtph_ps(_mm_load_si128((const __m128i *)&ttmp[(left + k) * 8]));
+			__m256 c = _mm256_broadcast_ss(&filter_row[k]);
+
+			accum = _mm256_fmadd_ps(c, x, accum);
+		}
+
+		scatter_epi16(_mm256_cvtps_ph(accum, 0), &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
+	}
+}
+
+template <unsigned N>
+void filter_line_f32_h(const FilterContext &filter, const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp)
+{
+	const float *filter_data = filter.data.data();
+	const unsigned *filter_left = filter.left.data();
+	unsigned filter_stride = filter.stride;
+
+	unsigned src_width = src.right();
+	unsigned dst_left = dst.left();
+	unsigned dst_right = dst.right();
+
+	float *dst_ptr0 = dst[n + 0];
+	float *dst_ptr1 = dst[n + 1];
+	float *dst_ptr2 = dst[n + 2];
+	float *dst_ptr3 = dst[n + 3];
+	float *dst_ptr4 = dst[n + 4];
+	float *dst_ptr5 = dst[n + 5];
+	float *dst_ptr6 = dst[n + 6];
+	float *dst_ptr7 = dst[n + 7];
+
+	float *ttmp = (float *)tmp;
+	ALIGNED float cache[8 * 8];
+
+	transpose_line_8x8_ps(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
+
+	for (unsigned j = dst_left; j < mod(dst_right, 8); ++j) {
+		const float *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
+		__m256 accum0 = _mm256_setzero_ps();
+		__m256 accum1 = _mm256_setzero_ps();
+		__m256 x, c;
+
+#define ITER(xiter) \
+  do { \
+    x = _mm256_load_ps(&ttmp[(left + (xiter)) * 8]); \
+    c = _mm256_broadcast_ss(&filter_row[xiter]); \
+    if ((xiter) % 2) accum1 = _mm256_fmadd_ps(c, x, accum1); else accum0 = _mm256_fmadd_ps(c, x, accum0); \
+  } while (0);
+
+		if (N) {
+			switch (N) {
+			case 8: ITER(7);
+			case 7: ITER(6);
+			case 6: ITER(5);
+			case 5: ITER(4);
+			case 4: ITER(3);
+			case 3: ITER(2);
+			case 2: ITER(1);
+			case 1: ITER(0);
+			}
+		} else {
+			for (unsigned k = 0; k < filter.filter_width; k += 4) {
+				ITER(k + 3);
+				ITER(k + 2);
+				ITER(k + 1);
+				ITER(k + 0);
+			}
+		}
+#undef ITER
+
+		if (N != 1)
+			accum0 = _mm256_add_ps(accum0, accum1);
+
+		_mm256_store_ps(&cache[(j % 8) * 8], accum0);
+
+		if (j % 8 == 7) {
+			unsigned dst_j = j - 7;
+			transpose_block_8x8_ps(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
+		}
+	}
+	for (unsigned j = mod(dst_right, 8); j < dst_right; ++j) {
+		const float *filter_row = &filter_data[j * filter_stride];
+		unsigned left = filter_left[j];
+		__m256 accum = _mm256_setzero_ps();
+
+		for (unsigned k = 0; k < filter.filter_width; ++k) {
+			__m256 x = _mm256_load_ps(&ttmp[(left + k) * 8]);
+			__m256 c = _mm256_broadcast_ss(&filter_row[k]);
+
+			accum = _mm256_fmadd_ps(c, x, accum);
+		}
+
+		scatter_ps(accum, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
+	}
 }
 
 void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
@@ -672,6 +930,11 @@ public:
 	ResizeImplAVX2_H(const FilterContext &filter) : ResizeImpl(filter, true)
 	{}
 
+	size_t tmp_size(PixelType type, unsigned width) const override
+	{
+		return 8 * align((size_t)(m_filter.input_width + 32) * pixel_size(type), ALIGNMENT);
+	}
+
 	unsigned output_buffering(PixelType type) const override
 	{
 		return 8;
@@ -679,26 +942,35 @@ public:
 
 	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		if (m_filter.filter_width > 16)
-			filter_line_u16_h<true>(m_filter, src, dst, n);
-		else
-			filter_line_u16_h<false>(m_filter, src, dst, n);
+#define CASE(x) case (x): filter_line_u16_h<x>(m_filter, src, dst, n, tmp); break;
+		switch (m_filter.filter_width) {
+			CASE(8) CASE(7) CASE(6) CASE(5) CASE(4) CASE(3) CASE(2) CASE(1)
+		default:
+			filter_line_u16_h<0>(m_filter, src, dst, n, tmp);
+		}
+#undef CASE
 	}
 
 	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		if (m_filter.filter_width > 8)
-			filter_line_fp_h<true>(m_filter, src, dst, n, VectorPolicy_F16{});
-		else
-			filter_line_fp_h<false>(m_filter, src, dst, n, VectorPolicy_F16{});
+#define CASE(x) case (x): filter_line_f16_h<x>(m_filter, src, dst, n, tmp); break;
+		switch (m_filter.filter_width) {
+		CASE(8) CASE(7) CASE(6) CASE(5) CASE(4) CASE(3) CASE(2) CASE(1)
+		default:
+			filter_line_f16_h<0>(m_filter, src, dst, n, tmp);
+		}
+#undef CASE
 	}
 
 	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
 	{
-		if (m_filter.filter_width > 8)
-			filter_line_fp_h<true>(m_filter, src, dst, n, VectorPolicy_F32{});
-		else
-			filter_line_fp_h<false>(m_filter, src, dst, n, VectorPolicy_F32{});
+#define CASE(x) case (x): filter_line_f32_h<x>(m_filter, src, dst, n, tmp); break;
+		switch (m_filter.filter_width) {
+			CASE(8) CASE(7) CASE(6) CASE(5) CASE(4) CASE(3) CASE(2) CASE(1)
+		default:
+			filter_line_f32_h<0>(m_filter, src, dst, n, tmp);
+		}
+#undef CASE
 	}
 };
 

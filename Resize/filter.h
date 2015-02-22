@@ -125,6 +125,11 @@ struct FilterContext {
 	unsigned filter_rows;
 
 	/**
+	 * Width of the filter input.
+	 */
+	unsigned input_width;
+
+	/**
 	 * Distance between filter rows in units of coefficients.
 	 */
 	unsigned stride;
