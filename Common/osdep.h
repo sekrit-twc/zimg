@@ -11,6 +11,12 @@
   #define FORCE_INLINE
 #endif
 
+#if defined(_MSC_VER)
+  #define ALIGNED __declspec(align(32))
+#else
+  #define ALIGNED alignas(32)
+#endif
+
 #if defined(_MSC_VER) || defined(__GNUC__)
   #define RESTRICT __restrict
 #else
