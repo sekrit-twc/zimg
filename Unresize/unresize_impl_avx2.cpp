@@ -296,7 +296,7 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 				
 			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				__m256 x0, x1, x2, x3, x4, x5, x6, x7;
-				__m256 accum0, accum1, accum2, accum3;
+				__m256 accum0, accum1;
 
 				x0 = policy.load_8(&src_ptr0[j]);
 				accum0 = _mm256_mul_ps(coeff0, x0);
@@ -305,10 +305,10 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 				accum1 = _mm256_mul_ps(coeff1, x1);
 
 				x2 = policy.load_8(&src_ptr2[j]);
-				accum2 = _mm256_mul_ps(coeff2, x2);
+				accum0 = _mm256_fmadd_ps(coeff2, x2, accum0);
 
 				x3 = policy.load_8(&src_ptr3[j]);
-				accum3 = _mm256_mul_ps(coeff3, x3);
+				accum1 = _mm256_fmadd_ps(coeff3, x3, accum1);
 
 				x4 = policy.load_8(&src_ptr4[j]);
 				accum0 = _mm256_fmadd_ps(coeff4, x4, accum0);
@@ -317,15 +317,12 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 				accum1 = _mm256_fmadd_ps(coeff5, x5, accum1);
 
 				x6 = policy.load_8(&src_ptr6[j]);
-				accum2 = _mm256_fmadd_ps(coeff6, x6, accum2);
+				accum0 = _mm256_fmadd_ps(coeff6, x6, accum0);
 
 				x7 = policy.load_8(&src_ptr7[j]);
-				accum3 = _mm256_fmadd_ps(coeff7, x7, accum3);
+				accum1 = _mm256_fmadd_ps(coeff7, x7, accum1);
 
-				accum0 = _mm256_add_ps(accum0, accum2);
-				accum1 = _mm256_add_ps(accum1, accum3);
 				accum0 = _mm256_add_ps(accum0, accum1);
-
 				if (k)
 					accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
 
@@ -357,25 +354,23 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 
 				__m256 accum0 = _mm256_setzero_ps();
 				__m256 accum1 = _mm256_setzero_ps();
-				__m256 accum2 = _mm256_setzero_ps();
-				__m256 accum3 = _mm256_setzero_ps();
 
 				switch (m) {
 				case 7:
 					x6 = policy.load_8(&src_ptr6[j]);
-					accum2 = _mm256_mul_ps(coeff6, x6);
+					accum0 = _mm256_mul_ps(coeff6, x6);
 				case 6:
 					x5 = policy.load_8(&src_ptr5[j]);
 					accum1 = _mm256_mul_ps(coeff5, x5);
 				case 5:
 					x4 = policy.load_8(&src_ptr4[j]);
-					accum0 = _mm256_mul_ps(coeff4, x4);
+					accum0 = _mm256_fmadd_ps(coeff4, x4, accum0);
 				case 4:
 					x3 = policy.load_8(&src_ptr3[j]);
-					accum3 = _mm256_mul_ps(coeff3, x3);
+					accum1 = _mm256_fmadd_ps(coeff3, x3, accum1);
 				case 3:
 					x2 = policy.load_8(&src_ptr2[j]);
-					accum2 = _mm256_fmadd_ps(coeff2, x2, accum2);
+					accum0 = _mm256_fmadd_ps(coeff2, x2, accum0);
 				case 2:
 					x1 = policy.load_8(&src_ptr1[j]);
 					accum1 = _mm256_fmadd_ps(coeff1, x1, accum1);
@@ -384,10 +379,7 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 					accum0 = _mm256_fmadd_ps(coeff0, x0, accum0);
 				}
 
-				accum0 = _mm256_add_ps(accum0, accum2);
-				accum1 = _mm256_add_ps(accum1, accum3);
 				accum0 = _mm256_add_ps(accum0, accum1);
-
 				if (k)
 					accum0 = _mm256_add_ps(accum0, policy.load_8(&dst_ptr[j]));
 
