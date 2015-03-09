@@ -187,9 +187,6 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 	if (width <= support)
 		throw ZimgIllegalArgument{ "subwindow too small" };
 
-	double minpos = 0.5;
-	double maxpos = (double)src_dim - 0.5;
-
 	// Preserving center position with point upsampling filter is impossible.
 	// Instead, the top-left position is preserved to avoid mirroring artifacts.
 	if (filter_size == 1 && scale >= 1.0)
@@ -212,10 +209,10 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 			double real_pos;
 
 			// Mirror the position if it goes beyond image bounds.
-			if (xpos < minpos)
-				real_pos = 2.0 * minpos - xpos;
-			else if (xpos > maxpos)
-				real_pos = 2.0 * maxpos - xpos;
+			if (xpos < 0.0)
+				real_pos = -xpos;
+			else if (xpos >= src_dim)
+				real_pos = std::min(2.0 * src_dim - xpos, src_dim - 0.5);
 			else
 				real_pos = xpos;
 
