@@ -190,6 +190,11 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 	double minpos = 0.5;
 	double maxpos = (double)src_dim - 0.5;
 
+	// Preserving center position with point upsampling filter is impossible.
+	// Instead, the top-left position is preserved to avoid mirroring artifacts.
+	if (filter_size == 1 && scale >= 1.0)
+		shift += 0.5;
+
 	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
 	for (int i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
