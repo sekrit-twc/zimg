@@ -688,6 +688,7 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 	vsapi->createFilter(in, out, "resize", vs_resize_init, vs_resize_get_frame, vs_resize_free, fmParallel, 0, data, core);
 	return;
 fail:
+	vsapi->setError(out, fail_str);
 	vsapi->freeNode(node);
 	zimg_resize_delete(resize_ctx_y);
 	zimg_resize_delete(resize_ctx_uv);
