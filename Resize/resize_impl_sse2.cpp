@@ -206,7 +206,7 @@ inline FORCE_INLINE void fmadd_epi16_epi32(__m128i a, __m128i b, __m128i &accum0
 	accum1 = _mm_add_epi32(accum1, uphi);
 }
 
-inline FORCE_INLINE __m128i pack_i30_epi32(__m128i lo, __m128i hi)
+inline FORCE_INLINE __m128i pack_i30_to_epi16(__m128i lo, __m128i hi)
 {
 	__m128i offset = _mm_set1_epi32(1 << 13);
 
@@ -284,7 +284,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 		}
 #undef ITER
 
-		result = pack_i30_epi32(accum_lo, accum_hi);
+		result = pack_i30_to_epi16(accum_lo, accum_hi);
 		result = _mm_sub_epi16(result, INT16_MIN_EPI16);
 
 		_mm_store_si128((__m128i *)&cache[(j % 8) * 8], result);
@@ -319,7 +319,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			accum_hi = _mm_madd_epi16(c, hi);
 		}
 
-		result = pack_i30_epi32(accum_lo, accum_hi);
+		result = pack_i30_to_epi16(accum_lo, accum_hi);
 		result = _mm_sub_epi16(result, INT16_MIN_EPI16);
 
 		scatter_epi16(result, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
@@ -545,7 +545,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 			}
 
 			if (k == filter.filter_width - 4) {
-				packed = pack_i30_epi32(accum0l, accum0h);
+				packed = pack_i30_to_epi16(accum0l, accum0h);
 				packed = _mm_sub_epi16(packed, INT16_MIN_EPI16);
 				_mm_store_si128((__m128i *)&dst_ptr[j], packed);
 			} else {
@@ -598,7 +598,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 				accum0h = _mm_add_epi32(accum0h, _mm_load_si128((const __m128i *)&accum_tmp[j + 4]));
 			}
 
-			packed = pack_i30_epi32(accum0l, accum0h);
+			packed = pack_i30_to_epi16(accum0l, accum0h);
 			packed = _mm_sub_epi16(packed, INT16_MIN_EPI16);
 
 			_mm_store_si128((__m128i *)&dst_ptr[j], packed);

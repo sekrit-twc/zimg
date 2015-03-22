@@ -324,7 +324,7 @@ inline FORCE_INLINE void fmadd_epi16_2(__m256i x, __m256i a, __m256i b, __m256i 
 	accum1 = _mm256_add_epi32(accum1, tmphi);
 }
 
-inline FORCE_INLINE __m256i pack_i30_epi32(__m256i lo, __m256i hi)
+inline FORCE_INLINE __m256i pack_i30_to_epi16(__m256i lo, __m256i hi)
 {
 	__m256i offset = _mm256_set1_epi32(1 << 13);
 
@@ -348,7 +348,7 @@ inline FORCE_INLINE __m256i interleave_lanes_epi16(__m256i x)
 	return x;
 }
 
-inline FORCE_INLINE __m128i pack1_i30_to_u16(__m256i x)
+inline FORCE_INLINE __m128i pack1_i30_to_epi16(__m256i x)
 {
 	__m256i offset = _mm256_set1_epi32(1 << 13);
 
@@ -419,7 +419,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 		}
 #undef ITER
 
-		result = pack1_i30_to_u16(accum);
+		result = pack1_i30_to_epi16(accum);
 		result = _mm_sub_epi16(result, _mm256_castsi256_si128(INT16_MIN_EPI16));
 
 		_mm_store_si128((__m128i *)&cache[(j % 16) * 8], result);
@@ -446,7 +446,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			accum = _mm256_add_epi32(accum, x);
 		}
 
-		result = pack1_i30_to_u16(accum);
+		result = pack1_i30_to_epi16(accum);
 		result = _mm_sub_epi16(result, _mm256_castsi256_si128(INT16_MIN_EPI16));
 
 		scatter_epi16(result, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
@@ -707,7 +707,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 			}
 
 			if (k == filter.filter_width - 8) {					
-				packed = pack_i30_epi32(accum0l, accum0h);
+				packed = pack_i30_to_epi16(accum0l, accum0h);
 				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
 				_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
 			} else {
@@ -788,7 +788,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 				accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&accum_tmp[j + 8]));
 			}
 
-			packed = pack_i30_epi32(accum0l, accum0h);
+			packed = pack_i30_to_epi16(accum0l, accum0h);
 			packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
 
 			_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
