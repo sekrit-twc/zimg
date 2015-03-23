@@ -740,13 +740,13 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                           "primaries_in:int;"
 	                           "matrix_out:int:opt;"
 	                           "transfer_out:int:opt;"
-	                           "primaries_out:int:opt", vs_colorspace_create, 0, plugin);
+	                           "primaries_out:int:opt;", vs_colorspace_create, 0, plugin);
 	registerFunc("Depth", "clip:clip;"
 	                      "dither:data:opt;"
 	                      "sample:int:opt;"
 	                      "depth:int:opt;"
 	                      "fullrange_in:int:opt;"
-	                      "fullrange_out:int:opt", vs_depth_create, 0, plugin);
+	                      "fullrange_out:int:opt;", vs_depth_create, 0, plugin);
 	registerFunc("Resize", "clip:clip;"
 	                       "width:int;"
 	                       "height:int;"
