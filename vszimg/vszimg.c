@@ -484,6 +484,8 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 
 		for (p = 0; p < format->numPlanes; ++p) {
 			zimg_resize_context *resize_ctx = ((p == 1 || p == 2) && data->resize_ctx_uv) ? data->resize_ctx_uv : data->resize_ctx_y;
+			int dst_width_plane = data->vi.width >> ((p == 1 || p == 2) ? data->vi.format->subSamplingW : 0);
+			int dst_height_plane = data->vi.height >> ((p == 1 || p == 2) ? data->vi.format->subSamplingH : 0);
 
 			err = zimg_resize_process(resize_ctx,
 			                          vsapi->getReadPtr(src_frame, p),
@@ -491,8 +493,8 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 			                          tmp,
 			                          vsapi->getFrameWidth(src_frame, p),
 			                          vsapi->getFrameHeight(src_frame, p),
-			                          data->vi.width,
-			                          data->vi.height,
+			                          dst_width_plane,
+			                          dst_height_plane,
 			                          vsapi->getStride(src_frame, p),
 			                          vsapi->getStride(dst_frame, p),
 			                          pixel_type);
