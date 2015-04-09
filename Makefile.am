@@ -120,7 +120,7 @@ endif
 
 
 if TESTAPP
-bin_PROGRAMS = zimg-test
+noinst_PROGRAMS = zimg-test
 
 zimg_test_SOURCES = TestApp/apps.h \
 					TestApp/colorspaceapp.cpp \
