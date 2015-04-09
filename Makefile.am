@@ -28,8 +28,10 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Colorspace/operation_impl.cpp \
 					 Colorspace/operation_impl.h \
 					 Common/align.h \
+					 Common/alloc.h \
 					 Common/cpuinfo.h \
 					 Common/except.h \
+					 Common/linebuffer.h \
 					 Common/matrix.h \
 					 Common/osdep.h \
 					 Common/pixel.h \
