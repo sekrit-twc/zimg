@@ -147,12 +147,9 @@ Frame read_frame_bmp(const char *filename)
 			throw std::runtime_error{ "error reading bitmap data" };
 
 		for (int j = 0; j < width; ++j) {
-			frame.row_ptr(0, i - 1)[j] = buf[j * channels];
-			frame.row_ptr(1, i - 1)[j] = buf[j * channels + 1];
-			frame.row_ptr(2, i - 1)[j] = buf[j * channels + 2];
-
-			if (channels == 4)
-				frame.row_ptr(3, i - 1)[j] = buf[j * channels + 3];
+			for (int p = 0; p < channels; ++p) {
+				frame.row_ptr(p, i - 1)[j] = buf[j * channels + p];
+			}
 		}
 	}
 
