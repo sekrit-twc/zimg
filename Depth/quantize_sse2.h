@@ -5,6 +5,7 @@
 #ifndef ZIMG_DEPTH_QUANTIZE_SSE2_H_
 #define ZIMG_DEPTH_QUANTIZE_SSE2_H_
 
+#include <cstdint>
 #include <emmintrin.h>
 #include "Common/osdep.h"
 #include "Common/pixel.h"
@@ -29,13 +30,15 @@ inline FORCE_INLINE __m128i min_epi32_sse2(__m128i a, __m128i b)
 
 inline FORCE_INLINE __m128i packus_epi32_sse2(__m128i a, __m128i b)
 {
-	a = _mm_slli_epi32(a, 16);
-	a = _mm_srai_epi32(a, 16);
+	__m128i INT16_MIN_EPI32 = _mm_set1_epi32(INT16_MIN);
+	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
 
-	b = _mm_slli_epi32(b, 16);
-	b = _mm_srai_epi32(b, 16);
+	a = _mm_add_epi32(a, INT16_MIN_EPI32);
+	b = _mm_add_epi32(b, INT16_MIN_EPI32);
 
-	return _mm_packs_epi32(a, b);
+	a = _mm_packs_epi32(a, b);
+
+	return _mm_sub_epi16(a, INT16_MIN_EPI16);
 }
 
 inline FORCE_INLINE __m128 half_to_float_sse2(__m128i x)
