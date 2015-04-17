@@ -47,7 +47,7 @@ protected:
 
 		const float *dither_data = m_dither.data();
 
-		float scale = 1.0f / (float)(1 << (dst.format().depth - 1));
+		float scale = 1.0f / (float)(1L << dst.format().depth);
 		vector_type scale_ps = policy.set1(scale);
 
 		for (ptrdiff_t i = 0; i < height; ++i) {

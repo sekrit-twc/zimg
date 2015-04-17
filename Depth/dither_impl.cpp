@@ -55,8 +55,8 @@ void get_random_dithers(float *p)
 	uint_fast32_t mt_min = std::mt19937::min();
 	uint_fast32_t mt_max = std::mt19937::max();
 
-	// Dividing the random numbers by 4 chosen arbitrarily to limit noisiness.
-	std::generate_n(p, OrderedDither::NUM_DITHERS, [&]() { return normalize_dither(mt(), mt_min, mt_max) * 0.25; });
+	// Dividing the random numbers by two chosen arbitrarily to limit noisiness.
+	std::generate_n(p, OrderedDither::NUM_DITHERS, [&]() { return normalize_dither(mt(), mt_min, mt_max) * 0.5; });
 }
 
 class OrderedDitherC : public OrderedDither {
@@ -66,7 +66,7 @@ class OrderedDitherC : public OrderedDither {
 		int width = src.width();
 		int height = src.height();
 
-		float scale = 1.0f / (float)(1 << (depth - 1));
+		float scale = 1.0f / (float)(1L << depth);
 		auto dither_pixel = [=](T x, float d) { return from_float(to_float(x) + d * scale); };
 
 		for (ptrdiff_t i = 0; i < height; ++i) {
