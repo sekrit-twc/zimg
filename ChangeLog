@@ -1,0 +1,9 @@
+1.1:
+cache efficient 2d resizer
+rewrite horizontal resize kernels
+fix incorrect strength of ordered dither
+fix inaccurate error diffusion dither
+fix integer underflow in SSE2 dither
+
+1.0:
+initial release
