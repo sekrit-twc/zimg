@@ -18,16 +18,12 @@ class ErrorDiffusionC : public DitherConvert {
 		int width = src.width();
 		int height = src.height();
 
-		float *line0 = tmp + 1;
-		float *line1 = line0 + width + 2;
-		bool even = false;
+		float *prev_line = tmp + 1;
+		float *curr_line = prev_line + width + 2;
 
-		std::fill_n(tmp, ((size_t)width + 2) * 2, static_cast<T>(0));
+		std::fill_n(tmp, ((size_t)width + 2) * 2, 0.0f);
 
 		for (ptrdiff_t i = 0; i < height; ++i) {
-			float *prev_line = even ? line1 : line0;
-			float *curr_line = even ? line0 : line1;
-
 			for (ptrdiff_t j = 0; j < width; ++j) {
 				float x = unpack(src[i][j]);
 				float err = 0;
@@ -46,7 +42,7 @@ class ErrorDiffusionC : public DitherConvert {
 				curr_line[j] = x - y;
 			}
 
-			even = !even;
+			std::swap(prev_line, curr_line);
 		}
 	}
 public:
