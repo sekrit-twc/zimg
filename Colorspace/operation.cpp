@@ -29,7 +29,7 @@ Operation *create_gamma_to_linear_operation(TransferCharacteristics transfer, CP
 {
 	switch (transfer) {
 	case TransferCharacteristics::TRANSFER_709:
-		return create_rec709_gamma_operation(cpu);
+		return create_rec709_inverse_gamma_operation(cpu);
 	default:
 		throw ZimgUnsupportedError{ "unsupported transfer function" };
 	}
@@ -39,7 +39,7 @@ Operation *create_linear_to_gamma_operation(TransferCharacteristics transfer, CP
 {
 	switch (transfer) {
 	case TransferCharacteristics::TRANSFER_709:
-		return create_rec709_inverse_gamma_operation(cpu);
+		return create_rec709_gamma_operation(cpu);
 	default:
 		throw ZimgUnsupportedError{ "unsupported transfer function" };
 	}
