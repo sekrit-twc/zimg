@@ -251,8 +251,8 @@ typedef struct vs_depth_data {
 	zimg_depth_context *depth_ctx;
 	VSNodeRef *node;
 	VSVideoInfo vi;
-	int tv_in;
-	int tv_out;
+	int fullrange_in;
+	int fullrange_out;
 } vs_depth_data;
 
 static void VS_CC vs_depth_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
@@ -307,8 +307,8 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 			                         dst_pixel,
 			                         src_format->bitsPerSample,
 			                         dst_format->bitsPerSample,
-			                         data->tv_in,
-			                         data->tv_out,
+			                         data->fullrange_in,
+			                         data->fullrange_out,
 			                         p > 0 && yuv);
 			if (err) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
@@ -353,8 +353,8 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	const char *dither;
 	int sample;
 	int depth;
-	int tv_in;
-	int tv_out;
+	int fullrange_in;
+	int fullrange_out;
 
 	zimg_clear_last_error();
 
@@ -379,13 +379,13 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	if (err)
 		depth = node_fmt->bitsPerSample;
 
-	tv_in = !!vsapi->propGetInt(in, "fullrange_in", 0, &err);
+	fullrange_in = !!vsapi->propGetInt(in, "fullrange_in", 0, &err);
 	if (err)
-		tv_in = node_fmt->colorFamily == cmRGB;
+		fullrange_in = node_fmt->colorFamily == cmRGB;
 
-	tv_out = !!vsapi->propGetInt(in, "fullrange_out", 0, &err);
+	fullrange_out = !!vsapi->propGetInt(in, "fullrange_out", 0, &err);
 	if (err)
-		tv_out = node_fmt->colorFamily == cmRGB;
+		fullrange_out = node_fmt->colorFamily == cmRGB;
 
 	if (sample != stInteger && sample != stFloat) {
 		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
@@ -424,8 +424,8 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	data->depth_ctx = depth_ctx;
 	data->node = node;
 	data->vi = out_vi;
-	data->tv_in = tv_in;
-	data->tv_out = tv_out;
+	data->fullrange_in = fullrange_in;
+	data->fullrange_out = fullrange_out;
 
 	vsapi->createFilter(in, out, "depth", vs_depth_init, vs_depth_get_frame, vs_depth_free, fmParallel, 0, data, core);
 	return;
