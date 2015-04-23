@@ -49,7 +49,7 @@ const AppOption OPTIONS[] = {
 
 void usage()
 {
-	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--pixtype type]\n";
+	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--filetype type] [--pixtype type]\n";
 	std::cout << "    infile               input file\n";
 	std::cout << "    outfile              output file\n";
 	std::cout << "    w                    image width\n";

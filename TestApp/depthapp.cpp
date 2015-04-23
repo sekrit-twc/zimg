@@ -72,7 +72,7 @@ const AppOption OPTIONS[] = {
 
 void usage()
 {
-	std::cout << "depth infile outfile w h pxl_in pxl_out [--dither dither] [--bits-in bits] [--bits-out bits] [--tv-in | pc-in] [--tv-out | --pc-out] [--yuv | --rgb] [--times n] [--cpu cpu]\n";
+	std::cout << "depth infile outfile w h pxl_in pxl_out [--dither dither] [--bits-in bits] [--bits-out bits] [--tv-in | pc-in] [--tv-out | --pc-out] [--yuv | --rgb] [--visualise path] [--times n] [--cpu cpu]\n";
 	std::cout << "    infile               input file\n";
 	std::cout << "    outfile              output file\n";
 	std::cout << "    w                    image width\n";
