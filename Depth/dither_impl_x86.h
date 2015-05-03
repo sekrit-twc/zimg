@@ -5,7 +5,7 @@
 #ifndef ZIMG_DEPTH_DITHER_IMPL_X86_H_
 #define ZIMG_DEPTH_DITHER_IMPL_X86_H_
 
-#include "Common/plane.h"
+#include "Common/linebuffer.h"
 #include "dither_impl.h"
 
 namespace zimg {;
@@ -31,7 +31,7 @@ protected:
 	{}
 
 	template <class T, class U, class Policy, class Unpack, class Pack, class ToFloat, class FromFloat, class ToFloatScalar, class FromFloatScalar>
-	void process(const ImagePlane<const T> &src, const ImagePlane<U> &dst, Policy policy, Unpack unpack, Pack pack,
+	void process(const LineBuffer<T> &src, LineBuffer<U> &dst, unsigned depth, unsigned n, Policy policy, Unpack unpack, Pack pack,
 	             ToFloat to_float, FromFloat from_float, ToFloatScalar to_float_scalar, FromFloatScalar from_float_scalar) const
 	{
 		typedef typename Policy::type vector_type;
@@ -42,56 +42,54 @@ protected:
 		typedef Div<loop_step::value, Unpack::loop_step> loop_unroll_unpack;
 		typedef Div<loop_step::value, Pack::loop_step> loop_unroll_pack;
 
-		int width = src.width();
-		int height = src.height();
+		unsigned left = dst.left();
+		unsigned right = dst.right();
 
 		const float *dither_data = m_dither.data();
 
-		float scale = 1.0f / (float)(1L << dst.format().depth);
+		float scale = 1.0f / (float)(1L << depth);
 		vector_type scale_ps = policy.set1(scale);
 
-		for (ptrdiff_t i = 0; i < height; ++i) {
-			const T *src_row = src[i];
-			U * dst_row = dst[i];
+		const T *src_row = src[n];
+		U * dst_row = dst[n];
 
-			const float *dither_row = &dither_data[(i % NUM_DITHERS_V) * NUM_DITHERS_H];
-			int m = 0;
+		const float *dither_row = &dither_data[(n % NUM_DITHERS_V) * NUM_DITHERS_H];
+		int m = 0;
 
-			src_vector_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
-			dst_vector_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
+		src_vector_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
+		dst_vector_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
 
-			for (ptrdiff_t j = 0; j < mod(width, loop_step::value); j += loop_step::value) {
-				for (ptrdiff_t k = 0; k < loop_unroll_unpack::value; ++k) {
-					unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], &src_row[j + k * Unpack::loop_step]);
-				}
-
-				for (ptrdiff_t k = 0; k < loop_unroll_pack::value * Pack::unpacked_count; ++k) {
-					vector_type x = to_float(src_unpacked[k]);
-					vector_type d = policy.load(&dither_row[m]);
-
-					d = policy.mul(d, scale_ps);
-					x = policy.add(x, d);
-
-					dst_unpacked[k] = from_float(x);
-
-					m += Policy::vector_size;
-				}
-
-				for (ptrdiff_t k = 0; k < loop_unroll_pack::value; ++k) {
-					pack.pack(&dst_row[j + k * Pack::loop_step], &dst_unpacked[k * Pack::unpacked_count]);
-				}
-
-				m %= NUM_DITHERS_H;
+		for (ptrdiff_t j = left; j < mod(right, loop_step::value); j += loop_step::value) {
+			for (ptrdiff_t k = 0; k < loop_unroll_unpack::value; ++k) {
+				unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], &src_row[j + k * Unpack::loop_step]);
 			}
 
-			m = 0;
-			for (ptrdiff_t j = mod(width, loop_step::value); j < width; ++j) {
-				float x = to_float_scalar(src[i][j]);
-				float d = dither_row[m++];
+			for (ptrdiff_t k = 0; k < loop_unroll_pack::value * Pack::unpacked_count; ++k) {
+				vector_type x = to_float(src_unpacked[k]);
+				vector_type d = policy.load(&dither_row[m]);
 
-				dst[i][j] = from_float_scalar(x + d * scale);
-				m %= NUM_DITHERS_H;
+				d = policy.mul(d, scale_ps);
+				x = policy.add(x, d);
+
+				dst_unpacked[k] = from_float(x);
+
+				m += Policy::vector_size;
 			}
+
+			for (ptrdiff_t k = 0; k < loop_unroll_pack::value; ++k) {
+				pack.pack(&dst_row[j + k * Pack::loop_step], &dst_unpacked[k * Pack::unpacked_count]);
+			}
+
+			m %= NUM_DITHERS_H;
+		}
+
+		m = 0;
+		for (ptrdiff_t j = mod(right, loop_step::value); j < right; ++j) {
+			float x = to_float_scalar(src_row[j]);
+			float d = dither_row[m++];
+
+			dst_row[j] = from_float_scalar(x + d * scale);
+			m %= NUM_DITHERS_H;
 		}
 	}
 };

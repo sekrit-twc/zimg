@@ -5,7 +5,7 @@
 #include <vector>
 #include "Common/align.h"
 #include "Common/except.h"
-#include "Common/plane.h"
+#include "Common/linebuffer.h"
 #include "depth.h"
 #include "dither_impl.h"
 #include "dither_impl_x86.h"
@@ -61,79 +61,86 @@ void get_random_dithers(float *p)
 
 class OrderedDitherC : public OrderedDither {
 	template <class T, class U, class ToFloat, class FromFloat>
-	void dither(const ImagePlane<const T> &src, const ImagePlane<U> &dst, float *tmp, int depth, ToFloat to_float, FromFloat from_float) const
+	void dither(const LineBuffer<T> &src, LineBuffer<U> &dst, int depth, int n, ToFloat to_float, FromFloat from_float) const
 	{
-		int width = src.width();
-		int height = src.height();
+		unsigned left = src.left();
+		unsigned right = src.right();
 
 		float scale = 1.0f / (float)(1L << depth);
 		auto dither_pixel = [=](T x, float d) { return from_float(to_float(x) + d * scale); };
 
-		for (ptrdiff_t i = 0; i < height; ++i) {
-			ptrdiff_t loop_end = mod(width, NUM_DITHERS_H);
-			int m;
+		const T *src_row = src[n];
+		U * dst_row = dst[n];
 
-			const float *dith = m_dither.data() + (i % NUM_DITHERS_V) * NUM_DITHERS_H;
+		ptrdiff_t loop_begin = align(left, NUM_DITHERS_H);
+		ptrdiff_t loop_end = mod(right, NUM_DITHERS_H);
+		int m;
 
-			for (ptrdiff_t j = 0; j < loop_end; j += NUM_DITHERS_H) {
-				m = 0;
-				for (ptrdiff_t jj = j; jj < j + NUM_DITHERS_H; ++jj) {
-					dst[i][jj] = dither_pixel(src[i][jj], dith[m++]);
-				}
-			}
+		const float *dith = m_dither.data() + (n % NUM_DITHERS_V) * NUM_DITHERS_H;
 
+		m = 0;
+		for (ptrdiff_t j = 0; j < loop_begin; ++j) {
+			dst_row[j] = dither_pixel(src_row[j], dith[m++]);
+		}
+
+		for (ptrdiff_t j = loop_begin; j < loop_end; j += NUM_DITHERS_H) {
 			m = 0;
-			for (ptrdiff_t j = loop_end; j < width; ++j) {
-				dst[i][j] = dither_pixel(src[i][j], dith[m++]);
+			for (ptrdiff_t jj = j; jj < j + NUM_DITHERS_H; ++jj) {
+				dst_row[jj] = dither_pixel(src_row[jj], dith[m++]);
 			}
+		}
+
+		m = 0;
+		for (ptrdiff_t j = loop_end; j < right; ++j) {
+			dst_row[j] = dither_pixel(src_row[j], dith[m++]);
 		}
 	}
 public:
 	explicit OrderedDitherC(const float *dither) : OrderedDither(dither)
 	{}
 
-	void byte_to_byte(const ImagePlane<const uint8_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void byte_to_byte(const LineBuffer<uint8_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth,
-		       make_integer_to_float<uint8_t>(src.format()), make_float_to_integer<uint8_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n,
+		       make_integer_to_float<uint8_t>(src_fmt), make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void byte_to_word(const ImagePlane<const uint8_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void byte_to_word(const LineBuffer<uint8_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth,
-		       make_integer_to_float<uint8_t>(src.format()), make_float_to_integer<uint16_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n,
+		       make_integer_to_float<uint8_t>(src_fmt), make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void word_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void word_to_byte(const LineBuffer<uint16_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth,
-		       make_integer_to_float<uint16_t>(src.format()), make_float_to_integer<uint8_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n,
+		       make_integer_to_float<uint16_t>(src_fmt), make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void word_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void word_to_word(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth,
-		       make_integer_to_float<uint16_t>(src.format()), make_float_to_integer<uint16_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n,
+		       make_integer_to_float<uint16_t>(src_fmt), make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void half_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void half_to_byte(const LineBuffer<uint16_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth, depth::half_to_float, make_float_to_integer<uint8_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n, depth::half_to_float, make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void half_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void half_to_word(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth, depth::half_to_float, make_float_to_integer<uint16_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n, depth::half_to_float, make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void float_to_byte(const ImagePlane<const float> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void float_to_byte(const LineBuffer<float> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth, identity<float>, make_float_to_integer<uint8_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n, identity<float>, make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void float_to_word(const ImagePlane<const float> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void float_to_word(const LineBuffer<float> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		dither(src, dst, tmp, dst.format().depth, identity<float>, make_float_to_integer<uint16_t>(dst.format()));
+		dither(src, dst, dst_fmt.depth, n, identity<float>, make_float_to_integer<uint16_t>(dst_fmt));
 	}
 };
 

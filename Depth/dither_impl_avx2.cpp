@@ -1,7 +1,7 @@
 #ifdef ZIMG_X86
 
 #include <immintrin.h>
-#include "Common/plane.h"
+#include "Common/linebuffer.h"
 #include "dither_impl.h"
 #include "dither_impl_x86.h"
 #include "quantize_avx2.h"
@@ -29,60 +29,60 @@ public:
 	explicit OrderedDitherAVX2(const float *dither) : OrderedDitherX86(dither)
 	{}
 
-	void byte_to_byte(const ImagePlane<const uint8_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void byte_to_byte(const LineBuffer<uint8_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackByteAVX2{}, PackByteAVX2{},
-		        make_integer_to_float_avx2(src.format()), make_float_to_integer_avx2(dst.format()),
-		        make_integer_to_float<uint8_t>(src.format()), make_float_to_integer<uint8_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackByteAVX2{}, PackByteAVX2{},
+		        make_integer_to_float_avx2(src_fmt), make_float_to_integer_avx2(dst_fmt),
+		        make_integer_to_float<uint8_t>(src_fmt), make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void byte_to_word(const ImagePlane<const uint8_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void byte_to_word(const LineBuffer<uint8_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackByteAVX2{}, PackWordAVX2{},
-		        make_integer_to_float_avx2(src.format()), make_float_to_integer_avx2(dst.format()),
-		        make_integer_to_float<uint8_t>(src.format()), make_float_to_integer<uint16_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackByteAVX2{}, PackWordAVX2{},
+		        make_integer_to_float_avx2(src_fmt), make_float_to_integer_avx2(dst_fmt),
+		        make_integer_to_float<uint8_t>(src_fmt), make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void word_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void word_to_byte(const LineBuffer<uint16_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackWordAVX2{}, PackByteAVX2{},
-		        make_integer_to_float_avx2(src.format()), make_float_to_integer_avx2(dst.format()),
-		        make_integer_to_float<uint16_t>(src.format()), make_float_to_integer<uint8_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackWordAVX2{}, PackByteAVX2{},
+		        make_integer_to_float_avx2(src_fmt), make_float_to_integer_avx2(dst_fmt),
+		        make_integer_to_float<uint16_t>(src_fmt), make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void word_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void word_to_word(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackWordAVX2{}, PackWordAVX2{},
-		        make_integer_to_float_avx2(src.format()), make_float_to_integer_avx2(dst.format()),
-		        make_integer_to_float<uint16_t>(src.format()), make_float_to_integer<uint16_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackWordAVX2{}, PackWordAVX2{},
+		        make_integer_to_float_avx2(src_fmt), make_float_to_integer_avx2(dst_fmt),
+		        make_integer_to_float<uint16_t>(src_fmt), make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void half_to_byte(const ImagePlane<const uint16_t> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void half_to_byte(const LineBuffer<uint16_t> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackHalfAVX2{}, PackByteAVX2{},
-		        half_to_float_avx2, make_float_to_integer_avx2(dst.format()),
-		        depth::half_to_float, make_float_to_integer<uint8_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackHalfAVX2{}, PackByteAVX2{},
+		        half_to_float_avx2, make_float_to_integer_avx2(dst_fmt),
+		        depth::half_to_float, make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void half_to_word(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void half_to_word(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackHalfAVX2{}, PackWordAVX2{},
-		        half_to_float_avx2, make_float_to_integer_avx2(dst.format()),
-		        depth::half_to_float, make_float_to_integer<uint16_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackHalfAVX2{}, PackWordAVX2{},
+		        half_to_float_avx2, make_float_to_integer_avx2(dst_fmt),
+		        depth::half_to_float, make_float_to_integer<uint16_t>(dst_fmt));
 	}
 
-	void float_to_byte(const ImagePlane<const float> &src, const ImagePlane<uint8_t> &dst, float *tmp) const override
+	void float_to_byte(const LineBuffer<float> &src, LineBuffer<uint8_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackFloatAVX2{}, PackByteAVX2{},
-		        identity<__m256>, make_float_to_integer_avx2(dst.format()),
-		        identity<float>, make_float_to_integer<uint8_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackFloatAVX2{}, PackByteAVX2{},
+		        identity<__m256>, make_float_to_integer_avx2(dst_fmt),
+		        identity<float>, make_float_to_integer<uint8_t>(dst_fmt));
 	}
 
-	void float_to_word(const ImagePlane<const float> &src, const ImagePlane<uint16_t> &dst, float *tmp) const override
+	void float_to_word(const LineBuffer<float> &src, LineBuffer<uint16_t> &dst, const PixelFormat &src_fmt, const PixelFormat &dst_fmt, unsigned n, void *tmp) const override
 	{
-		process(src, dst, DitherPolicyAVX2{}, UnpackFloatAVX2{}, PackWordAVX2{},
-		        identity<__m256>, make_float_to_integer_avx2(dst.format()),
-		        identity<float>, make_float_to_integer<uint16_t>(dst.format()));
+		process(src, dst, dst_fmt.depth, n, DitherPolicyAVX2{}, UnpackFloatAVX2{}, PackWordAVX2{},
+		        identity<__m256>, make_float_to_integer_avx2(dst_fmt),
+		        identity<float>, make_float_to_integer<uint16_t>(dst_fmt));
 	}
 };
 

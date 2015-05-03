@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <utility>
 #include "Common/except.h"
+#include "Common/linebuffer.h"
 #include "Common/plane.h"
 #include "Common/pixel.h"
 #include "depth.h"
@@ -22,35 +23,32 @@ void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<const T
 
 void convert_dithered(const DitherConvert &dither, const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp)
 {
-	ImagePlane<const uint8_t> src_b = plane_cast<const uint8_t>(src);
-	ImagePlane<const uint16_t> src_w = plane_cast<const uint16_t>(src);
-	ImagePlane<const float> src_f = plane_cast<const float>(src);
-
-	ImagePlane<uint8_t> dst_b = plane_cast<uint8_t>(dst);
-	ImagePlane<uint16_t> dst_w = plane_cast<uint16_t>(dst);
+	LineBuffer<void> src_buf{ (void *)src.data(), 0, (unsigned)src.width(), (unsigned)src.stride() * pixel_size(src.format().type), UINT_MAX };
+	LineBuffer<void> dst_buf{ dst.data(), 0, (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(dst.format().type), UINT_MAX };
 
 	PixelType src_type = src.format().type;
 	PixelType dst_type = dst.format().type;
-	float *tmp_f = (float *)tmp;
 
-	if (src_type == PixelType::BYTE && dst_type == PixelType::BYTE)
-		dither.byte_to_byte(src_b, dst_b, tmp_f);
-	else if (src_type == PixelType::BYTE && dst_type == PixelType::WORD)
-		dither.byte_to_word(src_b, dst_w, tmp_f);
-	else if (src_type == PixelType::WORD && dst_type == PixelType::BYTE)
-		dither.word_to_byte(src_w, dst_b, tmp_f);
-	else if (src_type == PixelType::WORD && dst_type == PixelType::WORD)
-		dither.word_to_word(src_w, dst_w, tmp_f);
-	else if (src_type == PixelType::HALF && dst_type == PixelType::BYTE)
-		dither.half_to_byte(src_w, dst_b, tmp_f);
-	else if (src_type == PixelType::HALF && dst_type == PixelType::WORD)
-		dither.half_to_word(src_w, dst_w, tmp_f);
-	else if (src_type == PixelType::FLOAT && dst_type == PixelType::BYTE)
-		dither.float_to_byte(src_f, dst_b, tmp_f);
-	else if (src_type == PixelType::FLOAT && dst_type == PixelType::WORD)
-		dither.float_to_word(src_f, dst_w, tmp_f);
-	else
-		throw ZimgUnsupportedError{ "no conversion found between pixel types" };
+	for (int i = 0; i < src.height(); ++i) {
+		if (src_type == PixelType::BYTE && dst_type == PixelType::BYTE)
+			dither.byte_to_byte(buffer_cast<uint8_t>(src_buf), buffer_cast<uint8_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::BYTE && dst_type == PixelType::WORD)
+			dither.byte_to_word(buffer_cast<uint8_t>(src_buf), buffer_cast<uint16_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::WORD && dst_type == PixelType::BYTE)
+			dither.word_to_byte(buffer_cast<uint16_t>(src_buf), buffer_cast<uint8_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::WORD && dst_type == PixelType::WORD)
+			dither.word_to_word(buffer_cast<uint16_t>(src_buf), buffer_cast<uint16_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::HALF && dst_type == PixelType::BYTE)
+			dither.half_to_byte(buffer_cast<uint16_t>(src_buf), buffer_cast<uint8_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::HALF && dst_type == PixelType::WORD)
+			dither.half_to_word(buffer_cast<uint16_t>(src_buf), buffer_cast<uint16_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::FLOAT && dst_type == PixelType::BYTE)
+			dither.float_to_byte(buffer_cast<float>(src_buf), buffer_cast<uint8_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else if (src_type == PixelType::FLOAT && dst_type == PixelType::WORD)
+			dither.float_to_word(buffer_cast<float>(src_buf), buffer_cast<uint16_t>(dst_buf), src.format(), dst.format(), i, tmp);
+		else
+			throw ZimgUnsupportedError{ "no conversion found between pixel types" };
+	}
 }
 
 void convert_depth(const DepthConvert &depth, const ImagePlane<const void> &src, const ImagePlane<void> &dst)
