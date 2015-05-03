@@ -47,7 +47,7 @@ LineBuffer<void> alloc_line_buffer(Alloc &alloc, unsigned count, unsigned width,
 	unsigned mask = pow2count == UINT_MAX ? UINT_MAX : pow2count - 1;
 	void *ptr = alloc.allocate((size_t)pow2count * stride);
 
-	return{ ptr, 0, width, stride, mask };
+	return{ ptr, width, stride, mask };
 }
 
 void invoke_impl(const ResizeImpl *impl, PixelType type, const LineBuffer<void> &src, LineBuffer<void> &dst, unsigned n, void *tmp)
@@ -161,8 +161,8 @@ void Resize::process1d(const ImagePlane<const void> &src, const ImagePlane<void>
 	LinearAllocator alloc{ tmp };
 	ResizeContext ctx = get_context(alloc, type);
 
-	LineBuffer<void> src_buf{ (void *)src.data(), 0, (unsigned)src.width(), (unsigned)src.stride() * pixel_size(type), UINT_MAX };
-	LineBuffer<void> dst_buf{ dst.data(), 0, (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(type), UINT_MAX };
+	LineBuffer<void> src_buf{ (void *)src.data(), (unsigned)src.width(), (unsigned)src.stride() * pixel_size(type), UINT_MAX };
+	LineBuffer<void> dst_buf{ dst.data(), (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(type), UINT_MAX };
 
 	bool overflow_flag = false;
 	unsigned src_linesize = m_src_width * pixel_size(type);
@@ -199,8 +199,8 @@ void Resize::process2d(const ImagePlane<const void> &src, const ImagePlane<void>
 	LinearAllocator alloc{ tmp };
 	ResizeContext ctx = get_context(alloc, type);
 
-	LineBuffer<void> src_buf{ (void *)src.data(), 0, (unsigned)src.width(), (unsigned)src.stride() * pixel_size(type), UINT_MAX };
-	LineBuffer<void> dst_buf{ dst.data(), 0, (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(type), UINT_MAX };
+	LineBuffer<void> src_buf{ (void *)src.data(), (unsigned)src.width(), (unsigned)src.stride() * pixel_size(type), UINT_MAX };
+	LineBuffer<void> dst_buf{ dst.data(), (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(type), UINT_MAX };
 
 	bool overflow_flag = false;
 	unsigned buffer_pos = 0;

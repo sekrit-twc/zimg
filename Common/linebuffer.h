@@ -8,7 +8,7 @@
 namespace zimg {;
 
 /**
- * Buffer interface providing a rolling window of a given number of rows.
+ * Buffer interface providing a rolling window of k rows.
  * Accessing a a row (n) by index yields the (n & k)-th row in the buffer.
  * This grants effective access to a power of two number of rows.
  *
@@ -16,9 +16,8 @@ namespace zimg {;
  */
 template <class T>
 class LineBuffer {
-	void *m_ptr; // Must be void pointer to allow casting the template paramter T.
-	unsigned m_left;
-	unsigned m_right;
+	void *m_ptr; // Must be void pointer to allow casting to the template parameter T.
+	unsigned m_width;
 	unsigned m_byte_stride;
 	unsigned m_mask;
 
@@ -38,33 +37,22 @@ public:
 	 * Initialize a LineBuffer with a given buffer.
 	 *
 	 * @param ptr pointer to buffer
-	 * @param left left column index
-	 * @param right right column index
+	 * @param width width of line in pixels
 	 * @param byte_stride distance between lines in bytes
 	 * @param mask bit mask applied to row index
 	 */
-	LineBuffer(T *ptr, unsigned left, unsigned right, unsigned byte_stride, unsigned mask) :
-		m_ptr{ ptr }, m_left{ left }, m_right{ right }, m_byte_stride{ byte_stride }, m_mask{ mask }
+	LineBuffer(T *ptr, unsigned width, unsigned byte_stride, unsigned mask) :
+		m_ptr{ ptr }, m_width{ width }, m_byte_stride{ byte_stride }, m_mask{ mask }
 	{}
 
 	/**
-	 * Get the index of the leftmost column contained in the buffer.
+	 * Get width of line in pixels.
 	 *
-	 * @return left column index
+	 * @return width
 	 */
-	unsigned left() const
+	unsigned width() const
 	{
-		return m_left;
-	}
-
-	/**
-	 * Get the index of one past the rightmost column contained in the buffer.
-	 *
-	 * @return right column index
-	 */
-	unsigned right() const
-	{
-		return m_right;
+		return m_width;
 	}
 
 	/**

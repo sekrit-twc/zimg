@@ -15,11 +15,10 @@ class ErrorDiffusionC : public DitherConvert {
 	template <class T, class U, class Unpack, class Quant, class Dequant>
 	void dither(const LineBuffer<T> &src, LineBuffer<U> &dst, int n, float *tmp, Unpack unpack, Quant quant, Dequant dequant) const
 	{		
-		unsigned left = dst.left();
-		unsigned right = dst.right();
+		unsigned width = dst.width();
 
 		float *prev_line = tmp + 1;
-		float *curr_line = prev_line + right + 2;
+		float *curr_line = prev_line + width + 2;
 
 		const T *src_row = src[n];
 		U *dst_row = dst[n];
@@ -27,7 +26,7 @@ class ErrorDiffusionC : public DitherConvert {
 		if (n % 2)
 			std::swap(prev_line, curr_line);
 
-		for (ptrdiff_t j = left; j < right; ++j) {
+		for (ptrdiff_t j = 0; j < width; ++j) {
 			float x = unpack(src_row[j]);
 			float err = 0;
 

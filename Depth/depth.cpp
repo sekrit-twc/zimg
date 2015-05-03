@@ -23,8 +23,8 @@ void invoke_depth(const DepthConvert &depth, Func func, const ImagePlane<const T
 
 void convert_dithered(const DitherConvert &dither, const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp)
 {
-	LineBuffer<void> src_buf{ (void *)src.data(), 0, (unsigned)src.width(), (unsigned)src.stride() * pixel_size(src.format().type), UINT_MAX };
-	LineBuffer<void> dst_buf{ dst.data(), 0, (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(dst.format().type), UINT_MAX };
+	LineBuffer<void> src_buf{ (void *)src.data(), (unsigned)src.width(), (unsigned)src.stride() * pixel_size(src.format().type), UINT_MAX };
+	LineBuffer<void> dst_buf{ dst.data(), (unsigned)dst.width(), (unsigned)dst.stride() * pixel_size(dst.format().type), UINT_MAX };
 
 	PixelType src_type = src.format().type;
 	PixelType dst_type = dst.format().type;

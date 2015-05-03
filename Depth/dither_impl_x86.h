@@ -42,8 +42,7 @@ protected:
 		typedef Div<loop_step::value, Unpack::loop_step> loop_unroll_unpack;
 		typedef Div<loop_step::value, Pack::loop_step> loop_unroll_pack;
 
-		unsigned left = dst.left();
-		unsigned right = dst.right();
+		unsigned width = dst.width();
 
 		const float *dither_data = m_dither.data();
 
@@ -59,7 +58,7 @@ protected:
 		src_vector_type src_unpacked[loop_unroll_unpack::value * Unpack::unpacked_count];
 		dst_vector_type dst_unpacked[loop_unroll_pack::value * Pack::unpacked_count];
 
-		for (ptrdiff_t j = left; j < mod(right, loop_step::value); j += loop_step::value) {
+		for (ptrdiff_t j = 0; j < mod(width, loop_step::value); j += loop_step::value) {
 			for (ptrdiff_t k = 0; k < loop_unroll_unpack::value; ++k) {
 				unpack.unpack(&src_unpacked[k * Unpack::unpacked_count], &src_row[j + k * Unpack::loop_step]);
 			}
@@ -84,7 +83,7 @@ protected:
 		}
 
 		m = 0;
-		for (ptrdiff_t j = mod(right, loop_step::value); j < right; ++j) {
+		for (ptrdiff_t j = mod(width, loop_step::value); j < width; ++j) {
 			float x = to_float_scalar(src_row[j]);
 			float d = dither_row[m++];
 

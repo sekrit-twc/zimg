@@ -228,9 +228,8 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride_i16;
 
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
+	unsigned src_width = src.width();
+	unsigned dst_width = dst.width();
 
 	uint16_t *dst_ptr0 = dst[n + 0];
 	uint16_t *dst_ptr1 = dst[n + 1];
@@ -246,7 +245,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 
 	transpose_line_8x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
-	for (unsigned j = dst_left; j < mod(dst_right, 8); ++j) {
+	for (unsigned j = 0; j < mod(dst_width, 8); ++j) {
 		const int16_t *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m128i accum_lo = _mm_setzero_si128();
@@ -294,7 +293,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			transpose_block_8x8_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	for (unsigned j = mod(dst_right, 8); j < dst_right; ++j) {
+	for (unsigned j = mod(dst_width, 8); j < dst_width; ++j) {
 		const int16_t *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m128i accum_lo = _mm_setzero_si128();
@@ -333,9 +332,8 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
 
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
+	unsigned src_width = src.width();
+	unsigned dst_width = dst.width();
 
 	float *dst_ptr0 = dst[n + 0];
 	float *dst_ptr1 = dst[n + 1];
@@ -347,7 +345,7 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 
 	transpose_line_4x4_ps(src[n + 0], src[n + 1], src[n + 2], src[n + 3], ttmp, src_width);
 
-	for (unsigned j = dst_left; j < mod(dst_right, 4); ++j) {
+	for (unsigned j = 0; j < mod(dst_width, 4); ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m128 accum0 = _mm_setzero_ps();
@@ -393,7 +391,7 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 			transpose_block_4x4_ps(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j]);
 		}
 	}
-	for (unsigned j = mod(dst_right, 4); j < dst_right; ++j) {
+	for (unsigned j = mod(dst_width, 4); j < dst_width; ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m128 accum = _mm_setzero_ps();
@@ -410,80 +408,6 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 	}
 }
 
-template <bool DoLoop>
-void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n)
-{
-	__m128 cached[4];
-
-	const float *filter_data = filter.data.data();
-	const unsigned *filter_left = filter.left.data();
-	unsigned filter_stride = filter.stride;
-
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
-
-	const float *src_p0 = src[n + 0];
-	const float *src_p1 = src[n + 1];
-	const float *src_p2 = src[n + 2];
-	const float *src_p3 = src[n + 3];
-
-	float *dst_p0 = dst[n + 0];
-	float *dst_p1 = dst[n + 1];
-	float *dst_p2 = dst[n + 2];
-	float *dst_p3 = dst[n + 3];
-
-	unsigned j;
-
-	for (j = dst_left; j < dst_right; ++j) {
-		__m128 accum = _mm_setzero_ps();
-
-		const float *filter_row = &filter_data[j * filter_stride];
-		unsigned left = filter_left[j];
-
-		if (left + filter_stride > src_width)
-			break;
-
-		for (unsigned k = 0; k < (DoLoop ? filter.filter_width : 4); k += 4) {
-			__m128 coeff = _mm_load_ps(filter_row + k);
-			__m128 x0, x1, x2, x3;
-
-			x0 = _mm_loadu_ps(&src_p0[left + k]);
-			x0 = _mm_mul_ps(coeff, x0);
-
-			x1 = _mm_loadu_ps(&src_p1[left + k]);
-			x1 = _mm_mul_ps(coeff, x1);
-
-			x2 = _mm_loadu_ps(&src_p2[left + k]);
-			x2 = _mm_mul_ps(coeff, x2);
-
-			x3 = _mm_loadu_ps(&src_p3[left + k]);
-			x3 = _mm_mul_ps(coeff, x3);
-
-			transpose4_ps(x0, x1, x2, x3);
-
-			x0 = _mm_add_ps(x0, x2);
-			x1 = _mm_add_ps(x1, x3);
-				
-			accum = _mm_add_ps(accum, x0);
-			accum = _mm_add_ps(accum, x1);
-		}
-		cached[j % 4] = accum;
-
-		if (j % 4 == 3) {
-			unsigned dst_j = mod(j, 4);
-
-			transpose4_ps(cached[0], cached[1], cached[2], cached[3]);
-
-			_mm_store_ps(&dst_p0[dst_j], cached[0]);
-			_mm_store_ps(&dst_p1[dst_j], cached[1]);
-			_mm_store_ps(&dst_p2[dst_j], cached[2]);
-			_mm_store_ps(&dst_p3[dst_j], cached[3]);
-		}
-	}
-	filter_line_h_scalar(filter, src, dst, n, n + 4, mod(j, 4), dst_right, ScalarPolicy_F32{});
-}
-
 void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
 {
 	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
@@ -492,8 +416,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride_i16;
 
-	unsigned left = dst.left();
-	unsigned right = dst.right();
+	unsigned width = dst.width();
 
 	const int16_t *filter_row = &filter_data[n * filter_stride];
 	unsigned top = filter_left[n];
@@ -511,7 +434,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 		__m128i coeff2 = _mm_set1_epi16(filter_row[k + 2]);
 		__m128i coeff3 = _mm_set1_epi16(filter_row[k + 3]);
 
-		for (unsigned j = left; j < mod(right, 8); j += 8) {
+		for (unsigned j = 0; j < mod(width, 8); j += 8) {
 			__m128i x0, x1, x2, x3;
 			__m128i packed;
 
@@ -566,7 +489,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 		__m128i coeff1 = _mm_set1_epi16(filter_row[k + 1]);
 		__m128i coeff2 = _mm_set1_epi16(filter_row[k + 2]);
 
-		for (unsigned j = left; j < mod(right, 8); j += 8) {
+		for (unsigned j = 0; j < mod(width, 8); j += 8) {
 			__m128i x0, x1, x2;
 			__m128i packed;
 
@@ -604,7 +527,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 			_mm_store_si128((__m128i *)&dst_ptr[j], packed);
 		}
 	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 8), right, ScalarPolicy_U16{});
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 8), width, ScalarPolicy_U16{});
 }
 
 void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n)
@@ -613,8 +536,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src,
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
 
-	unsigned left = dst.left();
-	unsigned right = dst.right();
+	unsigned width = dst.width();
 
 	const float *filter_row = &filter_data[n * filter_stride];
 	unsigned top = filter_left[n];
@@ -631,7 +553,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src,
 		__m128 coeff2 = _mm_set_ps1(filter_row[k + 2]);
 		__m128 coeff3 = _mm_set_ps1(filter_row[k + 3]);
 
-		for (unsigned j = left; j < mod(right, 4); j += 4) {
+		for (unsigned j = 0; j < mod(width, 4); j += 4) {
 			__m128 x0, x1, x2, x3;
 			__m128 accum0, accum1;
 
@@ -669,7 +591,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src,
 		__m128 coeff1 = _mm_set_ps1(filter_row[k + 1]);
 		__m128 coeff2 = _mm_set_ps1(filter_row[k + 2]);
 
-		for (unsigned j = left; j < mod(right, 4); j += 4) {
+		for (unsigned j = 0; j < mod(width, 4); j += 4) {
 			__m128 x0, x1, x2;
 
 			__m128 accum0 = _mm_setzero_ps();
@@ -696,7 +618,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src,
 			_mm_store_ps(&dst_ptr[j], accum0);
 		}
 	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 4), right, ScalarPolicy_F32{});
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 4), width, ScalarPolicy_F32{});
 }
 
 class ResizeImplSSE2_H : public ResizeImpl {

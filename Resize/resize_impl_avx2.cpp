@@ -370,9 +370,8 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride_i16;
 
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
+	unsigned src_width = src.width();
+	unsigned dst_width = dst.width();
 
 	uint16_t *dst_ptr0 = dst[n + 0];
 	uint16_t *dst_ptr1 = dst[n + 1];
@@ -388,7 +387,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 
 	transpose_line_16x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
-	for (unsigned j = dst_left; j < mod(dst_right, 16); ++j) {
+	for (unsigned j = 0; j < mod(dst_width, 16); ++j) {
 		const int16_t *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256i accum = _mm256_setzero_si256();
@@ -429,7 +428,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			transpose_block_8x16_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	for (unsigned j = mod(dst_right, 16); j < dst_right; ++j) {
+	for (unsigned j = mod(dst_width, 16); j < dst_width; ++j) {
 		const int16_t *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256i accum = _mm256_setzero_si256();
@@ -460,9 +459,8 @@ void filter_line_f16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
 
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
+	unsigned src_width = src.width();
+	unsigned dst_width = dst.width();
 
 	uint16_t *dst_ptr0 = dst[n + 0];
 	uint16_t *dst_ptr1 = dst[n + 1];
@@ -478,7 +476,7 @@ void filter_line_f16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 
 	transpose_line_16x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
-	for (unsigned j = dst_left; j < mod(dst_right, 16); ++j) {
+	for (unsigned j = 0; j < mod(dst_width, 16); ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256 accum0 = _mm256_setzero_ps();
@@ -523,7 +521,7 @@ void filter_line_f16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			transpose_block_8x16_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	for (unsigned j = mod(dst_right, 16); j < dst_right; ++j) {
+	for (unsigned j = mod(dst_width, 16); j < dst_width; ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256 accum = _mm256_setzero_ps();
@@ -546,9 +544,8 @@ void filter_line_f32_h(const FilterContext &filter, const LineBuffer<float> &src
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
 
-	unsigned src_width = src.right();
-	unsigned dst_left = dst.left();
-	unsigned dst_right = dst.right();
+	unsigned src_width = src.width();
+	unsigned dst_width = dst.width();
 
 	float *dst_ptr0 = dst[n + 0];
 	float *dst_ptr1 = dst[n + 1];
@@ -564,7 +561,7 @@ void filter_line_f32_h(const FilterContext &filter, const LineBuffer<float> &src
 
 	transpose_line_8x8_ps(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
-	for (unsigned j = dst_left; j < mod(dst_right, 8); ++j) {
+	for (unsigned j = 0; j < mod(dst_width, 8); ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256 accum0 = _mm256_setzero_ps();
@@ -609,7 +606,7 @@ void filter_line_f32_h(const FilterContext &filter, const LineBuffer<float> &src
 			transpose_block_8x8_ps(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
 		}
 	}
-	for (unsigned j = mod(dst_right, 8); j < dst_right; ++j) {
+	for (unsigned j = mod(dst_width, 8); j < dst_width; ++j) {
 		const float *filter_row = &filter_data[j * filter_stride];
 		unsigned left = filter_left[j];
 		__m256 accum = _mm256_setzero_ps();
@@ -633,8 +630,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride_i16;
 
-	unsigned left = dst.left();
-	unsigned right = dst.right();
+	unsigned width = dst.width();
 
 	const int16_t *filter_row = &filter_data[n * filter_stride];
 	unsigned top = filter_left[n];
@@ -665,7 +661,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 		__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
 		__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
 
-		for (unsigned j = left; j < mod(right, 16); j += 16) {
+		for (unsigned j = 0; j < mod(width, 16); j += 16) {
 			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
 			__m256i packed;
 
@@ -742,7 +738,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 		__m256i coeff45 = _mm256_unpacklo_epi16(coeff4, coeff5);
 		__m256i coeff67 = _mm256_unpacklo_epi16(coeff6, coeff7);
 
-		for (unsigned j = left; j < mod(right, 16); j += 16) {
+		for (unsigned j = 0; j < mod(width, 16); j += 16) {
 			__m256i x0, x1, x2, x3, x4, x5, x6, x7;
 			__m256i packed;
 
@@ -794,7 +790,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 			_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
 		}
 	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 16), right, ScalarPolicy_U16{});
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 16), width, ScalarPolicy_U16{});
 }
 
 template <class T, class Policy>
@@ -804,8 +800,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<T> &src, Lin
 	const unsigned *filter_left = filter.left.data();
 	unsigned filter_stride = filter.stride;
 
-	unsigned left = dst.left();
-	unsigned right = dst.right();
+	unsigned width = dst.width();
 
 	const float *filter_row = &filter_data[n * filter_stride];
 	unsigned top = filter_left[n];
@@ -830,7 +825,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<T> &src, Lin
 		__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
 		__m256 coeff7 = _mm256_broadcast_ss(&filter_row[k + 7]);
 
-		for (unsigned j = left; j < mod(right, 8); j += 8) {
+		for (unsigned j = 0; j < mod(width, 8); j += 8) {
 			__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 			__m256 accum0, accum1;
 
@@ -885,7 +880,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<T> &src, Lin
 		__m256 coeff5 = _mm256_broadcast_ss(&filter_row[k + 5]);
 		__m256 coeff6 = _mm256_broadcast_ss(&filter_row[k + 6]);
 
-		for (unsigned j = left; j < mod(right, 8); j += 8) {
+		for (unsigned j = 0; j < mod(width, 8); j += 8) {
 			__m256 x0, x1, x2, x3, x4, x5, x6;
 
 			__m256 accum0 = _mm256_setzero_ps();
@@ -922,7 +917,7 @@ void filter_line_fp_v(const FilterContext &filter, const LineBuffer<T> &src, Lin
 			policy.store_8(&dst_ptr[j], accum0);
 		}
 	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(right, 8), right, policy);
+	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 8), width, policy);
 }
 
 class ResizeImplAVX2_H final : public ResizeImpl {

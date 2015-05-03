@@ -20,7 +20,7 @@ public:
 
 	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		filter_line_h_scalar(m_filter, src, dst, n, n + 1, dst.left(), dst.right(), ScalarPolicy_U16{});
+		filter_line_h_scalar(m_filter, src, dst, n, n + 1, 0, dst.width(), ScalarPolicy_U16{});
 	}
 
 	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
@@ -30,7 +30,7 @@ public:
 
 	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
 	{
-		filter_line_h_scalar(m_filter, src, dst, n, n + 1, dst.left(), dst.right(), ScalarPolicy_F32{});
+		filter_line_h_scalar(m_filter, src, dst, n, n + 1, 0, dst.width(), ScalarPolicy_F32{});
 	}
 };
 
@@ -41,7 +41,7 @@ public:
 
 	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
 	{
-		filter_line_v_scalar(m_filter, src, dst, n, n + 1, dst.left(), dst.right(), ScalarPolicy_U16{});
+		filter_line_v_scalar(m_filter, src, dst, n, n + 1, 0, dst.width(), ScalarPolicy_U16{});
 	}
 
 	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
@@ -51,7 +51,7 @@ public:
 
 	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
 	{
-		filter_line_v_scalar(m_filter, src, dst, n, n + 1, dst.left(), dst.right(), ScalarPolicy_F32{});
+		filter_line_v_scalar(m_filter, src, dst, n, n + 1, 0, dst.width(), ScalarPolicy_F32{});
 	}
 };
 

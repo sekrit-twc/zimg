@@ -63,8 +63,7 @@ class OrderedDitherC : public OrderedDither {
 	template <class T, class U, class ToFloat, class FromFloat>
 	void dither(const LineBuffer<T> &src, LineBuffer<U> &dst, int depth, int n, ToFloat to_float, FromFloat from_float) const
 	{
-		unsigned left = src.left();
-		unsigned right = src.right();
+		unsigned width = src.width();
 
 		float scale = 1.0f / (float)(1L << depth);
 		auto dither_pixel = [=](T x, float d) { return from_float(to_float(x) + d * scale); };
@@ -72,18 +71,12 @@ class OrderedDitherC : public OrderedDither {
 		const T *src_row = src[n];
 		U * dst_row = dst[n];
 
-		ptrdiff_t loop_begin = align(left, NUM_DITHERS_H);
-		ptrdiff_t loop_end = mod(right, NUM_DITHERS_H);
+		ptrdiff_t loop_end = mod(width, NUM_DITHERS_H);
 		int m;
 
 		const float *dith = m_dither.data() + (n % NUM_DITHERS_V) * NUM_DITHERS_H;
 
-		m = 0;
-		for (ptrdiff_t j = 0; j < loop_begin; ++j) {
-			dst_row[j] = dither_pixel(src_row[j], dith[m++]);
-		}
-
-		for (ptrdiff_t j = loop_begin; j < loop_end; j += NUM_DITHERS_H) {
+		for (ptrdiff_t j = 0; j < loop_end; j += NUM_DITHERS_H) {
 			m = 0;
 			for (ptrdiff_t jj = j; jj < j + NUM_DITHERS_H; ++jj) {
 				dst_row[jj] = dither_pixel(src_row[jj], dith[m++]);
@@ -91,7 +84,7 @@ class OrderedDitherC : public OrderedDither {
 		}
 
 		m = 0;
-		for (ptrdiff_t j = loop_end; j < right; ++j) {
+		for (ptrdiff_t j = loop_end; j < width; ++j) {
 			dst_row[j] = dither_pixel(src_row[j], dith[m++]);
 		}
 	}
