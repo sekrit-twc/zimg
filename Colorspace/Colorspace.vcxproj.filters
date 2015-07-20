@@ -36,6 +36,9 @@
     <ClInclude Include="operation_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="colorspace2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="colorspace.cpp">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="operation_impl_avx2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="colorspace2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

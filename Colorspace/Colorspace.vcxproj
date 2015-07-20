@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="colorspace.h" />
+    <ClInclude Include="colorspace2.h" />
     <ClInclude Include="colorspace_param.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="matrix3.h" />
@@ -29,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="colorspace.cpp" />
+    <ClCompile Include="colorspace2.cpp" />
     <ClCompile Include="colorspace_param.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="matrix3.cpp" />
