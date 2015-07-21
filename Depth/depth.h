@@ -18,6 +18,7 @@ namespace depth {;
 class DepthConvert;
 class DitherConvert;
 
+#ifndef ZIMG_DEPTH_DEPTH2_H_
 /**
  * Enum for dithering modes.
  */
@@ -27,6 +28,7 @@ enum class DitherType {
 	DITHER_RANDOM,
 	DITHER_ERROR_DIFFUSION
 };
+#endif
 
 /**
  * Depth: converts between pixel types and bit depths.

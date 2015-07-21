@@ -65,6 +65,33 @@ inline PixelFormat default_pixel_format(PixelType type)
 	return{ type, pixel_size(type) * 8, false, false };
 }
 
+/**
+ * Compare PixelFormat structures for equality.
+ * Integer formats are considered equal if all fields match,
+ * whereas floating-point formats are defined only by their PixelType.
+ *
+ * @param a lhs structure
+ * @param b rhs structure
+ * @return true if equal, else false
+ */
+inline bool operator==(const PixelFormat &a, const PixelFormat &b)
+{
+	if (a.type >= PixelType::HALF)
+		return a.type == b.type;
+	else
+		return a.type == b.type && a.depth == b.depth && a.fullrange == b.fullrange && a.chroma == b.chroma;
+}
+
+/**
+ * Compare PixelFormat structures for inequality.
+ *
+ * @see operator==(const PixelFormat &, const PixelFormat &)
+ */
+inline bool operator!=(const PixelFormat &a, const PixelFormat &b)
+{
+	return !(a == b);
+}
+
 } // namespace zimg
 
 #endif // ZIMG_PIXEL_H_

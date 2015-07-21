@@ -20,8 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="depth.h" />
+    <ClInclude Include="depth2.h" />
     <ClInclude Include="depth_convert.h" />
+    <ClInclude Include="depth_convert2.h" />
     <ClInclude Include="depth_convert_x86.h" />
+    <ClInclude Include="dither2.h" />
     <ClInclude Include="dither_impl.h" />
     <ClInclude Include="dither_impl_x86.h" />
     <ClInclude Include="error_diffusion.h" />
@@ -32,7 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="depth.cpp" />
+    <ClCompile Include="depth2.cpp" />
     <ClCompile Include="depth_convert.cpp" />
+    <ClCompile Include="depth_convert2.cpp" />
     <ClCompile Include="depth_convert_avx2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -42,6 +47,7 @@
     <ClCompile Include="depth_convert_sse2.cpp" />
     <ClCompile Include="depth_convert_x86.cpp" />
     <ClCompile Include="dither.cpp" />
+    <ClCompile Include="dither2.cpp" />
     <ClCompile Include="dither_impl.cpp" />
     <ClCompile Include="dither_impl_avx2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
