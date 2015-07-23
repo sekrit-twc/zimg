@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_COMMON_LINEBUFFER_H_
-#define ZIMG_COMMON_LINEBUFFER_H_
+#ifndef ZIMG_LINEBUFFER_H_
+#define ZIMG_LINEBUFFER_H_
 
 #include <algorithm>
 
@@ -119,4 +119,4 @@ void copy_buffer_lines(const LineBuffer<T> &src, LineBuffer<T> &dst, unsigned by
 
 } // namespace zimg
 
-#endif // ZIMG_COMMON_LINEBUFFER_H_
+#endif // ZIMG_LINEBUFFER_H_

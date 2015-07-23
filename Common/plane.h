@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_COMMON_PLANE_H_
-#define ZIMG_COMMON_PLANE_H_
+#ifndef ZIMG_PLANE_H_
+#define ZIMG_PLANE_H_
 
 #include <algorithm>
 #include <cstddef>
@@ -143,4 +143,4 @@ inline void copy_image_plane(const ImagePlane<const T> &src, const ImagePlane<T>
 
 } // namespace zimg
 
-#endif // ZIMG_COMMON_PLANE_H_
+#endif // ZIMG_PLANE_H_

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_COMMON_ALLOC_H_
-#define ZIMG_COMMON_ALLOC_H_
+#ifndef ZIMG_ALLOC_H_
+#define ZIMG_ALLOC_H_
 
 #include <cstddef>
 #include "align.h"
@@ -104,4 +104,4 @@ public:
 
 } // namespace zimg
 
-#endif // ZIMG_COMMON_ALLOC_H_
+#endif // ZIMG_ALLOC_H_
