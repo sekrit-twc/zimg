@@ -9,7 +9,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
-#include "Colorspace/colorspace.h"
+#include "Colorspace/colorspace2.h"
 #include "Colorspace/colorspace_param.h"
 #include "apps.h"
 #include "frame.h"
@@ -32,7 +32,6 @@ struct AppContext {
 	int times;
 	CPUClass cpu;
 	PixelType filetype;
-	PixelType pixtype;
 };
 
 const AppOption OPTIONS[] = {
@@ -44,12 +43,11 @@ const AppOption OPTIONS[] = {
 	{ "times",     OptionType::OPTION_INTEGER,   offsetof(AppContext, times) },
 	{ "cpu",       OptionType::OPTION_CPUCLASS,  offsetof(AppContext, cpu) },
     { "filetype",  OptionType::OPTION_PIXELTYPE, offsetof(AppContext, filetype) },
-	{ "pixtype",   OptionType::OPTION_PIXELTYPE, offsetof(AppContext, pixtype) }
 };
 
 void usage()
 {
-	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--filetype type] [--pixtype type]\n";
+	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--filetype type]\n";
 	std::cout << "    infile               input file\n";
 	std::cout << "    outfile              output file\n";
 	std::cout << "    w                    image width\n";
@@ -62,7 +60,6 @@ void usage()
 	std::cout << "    --times              number of cycles\n";
 	std::cout << "    --cpu                select CPU type\n";
 	std::cout << "    --filetype           pixel format of input/output files\n";
-	std::cout << "    --pixtype            select working pixel format\n";
 }
 
 colorspace::MatrixCoefficients parse_matrix(const char *matrix)
@@ -135,33 +132,43 @@ colorspace::ColorspaceDefinition parse_csp(const char *str)
 	return csp;
 }
 
-void execute(const colorspace::ColorspaceConversion &conv, const Frame &in, Frame &out, int times,
-             bool fullrange_in, bool fullrange_out, bool yuv_in, bool yuv_out, PixelType filetype, PixelType type)
+void execute(const colorspace::ColorspaceConversion2 &conv, const Frame &in, Frame &out, int times,
+             bool fullrange_in, bool fullrange_out, bool yuv_in, bool yuv_out, PixelType filetype)
 {
 	int width = in.width();
 	int height = in.height();
 
-	Frame in_conv{ width, height, pixel_size(type), 3 };
-	Frame out_conv{ width, height, pixel_size(type), 3 };
+	Frame in_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
+	Frame out_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
 
-	ImagePlane<const void> in_planes[3];
-	ImagePlane<void> out_planes[3];
+	zimg_image_buffer in_buf;
+	zimg_image_buffer out_buf;
 
-	convert_frame(in, in_conv, filetype, type, fullrange_in, yuv_in);
+	convert_frame(in, in_conv, filetype, PixelType::FLOAT, fullrange_in, yuv_in);
 
 	for (int p = 0; p < 3; ++p) {
-		in_planes[p] = ImagePlane<const void>{ in_conv.data(p), width, height, in_conv.stride(), type };
-		out_planes[p] = ImagePlane<void>{ out_conv.data(p), width, height, out_conv.stride(), type };
+		in_buf.data[p] = in_conv.data(p);
+		in_buf.stride[p] = in_conv.stride() * in_conv.pxsize();
+		in_buf.mask[p] = -1;
+
+		out_buf.data[p] = out_conv.data(p);
+		out_buf.stride[p] = out_conv.stride() * out_conv.pxsize();
+		out_buf.mask[p] = -1;
 	}
 
-	auto tmp = allocate_buffer(conv.tmp_size(in.width()), PixelType::FLOAT);
+	auto ctx = allocate_buffer(conv.get_context_size(), PixelType::BYTE);
+	auto tmp = allocate_buffer(conv.get_tmp_size(0, width), PixelType::BYTE);
 
 	measure_time(times, [&]()
 	{
-		conv.process(in_planes, out_planes, tmp.data());
+		conv.init_context(ctx.data());
+
+		for (unsigned i = 0; i < (unsigned)height; i += conv.get_simultaneous_lines()) {
+			conv.process(ctx.data(), &in_buf, &out_buf, tmp.data(), i, 0, width);
+		}
 	});
 
-	convert_frame(out_conv, out, type, filetype, fullrange_out, yuv_out);
+	convert_frame(out_conv, out, PixelType::FLOAT, filetype, fullrange_out, yuv_out);
 }
 
 } // namespace
@@ -176,19 +183,18 @@ int colorspace_main(int argc, const char **argv)
 
 	AppContext c{};
 
-	c.infile           = argv[1];
-	c.outfile          = argv[2];
-	c.width            = std::stoi(argv[3]);
-	c.height           = std::stoi(argv[4]);
-	c.csp_in           = parse_csp(argv[5]);
-	c.csp_out          = parse_csp(argv[6]);
-	c.fullrange_in     = 0;
-	c.fullrange_out    = 0;
-	c.visualise        = nullptr;
-	c.times            = 1;
-	c.filetype         = PixelType::FLOAT;
-	c.pixtype          = PixelType::FLOAT;
-	c.cpu              = CPUClass::CPU_NONE;
+	c.infile        = argv[1];
+	c.outfile       = argv[2];
+	c.width         = std::stoi(argv[3]);
+	c.height        = std::stoi(argv[4]);
+	c.csp_in        = parse_csp(argv[5]);
+	c.csp_out       = parse_csp(argv[6]);
+	c.fullrange_in  = 0;
+	c.fullrange_out = 0;
+	c.visualise     = nullptr;
+	c.times         = 1;
+	c.filetype      = PixelType::FLOAT;
+	c.cpu           = CPUClass::CPU_NONE;
 
 	parse_opts(argv + 7, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
 
@@ -204,8 +210,8 @@ int colorspace_main(int argc, const char **argv)
 
 	read_frame_raw(in, c.infile);
 
-	colorspace::ColorspaceConversion conv{ c.csp_in, c.csp_out, c.cpu };
-	execute(conv, in, out, c.times, !!c.fullrange_in, !!c.fullrange_out, yuv_in, yuv_out, c.filetype, c.pixtype);
+	colorspace::ColorspaceConversion2 conv{ c.csp_in, c.csp_out, c.cpu };
+	execute(conv, in, out, c.times, !!c.fullrange_in, !!c.fullrange_out, yuv_in, yuv_out, c.filetype);
 
 	write_frame_raw(out, c.outfile);
 
