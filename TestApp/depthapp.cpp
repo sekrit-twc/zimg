@@ -6,6 +6,7 @@
 #include "Common/pixel.h"
 #include "Common/plane.h"
 #include "Depth/depth.h"
+#include "Depth/depth2.h"
 #include "apps.h"
 #include "frame.h"
 #include "utils.h"
@@ -90,7 +91,7 @@ void usage()
 	std::cout << "    --cpu                select CPU type\n";
 }
 
-void execute(const depth::Depth &depth, const Frame &in, Frame &out, int times,
+void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &in, Frame &out, int times,
              PixelType pxl_in, PixelType pxl_out, int bits_in, int bits_out, bool fullrange_in, bool fullrange_out, bool yuv)
 {
 	int width = in.width();
@@ -98,20 +99,32 @@ void execute(const depth::Depth &depth, const Frame &in, Frame &out, int times,
 	int src_stride = in.stride();
 	int dst_stride = out.stride();
 
-	auto tmp = allocate_buffer(depth.tmp_size(width), PixelType::FLOAT);
+	auto ctx = allocate_buffer(depth.get_context_size(), PixelType::BYTE);
+	auto tmp = allocate_buffer(depth.get_tmp_size(0, width), PixelType::BYTE);
+
+	zimg_image_buffer in_buf[3];
+	zimg_image_buffer out_buf[3];
+
+	for (int p = 0; p < 3; ++p) {
+		in_buf[p].data[0] = in.data(p);
+		in_buf[p].stride[0] = src_stride * in.pxsize();
+		in_buf[p].mask[0] = -1;
+
+		out_buf[p].data[0] = out.data(p);
+		out_buf[p].stride[0] = dst_stride * out.pxsize();
+		out_buf[p].mask[0] = -1;
+	}
 
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < 3; ++p) {
-			bool chroma = yuv && (p == 1 || p == 2);
+			const depth::Depth2 depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
 
-			PixelFormat src_format{ pxl_in, bits_in, fullrange_in, chroma };
-			PixelFormat dst_format{ pxl_out, bits_out, fullrange_out, chroma };
+			depth_ctx.init_context(ctx.data());
 
-			ImagePlane<const void> src_plane{ in.data(p), width, height, src_stride, src_format };
-			ImagePlane<void> dst_plane{ out.data(p), width, height, dst_stride, dst_format };
-
-			depth.process(src_plane, dst_plane, tmp.data());
+			for (unsigned i = 0; i < (unsigned)height; i += depth_ctx.get_simultaneous_lines()) {
+				depth_ctx.process(ctx.data(), &in_buf[p], &out_buf[p], tmp.data(), i, 0, width);
+			}
 		}
 	});
 }
@@ -179,10 +192,16 @@ int depth_main(int argc, const char **argv)
 	Frame in{ width, height, pixel_size(c.pixtype_in), 3 };
 	Frame out{ width, height, pixel_size(c.pixtype_out), 3 };
 
+	PixelFormat pixel_in_y{ c.pixtype_in, c.bits_in, !!c.fullrange_in, false };
+	PixelFormat pixel_out_y{ c.pixtype_out, c.bits_out, !!c.fullrange_out, false };
+	PixelFormat pixel_in_uv{ c.pixtype_in, c.bits_in, !!c.fullrange_in, !!c.yuv };
+	PixelFormat pixel_out_uv{ c.pixtype_out, c.bits_out, !!c.fullrange_out, !!c.yuv };
+
 	read_frame_raw(in, c.infile);
 
-	depth::Depth depth{ c.dither, c.cpu };
-	execute(depth, in, out, c.times, c.pixtype_in, c.pixtype_out, c.bits_in, c.bits_out, !!c.fullrange_in, !!c.fullrange_out, !!c.yuv);
+	depth::Depth2 depth{ c.dither, (unsigned)width, pixel_in_y, pixel_out_y, c.cpu };
+	depth::Depth2 depth_uv{ c.dither, (unsigned)width, pixel_in_uv, pixel_out_uv, c.cpu };
+	execute(depth, depth_uv, in, out, c.times, c.pixtype_in, c.pixtype_out, c.bits_in, c.bits_out, !!c.fullrange_in, !!c.fullrange_out, !!c.yuv);
 
 	write_frame_raw(out, c.outfile);
 
