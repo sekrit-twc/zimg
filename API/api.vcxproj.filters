@@ -29,5 +29,8 @@
     <ClCompile Include="zimg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zimg2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
