@@ -1,3 +1,4 @@
+#include <climits>
 #include <cstddef>
 #include <utility>
 #include "Common/except.h"
