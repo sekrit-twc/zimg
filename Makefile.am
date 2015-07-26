@@ -19,6 +19,8 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Colorspace/colorspace.h \
 					 Colorspace/colorspace_param.cpp \
 					 Colorspace/colorspace_param.h \
+					 Colorspace/colorspace2.cpp \
+					 Colorspace/colorspace2.h \
 					 Colorspace/graph.cpp \
 					 Colorspace/graph.h \
 					 Colorspace/matrix3.cpp \
@@ -38,10 +40,16 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Common/plane.h \
 					 Depth/depth_convert.cpp \
 					 Depth/depth_convert.h \
+					 Depth/depth_convert2.cpp \
+					 Depth/depth_convert2.h \
 					 Depth/depth.cpp \
 					 Depth/depth.h \
+					 Depth/depth2.cpp \
+					 Depth/depth2.h \
 					 Depth/dither.cpp \
 					 Depth/dither.h \
+					 Depth/dither2.cpp \
+					 Depth/dither2.h \
 					 Depth/dither_impl.cpp \
 					 Depth/dither_impl.h \
 					 Depth/error_diffusion.cpp \
