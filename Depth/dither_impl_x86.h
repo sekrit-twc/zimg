@@ -5,6 +5,7 @@
 #ifndef ZIMG_DEPTH_DITHER_IMPL_X86_H_
 #define ZIMG_DEPTH_DITHER_IMPL_X86_H_
 
+#include <cstddef>
 #include "Common/linebuffer.h"
 #include "dither_impl.h"
 
