@@ -12,6 +12,8 @@ namespace zimg {;
 enum class CPUClass;
 enum class PixelType;
 
+class IZimgFilter;
+
 } // namespace zimg
 
 
@@ -42,6 +44,10 @@ zimg::PixelType select_pixel_type(const char *pixtype);
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type);
 
 void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool fullrange, bool yuv);
+
+zimg::AlignedVector<char> alloc_filter_tmp(const zimg::IZimgFilter &filter, const Frame &in, Frame &out);
+
+void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, void *alloc_pool, int plane);
 
 void measure_time(int times, std::function<void(void)> f);
 

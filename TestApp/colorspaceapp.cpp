@@ -141,31 +141,13 @@ void execute(const colorspace::ColorspaceConversion2 &conv, const Frame &in, Fra
 	Frame in_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
 	Frame out_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
 
-	zimg_image_buffer in_buf;
-	zimg_image_buffer out_buf;
-
 	convert_frame(in, in_conv, filetype, PixelType::FLOAT, fullrange_in, yuv_in);
 
-	for (int p = 0; p < 3; ++p) {
-		in_buf.data[p] = in_conv.data(p);
-		in_buf.stride[p] = in_conv.stride() * in_conv.pxsize();
-		in_buf.mask[p] = -1;
-
-		out_buf.data[p] = out_conv.data(p);
-		out_buf.stride[p] = out_conv.stride() * out_conv.pxsize();
-		out_buf.mask[p] = -1;
-	}
-
-	auto ctx = allocate_buffer(conv.get_context_size(), PixelType::BYTE);
-	auto tmp = allocate_buffer(conv.get_tmp_size(0, width), PixelType::BYTE);
+	auto tmp = alloc_filter_tmp(conv, in_conv, out_conv);
 
 	measure_time(times, [&]()
 	{
-		conv.init_context(ctx.data());
-
-		for (unsigned i = 0; i < (unsigned)height; i += conv.get_simultaneous_lines()) {
-			conv.process(ctx.data(), &in_buf, &out_buf, tmp.data(), i, 0, width);
-		}
+		apply_filter(conv, in_conv, out_conv, tmp.data(), 0);
 	});
 
 	convert_frame(out_conv, out, PixelType::FLOAT, filetype, fullrange_out, yuv_out);

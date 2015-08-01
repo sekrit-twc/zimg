@@ -94,37 +94,16 @@ void usage()
 void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &in, Frame &out, int times,
              PixelType pxl_in, PixelType pxl_out, int bits_in, int bits_out, bool fullrange_in, bool fullrange_out, bool yuv)
 {
-	int width = in.width();
-	int height = in.height();
-	int src_stride = in.stride();
-	int dst_stride = out.stride();
-
-	auto ctx = allocate_buffer(depth.get_context_size(), PixelType::BYTE);
-	auto tmp = allocate_buffer(depth.get_tmp_size(0, width), PixelType::BYTE);
-
-	zimg_image_buffer in_buf[3];
-	zimg_image_buffer out_buf[3];
-
-	for (int p = 0; p < 3; ++p) {
-		in_buf[p].data[0] = in.data(p);
-		in_buf[p].stride[0] = src_stride * in.pxsize();
-		in_buf[p].mask[0] = -1;
-
-		out_buf[p].data[0] = out.data(p);
-		out_buf[p].stride[0] = dst_stride * out.pxsize();
-		out_buf[p].mask[0] = -1;
-	}
+	auto tmp = alloc_filter_tmp(depth, in, out);
+	auto tmp_uv = alloc_filter_tmp(depth_uv, in, out);
 
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < 3; ++p) {
-			const depth::Depth2 depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
+			const depth::Depth2 &depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
+			void *tmp_pool = (p > 0 && yuv) ? tmp_uv.data() : tmp.data();
 
-			depth_ctx.init_context(ctx.data());
-
-			for (unsigned i = 0; i < (unsigned)height; i += depth_ctx.get_simultaneous_lines()) {
-				depth_ctx.process(ctx.data(), &in_buf[p], &out_buf[p], tmp.data(), i, 0, width);
-			}
+			apply_filter(depth_ctx, in, out, tmp_pool, p);
 		}
 	});
 }
