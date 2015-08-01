@@ -78,7 +78,7 @@ public:
 	template <class T = void>
 	T *allocate(size_t bytes)
 	{
-		m_count += bytes;
+		m_count += align(bytes, ALIGNMENT);
 		return nullptr;
 	}
 
