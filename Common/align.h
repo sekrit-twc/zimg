@@ -55,6 +55,13 @@ template <class T>
 struct AlignedAllocator {
 	typedef T value_type;
 
+	AlignedAllocator() = default;
+
+	template <class U>
+	AlignedAllocator(const AlignedAllocator<U> &)
+	{
+	}
+
 	T *allocate(size_t n) const
 	{
 		T *ptr = (T *)zimg_aligned_malloc(n * sizeof(T), ALIGNMENT);
