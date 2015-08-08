@@ -36,8 +36,9 @@ zimg_filter_flags ColorspaceConversion2::get_flags() const
 {
 	zimg_filter_flags flags{};
 
+	flags.same_row = true;
+	flags.in_place = true;
 	flags.color = true;
-	flags.direct_render = true;
 
 	return flags;
 }

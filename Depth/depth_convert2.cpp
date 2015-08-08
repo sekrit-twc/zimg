@@ -98,7 +98,8 @@ zimg_filter_flags DepthConvert2::get_flags() const
 {
 	zimg_filter_flags flags{};
 
-	flags.direct_render = !(m_func && m_f16c) && (pixel_size(m_pixel_in) >= pixel_size(m_pixel_out));
+	flags.same_row = true;
+	flags.in_place = !(m_func && m_f16c) && (pixel_size(m_pixel_in) >= pixel_size(m_pixel_out));
 
 	return flags;
 }

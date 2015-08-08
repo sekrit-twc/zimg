@@ -60,7 +60,8 @@ typedef struct zimg_image_buffer {
 typedef struct zimg_filter_flags {
 	unsigned version;
 	unsigned char has_state;
-	unsigned char direct_render;
+	unsigned char same_row;
+	unsigned char in_place;
 	unsigned char entire_row;
 	unsigned char entire_plane;
 	unsigned char color;
