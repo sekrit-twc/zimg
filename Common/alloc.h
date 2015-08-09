@@ -55,7 +55,7 @@ public:
 	template <class T>
 	T *allocate_n(size_t count)
 	{
-		return allocate(count * sizeof(T));
+		return allocate<T>(count * sizeof(T));
 	}
 };
 
