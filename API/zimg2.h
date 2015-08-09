@@ -225,6 +225,34 @@ void zimg_depth_delete(zimg_depth_context *ctx);
 #define ZIMG_RESIZE_SPLINE36 4
 #define ZIMG_RESIZE_LANCZOS  5
 
+typedef struct zimg_resize_params {
+	unsigned version;
+
+	unsigned src_width;
+	unsigned src_height;
+	unsigned dst_width;
+	unsigned dst_height;
+
+	int pixel_type;
+
+	double shift_w;
+	double shift_h;
+	double subwidth;
+	double subheight;
+
+	int filter_type;
+	double filter_param_a;
+	double filter_param_b;
+} zimg_resize_params;
+
+zimg_resize_params *zimg2_resize_params_alloc(void);
+
+void zimg2_resize_params_free(zimg_resize_params *ptr);
+
+void zimg2_resize_params_default(zimg_resize_params *ptr, unsigned version);
+
+zimg_filter *zimg2_resize_create(const zimg_resize_params *params);
+
 #ifdef ZIMG_API_V1
 
 typedef struct zimg_resize_context zimg_resize_context;
