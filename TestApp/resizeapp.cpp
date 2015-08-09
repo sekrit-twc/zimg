@@ -9,7 +9,7 @@
 #include "Common/pixel.h"
 #include "Common/plane.h"
 #include "Resize/filter.h"
-#include "Resize/resize.h"
+#include "Resize/resize2.h"
 #include "apps.h"
 #include "frame.h"
 #include "utils.h"
@@ -88,24 +88,22 @@ void usage()
 	std::cout << "    --pixtype           select pixel format\n";
 }
 
-void execute(const resize::Resize &resize, const Frame &in, Frame &out, int times, PixelType type)
+void execute(const resize::Resize2 &resize, const Frame &in, Frame &out, int times, PixelType type)
 {
 	int pxsize = pixel_size(type);
 	int planes = in.planes();
 
 	Frame src{ in.width(), in.height(), pxsize, planes };
 	Frame dst{ out.width(), out.height(), pxsize, planes };
-	auto tmp = allocate_buffer(resize.tmp_size(type), PixelType::BYTE);
+
+	auto tmp = alloc_filter_tmp(resize, src, dst);
 
 	convert_frame(in, src, PixelType::BYTE, type, true, false);
 
 	measure_time(times, [&]()
 	{
-		for (int p = 0; p < planes; ++p) {
-			ImagePlane<const void> src_p{ src.data(p), src.width(), src.height(), src.stride(), type };
-			ImagePlane<void> dst_p{ dst.data(p), dst.width(), dst.height(), dst.stride(), type };
-
-			resize.process(src_p, dst_p, tmp.data());
+		for (int p = 0; p < src.planes(); ++p) {
+			apply_filter(resize, src, dst, tmp.data(), p);
 		}
 	});
 
@@ -148,7 +146,7 @@ int resize_main(int argc, const char **argv)
 	if (!c.filter)
 		c.filter.reset(new resize::BilinearFilter{});
 
-	resize::Resize resize{ *c.filter, in.width(), in.height(), c.width, c.height, c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu };
+	resize::Resize2 resize{ *c.filter, c.pixtype, in.width(), in.height(), c.width, c.height, c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu };
 
 	execute(resize, in, out, c.times, c.pixtype);
 	write_frame_bmp(out, c.outfile);
