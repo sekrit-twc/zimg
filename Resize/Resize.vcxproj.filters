@@ -27,6 +27,12 @@
     <ClInclude Include="resize_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resize2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resize_impl2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="filter.cpp">
@@ -45,6 +51,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="resize_impl_x86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resize2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resize_impl2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

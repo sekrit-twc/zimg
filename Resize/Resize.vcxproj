@@ -126,14 +126,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="filter.h" />
+    <ClInclude Include="resize2.h" />
     <ClInclude Include="resize.h" />
     <ClInclude Include="resize_impl.h" />
+    <ClInclude Include="resize_impl2.h" />
     <ClInclude Include="resize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="filter.cpp" />
     <ClCompile Include="resize.cpp" />
+    <ClCompile Include="resize2.cpp" />
     <ClCompile Include="resize_impl.cpp" />
+    <ClCompile Include="resize_impl2.cpp" />
     <ClCompile Include="resize_impl_avx2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
