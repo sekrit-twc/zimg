@@ -15,6 +15,7 @@ lib_LTLIBRARIES = libzimg.la
 pkglib_LTLIBRARIES = vszimg.la
 
 libzimg_la_SOURCES = API/zimg.cpp \
+					 API/zimg2.cpp \
 					 Colorspace/colorspace.cpp \
 					 Colorspace/colorspace.h \
 					 Colorspace/colorspace_param.cpp \
@@ -59,8 +60,12 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Resize/filter.h \
 					 Resize/resize.cpp \
 					 Resize/resize.h \
+					 Resize/resize2.cpp \
+					 Resize/resize2.h \
 					 Resize/resize_impl.cpp \
 					 Resize/resize_impl.h \
+					 Resize/resize_impl2.cpp \
+					 Resize/resize_impl2.h \
 					 Unresize/bilinear.cpp \
 					 Unresize/bilinear.h \
 					 Unresize/unresize.cpp \
