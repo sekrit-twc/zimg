@@ -120,10 +120,10 @@ inline FORCE_INLINE void transpose_line_4x4_ps(const float *p0, const float *p1,
 		_mm_store_ps(&dst[(j + 3) * 4], x3);
 	}
 	for (unsigned j = mod(n, 4); j < n; ++j) {
-		dst[j * 8 + 0] = p0[j];
-		dst[j * 8 + 1] = p1[j];
-		dst[j * 8 + 2] = p2[j];
-		dst[j * 8 + 3] = p3[j];
+		dst[j * 4 + 0] = p0[j];
+		dst[j * 4 + 1] = p1[j];
+		dst[j * 4 + 2] = p2[j];
+		dst[j * 4 + 3] = p3[j];
 	}
 }
 
@@ -187,7 +187,7 @@ inline FORCE_INLINE void scatter_ps(__m128 x, float *p0, float *p1, float *p2, f
 
 	_mm_store_ps(tmp, x);
 	*p0 = tmp[0];
-	*p1 = tmp[2];
+	*p1 = tmp[1];
 	*p2 = tmp[2];
 	*p3 = tmp[3];
 }
@@ -314,9 +314,12 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 			hi = _mm_unpackhi_epi16(x0, x1);
 
 			c = _mm_loadu_si128((const __m128i *)&filter_row[k]);
-			c = _mm_shuffle_epi32(c, _MM_SHUFFLE(3, 3, 3, 3));
-			accum_lo = _mm_madd_epi16(c, lo);
-			accum_hi = _mm_madd_epi16(c, hi);
+			c = _mm_shuffle_epi32(c, _MM_SHUFFLE(0, 0, 0, 0));
+			lo = _mm_madd_epi16(c, lo);
+			hi = _mm_madd_epi16(c, hi);
+
+			accum_lo = _mm_add_epi32(accum_lo, lo);
+			accum_hi = _mm_add_epi32(accum_hi, hi);
 		}
 
 		result = pack_i30_to_epi16(accum_lo, accum_hi);
@@ -399,7 +402,7 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 		__m128 accum = _mm_setzero_ps();
 
 		for (unsigned k = 0; k < filter.filter_width; ++k) {
-			__m128 x = _mm_load_ps(&ttmp[(left + k) * 8]);
+			__m128 x = _mm_load_ps(&ttmp[(left + k) * 4]);
 			__m128 c = _mm_load_ps1(&filter_row[k]);
 
 			x = _mm_mul_ps(c, x);
