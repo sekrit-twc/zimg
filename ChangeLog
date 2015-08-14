@@ -1,3 +1,6 @@
+1.1.1:
+fix border handling in SSE2 horizontal resize
+
 1.1:
 cache efficient 2d resizer
 rewrite horizontal resize kernels
