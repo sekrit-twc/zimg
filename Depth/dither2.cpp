@@ -175,9 +175,9 @@ OrderedDitherBase::OrderedDitherBase(const PixelFormat &pixel_in, const PixelFor
 
 }
 
-zimg_filter_flags OrderedDitherBase::get_flags() const
+ZimgFilterFlags OrderedDitherBase::get_flags() const
 {
-	zimg_filter_flags flags{};
+	ZimgFilterFlags flags{};
 
 	flags.same_row = true;
 	flags.in_place = pixel_size(m_pixel_in) >= pixel_size(m_pixel_out);
@@ -190,7 +190,7 @@ size_t OrderedDitherBase::get_tmp_size(unsigned left, unsigned right) const
 	return (m_func && m_f16c) ? align(right - left, AlignmentOf<float>::value) * sizeof(float) : 0;
 }
 
-void OrderedDitherBase::process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void OrderedDitherBase::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	LineBuffer<void> src_buf{ src->data[0], right, (unsigned)src->stride[0], src->mask[0] };
 	LineBuffer<void> dst_buf{ dst->data[0], right, (unsigned)dst->stride[0], dst->mask[0] };
@@ -286,9 +286,9 @@ ErrorDiffusion::ErrorDiffusion(unsigned width, const PixelFormat &pixel_in, cons
 	m_offset = scale_offset.second;
 }
 
-zimg_filter_flags ErrorDiffusion::get_flags() const
+ZimgFilterFlags ErrorDiffusion::get_flags() const
 {
-	zimg_filter_flags flags{};
+	ZimgFilterFlags flags{};
 
 	flags.has_state = true;
 	flags.same_row = true;
@@ -314,7 +314,7 @@ void ErrorDiffusion::init_context(void *ctx) const
 	std::fill_n(ctx_p, get_context_width(), 0.0f);
 }
 
-void ErrorDiffusion::process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned, unsigned) const
+void ErrorDiffusion::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned, unsigned) const
 {
 	LineBuffer<void> src_buf{ src->data[0], m_width, (unsigned)src->stride[0], src->mask[0] };
 	LineBuffer<void> dst_buf{ dst->data[0], m_width, (unsigned)dst->stride[0], dst->mask[0] };

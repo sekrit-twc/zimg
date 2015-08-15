@@ -29,7 +29,7 @@ public:
 
 	Depth2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
 	pair_unsigned get_required_row_range(unsigned i) const override;
 
@@ -45,7 +45,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg_image_buffer src[3], const zimg_image_buffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer src[3], const ZimgImageBuffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace depth

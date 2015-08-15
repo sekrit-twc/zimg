@@ -32,9 +32,9 @@ try
 	throw ZimgOutOfMemory{};
 }
 
-zimg_filter_flags ColorspaceConversion2::get_flags() const
+ZimgFilterFlags ColorspaceConversion2::get_flags() const
 {
-	zimg_filter_flags flags{};
+	ZimgFilterFlags flags{};
 
 	flags.same_row = true;
 	flags.in_place = true;
@@ -43,7 +43,7 @@ zimg_filter_flags ColorspaceConversion2::get_flags() const
 	return flags;
 }
 
-void ColorspaceConversion2::process(void *, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *, unsigned i, unsigned left, unsigned right) const
+void ColorspaceConversion2::process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const
 {
 	float *buf[3];
 	unsigned count = right - left;

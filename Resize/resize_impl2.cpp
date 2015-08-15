@@ -112,9 +112,9 @@ public:
 			throw ZimgUnsupportedError{ "pixel type not supported" };
 	}
 
-	zimg_filter_flags get_flags() const override
+	ZimgFilterFlags get_flags() const override
 	{
-		zimg_filter_flags flags{};
+		ZimgFilterFlags flags{};
 
 		flags.same_row = true;
 		flags.entire_row = !m_is_sorted;
@@ -134,7 +134,7 @@ public:
 		}
 	}
 
-	void process(void *, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
 			LineBuffer<uint16_t> src_buf{ reinterpret_cast<uint16_t *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };
@@ -164,9 +164,9 @@ public:
 			throw ZimgUnsupportedError{ "pixel type not supported" };
 	}
 
-	zimg_filter_flags get_flags() const override
+	ZimgFilterFlags get_flags() const override
 	{
-		zimg_filter_flags flags{};
+		ZimgFilterFlags flags{};
 
 		flags.entire_row = !m_is_sorted;
 		flags.entire_plane = !m_is_sorted;
@@ -190,7 +190,7 @@ public:
 		return m_is_sorted ? m_filter.filter_width : -1;
 	}
 
-	void process(void *, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
 			LineBuffer<uint16_t> src_buf{ reinterpret_cast<uint16_t *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };

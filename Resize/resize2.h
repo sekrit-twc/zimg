@@ -24,7 +24,7 @@ public:
 	Resize2(const Filter &filter, PixelType type, int src_width, int src_height, int dst_width, int dst_height,
 	        double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
 	pair_unsigned get_required_row_range(unsigned i) const override;
 
@@ -40,7 +40,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace resize

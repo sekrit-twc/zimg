@@ -18,7 +18,7 @@ try
 	throw ZimgOutOfMemory{};
 }
 
-zimg_filter_flags Depth2::get_flags() const
+ZimgFilterFlags Depth2::get_flags() const
 {
 	return m_impl->get_flags();
 }
@@ -58,7 +58,7 @@ void Depth2::init_context(void *ctx) const
 	m_impl->init_context(ctx);
 }
 
-void Depth2::process(void *ctx, const zimg_image_buffer src[3], const zimg_image_buffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const
+void Depth2::process(void *ctx, const ZimgImageBuffer src[3], const ZimgImageBuffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	m_impl->process(ctx, src, dst, tmp, i, left, right);
 }

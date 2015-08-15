@@ -97,7 +97,7 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 
 zimg::AlignedVector<char> alloc_filter_tmp(const zimg::IZimgFilter &filter, const Frame &in, Frame &out)
 {
-	zimg_filter_flags flags = filter.get_flags();
+	ZimgFilterFlags flags = filter.get_flags();
 	FakeAllocator alloc;
 
 	unsigned input_lines = filter.get_max_buffering();
@@ -123,7 +123,7 @@ zimg::AlignedVector<char> alloc_filter_tmp(const zimg::IZimgFilter &filter, cons
 
 void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, void *alloc_pool, int plane)
 {
-	zimg_filter_flags flags = filter.get_flags();
+	ZimgFilterFlags flags = filter.get_flags();
 	LinearAllocator alloc{ alloc_pool };
 
 	unsigned input_lines = filter.get_max_buffering();
@@ -134,10 +134,10 @@ void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, 
 	size_t input_buf_stride = align(in.width() * in.pxsize(), ALIGNMENT);
 	size_t output_buf_stride = align(out.width() * out.pxsize(), ALIGNMENT);
 
-	zimg_image_buffer in_buf1{};
-	zimg_image_buffer in_buf2{};
-	zimg_image_buffer out_buf1{};
-	zimg_image_buffer out_buf2{};
+	ZimgImageBuffer in_buf1{};
+	ZimgImageBuffer in_buf2{};
+	ZimgImageBuffer out_buf1{};
+	ZimgImageBuffer out_buf2{};
 
 	void *ctx = alloc.allocate(filter.get_context_size());
 	void *tmp = alloc.allocate(filter.get_tmp_size(0, out.width()));
@@ -168,8 +168,8 @@ void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, 
 	filter.init_context(ctx);
 
 	for (unsigned i = 0; i < (unsigned)out.height(); i += output_lines) {
-		const zimg_image_buffer *in_buf_p = &in_buf1;
-		const zimg_image_buffer *out_buf_p = &out_buf1;
+		const ZimgImageBuffer *in_buf_p = &in_buf1;
+		const ZimgImageBuffer *out_buf_p = &out_buf1;
 
 		auto input_bounds = filter.get_required_row_range(i);
 		unsigned top = input_bounds.first;

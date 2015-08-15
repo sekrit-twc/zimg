@@ -20,9 +20,9 @@ public:
 
 	ColorspaceConversion2(const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
 
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace colorspace

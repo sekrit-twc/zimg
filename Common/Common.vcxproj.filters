@@ -45,5 +45,8 @@
     <ClInclude Include="zfilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ztypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

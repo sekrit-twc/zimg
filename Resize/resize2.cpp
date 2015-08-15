@@ -31,8 +31,8 @@ class PairFilter : public IZimgFilter {
 	std::unique_ptr<IZimgFilter> m_first;
 	std::unique_ptr<IZimgFilter> m_second;
 
-	zimg_filter_flags m_first_flags;
-	zimg_filter_flags m_second_flags;
+	ZimgFilterFlags m_first_flags;
+	ZimgFilterFlags m_second_flags;
 
 	PixelType m_first_type;
 	PixelType m_second_type;
@@ -85,9 +85,9 @@ public:
 		}
 	}
 
-	zimg_filter_flags get_flags() const override
+	ZimgFilterFlags get_flags() const override
 	{
-		zimg_filter_flags flags{};
+		ZimgFilterFlags flags{};
 
 		flags.has_state = m_first_flags.has_state || m_second_flags.has_state ||
 		                  !(m_first_flags.same_row && m_second_flags.same_row && m_first->get_simultaneous_lines() == m_second->get_simultaneous_lines());
@@ -205,7 +205,7 @@ public:
 		}
 	}
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		cache_context *cache_ctx = reinterpret_cast<cache_context *>(ctx);
 		pair_unsigned req_row_range = m_second->get_required_row_range(i);
@@ -218,8 +218,8 @@ public:
 		while (cache_ctx->cache_pos < req_row_range.second) {
 			if (color && !m_first_flags.color) {
 				for (unsigned p = 0; p < 3; ++p) {
-					zimg_image_buffer src_plane(*src);
-					zimg_image_buffer cache_buf{};
+					ZimgImageBuffer src_plane(*src);
+					ZimgImageBuffer cache_buf{};
 
 					src_plane.data[0] = src->data[p];
 					src_plane.stride[0] = src->stride[p];
@@ -232,7 +232,7 @@ public:
 					m_first->process(cache_ctx->first_ctx[p], &src_plane, &cache_buf, tmp, cache_ctx->cache_pos, req_col_range.first, req_col_range.second);
 				}
 			} else {
-				zimg_image_buffer cache_buf{};
+				ZimgImageBuffer cache_buf{};
 
 				for (unsigned p = 0; p < 3; ++p) {
 					cache_buf.data[p] = cache_ctx->cache_mem[p];
@@ -248,8 +248,8 @@ public:
 
 		if (color && !m_second_flags.color) {
 			for (unsigned p = 0; p < 3; ++p) {
-				zimg_image_buffer cache_buf{};
-				zimg_image_buffer dst_plane(*dst);
+				ZimgImageBuffer cache_buf{};
+				ZimgImageBuffer dst_plane(*dst);
 
 				cache_buf.data[0] = cache_ctx->cache_mem[p];
 				cache_buf.stride[0] = cache_stride;
@@ -262,7 +262,7 @@ public:
 				m_second->process(cache_ctx->second_ctx[p], &cache_buf, &dst_plane, tmp, i, left, right);
 			}
 		} else {
-			zimg_image_buffer cache_buf{};
+			ZimgImageBuffer cache_buf{};
 
 			for (unsigned p = 0; p < 3; ++p) {
 				cache_buf.data[p] = cache_ctx->cache_mem[p];
@@ -283,9 +283,9 @@ public:
 	{
 	}
 
-	zimg_filter_flags get_flags() const override
+	ZimgFilterFlags get_flags() const override
 	{
-		zimg_filter_flags flags{};
+		ZimgFilterFlags flags{};
 
 		flags.same_row = 1;
 		flags.in_place = 1;
@@ -293,7 +293,7 @@ public:
 		return flags;
 	}
 
-	void process(void *, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		LineBuffer<void> src_buf{ reinterpret_cast<char *>(src->data[0]) + left * pixel_size(m_type), right - left, (unsigned)src->stride[0], src->mask[0] };
 		LineBuffer<void> dst_buf{ reinterpret_cast<char *>(dst->data[0]) + left * pixel_size(m_type), right - left, (unsigned)dst->stride[0], dst->mask[0] };
@@ -347,7 +347,7 @@ try
 	throw ZimgOutOfMemory{};
 }
 
-zimg_filter_flags Resize2::get_flags() const
+ZimgFilterFlags Resize2::get_flags() const
 {
 	return m_impl->get_flags();
 }
@@ -387,7 +387,7 @@ void Resize2::init_context(void *ctx) const
 	m_impl->init_context(ctx);
 }
 
-void Resize2::process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void Resize2::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	m_impl->process(ctx, src, dst, tmp, i, left, right);
 }

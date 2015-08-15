@@ -29,11 +29,11 @@ private:
 public:
 	DepthConvert2(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace depth

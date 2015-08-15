@@ -9,23 +9,7 @@
 #include <memory>
 #include <utility>
 #include "align.h"
-
-typedef struct zimg_image_buffer {
-	unsigned version;
-	void *data[3];
-	ptrdiff_t stride[3];
-	unsigned mask[3];
-} zimg_image_buffer;
-
-typedef struct zimg_filter_flags {
-	unsigned version;
-	unsigned char has_state;
-	unsigned char same_row;
-	unsigned char in_place;
-	unsigned char entire_row;
-	unsigned char entire_plane;
-	unsigned char color;
-} zimg_filter_flags;
+#include "ztypes.h"
 
 struct zimg_filter {
 };
@@ -38,7 +22,7 @@ public:
 
 	virtual inline ~IZimgFilter() = 0;
 
-	virtual zimg_filter_flags get_flags() const = 0;
+	virtual ZimgFilterFlags get_flags() const = 0;
 
 	virtual pair_unsigned get_required_row_range(unsigned i) const = 0;
 
@@ -54,7 +38,7 @@ public:
 
 	virtual void init_context(void *ctx) const = 0;
 
-	virtual void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
+	virtual void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
 };
 
 class ZimgFilter : public IZimgFilter {

@@ -37,11 +37,11 @@ protected:
 
 	virtual std::tuple<unsigned, unsigned, unsigned> get_dither_params(unsigned i, unsigned left) const = 0;
 public:
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 class NoneDither final : public OrderedDitherBase {
@@ -82,13 +82,13 @@ private:
 public:
 	ErrorDiffusion(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-	zimg_filter_flags get_flags() const override;
+	ZimgFilterFlags get_flags() const override;
 
 	size_t get_context_size() const override;
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 IZimgFilter *create_dither_convert2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);

@@ -94,9 +94,9 @@ DepthConvert2::DepthConvert2(const PixelFormat &pixel_in, const PixelFormat &pix
 	m_offset = (float)(-offset * (1.0 / range));
 }
 
-zimg_filter_flags DepthConvert2::get_flags() const
+ZimgFilterFlags DepthConvert2::get_flags() const
 {
-	zimg_filter_flags flags{};
+	ZimgFilterFlags flags{};
 
 	flags.same_row = true;
 	flags.in_place = !(m_func && m_f16c) && (pixel_size(m_pixel_in) >= pixel_size(m_pixel_out));
@@ -109,7 +109,7 @@ size_t DepthConvert2::get_tmp_size(unsigned left, unsigned right) const
 	return (m_func && m_f16c) ? align(right - left, AlignmentOf<float>::value) * sizeof(float) : 0;
 }
 
-void DepthConvert2::process(void *, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void DepthConvert2::process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	LineBuffer<void> src_buf{ src->data[0], right, (unsigned)src->stride[0], src->mask[0] };
 	LineBuffer<void> dst_buf{ dst->data[0], right, (unsigned)dst->stride[0], dst->mask[0] };
