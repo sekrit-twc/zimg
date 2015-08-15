@@ -3,10 +3,8 @@
 #ifndef ZIMG_ZFILTER_H_
 #define ZIMG_ZFILTER_H_
 
-#include <climits>
 #include <cstddef>
 #include <limits>
-#include <memory>
 #include <utility>
 #include "align.h"
 #include "ztypes.h"

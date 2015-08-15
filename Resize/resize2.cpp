@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <memory>
 #include "Common/align.h"
 #include "Common/alloc.h"
 #include "Common/linebuffer.h"
