@@ -71,23 +71,23 @@ typedef struct zimg_filter zimg_filter;
 
 void zimg2_filter_free(zimg_filter *ptr);
 
-void zimg2_filter_get_flags(const zimg_filter *ptr, zimg_filter_flags *flags);
+int zimg2_filter_get_flags(const zimg_filter *ptr, zimg_filter_flags *flags, unsigned version);
 
-void zimg2_filter_get_required_row_range(unsigned i, unsigned *first, unsigned *second);
+int zimg2_filter_get_required_row_range(const zimg_filter *ptr, unsigned i, unsigned *first, unsigned *second);
 
-void zimg2_filter_get_required_col_range(unsigned left, unsigned right, unsigned *first, unsigned *second);
+int zimg2_filter_get_required_col_range(const zimg_filter *ptr, unsigned left, unsigned right, unsigned *first, unsigned *second);
 
-unsigned zimg2_filter_get_simultaneous_lines(const zimg_filter *ptr);
+int zimg2_filter_get_simultaneous_lines(const zimg_filter *ptr, unsigned *out);
 
-unsigned zimg2_filter_get_max_buffering(const zimg_filter *ptr);
+int zimg2_filter_get_max_buffering(const zimg_filter *ptr, unsigned *out);
 
-size_t zimg2_filter_get_context_size(const zimg_filter *ptr);
+int zimg2_filter_get_context_size(const zimg_filter *ptr, size_t *out);
 
-size_t zimg2_filter_get_tmp_size(const zimg_filter *ptr, unsigned left, unsigned right);
+int zimg2_filter_get_tmp_size(const zimg_filter *ptr, unsigned left, unsigned right, size_t *out);
 
-void zimg2_filter_init_context(const zimg_filter *ptr, void *ctx);
+int zimg2_filter_init_context(const zimg_filter *ptr, void *ctx);
 
-void zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right);
+int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right);
 
 
 /* Chosen to match ITU-T H.264 and H.265 */
@@ -127,10 +127,6 @@ typedef struct zimg_colorspace_params {
 	unsigned depth;
 	unsigned range;
 } zimg_colorspace_params;
-
-zimg_colorspace_params *zimg2_colorspace_params_alloc(void);
-
-void zimg2_colorspace_params_free(zimg_colorspace_params *ptr);
 
 void zimg2_colorspace_params_default(zimg_colorspace_params *ptr, unsigned version);
 
@@ -177,6 +173,9 @@ typedef struct zimg_depth_params {
 	unsigned width;
 	unsigned height;
 
+	int dither_type;
+	int chroma;
+
 	int pixel_in;
 	unsigned depth_in;
 	unsigned range_in;
@@ -185,10 +184,6 @@ typedef struct zimg_depth_params {
 	unsigned depth_out;
 	unsigned range_out;
 } zimg_depth_params;
-
-zimg_depth_params *zimg2_depth_params_alloc(void);
-
-void zimg2_depth_params_free(zimg_depth_params *ptr);
 
 void zimg2_depth_params_default(zimg_depth_params *ptr, unsigned version);
 
@@ -244,10 +239,6 @@ typedef struct zimg_resize_params {
 	double filter_param_a;
 	double filter_param_b;
 } zimg_resize_params;
-
-zimg_resize_params *zimg2_resize_params_alloc(void);
-
-void zimg2_resize_params_free(zimg_resize_params *ptr);
 
 void zimg2_resize_params_default(zimg_resize_params *ptr, unsigned version);
 
