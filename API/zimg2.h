@@ -101,8 +101,8 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 #define ZIMG_TRANSFER_709      1
 #define ZIMG_TRANSFER_601      6 /* Equivalent to 1. */
 #define ZIMG_TRANSFER_LINEAR   8
-#define ZIMG_TRANSFER_2020_10 14 /* The Rec.709 curve is used for both 2020 10-bit and 12-bit. */
-#define ZIMG_TRANSFER_2020_12 15
+#define ZIMG_TRANSFER_2020_10 14 /* Equivalent to 1. */
+#define ZIMG_TRANSFER_2020_12 15 /* Equivalent to 1. */
 
 #define ZIMG_PRIMARIES_709     1
 #define ZIMG_PRIMARIES_170M    6
