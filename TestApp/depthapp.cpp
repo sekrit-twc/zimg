@@ -91,8 +91,7 @@ void usage()
 	std::cout << "    --cpu                select CPU type\n";
 }
 
-void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &in, Frame &out, int times,
-             PixelType pxl_in, PixelType pxl_out, int bits_in, int bits_out, bool fullrange_in, bool fullrange_out, bool yuv)
+void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &in, Frame &out, bool yuv, int times)
 {
 	auto tmp = alloc_filter_tmp(depth, in, out);
 	auto tmp_uv = alloc_filter_tmp(depth_uv, in, out);
@@ -180,7 +179,7 @@ int depth_main(int argc, const char **argv)
 
 	depth::Depth2 depth{ c.dither, (unsigned)width, pixel_in_y, pixel_out_y, c.cpu };
 	depth::Depth2 depth_uv{ c.dither, (unsigned)width, pixel_in_uv, pixel_out_uv, c.cpu };
-	execute(depth, depth_uv, in, out, c.times, c.pixtype_in, c.pixtype_out, c.bits_in, c.bits_out, !!c.fullrange_in, !!c.fullrange_out, !!c.yuv);
+	execute(depth, depth_uv, in, out, !!c.yuv, c.times);
 
 	write_frame_raw(out, c.outfile);
 
