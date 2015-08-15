@@ -16,11 +16,18 @@
 
 using namespace zimg;
 
-namespace {;
+namespace zimg_api {;
 
 std::atomic<CPUClass> g_cpu_type{ CPUClass::CPU_NONE };
 THREAD_LOCAL int g_last_error = 0;
 THREAD_LOCAL char g_last_error_msg[1024];
+
+} // namespace zimg
+
+using namespace zimg_api;
+
+
+namespace {;
 
 CPUClass get_cpu_class(int cpu)
 {

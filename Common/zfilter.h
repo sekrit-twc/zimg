@@ -12,7 +12,13 @@
 #include "ztypes.h"
 
 struct zimg_filter {
+	virtual inline ~zimg_filter() = 0;
 };
+
+zimg_filter::~zimg_filter()
+{
+}
+
 
 namespace zimg {;
 
