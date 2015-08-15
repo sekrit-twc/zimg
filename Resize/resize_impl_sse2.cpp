@@ -183,7 +183,7 @@ inline FORCE_INLINE void scatter_epi16(__m128i x, uint16_t *p0, uint16_t *p1, ui
 
 inline FORCE_INLINE void scatter_ps(__m128 x, float *p0, float *p1, float *p2, float *p3)
 {
-	ALIGNED float tmp[4];
+	ALIGNED(16) float tmp[4];
 
 	_mm_store_ps(tmp, x);
 	*p0 = tmp[0];
@@ -241,7 +241,7 @@ void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &
 	uint16_t *dst_ptr7 = dst[n + 7];
 
 	uint16_t *ttmp = (uint16_t *)tmp;
-	ALIGNED uint16_t cache[8 * 8];
+	ALIGNED(16) uint16_t cache[8 * 8];
 
 	transpose_line_8x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
 
@@ -344,7 +344,7 @@ void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src,
 	float *dst_ptr3 = dst[n + 3];
 
 	float *ttmp = (float *)tmp;
-	ALIGNED float cache[4 * 4];
+	ALIGNED(16) float cache[4 * 4];
 
 	transpose_line_4x4_ps(src[n + 0], src[n + 1], src[n + 2], src[n + 3], ttmp, src_width);
 
