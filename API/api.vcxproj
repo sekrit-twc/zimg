@@ -84,7 +84,7 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)api.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>del $(OutDir)z.lib</Command>
@@ -104,7 +104,7 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)api.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>del $(OutDir)z.lib</Command>
@@ -128,7 +128,7 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)api.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>del $(OutDir)z.lib</Command>
@@ -152,7 +152,7 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)api.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>del $(OutDir)z.lib</Command>
