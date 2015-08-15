@@ -11,7 +11,7 @@
   #define FORCE_INLINE
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER < 1900
   #define ALIGNED __declspec(align(32))
 #else
   #define ALIGNED alignas(32)
@@ -23,7 +23,7 @@
   #define RESTRICT
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
   #define THREAD_LOCAL __declspec(thread)
 #else
   #define THREAD_LOCAL thread_local
