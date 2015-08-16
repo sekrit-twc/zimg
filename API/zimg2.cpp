@@ -25,9 +25,9 @@
 
 namespace zimg_api {;
 
-extern std::atomic<zimg::CPUClass> g_cpu_type;
-extern THREAD_LOCAL int g_last_error;
-extern THREAD_LOCAL char g_last_error_msg[1024];
+std::atomic<zimg::CPUClass> g_cpu_type{ zimg::CPUClass::CPU_NONE };
+THREAD_LOCAL int g_last_error = 0;
+THREAD_LOCAL char g_last_error_msg[1024];
 
 } // namespace zimg_api
 
@@ -94,7 +94,7 @@ zimg::CPUClass translate_cpu(int cpu)
 #endif
 	};
 	auto it = map.find(cpu);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid cpu type" } : it->second;
+	return it == map.end() ? zimg::CPUClass::CPU_NONE : it->second;
 }
 
 zimg::PixelType translate_pixel_type(int pixel_type)
@@ -250,6 +250,31 @@ unsigned zimg2_get_api_version(void)
 {
 	return ZIMG_API_VERSION;
 }
+
+int zimg_get_last_error(char *err_msg, size_t n)
+{
+	if (err_msg && n) {
+		size_t sz = strlen(g_last_error_msg);
+		size_t to_copy = std::min(n - 1, sz);
+
+		memcpy(err_msg, g_last_error_msg, to_copy);
+		err_msg[to_copy] = '\0';
+	}
+
+	return g_last_error;
+}
+
+void zimg_clear_last_error(void)
+{
+	g_last_error_msg[0] = '\0';
+	g_last_error = 0;
+}
+
+void zimg_set_cpu(int cpu)
+{
+	g_cpu_type = translate_cpu(cpu);
+}
+
 
 #define EX_BEGIN \
   int ret = 0; \

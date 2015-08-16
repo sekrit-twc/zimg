@@ -18,9 +18,9 @@ using namespace zimg;
 
 namespace zimg_api {;
 
-std::atomic<CPUClass> g_cpu_type{ CPUClass::CPU_NONE };
-THREAD_LOCAL int g_last_error = 0;
-THREAD_LOCAL char g_last_error_msg[1024];
+extern std::atomic<CPUClass> g_cpu_type;
+extern THREAD_LOCAL int g_last_error;
+extern THREAD_LOCAL char g_last_error_msg[1024];
 
 } // namespace zimg
 
@@ -202,7 +202,7 @@ struct zimg_resize_context {
 	resize::Resize p;
 };
 
-
+#if 0
 int zimg_check_api_version(int ver)
 {
 	return ZIMG_API_VERSION >= ver;
@@ -234,7 +234,7 @@ void zimg_set_cpu(int cpu)
 {
 	g_cpu_type = get_cpu_class(cpu);
 }
-
+#endif
 
 zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, int primaries_in,
                                                 int matrix_out, int transfer_out, int primaries_out)
