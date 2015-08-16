@@ -111,7 +111,7 @@ std::pair<OrderedDitherBase::func_type, OrderedDitherBase::f16c_func_type> selec
 	else if ((pixel_in.type == PixelType::HALF || pixel_in.type == PixelType::FLOAT) && pixel_out.type == PixelType::BYTE)
 		func = dither_ordered<float, uint8_t>;
 	else if ((pixel_in.type == PixelType::HALF || pixel_in.type == PixelType::FLOAT) && pixel_out.type == PixelType::WORD)
-		func = dither_ordered<float, uint8_t>;
+		func = dither_ordered<float, uint16_t>;
 
 	if (pixel_in.type == PixelType::HALF)
 		f16c = half_to_float_n;
@@ -140,7 +140,7 @@ std::pair<ErrorDiffusion::func_type, ErrorDiffusion::f16c_func_type> select_func
 	else if ((pixel_in.type == PixelType::HALF || pixel_in.type == PixelType::FLOAT) && pixel_out.type == PixelType::BYTE)
 		func = dither_ed<float, uint8_t>;
 	else if ((pixel_in.type == PixelType::HALF || pixel_in.type == PixelType::FLOAT) && pixel_out.type == PixelType::WORD)
-		func = dither_ed<float, uint8_t>;
+		func = dither_ed<float, uint16_t>;
 
 	if (pixel_in.type == PixelType::HALF)
 		f16c = half_to_float_n;
