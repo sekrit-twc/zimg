@@ -14,7 +14,7 @@
 #include "Common/pixel.h"
 #include "Common/plane.h"
 #include "Common/zfilter.h"
-#include "Depth/depth.h"
+#include "Depth/depth2.h"
 #include "frame.h"
 #include "utils.h"
 #include "timer.h"
@@ -71,7 +71,20 @@ zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type)
 
 void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::PixelType pxl_out, bool fullrange, bool yuv)
 {
-	std::unique_ptr<depth::Depth> convert{ new depth::Depth{ depth::DitherType::DITHER_NONE, CPUClass::CPU_NONE } };
+	PixelFormat src_fmt = default_pixel_format(pxl_in);
+	PixelFormat dst_fmt = default_pixel_format(pxl_out);
+
+	src_fmt.fullrange = fullrange;
+	dst_fmt.fullrange = fullrange;
+
+	src_fmt.chroma = false;
+	dst_fmt.chroma = false;
+	std::unique_ptr<depth::Depth2> convert{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
+
+	src_fmt.chroma = yuv;
+	dst_fmt.chroma = yuv;
+	std::unique_ptr<depth::Depth2> convert_uv{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
+
 	int width = in.width();
 	int height = in.height();
 	int planes = in.planes();
@@ -80,18 +93,7 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 		bool plane_fullrange = fullrange || p == 3; // Always treat alpha as fullrange.
 		bool plane_chroma = yuv && (p == 1 || p == 2); // Chroma planes.
 
-		PixelFormat src_fmt = default_pixel_format(pxl_in);
-		PixelFormat dst_fmt = default_pixel_format(pxl_out);
-
-		src_fmt.fullrange = plane_fullrange;
-		src_fmt.chroma = plane_chroma;
-		dst_fmt.fullrange = plane_fullrange;
-		dst_fmt.chroma = plane_chroma;
-
-		ImagePlane<const void> src_plane{ in.data(p), width, height, in.stride(), src_fmt };
-		ImagePlane<void> dst_plane{ out.data(p), width, height, out.stride(), dst_fmt };
-
-		convert->process(src_plane, dst_plane, nullptr);
+		apply_filter(*(plane_chroma ? convert_uv : convert), in, out, nullptr, p);
 	}
 }
 
