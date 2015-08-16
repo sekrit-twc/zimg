@@ -82,12 +82,7 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 	dst_fmt.chroma = yuv;
 	std::unique_ptr<depth::Depth2> convert_uv{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
 
-	int width = in.width();
-	int height = in.height();
-	int planes = in.planes();
-
-	for (int p = 0; p < planes; ++p) {
-		bool plane_fullrange = fullrange || p == 3; // Always treat alpha as fullrange.
+	for (int p = 0; p < in.planes(); ++p) {
 		bool plane_chroma = yuv && (p == 1 || p == 2); // Chroma planes.
 
 		apply_filter(*(plane_chroma ? convert_uv : convert), in, out, nullptr, p);
