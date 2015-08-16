@@ -251,12 +251,6 @@ unsigned zimg2_get_api_version(void)
 	return ZIMG_API_VERSION;
 }
 
-void zimg2_filter_free(zimg_filter *ptr)
-{
-	delete ptr;
-}
-
-
 #define EX_BEGIN \
   int ret = 0; \
   try {
@@ -265,6 +259,11 @@ void zimg2_filter_free(zimg_filter *ptr)
     ret = handle_exception(e); \
   } \
   return ret;
+
+void zimg2_filter_free(zimg_filter *ptr)
+{
+	delete ptr;
+}
 
 int zimg2_filter_get_flags(const zimg_filter *ptr, zimg_filter_flags *flags, unsigned version)
 {
