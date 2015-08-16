@@ -533,6 +533,8 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 
 			subwidth = std::isnan(params->subwidth) ? src_width : params->subwidth;
 			subheight = std::isnan(params->subheight) ? src_height : params->subheight;
+
+			filter.reset(translate_resize_filter(params->filter_type, params->filter_param_a, params->filter_param_b));
 		}
 
 		return new(std::nothrow) zimg::resize::Resize2{ *filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type };
