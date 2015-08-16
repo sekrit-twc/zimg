@@ -26,7 +26,7 @@ static const unsigned short ORDERED_DITHERS[ORDERED_DITHER_NUM] = {
 	 3, 51, 15, 63,  2, 50, 14, 62,
 	35, 19, 47, 31, 34, 18, 46, 30,
 	11, 59,  7, 55, 10, 58,  6, 54,
-	43, 27, 39, 23, 42, 26, 38, 22	
+	43, 27, 39, 23, 42, 26, 38, 22
 };
 
 template <class T, class U>
@@ -68,7 +68,7 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
 
 		U q = static_cast<U>(x + 0.5f);
-		
+
 		dst_p[i] = q;
 		error_cur_p[i] = x - static_cast<float>(q);
 	}
