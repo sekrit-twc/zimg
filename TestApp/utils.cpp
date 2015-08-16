@@ -13,6 +13,7 @@
 #include "Common/linebuffer.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
+#include "Common/static_map.h"
 #include "Common/zfilter.h"
 #include "Depth/depth2.h"
 #include "frame.h"
@@ -36,32 +37,28 @@ int required_args(OptionType type)
 
 zimg::CPUClass select_cpu(const char *cpu)
 {
+	static const static_string_map<CPUClass, 4> map{
+		{ "none", CPUClass::CPU_NONE },
 #ifdef ZIMG_X86
-	if (!strcmp(cpu, "auto"))
-		return CPUClass::CPU_X86_AUTO;
-	else if (!strcmp(cpu, "sse2"))
-		return CPUClass::CPU_X86_SSE2;
-	else if (!strcmp(cpu, "avx2"))
-		return CPUClass::CPU_X86_AVX2;
-	else
-		return CPUClass::CPU_NONE;
-#else
-	return CPUClass::CPU_NONE;
-#endif // ZIMG_X86
+		{ "auto", CPUClass::CPU_X86_AUTO },
+		{ "sse2", CPUClass::CPU_X86_SSE2 },
+		{ "avx2", CPUClass::CPU_X86_AVX2 },
+#endif
+	};
+	auto it = map.find(cpu);
+	return it == map.end() ? CPUClass::CPU_NONE : it->second;
 }
 
 zimg::PixelType select_pixel_type(const char *pixtype)
 {
-	if (!strcmp(pixtype, "u8"))
-		return PixelType::BYTE;
-	else if (!strcmp(pixtype, "u16"))
-		return PixelType::WORD;
-	else if (!strcmp(pixtype, "f16"))
-		return PixelType::HALF;
-	else if (!strcmp(pixtype, "f32"))
-		return PixelType::FLOAT;
-	else
-		throw std::invalid_argument{ "unknown pixel type" };
+	static const static_string_map<PixelType, 4> map{
+		{ "u8",  PixelType::BYTE },
+		{ "u16", PixelType::WORD },
+		{ "f16", PixelType::HALF },
+		{ "f32", PixelType::FLOAT }
+	};
+	auto it = map.find(pixtype);
+	return it == map.end() ? throw std::invalid_argument{ "unknown pixel type" } : it->second;
 }
 
 zimg::AlignedVector<char> allocate_buffer(size_t count, zimg::PixelType type)

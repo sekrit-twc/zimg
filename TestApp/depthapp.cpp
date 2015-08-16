@@ -5,6 +5,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
+#include "Common/static_map.h"
 #include "Depth/depth.h"
 #include "Depth/depth2.h"
 #include "apps.h"
@@ -35,23 +36,20 @@ struct AppContext {
 
 int select_dither(const char **opt, const char **lastopt, void *p, void *user)
 {
+	static static_string_map<depth::DitherType, 4> map{
+		{ "none",            depth::DitherType::DITHER_NONE },
+		{ "ordered",         depth::DitherType::DITHER_ORDERED },
+		{ "random",          depth::DitherType::DITHER_RANDOM },
+		{ "error_diffusion", depth::DitherType::DITHER_ERROR_DIFFUSION },
+	};
+
 	AppContext *c = (AppContext *)p;
 
 	if (lastopt - opt < 2)
 		throw std::invalid_argument{ "insufficient arguments for option dither" };
 
-	const char *dither = opt[1];
-
-	if (!strcmp(dither, "none"))
-		c->dither = depth::DitherType::DITHER_NONE;
-	else if (!strcmp(dither, "ordered"))
-		c->dither = depth::DitherType::DITHER_ORDERED;
-	else if (!strcmp(dither, "random"))
-		c->dither = depth::DitherType::DITHER_RANDOM;
-	else if (!strcmp(dither, "error_diffusion"))
-		c->dither = depth::DitherType::DITHER_ERROR_DIFFUSION;
-	else
-		throw std::invalid_argument{ "unsupported dither type" };
+	auto it = map.find(opt[1]);
+	c->dither = (it == map.end()) ? throw std::invalid_argument{ "unsupported dither type" } : it->second;
 
 	return 2;
 }

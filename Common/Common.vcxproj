@@ -125,6 +125,7 @@
     <ClInclude Include="pair_filter.h" />
     <ClInclude Include="pixel.h" />
     <ClInclude Include="plane.h" />
+    <ClInclude Include="static_map.h" />
     <ClInclude Include="zfilter.h" />
     <ClInclude Include="ztypes.h" />
   </ItemGroup>

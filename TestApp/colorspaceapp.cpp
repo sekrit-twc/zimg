@@ -9,6 +9,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
+#include "Common/static_map.h"
 #include "Colorspace/colorspace2.h"
 #include "Colorspace/colorspace_param.h"
 #include "apps.h"
@@ -64,40 +65,36 @@ void usage()
 
 colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 {
-	if (!strcmp(matrix, "rgb"))
-		return colorspace::MatrixCoefficients::MATRIX_RGB;
-	else if (!strcmp(matrix, "601"))
-		return colorspace::MatrixCoefficients::MATRIX_601;
-	else if (!strcmp(matrix, "709"))
-		return colorspace::MatrixCoefficients::MATRIX_709;
-	else if (!strcmp(matrix, "2020_ncl"))
-		return colorspace::MatrixCoefficients::MATRIX_2020_NCL;
-	else if (!strcmp(matrix, "2020_cl"))
-		return colorspace::MatrixCoefficients::MATRIX_2020_CL;
-	else
-		throw std::runtime_error{ "bad matrix coefficients" };
+	static const static_string_map<colorspace::MatrixCoefficients, 5> map{
+		{ "rgb",      colorspace::MatrixCoefficients::MATRIX_RGB },
+		{ "601",      colorspace::MatrixCoefficients::MATRIX_601 },
+		{ "709",      colorspace::MatrixCoefficients::MATRIX_709 },
+		{ "2020_ncl", colorspace::MatrixCoefficients::MATRIX_2020_NCL },
+		{ "2020_cl",  colorspace::MatrixCoefficients::MATRIX_2020_CL },
+	};
+	auto it = map.find(matrix);
+	return it == map.end() ? throw std::invalid_argument{ "bad matrix coefficients" } : it->second;
 }
 
 colorspace::TransferCharacteristics parse_transfer(const char *transfer)
 {
-	if (!strcmp(transfer, "linear"))
-		return colorspace::TransferCharacteristics::TRANSFER_LINEAR;
-	else if (!strcmp(transfer, "709"))
-		return colorspace::TransferCharacteristics::TRANSFER_709;
-	else
-		throw std::runtime_error{ "bad transfer characteristics" };
+	static const static_string_map<colorspace::TransferCharacteristics, 2> map{
+		{ "linear", colorspace::TransferCharacteristics::TRANSFER_LINEAR },
+		{ "709",    colorspace::TransferCharacteristics::TRANSFER_709 },
+	};
+	auto it = map.find(transfer);
+	return it == map.end() ? throw std::invalid_argument{ "bad transfer characteristics" } : it->second;
 }
 
 colorspace::ColorPrimaries parse_primaries(const char *primaries)
 {
-	if (!strcmp(primaries, "smpte_c"))
-		return colorspace::ColorPrimaries::PRIMARIES_SMPTE_C;
-	else if (!strcmp(primaries, "709"))
-		return colorspace::ColorPrimaries::PRIMARIES_709;
-	else if (!strcmp(primaries, "2020"))
-		return colorspace::ColorPrimaries::PRIMARIES_2020;
-	else
-		throw std::runtime_error{ "bad primaries" };
+	static const static_string_map<colorspace::ColorPrimaries, 3> map{
+		{ "smpte_c", colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ "709",     colorspace::ColorPrimaries::PRIMARIES_709 },
+		{ "2020",    colorspace::ColorPrimaries::PRIMARIES_2020 }
+	};
+	auto it = map.find(primaries);
+	return it == map.end() ? throw std::invalid_argument{ "bad primaries" } : it->second;
 }
 
 colorspace::ColorspaceDefinition parse_csp(const char *str)

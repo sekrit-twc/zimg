@@ -8,6 +8,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
+#include "Common/static_map.h"
 #include "Resize/filter.h"
 #include "Resize/resize2.h"
 #include "apps.h"
@@ -35,27 +36,23 @@ struct AppContext {
 
 int select_filter(const char **opt, const char **lastopt, void *p, void *)
 {
+	static resize::Filter *const _f = nullptr;
+	static const static_string_map<resize::Filter *(*)(void), 6> map{
+		{ "point",    []() { return 0 ? _f : new resize::PointFilter{}; } },
+		{ "bilinear", []() { return 0 ? _f : new resize::BilinearFilter{}; } },
+		{ "bicubc",   []() { return 0 ? _f : new resize::BicubicFilter{ 1.0 / 3.0, 1.0 / 3.0 }; } },
+		{ "spline16", []() { return 0 ? _f : new resize::Spline16Filter{}; } },
+		{ "spline36", []() { return 0 ? _f : new resize::Spline36Filter{}; } },
+		{ "lanczos",  []() { return 0 ? _f : new resize::LanczosFilter{ 4 }; } },
+	};
+
 	AppContext *c = (AppContext *)p;
 
 	if (lastopt - opt < 2)
 		throw std::invalid_argument{ "insufficient arguments for option filter" };
 
-	const char *filter = opt[1];
-
-	if (!strcmp(filter, "point"))
-		c->filter.reset(new resize::PointFilter{});
-	else if (!strcmp(filter, "bilinear"))
-		c->filter.reset(new resize::BilinearFilter{});
-	else if (!strcmp(filter, "bicubic"))
-		c->filter.reset(new resize::BicubicFilter{ 1.0 / 3.0, 1.0 / 3.0 });
-	else if (!strcmp(filter, "lanczos"))
-		c->filter.reset(new resize::LanczosFilter{ 4 });
-	else if (!strcmp(filter, "spline16"))
-		c->filter.reset(new resize::Spline16Filter{});
-	else if (!strcmp(filter, "spline36"))
-		c->filter.reset(new resize::Spline36Filter{});
-	else
-		throw std::invalid_argument{ "unsupported filter type" };
+	auto it = map.find(opt[1]);
+	c->filter.reset(it == map.end() ? throw std::invalid_argument{ "unsupported filter type" } : it->second());
 
 	return 2;
 }

@@ -51,6 +51,9 @@
     <ClInclude Include="pair_filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="static_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pair_filter.cpp">

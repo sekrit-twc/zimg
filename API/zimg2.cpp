@@ -12,6 +12,7 @@
 #include "Common/except.h"
 #include "Common/osdep.h"
 #include "Common/pixel.h"
+#include "Common/static_map.h"
 #include "Common/zfilter.h"
 #include "Depth/depth2.h"
 #include "Resize/filter.h"
@@ -76,122 +77,97 @@ int handle_exception(const zimg::ZimgException &e)
 
 zimg::CPUClass translate_cpu(int cpu)
 {
-	switch (cpu) {
-	case ZIMG_CPU_NONE:
-		return zimg::CPUClass::CPU_NONE;
-	case ZIMG_CPU_AUTO:
-		return zimg::CPUClass::CPU_X86_AUTO;
+	static const zimg::static_int_map<zimg::CPUClass, 12> map{
+		{ ZIMG_CPU_NONE,      zimg::CPUClass::CPU_NONE },
 #ifdef ZIMG_X86
-	case ZIMG_CPU_X86_MMX:
-	case ZIMG_CPU_X86_SSE:
-		return zimg::CPUClass::CPU_NONE;
-	case ZIMG_CPU_X86_SSE2:
-	case ZIMG_CPU_X86_SSE3:
-	case ZIMG_CPU_X86_SSSE3:
-	case ZIMG_CPU_X86_SSE41:
-	case ZIMG_CPU_X86_SSE42:
-	case ZIMG_CPU_X86_AVX:
-	case ZIMG_CPU_X86_F16C:
-		return zimg::CPUClass::CPU_X86_SSE2;
-	case ZIMG_CPU_X86_AVX2:
-		return zimg::CPUClass::CPU_X86_AVX2;
+		{ ZIMG_CPU_AUTO,      zimg::CPUClass::CPU_X86_AUTO },
+		{ ZIMG_CPU_X86_MMX,   zimg::CPUClass::CPU_NONE },
+		{ ZIMG_CPU_X86_SSE,   zimg::CPUClass::CPU_NONE },
+		{ ZIMG_CPU_X86_SSE2,  zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE3,  zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_SSSE3, zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE41, zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE42, zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_AVX,   zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_F16C,  zimg::CPUClass::CPU_X86_SSE2 },
+		{ ZIMG_CPU_X86_AVX2,  zimg::CPUClass::CPU_X86_AVX2 },
 #endif
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid cpu type" };
-	}
+	};
+	auto it = map.find(cpu);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid cpu type" } : it->second;
 }
 
 zimg::PixelType translate_pixel_type(int pixel_type)
 {
-	switch (pixel_type) {
-	case ZIMG_PIXEL_BYTE:
-		return zimg::PixelType::BYTE;
-	case ZIMG_PIXEL_WORD:
-		return zimg::PixelType::WORD;
-	case ZIMG_PIXEL_HALF:
-		return zimg::PixelType::HALF;
-	case ZIMG_PIXEL_FLOAT:
-		return zimg::PixelType::FLOAT;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid pixel type" };
-	}
+	static const zimg::static_int_map<zimg::PixelType, 4> map{
+		{ ZIMG_PIXEL_BYTE,  zimg::PixelType::BYTE },
+		{ ZIMG_PIXEL_WORD,  zimg::PixelType::WORD },
+		{ ZIMG_PIXEL_HALF,  zimg::PixelType::HALF },
+		{ ZIMG_PIXEL_FLOAT, zimg::PixelType::FLOAT },
+	};
+	auto it = map.find(pixel_type);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel type" } : it->second;
 }
 
 bool translate_pixel_range(int range)
 {
-	switch (range) {
-	case ZIMG_RANGE_LIMITED:
-		return false;
-	case ZIMG_RANGE_FULL:
-		return true;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid pixel range" };
-	}
+	static const zimg::static_int_map<bool, 2> map{
+		{ ZIMG_RANGE_LIMITED, false },
+		{ ZIMG_RANGE_FULL,    true }
+	};
+	auto it = map.find(range);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel range" } : it->second;
 }
 
 zimg::colorspace::MatrixCoefficients translate_matrix(int matrix)
 {
-	switch (matrix) {
-	case ZIMG_MATRIX_RGB:
-		return zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
-	case ZIMG_MATRIX_709:
-		return zimg::colorspace::MatrixCoefficients::MATRIX_709;
-	case ZIMG_MATRIX_470BG:
-	case ZIMG_MATRIX_170M:
-		return zimg::colorspace::MatrixCoefficients::MATRIX_601;
-	case ZIMG_MATRIX_2020_NCL:
-		return zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL;
-	case ZIMG_MATRIX_2020_CL:
-		return zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid matrix coefficients" };
-	}
+	static const zimg::static_int_map<zimg::colorspace::MatrixCoefficients, 6> map{
+		{ ZIMG_MATRIX_RGB,      zimg::colorspace::MatrixCoefficients::MATRIX_RGB },
+		{ ZIMG_MATRIX_709,      zimg::colorspace::MatrixCoefficients::MATRIX_709 },
+		{ ZIMG_MATRIX_470BG,    zimg::colorspace::MatrixCoefficients::MATRIX_601 },
+		{ ZIMG_MATRIX_170M,     zimg::colorspace::MatrixCoefficients::MATRIX_601 },
+		{ ZIMG_MATRIX_2020_NCL, zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
+		{ ZIMG_MATRIX_2020_CL,  zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
+	};
+	auto it = map.find(matrix);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid matrix coefficients" } : it->second;
 }
 
 zimg::colorspace::TransferCharacteristics translate_transfer(int transfer)
 {
-	switch (transfer) {
-	case ZIMG_TRANSFER_709:
-	case ZIMG_TRANSFER_601:
-	case ZIMG_TRANSFER_2020_10:
-	case ZIMG_TRANSFER_2020_12:
-		return zimg::colorspace::TransferCharacteristics::TRANSFER_709;
-	case ZIMG_TRANSFER_LINEAR:
-		return zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid transfer characteristics" };
-	}
+	static const zimg::static_int_map<zimg::colorspace::TransferCharacteristics, 5> map{
+		{ ZIMG_TRANSFER_709,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_601,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_2020_10, zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_2020_12, zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_LINEAR,  zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR },
+	};
+	auto it = map.find(transfer);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid transfer characteristics" } : it->second;
 }
 
 zimg::colorspace::ColorPrimaries translate_primaries(int primaries)
 {
-	switch (primaries) {
-	case ZIMG_PRIMARIES_709:
-		return zimg::colorspace::ColorPrimaries::PRIMARIES_709;
-	case ZIMG_PRIMARIES_170M:
-	case ZIMG_PRIMARIES_240M:
-		return zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C;
-	case ZIMG_PRIMARIES_2020:
-		return zimg::colorspace::ColorPrimaries::PRIMARIES_2020;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid color primaries" };
-	}
+	static const zimg::static_int_map<zimg::colorspace::ColorPrimaries, 4> map{
+		{ ZIMG_PRIMARIES_709,  zimg::colorspace::ColorPrimaries::PRIMARIES_709 },
+		{ ZIMG_PRIMARIES_170M, zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ ZIMG_PRIMARIES_240M, zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ ZIMG_PRIMARIES_2020, zimg::colorspace::ColorPrimaries::PRIMARIES_2020 },
+	};
+	auto it = map.find(primaries);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color primaries" } : it->second;
 }
 
 zimg::depth::DitherType translate_dither(int dither)
 {
-	switch (dither) {
-	case ZIMG_DITHER_NONE:
-		return zimg::depth::DitherType::DITHER_NONE;
-	case ZIMG_DITHER_ORDERED:
-		return zimg::depth::DitherType::DITHER_ORDERED;
-	case ZIMG_DITHER_RANDOM:
-		return zimg::depth::DitherType::DITHER_RANDOM;
-	case ZIMG_DITHER_ERROR_DIFFUSION:
-		return zimg::depth::DitherType::DITHER_ERROR_DIFFUSION;
-	default:
-		throw zimg::ZimgIllegalArgument{ "invalid dither" };
-	}
+	static const zimg::static_int_map<zimg::depth::DitherType, 4> map{
+		{ ZIMG_DITHER_NONE,            zimg::depth::DitherType::DITHER_NONE },
+		{ ZIMG_DITHER_ORDERED,         zimg::depth::DitherType::DITHER_ORDERED },
+		{ ZIMG_DITHER_RANDOM,          zimg::depth::DitherType::DITHER_RANDOM },
+		{ ZIMG_DITHER_ERROR_DIFFUSION, zimg::depth::DitherType::DITHER_ERROR_DIFFUSION },
+	};
+	auto it = map.find(dither);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid dither" } : it->second;
 }
 
 zimg::resize::Filter *translate_resize_filter(int filter_type, double param_a, double param_b)
