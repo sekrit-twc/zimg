@@ -37,6 +37,8 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Common/linebuffer.h \
 					 Common/matrix.h \
 					 Common/osdep.h \
+					 Common/pair_filter.cpp \
+					 Common/pair_filter.h \
 					 Common/pixel.h \
 					 Common/plane.h \
 					 Depth/depth_convert.cpp \
