@@ -26,6 +26,7 @@ PairFilter::PairFilter(const builder &b) :
 	m_second_pixel{ b.second_pixel },
 	m_first_step{},
 	m_second_step{},
+	m_second_buffering{},
 	m_has_state{},
 	m_in_place{},
 	m_color{}
@@ -41,6 +42,7 @@ PairFilter::PairFilter(const builder &b) :
 
 	m_first_step = first->get_simultaneous_lines();
 	m_second_step = second->get_simultaneous_lines();
+	m_second_buffering = second->get_max_buffering();
 
 	m_has_state = m_first_flags.has_state || m_second_flags.has_state ||
 	              !m_first_flags.same_row || !m_second_flags.same_row ||
@@ -63,10 +65,10 @@ unsigned PairFilter::get_cache_line_count() const
 		return 0;
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return m_first_height;
-	else if (m_first_flags.same_row && m_first_step == m_second_step)
-		return m_second_step;
+	else if (m_second_flags.same_row && m_first_step == m_second_step)
+		return m_second_buffering;
 	else
-		return m_first_step + m_second_step - 1;
+		return m_first_step + m_second_buffering - 1;
 }
 
 size_t PairFilter::get_cache_size_one_plane() const

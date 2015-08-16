@@ -42,6 +42,7 @@ private:
 
 	unsigned m_first_step;
 	unsigned m_second_step;
+	unsigned m_second_buffering;
 
 	bool m_has_state;
 	bool m_in_place;
