@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include "Common/cpuinfo.h"
@@ -100,31 +101,15 @@ colorspace::ColorPrimaries parse_primaries(const char *primaries)
 colorspace::ColorspaceDefinition parse_csp(const char *str)
 {
 	colorspace::ColorspaceDefinition csp;
-	std::string s{ str };
-	std::string sub;
-	size_t prev;
-	size_t curr;
+	std::regex csp_regex{ R"(^(\w+):(\w+):(\w+)$)" };
+	std::cmatch match;
 
-	prev = 0;
-	curr = s.find(':');
-	if (curr == std::string::npos || curr == s.size() - 1)
+	if (!std::regex_match(str, match, csp_regex))
 		throw std::runtime_error{ "bad colorspace string" };
 
-	sub = s.substr(prev, curr - prev);
-	csp.matrix = parse_matrix(sub.c_str());
-
-	prev = curr + 1;
-	curr = s.find(':', prev);
-	if (curr == std::string::npos || curr == s.size() - 1)
-		throw std::runtime_error{ "bad colorspace string" };
-
-	sub = s.substr(prev, curr - prev);
-	csp.transfer = parse_transfer(sub.c_str());
-
-	prev = curr + 1;
-	curr = s.size();
-	sub = s.substr(prev, curr - prev);
-	csp.primaries = parse_primaries(sub.c_str());
+	csp.matrix = parse_matrix(match[1].str().c_str());
+	csp.transfer = parse_transfer(match[2].str().c_str());
+	csp.primaries = parse_primaries(match[3].str().c_str());
 
 	return csp;
 }
