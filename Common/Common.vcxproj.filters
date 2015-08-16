@@ -48,5 +48,13 @@
     <ClInclude Include="ztypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pair_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pair_filter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

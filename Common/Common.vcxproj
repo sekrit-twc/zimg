@@ -122,10 +122,14 @@
     <ClInclude Include="linebuffer.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="osdep.h" />
+    <ClInclude Include="pair_filter.h" />
     <ClInclude Include="pixel.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="zfilter.h" />
     <ClInclude Include="ztypes.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pair_filter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
