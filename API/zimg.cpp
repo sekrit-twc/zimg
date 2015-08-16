@@ -1,3 +1,4 @@
+#if 0
 #include <atomic>
 #include <cmath>
 #include <cstddef>
@@ -202,7 +203,7 @@ struct zimg_resize_context {
 	resize::Resize p;
 };
 
-#if 0
+
 int zimg_check_api_version(int ver)
 {
 	return ZIMG_API_VERSION >= ver;
@@ -234,7 +235,7 @@ void zimg_set_cpu(int cpu)
 {
 	g_cpu_type = get_cpu_class(cpu);
 }
-#endif
+
 
 zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, int primaries_in,
                                                 int matrix_out, int transfer_out, int primaries_out)
@@ -422,3 +423,4 @@ void zimg_resize_delete(zimg_resize_context *ctx)
 {
 	delete ctx;
 }
+#endif
