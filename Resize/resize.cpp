@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <climits>
 #include <cstddef>
@@ -251,3 +252,4 @@ void Resize::process(const ImagePlane<const void> &src, const ImagePlane<void> &
 
 } // namespace resize
 } // namespace zimg
+#endif

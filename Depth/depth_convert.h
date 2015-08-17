@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_DEPTH_DEPTH_CONVERSION_H_
@@ -81,3 +82,4 @@ DepthConvert *create_depth_convert(CPUClass cpu);
 } // namespace zimg
 
 #endif // ZIMG_DEPTH_DEPTH_CONVERSION_H_
+#endif

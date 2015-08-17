@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include <emmintrin.h>
@@ -19,7 +20,7 @@ public:
 	{
 		auto cvt_sse2 = make_integer_to_float_sse2(src_fmt);
 		auto cvt = make_integer_to_float<uint8_t>(src_fmt);
-		
+
 		process(src, dst, width, UnpackByteSSE2{}, PackWordSSE2{},
 		        [=](__m128i x) { return float_to_half_sse2(cvt_sse2(x)); },
 		        [=](uint8_t x) { return depth::float_to_half(cvt(x)); });
@@ -29,7 +30,7 @@ public:
 	{
 		auto cvt_sse2 = make_integer_to_float_sse2(src_fmt);
 		auto cvt = make_integer_to_float<uint8_t>(src_fmt);
-		
+
 		process(src, dst, width, UnpackByteSSE2{}, PackFloatSSE2{}, cvt_sse2, cvt);
 	}
 
@@ -37,7 +38,7 @@ public:
 	{
 		auto cvt_sse2 = make_integer_to_float_sse2(src_fmt);
 		auto cvt = make_integer_to_float<uint16_t>(src_fmt);
-		
+
 		process(src, dst, width, UnpackWordSSE2{}, PackWordSSE2{},
 		        [=](__m128i x) { return float_to_half_sse2(cvt_sse2(x)); },
 		        [=](uint16_t x) { return depth::float_to_half(cvt(x)); });
@@ -47,7 +48,7 @@ public:
 	{
 		auto cvt_sse2 = make_integer_to_float_sse2(src_fmt);
 		auto cvt = make_integer_to_float<uint16_t>(src_fmt);
-		
+
 		process(src, dst, width, UnpackWordSSE2{}, PackFloatSSE2{}, cvt_sse2, cvt);
 	}
 
@@ -74,3 +75,4 @@ DepthConvert *create_depth_convert_sse2()
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

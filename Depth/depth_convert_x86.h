@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -72,3 +73,4 @@ DepthConvert *create_depth_convert_x86(CPUClass cpu);
 #endif // ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
 
 #endif // ZIMG_X86
+#endif

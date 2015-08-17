@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include "Common/cpuinfo.h"
@@ -33,3 +34,4 @@ DepthConvert *create_depth_convert_x86(CPUClass cpu)
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

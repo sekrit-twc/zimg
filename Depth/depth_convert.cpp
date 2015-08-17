@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <cstring>
 #include "Common/cpuinfo.h"
@@ -70,3 +71,4 @@ DepthConvert *create_depth_convert(CPUClass cpu)
 
 } // namespace depth
 } // namespace zimg
+#endif

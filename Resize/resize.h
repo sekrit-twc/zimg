@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_RESIZE_RESIZE_H_
@@ -90,3 +91,4 @@ public:
 } // namespace zimg
 
 #endif // ZIMG_RESIZE_RESIZE_H_
+#endif

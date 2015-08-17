@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include "Common/cpuinfo.h"
@@ -33,3 +34,4 @@ ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal,
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

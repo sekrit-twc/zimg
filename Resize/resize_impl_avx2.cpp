@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include <cstddef>
@@ -702,7 +703,7 @@ void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &
 				accum0h = _mm256_add_epi32(accum0h, _mm256_load_si256((const __m256i *)&accum_tmp[j + 8]));
 			}
 
-			if (k == filter.filter_width - 8) {					
+			if (k == filter.filter_width - 8) {
 				packed = pack_i30_to_epi16(accum0l, accum0h);
 				packed = _mm256_sub_epi16(packed, INT16_MIN_EPI16);
 				_mm256_store_si256((__m256i *)&dst_ptr[j], packed);
@@ -1010,3 +1011,4 @@ ResizeImpl *create_resize_impl_avx2(const FilterContext &filter, bool horizontal
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

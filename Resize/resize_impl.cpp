@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <climits>
 #include "Common/align.h"
@@ -122,3 +123,4 @@ ResizeImpl *create_resize_impl(const Filter &f, bool horizontal, int src_dim, in
 
 } // namespace resize
 } // namespace zimg
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -31,3 +32,4 @@ ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal,
 #endif // ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
 #endif // ZIMG_X86
+#endif

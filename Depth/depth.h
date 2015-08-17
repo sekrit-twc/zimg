@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_DEPTH_DEPTH_H_
@@ -78,3 +79,4 @@ public:
 } // namespace zimg
 
 #endif // ZIMG_DEPTH_DEPTH_H_
+#endif

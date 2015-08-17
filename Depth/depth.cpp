@@ -1,3 +1,4 @@
+#if 0
 #include <climits>
 #include <cstddef>
 #include <utility>
@@ -107,3 +108,4 @@ void Depth::process(const ImagePlane<const void> &src, const ImagePlane<void> &d
 
 } // namespace depth
 } // namespace zimg
+#endif

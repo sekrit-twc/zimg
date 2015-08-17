@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_DEPTH_DITHER_IMPL_H_
@@ -17,7 +18,7 @@ namespace depth {;
  * Base class for ordered dither implementations.
  */
 class OrderedDither : public DitherConvert {
-protected:	
+protected:
 	/**
 	 * Array of fixed dither offsets to add (range -0.5 to 0.5).
 	 * This is a 64x64 array.
@@ -49,3 +50,4 @@ DitherConvert *create_ordered_dither(DitherType type, CPUClass cpu);
 }; // namespace zimg
 
 #endif // ZIMG_DEPTH_DITHER_IMPL_H_
+#endif

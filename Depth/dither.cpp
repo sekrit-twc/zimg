@@ -1,3 +1,4 @@
+#if 0
 #include <memory>
 #include <utility>
 #include "Common/except.h"
@@ -30,3 +31,4 @@ DitherConvert *create_dither_convert(DitherType type, CPUClass cpu)
 
 } // namespace depth
 } // namespace zimg
+#endif

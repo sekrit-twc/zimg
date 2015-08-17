@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <cmath>
 #include <random>
@@ -24,7 +25,7 @@ static const unsigned short ORDERED_DITHERS[64] = {
 	 3, 51, 15, 63,  2, 50, 14, 62,
 	35, 19, 47, 31, 34, 18, 46, 30,
 	11, 59,  7, 55, 10, 58,  6, 54,
-	43, 27, 39, 23, 42, 26, 38, 22	
+	43, 27, 39, 23, 42, 26, 38, 22
 };
 
 static const int ORDERED_DITHERS_SCALE = 65;
@@ -175,3 +176,4 @@ DitherConvert *create_ordered_dither(DitherType type, CPUClass cpu)
 
 } // namespace depth
 } // namespace zimg
+#endif

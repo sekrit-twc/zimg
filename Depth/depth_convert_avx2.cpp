@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include "Common/align.h"
@@ -71,3 +72,4 @@ DepthConvert *create_depth_convert_avx2()
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

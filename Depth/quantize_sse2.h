@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -262,3 +263,4 @@ inline FloatToIntegerSSE2 make_float_to_integer_sse2(const PixelFormat &fmt)
 #endif // ZIMG_DEPTH_QUANTIZE_SSE2_H_
 
 #endif // ZIMG_X86
+#endif

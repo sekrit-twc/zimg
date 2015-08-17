@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_DEPTH_ERROR_DIFFUSION_H_
@@ -22,3 +23,4 @@ DitherConvert *create_error_diffusion(CPUClass cpu);
 } // namespace zimg
 
 #endif // ZIMG_DEPTH_ERROR_DIFFUSION_H_
+#endif

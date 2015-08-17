@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
@@ -145,3 +146,4 @@ ResizeImpl *create_resize_impl(const Filter &f, bool horizontal, int src_dim, in
 } // namespace zimg
 
 #endif // ZIMG_RESIZE_RESIZE_IMPL_H_
+#endif

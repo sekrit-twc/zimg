@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <cstddef>
 #include "Common/except.h"
@@ -14,7 +15,7 @@ namespace {;
 class ErrorDiffusionC : public DitherConvert {
 	template <class T, class U, class Unpack, class Quant, class Dequant>
 	void dither(const LineBuffer<T> &src, LineBuffer<U> &dst, int n, float *tmp, Unpack unpack, Quant quant, Dequant dequant) const
-	{		
+	{
 		unsigned width = dst.width();
 
 		float *prev_line = tmp + 1;
@@ -120,3 +121,4 @@ DitherConvert *create_error_diffusion(CPUClass cpu)
 
 } // namespace depth
 } // namespace zimg
+#endif

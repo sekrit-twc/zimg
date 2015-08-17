@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -96,7 +97,7 @@ struct PackByteAVX2 {
 	{
 		__m256i p = _mm256_set_epi32(7, 7, 7, 7, 5, 1, 4, 0);
 		__m256i x;
-		
+
 		x = _mm256_packus_epi32(src[0], src[1]);
 		x = _mm256_packus_epi16(x, x);
 		x = _mm256_permutevar8x32_epi32(x, p);
@@ -205,3 +206,4 @@ inline FloatToIntegerAVX2 make_float_to_integer_avx2(const PixelFormat &fmt)
 #endif // ZIMG_DEPTH_QUANTIZE_AVX2_H_
 
 #endif // ZIMG_X86
+#endif

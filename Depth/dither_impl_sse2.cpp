@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include <emmintrin.h>
@@ -98,3 +99,4 @@ DitherConvert *create_ordered_dither_sse2(const float *dither)
 }
 
 #endif // ZIMG_X86
+#endif

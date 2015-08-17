@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -104,3 +105,4 @@ DitherConvert *create_ordered_dither_x86(const float *dither, CPUClass cpu);
 
 #endif // ZIMG_DEPTH_DITHER_IMPL_X86_H_
 #endif // ZIMG_X86
+#endif
