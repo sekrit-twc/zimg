@@ -175,6 +175,9 @@ void PairFilter::init_context(void *ctx) const
 	cache->first_ctx = alloc.allocate(first_context_size);
 	cache->second_ctx = alloc.allocate(second_context_size);
 
+	m_first->init_context(cache->first_ctx);
+	m_second->init_context(cache->second_ctx);
+
 	for (unsigned p = 0; p < get_num_planes(); ++p) {
 		cache->cache_plane[p] = alloc.allocate(cache_size_one_plane);
 	}
