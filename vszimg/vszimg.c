@@ -6,8 +6,8 @@
 #include "VapourSynth.h"
 #include "VSHelper.h"
 
-#if ZIMG_API_VERSION < 1
-  #error zAPI v1 or greater required
+#if ZIMG_API_VERSION < 2
+  #error zAPI v2 or greater required
 #endif
 
 typedef enum chroma_location {
@@ -82,11 +82,23 @@ static double chroma_adjust_v(const char *loc_in, const char *loc_out, int subsa
 	return 0.0;
 }
 
+static int64_t propGetIntDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, int64_t default_value)
+{
+	int64_t x;
+	int err;
+
+	x = vsapi->propGetInt(map, key, index, &err);
+	return err ? default_value : x;
+}
+
 
 typedef struct vs_colorspace_data {
-	zimg_colorspace_context *colorspace_ctx;
+	zimg_filter *filter;
 	VSNodeRef *node;
 	VSVideoInfo vi;
+	int matrix_out;
+	int transfer_out;
+	int primaries_out;
 } vs_colorspace_data;
 
 static void VS_CC vs_colorspace_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
@@ -99,40 +111,37 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 {
 	vs_colorspace_data *data = *instanceData;
 	VSFrameRef *ret = 0;
-	char fail_str[1024] = { 0 };
+	char fail_str[1024];
 	int err = 0;
-	int p;
-
-	zimg_clear_last_error();
 
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
 	} else if (activationReason == arAllFramesReady) {
-		const VSFrameRef *src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
+		const VSFrameRef *src_frame = 0;
 		VSFrameRef *dst_frame = 0;
-
-		int width = vsapi->getFrameWidth(src_frame, 0);
-		int height = vsapi->getFrameHeight(src_frame, 0);
-		int pixel_type = translate_pixel(vsapi->getFrameFormat(src_frame));
+		void *tmp = 0;
 
 		const void *src_plane[3];
 		void *dst_plane[3];
-		int src_stride[3];
-		int dst_stride[3];
-
+		ptrdiff_t src_stride[3];
+		ptrdiff_t dst_stride[3];
+		int width;
+		int height;
 		size_t tmp_size;
-		void *tmp = 0;
+		VSMap *props;
+		unsigned p;
 
+		width = data->vi.width;
+		height = data->vi.height;
+
+		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
 		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
 
-		for (p = 0; p < 3; ++p) {
-			src_plane[p] = vsapi->getReadPtr(src_frame, p);
-			dst_plane[p] = vsapi->getWritePtr(dst_frame, p);
-			src_stride[p] = vsapi->getStride(src_frame, p);
-			dst_stride[p] = vsapi->getStride(dst_frame, p);
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+			zimg_get_last_error(fail_str, sizeof(fail_str));
+			goto fail;
 		}
 
-		tmp_size = zimg_colorspace_tmp_size(data->colorspace_ctx, width);
 		VS_ALIGNED_MALLOC(&tmp, tmp_size, 32);
 		if (!tmp) {
 			strcpy(fail_str, "error allocating temporary buffer");
@@ -140,11 +149,24 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 			goto fail;
 		}
 
-		err = zimg_colorspace_process(data->colorspace_ctx, src_plane, dst_plane, tmp, width, height, src_stride, dst_stride, pixel_type);
-		if (err) {
+		for (p = 0; p < 3; ++p) {
+			src_plane[p] = vsapi->getReadPtr(src_frame, p);
+			src_stride[p] = vsapi->getStride(src_frame, p);
+
+			dst_plane[p] = vsapi->getWritePtr(dst_frame, p);
+			dst_stride[p] = vsapi->getStride(dst_frame, p);
+		}
+
+		if ((err = zimg2_plane_filter_process(data->filter, tmp, src_plane, dst_plane, src_stride, dst_stride, width, height))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
+
+		props = vsapi->getFramePropsRW(dst_frame);
+		vsapi->propSetInt(props, "_Matrix", data->matrix_out, paReplace);
+		vsapi->propSetInt(props, "_Transfer", data->transfer_out, paReplace);
+		vsapi->propSetInt(props, "_Primaries", data->primaries_out, paReplace);
+
 		ret = dst_frame;
 		dst_frame = 0;
 	fail:
@@ -155,13 +177,14 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 
 	if (err)
 		vsapi->setFilterError(fail_str, frameCtx);
+
 	return ret;
 }
 
 static void VS_CC vs_colorspace_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
 	vs_colorspace_data *data = instanceData;
-	zimg_colorspace_delete(data->colorspace_ctx);
+	zimg2_filter_free(data->filter);
 	vsapi->freeNode(data->node);
 	free(data);
 }
@@ -169,82 +192,73 @@ static void VS_CC vs_colorspace_free(void *instanceData, VSCore *core, const VSA
 static void VS_CC vs_colorspace_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
 	vs_colorspace_data *data = 0;
-	zimg_colorspace_context *colorspace_ctx = 0;
-	char fail_str[1024] = { 0 };
-	int err;
+	zimg_colorspace_params params;
+	zimg_filter *filter = 0;
+	char fail_str[1024];
 
 	VSNodeRef *node = 0;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
 	VSVideoInfo vi;
 
-	int matrix_in;
-	int transfer_in;
-	int primaries_in;
-	int matrix_out;
-	int transfer_out;
-	int primaries_out;
-
-	zimg_clear_last_error();
-
 	node = vsapi->propGetNode(in, "clip", 0, 0);
 	node_vi = vsapi->getVideoInfo(node);
 	node_fmt = node_vi->format;
 
-	if (!node_fmt) {
+	if (!isConstantFormat(node_vi)) {
 		strcpy(fail_str, "clip must have a defined format");
 		goto fail;
 	}
-
-	matrix_in = (int)vsapi->propGetInt(in, "matrix_in", 0, 0);
-	transfer_in = (int)vsapi->propGetInt(in, "transfer_in", 0, 0);
-	primaries_in = (int)vsapi->propGetInt(in, "primaries_in", 0, 0);
-
-	matrix_out = (int)vsapi->propGetInt(in, "matrix_out", 0, &err);
-	if (err)
-		matrix_out = matrix_in;
-
-	transfer_out = (int)vsapi->propGetInt(in, "transfer_out", 0, &err);
-	if (err)
-		transfer_out = transfer_in;
-
-	primaries_out = (int)vsapi->propGetInt(in, "primaries_out", 0, &err);
-	if (err)
-		primaries_out = primaries_in;
-
 	if (node_fmt->numPlanes < 3 || node_fmt->subSamplingW || node_fmt->subSamplingH) {
 		strcpy(fail_str, "colorspace conversion can only be performed on 4:4:4 clips");
 		goto fail;
 	}
 
+	zimg2_colorspace_params_default(&params, ZIMG_API_VERSION);
+
+	params.width = node_vi->width;
+	params.height = node_vi->height;
+
+	params.matrix_in = (int)vsapi->propGetInt(in, "matrix_in", 0, 0);
+	params.transfer_in = (int)vsapi->propGetInt(in, "transfer_in", 0, 0);
+	params.primaries_in = (int)vsapi->propGetInt(in, "primaries_in", 0, 0);
+
+	params.matrix_out = (int)propGetIntDefault(vsapi, in, "matrix_out", 0, params.matrix_in);
+	params.transfer_out = (int)propGetIntDefault(vsapi, in, "transfer_out", 0, params.transfer_in);
+	params.primaries_out = (int)propGetIntDefault(vsapi, in, "primaries_out", 0, params.primaries_in);
+
+	params.pixel_type = translate_pixel(node_fmt);
+	params.depth = node_fmt->bitsPerSample;
+	params.range_in = (int)!!propGetIntDefault(vsapi, in, "fullrange_in", 0, params.matrix_in == ZIMG_MATRIX_RGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
+	params.range_out = (int)!!propGetIntDefault(vsapi, in, "fullrange_out", 0, params.matrix_out == ZIMG_MATRIX_RGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
+
 	vi = *node_vi;
-	vi.format = vsapi->registerFormat(matrix_out == ZIMG_MATRIX_RGB ? cmRGB : cmYUV,
+	vi.format = vsapi->registerFormat(params.matrix_out == ZIMG_MATRIX_RGB ? cmRGB : cmYUV,
 	                                  node_fmt->sampleType, node_fmt->bitsPerSample, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
 
-	colorspace_ctx = zimg_colorspace_create(matrix_in, transfer_in, primaries_in, matrix_out, transfer_out, primaries_out);
-	if (!colorspace_ctx) {
+	if (!(filter = zimg2_colorspace_create(&params))) {
 		zimg_get_last_error(fail_str, sizeof(fail_str));
 		goto fail;
 	}
-
-	data = malloc(sizeof(vs_colorspace_data));
-	if (!data) {
+	if (!(data = malloc(sizeof(*data)))) {
 		strcpy(fail_str, "error allocating vs_colorspace_data");
 		goto fail;
 	}
 
-	data->colorspace_ctx = colorspace_ctx;
+	data->filter = filter;
 	data->node = node;
 	data->vi = vi;
+	data->matrix_out = params.matrix_out;
+	data->transfer_out = params.transfer_out;
+	data->primaries_out = params.primaries_out;
 
 	vsapi->createFilter(in, out, "colorspace", vs_colorspace_init, vs_colorspace_get_frame, vs_colorspace_free, fmParallel, 0, data, core);
 	return;
 fail:
 	vsapi->setError(out, fail_str);
 	vsapi->freeNode(node);
-	zimg_colorspace_delete(colorspace_ctx);
+	zimg2_filter_free(filter);
 	free(data);
-	return;
 }
 
 
@@ -743,7 +757,9 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                           "primaries_in:int;"
 	                           "matrix_out:int:opt;"
 	                           "transfer_out:int:opt;"
-	                           "primaries_out:int:opt;", vs_colorspace_create, 0, plugin);
+	                           "primaries_out:int:opt;"
+	                           "range_in:int:opt;"
+	                           "range_out:int:opt;", vs_colorspace_create, 0, plugin);
 	registerFunc("Depth", "clip:clip;"
 	                      "dither:data:opt;"
 	                      "sample:int:opt;"
