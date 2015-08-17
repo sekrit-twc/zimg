@@ -61,7 +61,7 @@ ptrdiff_t PairFilter::get_cache_stride() const
 
 unsigned PairFilter::get_cache_line_count() const
 {
-	if (m_in_place)
+	if (m_second_flags.in_place)
 		return 0;
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return m_first_height;
@@ -194,7 +194,7 @@ void PairFilter::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageB
 	ptrdiff_t cache_stride = get_cache_stride();
 	ZimgImageBuffer cache_buf{};
 
-	if (m_in_place) {
+	if (m_second_flags.in_place) {
 		cache_buf = *dst;
 	} else {
 		for (unsigned p = 0; p < get_num_planes(); ++p) {
