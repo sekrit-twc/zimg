@@ -570,7 +570,7 @@ zimg_filter *zimg2_depth_create(const zimg_depth_params *params)
 			pixel_out.type = translate_pixel_type(params->pixel_out);
 			pixel_out.chroma = !!params->chroma;
 
-			if (pixel_in.type == zimg::PixelType::BYTE || pixel_in.type == zimg::PixelType::WORD) {
+			if (pixel_out.type == zimg::PixelType::BYTE || pixel_out.type == zimg::PixelType::WORD) {
 				pixel_out.depth = params->depth_out;
 				pixel_out.fullrange = translate_pixel_range(params->range_out);
 			}
