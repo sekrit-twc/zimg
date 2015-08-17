@@ -247,41 +247,6 @@ zimg::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 	return dst;
 }
 
-size_t filter_plane_tmp_size(const zimg::IZimgFilter *filter, unsigned width)
-{
-	size_t ctx_size = filter->get_context_size();
-	size_t tmp_size = filter->get_tmp_size(0, width);
-
-	return zimg::align(ctx_size, zimg::ALIGNMENT) + zimg::align(tmp_size, zimg::ALIGNMENT);
-}
-
-void filter_plane_process(const zimg::IZimgFilter *filter, const void * const src_plane[3], void * const dst_plane[3], void *tmp,
-                          const int src_stride[3], const int dst_stride[3], unsigned dst_width, unsigned dst_height)
-{
-	zimg::LinearAllocator alloc{ tmp };
-	zimg::ZimgImageBuffer src_buf{};
-	zimg::ZimgImageBuffer dst_buf{};
-
-	void *filter_ctx = alloc.allocate(filter->get_context_size());
-	void *filter_tmp = alloc.allocate(filter->get_tmp_size(0, dst_width));
-
-	for (unsigned p = 0; p < 3; ++p) {
-		src_buf.data[p] = const_cast<void *>(src_plane[p]);
-		src_buf.stride[p] = src_stride[p];
-		src_buf.mask[p] = -1;
-
-		dst_buf.data[p] = dst_plane[p];
-		dst_buf.stride[p] = dst_stride[p];
-		dst_buf.mask[p] = -1;
-	}
-
-	filter->init_context(filter_ctx);
-
-	for (unsigned i = 0; i < dst_height; ++i) {
-		filter->process(filter_ctx, &src_buf, &dst_buf, filter_tmp, i, 0, dst_width);
-	}
-}
-
 } // namespace
 
 
@@ -698,7 +663,7 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 
 // Legacy API v1 functions.
 struct zimg_colorspace_context {
-	std::unique_ptr<zimg::IZimgFilter> filter;
+	std::unique_ptr<zimg_filter> filter;
 };
 
 zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, int primaries_in,
@@ -706,19 +671,21 @@ zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, 
 {
 	try {
 		std::unique_ptr<zimg_colorspace_context> ret{ new zimg_colorspace_context{} };
+		zimg_colorspace_params params;
 
-		zimg::colorspace::ColorspaceDefinition csp_in;
-		zimg::colorspace::ColorspaceDefinition csp_out;
+		zimg2_colorspace_params_default(&params, ZIMG_API_VERSION);
 
-		csp_in.matrix = translate_matrix(matrix_in);
-		csp_in.transfer = translate_transfer(transfer_in);
-		csp_in.primaries = translate_primaries(primaries_in);
+		params.matrix_in = matrix_in;
+		params.transfer_in = transfer_in;
+		params.primaries_in = primaries_in;
 
-		csp_out.matrix = translate_matrix(matrix_out);
-		csp_out.transfer = translate_transfer(transfer_out);
-		csp_out.primaries = translate_primaries(primaries_out);
+		params.matrix_out = matrix_out;
+		params.transfer_out = transfer_out;
+		params.primaries_out = primaries_out;
 
-		ret->filter.reset(new zimg::colorspace::ColorspaceConversion2{ csp_in, csp_out, g_cpu_type });
+		ret->filter.reset(zimg2_colorspace_create(&params));
+		if (!ret->filter)
+			return nullptr;
 
 		return ret.release();
 	} catch (const zimg::ZimgException &e) {
@@ -732,7 +699,13 @@ zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, 
 
 size_t zimg_colorspace_tmp_size(zimg_colorspace_context *ctx, int width)
 {
-	return filter_plane_tmp_size(ctx->filter.get(), width);
+	size_t ret;
+	int err;
+
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter.get(), width, 0, &ret);
+	assert(!err);
+
+	return ret;
 }
 
 int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src[3], void * const dst[3], void *tmp,
@@ -740,11 +713,16 @@ int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src
 {
 	try {
 		zimg::PixelType type = translate_pixel_type(pixel_type);
+		ptrdiff_t src_stride_[3] = { src_stride[0], src_stride[1], src_stride[2] };
+		ptrdiff_t dst_stride_[3] = { dst_stride[0], dst_stride[1], dst_stride[2] };
+		int err;
 
 		if (type != zimg::PixelType::FLOAT)
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 
-		filter_plane_process(ctx->filter.get(), src, dst, tmp, src_stride, dst_stride, width, height);
+		err = zimg2_plane_filter_process(ctx->filter.get(), tmp, src, dst, src_stride_, dst_stride_, width, height);
+		assert(!err);
+
 		return 0;
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
@@ -760,13 +738,14 @@ void zimg_colorspace_delete(zimg_colorspace_context *ctx)
 
 
 struct zimg_depth_context {
-	zimg::depth::DitherType type;
+	int type;
 };
 
 zimg_depth_context *zimg_depth_create(int dither_type)
 {
 	try {
-		return new zimg_depth_context{ translate_dither(dither_type) };
+		translate_dither(dither_type);
+		return new zimg_depth_context{ dither_type };
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
 		return nullptr;
@@ -788,26 +767,42 @@ int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void
 	try {
 		const void *src_p[3] = { src, nullptr, nullptr };
 		void *dst_p[3] = { dst, nullptr, nullptr };
-		int src_stride_[3] = { src_stride, 0, 0 };
-		int dst_stride_[3] = { dst_stride, 0, 0 };
+		ptrdiff_t src_stride_[3] = { src_stride, 0, 0 };
+		ptrdiff_t dst_stride_[3] = { dst_stride, 0, 0 };
 
-		zimg::PixelFormat src_format;
-		zimg::PixelFormat dst_format;
+		std::unique_ptr<zimg_filter> filter;
+		zimg_depth_params params;
+		size_t tmp_size;
+		int err;
 
-		src_format.type = translate_pixel_type(pixel_in);
-		src_format.depth = depth_in;
-		src_format.fullrange = !!fullrange_in;
-		src_format.chroma = !!chroma;
+		zimg2_depth_params_default(&params, ZIMG_API_VERSION);
 
-		dst_format.type = translate_pixel_type(pixel_out);
-		dst_format.depth = depth_out;
-		dst_format.fullrange = !!fullrange_out;
-		dst_format.chroma = !!chroma;
+		params.width = width;
+		params.height = height;
 
-		zimg::depth::Depth2 depth{ ctx->type, (unsigned)width, src_format, dst_format, g_cpu_type };
-		zimg::AlignedVector<char> tmp_vec(filter_plane_tmp_size(&depth, width));
+		params.dither_type = ctx->type;
+		params.chroma = chroma;
 
-		filter_plane_process(&depth, src_p, dst_p, tmp_vec.data(), src_stride_, dst_stride_, width, height);
+		params.pixel_in = pixel_in;
+		params.depth_in = depth_in;
+		params.range_in = fullrange_in;
+
+		params.pixel_out = pixel_out;
+		params.depth_out = depth_out;
+		params.range_out = fullrange_out;
+
+		filter.reset(zimg2_depth_create(&params));
+		if (!filter)
+			return g_last_error;
+
+		if ((err = zimg2_plane_filter_get_tmp_size(filter.get(), width, 0, &tmp_size)))
+			return err;
+
+		zimg::AlignedVector<char> tmp_vec(tmp_size);
+
+		if ((err = zimg2_plane_filter_process(filter.get(), tmp_vec.data(), src_p, dst_p, src_stride_, dst_stride_, width, height)))
+			return err;
+
 		return 0;
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
@@ -823,8 +818,8 @@ void zimg_depth_delete(zimg_depth_context *ctx)
 
 
 struct zimg_resize_context {
-	std::unique_ptr<zimg::IZimgFilter> filter_u16;
-	std::unique_ptr<zimg::IZimgFilter> filter_f32;
+	std::unique_ptr<zimg_filter> filter_u16;
+	std::unique_ptr<zimg_filter> filter_f32;
 	int dst_width;
 };
 
@@ -834,12 +829,37 @@ zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_
 {
 	try {
 		std::unique_ptr<zimg_resize_context> ret{ new zimg_resize_context{} };
-		std::unique_ptr<zimg::resize::Filter> filter{ translate_resize_filter(filter_type, filter_param_a, filter_param_b) };
+		zimg_resize_params params;
 
-		ret->filter_u16.reset(new zimg::resize::Resize2{ *filter, zimg::PixelType::WORD, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type });
-		ret->filter_f32.reset(new zimg::resize::Resize2{ *filter, zimg::PixelType::FLOAT, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type });
+		zimg2_resize_params_default(&params, ZIMG_API_VERSION);
+
+		params.src_width = src_width;
+		params.src_height = src_height;
+		params.dst_width = dst_width;
+		params.dst_height = dst_height;
+
+		params.shift_w = shift_w;
+		params.shift_h = shift_h;
+		params.subwidth = subwidth;
+		params.subheight = subheight;
+
+		params.filter_type = filter_type;
+		params.filter_param_a = filter_param_a;
+		params.filter_param_b = filter_param_b;
+
+		params.pixel_type = ZIMG_PIXEL_WORD;
+		ret->filter_u16.reset(zimg2_resize_create(&params));
+
+		if (!ret->filter_u16)
+			return nullptr;
+
+		params.pixel_type = ZIMG_PIXEL_FLOAT;
+		ret->filter_f32.reset(zimg2_resize_create(&params));
+
+		if (!ret->filter_f32)
+			return nullptr;
+
 		ret->dst_width = dst_width;
-
 		return ret.release();
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
@@ -852,8 +872,16 @@ zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_
 
 size_t zimg_resize_tmp_size(zimg_resize_context *ctx, int pixel_type)
 {
-	size_t tmp_u16 = filter_plane_tmp_size(ctx->filter_u16.get(), ctx->dst_width);
-	size_t tmp_f32 = filter_plane_tmp_size(ctx->filter_f32.get(), ctx->dst_width);
+	size_t tmp_u16;
+	size_t tmp_f32;
+	int err;
+
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter_u16.get(), ctx->dst_width, 0, &tmp_u16);
+	assert(!err);
+
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter_f32.get(), ctx->dst_width, 0, &tmp_f32);
+	assert(!err);
+
 	return std::max(tmp_u16, tmp_f32);
 }
 
@@ -864,10 +892,11 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 	try {
 		const void *src_p[3] = { src, nullptr, nullptr };
 		void *dst_p[3] = { dst, nullptr, nullptr };
-		int src_stride_[3] = { src_stride, 0, 0 };
-		int dst_stride_[3] = { dst_stride, 0, 0 };
+		ptrdiff_t src_stride_[3] = { src_stride, 0, 0 };
+		ptrdiff_t dst_stride_[3] = { dst_stride, 0, 0 };
+		int err;
 
-		const zimg::IZimgFilter *filter;
+		const zimg_filter *filter;
 		zimg::PixelType type = translate_pixel_type(pixel_type);
 
 		if (type == zimg::PixelType::WORD)
@@ -877,7 +906,9 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 		else
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 
-		filter_plane_process(filter, src_p, dst_p, tmp, src_stride_, dst_stride_, dst_width, dst_height);
+		err = zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_, dst_width, dst_height);
+		assert(!err);
+
 		return 0;
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
