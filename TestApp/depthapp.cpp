@@ -6,7 +6,6 @@
 #include "Common/pixel.h"
 #include "Common/plane.h"
 #include "Common/static_map.h"
-#include "Depth/depth.h"
 #include "Depth/depth2.h"
 #include "apps.h"
 #include "frame.h"
@@ -107,25 +106,15 @@ void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &i
 
 void export_for_bmp(const Frame &in, Frame &out, PixelType type, int bits, bool fullrange, bool yuv)
 {
-	depth::Depth depth{ depth::DitherType::DITHER_NONE, CPUClass::CPU_NONE };
-
-	int width = in.width();
-	int height = in.height();
-	int src_stride = in.stride();
-	int dst_stride = out.stride();
-
-	auto tmp = allocate_buffer(depth.tmp_size(width), PixelType::FLOAT);
-
 	for (int p = 0; p < 3; ++p) {
 		bool chroma = yuv && (p == 1 || p == 2);
-
 		PixelFormat src_format{ type, bits, fullrange, chroma };
 		PixelFormat dst_format{ PixelType::BYTE, 8, fullrange, chroma };
 
-		ImagePlane<const void> src_plane{ in.data(p), width, height, src_stride, src_format };
-		ImagePlane<void> dst_plane{ out.data(p), width, height, dst_stride, dst_format };
+		depth::Depth2 depth{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_format, dst_format, CPUClass::CPU_NONE };
 
-		depth.process(src_plane, dst_plane, tmp.data());
+		auto tmp = alloc_filter_tmp(depth, in, out);
+		apply_filter(depth, in, out, tmp.data(), p);
 	}
 }
 
