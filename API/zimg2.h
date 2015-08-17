@@ -90,6 +90,13 @@ int zimg2_filter_init_context(const zimg_filter *ptr, void *ctx);
 int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right);
 
 
+int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int height, size_t *out);
+
+int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const void * const src[3], void * const dst[3],
+                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3],
+                               unsigned width, unsigned height);
+
+
 /* Chosen to match ITU-T H.264 and H.265 */
 #define ZIMG_MATRIX_RGB        0
 #define ZIMG_MATRIX_709        1

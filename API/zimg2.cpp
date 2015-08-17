@@ -419,6 +419,68 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 #undef EX_END
 
 
+int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int, size_t *out)
+{
+	size_t filter_ctx_size;
+	size_t filter_tmp_size;
+	int err;
+
+	assert(out);
+
+	if ((err = zimg2_filter_get_context_size(ptr, &filter_ctx_size)))
+		return err;
+	if ((err = zimg2_filter_get_tmp_size(ptr, 0, width, &filter_tmp_size)))
+		return err;
+
+	*out = zimg::align(filter_ctx_size, zimg::ALIGNMENT) + zimg::align(filter_tmp_size, zimg::ALIGNMENT);
+	return 0;
+}
+
+int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const void * const src[3], void * const dst[3],
+                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3],
+							   unsigned width, unsigned height)
+{
+	zimg::LinearAllocator alloc{ tmp_pool };
+	zimg_image_buffer src_buf{ ZIMG_API_VERSION };
+	zimg_image_buffer dst_buf{ ZIMG_API_VERSION };
+	void *filter_ctx;
+	void *filter_tmp;
+	size_t filter_ctx_size;
+	size_t filter_tmp_size;
+	unsigned filter_step;
+	int err;
+
+	if ((err = zimg2_filter_get_context_size(ptr, &filter_ctx_size)))
+		return err;
+	if ((err = zimg2_filter_get_tmp_size(ptr, 0, width, &filter_tmp_size)))
+		return err;
+	if ((err = zimg2_filter_get_simultaneous_lines(ptr, &filter_step)))
+		return err;
+
+	filter_ctx = alloc.allocate(filter_ctx_size);
+	filter_tmp = alloc.allocate(filter_tmp_size);
+
+	for (unsigned p = 0; p < 3; ++p) {
+		src_buf.data[p] = const_cast<void *>(src[p]);
+		src_buf.stride[p] = src_stride[p];
+		src_buf.mask[p] = -1;
+
+		dst_buf.data[p] = dst[p];
+		dst_buf.stride[p] = dst_stride[p];
+		dst_buf.mask[p] = -1;
+	}
+
+	if ((err = zimg2_filter_init_context(ptr, filter_ctx)))
+		return err;
+
+	for (unsigned i = 0; i < height; i += filter_step) {
+		if ((err = zimg2_filter_process(ptr, filter_ctx, &src_buf, &dst_buf, filter_tmp, i, 0, width)))
+			return err;
+	}
+	return 0;
+}
+
+
 void zimg2_colorspace_params_default(zimg_colorspace_params *ptr, unsigned version)
 {
 	assert(ptr);
