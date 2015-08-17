@@ -336,6 +336,7 @@ void zimg2_filter_free(zimg_filter *ptr)
 int zimg2_filter_get_flags(const zimg_filter *ptr, zimg_filter_flags *flags, unsigned version)
 {
 	EX_BEGIN
+	assert(flags);
 	export_filter_flags(cast_filter_ptr(ptr)->get_flags(), flags, version);
 	EX_END
 }
@@ -344,6 +345,10 @@ int zimg2_filter_get_required_row_range(const zimg_filter *ptr, unsigned i, unsi
 {
 	EX_BEGIN
 	auto range = cast_filter_ptr(ptr)->get_required_row_range(i);
+
+	assert(first);
+	assert(second);
+
 	*first = range.first;
 	*second = range.second;
 	EX_END
@@ -353,6 +358,10 @@ int zimg2_filter_get_required_col_range(const zimg_filter *ptr, unsigned left, u
 {
 	EX_BEGIN
 	auto range = cast_filter_ptr(ptr)->get_required_col_range(left, right);
+
+	assert(first);
+	assert(second);
+
 	*first = range.first;
 	*second = range.second;
 	EX_END
@@ -361,6 +370,7 @@ int zimg2_filter_get_required_col_range(const zimg_filter *ptr, unsigned left, u
 int zimg2_filter_get_simultaneous_lines(const zimg_filter *ptr, unsigned *out)
 {
 	EX_BEGIN
+	assert(out);
 	*out = cast_filter_ptr(ptr)->get_simultaneous_lines();
 	EX_END
 }
@@ -368,6 +378,7 @@ int zimg2_filter_get_simultaneous_lines(const zimg_filter *ptr, unsigned *out)
 int zimg2_filter_get_context_size(const zimg_filter *ptr, size_t *out)
 {
 	EX_BEGIN
+	assert(out);
 	*out = cast_filter_ptr(ptr)->get_context_size();
 	EX_END
 }
@@ -375,6 +386,7 @@ int zimg2_filter_get_context_size(const zimg_filter *ptr, size_t *out)
 int zimg2_filter_get_tmp_size(const zimg_filter *ptr, unsigned left, unsigned right, size_t *out)
 {
 	EX_BEGIN
+	assert(out);
 	*out = cast_filter_ptr(ptr)->get_tmp_size(left, right);
 	EX_END
 }
