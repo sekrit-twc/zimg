@@ -11,6 +11,8 @@
 #include "Common/alloc.h"
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
+#include "Common/mux_filter.h"
+#include "Common/pair_filter.h"
 #include "Common/osdep.h"
 #include "Common/pixel.h"
 #include "Common/static_map.h"
@@ -247,6 +249,49 @@ zimg::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 	return dst;
 }
 
+
+zimg::IZimgFilter *create_depth_color_filter(unsigned width, unsigned height, zimg::PixelFormat pixel_in, zimg::PixelFormat pixel_out, bool yuv)
+{
+	const zimg::depth::DitherType dither_type_none = zimg::depth::DitherType::DITHER_NONE;
+	std::unique_ptr<zimg::IZimgFilter> filter;
+	std::unique_ptr<zimg::IZimgFilter> filter_uv;
+	std::unique_ptr<zimg::IZimgFilter> ret;
+
+	pixel_in.chroma = false;
+	pixel_out.chroma = false;
+	filter.reset(new zimg::depth::Depth2{ dither_type_none, width, pixel_in, pixel_out, g_cpu_type });
+
+	if (yuv) {
+		pixel_in.chroma = true;
+		pixel_out.chroma = true;
+		filter_uv.reset(new zimg::depth::Depth2{ dither_type_none, width, pixel_in, pixel_out, g_cpu_type });
+	}
+
+	ret.reset(new zimg::MuxFilter{ filter.get(), filter_uv.get(), width, height });
+	filter.release();
+	filter_uv.release();
+
+	return ret.release();
+}
+
+zimg::IZimgFilter *link_filter(zimg::IZimgFilter *first, zimg::IZimgFilter *second, unsigned width, unsigned height, zimg::PixelType pixel_in, zimg::PixelType pixel_out)
+{
+	zimg::PairFilter::builder b{};
+
+	b.first = first;
+	b.second = second;
+
+	b.first_width = width;
+	b.first_height = height;
+	b.first_pixel = pixel_in;
+
+	b.second_width = width;
+	b.second_height = height;
+	b.second_pixel = pixel_out;
+
+	return new zimg::PairFilter{ b };
+}
+
 } // namespace
 
 
@@ -374,6 +419,7 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 	POINTER_ALIGNMENT_ASSERT(src->data[0]);
 	POINTER_ALIGNMENT_ASSERT(src->data[1]);
 	POINTER_ALIGNMENT_ASSERT(src->data[2]);
+
 	POINTER_ALIGNMENT_ASSERT(dst->data[0]);
 	POINTER_ALIGNMENT_ASSERT(dst->data[1]);
 	POINTER_ALIGNMENT_ASSERT(dst->data[2]);
@@ -381,6 +427,7 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 	STRIDE_ALIGNMENT_ASSERT(src->stride[0]);
 	STRIDE_ALIGNMENT_ASSERT(src->stride[1]);
 	STRIDE_ALIGNMENT_ASSERT(src->stride[2]);
+
 	STRIDE_ALIGNMENT_ASSERT(dst->stride[0]);
 	STRIDE_ALIGNMENT_ASSERT(dst->stride[1]);
 	STRIDE_ALIGNMENT_ASSERT(dst->stride[2]);
@@ -415,7 +462,7 @@ int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int, size
 
 int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const void * const src[3], void * const dst[3],
                                const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3],
-							   unsigned width, unsigned height)
+                               unsigned width, unsigned height)
 {
 	zimg::LinearAllocator alloc{ tmp_pool };
 	zimg_image_buffer src_buf{ ZIMG_API_VERSION };
@@ -479,7 +526,8 @@ void zimg2_colorspace_params_default(zimg_colorspace_params *ptr, unsigned versi
 
 		ptr->pixel_type = -1;
 		ptr->depth = 0;
-		ptr->range = 0;
+		ptr->range_in = 0;
+		ptr->range_out = 0;
 	}
 }
 
@@ -489,12 +537,22 @@ zimg_filter *zimg2_colorspace_create(const zimg_colorspace_params *params)
 	API_VERSION_ASSERT(params->version);
 
 	try {
+		std::unique_ptr<zimg::IZimgFilter> colorspace_filter;
+
 		zimg::colorspace::ColorspaceDefinition csp_in{};
 		zimg::colorspace::ColorspaceDefinition csp_out{};
 
 		zimg::PixelType pixel_type{};
+		unsigned width = 0;
+		unsigned height = 0;
+		unsigned depth = 0;
+		bool range_in = false;
+		bool range_out = false;
 
 		if (params->version >= 2) {
+			width = params->width;
+			height = params->height;
+
 			csp_in.matrix = translate_matrix(params->matrix_in);
 			csp_in.transfer = translate_transfer(params->transfer_in);
 			csp_in.primaries = translate_primaries(params->primaries_in);
@@ -504,12 +562,45 @@ zimg_filter *zimg2_colorspace_create(const zimg_colorspace_params *params)
 			csp_out.primaries = translate_primaries(params->primaries_out);
 
 			pixel_type = translate_pixel_type(params->pixel_type);
+			depth = params->depth;
+			range_in = translate_pixel_range(params->range_in);
+			range_out = translate_pixel_range(params->range_out);
 		}
 
-		if (pixel_type != zimg::PixelType::FLOAT)
-			throw zimg::ZimgUnsupportedError{ "colorspace only supports FLOAT" };
+		colorspace_filter.reset(new zimg::colorspace::ColorspaceConversion2{ csp_in, csp_out, g_cpu_type });
 
-		return new zimg::colorspace::ColorspaceConversion2{ csp_in, csp_out, g_cpu_type };
+		if (pixel_type != zimg::PixelType::FLOAT) {
+			std::unique_ptr<zimg::IZimgFilter> to_float;
+			std::unique_ptr<zimg::IZimgFilter> from_float;
+
+			std::unique_ptr<zimg::IZimgFilter> pair_filter1;
+			std::unique_ptr<zimg::IZimgFilter> pair_filter2;
+
+			zimg::PixelFormat pixel_format = zimg::default_pixel_format(pixel_type);
+			zimg::PixelFormat float_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
+			bool yuv_in = csp_in.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
+			bool yuv_out = csp_out.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
+
+			pixel_format.depth = depth;
+
+			pixel_format.fullrange = range_in;
+			to_float.reset(create_depth_color_filter(width, height, pixel_format, float_format, yuv_in));
+
+			pixel_format.fullrange = range_out;
+			from_float.reset(create_depth_color_filter(width, height, float_format, pixel_format, yuv_out));
+
+			pair_filter1.reset(link_filter(to_float.get(), colorspace_filter.get(), width, height, zimg::PixelType::FLOAT, zimg::PixelType::FLOAT));
+			to_float.release();
+			colorspace_filter.release();
+
+			pair_filter2.reset(link_filter(pair_filter1.get(), from_float.get(), width, height, zimg::PixelType::FLOAT, pixel_type));
+			pair_filter1.release();
+			from_float.release();
+
+			return pair_filter2.release();
+		} else {
+			return colorspace_filter.release();
+		}
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
 		return nullptr;

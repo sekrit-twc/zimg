@@ -132,7 +132,8 @@ typedef struct zimg_colorspace_params {
 
 	int pixel_type;
 	unsigned depth;
-	unsigned range;
+	unsigned range_in;
+	unsigned range_out;
 } zimg_colorspace_params;
 
 void zimg2_colorspace_params_default(zimg_colorspace_params *ptr, unsigned version);
