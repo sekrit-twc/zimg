@@ -1,7 +1,8 @@
+#define ZIMG_API_V1
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zimg.h"
+#include "zimg2.h"
 #include "VapourSynth.h"
 #include "VSHelper.h"
 
