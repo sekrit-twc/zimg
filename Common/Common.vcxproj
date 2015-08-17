@@ -121,6 +121,7 @@
     <ClInclude Include="except.h" />
     <ClInclude Include="linebuffer.h" />
     <ClInclude Include="matrix.h" />
+    <ClInclude Include="mux_filter.h" />
     <ClInclude Include="osdep.h" />
     <ClInclude Include="pair_filter.h" />
     <ClInclude Include="pixel.h" />
@@ -130,6 +131,7 @@
     <ClInclude Include="ztypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="mux_filter.cpp" />
     <ClCompile Include="pair_filter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
