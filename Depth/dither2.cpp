@@ -172,7 +172,6 @@ OrderedDitherBase::OrderedDitherBase(const PixelFormat &pixel_in, const PixelFor
 	auto scale_offset = get_scale_offset(pixel_in, pixel_out);
 	m_scale = scale_offset.first;
 	m_offset = scale_offset.second;
-
 }
 
 ZimgFilterFlags OrderedDitherBase::get_flags() const
