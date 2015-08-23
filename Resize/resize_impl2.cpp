@@ -223,15 +223,21 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned src_dim, unsigned dst_dim, unsigned width, unsigned height,
+IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
                                  double shift, double subwidth, CPUClass cpu)
 {
+	unsigned src_dim = horizontal ? src_width : src_height;
+	unsigned dst_dim = horizontal ? dst_width : dst_height;
+
+	if (src_width != dst_width && src_height != dst_height)
+		throw ZimgLogicError{ "cannot resize both width and height" };
+
 	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 
 	if (horizontal)
-		return new ResizeImplH_C{ filter_ctx, height, type };
+		return new ResizeImplH_C{ filter_ctx, dst_height, type };
 	else
-		return new ResizeImplV_C{ filter_ctx, width, type };
+		return new ResizeImplV_C{ filter_ctx, dst_width, type };
 }
 
 } // namespace resize

@@ -70,20 +70,20 @@ try
 	if (skip_h && skip_v) {
 		m_impl.reset(new CopyFilter{ (unsigned)src_width, (unsigned)src_height, type });
 	} else if (skip_h) {
-		m_impl.reset(create_resize_impl2(filter, type, false, src_height, dst_height, src_width, dst_height, shift_h, subheight, cpu));
+		m_impl.reset(create_resize_impl2(filter, type, false, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu));
 	} else if (skip_v) {
-		m_impl.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
+		m_impl.reset(create_resize_impl2(filter, type, true, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu));
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 		std::unique_ptr<IZimgFilter> stage1;
 		std::unique_ptr<IZimgFilter> stage2;
 
 		if (h_first) {
-			stage1.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, src_height, shift_w, subwidth, cpu));
-			stage2.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_width, dst_height, shift_h, subheight, cpu));
+			stage1.reset(create_resize_impl2(filter, type, true, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu));
+			stage2.reset(create_resize_impl2(filter, type, false, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu));
 		} else {
-			stage1.reset(create_resize_impl2(filter, type, false, src_height, dst_height, src_width, dst_height, shift_h, subheight, cpu));
-			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
+			stage1.reset(create_resize_impl2(filter, type, false, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu));
+			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu));
 		}
 
 		m_impl.reset(new PairFilter{ stage1.get(), stage2.get() });
