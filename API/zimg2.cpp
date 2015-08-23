@@ -26,15 +26,13 @@
 #define POINTER_ALIGNMENT_ASSERT(x) assert(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0)
 #define STRIDE_ALIGNMENT_ASSERT(x) assert(!(x) || (x) % zimg::ALIGNMENT == 0)
 
-namespace zimg_api {;
+namespace {;
 
 std::atomic<zimg::CPUClass> g_cpu_type{ zimg::CPUClass::CPU_NONE };
 THREAD_LOCAL int g_last_error = 0;
 THREAD_LOCAL char g_last_error_msg[1024];
 
-} // namespace zimg_api
-
-using namespace zimg_api;
+} // namespace
 
 
 namespace {;
