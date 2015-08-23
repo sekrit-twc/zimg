@@ -7,65 +7,17 @@
 namespace zimg {;
 namespace depth {;
 
-Depth2::Depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
-try
+IZimgFilter *create_depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
-	if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)
-		m_impl.reset(new DepthConvert2{ width, height, pixel_in, pixel_out, cpu });
-	else
-		m_impl.reset(create_dither_convert2(type, width, height, pixel_in, pixel_out, cpu));
-} catch (const std::bad_alloc &) {
-	throw ZimgOutOfMemory{};
-}
-
-ZimgFilterFlags Depth2::get_flags() const
-{
-	return m_impl->get_flags();
-}
-
-IZimgFilter::image_attributes Depth2::get_image_attributes() const
-{
-	return m_impl->get_image_attributes();
-}
-
-IZimgFilter::pair_unsigned Depth2::get_required_row_range(unsigned i) const
-{
-	return m_impl->get_required_row_range(i);
-}
-
-IZimgFilter::pair_unsigned Depth2::get_required_col_range(unsigned left, unsigned right) const
-{
-	return m_impl->get_required_col_range(left, right);
-}
-
-unsigned Depth2::get_simultaneous_lines() const
-{
-	return m_impl->get_simultaneous_lines();
-}
-
-unsigned Depth2::get_max_buffering() const
-{
-	return m_impl->get_max_buffering();
-}
-
-size_t Depth2::get_context_size() const
-{
-	return m_impl->get_context_size();
-}
-
-size_t Depth2::get_tmp_size(unsigned left, unsigned right) const
-{
-	return m_impl->get_tmp_size(left, right);
-}
-
-void Depth2::init_context(void *ctx) const
-{
-	m_impl->init_context(ctx);
-}
-
-void Depth2::process(void *ctx, const ZimgImageBuffer src[3], const ZimgImageBuffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const
-{
-	m_impl->process(ctx, src, dst, tmp, i, left, right);
+	try
+	{
+		if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)
+			return new DepthConvert2{ width, height, pixel_in, pixel_out, cpu };
+		else
+			return create_dither_convert2(type, width, height, pixel_in, pixel_out, cpu);
+	} catch (const std::bad_alloc &) {
+		throw ZimgOutOfMemory{};
+	}
 }
 
 } // namespace depth

@@ -22,33 +22,7 @@ enum class DitherType {
 };
 #endif
 
-class Depth2 : public IZimgFilter {
-	std::shared_ptr<IZimgFilter> m_impl;
-public:
-	Depth2() = default;
-
-	Depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
-
-	ZimgFilterFlags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	pair_unsigned get_required_row_range(unsigned i) const override;
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_simultaneous_lines() const override;
-
-	unsigned get_max_buffering() const override;
-
-	size_t get_context_size() const override;
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override;
-
-	void init_context(void *ctx) const override;
-
-	void process(void *ctx, const ZimgImageBuffer src[3], const ZimgImageBuffer dst[3], void *tmp, unsigned i, unsigned left, unsigned right) const override;
-};
+IZimgFilter *create_depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

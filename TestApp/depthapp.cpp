@@ -88,34 +88,20 @@ void usage()
 	std::cout << "    --cpu                select CPU type\n";
 }
 
-void execute(const depth::Depth2 &depth, const depth::Depth2 &depth_uv, Frame &in, Frame &out, bool yuv, int times)
+void execute(const IZimgFilter *depth, const IZimgFilter *depth_uv, Frame &in, Frame &out, bool yuv, int times)
 {
-	auto tmp = alloc_filter_tmp(depth, in, out);
-	auto tmp_uv = alloc_filter_tmp(depth_uv, in, out);
+	auto tmp = alloc_filter_tmp(*depth, in, out);
+	auto tmp_uv = alloc_filter_tmp(*depth_uv, in, out);
 
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < 3; ++p) {
-			const depth::Depth2 &depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
+			const IZimgFilter *depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
 			void *tmp_pool = (p > 0 && yuv) ? tmp_uv.data() : tmp.data();
 
-			apply_filter(depth_ctx, in, out, tmp_pool, p);
+			apply_filter(*depth_ctx, in, out, tmp_pool, p);
 		}
 	});
-}
-
-void export_for_bmp(const Frame &in, Frame &out, PixelType type, int bits, bool fullrange, bool yuv)
-{
-	for (int p = 0; p < 3; ++p) {
-		bool chroma = yuv && (p == 1 || p == 2);
-		PixelFormat src_format{ type, bits, fullrange, chroma };
-		PixelFormat dst_format{ PixelType::BYTE, 8, fullrange, chroma };
-
-		depth::Depth2 depth{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), (unsigned)in.height(), src_format, dst_format, CPUClass::CPU_NONE };
-
-		auto tmp = alloc_filter_tmp(depth, in, out);
-		apply_filter(depth, in, out, tmp.data(), p);
-	}
 }
 
 } // namespace
@@ -164,16 +150,16 @@ int depth_main(int argc, const char **argv)
 
 	read_frame_raw(in, c.infile);
 
-	depth::Depth2 depth{ c.dither, (unsigned)width, (unsigned)height, pixel_in_y, pixel_out_y, c.cpu };
-	depth::Depth2 depth_uv{ c.dither, (unsigned)width, (unsigned)height, pixel_in_uv, pixel_out_uv, c.cpu };
-	execute(depth, depth_uv, in, out, !!c.yuv, c.times);
+	std::unique_ptr<IZimgFilter> depth{ depth::create_depth2(c.dither, (unsigned)width, (unsigned)height, pixel_in_y, pixel_out_y, c.cpu) };
+	std::unique_ptr<IZimgFilter> depth_uv{ depth::create_depth2(c.dither, (unsigned)width, (unsigned)height, pixel_in_uv, pixel_out_uv, c.cpu) };
+	execute(depth.get(), depth_uv.get(), in, out, !!c.yuv, c.times);
 
 	write_frame_raw(out, c.outfile);
 
 	if (c.visualise) {
 		Frame bmp{ width, height, 1, 3 };
 
-		export_for_bmp(out, bmp, c.pixtype_out, c.bits_out, !!c.fullrange_out, !!c.yuv);
+		convert_frame(out, bmp, c.pixtype_out, PixelType::BYTE, !!c.fullrange_out, !!c.yuv);
 		write_frame_bmp(bmp, c.visualise);
 	}
 
