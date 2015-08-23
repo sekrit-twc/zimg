@@ -45,12 +45,12 @@ void resize_line_h_u16_c(const FilterContext &filter, const uint16_t *src, uint1
 void resize_line_h_f32_c(const FilterContext &filter, const float *src, float *dst, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; ++j) {
-		unsigned left = filter.left[j];
+		unsigned top = filter.left[j];
 		float accum = 0;
 
 		for (unsigned k = 0; k < filter.filter_width; ++k) {
 			float coeff = filter.data[j * filter.stride + k];
-			float x = src[left + k];
+			float x = src[top + k];
 
 			accum += coeff * x;
 		}
@@ -155,7 +155,7 @@ class ResizeImplV_C : public ZimgFilter {
 	PixelType m_type;
 	bool m_is_sorted;
 public:
-	ResizeImplV_C(const FilterContext &filter, PixelType type) : 
+	ResizeImplV_C(const FilterContext &filter, PixelType type) :
 		m_filter(filter),
 		m_type{ type },
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
