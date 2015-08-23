@@ -695,7 +695,7 @@ void zimg2_resize_params_default(zimg_resize_params *ptr, unsigned version)
 
 		ptr->shift_w = 0;
 		ptr->shift_h = 0;
-		ptr->subheight = NAN;
+		ptr->subwidth = NAN;
 		ptr->subheight = NAN;
 
 		ptr->filter_type = ZIMG_RESIZE_POINT;
