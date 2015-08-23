@@ -78,7 +78,9 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Unresize/unresize_impl.h
 
 include_HEADERS = API/zimg.h \
-				  API/zimg++.hpp
+				  API/zimg2.h \
+				  API/zimg++.hpp \
+				  API/zimg2++.hpp
 
 
 libzimg_la_LDFLAGS = -no-undefined -version-info 1
