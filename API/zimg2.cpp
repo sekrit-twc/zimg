@@ -787,15 +787,11 @@ int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src
 		zimg::PixelType type = translate_pixel_type(pixel_type);
 		ptrdiff_t src_stride_[3] = { src_stride[0], src_stride[1], src_stride[2] };
 		ptrdiff_t dst_stride_[3] = { dst_stride[0], dst_stride[1], dst_stride[2] };
-		int err;
 
 		if (type != zimg::PixelType::FLOAT)
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 
-		err = zimg2_plane_filter_process(ctx->filter.get(), tmp, src, dst, src_stride_, dst_stride_, width, height);
-		assert(!err);
-
-		return 0;
+		return zimg2_plane_filter_process(ctx->filter.get(), tmp, src, dst, src_stride_, dst_stride_, width, height);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
@@ -872,10 +868,7 @@ int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void
 
 		zimg::AlignedVector<char> tmp_vec(tmp_size);
 
-		if ((err = zimg2_plane_filter_process(filter.get(), tmp_vec.data(), src_p, dst_p, src_stride_, dst_stride_, width, height)))
-			return err;
-
-		return 0;
+		return zimg2_plane_filter_process(filter.get(), tmp_vec.data(), src_p, dst_p, src_stride_, dst_stride_, width, height);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
@@ -966,7 +959,6 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 		void *dst_p[3] = { dst, nullptr, nullptr };
 		ptrdiff_t src_stride_[3] = { src_stride, 0, 0 };
 		ptrdiff_t dst_stride_[3] = { dst_stride, 0, 0 };
-		int err;
 
 		const zimg_filter *filter;
 		zimg::PixelType type = translate_pixel_type(pixel_type);
@@ -978,10 +970,7 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 		else
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 
-		err = zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_, dst_width, dst_height);
-		assert(!err);
-
-		return 0;
+		return zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_, dst_width, dst_height);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
