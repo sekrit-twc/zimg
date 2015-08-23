@@ -54,6 +54,11 @@ ZimgFilterFlags MuxFilter::get_flags() const
 	return m_flags;
 }
 
+IZimgFilter::image_attributes MuxFilter::get_image_attributes() const
+{
+	return m_filter->get_image_attributes();
+}
+
 IZimgFilter::pair_unsigned MuxFilter::get_required_row_range(unsigned i) const
 {
 	return m_filter->get_required_row_range(i);

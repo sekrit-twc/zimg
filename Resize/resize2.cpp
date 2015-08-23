@@ -22,9 +22,13 @@ bool resize_h_first(double xscale, double yscale)
 }
 
 class CopyFilter : public ZimgFilter {
+	unsigned m_width;
+	unsigned m_height;
 	PixelType m_type;
 public:
-	explicit CopyFilter(PixelType type) :
+	CopyFilter(unsigned width, unsigned height, PixelType type) :
+		m_width{ width },
+		m_height{ height },
 		m_type{ type }
 	{
 	}
@@ -37,6 +41,11 @@ public:
 		flags.in_place = 1;
 
 		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_width, m_height, m_type };
 	}
 
 	void process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
@@ -59,11 +68,11 @@ try
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
 	if (skip_h && skip_v) {
-		m_impl.reset(new CopyFilter{ type });
+		m_impl.reset(new CopyFilter{ (unsigned)src_width, (unsigned)src_height, type });
 	} else if (skip_h) {
-		m_impl.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_height, shift_h, subheight, cpu));
+		m_impl.reset(create_resize_impl2(filter, type, false, src_height, dst_height, src_width, dst_height, shift_h, subheight, cpu));
 	} else if (skip_v) {
-		m_impl.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_height, shift_w, subwidth, cpu));
+		m_impl.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 		PairFilter::builder builder{};
@@ -73,14 +82,14 @@ try
 		unsigned tmp_height;
 
 		if (h_first) {
-			stage1.reset(create_resize_impl2(filter, type, true, src_width, dst_width, src_height, shift_w, subwidth, cpu));
-			stage2.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_height, shift_h, subheight, cpu));
+			stage1.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, src_height, shift_w, subwidth, cpu));
+			stage2.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_width, dst_height, shift_h, subheight, cpu));
 
 			tmp_width = dst_width;
 			tmp_height = src_height;
 		} else {
-			stage1.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_height, shift_h, subheight, cpu));
-			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_height, shift_w, subwidth, cpu));
+			stage1.reset(create_resize_impl2(filter, type, false, src_height, dst_height, src_width, dst_height, shift_h, subheight, cpu));
+			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
 
 			tmp_width = src_width;
 			tmp_height = dst_height;
@@ -106,6 +115,11 @@ try
 ZimgFilterFlags Resize2::get_flags() const
 {
 	return m_impl->get_flags();
+}
+
+IZimgFilter::image_attributes Resize2::get_image_attributes() const
+{
+	return m_impl->get_image_attributes();
 }
 
 IZimgFilter::pair_unsigned Resize2::get_required_row_range(unsigned i) const

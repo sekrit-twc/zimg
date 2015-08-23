@@ -1,5 +1,6 @@
 #include "Common/except.h"
 #include "Common/linebuffer.h"
+#include "Common/pixel.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
 #include "colorspace2.h"
@@ -19,8 +20,10 @@ bool is_valid_csp(const ColorspaceDefinition &csp)
 } // namespace
 
 
-ColorspaceConversion2::ColorspaceConversion2(const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu)
-try
+ColorspaceConversion2::ColorspaceConversion2(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu)
+try :
+	m_width{ width },
+	m_height{ height }
 {
 	if (!is_valid_csp(in) || !is_valid_csp(out))
 		throw ZimgIllegalArgument{ "invalid colorspace definition" };
@@ -41,6 +44,11 @@ ZimgFilterFlags ColorspaceConversion2::get_flags() const
 	flags.color = true;
 
 	return flags;
+}
+
+IZimgFilter::image_attributes ColorspaceConversion2::get_image_attributes() const
+{
+	return{ m_width, m_height, PixelType::FLOAT };
 }
 
 void ColorspaceConversion2::process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const

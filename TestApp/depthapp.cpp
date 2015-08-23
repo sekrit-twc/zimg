@@ -111,7 +111,7 @@ void export_for_bmp(const Frame &in, Frame &out, PixelType type, int bits, bool 
 		PixelFormat src_format{ type, bits, fullrange, chroma };
 		PixelFormat dst_format{ PixelType::BYTE, 8, fullrange, chroma };
 
-		depth::Depth2 depth{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_format, dst_format, CPUClass::CPU_NONE };
+		depth::Depth2 depth{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), (unsigned)in.height(), src_format, dst_format, CPUClass::CPU_NONE };
 
 		auto tmp = alloc_filter_tmp(depth, in, out);
 		apply_filter(depth, in, out, tmp.data(), p);
@@ -164,8 +164,8 @@ int depth_main(int argc, const char **argv)
 
 	read_frame_raw(in, c.infile);
 
-	depth::Depth2 depth{ c.dither, (unsigned)width, pixel_in_y, pixel_out_y, c.cpu };
-	depth::Depth2 depth_uv{ c.dither, (unsigned)width, pixel_in_uv, pixel_out_uv, c.cpu };
+	depth::Depth2 depth{ c.dither, (unsigned)width, (unsigned)height, pixel_in_y, pixel_out_y, c.cpu };
+	depth::Depth2 depth_uv{ c.dither, (unsigned)width, (unsigned)height, pixel_in_uv, pixel_out_uv, c.cpu };
 	execute(depth, depth_uv, in, out, !!c.yuv, c.times);
 
 	write_frame_raw(out, c.outfile);

@@ -27,9 +27,11 @@ class Depth2 : public IZimgFilter {
 public:
 	Depth2() = default;
 
-	Depth2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	Depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 	ZimgFilterFlags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
 
 	pair_unsigned get_required_row_range(unsigned i) const override;
 

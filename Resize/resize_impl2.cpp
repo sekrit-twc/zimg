@@ -100,11 +100,13 @@ void resize_line_v_f32_c(const FilterContext &filter, const LineBuffer<float> &s
 
 class ResizeImplH_C : public ZimgFilter {
 	FilterContext m_filter;
+	unsigned m_height;
 	PixelType m_type;
 	bool m_is_sorted;
 public:
-	ResizeImplH_C(const FilterContext &filter, PixelType type) :
+	ResizeImplH_C(const FilterContext &filter, unsigned height, PixelType type) :
 		m_filter(filter),
+		m_height{ height },
 		m_type{ type },
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
@@ -120,6 +122,11 @@ public:
 		flags.entire_row = !m_is_sorted;
 
 		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_filter.filter_rows, m_height, m_type };
 	}
 
 	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
@@ -152,11 +159,13 @@ public:
 
 class ResizeImplV_C : public ZimgFilter {
 	FilterContext m_filter;
+	unsigned m_width;
 	PixelType m_type;
 	bool m_is_sorted;
 public:
-	ResizeImplV_C(const FilterContext &filter, PixelType type) :
+	ResizeImplV_C(const FilterContext &filter, unsigned width, PixelType type) :
 		m_filter(filter),
+		m_width{ width },
 		m_type{ type },
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
@@ -172,6 +181,11 @@ public:
 		flags.entire_plane = !m_is_sorted;
 
 		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_width, m_filter.filter_rows, m_type };
 	}
 
 	pair_unsigned get_required_row_range(unsigned i) const override
@@ -209,15 +223,15 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned src_dim, unsigned dst_dim, unsigned height,
+IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned src_dim, unsigned dst_dim, unsigned width, unsigned height,
                                  double shift, double subwidth, CPUClass cpu)
 {
 	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 
 	if (horizontal)
-		return new ResizeImplH_C{ filter_ctx, type };
+		return new ResizeImplH_C{ filter_ctx, height, type };
 	else
-		return new ResizeImplV_C{ filter_ctx, type };
+		return new ResizeImplV_C{ filter_ctx, width, type };
 }
 
 } // namespace resize

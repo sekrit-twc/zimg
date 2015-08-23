@@ -60,6 +60,8 @@ public:
 
 	ZimgFilterFlags get_flags() const override;
 
+	image_attributes get_image_attributes() const override;
+
 	pair_unsigned get_required_row_range(unsigned i) const override;
 
 	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;

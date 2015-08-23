@@ -26,10 +26,15 @@ private:
 	PixelType m_pixel_out;
 	float m_scale;
 	float m_offset;
+
+	unsigned m_width;
+	unsigned m_height;
 public:
-	DepthConvert2(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	DepthConvert2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 	ZimgFilterFlags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 

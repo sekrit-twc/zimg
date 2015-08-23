@@ -259,12 +259,12 @@ zimg::IZimgFilter *create_depth_color_filter(unsigned width, unsigned height, zi
 
 	pixel_in.chroma = false;
 	pixel_out.chroma = false;
-	filter.reset(new zimg::depth::Depth2{ dither_type_none, width, pixel_in, pixel_out, g_cpu_type });
+	filter.reset(new zimg::depth::Depth2{ dither_type_none, width, height, pixel_in, pixel_out, g_cpu_type });
 
 	if (yuv) {
 		pixel_in.chroma = true;
 		pixel_out.chroma = true;
-		filter_uv.reset(new zimg::depth::Depth2{ dither_type_none, width, pixel_in, pixel_out, g_cpu_type });
+		filter_uv.reset(new zimg::depth::Depth2{ dither_type_none, width, height, pixel_in, pixel_out, g_cpu_type });
 	}
 
 	ret.reset(new zimg::MuxFilter{ filter.get(), filter_uv.get(), width, height });
@@ -567,7 +567,7 @@ zimg_filter *zimg2_colorspace_create(const zimg_colorspace_params *params)
 			range_out = translate_pixel_range(params->range_out);
 		}
 
-		colorspace_filter.reset(new zimg::colorspace::ColorspaceConversion2{ csp_in, csp_out, g_cpu_type });
+		colorspace_filter.reset(new zimg::colorspace::ColorspaceConversion2{ width, height, csp_in, csp_out, g_cpu_type });
 
 		if (pixel_type != zimg::PixelType::FLOAT) {
 			std::unique_ptr<zimg::IZimgFilter> to_float;
@@ -645,9 +645,11 @@ zimg_filter *zimg2_depth_create(const zimg_depth_params *params)
 		zimg::PixelFormat pixel_out{};
 		zimg::depth::DitherType dither = zimg::depth::DitherType::DITHER_NONE;
 		unsigned width = 0;
+		unsigned height = 0;
 
 		if (params->version >= 2) {
 			width = params->width;
+			height = params->height;
 			dither = translate_dither(params->dither_type);
 
 			pixel_in.type = translate_pixel_type(params->pixel_in);
@@ -667,7 +669,7 @@ zimg_filter *zimg2_depth_create(const zimg_depth_params *params)
 			}
 		}
 
-		return new zimg::depth::Depth2{ dither, width, pixel_in, pixel_out, g_cpu_type };
+		return new zimg::depth::Depth2{ dither, width, height, pixel_in, pixel_out, g_cpu_type };
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
 		return nullptr;

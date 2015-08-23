@@ -156,14 +156,16 @@ std::pair<ErrorDiffusion::func_type, ErrorDiffusion::f16c_func_type> select_func
 } // namespace
 
 
-OrderedDitherBase::OrderedDitherBase(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+OrderedDitherBase::OrderedDitherBase(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
 	m_func{},
 	m_f16c{},
 	m_pixel_in{ pixel_in.type },
 	m_pixel_out{ pixel_out.type },
 	m_scale{},
 	m_offset{},
-	m_depth{ (unsigned)pixel_out.depth }
+	m_depth{ (unsigned)pixel_out.depth },
+	m_width{ width },
+	m_height{ height }
 {
 	auto impl = select_func(pixel_in, pixel_out, cpu);
 	m_func = impl.first;
@@ -182,6 +184,11 @@ ZimgFilterFlags OrderedDitherBase::get_flags() const
 	flags.in_place = pixel_size(m_pixel_in) >= pixel_size(m_pixel_out);
 
 	return flags;
+}
+
+IZimgFilter::image_attributes OrderedDitherBase::get_image_attributes() const
+{
+	return{ m_width, m_height, m_pixel_out };
 }
 
 size_t OrderedDitherBase::get_tmp_size(unsigned left, unsigned right) const
@@ -218,8 +225,8 @@ void OrderedDitherBase::process(void *ctx, const ZimgImageBuffer *src, const Zim
 }
 
 
-NoneDither::NoneDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
-	OrderedDitherBase(pixel_in, pixel_out, cpu)
+NoneDither::NoneDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+	OrderedDitherBase(width, height, pixel_in, pixel_out, cpu)
 {
 	m_dither.assign(16, 0.0f);
 }
@@ -229,8 +236,8 @@ std::tuple<unsigned, unsigned, unsigned> NoneDither::get_dither_params(unsigned 
 	return std::make_tuple(0U, 0U, 16U);
 }
 
-BayerDither::BayerDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
-	OrderedDitherBase(pixel_in, pixel_out, cpu)
+BayerDither::BayerDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+	OrderedDitherBase(width, height, pixel_in, pixel_out, cpu)
 {
 	m_dither.reserve(std::end(ORDERED_DITHERS) - std::begin(ORDERED_DITHERS));
 
@@ -244,8 +251,8 @@ std::tuple<unsigned, unsigned, unsigned> BayerDither::get_dither_params(unsigned
 	return std::make_tuple((i % ORDERED_DITHER_SIZE) * ORDERED_DITHER_SIZE, left % ORDERED_DITHER_SIZE, ORDERED_DITHER_SIZE);
 }
 
-RandomDither::RandomDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
-	OrderedDitherBase(pixel_in, pixel_out, cpu)
+RandomDither::RandomDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+	OrderedDitherBase(width, height, pixel_in, pixel_out, cpu)
 {
 	std::mt19937 mt;
 	auto mt_min = std::mt19937::min();
@@ -266,7 +273,7 @@ std::tuple<unsigned, unsigned, unsigned> RandomDither::get_dither_params(unsigne
 }
 
 
-ErrorDiffusion::ErrorDiffusion(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+ErrorDiffusion::ErrorDiffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
 	m_func{},
 	m_f16c{},
 	m_pixel_in{ pixel_in.type },
@@ -274,7 +281,8 @@ ErrorDiffusion::ErrorDiffusion(unsigned width, const PixelFormat &pixel_in, cons
 	m_scale{},
 	m_offset{},
 	m_depth{ (unsigned)pixel_out.depth },
-	m_width{ width }
+	m_width{ width },
+	m_height{ height }
 {
 	auto impl = select_func_ed(pixel_in, pixel_out, cpu);
 	m_func = impl.first;
@@ -295,6 +303,11 @@ ZimgFilterFlags ErrorDiffusion::get_flags() const
 	flags.entire_row = true;
 
 	return flags;
+}
+
+IZimgFilter::image_attributes ErrorDiffusion::get_image_attributes() const
+{
+	return{ m_width, m_height, m_pixel_out };
 }
 
 size_t ErrorDiffusion::get_context_width() const
@@ -343,20 +356,20 @@ void ErrorDiffusion::process(void *ctx, const ZimgImageBuffer *src, const ZimgIm
 }
 
 
-IZimgFilter *create_dither_convert2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+IZimgFilter *create_dither_convert2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (pixel_out.type != PixelType::BYTE && pixel_out.type != PixelType::WORD)
 		throw ZimgLogicError{ "dither only converts to floating-point types" };
 
 	switch (type) {
 	case DitherType::DITHER_NONE:
-		return new NoneDither{ pixel_in, pixel_out, cpu };
+		return new NoneDither{ width, height, pixel_in, pixel_out, cpu };
 	case DitherType::DITHER_ORDERED:
-		return new BayerDither{ pixel_in, pixel_out, cpu };
+		return new BayerDither{ width, height, pixel_in, pixel_out, cpu };
 	case DitherType::DITHER_RANDOM:
-		return new RandomDither{ pixel_in, pixel_out, cpu };
+		return new RandomDither{ width, height, pixel_in, pixel_out, cpu };
 	case DitherType::DITHER_ERROR_DIFFUSION:
-		return new ErrorDiffusion{ width, pixel_in, pixel_out, cpu };
+		return new ErrorDiffusion{ width, height, pixel_in, pixel_out, cpu };
 	default:
 		throw ZimgLogicError{ "unknown dither type" };
 	}

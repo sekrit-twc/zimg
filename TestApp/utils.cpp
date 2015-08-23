@@ -76,11 +76,11 @@ void convert_frame(const Frame &in, Frame &out, zimg::PixelType pxl_in, zimg::Pi
 
 	src_fmt.chroma = false;
 	dst_fmt.chroma = false;
-	std::unique_ptr<depth::Depth2> convert{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
+	std::unique_ptr<depth::Depth2> convert{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), (unsigned)in.height(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
 
 	src_fmt.chroma = yuv;
 	dst_fmt.chroma = yuv;
-	std::unique_ptr<depth::Depth2> convert_uv{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
+	std::unique_ptr<depth::Depth2> convert_uv{ new depth::Depth2{ depth::DitherType::DITHER_NONE, (unsigned)in.width(), (unsigned)in.height(), src_fmt, dst_fmt, CPUClass::CPU_NONE } };
 
 	for (int p = 0; p < in.planes(); ++p) {
 		bool plane_chroma = yuv && (p == 1 || p == 2); // Chroma planes.

@@ -71,13 +71,15 @@ std::pair<DepthConvert2::func_type, DepthConvert2::f16c_func_type> select_func(c
 } // namespace
 
 
-DepthConvert2::DepthConvert2(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
+DepthConvert2::DepthConvert2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
 	m_func{},
 	m_f16c{},
 	m_pixel_in{ pixel_in.type },
 	m_pixel_out{ pixel_out.type },
 	m_scale{},
-	m_offset{}
+	m_offset{},
+	m_width{ width },
+	m_height{ height }
 {
 	if (pixel_out.type != PixelType::HALF && pixel_out.type != PixelType::FLOAT)
 		throw ZimgLogicError{ "DepthConvert only converts to floating point types" };
@@ -102,6 +104,11 @@ ZimgFilterFlags DepthConvert2::get_flags() const
 	flags.in_place = !(m_func && m_f16c) && (pixel_size(m_pixel_in) >= pixel_size(m_pixel_out));
 
 	return flags;
+}
+
+IZimgFilter::image_attributes DepthConvert2::get_image_attributes() const
+{
+	return{ m_width, m_height, m_pixel_out };
 }
 
 size_t DepthConvert2::get_tmp_size(unsigned left, unsigned right) const

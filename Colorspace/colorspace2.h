@@ -15,10 +15,14 @@ struct ColorspaceDefinition;
 
 class ColorspaceConversion2 final : public ZimgFilter {
 	std::vector<std::shared_ptr<Operation>> m_operations;
+	unsigned m_width;
+	unsigned m_height;
 public:
 	ColorspaceConversion2() = default;
 
-	ColorspaceConversion2(const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
+	ColorspaceConversion2(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
+
+	image_attributes get_image_attributes() const override;
 
 	ZimgFilterFlags get_flags() const override;
 

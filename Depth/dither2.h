@@ -33,11 +33,16 @@ protected:
 	float m_offset;
 	unsigned m_depth;
 
-	OrderedDitherBase(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	unsigned m_width;
+	unsigned m_height;
+
+	OrderedDitherBase(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 	virtual std::tuple<unsigned, unsigned, unsigned> get_dither_params(unsigned i, unsigned left) const = 0;
 public:
 	ZimgFilterFlags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 
@@ -47,13 +52,13 @@ public:
 class NoneDither final : public OrderedDitherBase {
 	std::tuple<unsigned, unsigned, unsigned> get_dither_params(unsigned i, unsigned left) const override;
 public:
-	NoneDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	NoneDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 };
 
 class BayerDither final : public OrderedDitherBase {
 	std::tuple<unsigned, unsigned, unsigned> get_dither_params(unsigned i, unsigned left) const override;
 public:
-	BayerDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	BayerDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 };
 
 class RandomDither final : public OrderedDitherBase {
@@ -61,7 +66,7 @@ class RandomDither final : public OrderedDitherBase {
 
 	std::tuple<unsigned, unsigned, unsigned> get_dither_params(unsigned i, unsigned left) const override;
 public:
-	RandomDither(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	RandomDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 };
 
 class ErrorDiffusion final : public ZimgFilter {
@@ -77,12 +82,15 @@ private:
 	float m_offset;
 	unsigned m_depth;
 	unsigned m_width;
+	unsigned m_height;
 
 	size_t get_context_width() const;
 public:
-	ErrorDiffusion(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+	ErrorDiffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 	ZimgFilterFlags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
 
 	size_t get_context_size() const override;
 
@@ -91,7 +99,7 @@ public:
 	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
-IZimgFilter *create_dither_convert2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+IZimgFilter *create_dither_convert2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

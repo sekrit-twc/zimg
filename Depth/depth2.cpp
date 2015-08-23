@@ -7,13 +7,13 @@
 namespace zimg {;
 namespace depth {;
 
-Depth2::Depth2(DitherType type, unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+Depth2::Depth2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 try
 {
 	if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)
-		m_impl.reset(new DepthConvert2{ pixel_in, pixel_out, cpu });
+		m_impl.reset(new DepthConvert2{ width, height, pixel_in, pixel_out, cpu });
 	else
-		m_impl.reset(create_dither_convert2(type, width, pixel_in, pixel_out, cpu));
+		m_impl.reset(create_dither_convert2(type, width, height, pixel_in, pixel_out, cpu));
 } catch (const std::bad_alloc &) {
 	throw ZimgOutOfMemory{};
 }
@@ -23,12 +23,17 @@ ZimgFilterFlags Depth2::get_flags() const
 	return m_impl->get_flags();
 }
 
-ZimgFilter::pair_unsigned Depth2::get_required_row_range(unsigned i) const
+IZimgFilter::image_attributes Depth2::get_image_attributes() const
+{
+	return m_impl->get_image_attributes();
+}
+
+IZimgFilter::pair_unsigned Depth2::get_required_row_range(unsigned i) const
 {
 	return m_impl->get_required_row_range(i);
 }
 
-ZimgFilter::pair_unsigned Depth2::get_required_col_range(unsigned left, unsigned right) const
+IZimgFilter::pair_unsigned Depth2::get_required_col_range(unsigned left, unsigned right) const
 {
 	return m_impl->get_required_col_range(left, right);
 }

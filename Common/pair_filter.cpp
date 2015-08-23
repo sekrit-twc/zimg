@@ -95,6 +95,11 @@ ZimgFilterFlags PairFilter::get_flags() const
 	return flags;
 }
 
+IZimgFilter::image_attributes PairFilter::get_image_attributes() const
+{
+	return{ m_second_width, m_second_height, m_second_pixel };
+}
+
 IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
 {
 	auto second_range = m_second->get_required_row_range(i);

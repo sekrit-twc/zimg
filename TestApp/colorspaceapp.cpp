@@ -174,7 +174,7 @@ int colorspace_main(int argc, const char **argv)
 
 	read_frame_raw(in, c.infile);
 
-	colorspace::ColorspaceConversion2 conv{ c.csp_in, c.csp_out, c.cpu };
+	colorspace::ColorspaceConversion2 conv{ (unsigned)width, (unsigned)height, c.csp_in, c.csp_out, c.cpu };
 	execute(conv, in, out, c.times, !!c.fullrange_in, !!c.fullrange_out, yuv_in, yuv_out, c.filetype);
 
 	write_frame_raw(out, c.outfile);
