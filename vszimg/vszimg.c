@@ -263,11 +263,11 @@ fail:
 
 
 typedef struct vs_depth_data {
-	zimg_depth_context *depth_ctx;
+	zimg_filter *filter;
+	zimg_filter *filter_uv;
 	VSNodeRef *node;
 	VSVideoInfo vi;
-	int fullrange_in;
-	int fullrange_out;
+	int fullrange;
 } vs_depth_data;
 
 static void VS_CC vs_depth_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
@@ -280,56 +280,87 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 {
 	vs_depth_data *data = *instanceData;
 	VSFrameRef *ret = 0;
-	char fail_str[1024] = { 0 };
+	char fail_str[1024];
 	int err = 0;
-	int p;
-
-	zimg_clear_last_error();
 
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
-	} else if (activationReason == arAllFramesReady) {
-		const VSFrameRef *src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
-		VSFrameRef *dst_frame = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src_frame, core);
-
-		const VSFormat *src_format = vsapi->getFrameFormat(src_frame);
-		const VSFormat *dst_format = data->vi.format;
-
-		int src_pixel = translate_pixel(src_format);
-		int dst_pixel = translate_pixel(dst_format);
-		int yuv = src_format->colorFamily == cmYUV || src_format->colorFamily == cmYCoCg;
-
+	} else {
+		const VSFrameRef *src_frame = 0;
+		VSFrameRef *dst_frame = 0;
 		void *tmp = 0;
-		size_t tmp_size = zimg_depth_tmp_size(data->depth_ctx, vsapi->getFrameWidth(src_frame, 0));
 
-		VS_ALIGNED_MALLOC(&tmp, tmp_size, 32);
+		const void *src_plane[3] = { 0 };
+		void *dst_plane[3] = { 0 };
+		ptrdiff_t src_stride[3] = { 0 };
+		ptrdiff_t dst_stride[3] = { 0 };
+		int width;
+		int height;
+		int width_uv;
+		int height_uv;
+		unsigned num_planes;
+		size_t tmp_size;
+		size_t tmp_size_uv;
+		VSMap *props;
+		unsigned p;
+
+		width = data->vi.width;
+		height = data->vi.height;
+		width_uv = width >> data->vi.format->subSamplingW;
+		height_uv = height >> data->vi.format->subSamplingH;
+		num_planes = data->vi.format->numPlanes;
+
+		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
+		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
+
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+			zimg_get_last_error(fail_str, sizeof(fail_str));
+			goto fail;
+		}
+		if (data->filter_uv) {
+			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, width_uv, height_uv, &tmp_size_uv))) {
+				zimg_get_last_error(fail_str, sizeof(fail_str));
+				goto fail;
+			}
+		} else {
+			tmp_size_uv = 0;
+		}
+
+		VS_ALIGNED_MALLOC(&tmp, tmp_size > tmp_size_uv ? tmp_size : tmp_size_uv, 32);
 		if (!tmp) {
 			strcpy(fail_str, "error allocating temporary buffer");
 			err = 1;
 			goto fail;
 		}
 
-		for (p = 0; p < data->vi.format->numPlanes; ++p) {
-			err = zimg_depth_process(data->depth_ctx,
-			                         vsapi->getReadPtr(src_frame, p),
-			                         vsapi->getWritePtr(dst_frame, p),
-			                         tmp,
-			                         vsapi->getFrameWidth(src_frame, p),
-			                         vsapi->getFrameHeight(src_frame, p),
-			                         vsapi->getStride(src_frame, p),
-			                         vsapi->getStride(dst_frame, p),
-			                         src_pixel,
-			                         dst_pixel,
-			                         src_format->bitsPerSample,
-			                         dst_format->bitsPerSample,
-			                         data->fullrange_in,
-			                         data->fullrange_out,
-			                         p > 0 && yuv);
-			if (err) {
+		for (p = 0; p < num_planes; ++p) {
+			const zimg_filter *filter;
+			unsigned plane_width;
+			unsigned plane_height;
+
+			if ((p == 1 || p == 2) && data->filter_uv)
+				filter = data->filter_uv;
+			else
+				filter = data->filter;
+
+			src_plane[0] = vsapi->getReadPtr(src_frame, p);
+			src_stride[0] = vsapi->getStride(src_frame, p);
+
+			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
+			dst_stride[0] = vsapi->getStride(dst_frame, p);
+
+			plane_width = vsapi->getFrameWidth(src_frame, p);
+			plane_height = vsapi->getFrameHeight(src_frame, p);
+
+			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride, plane_width, plane_height))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}
 		}
+
+		props = vsapi->getFramePropsRW(dst_frame);
+		vsapi->propSetInt(props, "_ColorRange", !data->fullrange, paReplace);
+
 		ret = dst_frame;
 		dst_frame = 0;
 	fail:
@@ -340,13 +371,15 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 
 	if (err)
 		vsapi->setFilterError(fail_str, frameCtx);
+
 	return ret;
 }
 
 static void VS_CC vs_depth_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
 	vs_depth_data *data = instanceData;
-	zimg_depth_delete(data->depth_ctx);
+	zimg2_filter_free(data->filter);
+	zimg2_filter_free(data->filter_uv);
 	vsapi->freeNode(data->node);
 	free(data);
 }
@@ -354,102 +387,108 @@ static void VS_CC vs_depth_free(void *instanceData, VSCore *core, const VSAPI *v
 static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
 	vs_depth_data *data = 0;
-	zimg_depth_context *depth_ctx = 0;
-	char fail_str[1024] = { 0 };
+	zimg_depth_params params;
+	zimg_filter *filter = 0;
+	zimg_filter *filter_uv = 0;
+	char fail_str[1024];
 	int err;
 
 	VSNodeRef *node = 0;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
+	VSVideoInfo vi;
 
-	VSVideoInfo out_vi;
-	const VSFormat *out_fmt;
-
-	const char *dither;
-	int sample;
+	const char *dither_str;
+	int sample_type;
 	int depth;
-	int fullrange_in;
-	int fullrange_out;
-
-	zimg_clear_last_error();
 
 	node = vsapi->propGetNode(in, "clip", 0, 0);
 	node_vi = vsapi->getVideoInfo(node);
 	node_fmt = node_vi->format;
 
-	if (!node_fmt) {
+	if (!isConstantFormat(node_vi)) {
 		strcpy(fail_str, "clip must have a defined format");
 		goto fail;
 	}
 
-	dither = vsapi->propGetData(in, "dither", 0, &err);
-	if (err)
-		dither = "none";
+	sample_type = (int)propGetIntDefault(vsapi, in, "sample", 0, node_fmt->sampleType);
+	depth = (int)propGetIntDefault(vsapi, in, "depth", 0, node_fmt->bitsPerSample);
 
-	sample = (int)vsapi->propGetInt(in, "sample", 0, &err);
-	if (err)
-		sample = node_fmt->sampleType;
-
-	depth = (int)vsapi->propGetInt(in, "depth", 0, &err);
-	if (err)
-		depth = node_fmt->bitsPerSample;
-
-	fullrange_in = !!vsapi->propGetInt(in, "fullrange_in", 0, &err);
-	if (err)
-		fullrange_in = node_fmt->colorFamily == cmRGB;
-
-	fullrange_out = !!vsapi->propGetInt(in, "fullrange_out", 0, &err);
-	if (err)
-		fullrange_out = node_fmt->colorFamily == cmRGB;
-
-	if (sample != stInteger && sample != stFloat) {
+	if (sample_type != stInteger && sample_type != stFloat) {
 		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
 		goto fail;
 	}
-	if (sample == stFloat && depth != 16 && depth != 32) {
-		strcpy(fail_str, "only half and single-precision supported for floats");
+	if (sample_type == stFloat && depth != 16 && depth != 32) {
+		strcpy(fail_str, "invalid depth: must be 16 or 32 for stFloat");
 		goto fail;
 	}
-	if (sample == stInteger && (depth <= 0 || depth > 16)) {
-		strcpy(fail_str, "only bit depths 1-16 are supported for int");
+	if (sample_type == stInteger && (depth <= 0 || depth > 16)) {
+		strcpy(fail_str, "invalid depth: must be between 1-16 for stInteger");
 		goto fail;
 	}
 
-	out_fmt = vsapi->registerFormat(node_fmt->colorFamily, sample, depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
-	out_vi.format = out_fmt;
-	out_vi.fpsNum = node_vi->fpsNum;
-	out_vi.fpsDen = node_vi->fpsDen;
-	out_vi.width = node_vi->width;
-	out_vi.height = node_vi->height;
-	out_vi.numFrames = node_vi->numFrames;
-	out_vi.flags = 0;
+	vi = *node_vi;
+	vi.format = vsapi->registerFormat(node_fmt->colorFamily, sample_type, depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
 
-	depth_ctx = zimg_depth_create(translate_dither(dither));
-	if (!depth_ctx) {
+	if (!vi.format) {
+		strcpy(fail_str, "unable to register output VSFormat");
+		goto fail;
+	}
+
+	zimg2_depth_params_default(&params, ZIMG_API_VERSION);
+
+	params.width = node_vi->width;
+	params.height = node_vi->height;
+
+	dither_str = vsapi->propGetData(in, "dither", 0, &err);
+	if (!err)
+		params.dither_type = translate_dither(dither_str);
+
+	params.chroma = 0;
+
+	params.pixel_in = translate_pixel(node_fmt);
+	params.depth_in = node_fmt->bitsPerSample;
+	params.range_in = (int)propGetIntDefault(vsapi, in, "range_in", 0, node_fmt->colorFamily == cmRGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
+
+	params.pixel_out = translate_pixel(vi.format);
+	params.depth_out = depth;
+	params.range_out = (int)propGetIntDefault(vsapi, in, "range_out", 0, params.range_in);
+
+	if (!(filter = zimg2_depth_create(&params))) {
 		zimg_get_last_error(fail_str, sizeof(fail_str));
 		goto fail;
 	}
 
-	data = malloc(sizeof(vs_depth_data));
-	if (!data) {
+	if (node_fmt->colorFamily == cmYUV || node_fmt->colorFamily == cmYCoCg) {
+		params.width = params.width >> node_fmt->subSamplingW;
+		params.height = params.height >> node_fmt->subSamplingH;
+		params.chroma = 1;
+
+		if (!(filter_uv = zimg2_depth_create(&params))) {
+			zimg_get_last_error(fail_str, sizeof(fail_str));
+			goto fail;
+		}
+	}
+
+	if (!(data = malloc(sizeof(*data)))) {
 		strcpy(fail_str, "error allocating vs_depth_data");
 		goto fail;
 	}
 
-	data->depth_ctx = depth_ctx;
+	data->filter = filter;
+	data->filter_uv = filter_uv;
 	data->node = node;
-	data->vi = out_vi;
-	data->fullrange_in = fullrange_in;
-	data->fullrange_out = fullrange_out;
+	data->vi = vi;
+	data->fullrange = params.range_out == ZIMG_RANGE_FULL;
 
 	vsapi->createFilter(in, out, "depth", vs_depth_init, vs_depth_get_frame, vs_depth_free, fmParallel, 0, data, core);
 	return;
 fail:
 	vsapi->setError(out, fail_str);
 	vsapi->freeNode(node);
-	zimg_depth_delete(depth_ctx);
+	zimg2_filter_free(filter);
+	zimg2_filter_free(filter_uv);
 	free(data);
-	return;
 }
 
 
@@ -764,8 +803,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 	                      "dither:data:opt;"
 	                      "sample:int:opt;"
 	                      "depth:int:opt;"
-	                      "fullrange_in:int:opt;"
-	                      "fullrange_out:int:opt;", vs_depth_create, 0, plugin);
+	                      "range_in:int:opt;"
+	                      "range_out:int:opt;", vs_depth_create, 0, plugin);
 	registerFunc("Resize", "clip:clip;"
 	                       "width:int;"
 	                       "height:int;"
