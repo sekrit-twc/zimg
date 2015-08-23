@@ -723,7 +723,7 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 			filter.reset(translate_resize_filter(params->filter_type, params->filter_param_a, params->filter_param_b));
 		}
 
-		return new zimg::resize::Resize2{ *filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type };
+		return zimg::resize::create_resize2(*filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type);
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
 		return nullptr;

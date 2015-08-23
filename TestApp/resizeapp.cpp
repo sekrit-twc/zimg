@@ -85,7 +85,7 @@ void usage()
 	std::cout << "    --pixtype           select pixel format\n";
 }
 
-void execute(const resize::Resize2 &resize, const Frame &in, Frame &out, int times, PixelType type)
+void execute(const IZimgFilter *resize, const Frame &in, Frame &out, int times, PixelType type)
 {
 	int pxsize = pixel_size(type);
 	int planes = in.planes();
@@ -93,14 +93,14 @@ void execute(const resize::Resize2 &resize, const Frame &in, Frame &out, int tim
 	Frame src{ in.width(), in.height(), pxsize, planes };
 	Frame dst{ out.width(), out.height(), pxsize, planes };
 
-	auto tmp = alloc_filter_tmp(resize, src, dst);
+	auto tmp = alloc_filter_tmp(*resize, src, dst);
 
 	convert_frame(in, src, PixelType::BYTE, type, true, false);
 
 	measure_time(times, [&]()
 	{
 		for (int p = 0; p < src.planes(); ++p) {
-			apply_filter(resize, src, dst, tmp.data(), p);
+			apply_filter(*resize, src, dst, tmp.data(), p);
 		}
 	});
 
@@ -143,9 +143,10 @@ int resize_main(int argc, const char **argv)
 	if (!c.filter)
 		c.filter.reset(new resize::BilinearFilter{});
 
-	resize::Resize2 resize{ *c.filter, c.pixtype, in.width(), in.height(), c.width, c.height, c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu };
+	std::unique_ptr<IZimgFilter> resize{ resize::create_resize2(*c.filter, c.pixtype, in.width(), in.height(), c.width, c.height,
+	                                                            c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu) };
 
-	execute(resize, in, out, c.times, c.pixtype);
+	execute(resize.get(), in, out, c.times, c.pixtype);
 	write_frame_bmp(out, c.outfile);
 
 	return 0;

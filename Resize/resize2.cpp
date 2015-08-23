@@ -60,23 +60,23 @@ public:
 } // namespace
 
 
-Resize2::Resize2(const Filter &filter, PixelType type, int src_width, int src_height, int dst_width, int dst_height,
-                 double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
-try
+IZimgFilter *create_resize2(const Filter &filter, PixelType type, int src_width, int src_height, int dst_width, int dst_height,
+                            double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
 	if (skip_h && skip_v) {
-		m_impl.reset(new CopyFilter{ (unsigned)src_width, (unsigned)src_height, type });
+		return new CopyFilter{ (unsigned)src_width, (unsigned)src_height, type };
 	} else if (skip_h) {
-		m_impl.reset(create_resize_impl2(filter, type, false, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu));
+		return create_resize_impl2(filter, type, false, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu);
 	} else if (skip_v) {
-		m_impl.reset(create_resize_impl2(filter, type, true, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu));
+		return create_resize_impl2(filter, type, true, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu);
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 		std::unique_ptr<IZimgFilter> stage1;
 		std::unique_ptr<IZimgFilter> stage2;
+		std::unique_ptr<IZimgFilter> ret;
 
 		if (h_first) {
 			stage1.reset(create_resize_impl2(filter, type, true, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu));
@@ -86,62 +86,12 @@ try
 			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu));
 		}
 
-		m_impl.reset(new PairFilter{ stage1.get(), stage2.get() });
+		ret.reset(new PairFilter{ stage1.get(), stage2.get() });
 		stage1.release();
 		stage2.release();
+
+		return ret.release();
 	}
-} catch (const std::bad_alloc &) {
-	throw ZimgOutOfMemory{};
-}
-
-ZimgFilterFlags Resize2::get_flags() const
-{
-	return m_impl->get_flags();
-}
-
-IZimgFilter::image_attributes Resize2::get_image_attributes() const
-{
-	return m_impl->get_image_attributes();
-}
-
-IZimgFilter::pair_unsigned Resize2::get_required_row_range(unsigned i) const
-{
-	return m_impl->get_required_row_range(i);
-}
-
-IZimgFilter::pair_unsigned Resize2::get_required_col_range(unsigned left, unsigned right) const
-{
-	return m_impl->get_required_col_range(left, right);
-}
-
-unsigned Resize2::get_simultaneous_lines() const
-{
-	return m_impl->get_simultaneous_lines();
-}
-
-unsigned Resize2::get_max_buffering() const
-{
-	return m_impl->get_max_buffering();
-}
-
-size_t Resize2::get_context_size() const
-{
-	return m_impl->get_context_size();
-}
-
-size_t Resize2::get_tmp_size(unsigned left, unsigned right) const
-{
-	return m_impl->get_tmp_size(left, right);
-}
-
-void Resize2::init_context(void *ctx) const
-{
-	m_impl->init_context(ctx);
-}
-
-void Resize2::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
-{
-	m_impl->process(ctx, src, dst, tmp, i, left, right);
 }
 
 } // namespace resize
