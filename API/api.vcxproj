@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="zimg++.hpp" />
     <ClInclude Include="zimg.h" />
+    <ClInclude Include="zimg2++.hpp" />
     <ClInclude Include="zimg2.h" />
   </ItemGroup>
   <ItemGroup>
