@@ -1,4 +1,3 @@
-#define ZIMG_API_V1
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,6 +87,24 @@ static int64_t propGetIntDefault(const VSAPI *vsapi, const VSMap *map, const cha
 	int err;
 
 	x = vsapi->propGetInt(map, key, index, &err);
+	return err ? default_value : x;
+}
+
+static double propGetFloatDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, double default_value)
+{
+	double x;
+	int err;
+
+	x = vsapi->propGetFloat(map, key, index, &err);
+	return err ? default_value : x;
+}
+
+static const char *propGetDataDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, const char *default_value)
+{
+	const char *x;
+	int err;
+
+	x = vsapi->propGetData(map, key, index, &err);
 	return err ? default_value : x;
 }
 
@@ -493,10 +510,11 @@ fail:
 
 
 typedef struct vs_resize_data {
-	zimg_resize_context *resize_ctx_y;
-	zimg_resize_context *resize_ctx_uv;
+	zimg_filter *filter;
+	zimg_filter *filter_uv;
 	VSNodeRef *node;
 	VSVideoInfo vi;
+	int mpeg2;
 } vs_resize_data;
 
 static void VS_CC vs_resize_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
@@ -509,54 +527,87 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 {
 	vs_resize_data *data = *instanceData;
 	VSFrameRef *ret = 0;
-	char fail_str[1024] = { 0 };
+	char fail_str[1024];
 	int err = 0;
-	int p;
-
-	zimg_clear_last_error();
 
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
-	} else if (activationReason == arAllFramesReady) {
-		const VSFrameRef *src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
-		VSFrameRef *dst_frame = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src_frame, core);
-
-		const VSFormat *format = data->vi.format;
-		int pixel_type = translate_pixel(format);
-
+	} else {
+		const VSFrameRef *src_frame = 0;
+		VSFrameRef *dst_frame = 0;
 		void *tmp = 0;
-		size_t tmp_size = zimg_resize_tmp_size(data->resize_ctx_y, pixel_type);
-		size_t tmp_size_uv = data->resize_ctx_uv ? zimg_resize_tmp_size(data->resize_ctx_uv, pixel_type) : 0;
-		tmp_size = tmp_size_uv > tmp_size ? tmp_size_uv : tmp_size;
 
-		VS_ALIGNED_MALLOC(&tmp, tmp_size, 32);
+		const void *src_plane[3] = { 0 };
+		void *dst_plane[3] = { 0 };
+		ptrdiff_t src_stride[3] = { 0 };
+		ptrdiff_t dst_stride[3] = { 0 };
+		int width;
+		int height;
+		int width_uv;
+		int height_uv;
+		unsigned num_planes;
+		size_t tmp_size;
+		size_t tmp_size_uv;
+		VSMap *props;
+		unsigned p;
+
+		width = data->vi.width;
+		height = data->vi.height;
+		width_uv = width >> data->vi.format->subSamplingW;
+		height_uv = height >> data->vi.format->subSamplingH;
+		num_planes = data->vi.format->numPlanes;
+
+		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
+		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
+
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+			zimg_get_last_error(fail_str, sizeof(fail_str));
+			goto fail;
+		}
+		if (data->filter_uv) {
+			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, width_uv, height_uv, &tmp_size_uv))) {
+				zimg_get_last_error(fail_str, sizeof(fail_str));
+				goto fail;
+			}
+		} else {
+			tmp_size_uv = 0;
+		}
+
+		VS_ALIGNED_MALLOC(&tmp, tmp_size > tmp_size_uv ? tmp_size : tmp_size_uv, 32);
 		if (!tmp) {
 			strcpy(fail_str, "error allocating temporary buffer");
 			err = 1;
 			goto fail;
 		}
 
-		for (p = 0; p < format->numPlanes; ++p) {
-			zimg_resize_context *resize_ctx = ((p == 1 || p == 2) && data->resize_ctx_uv) ? data->resize_ctx_uv : data->resize_ctx_y;
-			int dst_width_plane = data->vi.width >> ((p == 1 || p == 2) ? data->vi.format->subSamplingW : 0);
-			int dst_height_plane = data->vi.height >> ((p == 1 || p == 2) ? data->vi.format->subSamplingH : 0);
+		for (p = 0; p < num_planes; ++p) {
+			const zimg_filter *filter;
+			unsigned plane_width;
+			unsigned plane_height;
 
-			err = zimg_resize_process(resize_ctx,
-			                          vsapi->getReadPtr(src_frame, p),
-			                          vsapi->getWritePtr(dst_frame, p),
-			                          tmp,
-			                          vsapi->getFrameWidth(src_frame, p),
-			                          vsapi->getFrameHeight(src_frame, p),
-			                          dst_width_plane,
-			                          dst_height_plane,
-			                          vsapi->getStride(src_frame, p),
-			                          vsapi->getStride(dst_frame, p),
-			                          pixel_type);
-			if (err) {
+			if ((p == 1 || p == 2) && data->filter_uv)
+				filter = data->filter_uv;
+			else
+				filter = data->filter;
+
+			src_plane[0] = vsapi->getReadPtr(src_frame, p);
+			src_stride[0] = vsapi->getStride(src_frame, p);
+
+			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
+			dst_stride[0] = vsapi->getStride(dst_frame, p);
+
+			plane_width = vsapi->getFrameWidth(dst_frame, p);
+			plane_height = vsapi->getFrameHeight(dst_frame, p);
+
+			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride, plane_width, plane_height))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}
 		}
+
+		props = vsapi->getFramePropsRW(dst_frame);
+		vsapi->propSetInt(props, "_ChromaLocation", data->mpeg2 ? 0 : 1, paReplace);
+
 		ret = dst_frame;
 		dst_frame = 0;
 	fail:
@@ -567,6 +618,7 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 
 	if (err)
 		vsapi->setFilterError(fail_str, frameCtx);
+
 	return ret;
 }
 
@@ -574,46 +626,29 @@ static void VS_CC vs_resize_free(void *instanceData, VSCore *core, const VSAPI *
 {
 	vs_resize_data *data = instanceData;
 	vsapi->freeNode(data->node);
-	zimg_resize_delete(data->resize_ctx_y);
-	zimg_resize_delete(data->resize_ctx_uv);
+	zimg2_filter_free(data->filter);
+	zimg2_filter_free(data->filter_uv);
 	free(data);
 }
 
 static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
 	vs_resize_data *data = 0;
-	zimg_resize_context *resize_ctx_y = 0;
-	zimg_resize_context *resize_ctx_uv = 0;
-	char fail_str[1024] = { 0 };
-	int err;
+	zimg_resize_params params;
+	zimg_filter *filter = 0;
+	zimg_filter *filter_uv = 0;
+	char fail_str[1024];
+	int err = 0;
 
 	VSNodeRef *node = 0;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
-	VSVideoInfo out_vi;
-	const VSFormat *out_fmt;
+	VSVideoInfo vi;
 
-	int width;
-	int height;
-
-	const char *filter;
-	double filter_param_a;
-	double filter_param_b;
-
-	double shift_w;
-	double shift_h;
-	double subwidth;
-	double subheight;
-
-	const char *filter_uv;
-	double filter_param_a_uv;
-	double filter_param_b_uv;
-
-	int subsample_w;
-	int subsample_h;
-
-	const char *chroma_loc_in;
-	const char *chroma_loc_out;
+	const char *filter_str;
+	unsigned subsampling_w;
+	unsigned subsampling_h;
+	int mpeg2 = 0;
 
 	node = vsapi->propGetNode(in, "clip", 0, 0);
 	node_vi = vsapi->getVideoInfo(node);
@@ -624,133 +659,112 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 		goto fail;
 	}
 
-	width = (int)vsapi->propGetInt(in, "width", 0, 0);
-	height = (int)vsapi->propGetInt(in, "height", 0, 0);
+	zimg2_resize_params_default(&params, ZIMG_API_VERSION);
 
-	filter = vsapi->propGetData(in, "filter", 0, &err);
-	if (err)
-		filter = "point";
+	params.src_width = node_vi->width;
+	params.src_height = node_vi->height;
+	params.dst_width = (unsigned)vsapi->propGetInt(in, "width", 0, 0);
+	params.dst_height = (unsigned)vsapi->propGetInt(in, "height", 0, 0);
 
-	filter_param_a = vsapi->propGetFloat(in, "filter_param_a", 0, &err);
-	if (err)
-		filter_param_a = NAN;
+	params.pixel_type = translate_pixel(node_fmt);
 
-	filter_param_b = vsapi->propGetFloat(in, "filter_param_b", 0, &err);
-	if (err)
-		filter_param_b = NAN;
+	params.shift_w = propGetFloatDefault(vsapi, in, "shift_w", 0, params.shift_w);
+	params.shift_h = propGetFloatDefault(vsapi, in, "shift_h", 0, params.shift_h);
+	params.subwidth = propGetFloatDefault(vsapi, in, "subwidth", 0, params.subwidth);
+	params.subheight = propGetFloatDefault(vsapi, in, "subheight", 0, params.subheight);
 
-	shift_w = vsapi->propGetFloat(in, "shift_w", 0, &err);
-	if (err)
-		shift_w = 0.0;
+	filter_str = vsapi->propGetData(in, "filter", 0, &err);
+	if (!err)
+		params.filter_type = translate_filter(filter_str);
 
-	shift_h = vsapi->propGetFloat(in, "shift_h", 0, &err);
-	if (err)
-		shift_h = 0.0;
+	params.filter_param_a = propGetFloatDefault(vsapi, in, "filter_param_a", 0, params.filter_param_a);
+	params.filter_param_b = propGetFloatDefault(vsapi, in, "filter_param_b", 0, params.filter_param_b);
 
-	subwidth = vsapi->propGetFloat(in, "subwidth", 0, &err);
-	if (err)
-		subwidth = node_vi->width;
+	subsampling_w = (int)propGetIntDefault(vsapi, in, "subsample_w", 0, node_fmt->subSamplingW);
+	subsampling_h = (int)propGetIntDefault(vsapi, in, "subsample_h", 0, node_fmt->subSamplingH);
 
-	subheight = vsapi->propGetFloat(in, "subheight", 0, &err);
-	if (err)
-		subheight = node_vi->height;
-
-	filter_uv = vsapi->propGetData(in, "filter_uv", 0, &err);
-	if (err)
-		filter_uv = filter;
-
-	filter_param_a_uv = vsapi->propGetFloat(in, "filter_param_a_uv", 0, &err);
-	if (err)
-		filter_param_a_uv = !strcmp(filter, filter_uv) ? filter_param_a : NAN;
-
-	filter_param_b_uv = vsapi->propGetFloat(in, "filter_param_b_uv", 0, &err);
-	if (err)
-		filter_param_b_uv = !strcmp(filter, filter_uv) ? filter_param_b : NAN;
-
-	subsample_w = (int)vsapi->propGetInt(in, "subsample_w", 0, &err);
-	if (err)
-		subsample_w = node_fmt->subSamplingW;
-
-	subsample_h = (int)vsapi->propGetInt(in, "subsample_h", 0, &err);
-	if (err)
-		subsample_h = node_fmt->subSamplingH;
-
-	chroma_loc_in = vsapi->propGetData(in, "chroma_loc_in", 0, &err);
-	if (err)
-		chroma_loc_in = "mpeg2";
-
-	chroma_loc_out = vsapi->propGetData(in, "chroma_loc_out", 0, &err);
-	if (err)
-		chroma_loc_out = "mpeg2";
-
-	if (width <= 0 || height <= 0 || subwidth <= 0.0 || subheight <= 0.0) {
-		strcpy(fail_str, "width and height must be positive");
-		goto fail;
-	}
-	if ((node_fmt->colorFamily != cmYUV && node_fmt->colorFamily != cmYCoCg) && (subsample_w || subsample_h)) {
-		strcpy(fail_str, "subsampling is only allowed for YUV");
+	if ((node_fmt->colorFamily != cmYUV && node_fmt->colorFamily != cmYCoCg) && (subsampling_w || subsampling_h)) {
+		strcpy(fail_str, "subsampling not allowed for colorfamily");
 		goto fail;
 	}
 
-	out_fmt = vsapi->registerFormat(node_fmt->colorFamily, node_fmt->sampleType, node_fmt->bitsPerSample, subsample_w, subsample_h, core);
-	out_vi.format = out_fmt;
-	out_vi.fpsNum = node_vi->fpsNum;
-	out_vi.fpsDen = node_vi->fpsDen;
-	out_vi.width = width;
-	out_vi.height = height;
-	out_vi.numFrames = node_vi->numFrames;
-	out_vi.flags = 0;
+	vi = *node_vi;
+	vi.width = params.dst_width;
+	vi.height = params.dst_height;
+	vi.format = vsapi->registerFormat(node_fmt->colorFamily, node_fmt->sampleType, node_fmt->bitsPerSample, subsampling_w, subsampling_h, core);
 
-	resize_ctx_y = zimg_resize_create(translate_filter(filter), node_vi->width, node_vi->height,
-	                                  width, height, shift_w, shift_h, subwidth, subheight, filter_param_a, filter_param_b);
-	if (!resize_ctx_y) {
+	if (!(filter = zimg2_resize_create(&params))) {
 		zimg_get_last_error(fail_str, sizeof(fail_str));
 		goto fail;
 	}
 
-	if (node_fmt->subSamplingW || node_fmt->subSamplingH || subsample_w || subsample_h) {
-		int src_width_uv = node_vi->width >> node_fmt->subSamplingW;
-		int src_height_uv = node_vi->height >> node_fmt->subSamplingH;
-		int width_uv = width >> subsample_w;
-		int height_uv = height >> subsample_h;
+	if (node_fmt->subSamplingW || node_fmt->subSamplingH || subsampling_w || subsampling_h) {
+		zimg_resize_params params_uv;
 
-		double shift_w_uv = shift_w / (double)(1 << node_fmt->subSamplingW);
-		double shift_h_uv = shift_h / (double)(1 << node_fmt->subSamplingH);
-		double subwidth_uv = subwidth / (double)(1 << node_fmt->subSamplingW);
-		double subheight_uv = subheight / (double)(1 << node_fmt->subSamplingH);
+		double scale_w = 1.0 / (double)(1 << node_fmt->subSamplingW);
+		double scale_h = 1.0 / (double)(1 << node_fmt->subSamplingH);
 
-		shift_w_uv += chroma_adjust_h(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingW, subsample_w);
-		shift_h_uv += chroma_adjust_v(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingH, subsample_h);
+		const char *chroma_loc_in = propGetDataDefault(vsapi, in, "chroma_loc_in", 0, "mpeg2");
+		const char *chroma_loc_out = propGetDataDefault(vsapi, in, "chroma_loc_out", 0, chroma_loc_in);
 
-		resize_ctx_uv = zimg_resize_create(translate_filter(filter_uv), src_width_uv, src_height_uv, width_uv, height_uv,
-		                                   shift_w_uv, shift_h_uv, subwidth_uv, subheight_uv, filter_param_a_uv, filter_param_b_uv);
-		if (!resize_ctx_uv) {
+		zimg2_resize_params_default(&params_uv, ZIMG_API_VERSION);
+
+		params_uv.src_width = params.src_width >> node_fmt->subSamplingW;
+		params_uv.src_height = params.src_height >> node_fmt->subSamplingH;
+		params_uv.dst_width = params.dst_width >> subsampling_w;
+		params_uv.dst_height = params.dst_height >> subsampling_h;
+
+		params_uv.pixel_type = params.pixel_type;
+
+		params_uv.shift_w = params.shift_w * scale_w;
+		params_uv.shift_h = params.shift_h * scale_h;
+		params_uv.subwidth = params.subwidth * scale_w;
+		params_uv.subheight = params.subheight * scale_h;
+
+		params_uv.shift_w += chroma_adjust_h(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingW, subsampling_w);
+		params_uv.shift_h += chroma_adjust_v(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingH, subsampling_h);
+
+		filter_str = vsapi->propGetData(in, "filter_uv", 0, &err);
+		if (!err) {
+			params_uv.filter_type = translate_filter(filter_str);
+		} else {
+			params_uv.filter_type = params.filter_type;
+			params_uv.filter_param_a = params.filter_param_a;
+			params_uv.filter_param_b = params.filter_param_b;
+		}
+
+		params_uv.filter_param_a = propGetFloatDefault(vsapi, in, "filter_param_a_uv", 0, params_uv.filter_param_a);
+		params_uv.filter_param_b = propGetFloatDefault(vsapi, in, "filter_param_b_uv", 0, params_uv.filter_param_b);
+
+		if (!(filter_uv = zimg2_resize_create(&params_uv))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
+
+		mpeg2 = !strcmp(chroma_loc_out, "mpeg2") && (subsampling_w || subsampling_h);
 	}
 
-	data = malloc(sizeof(vs_resize_data));
-	if (!data) {
-		strcpy(fail_str, "error allocaing vs_resize_data");
+	if (!(data = malloc(sizeof(*data)))) {
+		strcpy(fail_str, "error allocating vs_resize_data");
 		goto fail;
 	}
 
+	data->filter = filter;
+	data->filter_uv = filter_uv;
 	data->node = node;
-	data->resize_ctx_y = resize_ctx_y;
-	data->resize_ctx_uv = resize_ctx_uv;
-	data->vi = out_vi;
+	data->vi = vi;
+	data->mpeg2 = mpeg2;
 
 	vsapi->createFilter(in, out, "resize", vs_resize_init, vs_resize_get_frame, vs_resize_free, fmParallel, 0, data, core);
 	return;
 fail:
 	vsapi->setError(out, fail_str);
 	vsapi->freeNode(node);
-	zimg_resize_delete(resize_ctx_y);
-	zimg_resize_delete(resize_ctx_uv);
+	zimg2_filter_free(filter);
+	zimg2_filter_free(filter_uv);
 	free(data);
-	return;
 }
+
 
 static void VS_CC vs_set_cpu(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
