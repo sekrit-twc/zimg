@@ -10,7 +10,7 @@ class MuxFilter final : public IZimgFilter {
 	std::unique_ptr<IZimgFilter> m_filter_uv;
 	ZimgFilterFlags m_flags;
 public:
-	MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv, unsigned width, unsigned height);
+	MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv);
 
 	ZimgFilterFlags get_flags() const override;
 

@@ -267,7 +267,7 @@ zimg::IZimgFilter *create_depth_color_filter(unsigned width, unsigned height, zi
 		filter_uv.reset(new zimg::depth::Depth2{ dither_type_none, width, height, pixel_in, pixel_out, g_cpu_type });
 	}
 
-	ret.reset(new zimg::MuxFilter{ filter.get(), filter_uv.get(), width, height });
+	ret.reset(new zimg::MuxFilter{ filter.get(), filter_uv.get() });
 	filter.release();
 	filter_uv.release();
 
