@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <new>
 #include "Colorspace/colorspace2.h"
 #include "Colorspace/colorspace_param.h"
 #include "Common/align.h"
