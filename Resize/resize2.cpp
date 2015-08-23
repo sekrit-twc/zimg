@@ -75,36 +75,18 @@ try
 		m_impl.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
-		PairFilter::builder builder{};
 		std::unique_ptr<IZimgFilter> stage1;
 		std::unique_ptr<IZimgFilter> stage2;
-		unsigned tmp_width;
-		unsigned tmp_height;
 
 		if (h_first) {
 			stage1.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, src_height, shift_w, subwidth, cpu));
 			stage2.reset(create_resize_impl2(filter, type, false, src_height, dst_height, dst_width, dst_height, shift_h, subheight, cpu));
-
-			tmp_width = dst_width;
-			tmp_height = src_height;
 		} else {
 			stage1.reset(create_resize_impl2(filter, type, false, src_height, dst_height, src_width, dst_height, shift_h, subheight, cpu));
 			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_width, dst_width, dst_height, shift_w, subwidth, cpu));
-
-			tmp_width = src_width;
-			tmp_height = dst_height;
 		}
 
-		builder.first = stage1.get();
-		builder.second = stage2.get();
-		builder.first_width = tmp_width;
-		builder.first_height = tmp_height;
-		builder.first_pixel = type;
-		builder.second_width = dst_width;
-		builder.second_height = dst_height;
-		builder.second_pixel = type;
-
-		m_impl.reset(new PairFilter{ builder });
+		m_impl.reset(new PairFilter{ stage1.get(), stage2.get() });
 		stage1.release();
 		stage2.release();
 	}

@@ -15,15 +15,11 @@ struct PairFilter::cache_context {
 	unsigned cache_mask;
 };
 
-PairFilter::PairFilter(const builder &b) :
+PairFilter::PairFilter(IZimgFilter *first, IZimgFilter *second) :
 	m_first_flags{},
 	m_second_flags{},
-	m_first_width{ b.first_width },
-	m_first_height{ b.first_height },
-	m_first_pixel{ b.first_pixel },
-	m_second_width{ b.second_width },
-	m_second_height{ b.second_height },
-	m_second_pixel{ b.second_pixel },
+	m_first_attr{},
+	m_second_attr{},
 	m_first_step{},
 	m_second_step{},
 	m_second_buffering{},
@@ -31,11 +27,10 @@ PairFilter::PairFilter(const builder &b) :
 	m_in_place{},
 	m_color{}
 {
-	IZimgFilter *first = b.first;
-	IZimgFilter *second = b.second;
-
 	m_first_flags = first->get_flags();
 	m_second_flags = second->get_flags();
+	m_first_attr = first->get_image_attributes();
+	m_second_attr = second->get_image_attributes();
 
 	if (m_first_flags.color != m_second_flags.color)
 		throw ZimgLogicError{ "filter pair must be both color or both grey" };
@@ -47,7 +42,7 @@ PairFilter::PairFilter(const builder &b) :
 	m_has_state = m_first_flags.has_state || m_second_flags.has_state ||
 	              !m_first_flags.same_row || !m_second_flags.same_row ||
 	              first->get_simultaneous_lines() != second->get_simultaneous_lines();
-	m_in_place = m_first_flags.in_place && m_second_flags.in_place && m_first_pixel == m_second_pixel;
+	m_in_place = m_first_flags.in_place && m_second_flags.in_place && m_first_attr.type == m_second_attr.type;
 	m_color = !!m_first_flags.color;
 
 	m_first.reset(first);
@@ -56,7 +51,7 @@ PairFilter::PairFilter(const builder &b) :
 
 ptrdiff_t PairFilter::get_cache_stride() const
 {
-	return align(m_first_width * pixel_size(m_first_pixel), ALIGNMENT);
+	return align(m_first_attr.width * pixel_size(m_first_attr.type), ALIGNMENT);
 }
 
 unsigned PairFilter::get_cache_line_count() const
@@ -64,7 +59,7 @@ unsigned PairFilter::get_cache_line_count() const
 	if (m_second_flags.in_place)
 		return 0;
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
-		return m_first_height;
+		return m_first_attr.height;
 	else if (m_second_flags.same_row && m_first_step == m_second_step)
 		return m_second_buffering;
 	else
@@ -97,7 +92,7 @@ ZimgFilterFlags PairFilter::get_flags() const
 
 IZimgFilter::image_attributes PairFilter::get_image_attributes() const
 {
-	return{ m_second_width, m_second_height, m_second_pixel };
+	return m_second_attr;
 }
 
 IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
@@ -129,7 +124,7 @@ unsigned PairFilter::get_max_buffering() const
 	if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return -1;
 
-	for (unsigned i = 0; i < m_second_height; i += m_second_step) {
+	for (unsigned i = 0; i < m_second_attr.height; i += m_second_step) {
 		auto range = get_required_row_range(i);
 		buffering = std::max(buffering, range.second - range.first);
 	}

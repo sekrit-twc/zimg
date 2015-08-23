@@ -12,19 +12,6 @@ enum class PixelType;
 
 class PairFilter final : public IZimgFilter {
 	struct cache_context;
-public:
-	struct builder {
-		IZimgFilter *first;
-		IZimgFilter *second;
-
-		unsigned first_width;
-		unsigned first_height;
-		PixelType first_pixel;
-
-		unsigned second_width;
-		unsigned second_height;
-		PixelType second_pixel;
-	};
 private:
 	std::unique_ptr<IZimgFilter> m_first;
 	std::unique_ptr<IZimgFilter> m_second;
@@ -32,13 +19,8 @@ private:
 	ZimgFilterFlags m_first_flags;
 	ZimgFilterFlags m_second_flags;
 
-	unsigned m_first_width;
-	unsigned m_first_height;
-	PixelType m_first_pixel;
-
-	unsigned m_second_width;
-	unsigned m_second_height;
-	PixelType m_second_pixel;
+	image_attributes m_first_attr;
+	image_attributes m_second_attr;
 
 	unsigned m_first_step;
 	unsigned m_second_step;
@@ -56,7 +38,7 @@ private:
 
 	unsigned get_num_planes() const;
 public:
-	PairFilter(const builder &b);
+	PairFilter(IZimgFilter *first, IZimgFilter *second);
 
 	ZimgFilterFlags get_flags() const override;
 

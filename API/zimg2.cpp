@@ -274,24 +274,6 @@ zimg::IZimgFilter *create_depth_color_filter(unsigned width, unsigned height, zi
 	return ret.release();
 }
 
-zimg::IZimgFilter *link_filter(zimg::IZimgFilter *first, zimg::IZimgFilter *second, unsigned width, unsigned height, zimg::PixelType pixel_in, zimg::PixelType pixel_out)
-{
-	zimg::PairFilter::builder b{};
-
-	b.first = first;
-	b.second = second;
-
-	b.first_width = width;
-	b.first_height = height;
-	b.first_pixel = pixel_in;
-
-	b.second_width = width;
-	b.second_height = height;
-	b.second_pixel = pixel_out;
-
-	return new zimg::PairFilter{ b };
-}
-
 } // namespace
 
 
@@ -589,11 +571,11 @@ zimg_filter *zimg2_colorspace_create(const zimg_colorspace_params *params)
 			pixel_format.fullrange = range_out;
 			from_float.reset(create_depth_color_filter(width, height, float_format, pixel_format, yuv_out));
 
-			pair_filter1.reset(link_filter(to_float.get(), colorspace_filter.get(), width, height, zimg::PixelType::FLOAT, zimg::PixelType::FLOAT));
+			pair_filter1.reset(new zimg::PairFilter{ to_float.get(), colorspace_filter.get() });
 			to_float.release();
 			colorspace_filter.release();
 
-			pair_filter2.reset(link_filter(pair_filter1.get(), from_float.get(), width, height, zimg::PixelType::FLOAT, pixel_type));
+			pair_filter2.reset(new zimg::PairFilter{ pair_filter1.get(), from_float.get() });
 			pair_filter1.release();
 			from_float.release();
 
