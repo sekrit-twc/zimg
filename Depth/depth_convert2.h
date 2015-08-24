@@ -38,7 +38,7 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 
-	void process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace depth

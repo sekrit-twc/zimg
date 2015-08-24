@@ -116,7 +116,7 @@ void MuxFilter::init_context(void *ctx) const
 	(m_filter_uv ? m_filter_uv : m_filter)->init_context(ptr);
 }
 
-void MuxFilter::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void MuxFilter::process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	LinearAllocator alloc{ ctx };
 	size_t context_size = m_filter->get_context_size();
@@ -128,7 +128,7 @@ void MuxFilter::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBu
 	context[2] = alloc.allocate(context_size_uv);
 
 	for (unsigned p = 0; p < 3; ++p) {
-		ZimgImageBuffer src_p{};
+		ZimgImageBufferConst src_p{};
 		ZimgImageBuffer dst_p{};
 		IZimgFilter *filter;
 

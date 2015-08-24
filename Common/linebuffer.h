@@ -4,8 +4,27 @@
 #define ZIMG_LINEBUFFER_H_
 
 #include <algorithm>
+#include <type_traits>
 
 namespace zimg {;
+
+template <class T, bool Value>
+struct add_const_if_const;
+
+template <class T>
+struct add_const_if_const<T, true> {
+	typedef const T type;
+};
+
+template <class T>
+struct add_const_if_const<T, false> {
+	typedef T type;
+};
+
+template <class T, class U>
+struct propagate_const {
+	typedef typename add_const_if_const<U, std::is_const<T>::value>::type type;
+};
 
 /**
  * Buffer interface providing a rolling window of k rows.
@@ -16,7 +35,8 @@ namespace zimg {;
  */
 template <class T>
 class LineBuffer {
-	void *m_ptr; // Must be void pointer to allow casting to the template parameter T.
+	// Must be void pointer to allow casting to the template parameter T.
+	typename propagate_const<T, void>::type *m_ptr;
 	unsigned m_width;
 	unsigned m_byte_stride;
 	unsigned m_mask;
@@ -44,6 +64,11 @@ public:
 	LineBuffer(T *ptr, unsigned width, unsigned byte_stride, unsigned mask) :
 		m_ptr{ ptr }, m_width{ width }, m_byte_stride{ byte_stride }, m_mask{ mask }
 	{}
+
+	operator const LineBuffer<const T> &() const
+	{
+		return reinterpret_cast<LineBuffer<const T> &>(*this);
+	}
 
 	/**
 	 * Get width of line in pixels.
@@ -110,7 +135,7 @@ const LineBuffer<T> &buffer_cast(const LineBuffer<U> &x)
  * @param last index of bottom line
  */
 template <class T>
-void copy_buffer_lines(const LineBuffer<T> &src, LineBuffer<T> &dst, unsigned bytes, unsigned first, unsigned last)
+void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned bytes, unsigned first, unsigned last)
 {
 	for (unsigned n = first; n < last; ++n) {
 		std::copy_n((const char *)src[n], bytes, (char *)dst[n]);

@@ -109,11 +109,11 @@ void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, 
 	void *ctx = alloc.allocate(filter.get_context_size());
 	void *tmp = alloc.allocate(filter.get_tmp_size(0, out.width()));
 
-	ZimgImageBuffer in_buf{};
+	ZimgImageBufferConst in_buf{};
 	ZimgImageBuffer out_buf{};
 
 	for (int p = 0; p < (flags.color ? 3 : 1); ++p) {
-		in_buf.data[p] = const_cast<unsigned char *>(in.data(flags.color ? p : plane));
+		in_buf.data[p] = in.data(flags.color ? p : plane);
 		in_buf.stride[p] = in.stride() * in.pxsize();
 		in_buf.mask[p] = -1;
 

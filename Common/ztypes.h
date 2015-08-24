@@ -9,12 +9,21 @@ namespace zimg {;
 
 const unsigned API_VERSION = 2;
 
-struct ZimgImageBuffer {
+template <class T>
+struct ZimgImageBufferTemplate {
 	unsigned version = API_VERSION;
-	void *data[3];
+	T *data[3];
 	ptrdiff_t stride[3];
 	unsigned mask[3];
+
+	operator const ZimgImageBufferTemplate<const T> &() const
+	{
+		return reinterpret_cast<const ZimgImageBufferTemplate<const T> &>(*this);
+	}
 };
+
+typedef ZimgImageBufferTemplate<const void> ZimgImageBufferConst;
+typedef ZimgImageBufferTemplate<void> ZimgImageBuffer;
 
 struct ZimgFilterFlags {
 	unsigned version = API_VERSION;

@@ -48,9 +48,9 @@ public:
 		return{ m_width, m_height, m_type };
 	}
 
-	void process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		LineBuffer<void> src_buf{ reinterpret_cast<char *>(src->data[0]) + left * pixel_size(m_type), right - left, (unsigned)src->stride[0], src->mask[0] };
+		LineBuffer<const void> src_buf{ reinterpret_cast<const char *>(src->data[0]) + left * pixel_size(m_type), right - left, (unsigned)src->stride[0], src->mask[0] };
 		LineBuffer<void> dst_buf{ reinterpret_cast<char *>(dst->data[0]) + left * pixel_size(m_type), right - left, (unsigned)dst->stride[0], dst->mask[0] };
 
 		copy_buffer_lines(src_buf, dst_buf, pixel_size(m_type) * (right - left), i, i + 1);

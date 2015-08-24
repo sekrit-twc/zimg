@@ -116,9 +116,9 @@ size_t DepthConvert2::get_tmp_size(unsigned left, unsigned right) const
 	return (m_func && m_f16c) ? align(right - left, AlignmentOf<float>::value) * sizeof(float) : 0;
 }
 
-void DepthConvert2::process(void *, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void DepthConvert2::process(void *, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
-	LineBuffer<void> src_buf{ src->data[0], right, (unsigned)src->stride[0], src->mask[0] };
+	LineBuffer<const void> src_buf{ src->data[0], right, (unsigned)src->stride[0], src->mask[0] };
 	LineBuffer<void> dst_buf{ dst->data[0], right, (unsigned)dst->stride[0], dst->mask[0] };
 
 	const void *src_p = reinterpret_cast<const char *>(src_buf[i]) + left * pixel_size(m_pixel_in);

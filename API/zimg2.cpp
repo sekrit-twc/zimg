@@ -234,6 +234,22 @@ zimg::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 {
 	zimg::ZimgImageBuffer dst{};
 
+	API_VERSION_ASSERT(src.m.version);
+
+#define COPY_ARRAY(x, y) std::copy(std::begin(x), std::end(x), y)
+	if (src.m.version >= 2) {
+		COPY_ARRAY(src.m.data, dst.data);
+		COPY_ARRAY(src.m.stride, dst.stride);
+		COPY_ARRAY(src.m.mask, dst.mask);
+	}
+#undef COPY_ARRAY
+	return dst;
+}
+
+zimg::ZimgImageBufferConst import_image_buffer(const zimg_image_buffer_const &src)
+{
+	zimg::ZimgImageBufferConst dst{};
+
 	API_VERSION_ASSERT(src.version);
 
 #define COPY_ARRAY(x, y) std::copy(std::begin(x), std::end(x), y)
@@ -387,7 +403,7 @@ int zimg2_filter_init_context(const zimg_filter *ptr, void *ctx)
 	EX_END
 }
 
-int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right)
+int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right)
 {
 	EX_BEGIN
 	const zimg::IZimgFilter *filter_ptr = cast_filter_ptr(ptr);
@@ -399,19 +415,19 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 	POINTER_ALIGNMENT_ASSERT(src->data[1]);
 	POINTER_ALIGNMENT_ASSERT(src->data[2]);
 
-	POINTER_ALIGNMENT_ASSERT(dst->data[0]);
-	POINTER_ALIGNMENT_ASSERT(dst->data[1]);
-	POINTER_ALIGNMENT_ASSERT(dst->data[2]);
+	POINTER_ALIGNMENT_ASSERT(dst->m.data[0]);
+	POINTER_ALIGNMENT_ASSERT(dst->m.data[1]);
+	POINTER_ALIGNMENT_ASSERT(dst->m.data[2]);
 
 	STRIDE_ALIGNMENT_ASSERT(src->stride[0]);
 	STRIDE_ALIGNMENT_ASSERT(src->stride[1]);
 	STRIDE_ALIGNMENT_ASSERT(src->stride[2]);
 
-	STRIDE_ALIGNMENT_ASSERT(dst->stride[0]);
-	STRIDE_ALIGNMENT_ASSERT(dst->stride[1]);
-	STRIDE_ALIGNMENT_ASSERT(dst->stride[2]);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[0]);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[1]);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[2]);
 
-	zimg::ZimgImageBuffer src_buf = import_image_buffer(*src);
+	zimg::ZimgImageBufferConst src_buf = import_image_buffer(*src);
 	zimg::ZimgImageBuffer dst_buf = import_image_buffer(*dst);
 
 	filter_ptr->process(ctx, &src_buf, &dst_buf, tmp, i, left, right);
@@ -444,8 +460,8 @@ int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const voi
                                unsigned width, unsigned height)
 {
 	zimg::LinearAllocator alloc{ tmp_pool };
-	zimg_image_buffer src_buf{ ZIMG_API_VERSION };
-	zimg_image_buffer dst_buf{ ZIMG_API_VERSION };
+	zimg_image_buffer_const src_buf{ ZIMG_API_VERSION };
+	zimg_image_buffer dst_buf{ { ZIMG_API_VERSION } };
 	void *filter_ctx;
 	void *filter_tmp;
 	size_t filter_ctx_size;
@@ -464,13 +480,13 @@ int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const voi
 	filter_tmp = alloc.allocate(filter_tmp_size);
 
 	for (unsigned p = 0; p < 3; ++p) {
-		src_buf.data[p] = const_cast<void *>(src[p]);
+		src_buf.data[p] = src[p];
 		src_buf.stride[p] = src_stride[p];
 		src_buf.mask[p] = -1;
 
-		dst_buf.data[p] = dst[p];
-		dst_buf.stride[p] = dst_stride[p];
-		dst_buf.mask[p] = -1;
+		dst_buf.m.data[p] = dst[p];
+		dst_buf.m.stride[p] = dst_stride[p];
+		dst_buf.m.mask[p] = -1;
 	}
 
 	if ((err = zimg2_filter_init_context(ptr, filter_ctx)))

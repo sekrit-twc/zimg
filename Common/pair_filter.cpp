@@ -186,7 +186,7 @@ void PairFilter::init_context(void *ctx) const
 	cache->cache_mask = select_zimg_buffer_mask(get_cache_line_count());
 }
 
-void PairFilter::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void PairFilter::process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	cache_context *cache = static_cast<cache_context *>(ctx);
 	auto row_range = m_second->get_required_row_range(i);
@@ -207,7 +207,7 @@ void PairFilter::process(void *ctx, const ZimgImageBuffer *src, const ZimgImageB
 	for (; cache->cache_line_pos < row_range.second; cache->cache_line_pos += m_second_step) {
 		m_first->process(cache->first_ctx, src, &cache_buf, tmp, cache->cache_line_pos, col_range.first, col_range.second);
 	}
-	m_second->process(cache->second_ctx, &cache_buf, dst, tmp, i, left, right);
+	m_second->process(cache->second_ctx, &static_cast<const ZimgImageBufferConst &>(cache_buf), dst, tmp, i, left, right);
 }
 
 } // namespace zimg

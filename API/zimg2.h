@@ -50,11 +50,22 @@ void zimg_set_cpu(int cpu);
 #define ZIMG_PIXEL_FLOAT 3 /* IEEE-756 single precision (binary32). */
 
 
-typedef struct zimg_image_buffer {
+typedef struct zimg_image_buffer_const {
 	unsigned version;
-	void *data[3];
+	const void *data[3];
 	ptrdiff_t stride[3];
 	unsigned mask[3];
+} zimg_image_buffer_const;
+
+typedef union zimg_image_buffer {
+	struct {
+		unsigned version;
+		void *data[3];
+		ptrdiff_t stride[3];
+		unsigned mask[3];
+	} m;
+
+	zimg_image_buffer_const c;
 } zimg_image_buffer;
 
 typedef struct zimg_filter_flags {
@@ -87,7 +98,7 @@ int zimg2_filter_get_tmp_size(const zimg_filter *ptr, unsigned left, unsigned ri
 
 int zimg2_filter_init_context(const zimg_filter *ptr, void *ctx);
 
-int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right);
+int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right);
 
 
 int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int height, size_t *out);
