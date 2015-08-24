@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <type_traits>
+#include "ztypes.h"
 
 namespace zimg {;
 
@@ -37,21 +38,27 @@ template <class T>
 class LineBuffer {
 	// Must be void pointer to allow casting to the template parameter T.
 	typename propagate_const<T, void>::type *m_ptr;
-	unsigned m_width;
-	unsigned m_byte_stride;
+	ptrdiff_t m_stride;
 	unsigned m_mask;
 
 	const T *at_line(unsigned n) const
 	{
 		const char *byte_ptr = reinterpret_cast<const char *>(m_ptr);
 
-		return reinterpret_cast<const T *>(byte_ptr + (size_t)(n & m_mask) * m_byte_stride);
+		return reinterpret_cast<const T *>(byte_ptr + static_cast<ptrdiff_t>(n & m_mask) * m_stride);
 	}
 public:
 	/**
 	 * Default initialize LineBuffer.
 	 */
 	LineBuffer() = default;
+
+	explicit LineBuffer(const ZimgImageBufferTemplate<typename propagate_const<T, void>::type> &buffer, unsigned plane = 0) :
+		m_ptr{ buffer.data[plane] },
+		m_stride{ buffer.stride[plane] },
+		m_mask{ buffer.mask[plane] }
+	{
+	}
 
 	/**
 	 * Initialize a LineBuffer with a given buffer.
@@ -61,23 +68,19 @@ public:
 	 * @param byte_stride distance between lines in bytes
 	 * @param mask bit mask applied to row index
 	 */
-	LineBuffer(T *ptr, unsigned width, unsigned byte_stride, unsigned mask) :
-		m_ptr{ ptr }, m_width{ width }, m_byte_stride{ byte_stride }, m_mask{ mask }
-	{}
-
-	operator const LineBuffer<const T> &() const
+	LineBuffer(T *ptr, ptrdiff_t stride, unsigned mask) :
+		m_ptr{ ptr },
+		m_stride{ stride },
+		m_mask{ mask }
 	{
-		return reinterpret_cast<LineBuffer<const T> &>(*this);
 	}
 
 	/**
-	 * Get width of line in pixels.
-	 *
-	 * @return width
+	 * Implicit conversion to corresponding const LineBuffer.
 	 */
-	unsigned width() const
+	operator const LineBuffer<const T> &() const
 	{
-		return m_width;
+		return reinterpret_cast<LineBuffer<const T> &>(*this);
 	}
 
 	/**
@@ -135,10 +138,10 @@ const LineBuffer<T> &buffer_cast(const LineBuffer<U> &x)
  * @param last index of bottom line
  */
 template <class T>
-void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned bytes, unsigned first, unsigned last)
+void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned first_line, unsigned last_line, unsigned first_col, unsigned last_col)
 {
-	for (unsigned n = first; n < last; ++n) {
-		std::copy_n((const char *)src[n], bytes, (char *)dst[n]);
+	for (unsigned n = first_line; n < last_line; ++n) {
+		std::copy_n((const char *)src[n] + first_col, last_col - first_col, (char *)dst[n]);
 	}
 }
 

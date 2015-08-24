@@ -144,13 +144,13 @@ public:
 	void process(void *, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
-			LineBuffer<const uint16_t> src_buf{ reinterpret_cast<const uint16_t *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };
-			LineBuffer<uint16_t> dst_buf{ reinterpret_cast<uint16_t *>(dst->data[0]), right, (unsigned)dst->stride[0], dst->mask[0] };
+			LineBuffer<const uint16_t> src_buf{ *src };
+			LineBuffer<uint16_t> dst_buf{ *dst };
 
 			resize_line_h_u16_c(m_filter, src_buf[i], dst_buf[i], left, right);
 		} else {
-			LineBuffer<const float> src_buf{ reinterpret_cast<const float *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };
-			LineBuffer<float> dst_buf{ reinterpret_cast<float *>(dst->data[0]), right, (unsigned)dst->stride[0], dst->mask[0] };
+			LineBuffer<const float> src_buf{ *src };
+			LineBuffer<float> dst_buf{ *dst };
 
 			resize_line_h_f32_c(m_filter, src_buf[i], dst_buf[i], left, right);
 		}
@@ -207,13 +207,13 @@ public:
 	void process(void *, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
-			LineBuffer<const uint16_t> src_buf{ reinterpret_cast<const uint16_t *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };
-			LineBuffer<uint16_t> dst_buf{ reinterpret_cast<uint16_t *>(dst->data[0]), right, (unsigned)dst->stride[0], dst->mask[0] };
+			LineBuffer<const uint16_t> src_buf{ *src };
+			LineBuffer<uint16_t> dst_buf{ *dst };
 
 			resize_line_v_u16_c(m_filter, src_buf, dst_buf, i, left, right);
 		} else {
-			LineBuffer<const float> src_buf{ reinterpret_cast<const float *>(src->data[0]), right, (unsigned)src->stride[0], src->mask[0] };
-			LineBuffer<float> dst_buf{ reinterpret_cast<float *>(dst->data[0]), right, (unsigned)dst->stride[0], dst->mask[0] };
+			LineBuffer<const float> src_buf{ *src };
+			LineBuffer<float> dst_buf{ *dst };
 
 			resize_line_v_f32_c(m_filter, src_buf, dst_buf, i, left, right);
 		}

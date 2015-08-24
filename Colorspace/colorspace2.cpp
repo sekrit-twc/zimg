@@ -56,9 +56,9 @@ void ColorspaceConversion2::process(void *, const ZimgImageBufferConst *src, con
 	float *buf[3];
 	unsigned count = right - left;
 
-	for (int p = 0; p < 3; ++p) {
-		LineBuffer<const float> src_buf{ reinterpret_cast<const float *>(src->data[p]), right, (unsigned)src->stride[p], src->mask[p] };
-		LineBuffer<float> dst_buf{ reinterpret_cast<float *>(dst->data[p]), right, (unsigned)dst->stride[p], dst->mask[p] };
+	for (unsigned p = 0; p < 3; ++p) {
+		LineBuffer<const float> src_buf{ *src, p };
+		LineBuffer<float> dst_buf{ *dst, p };
 
 		const float *src_p = src_buf[i] + left;
 		float *dst_p = dst_buf[i] + left;
