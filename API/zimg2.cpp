@@ -430,7 +430,7 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 	zimg::ZimgImageBufferConst src_buf = import_image_buffer(*src);
 	zimg::ZimgImageBuffer dst_buf = import_image_buffer(*dst);
 
-	filter_ptr->process(ctx, &src_buf, &dst_buf, tmp, i, left, right);
+	filter_ptr->process(ctx, src_buf, dst_buf, tmp, i, left, right);
 	EX_END
 }
 

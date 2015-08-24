@@ -52,7 +52,7 @@ public:
 
 	virtual void init_context(void *ctx) const = 0;
 
-	virtual void process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
+	virtual void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
 };
 
 class ZimgFilter : public IZimgFilter {

@@ -125,7 +125,7 @@ void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, 
 	filter.init_context(ctx);
 
 	for (unsigned i = 0; i < (unsigned)out.height(); i += output_lines) {
-		filter.process(ctx, &in_buf, &out_buf, tmp, i, 0, out.width());
+		filter.process(ctx, in_buf, out_buf, tmp, i, 0, out.width());
 	}
 }
 

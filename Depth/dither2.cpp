@@ -196,10 +196,10 @@ size_t OrderedDitherBase::get_tmp_size(unsigned left, unsigned right) const
 	return (m_func && m_f16c) ? align(right - left, AlignmentOf<float>::value) * sizeof(float) : 0;
 }
 
-void OrderedDitherBase::process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void OrderedDitherBase::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
-	LineBuffer<const void> src_buf{ *src };
-	LineBuffer<void> dst_buf{ *dst };
+	LineBuffer<const void> src_buf{ src };
+	LineBuffer<void> dst_buf{ dst };
 
 	const void *src_p = reinterpret_cast<const char *>(src_buf[i]) + left * pixel_size(m_pixel_in);
 	void *dst_p = reinterpret_cast<char *>(dst_buf[i]) + left * pixel_size(m_pixel_out);
@@ -326,10 +326,10 @@ void ErrorDiffusion::init_context(void *ctx) const
 	std::fill_n(ctx_p, get_context_width(), 0.0f);
 }
 
-void ErrorDiffusion::process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned, unsigned) const
+void ErrorDiffusion::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned, unsigned) const
 {
-	LineBuffer<const void> src_buf{ *src };
-	LineBuffer<void> dst_buf{ *dst };
+	LineBuffer<const void> src_buf{ src };
+	LineBuffer<void> dst_buf{ dst };
 
 	const void *src_p = reinterpret_cast<const char *>(src_buf[i]);
 	void *dst_p = reinterpret_cast<char *>(dst_buf[i]);

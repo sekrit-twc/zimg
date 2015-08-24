@@ -116,7 +116,7 @@ void MuxFilter::init_context(void *ctx) const
 	(m_filter_uv ? m_filter_uv : m_filter)->init_context(ptr);
 }
 
-void MuxFilter::process(void *ctx, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void MuxFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	LinearAllocator alloc{ ctx };
 	size_t context_size = m_filter->get_context_size();
@@ -132,16 +132,16 @@ void MuxFilter::process(void *ctx, const ZimgImageBufferConst *src, const ZimgIm
 		ZimgImageBuffer dst_p{};
 		IZimgFilter *filter;
 
-		src_p.data[0] = src->data[p];
-		src_p.stride[0] = src->stride[p];
-		src_p.mask[0] = src->mask[p];
+		src_p.data[0] = src.data[p];
+		src_p.stride[0] = src.stride[p];
+		src_p.mask[0] = src.mask[p];
 
-		dst_p.data[0] = dst->data[p];
-		dst_p.stride[0] = dst->stride[p];
-		dst_p.mask[0] = dst->mask[p];
+		dst_p.data[0] = dst.data[p];
+		dst_p.stride[0] = dst.stride[p];
+		dst_p.mask[0] = dst.mask[p];
 
 		filter = ((p == 1 || p == 2) && m_filter_uv) ? m_filter_uv.get() : m_filter.get();
-		filter->process(context[p], &src_p, &dst_p, tmp, i, left, right);
+		filter->process(context[p], src_p, dst_p, tmp, i, left, right);
 	}
 }
 

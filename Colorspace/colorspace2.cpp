@@ -51,19 +51,19 @@ IZimgFilter::image_attributes ColorspaceConversion2::get_image_attributes() cons
 	return{ m_width, m_height, PixelType::FLOAT };
 }
 
-void ColorspaceConversion2::process(void *, const ZimgImageBufferConst *src, const ZimgImageBuffer *dst, void *, unsigned i, unsigned left, unsigned right) const
+void ColorspaceConversion2::process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
 {
 	float *buf[3];
 	unsigned count = right - left;
 
 	for (unsigned p = 0; p < 3; ++p) {
-		LineBuffer<const float> src_buf{ *src, p };
-		LineBuffer<float> dst_buf{ *dst, p };
+		LineBuffer<const float> src_buf{ src, p };
+		LineBuffer<float> dst_buf{ dst, p };
 
 		const float *src_p = src_buf[i] + left;
 		float *dst_p = dst_buf[i] + left;
 
-		if (src[p].data != dst[p].data)
+		if (src_p != dst_p)
 			std::copy_n(src_p, count, dst_p);
 
 		buf[p] = dst_p;
