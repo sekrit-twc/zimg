@@ -37,7 +37,7 @@ CPUClass get_cpu_class(int cpu)
 		return CPUClass::CPU_NONE;
 #ifdef ZIMG_X86
 	case ZIMG_CPU_AUTO:
-		return CPUClass::CPU_X86_AUTO;
+		return CPUClass::CPU_AUTO;
 	case ZIMG_CPU_X86_SSE2:
 	case ZIMG_CPU_X86_SSE3:
 	case ZIMG_CPU_X86_SSSE3:

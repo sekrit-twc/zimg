@@ -12,7 +12,7 @@ DitherConvert *create_ordered_dither_x86(const float *dither, CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	DitherConvert *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_ordered_dither_avx2(dither);
 		else if (caps.sse2)

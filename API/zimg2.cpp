@@ -89,8 +89,8 @@ zimg::CPUClass translate_cpu(int cpu)
 {
 	static const zimg::static_int_map<zimg::CPUClass, 12> map{
 		{ ZIMG_CPU_NONE,      zimg::CPUClass::CPU_NONE },
+		{ ZIMG_CPU_AUTO,      zimg::CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
-		{ ZIMG_CPU_AUTO,      zimg::CPUClass::CPU_X86_AUTO },
 		{ ZIMG_CPU_X86_MMX,   zimg::CPUClass::CPU_NONE },
 		{ ZIMG_CPU_X86_SSE,   zimg::CPUClass::CPU_NONE },
 		{ ZIMG_CPU_X86_SSE2,  zimg::CPUClass::CPU_X86_SSE2 },

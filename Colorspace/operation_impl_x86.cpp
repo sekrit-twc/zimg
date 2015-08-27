@@ -11,7 +11,7 @@ PixelAdapter *create_pixel_adapter_x86(CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	PixelAdapter *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_pixel_adapter_avx2();
 		else
@@ -30,7 +30,7 @@ Operation *create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	Operation *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_matrix_operation_avx2(m);
 		else if (caps.sse2)
@@ -53,7 +53,7 @@ Operation *create_rec709_gamma_operation_x86(CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	Operation *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_rec709_gamma_operation_avx2();
 		else
@@ -72,7 +72,7 @@ Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	Operation *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_rec709_inverse_gamma_operation_avx2();
 		else

@@ -11,7 +11,7 @@ UnresizeImpl *create_unresize_impl_x86(const BilinearContext &hcontext, const Bi
 	X86Capabilities caps = query_x86_capabilities();
 	UnresizeImpl *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_unresize_impl_avx2(hcontext, vcontext);
 		else if (caps.sse2)

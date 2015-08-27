@@ -39,8 +39,8 @@ zimg::CPUClass select_cpu(const char *cpu)
 {
 	static const static_string_map<CPUClass, 4> map{
 		{ "none", CPUClass::CPU_NONE },
+		{ "auto", CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
-		{ "auto", CPUClass::CPU_X86_AUTO },
 		{ "sse2", CPUClass::CPU_X86_SSE2 },
 		{ "avx2", CPUClass::CPU_X86_AVX2 },
 #endif

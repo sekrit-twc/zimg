@@ -12,7 +12,7 @@ DepthConvert *create_depth_convert_x86(CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	DepthConvert *ret;
 
-	if (cpu == CPUClass::CPU_X86_AUTO) {
+	if (cpu == CPUClass::CPU_AUTO) {
 		if (caps.avx2)
 			ret = create_depth_convert_avx2();
 		else if (caps.sse2)
