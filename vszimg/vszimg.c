@@ -806,40 +806,46 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 {
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
 
-	registerFunc("Colorspace", "clip:clip;"
-	                           "matrix_in:int;"
-	                           "transfer_in:int;"
-	                           "primaries_in:int;"
-	                           "matrix_out:int:opt;"
-	                           "transfer_out:int:opt;"
-	                           "primaries_out:int:opt;"
-	                           "range_in:int:opt;"
-	                           "range_out:int:opt;", vs_colorspace_create, 0, plugin);
-	registerFunc("Depth", "clip:clip;"
-	                      "dither:data:opt;"
-	                      "sample:int:opt;"
-	                      "depth:int:opt;"
-	                      "range_in:int:opt;"
-	                      "range_out:int:opt;", vs_depth_create, 0, plugin);
-	registerFunc("Resize", "clip:clip;"
-	                       "width:int;"
-	                       "height:int;"
-	                       "filter:data:opt;"
-	                       "filter_param_a:float:opt;"
-	                       "filter_param_b:float:opt;"
-	                       "shift_w:float:opt;"
-	                       "shift_h:float:opt;"
-	                       "subwidth:float:opt;"
-	                       "subheight:float:opt;"
-	                       "filter_uv:data:opt;"
-	                       "filter_param_a_uv:float:opt;"
-	                       "filter_param_b_uv:float:opt;"
-	                       "subsample_w:int:opt;"
-	                       "subsample_h:int:opt;"
-	                       "chroma_loc_in:data:opt;"
-	                       "chroma_loc_out:data:opt;", vs_resize_create, 0, plugin);
+	registerFunc("Colorspace",
+	             "clip:clip;"
+	             "matrix_in:int;"
+	             "transfer_in:int;"
+	             "primaries_in:int;"
+	             "matrix_out:int:opt;"
+	             "transfer_out:int:opt;"
+	             "primaries_out:int:opt;"
+	             "range_in:int:opt;"
+	             "range_out:int:opt;",
+	             vs_colorspace_create, 0, plugin);
+	registerFunc("Depth",
+	             "clip:clip;"
+	             "dither:data:opt;"
+	             "sample:int:opt;"
+	             "depth:int:opt;"
+	             "range_in:int:opt;"
+	             "range_out:int:opt;",
+	             vs_depth_create, 0, plugin);
+	registerFunc("Resize",
+	             "clip:clip;"
+	             "width:int;"
+	             "height:int;"
+	             "filter:data:opt;"
+	             "filter_param_a:float:opt;"
+	             "filter_param_b:float:opt;"
+	             "shift_w:float:opt;"
+	             "shift_h:float:opt;"
+	             "subwidth:float:opt;"
+	             "subheight:float:opt;"
+	             "filter_uv:data:opt;"
+	             "filter_param_a_uv:float:opt;"
+	             "filter_param_b_uv:float:opt;"
+	             "subsample_w:int:opt;"
+	             "subsample_h:int:opt;"
+	             "chroma_loc_in:data:opt;"
+	             "chroma_loc_out:data:opt;",
+	             vs_resize_create, 0, plugin);
 
-	registerFunc("SetCPU", "cpu:data", vs_set_cpu, 0, plugin);
+	registerFunc("SetCPU", "cpu:data;", vs_set_cpu, 0, plugin);
 
 	zimg_set_cpu(ZIMG_CPU_AUTO);
 }
