@@ -16,10 +16,32 @@ struct zerror {
 };
 
 
-struct zimage_buffer : public zimg_image_buffer {
+struct zimage_buffer {
+	zimg_image_buffer m_buffer;
+
 	zimage_buffer()
 	{
-		version = ZIMG_API_VERSION;
+		m_buffer.m.version = ZIMG_API_VERSION;
+	}
+
+	operator zimg_image_buffer &()
+	{
+		return m_buffer;
+	}
+
+	operator const zimg_image_buffer &() const
+	{
+		return m_buffer;
+	}
+
+	operator zimg_image_buffer_const &()
+	{
+		return m_buffer.c;
+	}
+
+	operator const zimg_image_buffer_const &() const
+	{
+		return m_buffer.c;
 	}
 };
 
@@ -107,9 +129,9 @@ public:
 		check_throw(zimg2_filter_init_context(m_filter, ctx));
 	}
 
-	void process(void *ctx, const zimg_image_buffer *src, const zimg_image_buffer *dst, void *tmp, unsigned i, unsigned left, unsigned right)
+	void process(void *ctx, const zimg_image_buffer_const &src, const zimg_image_buffer &dst, void *tmp, unsigned i, unsigned left, unsigned right)
 	{
-		check_throw(zimg2_filter_process(m_filter, ctx, src, dst, tmp, i, left, right));
+		check_throw(zimg2_filter_process(m_filter, ctx, &src, &dst, tmp, i, left, right));
 	}
 
 	size_t get_tmp_size_plane(int width, int height)
