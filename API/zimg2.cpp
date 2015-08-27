@@ -292,6 +292,10 @@ zimg::IZimgFilter *create_depth_color_filter(unsigned width, unsigned height, zi
 
 void zimg2_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 {
+	assert(major);
+	assert(minor);
+	assert(micro);
+
 	*major = VERSION_INFO[0];
 	*minor = VERSION_INFO[1];
 	*micro = VERSION_INFO[2];
