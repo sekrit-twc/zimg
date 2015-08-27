@@ -50,8 +50,8 @@ void zimg_set_cpu(int cpu);
 
 #define ZIMG_PIXEL_BYTE  0 /* Unsigned integer, one byte per sample. */
 #define ZIMG_PIXEL_WORD  1 /* Unsigned integer, two bytes per sample. */
-#define ZIMG_PIXEL_HALF  2 /* IEEE-756 half precision (binary16). */
-#define ZIMG_PIXEL_FLOAT 3 /* IEEE-756 single precision (binary32). */
+#define ZIMG_PIXEL_HALF  2 /* IEEE-754 half precision (binary16). */
+#define ZIMG_PIXEL_FLOAT 3 /* IEEE-754 single precision (binary32). */
 
 
 /* Chosen to match ITU-T H.264 and H.265 */
