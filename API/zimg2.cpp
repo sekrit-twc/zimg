@@ -738,7 +738,34 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 			filter.reset(translate_resize_filter(params->filter_type, params->filter_param_a, params->filter_param_b));
 		}
 
-		return zimg::resize::create_resize2(*filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type);
+		if (pixel_type == zimg::PixelType::BYTE || pixel_type == zimg::PixelType::HALF) {
+			zimg::PixelType working_pixel_type = pixel_type == zimg::PixelType::BYTE ? zimg::PixelType::WORD : zimg::PixelType::FLOAT;
+			zimg::PixelFormat inout_format = zimg::default_pixel_format(pixel_type);
+			zimg::PixelFormat working_format = zimg::default_pixel_format(working_pixel_type);
+
+			std::unique_ptr<zimg::IZimgFilter> resize_filter;
+			std::unique_ptr<zimg::IZimgFilter> adapter_in;
+			std::unique_ptr<zimg::IZimgFilter> adapter_out;
+			std::unique_ptr<zimg::IZimgFilter> pair_filter1;
+			std::unique_ptr<zimg::IZimgFilter> pair_filter2;
+
+			resize_filter.reset(zimg::resize::create_resize2(*filter, working_pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type));
+
+			adapter_in.reset(zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, src_width, src_height, inout_format, working_format, g_cpu_type));
+			adapter_out.reset(zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, dst_width, dst_height, working_format, inout_format, g_cpu_type));
+
+			pair_filter1.reset(new zimg::PairFilter{ adapter_in.get(), resize_filter.get() });
+			adapter_in.release();
+			resize_filter.release();
+
+			pair_filter2.reset(new zimg::PairFilter{ pair_filter1.get(), adapter_out.get() });
+			pair_filter1.release();
+			adapter_out.release();
+
+			return pair_filter2.release();
+		} else {
+			return zimg::resize::create_resize2(*filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type);
+		}
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
 		return nullptr;
@@ -899,7 +926,9 @@ void zimg_depth_delete(zimg_depth_context *ctx)
 
 
 struct zimg_resize_context {
+	std::unique_ptr<zimg_filter> filter_u8;
 	std::unique_ptr<zimg_filter> filter_u16;
+	std::unique_ptr<zimg_filter> filter_f16;
 	std::unique_ptr<zimg_filter> filter_f32;
 	int dst_width;
 };
@@ -928,15 +957,23 @@ zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_
 		params.filter_param_a = filter_param_a;
 		params.filter_param_b = filter_param_b;
 
+		params.pixel_type = ZIMG_PIXEL_BYTE;
+		ret->filter_u8.reset(zimg2_resize_create(&params));
+		if (!ret->filter_u8)
+			return nullptr;
+
 		params.pixel_type = ZIMG_PIXEL_WORD;
 		ret->filter_u16.reset(zimg2_resize_create(&params));
-
 		if (!ret->filter_u16)
+			return nullptr;
+
+		params.pixel_type = ZIMG_PIXEL_HALF;
+		ret->filter_f16.reset(zimg2_resize_create(&params));
+		if (!ret->filter_f16)
 			return nullptr;
 
 		params.pixel_type = ZIMG_PIXEL_FLOAT;
 		ret->filter_f32.reset(zimg2_resize_create(&params));
-
 		if (!ret->filter_f32)
 			return nullptr;
 
@@ -979,12 +1016,22 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 		const zimg_filter *filter;
 		zimg::PixelType type = translate_pixel_type(pixel_type);
 
-		if (type == zimg::PixelType::WORD)
+		switch (type) {
+		case zimg::PixelType::BYTE:
+			filter = ctx->filter_u8.get();
+			break;
+		case zimg::PixelType::WORD:
 			filter = ctx->filter_u16.get();
-		else if (type == zimg::PixelType::FLOAT)
+			break;
+		case zimg::PixelType::HALF:
+			filter = ctx->filter_f16.get();
+			break;
+		case zimg::PixelType::FLOAT:
 			filter = ctx->filter_f32.get();
-		else
+			break;
+		default:
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
+		}
 
 		return zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_, dst_width, dst_height);
 	} catch (const zimg::ZimgException &e) {
