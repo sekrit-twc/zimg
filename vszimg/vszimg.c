@@ -445,7 +445,7 @@ static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, V
 	}
 
 	vi = *node_vi;
-	vi.format = vsapi->registerFormat(node_fmt->colorFamily, sample_type, depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
+	vi.format = vsapi->registerFormat(node_fmt->colorFamily, sample_type, depth < 8 ? 8 : depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
 
 	if (!vi.format) {
 		strcpy(fail_str, "unable to register output VSFormat");
