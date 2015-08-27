@@ -248,6 +248,7 @@ typedef struct zimg_resize_params {
 	unsigned dst_height;
 
 	int pixel_type;
+	unsigned depth;
 
 	double shift_w;
 	double shift_h;

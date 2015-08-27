@@ -667,6 +667,7 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 	params.dst_height = (unsigned)vsapi->propGetInt(in, "height", 0, 0);
 
 	params.pixel_type = translate_pixel(node_fmt);
+	params.depth = node_fmt->bitsPerSample;
 
 	params.shift_w = propGetFloatDefault(vsapi, in, "shift_w", 0, params.shift_w);
 	params.shift_h = propGetFloatDefault(vsapi, in, "shift_h", 0, params.shift_h);
@@ -715,6 +716,7 @@ static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, 
 		params_uv.dst_height = params.dst_height >> subsampling_h;
 
 		params_uv.pixel_type = params.pixel_type;
+		params_uv.depth = params.depth;
 
 		params_uv.shift_w = params.shift_w * scale_w;
 		params_uv.shift_h = params.shift_h * scale_h;

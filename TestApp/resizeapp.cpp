@@ -143,7 +143,7 @@ int resize_main(int argc, const char **argv)
 	if (!c.filter)
 		c.filter.reset(new resize::BilinearFilter{});
 
-	std::unique_ptr<IZimgFilter> resize{ resize::create_resize2(*c.filter, c.pixtype, in.width(), in.height(), c.width, c.height,
+	std::unique_ptr<IZimgFilter> resize{ resize::create_resize2(*c.filter, c.pixtype, pixel_size(c.pixtype) * 8, in.width(), in.height(), c.width, c.height,
 	                                                            c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu) };
 
 	execute(resize.get(), in, out, c.times, c.pixtype);

@@ -17,15 +17,15 @@ int32_t unpack_pixel_u16(uint16_t x)
 	return (int32_t)x + INT16_MIN;
 }
 
-uint16_t pack_pixel_u16(int32_t x)
+uint16_t pack_pixel_u16(int32_t x, int32_t pixel_max)
 {
 	x = ((x + (1 << 13)) >> 14) - INT16_MIN;
-	x = std::max(std::min(x, (int32_t)UINT16_MAX), (int32_t)0);
+	x = std::max(std::min(x, pixel_max), (int32_t)0);
 
 	return (uint16_t)x;
 }
 
-void resize_line_h_u16_c(const FilterContext &filter, const uint16_t *src, uint16_t *dst, unsigned left, unsigned right)
+void resize_line_h_u16_c(const FilterContext &filter, const uint16_t *src, uint16_t *dst, unsigned left, unsigned right, unsigned pixel_max)
 {
 	for (unsigned j = left; j < right; ++j) {
 		unsigned left = filter.left[j];
@@ -38,7 +38,7 @@ void resize_line_h_u16_c(const FilterContext &filter, const uint16_t *src, uint1
 			accum += coeff * x;
 		}
 
-		dst[j] = pack_pixel_u16(accum);
+		dst[j] = pack_pixel_u16(accum, pixel_max);
 	}
 }
 
@@ -59,7 +59,7 @@ void resize_line_h_f32_c(const FilterContext &filter, const float *src, float *d
 	}
 }
 
-void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right)
+void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
 {
 	const int16_t *filter_coeffs = &filter.data_i16[i * filter.stride_i16];
 	unsigned top = filter.left[i];
@@ -74,7 +74,7 @@ void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uin
 			accum += coeff * x;
 		}
 
-		dst[i][j] = pack_pixel_u16(accum);
+		dst[i][j] = pack_pixel_u16(accum, pixel_max);
 	}
 }
 
@@ -102,12 +102,14 @@ class ResizeImplH_C : public ZimgFilter {
 	FilterContext m_filter;
 	unsigned m_height;
 	PixelType m_type;
+	int32_t m_pixel_max;
 	bool m_is_sorted;
 public:
-	ResizeImplH_C(const FilterContext &filter, unsigned height, PixelType type) :
+	ResizeImplH_C(const FilterContext &filter, unsigned height, PixelType type, unsigned depth) :
 		m_filter(filter),
 		m_height{ height },
 		m_type{ type },
+		m_pixel_max{ (int32_t)((uint32_t)1 << depth) - 1 },
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
@@ -147,7 +149,7 @@ public:
 			LineBuffer<const uint16_t> src_buf{ src };
 			LineBuffer<uint16_t> dst_buf{ dst };
 
-			resize_line_h_u16_c(m_filter, src_buf[i], dst_buf[i], left, right);
+			resize_line_h_u16_c(m_filter, src_buf[i], dst_buf[i], left, right, m_pixel_max);
 		} else {
 			LineBuffer<const float> src_buf{ src };
 			LineBuffer<float> dst_buf{ dst };
@@ -161,12 +163,14 @@ class ResizeImplV_C : public ZimgFilter {
 	FilterContext m_filter;
 	unsigned m_width;
 	PixelType m_type;
+	int32_t m_pixel_max;
 	bool m_is_sorted;
 public:
-	ResizeImplV_C(const FilterContext &filter, unsigned width, PixelType type) :
+	ResizeImplV_C(const FilterContext &filter, unsigned width, PixelType type, unsigned depth) :
 		m_filter(filter),
 		m_width{ width },
 		m_type{ type },
+		m_pixel_max{ (int32_t)((uint32_t)1 << depth) - 1 },
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
@@ -210,7 +214,7 @@ public:
 			LineBuffer<const uint16_t> src_buf{ src };
 			LineBuffer<uint16_t> dst_buf{ dst };
 
-			resize_line_v_u16_c(m_filter, src_buf, dst_buf, i, left, right);
+			resize_line_v_u16_c(m_filter, src_buf, dst_buf, i, left, right, m_pixel_max);
 		} else {
 			LineBuffer<const float> src_buf{ src };
 			LineBuffer<float> dst_buf{ dst };
@@ -223,7 +227,7 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
                                  double shift, double subwidth, CPUClass cpu)
 {
 	unsigned src_dim = horizontal ? src_width : src_height;
@@ -235,9 +239,9 @@ IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizonta
 	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 
 	if (horizontal)
-		return new ResizeImplH_C{ filter_ctx, dst_height, type };
+		return new ResizeImplH_C{ filter_ctx, dst_height, type, depth };
 	else
-		return new ResizeImplV_C{ filter_ctx, dst_width, type };
+		return new ResizeImplV_C{ filter_ctx, dst_width, type, depth };
 }
 
 } // namespace resize

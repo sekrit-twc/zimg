@@ -689,6 +689,7 @@ void zimg2_resize_params_default(zimg_resize_params *ptr, unsigned version)
 		ptr->dst_height = 0;
 
 		ptr->pixel_type = -1;
+		ptr->depth = 0;
 
 		ptr->shift_w = 0;
 		ptr->shift_h = 0;
@@ -707,8 +708,10 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 	API_VERSION_ASSERT(params->version);
 
 	try {
-		zimg::PixelType pixel_type{};
 		std::unique_ptr<zimg::resize::Filter> filter;
+
+		zimg::PixelType pixel_type{};
+		unsigned depth = 0;
 
 		int src_width = 0;
 		int src_height = 0;
@@ -728,6 +731,7 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 			dst_height = params->dst_height;
 
 			pixel_type = translate_pixel_type(params->pixel_type);
+			depth = params->depth;
 
 			shift_w = params->shift_w;
 			shift_h = params->shift_h;
@@ -749,7 +753,7 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 			std::unique_ptr<zimg::IZimgFilter> pair_filter1;
 			std::unique_ptr<zimg::IZimgFilter> pair_filter2;
 
-			resize_filter.reset(zimg::resize::create_resize2(*filter, working_pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type));
+			resize_filter.reset(zimg::resize::create_resize2(*filter, working_pixel_type, working_format.depth, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type));
 
 			adapter_in.reset(zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, src_width, src_height, inout_format, working_format, g_cpu_type));
 			adapter_out.reset(zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, dst_width, dst_height, working_format, inout_format, g_cpu_type));
@@ -764,7 +768,7 @@ zimg_filter *zimg2_resize_create(const zimg_resize_params *params)
 
 			return pair_filter2.release();
 		} else {
-			return zimg::resize::create_resize2(*filter, pixel_type, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type);
+			return zimg::resize::create_resize2(*filter, pixel_type, depth, src_width, src_height, dst_width, dst_height, shift_w, shift_h, subwidth, subheight, g_cpu_type);
 		}
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);

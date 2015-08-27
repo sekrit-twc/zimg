@@ -60,7 +60,7 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize2(const Filter &filter, PixelType type, int src_width, int src_height, int dst_width, int dst_height,
+IZimgFilter *create_resize2(const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
                             double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
@@ -69,9 +69,9 @@ IZimgFilter *create_resize2(const Filter &filter, PixelType type, int src_width,
 	if (skip_h && skip_v) {
 		return new CopyFilter{ (unsigned)src_width, (unsigned)src_height, type };
 	} else if (skip_h) {
-		return create_resize_impl2(filter, type, false, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu);
+		return create_resize_impl2(filter, type, false, depth, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu);
 	} else if (skip_v) {
-		return create_resize_impl2(filter, type, true, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu);
+		return create_resize_impl2(filter, type, true, depth, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu);
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 		std::unique_ptr<IZimgFilter> stage1;
@@ -79,11 +79,11 @@ IZimgFilter *create_resize2(const Filter &filter, PixelType type, int src_width,
 		std::unique_ptr<IZimgFilter> ret;
 
 		if (h_first) {
-			stage1.reset(create_resize_impl2(filter, type, true, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu));
-			stage2.reset(create_resize_impl2(filter, type, false, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu));
+			stage1.reset(create_resize_impl2(filter, type, true, depth, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu));
+			stage2.reset(create_resize_impl2(filter, type, false, depth, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu));
 		} else {
-			stage1.reset(create_resize_impl2(filter, type, false, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu));
-			stage2.reset(create_resize_impl2(filter, type, true, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu));
+			stage1.reset(create_resize_impl2(filter, type, false, depth, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu));
+			stage2.reset(create_resize_impl2(filter, type, true, depth, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu));
 		}
 
 		ret.reset(new PairFilter{ stage1.get(), stage2.get() });

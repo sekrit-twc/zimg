@@ -16,7 +16,7 @@ namespace resize {;
 
 class Filter;
 
-IZimgFilter *create_resize2(const Filter &filter, PixelType type, int src_width, int src_height, int dst_width, int dst_height,
+IZimgFilter *create_resize2(const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
                             double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 
 } // namespace resize
