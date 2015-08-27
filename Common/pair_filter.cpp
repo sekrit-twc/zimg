@@ -13,6 +13,8 @@ struct PairFilter::cache_context {
 	void *cache_plane[3];
 	unsigned cache_line_pos;
 	unsigned cache_mask;
+	unsigned col_left;
+	unsigned col_right;
 };
 
 PairFilter::PairFilter(IZimgFilter *first, IZimgFilter *second) :
@@ -171,6 +173,7 @@ void PairFilter::init_context(void *ctx) const
 	size_t cache_size_one_plane = get_cache_size_one_plane();
 
 	cache_context *cache = alloc.allocate_n<cache_context>(1);
+	new (cache) cache_context{};
 
 	cache->first_ctx = alloc.allocate(first_context_size);
 	cache->second_ctx = alloc.allocate(second_context_size);
@@ -184,6 +187,8 @@ void PairFilter::init_context(void *ctx) const
 
 	cache->cache_line_pos = 0;
 	cache->cache_mask = select_zimg_buffer_mask(get_cache_line_count());
+	cache->col_left = 0;
+	cache->col_right = 0;
 }
 
 void PairFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
@@ -193,6 +198,12 @@ void PairFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgI
 	auto col_range = m_second->get_required_col_range(left, right);
 	ptrdiff_t cache_stride = get_cache_stride();
 	ZimgImageBuffer cache_buf{};
+
+	if (left != cache->col_left || right != cache->col_right) {
+		cache->col_left = left;
+		cache->col_right = right;
+		cache->cache_line_pos = m_first_flags.has_state ? 0 : mod(row_range.first, m_first_step);
+	}
 
 	if (m_second_flags.in_place) {
 		cache_buf = dst;
@@ -204,7 +215,7 @@ void PairFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgI
 		}
 	}
 
-	for (; cache->cache_line_pos < row_range.second; cache->cache_line_pos += m_second_step) {
+	for (; cache->cache_line_pos < row_range.second; cache->cache_line_pos += m_first_step) {
 		m_first->process(cache->first_ctx, src, cache_buf, tmp, cache->cache_line_pos, col_range.first, col_range.second);
 	}
 	m_second->process(cache->second_ctx, cache_buf, dst, tmp, i, left, right);
