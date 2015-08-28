@@ -9,10 +9,6 @@
   #error zAPI v2 or greater required
 #endif
 
-typedef enum chroma_location {
-	CHROMA_LOC_MPEG1,
-	CHROMA_LOC_MPEG2
-} chroma_location;
 
 static int translate_dither(const char *dither)
 {
