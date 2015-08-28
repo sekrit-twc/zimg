@@ -488,7 +488,7 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
  * @param[out] out set to the size of the buffer in bytes
  * @return error code
  */
-int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int height, size_t *out);
+int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, size_t *out);
 
 /**
  * Process an entire plane with a filter instance.
@@ -507,8 +507,7 @@ int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int heigh
  * @param height image height
  */
 int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const void * const src[3], void * const dst[3],
-                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3],
-                               unsigned width, unsigned height);
+                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3]);
 
 
 /**

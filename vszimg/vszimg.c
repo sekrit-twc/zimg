@@ -150,7 +150,7 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
 		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
 
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
@@ -170,7 +170,7 @@ static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationRea
 			dst_stride[p] = vsapi->getStride(dst_frame, p);
 		}
 
-		if ((err = zimg2_plane_filter_process(data->filter, tmp, src_plane, dst_plane, src_stride, dst_stride, width, height))) {
+		if ((err = zimg2_plane_filter_process(data->filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
@@ -326,12 +326,12 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
 		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
 
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
 		if (data->filter_uv) {
-			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, width_uv, height_uv, &tmp_size_uv))) {
+			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, &tmp_size_uv))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}
@@ -348,8 +348,6 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 
 		for (p = 0; p < num_planes; ++p) {
 			const zimg_filter *filter;
-			unsigned plane_width;
-			unsigned plane_height;
 
 			if ((p == 1 || p == 2) && data->filter_uv)
 				filter = data->filter_uv;
@@ -362,10 +360,7 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
 			dst_stride[0] = vsapi->getStride(dst_frame, p);
 
-			plane_width = vsapi->getFrameWidth(src_frame, p);
-			plane_height = vsapi->getFrameHeight(src_frame, p);
-
-			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride, plane_width, plane_height))) {
+			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}
@@ -556,12 +551,12 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
 		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
 
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, width, height, &tmp_size))) {
+		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
 			zimg_get_last_error(fail_str, sizeof(fail_str));
 			goto fail;
 		}
 		if (data->filter_uv) {
-			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, width_uv, height_uv, &tmp_size_uv))) {
+			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, &tmp_size_uv))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}
@@ -578,8 +573,6 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 
 		for (p = 0; p < num_planes; ++p) {
 			const zimg_filter *filter;
-			unsigned plane_width;
-			unsigned plane_height;
 
 			if ((p == 1 || p == 2) && data->filter_uv)
 				filter = data->filter_uv;
@@ -592,10 +585,7 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
 			dst_stride[0] = vsapi->getStride(dst_frame, p);
 
-			plane_width = vsapi->getFrameWidth(dst_frame, p);
-			plane_height = vsapi->getFrameHeight(dst_frame, p);
-
-			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride, plane_width, plane_height))) {
+			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
 				zimg_get_last_error(fail_str, sizeof(fail_str));
 				goto fail;
 			}

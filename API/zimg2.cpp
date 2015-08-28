@@ -119,6 +119,18 @@ zimg::PixelType translate_pixel_type(int pixel_type)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel type" } : it->second;
 }
 
+int translate_pixel_type(zimg::PixelType pixel_type)
+{
+	static const zimg::static_map<zimg::PixelType, int, std::less<zimg::PixelType>, 4> map{
+		{ zimg::PixelType::BYTE,  ZIMG_PIXEL_BYTE },
+		{ zimg::PixelType::WORD,  ZIMG_PIXEL_WORD },
+		{ zimg::PixelType::HALF,  ZIMG_PIXEL_HALF },
+		{ zimg::PixelType::FLOAT, ZIMG_PIXEL_FLOAT },
+	};
+	auto it = map.find(pixel_type);
+	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel type" } : it->second;
+}
+
 bool translate_pixel_range(int range)
 {
 	static const zimg::static_int_map<bool, 2> map{
@@ -350,6 +362,20 @@ int zimg2_filter_get_flags(const zimg_filter *ptr, zimg_filter_flags *flags, uns
 	EX_END
 }
 
+int _zimg2_filter_get_image_attributes(const zimg_filter *ptr, unsigned *width, unsigned *height, int *pixel_type)
+{
+	EX_BEGIN
+	assert(width);
+	assert(height);
+	assert(pixel_type);
+
+	auto attr = cast_filter_ptr(ptr)->get_image_attributes();
+	*width = attr.width;
+	*height = attr.height;
+	*pixel_type = translate_pixel_type(attr.type);
+	EX_END
+}
+
 int zimg2_filter_get_required_row_range(const zimg_filter *ptr, unsigned i, unsigned *first, unsigned *second)
 {
 	EX_BEGIN
@@ -442,13 +468,16 @@ int zimg2_filter_process(const zimg_filter *ptr, void *ctx, const zimg_image_buf
 #undef EX_END
 
 
-int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int, size_t *out)
+int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, size_t *out)
 {
 	size_t filter_ctx_size;
 	size_t filter_tmp_size;
+	unsigned width;
 	int err;
 
 	assert(out);
+
+	width = cast_filter_ptr(ptr)->get_image_attributes().width;
 
 	if ((err = zimg2_filter_get_context_size(ptr, &filter_ctx_size)))
 		return err;
@@ -460,8 +489,7 @@ int zimg2_plane_filter_get_tmp_size(const zimg_filter *ptr, int width, int, size
 }
 
 int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const void * const src[3], void * const dst[3],
-                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3],
-                               unsigned width, unsigned height)
+                               const ptrdiff_t src_stride[3], const ptrdiff_t dst_stride[3])
 {
 	zimg::LinearAllocator alloc{ tmp_pool };
 	zimg_image_buffer_const src_buf{ ZIMG_API_VERSION };
@@ -471,8 +499,13 @@ int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const voi
 	size_t filter_ctx_size;
 	size_t filter_tmp_size;
 	unsigned filter_step;
+	unsigned width;
+	unsigned height;
+	int pixel_type;
 	int err;
 
+	if ((err = _zimg2_filter_get_image_attributes(ptr, &width, &height, &pixel_type)))
+		return err;
 	if ((err = zimg2_filter_get_context_size(ptr, &filter_ctx_size)))
 		return err;
 	if ((err = zimg2_filter_get_tmp_size(ptr, 0, width, &filter_tmp_size)))
@@ -825,7 +858,7 @@ size_t zimg_colorspace_tmp_size(zimg_colorspace_context *ctx, int width)
 	size_t ret;
 	int err;
 
-	err = zimg2_plane_filter_get_tmp_size(ctx->filter.get(), width, 0, &ret);
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter.get(), &ret);
 	assert(!err);
 
 	return ret;
@@ -842,7 +875,7 @@ int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src
 		if (type != zimg::PixelType::FLOAT)
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 
-		return zimg2_plane_filter_process(ctx->filter.get(), tmp, src, dst, src_stride_, dst_stride_, width, height);
+		return zimg2_plane_filter_process(ctx->filter.get(), tmp, src, dst, src_stride_, dst_stride_);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
@@ -914,12 +947,12 @@ int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void
 		if (!filter)
 			return g_last_error;
 
-		if ((err = zimg2_plane_filter_get_tmp_size(filter.get(), width, 0, &tmp_size)))
+		if ((err = zimg2_plane_filter_get_tmp_size(filter.get(), &tmp_size)))
 			return err;
 
 		zimg::AlignedVector<char> tmp_vec(tmp_size);
 
-		return zimg2_plane_filter_process(filter.get(), tmp_vec.data(), src_p, dst_p, src_stride_, dst_stride_, width, height);
+		return zimg2_plane_filter_process(filter.get(), tmp_vec.data(), src_p, dst_p, src_stride_, dst_stride_);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
@@ -938,7 +971,6 @@ struct zimg_resize_context {
 	std::unique_ptr<zimg_filter> filter_u16;
 	std::unique_ptr<zimg_filter> filter_f16;
 	std::unique_ptr<zimg_filter> filter_f32;
-	int dst_width;
 };
 
 zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_height, int dst_width, int dst_height,
@@ -985,7 +1017,6 @@ zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_
 		if (!ret->filter_f32)
 			return nullptr;
 
-		ret->dst_width = dst_width;
 		return ret.release();
 	} catch (const zimg::ZimgException &e) {
 		handle_exception(e);
@@ -1002,10 +1033,10 @@ size_t zimg_resize_tmp_size(zimg_resize_context *ctx, int pixel_type)
 	size_t tmp_f32;
 	int err;
 
-	err = zimg2_plane_filter_get_tmp_size(ctx->filter_u16.get(), ctx->dst_width, 0, &tmp_u16);
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter_u16.get(), &tmp_u16);
 	assert(!err);
 
-	err = zimg2_plane_filter_get_tmp_size(ctx->filter_f32.get(), ctx->dst_width, 0, &tmp_f32);
+	err = zimg2_plane_filter_get_tmp_size(ctx->filter_f32.get(), &tmp_f32);
 	assert(!err);
 
 	return std::max(tmp_u16, tmp_f32);
@@ -1041,7 +1072,7 @@ int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, vo
 			throw zimg::ZimgUnsupportedError{ "pixel type not supported" };
 		}
 
-		return zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_, dst_width, dst_height);
+		return zimg2_plane_filter_process(filter, tmp, src_p, dst_p, src_stride_, dst_stride_);
 	} catch (const zimg::ZimgException &e) {
 		return handle_exception(e);
 	} catch (const std::bad_alloc &e) {
