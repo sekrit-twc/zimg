@@ -129,6 +129,9 @@ void DepthConvert2::process(void *, const ZimgImageBufferConst &src, const ZimgI
 			std::copy_n(reinterpret_cast<const char *>(src_p), (right - left) * pixel_size(m_pixel_out), reinterpret_cast<char *>(dst_p));
 	} else {
 		if (m_func) {
+			if (m_f16c)
+				dst_p = tmp;
+
 			m_func(src_p, dst_p, m_scale, m_offset, right - left);
 
 			src_p = dst_p;

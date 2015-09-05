@@ -214,9 +214,8 @@ void OrderedDitherBase::process(void *ctx, const ZimgImageBufferConst &src, cons
 		unsigned dither_len = std::get<2>(dither_params);
 
 		if (m_f16c) {
-			m_f16c(src_p, dst_p, right - left);
-			src_p = dst_p;
-			dst_p = reinterpret_cast<char *>(dst_buf[i]) + left * pixel_size(m_pixel_out);
+			m_f16c(src_p, tmp, right - left);
+			src_p = tmp;
 		}
 
 		if (m_func)
