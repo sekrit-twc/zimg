@@ -15,12 +15,14 @@ namespace zimg {;
  */
 class LinearAllocator {
 	char *m_ptr;
+	size_t m_count;
 
 	template <class T>
 	T *increment_and_return(size_t n)
 	{
 		char *ptr = m_ptr;
 		m_ptr += n;
+		m_count += n;
 		return reinterpret_cast<T *>(ptr);
 	}
 public:
@@ -29,7 +31,7 @@ public:
 	 *
 	 * @param ptr pointer to buffer
 	 */
-	LinearAllocator(void *ptr) : m_ptr{ reinterpret_cast<char *>(ptr) }
+	LinearAllocator(void *ptr) : m_ptr{ reinterpret_cast<char *>(ptr) }, m_count{}
 	{}
 
 	/**
@@ -56,6 +58,16 @@ public:
 	T *allocate_n(size_t count)
 	{
 		return allocate<T>(count * sizeof(T));
+	}
+
+	/**
+	 * Get the number of bytes allocated.
+	 *
+	 * @return allocated size
+	 */
+	size_t count() const
+	{
+		return m_count;
 	}
 };
 
