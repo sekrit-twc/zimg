@@ -309,8 +309,6 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 		ptrdiff_t dst_stride[3] = { 0 };
 		int width;
 		int height;
-		int width_uv;
-		int height_uv;
 		unsigned num_planes;
 		size_t tmp_size;
 		size_t tmp_size_uv;
@@ -319,8 +317,6 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 
 		width = data->vi.width;
 		height = data->vi.height;
-		width_uv = width >> data->vi.format->subSamplingW;
-		height_uv = height >> data->vi.format->subSamplingH;
 		num_planes = data->vi.format->numPlanes;
 
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
@@ -534,8 +530,6 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 		ptrdiff_t dst_stride[3] = { 0 };
 		int width;
 		int height;
-		int width_uv;
-		int height_uv;
 		unsigned num_planes;
 		size_t tmp_size;
 		size_t tmp_size_uv;
@@ -544,8 +538,6 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 
 		width = data->vi.width;
 		height = data->vi.height;
-		width_uv = width >> data->vi.format->subSamplingW;
-		height_uv = height >> data->vi.format->subSamplingH;
 		num_planes = data->vi.format->numPlanes;
 
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
