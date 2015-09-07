@@ -1,6 +1,7 @@
 2.0:
 new cache-efficient buffering API
 support integer formats in colorspace module
+support unspecified parameter values in colorspace module
 support byte formats in resize module
 clamp all integer output to bit depth limits
 
