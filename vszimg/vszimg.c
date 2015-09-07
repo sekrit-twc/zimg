@@ -335,7 +335,7 @@ static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, 
 			tmp_size_uv = 0;
 		}
 
-		VS_ALIGNED_MALLOC(&tmp, tmp_size > tmp_size_uv ? tmp_size : tmp_size_uv, 32);
+		VS_ALIGNED_MALLOC(&tmp, VSMAX(tmp_size, tmp_size_uv), 32);
 		if (!tmp) {
 			strcpy(fail_str, "error allocating temporary buffer");
 			err = 1;
@@ -556,7 +556,7 @@ static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason,
 			tmp_size_uv = 0;
 		}
 
-		VS_ALIGNED_MALLOC(&tmp, tmp_size > tmp_size_uv ? tmp_size : tmp_size_uv, 32);
+		VS_ALIGNED_MALLOC(&tmp, VSMAX(tmp_size, tmp_size_uv), 32);
 		if (!tmp) {
 			strcpy(fail_str, "error allocating temporary buffer");
 			err = 1;
