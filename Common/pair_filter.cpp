@@ -172,8 +172,7 @@ void PairFilter::init_context(void *ctx) const
 	size_t second_context_size = m_second->get_context_size();
 	size_t cache_size_one_plane = get_cache_size_one_plane();
 
-	cache_context *cache = alloc.allocate_n<cache_context>(1);
-	new (cache) cache_context{};
+	cache_context *cache = new (alloc.allocate_n<cache_context>(1)) cache_context{};
 
 	cache->first_ctx = alloc.allocate(first_context_size);
 	cache->second_ctx = alloc.allocate(second_context_size);
