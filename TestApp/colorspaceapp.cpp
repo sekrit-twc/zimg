@@ -66,7 +66,8 @@ void usage()
 
 colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 {
-	static const static_string_map<colorspace::MatrixCoefficients, 5> map{
+	static const static_string_map<colorspace::MatrixCoefficients, 6> map{
+		{ "unspec",   colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED },
 		{ "rgb",      colorspace::MatrixCoefficients::MATRIX_RGB },
 		{ "601",      colorspace::MatrixCoefficients::MATRIX_601 },
 		{ "709",      colorspace::MatrixCoefficients::MATRIX_709 },
@@ -79,7 +80,8 @@ colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 
 colorspace::TransferCharacteristics parse_transfer(const char *transfer)
 {
-	static const static_string_map<colorspace::TransferCharacteristics, 2> map{
+	static const static_string_map<colorspace::TransferCharacteristics, 3> map{
+		{ "unspec", colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED },
 		{ "linear", colorspace::TransferCharacteristics::TRANSFER_LINEAR },
 		{ "709",    colorspace::TransferCharacteristics::TRANSFER_709 },
 	};
@@ -89,7 +91,8 @@ colorspace::TransferCharacteristics parse_transfer(const char *transfer)
 
 colorspace::ColorPrimaries parse_primaries(const char *primaries)
 {
-	static const static_string_map<colorspace::ColorPrimaries, 3> map{
+	static const static_string_map<colorspace::ColorPrimaries, 4> map{
+		{ "unspec",  colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED },
 		{ "smpte_c", colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
 		{ "709",     colorspace::ColorPrimaries::PRIMARIES_709 },
 		{ "2020",    colorspace::ColorPrimaries::PRIMARIES_2020 }

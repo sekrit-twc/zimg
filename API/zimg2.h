@@ -515,23 +515,26 @@ int zimg2_plane_filter_process(const zimg_filter *ptr, void *tmp_pool, const voi
  *
  * These constants mirror those defined in ITU-T H.264 and H.265.
  */
-#define ZIMG_MATRIX_RGB        0
-#define ZIMG_MATRIX_709        1
-#define ZIMG_MATRIX_470BG      5
-#define ZIMG_MATRIX_170M       6 /* Equivalent to 5. */
-#define ZIMG_MATRIX_2020_NCL   9
-#define ZIMG_MATRIX_2020_CL   10
+#define ZIMG_MATRIX_RGB            0
+#define ZIMG_MATRIX_709            1
+#define ZIMG_MATRIX_UNSPECIFIED    2
+#define ZIMG_MATRIX_470BG          5
+#define ZIMG_MATRIX_170M           6 /* Equivalent to 5. */
+#define ZIMG_MATRIX_2020_NCL       9
+#define ZIMG_MATRIX_2020_CL       10
 
-#define ZIMG_TRANSFER_709      1
-#define ZIMG_TRANSFER_601      6 /* Equivalent to 1. */
-#define ZIMG_TRANSFER_LINEAR   8
-#define ZIMG_TRANSFER_2020_10 14 /* Equivalent to 1. */
-#define ZIMG_TRANSFER_2020_12 15 /* Equivalent to 1. */
+#define ZIMG_TRANSFER_709          1
+#define ZIMG_TRANSFER_UNSPECIFIED  2
+#define ZIMG_TRANSFER_601          6 /* Equivalent to 1. */
+#define ZIMG_TRANSFER_LINEAR       8
+#define ZIMG_TRANSFER_2020_10     14 /* Equivalent to 1. */
+#define ZIMG_TRANSFER_2020_12     15 /* Equivalent to 1. */
 
-#define ZIMG_PRIMARIES_709     1
-#define ZIMG_PRIMARIES_170M    6
-#define ZIMG_PRIMARIES_240M    7 /* Equivalent to 6. */
-#define ZIMG_PRIMARIES_2020    9
+#define ZIMG_PRIMARIES_709         1
+#define ZIMG_PRIMARIES_UNSPECIFIED 2
+#define ZIMG_PRIMARIES_170M        6
+#define ZIMG_PRIMARIES_240M        7 /* Equivalent to 6. */
+#define ZIMG_PRIMARIES_2020        9
 
 /**
  * Parameters for {@link zimg2_colorspace_create}.

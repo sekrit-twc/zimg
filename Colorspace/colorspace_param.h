@@ -28,6 +28,7 @@ const double ILLUMINANT_D65[2] = { 0.3127f, 0.3290f };
  * Enum for matrix coefficients.
  */
 enum class MatrixCoefficients {
+	MATRIX_UNSPECIFIED,
 	MATRIX_RGB,
 	MATRIX_601,
 	MATRIX_709,
@@ -39,6 +40,7 @@ enum class MatrixCoefficients {
  * Enum for transfer characteristics.
  */
 enum class TransferCharacteristics {
+	TRANSFER_UNSPECIFIED,
 	TRANSFER_LINEAR,
 	TRANSFER_709
 };
@@ -47,6 +49,7 @@ enum class TransferCharacteristics {
  * Enum for primaries.
  */
 enum class ColorPrimaries {
+	PRIMARIES_UNSPECIFIED,
 	PRIMARIES_SMPTE_C,
 	PRIMARIES_709,
 	PRIMARIES_2020

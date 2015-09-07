@@ -143,13 +143,14 @@ bool translate_pixel_range(int range)
 
 zimg::colorspace::MatrixCoefficients translate_matrix(int matrix)
 {
-	static const zimg::static_int_map<zimg::colorspace::MatrixCoefficients, 6> map{
-		{ ZIMG_MATRIX_RGB,      zimg::colorspace::MatrixCoefficients::MATRIX_RGB },
-		{ ZIMG_MATRIX_709,      zimg::colorspace::MatrixCoefficients::MATRIX_709 },
-		{ ZIMG_MATRIX_470BG,    zimg::colorspace::MatrixCoefficients::MATRIX_601 },
-		{ ZIMG_MATRIX_170M,     zimg::colorspace::MatrixCoefficients::MATRIX_601 },
-		{ ZIMG_MATRIX_2020_NCL, zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
-		{ ZIMG_MATRIX_2020_CL,  zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
+	static const zimg::static_int_map<zimg::colorspace::MatrixCoefficients, 7> map{
+		{ ZIMG_MATRIX_RGB,         zimg::colorspace::MatrixCoefficients::MATRIX_RGB },
+		{ ZIMG_MATRIX_709,         zimg::colorspace::MatrixCoefficients::MATRIX_709 },
+		{ ZIMG_MATRIX_UNSPECIFIED, zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED },
+		{ ZIMG_MATRIX_470BG,       zimg::colorspace::MatrixCoefficients::MATRIX_601 },
+		{ ZIMG_MATRIX_170M,        zimg::colorspace::MatrixCoefficients::MATRIX_601 },
+		{ ZIMG_MATRIX_2020_NCL,    zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
+		{ ZIMG_MATRIX_2020_CL,     zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
 	};
 	auto it = map.find(matrix);
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid matrix coefficients" } : it->second;
@@ -157,12 +158,13 @@ zimg::colorspace::MatrixCoefficients translate_matrix(int matrix)
 
 zimg::colorspace::TransferCharacteristics translate_transfer(int transfer)
 {
-	static const zimg::static_int_map<zimg::colorspace::TransferCharacteristics, 5> map{
-		{ ZIMG_TRANSFER_709,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_601,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_2020_10, zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_2020_12, zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_LINEAR,  zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR },
+	static const zimg::static_int_map<zimg::colorspace::TransferCharacteristics, 6> map{
+		{ ZIMG_TRANSFER_709,         zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_UNSPECIFIED, zimg::colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED },
+		{ ZIMG_TRANSFER_601,         zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_2020_10,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_2020_12,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_LINEAR,      zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR },
 	};
 	auto it = map.find(transfer);
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid transfer characteristics" } : it->second;
@@ -170,11 +172,12 @@ zimg::colorspace::TransferCharacteristics translate_transfer(int transfer)
 
 zimg::colorspace::ColorPrimaries translate_primaries(int primaries)
 {
-	static const zimg::static_int_map<zimg::colorspace::ColorPrimaries, 4> map{
-		{ ZIMG_PRIMARIES_709,  zimg::colorspace::ColorPrimaries::PRIMARIES_709 },
-		{ ZIMG_PRIMARIES_170M, zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ ZIMG_PRIMARIES_240M, zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ ZIMG_PRIMARIES_2020, zimg::colorspace::ColorPrimaries::PRIMARIES_2020 },
+	static const zimg::static_int_map<zimg::colorspace::ColorPrimaries, 5> map{
+		{ ZIMG_PRIMARIES_709,         zimg::colorspace::ColorPrimaries::PRIMARIES_709 },
+		{ ZIMG_PRIMARIES_UNSPECIFIED, zimg::colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED },
+		{ ZIMG_PRIMARIES_170M,        zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ ZIMG_PRIMARIES_240M,        zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ ZIMG_PRIMARIES_2020,        zimg::colorspace::ColorPrimaries::PRIMARIES_2020 },
 	};
 	auto it = map.find(primaries);
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color primaries" } : it->second;
