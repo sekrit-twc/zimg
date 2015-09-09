@@ -57,12 +57,18 @@
     <ClInclude Include="mux_filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="filtergraph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pair_filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mux_filter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filtergraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
