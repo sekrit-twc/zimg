@@ -6,13 +6,22 @@
 #include <memory>
 #include "ztypes.h"
 
+struct zimg_filter_graph {
+	virtual inline ~zimg_filter_graph() = 0;
+};
+
+zimg_filter_graph::~zimg_filter_graph()
+{
+}
+
+
 namespace zimg {;
 
 class IZimgFilter;
 
 enum class PixelType;
 
-class FilterGraph {
+class FilterGraph : public zimg_filter_graph {
 	class impl;
 public:
 	class callback {

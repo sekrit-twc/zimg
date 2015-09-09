@@ -27,12 +27,18 @@
     <ClInclude Include="zimg2++.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="zimg3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zimg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="zimg2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zimg3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

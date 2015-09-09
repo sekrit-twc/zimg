@@ -1,3 +1,4 @@
+#if 0
 #define ZIMG_API_V1
 #include <algorithm>
 #include <atomic>
@@ -1087,3 +1088,4 @@ void zimg_resize_delete(zimg_resize_context *ctx)
 {
 	delete ctx;
 }
+#endif

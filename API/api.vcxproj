@@ -163,10 +163,12 @@
     <ClInclude Include="zimg.h" />
     <ClInclude Include="zimg2++.hpp" />
     <ClInclude Include="zimg2.h" />
+    <ClInclude Include="zimg3.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zimg.cpp" />
     <ClCompile Include="zimg2.cpp" />
+    <ClCompile Include="zimg3.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

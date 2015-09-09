@@ -1,3 +1,5 @@
+#if 0
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -827,3 +829,5 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 
 	zimg_set_cpu(ZIMG_CPU_AUTO);
 }
+
+#endif
