@@ -1,29 +1,31 @@
+sudo: false
 language: cpp
-before_install:
-# We need this line to have g++4.9 available in apt
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
+compiler:
+  - gcc
 install:
-  - sudo apt-get install -qq gcc-4.9 g++-4.9
-# We want to compile with g++ 4.9 when rather than the default g++
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
-
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 env:
   global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
-
+  # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+  #   via the "travis encrypt" command using the project repo's public key
+  - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
 addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
   coverity_scan:
     project:
       name: "sekrit-twc/zimg"
       description: "Build submitted via Travis CI"
     notification_email: noreply@example.com
     build_command_prepend: "autoreconf -i && ./configure --enable-x86simd --enable-testapp; make clean"
-    build_command:   "make"
+    build_command: "make"
     branch_pattern: coverity_scan
-
-
-script: "autoreconf -i && ./configure --enable-x86simd --enable-testapp && make clean && make"
+script:
+  - autoreconf -i
+  - ./configure --enable-x86simd --enable-testapp
+  - make clean
+  - make
