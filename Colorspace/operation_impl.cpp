@@ -181,7 +181,7 @@ PixelAdapter *create_pixel_adapter(CPUClass cpu)
 {
 	PixelAdapter *ret = nullptr;
 #ifdef ZIMG_X86
-	ret = create_pixel_adapter_x86(cpu);
+//	ret = create_pixel_adapter_x86(cpu);
 #endif
 	if (!ret)
 		ret = new PixelAdapterC{};
@@ -193,7 +193,7 @@ Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
 	Operation *ret = nullptr;
 #ifdef ZIMG_X86
-	ret = create_matrix_operation_x86(m, cpu);
+//	ret = create_matrix_operation_x86(m, cpu);
 #endif
 	if (!ret)
 		ret = new MatrixOperationC{ m };
@@ -205,7 +205,7 @@ Operation *create_rec709_gamma_operation(CPUClass cpu)
 {
 	Operation *ret = nullptr;
 #ifdef ZIMG_X86
-	ret = create_rec709_gamma_operation_x86(cpu);
+//	ret = create_rec709_gamma_operation_x86(cpu);
 #endif
 	if (!ret)
 		ret = new Rec709GammaOperationC{};
@@ -217,7 +217,7 @@ Operation *create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
 	Operation *ret = nullptr;
 #ifdef ZIMG_X86
-	ret = create_rec709_inverse_gamma_operation_x86(cpu);
+//	ret = create_rec709_inverse_gamma_operation_x86(cpu);
 #endif
 	if (!ret)
 		ret = new Rec709InverseGammaOperationC{};
