@@ -132,7 +132,7 @@ Frame read_frame_bmp(const char *filename)
 		throw std::runtime_error{ "unsupported compression" };
 
 	if (fseek(file, bfheader.bfOffBits, SEEK_SET))
-		throw std::runtime_error("error seeking to bitmap data");
+		throw std::runtime_error{ "error seeking to bitmap data" };
 
 	int width = biheader.biWidth;
 	int height = biheader.biHeight;
