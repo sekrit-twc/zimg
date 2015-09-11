@@ -19,72 +19,46 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="depth.h" />
-    <ClInclude Include="depth2.h" />
-    <ClInclude Include="depth_convert.h" />
-    <ClInclude Include="depth_convert2.h" />
-    <ClInclude Include="depth_convert_x86.h" />
-    <ClInclude Include="dither2.h" />
-    <ClInclude Include="dither_impl.h" />
-    <ClInclude Include="dither_impl_x86.h" />
-    <ClInclude Include="error_diffusion.h" />
-    <ClInclude Include="quantize.h" />
-    <ClInclude Include="dither.h" />
-    <ClInclude Include="quantize_avx2.h" />
-    <ClInclude Include="quantize_sse2.h" />
+    <ClInclude Include="..\..\TestApp\apps.h" />
+    <ClInclude Include="..\..\TestApp\frame.h" />
+    <ClInclude Include="..\..\TestApp\timer.h" />
+    <ClInclude Include="..\..\TestApp\utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="depth.cpp" />
-    <ClCompile Include="depth2.cpp" />
-    <ClCompile Include="depth_convert.cpp" />
-    <ClCompile Include="depth_convert2.cpp" />
-    <ClCompile Include="depth_convert_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="depth_convert_sse2.cpp" />
-    <ClCompile Include="depth_convert_x86.cpp" />
-    <ClCompile Include="dither.cpp" />
-    <ClCompile Include="dither2.cpp" />
-    <ClCompile Include="dither_impl.cpp" />
-    <ClCompile Include="dither_impl_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="dither_impl_sse2.cpp" />
-    <ClCompile Include="dither_impl_x86.cpp" />
-    <ClCompile Include="error_diffusion.cpp" />
+    <ClCompile Include="..\..\TestApp\colorspaceapp.cpp" />
+    <ClCompile Include="..\..\TestApp\depthapp.cpp" />
+    <ClCompile Include="..\..\TestApp\frame.cpp" />
+    <ClCompile Include="..\..\TestApp\main.cpp" />
+    <ClCompile Include="..\..\TestApp\resizeapp.cpp" />
+    <ClCompile Include="..\..\TestApp\unresizeapp.cpp" />
+    <ClCompile Include="..\..\TestApp\utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{6F28AB00-7D7A-4D75-9C92-2A2311AE02BB}</ProjectGuid>
-    <RootNamespace>Depth</RootNamespace>
+    <ProjectGuid>{B85E6CC0-ED80-487D-805A-DA3597A15CE6}</ProjectGuid>
+    <RootNamespace>TestApp</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -112,11 +86,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Colorspace.lib;Common.lib;Depth.lib;Resize.lib;Unresize.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -124,11 +100,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Colorspace.lib;Common.lib;Depth.lib;Resize.lib;Unresize.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -138,14 +116,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Colorspace.lib;Common.lib;Depth.lib;Resize.lib;Unresize.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -155,14 +134,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Colorspace.lib;Common.lib;Depth.lib;Resize.lib;Unresize.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

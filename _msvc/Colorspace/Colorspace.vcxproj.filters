@@ -15,87 +15,60 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dither.cpp">
+    <ClCompile Include="..\..\Colorspace\colorspace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dither_impl.cpp">
+    <ClCompile Include="..\..\Colorspace\colorspace_param.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="error_diffusion.cpp">
+    <ClCompile Include="..\..\Colorspace\colorspace2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth_convert.cpp">
+    <ClCompile Include="..\..\Colorspace\graph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth.cpp">
+    <ClCompile Include="..\..\Colorspace\matrix3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dither_impl_sse2.cpp">
+    <ClCompile Include="..\..\Colorspace\operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth_convert_x86.cpp">
+    <ClCompile Include="..\..\Colorspace\operation_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth_convert_sse2.cpp">
+    <ClCompile Include="..\..\Colorspace\operation_impl_avx2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dither_impl_x86.cpp">
+    <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth_convert_avx2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dither_impl_avx2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="depth2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="depth_convert2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dither2.cpp">
+    <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dither.h">
+    <ClInclude Include="..\..\Colorspace\colorspace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="quantize.h">
+    <ClInclude Include="..\..\Colorspace\colorspace_param.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dither_impl.h">
+    <ClInclude Include="..\..\Colorspace\colorspace2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="error_diffusion.h">
+    <ClInclude Include="..\..\Colorspace\graph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="depth.h">
+    <ClInclude Include="..\..\Colorspace\matrix3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="depth_convert.h">
+    <ClInclude Include="..\..\Colorspace\operation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="quantize_sse2.h">
+    <ClInclude Include="..\..\Colorspace\operation_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dither_impl_x86.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="depth_convert_x86.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="quantize_avx2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="depth2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="depth_convert2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dither2.h">
+    <ClInclude Include="..\..\Colorspace\operation_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

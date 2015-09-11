@@ -15,48 +15,39 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="filter.h">
+    <ClInclude Include="..\..\TestApp\apps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize.h">
+    <ClInclude Include="..\..\TestApp\frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize_impl.h">
+    <ClInclude Include="..\..\TestApp\timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resize_impl_x86.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resize2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resize_impl2.h">
+    <ClInclude Include="..\..\TestApp\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="filter.cpp">
+    <ClCompile Include="..\..\TestApp\colorspaceapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize_impl.cpp">
+    <ClCompile Include="..\..\TestApp\depthapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize.cpp">
+    <ClCompile Include="..\..\TestApp\frame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize_impl_avx2.cpp">
+    <ClCompile Include="..\..\TestApp\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize_impl_sse2.cpp">
+    <ClCompile Include="..\..\TestApp\resizeapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize_impl_x86.cpp">
+    <ClCompile Include="..\..\TestApp\unresizeapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="resize2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="resize_impl2.cpp">
+    <ClCompile Include="..\..\TestApp\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

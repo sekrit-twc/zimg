@@ -15,15 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="VapourSynth.h">
+    <ClInclude Include="..\..\Unresize\bilinear.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VSHelper.h">
+    <ClInclude Include="..\..\Unresize\unresize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\unresize_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\unresize_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="vszimg.c">
+    <ClCompile Include="..\..\Unresize\bilinear.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_avx2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

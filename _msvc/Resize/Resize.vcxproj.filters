@@ -15,30 +15,48 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="zimg.h">
+    <ClInclude Include="..\..\Resize\filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="zimg++.hpp">
+    <ClInclude Include="..\..\Resize\resize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="zimg2.h">
+    <ClInclude Include="..\..\Resize\resize_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="zimg2++.hpp">
+    <ClInclude Include="..\..\Resize\resize_impl_x86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="zimg3.h">
+    <ClInclude Include="..\..\Resize\resize_impl2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="zimg.cpp">
+    <ClCompile Include="..\..\Resize\filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="zimg2.cpp">
+    <ClCompile Include="..\..\Resize\resize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="zimg3.cpp">
+    <ClCompile Include="..\..\Resize\resize_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

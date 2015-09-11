@@ -19,40 +19,30 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="colorspace.h" />
-    <ClInclude Include="colorspace2.h" />
-    <ClInclude Include="colorspace_param.h" />
-    <ClInclude Include="graph.h" />
-    <ClInclude Include="matrix3.h" />
-    <ClInclude Include="operation.h" />
-    <ClInclude Include="operation_impl.h" />
-    <ClInclude Include="operation_impl_x86.h" />
+    <ClInclude Include="..\..\Common\align.h" />
+    <ClInclude Include="..\..\Common\alloc.h" />
+    <ClInclude Include="..\..\Common\cpuinfo.h" />
+    <ClInclude Include="..\..\Common\except.h" />
+    <ClInclude Include="..\..\Common\filtergraph.h" />
+    <ClInclude Include="..\..\Common\linebuffer.h" />
+    <ClInclude Include="..\..\Common\matrix.h" />
+    <ClInclude Include="..\..\Common\mux_filter.h" />
+    <ClInclude Include="..\..\Common\osdep.h" />
+    <ClInclude Include="..\..\Common\pair_filter.h" />
+    <ClInclude Include="..\..\Common\pixel.h" />
+    <ClInclude Include="..\..\Common\plane.h" />
+    <ClInclude Include="..\..\Common\static_map.h" />
+    <ClInclude Include="..\..\Common\zfilter.h" />
+    <ClInclude Include="..\..\Common\ztypes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="colorspace.cpp" />
-    <ClCompile Include="colorspace2.cpp" />
-    <ClCompile Include="colorspace_param.cpp" />
-    <ClCompile Include="graph.cpp" />
-    <ClCompile Include="matrix3.cpp" />
-    <ClCompile Include="operation.cpp" />
-    <ClCompile Include="operation_impl.cpp" />
-    <ClCompile Include="operation_impl_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="operation_impl_sse2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="operation_impl_x86.cpp" />
+    <ClCompile Include="..\..\Common\filtergraph.cpp" />
+    <ClCompile Include="..\..\Common\mux_filter.cpp" />
+    <ClCompile Include="..\..\Common\pair_filter.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{32C3BCFE-513E-4682-9E98-3450A7FE7F99}</ProjectGuid>
-    <RootNamespace>Colorspace</RootNamespace>
+    <ProjectGuid>{2A42B5D3-4208-4043-A44F-D4A46FF584A5}</ProjectGuid>
+    <RootNamespace>Common</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -103,8 +93,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,8 +104,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -129,9 +117,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -146,9 +132,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
