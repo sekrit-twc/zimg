@@ -84,10 +84,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>del $(OutDir)z.lib</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -104,10 +106,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>del $(OutDir)z.lib</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -128,10 +132,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>del $(OutDir)z.lib</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,10 +158,12 @@
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>lib.exe /OUT:$(OutDir)z.lib $(OutDir)API.lib $(OutDir)Common.lib $(OutDir)Colorspace.lib $(OutDir)Depth.lib $(OutDir)Resize.lib $(OutDir)Unresize.lib</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>del $(OutDir)z.lib</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
