@@ -10,8 +10,9 @@ pkgconfig_DATA = zimg.pc
 EXTRA_DIST = zimg.pc.in
 
 
+noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
-
+noinst_LTLIBRARIES =
 pkglib_LTLIBRARIES = vszimg.la
 
 libzimg_la_SOURCES = API/zimg.cpp \
@@ -82,9 +83,10 @@ libzimg_la_SOURCES = API/zimg.cpp \
 
 include_HEADERS = API/zimg.h \
 				  API/zimg2.h \
+				  API/zimg3.h \
 				  API/zimg++.hpp \
 				  API/zimg2++.hpp \
-				  API/zimg3.h
+				  API/zimg3++.hpp
 
 
 libzimg_la_LDFLAGS = -no-undefined -version-info 1
@@ -104,7 +106,7 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 if X86SIMD
-noinst_LTLIBRARIES = libsse2.la libavx2.la
+noinst_LTLIBRARIES += libsse2.la libavx2.la
 
 libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
 					  Colorspace/operation_impl_x86.h \
@@ -143,7 +145,19 @@ endif
 
 
 if TESTAPP
-noinst_PROGRAMS = zimg-test
+noinst_PROGRAMS += zimg-test
+noinst_LTLIBRARIES += libtestcommon.la
+
+libtestcommon_la_SOURCES = TestCommon/aligned_malloc.h \
+						   TestCommon/argparse.cpp \
+						   TestCommon/argparse.h \
+						   TestCommon/mmap.cpp \
+						   TestCommon/mmap.h \
+						   TestCommon/timer.h \
+						   TestCommon/win32_bitmap.cpp \
+						   TestCommon/win32_bitmap.h
+
+zimg_test_CPPFLAGS = -I$(srcdir)/TestCommon
 
 zimg_test_SOURCES = TestApp/apps.h \
 					TestApp/colorspaceapp.cpp \
@@ -152,10 +166,9 @@ zimg_test_SOURCES = TestApp/apps.h \
 					TestApp/frame.h \
 					TestApp/main.cpp \
 					TestApp/resizeapp.cpp \
-					TestApp/timer.h \
 					TestApp/unresizeapp.cpp \
 					TestApp/utils.cpp \
 					TestApp/utils.h
 
-zimg_test_LDADD = libzimg.la
+zimg_test_LDADD = libtestcommon.la libzimg.la
 endif # TESTAPP
