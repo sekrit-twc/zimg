@@ -1,9 +1,21 @@
+#ifndef _WIN32
+  #define _FILE_OFFSET_BITS 64
+#endif // _WIN32
+
 #include <climits>
 #include <cstring>
 #include <system_error>
 
 #ifdef _WIN32
   #include <Windows.h>
+#else
+  #include <cerrno>
+
+  #include <fcntl.h>
+  #include <unistd.h>
+  #include <sys/mman.h>
+  #include <sys/stat.h>
+  #include <sys/types.h>
 #endif // _WIN32
 
 #include "mmap.h"
@@ -103,6 +115,120 @@ void create_new_file(const char *path, size_t size)
 }
 
 } // namespace win32
+#else
+namespace posix {;
+
+struct close_fd {
+	struct descriptor {
+		int fd = -1;
+
+		descriptor(nullptr_t x = nullptr)
+		{
+		}
+
+		descriptor(int fd) : fd{ fd }
+		{
+		}
+
+		operator int() const
+		{
+			return fd;
+		}
+
+		bool operator==(nullptr_t) const
+		{
+			return fd < 0;
+		}
+
+		bool operator!=(nullptr_t) const
+		{
+			return !(*this == nullptr);
+		}
+	};
+
+	typedef descriptor pointer;
+
+	void operator()(descriptor x)
+	{
+		::close(x);
+	}
+};
+
+struct munmap_file {
+	struct map_pointer {
+		void *ptr = MAP_FAILED;
+
+		map_pointer(nullptr_t x = nullptr)
+		{
+		}
+
+		map_pointer(void *ptr) : ptr{ ptr }
+		{
+		}
+
+		operator void *() const
+		{
+			return ptr;
+		}
+
+		bool operator==(nullptr_t) const
+		{
+			return ptr == MAP_FAILED;
+		}
+
+		bool operator!=(nullptr_t) const
+		{
+			return !(*this == nullptr);
+		}
+	};
+
+	typedef map_pointer pointer;
+
+	size_t size;
+
+	void operator()(map_pointer ptr)
+	{
+		::munmap(ptr, size);
+	}
+};
+
+void trap_error(const char *msg = "")
+{
+	std::error_code code{ errno, std::system_category() };
+	throw std::system_error{ code, msg };
+}
+
+off64_t get_file_size(int fd)
+{
+	off64_t pos = -1;
+	off64_t ret;
+
+	if ((pos = ::lseek(fd, 0, SEEK_CUR)) < 0)
+		posix::trap_error("error getting file position");
+	if ((ret = ::lseek(fd, 0, SEEK_END)) < 0)
+		posix::trap_error("error seeking in file");
+	if ((pos = ::lseek(fd, pos, SEEK_SET)) < 0)
+		posix::trap_error("error setting file position");
+
+	return ret;
+}
+
+void create_new_file(const char *path, size_t size)
+{
+	std::unique_ptr<void, close_fd> fd_uptr;
+	int fd;
+
+	if ((fd = ::creat(path, 00666)) < 0)
+		posix::trap_error("error creating file");
+	if (ftruncate(fd, size) < 0)
+		posix::trap_error("error truncating file");
+	if (close(fd) < 0)
+		posix::trap_error("error closing file");
+
+	fd_uptr.release();
+}
+
+} // namespace posix
 #endif // _WIN32
 
 } // namespace
@@ -194,7 +320,82 @@ public:
 		m_map_view.release();
 	}
 };
-#endif
+#else
+class MemoryMappedFile::impl {
+	std::unique_ptr<void, posix::close_fd> m_fd;
+	std::unique_ptr<void, posix::munmap_file> m_ptr;
+
+	size_t m_size;
+	bool m_writable;
+
+	void map_file(const char *path, int open_flags, int prot, int mmap_flags)
+	{
+		std::unique_ptr<void, posix::close_fd> fd_uptr;
+		int fd;
+		off64_t file_size;
+		void *ptr;
+
+		if ((fd = ::open(path, open_flags)) < 0)
+			posix::trap_error("error opening file");
+
+		fd_uptr.reset(fd);
+
+		if ((file_size = posix::get_file_size(fd)) > PTRDIFF_MAX)
+			throw std::runtime_error{ "file too large to map" };
+
+		if ((ptr = ::mmap(nullptr, file_size, prot, mmap_flags, fd, 0)) == MAP_FAILED)
+			posix::trap_error("error mapping file");
+
+		m_fd.swap(fd_uptr);
+		m_ptr.reset(ptr);
+		m_size = (size_t)file_size;
+	}
+public:
+	size_t size() const
+	{
+		return m_size;
+	}
+
+	const void *read_ptr() const
+	{
+		return m_ptr.get();
+	}
+
+	void *write_ptr() const
+	{
+		return m_writable ? m_ptr.get() : nullptr;
+	}
+
+	void map_read(const char *path)
+	{
+		map_file(path, O_RDONLY, PROT_READ, MAP_PRIVATE);
+		m_writable = false;
+	}
+
+	void map_write(const char *path)
+	{
+		map_file(path, O_RDWR, PROT_READ | PROT_WRITE, MAP_SHARED);
+		m_writable = true;
+	}
+
+	void map_create(const char *path, size_t size)
+	{
+		posix::create_new_file(path, size);
+		map_write(path);
+	}
+
+	void flush()
+	{
+		if (::fsync(m_fd.get()))
+			posix::trap_error("error flushing file");
+	}
+
+	void unmap()
+	{
+		m_ptr.release();
+	}
+};
+#endif // _WIN32
 
 
 const MemoryMappedFile::read_tag MemoryMappedFile::READ_TAG{};
