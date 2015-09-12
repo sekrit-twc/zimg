@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\API\zimg.h" />
     <ClInclude Include="..\..\API\zimg2++.hpp" />
     <ClInclude Include="..\..\API\zimg2.h" />
+    <ClInclude Include="..\..\API\zimg3++.hpp" />
     <ClInclude Include="..\..\API\zimg3.h" />
   </ItemGroup>
   <ItemGroup>
