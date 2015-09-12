@@ -14,7 +14,9 @@ AC_CANONICAL_HOST
 
 
 AC_ARG_ENABLE([testapp], AS_HELP_STRING([--enable-testapp], [Compile the test application. (default=no)]))
+AC_ARG_ENABLE([examples], AS_HELP_STRING([--enable-examples], [Compile example programs. (default=no)]))
 AM_CONDITIONAL([TESTAPP], [test "x$enable_testapp" = "xyes"])
+AM_CONDITIONAL([EXAMPLES], [test "x$enable_examples" = "xyes"])
 
 
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable compilation options required for debugging. (default=no)]))

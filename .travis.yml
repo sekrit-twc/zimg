@@ -21,11 +21,11 @@ addons:
       name: "sekrit-twc/zimg"
       description: "Build submitted via Travis CI"
     notification_email: noreply@example.com
-    build_command_prepend: "autoreconf -i && ./configure --enable-x86simd --enable-testapp; make clean"
+    build_command_prepend: "autoreconf -i && ./configure --enable-x86simd --enable-testapp --enable-examples; make clean"
     build_command: "make"
     branch_pattern: coverity_scan
 script:
   - autoreconf -i
-  - ./configure --enable-x86simd --enable-testapp
+  - ./configure --enable-x86simd --enable-testapp --enable-examples
   - make clean
   - make

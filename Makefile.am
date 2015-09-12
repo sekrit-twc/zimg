@@ -144,10 +144,6 @@ libzimg_la_LIBADD = libsse2.la libavx2.la
 endif
 
 
-if TESTAPP
-noinst_PROGRAMS += zimg-test
-noinst_LTLIBRARIES += libtestcommon.la
-
 libtestcommon_la_SOURCES = TestCommon/aligned_malloc.h \
 						   TestCommon/argparse.cpp \
 						   TestCommon/argparse.h \
@@ -157,6 +153,27 @@ libtestcommon_la_SOURCES = TestCommon/aligned_malloc.h \
 						   TestCommon/win32_bitmap.cpp \
 						   TestCommon/win32_bitmap.h
 
+
+if EXAMPLES
+noinst_PROGRAMS += Example/api_example Example/api_example_c
+noinst_LTLIBRARIES += libtestcommon.la
+
+EXAMPLE_CPPFLAGS = -I$(srcdir)/API -I$(srcdir)/TestCommon
+EXAMPLE_LDADD = libtestcommon.la libzimg.la
+
+Example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+Example_api_example_SOURCES = Example/api_example.cpp
+Example_api_example_LDADD = $(EXAMPLE_LDADD)
+
+Example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+Example_api_example_c_SOURCES = Example/api_example_c.c
+Example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+endif # EXAMPLES
+						   
+						   
+if TESTAPP
+noinst_PROGRAMS += zimg-test
+noinst_LTLIBRARIES += libtestcommon.la
 zimg_test_CPPFLAGS = -I$(srcdir)/TestCommon
 
 zimg_test_SOURCES = TestApp/apps.h \
