@@ -26,7 +26,7 @@
 
 namespace {;
 
-THREAD_LOCAL int g_last_error = 0;
+THREAD_LOCAL zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 THREAD_LOCAL char g_last_error_msg[1024];
 
 const unsigned VERSION_INFO[] = { 1, 91, 0 };
@@ -73,9 +73,9 @@ void record_exception_message(const T &e)
 	g_last_error_msg[sizeof(g_last_error_msg) - 1] = '\0';
 }
 
-int handle_exception(const zimg::ZimgException &e)
+zimg_error_code_e handle_exception(const zimg::ZimgException &e)
 {
-	int code = ZIMG_ERROR_UNKNOWN;
+	zimg_error_code_e code = ZIMG_ERROR_UNKNOWN;
 
 	try {
 		throw e;
@@ -103,9 +103,9 @@ int handle_exception(const zimg::ZimgException &e)
 	return code;
 }
 
-int handle_exception(const std::bad_alloc &e)
+zimg_error_code_e handle_exception(const std::bad_alloc &e)
 {
-	int code = ZIMG_ERROR_OUT_OF_MEMORY;
+	zimg_error_code_e code = ZIMG_ERROR_OUT_OF_MEMORY;
 
 	record_exception_message(e);
 	g_last_error = code;
@@ -113,9 +113,9 @@ int handle_exception(const std::bad_alloc &e)
 	return code;
 }
 
-zimg::CPUClass translate_cpu(int cpu)
+zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 {
-	static const zimg::static_int_map<zimg::CPUClass, 12> map{
+	static const zimg::static_enum_map<zimg_cpu_type_e, zimg::CPUClass, 12> map{
 		{ ZIMG_CPU_NONE,      zimg::CPUClass::CPU_NONE },
 		{ ZIMG_CPU_AUTO,      zimg::CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
@@ -135,9 +135,9 @@ zimg::CPUClass translate_cpu(int cpu)
 	return it == map.end() ? zimg::CPUClass::CPU_NONE : it->second;
 }
 
-zimg::PixelType translate_pixel_type(int pixel_type)
+zimg::PixelType translate_pixel_type(zimg_pixel_type_e pixel_type)
 {
-	static const zimg::static_int_map<zimg::PixelType, 4> map{
+	static const zimg::static_enum_map<zimg_pixel_type_e, zimg::PixelType, 4> map{
 		{ ZIMG_PIXEL_BYTE,  zimg::PixelType::BYTE },
 		{ ZIMG_PIXEL_WORD,  zimg::PixelType::WORD },
 		{ ZIMG_PIXEL_HALF,  zimg::PixelType::HALF },
@@ -147,9 +147,9 @@ zimg::PixelType translate_pixel_type(int pixel_type)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel type" } : it->second;
 }
 
-bool translate_pixel_range(int range)
+bool translate_pixel_range(zimg_pixel_range_e range)
 {
-	static const zimg::static_int_map<bool, 2> map{
+	static const zimg::static_enum_map<zimg_pixel_range_e, bool, 2> map{
 		{ ZIMG_RANGE_LIMITED, false },
 		{ ZIMG_RANGE_FULL,    true },
 	};
@@ -157,9 +157,9 @@ bool translate_pixel_range(int range)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel range" } : it->second;
 }
 
-ColorFamily translate_color_family(int family)
+ColorFamily translate_color_family(zimg_color_family_e family)
 {
-	static const zimg::static_int_map<ColorFamily, 3> map{
+	static const zimg::static_enum_map<zimg_color_family_e, ColorFamily, 3> map{
 		{ ZIMG_COLOR_GREY, ColorFamily::COLOR_GREY },
 		{ ZIMG_COLOR_RGB,  ColorFamily::COLOR_RGB },
 		{ ZIMG_COLOR_YUV,  ColorFamily::COLOR_YUV},
@@ -168,9 +168,9 @@ ColorFamily translate_color_family(int family)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color fmaily" } : it->second;
 }
 
-FieldParity translate_field_parity(int field)
+FieldParity translate_field_parity(zimg_field_parity_e field)
 {
-	static const zimg::static_int_map<FieldParity, 3> map{
+	static const zimg::static_enum_map<zimg_field_parity_e, FieldParity, 3> map{
 		{ ZIMG_FIELD_PROGRESSIVE, FieldParity::FIELD_PROGRESSIVE },
 		{ ZIMG_FIELD_TOP,         FieldParity::FIELD_TOP },
 		{ ZIMG_FIELD_BOTTOM,      FieldParity::FIELD_BOTTOM },
@@ -179,9 +179,9 @@ FieldParity translate_field_parity(int field)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid field parity" } : it->second;
 }
 
-std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(int chromaloc)
+std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
 {
-	static const zimg::static_int_map<std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
+	static const zimg::static_enum_map<zimg_chroma_location_e, std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
 		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_CENTER } },
 		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_CENTER } },
 		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_TOP } },
@@ -193,9 +193,9 @@ std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(int chroma
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid chroma location" } : it->second;
 }
 
-zimg::colorspace::MatrixCoefficients translate_matrix(int matrix)
+zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e matrix)
 {
-	static const zimg::static_int_map<zimg::colorspace::MatrixCoefficients, 7> map{
+	static const zimg::static_enum_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 7> map{
 		{ ZIMG_MATRIX_RGB,         zimg::colorspace::MatrixCoefficients::MATRIX_RGB },
 		{ ZIMG_MATRIX_709,         zimg::colorspace::MatrixCoefficients::MATRIX_709 },
 		{ ZIMG_MATRIX_UNSPECIFIED, zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED },
@@ -208,9 +208,9 @@ zimg::colorspace::MatrixCoefficients translate_matrix(int matrix)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid matrix coefficients" } : it->second;
 }
 
-zimg::colorspace::TransferCharacteristics translate_transfer(int transfer)
+zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_characteristics_e transfer)
 {
-	static const zimg::static_int_map<zimg::colorspace::TransferCharacteristics, 6> map{
+	static const zimg::static_enum_map<zimg_transfer_characteristics_e, zimg::colorspace::TransferCharacteristics, 6> map{
 		{ ZIMG_TRANSFER_709,         zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED, zimg::colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED },
 		{ ZIMG_TRANSFER_601,         zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
@@ -222,9 +222,9 @@ zimg::colorspace::TransferCharacteristics translate_transfer(int transfer)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid transfer characteristics" } : it->second;
 }
 
-zimg::colorspace::ColorPrimaries translate_primaries(int primaries)
+zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e primaries)
 {
-	static const zimg::static_int_map<zimg::colorspace::ColorPrimaries, 5> map{
+	static const zimg::static_enum_map<zimg_color_primaries_e, zimg::colorspace::ColorPrimaries, 5> map{
 		{ ZIMG_PRIMARIES_709,         zimg::colorspace::ColorPrimaries::PRIMARIES_709 },
 		{ ZIMG_PRIMARIES_UNSPECIFIED, zimg::colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED },
 		{ ZIMG_PRIMARIES_170M,        zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
@@ -235,9 +235,9 @@ zimg::colorspace::ColorPrimaries translate_primaries(int primaries)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color primaries" } : it->second;
 }
 
-zimg::depth::DitherType translate_dither(int dither)
+zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 {
-	static const zimg::static_int_map<zimg::depth::DitherType, 4> map{
+	static const zimg::static_enum_map<zimg_dither_type_e, zimg::depth::DitherType, 4> map{
 		{ ZIMG_DITHER_NONE,            zimg::depth::DitherType::DITHER_NONE },
 		{ ZIMG_DITHER_ORDERED,         zimg::depth::DitherType::DITHER_ORDERED },
 		{ ZIMG_DITHER_RANDOM,          zimg::depth::DitherType::DITHER_RANDOM },
@@ -247,7 +247,7 @@ zimg::depth::DitherType translate_dither(int dither)
 	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid dither" } : it->second;
 }
 
-zimg::resize::Filter *translate_resize_filter(int filter_type, double param_a, double param_b)
+zimg::resize::Filter *translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
 {
 	try {
 		switch (filter_type) {
@@ -728,7 +728,7 @@ unsigned zimg2_get_api_version(void)
 	return ZIMG_API_VERSION;
 }
 
-int zimg_get_last_error(char *err_msg, size_t n)
+zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n)
 {
 	if (err_msg && n) {
 		strncpy(err_msg, g_last_error_msg, n);
@@ -741,7 +741,7 @@ int zimg_get_last_error(char *err_msg, size_t n)
 void zimg_clear_last_error(void)
 {
 	g_last_error_msg[0] = '\0';
-	g_last_error = 0;
+	g_last_error = ZIMG_ERROR_SUCCESS;
 }
 
 unsigned zimg2_select_buffer_mask(unsigned count)
@@ -750,7 +750,7 @@ unsigned zimg2_select_buffer_mask(unsigned count)
 }
 
 #define EX_BEGIN \
-  int ret = 0; \
+  zimg_error_code_e ret = ZIMG_ERROR_SUCCESS; \
   try {
 #define EX_END \
   } catch (const zimg::ZimgException &e) { \
@@ -763,7 +763,7 @@ void zimg2_filter_graph_free(zimg_filter_graph *ptr)
 	delete ptr;
 }
 
-int zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
+zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
 {
 	assert(ptr);
 	assert(out);
@@ -773,7 +773,7 @@ int zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
 	EX_END
 }
 
-int zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out)
+zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
 	assert(ptr);
 	assert(out);
@@ -783,7 +783,7 @@ int zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigne
 	EX_END
 }
 
-int zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out)
+zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
 	assert(ptr);
 	assert(out);
@@ -793,9 +793,9 @@ int zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsign
 	EX_END
 }
 
-int zimg2_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
-                               zimg_filter_graph_callback unpack_cb, void *unpack_user,
-                               zimg_filter_graph_callback pack_cb, void *pack_user)
+zimg_error_code_e zimg2_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
+                                             zimg_filter_graph_callback unpack_cb, void *unpack_user,
+                                             zimg_filter_graph_callback pack_cb, void *pack_user)
 {
 	assert(ptr);
 	assert(src);
@@ -841,7 +841,7 @@ void zimg2_image_format_default(zimg_image_format *ptr, unsigned version)
 	if (version >= 2) {
 		ptr->width = 0;
 		ptr->height = 0;
-		ptr->pixel_type = -1;
+		ptr->pixel_type = (zimg_pixel_type_e)-1;
 
 		ptr->subsample_w = 0;
 		ptr->subsample_h = 0;

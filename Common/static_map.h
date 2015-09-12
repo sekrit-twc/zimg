@@ -107,8 +107,8 @@ struct strcmp_less {
 template <class T, size_t Sz>
 using static_string_map = static_map<const char *, T, strcmp_less, Sz>;
 
-template <class T, size_t Sz>
-using static_int_map = static_map<int, T, std::less<int>, Sz>;
+template <class Key, class T, size_t Sz>
+using static_enum_map = static_map<Key, T, std::less<Key>, Sz>;
 
 } // namespace zimg
 
