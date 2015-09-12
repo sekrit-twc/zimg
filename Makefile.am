@@ -93,6 +93,7 @@ libzimg_la_LDFLAGS = -no-undefined -version-info 1
 
 
 vszimg_la_SOURCES = vszimg/vszimg.c \
+					vszimg/vszimg2.c \
 					vszimg/VapourSynth.h \
 					vszimg/VSHelper.h
 

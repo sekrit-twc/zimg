@@ -26,5 +26,8 @@
     <ClCompile Include="..\..\vszimg\vszimg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\vszimg\vszimg2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
