@@ -1,9 +1,10 @@
 2.0:
-new cache-efficient buffering API
-support integer formats in colorspace module
-support unspecified parameter values in colorspace module
-support byte formats in resize module
-clamp all integer output to bit depth limits
+api: new simplified API for all-in-one conversions
+api: remove zimg_set_cpu
+api: add zimg_get_version_info and zimg_get_api_version
+depth: clamp integer output to bit depth limit (e.g. 10-bit => 0-1023)
+resize: clamp integer output to bit depth limit
+vszimg: new resize.X compatible syntax
 
 1.1.1:
 fix border handling in SSE2 horizontal resize
