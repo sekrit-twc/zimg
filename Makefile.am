@@ -156,7 +156,9 @@ libtestcommon_la_SOURCES = TestCommon/aligned_malloc.h \
 
 
 if EXAMPLES
-noinst_PROGRAMS += Example/api_example Example/api_example_c
+noinst_PROGRAMS += Example/api_example \
+				   Example/api_example_c \
+				   Example/interlace_example
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = -I$(srcdir)/API -I$(srcdir)/TestCommon
@@ -169,6 +171,10 @@ Example_api_example_LDADD = $(EXAMPLE_LDADD)
 Example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 Example_api_example_c_SOURCES = Example/api_example_c.c
 Example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+
+Example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+Example_interlace_example_SOURCES = Example/interlace_example.cpp
+Example_interlace_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 						   
 						   
