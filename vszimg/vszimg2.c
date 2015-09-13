@@ -4,6 +4,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+  #include <Windows.h>
+  typedef CRITICAL_SECTION vszimg_mutex_t;
+
+  static int vszimg_mutex_init(vszimg_mutex_t *mutex) { InitializeCriticalSection(mutex); return 0;  }
+  static int vszimg_mutex_lock(vszimg_mutex_t *mutex) { EnterCriticalSection(mutex); return 0; }
+  static int vszimg_mutex_unlock(vszimg_mutex_t *mutex) { LeaveCriticalSection(mutex); return 0; }
+  static int vszimg_mutex_destroy(vszimg_mutex_t *mutex) { DeleteCriticalSection(mutex); return 0; }
+#else
+  #include <pthread.h>
+
+  typedef pthread_mutex_t vszimg_mutex_t;
+  static int vszimg_mutex_init(vszimg_mutex_t *mutex) { return pthread_mutex_init(mutex, NULL); }
+  static int vszimg_mutex_lock(vszimg_mutex_t *mutex) { return pthread_mutex_lock(mutex); }
+  static int vszimg_mutex_unlock(vszimg_mutex_t *mutex) { return pthread_mutex_unlock(mutex); }
+  static int vszimg_mutex_destroy(vszimg_mutex_t *mutex) { return pthread_mutex_destroy(mutex); }
+#endif // _WIN32
+
 #include <zimg3.h>
 
 #if ZIMG_API_VERSION < 2
@@ -412,6 +430,7 @@ struct vszimg_graph_data {
 
 struct vszimg_data {
 	struct vszimg_graph_data *graph_data;
+	vszimg_mutex_t graph_mutex;
 	vszimg_bool graph_mutex_initialized;
 
 	VSNodeRef *node;
@@ -442,6 +461,26 @@ struct vszimg_data {
 	vszimg_bool have_range_in;
 	vszimg_bool have_chromaloc_in;
 };
+
+static void _vszimg_default_init(struct vszimg_data *data)
+{
+	memset(data, 0, sizeof(*data));
+
+	data->graph_data = NULL;
+	data->graph_mutex_initialized = VSZIMG_FALSE;
+	data->node = NULL;
+}
+
+static void _vszimg_destroy(struct vszimg_data *data, const VSAPI *vsapi)
+{
+	if (data->graph_data)
+		zimg2_filter_graph_free(data->graph_data->graph);
+	if (data->graph_mutex_initialized)
+		vszimg_mutex_destroy(&data->graph_mutex);
+
+	free(data->graph_data);
+	vsapi->freeNode(data->node);
+}
 
 static void _vszimg_set_src_colorspace(const struct vszimg_data *data, zimg_image_format *src_format)
 {
@@ -480,38 +519,79 @@ static void _vszimg_set_dst_colorspace(const struct vszimg_data *data, const zim
 		dst_format->chroma_location = data->chromaloc;
 }
 
+static void _vszimg_release_graph_data_unsafe(struct vszimg_graph_data *graph_data)
+{
+	if (!graph_data)
+		return;
+	if (--graph_data->ref_count == 0) {
+		zimg2_filter_graph_free(graph_data->graph);
+		free(graph_data);
+	}
+}
+
+static void _vszimg_release_graph_data(struct vszimg_data *data, struct vszimg_graph_data *graph_data)
+{
+	if (!graph_data)
+		return;
+	if (vszimg_mutex_lock(&data->graph_mutex))
+		return;
+
+	_vszimg_release_graph_data_unsafe(graph_data);
+
+	vszimg_mutex_unlock(&data->graph_mutex);
+}
+
 static struct vszimg_graph_data *_vszimg_get_graph_data(struct vszimg_data *data, const zimg_image_format *src_format, const zimg_image_format *dst_format,
                                                         char *err_msg, size_t err_msg_size)
 {
-	struct vszimg_graph_data *graph_data = data->graph_data;
+	struct vszimg_graph_data *graph_data = NULL;
+	struct vszimg_graph_data *ret = NULL;
+	vszimg_bool mutex_locked = VSZIMG_FALSE;
+	vszimg_bool allocate_new;
 
-	if (!graph_data) {
+	if (vszimg_mutex_lock(&data->graph_mutex)) {
+		sprintf(err_msg, "error locking mutex");
+		goto fail;
+	}
+	mutex_locked = VSZIMG_TRUE;
+
+	allocate_new = !data->graph_data ||
+	               (!image_format_eq(&data->graph_data->src_format, src_format) ||
+                    !image_format_eq(&data->graph_data->dst_format, dst_format));
+
+	if (allocate_new) {
 		if (!(graph_data = malloc(sizeof(*graph_data)))) {
 			sprintf(err_msg, "error allocating vszimg_graph_data");
-			return NULL;
+			goto fail;
 		}
-
 		graph_data->graph = NULL;
-		zimg2_image_format_default(&graph_data->src_format, ZIMG_API_VERSION);
-		zimg2_image_format_default(&graph_data->dst_format, ZIMG_API_VERSION);
+		graph_data->ref_count = 1;
 
-		data->graph_data = graph_data;
-	}
-
-	if (!image_format_eq(&graph_data->src_format, src_format) || !image_format_eq(&graph_data->dst_format, dst_format)) {
-		zimg_filter_graph *graph = zimg2_filter_graph_build(src_format, dst_format, &data->params);
-
-		if (!graph) {
+		if (!(graph_data->graph = zimg2_filter_graph_build(src_format, dst_format, &data->params))) {
 			format_zimg_error(err_msg, err_msg_size);
-			return NULL;
+			goto fail;
 		}
 
-		graph_data->graph = graph;
 		graph_data->src_format = *src_format;
 		graph_data->dst_format = *dst_format;
-	}
 
-	return graph_data;
+		_vszimg_release_graph_data_unsafe(data->graph_data);
+
+		++graph_data->ref_count;
+		data->graph_data = graph_data;
+
+		ret = graph_data;
+		graph_data = NULL;
+	} else {
+		++data->graph_data->ref_count;
+		ret = data->graph_data;
+	}
+fail:
+	if (mutex_locked)
+		vszimg_mutex_unlock(&data->graph_mutex);
+
+	_vszimg_release_graph_data(data, graph_data);
+	return ret;
 }
 
 static void VS_CC vszimg_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
@@ -523,6 +603,7 @@ static void VS_CC vszimg_init(VSMap *in, VSMap *out, void **instanceData, VSNode
 static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
 	struct vszimg_data *data = *instanceData;
+	struct vszimg_graph_data *graph_data = NULL;
 	const VSFrameRef *src_frame = NULL;
 	VSFrameRef *dst_frame = NULL;
 	VSFrameRef *ret = NULL;
@@ -533,7 +614,6 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
 	} else if (activationReason == arAllFramesReady) {
-		struct vszimg_graph_data *graph_data;
 		zimg_image_buffer_const src_buf = { ZIMG_API_VERSION };
 		zimg_image_buffer dst_buf = { { ZIMG_API_VERSION } };
 		zimg_image_format src_format;
@@ -617,6 +697,7 @@ fail:
 	if (err_flag)
 		vsapi->setFilterError(err_msg, frameCtx);
 
+	_vszimg_release_graph_data(data, graph_data);
 	vsapi->freeFrame(src_frame);
 	vsapi->freeFrame(dst_frame);
 	return ret;
@@ -626,11 +707,7 @@ static void VS_CC vszimg_free(void *instanceData, VSCore *core, const VSAPI *vsa
 {
 	struct vszimg_data *data = instanceData;
 
-	if (data->graph_data)
-		zimg2_filter_graph_free(data->graph_data->graph);
-
-	vsapi->freeNode(data->node);
-	free(data->graph_data);
+	_vszimg_destroy(data, vsapi);
 	free(data);
 }
 
@@ -638,7 +715,6 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
 {
 	struct vszimg_data *data = NULL;
 
-	VSNodeRef *node = NULL;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
 	int format_id;
@@ -670,17 +746,23 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
       (out) = enum_tmp; \
   } while (0)
 
-	node = vsapi->propGetNode(in, "clip", 0, NULL);
-	node_vi = vsapi->getVideoInfo(node);
-	node_fmt = node_vi->format;
-
 	if (!(data = malloc(sizeof(*data)))) {
 		sprintf(err_msg, "error allocating vszimg_data");
 		goto fail;
 	}
 
-	data->graph_data = NULL;
-	data->node = node;
+	_vszimg_default_init(data);
+
+	if (vszimg_mutex_init(&data->graph_mutex)) {
+		sprintf(err_msg, "error initializing mutex");
+		goto fail;
+	}
+	data->graph_mutex_initialized = VSZIMG_TRUE;
+
+	data->node = vsapi->propGetNode(in, "clip", 0, NULL);
+	node_vi = vsapi->getVideoInfo(data->node);
+	node_fmt = node_vi->format;
+
 	data->vi = *node_vi;
 
 	zimg2_filter_graph_params_default(&data->params, ZIMG_API_VERSION);
@@ -741,11 +823,11 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
 			goto fail;
 	}
 
-	vsapi->createFilter(in, out, "format", vszimg_init, vszimg_get_frame, vszimg_free, fmParallelRequests, 0, data, core);
+	vsapi->createFilter(in, out, "format", vszimg_init, vszimg_get_frame, vszimg_free, fmParallel, 0, data, core);
 	return;
 fail:
 	vsapi->setError(out, err_msg);
-	vsapi->freeNode(node);
+	_vszimg_destroy(data, vsapi);
 	free(data);
 }
 

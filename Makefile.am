@@ -97,11 +97,11 @@ vszimg_la_SOURCES = vszimg/vszimg.c \
 					vszimg/VapourSynth.h \
 					vszimg/VSHelper.h
 
-vszimg_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/API
+vszimg_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/API -pthread
 
 vszimg_la_LIBADD = libzimg.la
 
-vszimg_la_LDFLAGS = -no-undefined -avoid-version -module
+vszimg_la_LDFLAGS = -no-undefined -avoid-version -module -pthread
 
 vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
