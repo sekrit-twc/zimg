@@ -348,6 +348,18 @@ double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned 
 	return shift;
 }
 
+double luma_shift_factor(FieldParity parity, unsigned src_height, unsigned dst_height)
+{
+	double shift = 0.0;
+
+	if (parity == FieldParity::FIELD_TOP)
+		shift = -0.25;
+	else if (parity == FieldParity::FIELD_BOTTOM)
+		shift = 0.25;
+
+	return shift * (double)src_height / dst_height - shift;
+}
+
 class GraphBuilder {
 public:
 	struct params {
@@ -572,9 +584,11 @@ private:
 		std::unique_ptr<zimg::IZimgFilter> filter_uv;
 
 		if (do_resize_luma) {
+			double shift_h = luma_shift_factor(m_state.parity, m_state.height, height);
+
 			filter.reset(
 				zimg::resize::create_resize2(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
-				                             0.0, 0.0, m_state.width, m_state.height, cpu));
+				                             0.0, shift_h, m_state.width, m_state.height, cpu));
 
 			if (m_state.is_rgb()) {
 				std::unique_ptr<zimg::IZimgFilter> mux{ new zimg::MuxFilter{ filter.get(), nullptr } };
