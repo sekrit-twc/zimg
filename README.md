@@ -1,17 +1,26 @@
 z.lib
 ======
-The "z" library implements the commonly required image processing basics of scaling, color conversion, and depth conversion. Each basic function is exposed in a simple C API designed to be adaptable to any user scenario. Allocation, buffering, and other such details are cleanly separated from the image processing, allowing the user to implement such concerns to best fit his use case.
+The "z" library implements the commonly required image processing basics of
+scaling, colorspace conversion, and depth conversion. A simple API enables
+conversion between any supported formats to operate with minimal knowledge
+from the programmer. All library routines were designed from the ground-up
+with flexibility, thread-safety, and correctness as first priorities.
+Allocation, buffering, and I/O are cleanly separated from processing, allowing
+the programmer to adapt "z" to many scenarios.
 
 Requirements
 -----
 - Byte-addressable architecture
 - Two's complement integer encoding
 - 32-bit or greater machine word
+- C++11 compliant compiler
 - Platforms: Microsoft Windows, POSIX
 
 Building
 -----
-The officially supported build system is GNU autotools. Use the provided "autogen.sh" script to instantiate the familiar "configure" and "make" build system.
+The officially supported build system is GNU autotools. Use the provided
+"autogen.sh" script to instantiate the familiar "configure" and "make" build
+system. Visual Studio project files are not stable and are subject to change.
 
 Capabilities
 -----
@@ -19,12 +28,32 @@ Capabilities
 
 Colorspaces: SMPTE-C (NTSC), Rec.709, Rec.2020
 
-The colorspace module provides support for conversion between any combination of matrix coefficients, transfer characteristics, and color primaries. This includes the basic conversions between YCbCr and RGB, as well as more advanced operations such as conversion between linear and gamma encoding and widening from Rec.709 to Rec.2020 gamut. Full support is also provided for constant-luminance (CL) Rec.2020 YCbCr, which retains higher fidelity in chroma subsampling scenarios. However, color management (CMS) is not included in the module, so narrowing conversions, such as from Rec.2020 to Rec.709 may produce suboptimal results.
+The colorspace module provides for conversion between any combination of
+colorspaces, as defined by the commonly used triplet of matrix coefficients,
+transfer characteristics, and color primaries. Conversions are implemented
+with intelligent logic that minimizes the number of intermediate
+representations required for common scenarios, such as conversion between
+YCbCr and RGB. Support is also provided for the non-traditional YCbCr system
+of ITU-R BT.2020 constant luminance (CL), which retains higher fidelity with
+chroma subsampling. Note that "z" is not a color management system and should
+not be used to perform drastic contrast or gamut reduction, such as BT.2020
+to BT.709.
 
 ###Depth
 
-The depth module provides support for converting between any pixel (number) format, including single and dual-byte integer formats as well as IEEE-754 binary16 and binary32 formats. Both limited (studio) and full (PC) range integer formats are supported, including conversion in either direction. When converting to an integral format, multiple dithering methods are available, including rounding, bayer (ordered) dithering, random dithering, and Floyd-Steinberg error diffusion.
+Formats: BYTE, WORD, HALF, FLOAT
+
+The depth module provides for conversion between any pixel (number) format,
+including one and two-byte integer formats as well as IEEE-754 binary16
+(OpenEXR) and binary32 formats. Limited (16-235) and full swing (0-255) range
+integer formats are supported, including conversion between such formats.
+Multiple dithering methods are available when converting to integer formats,
+from basic rounding to high quality error diffusion.
 
 ###Resize
 
-The resize module provides high fidelity linear resamplers, such as the popular Bicubic and Lanczos filters. Resampling ratios up to 100x are supported without issue for both upsampling and downsampling. Full support is also provided for sub-pixel center shifts and cropping, allowing conversion between different coordinate systems, such as JPEG and MPEG-2 chroma siting.
+The resize module provides high fidelity linear resamplers, including the
+popular Bicubic and Lanczos filters. Resampling ratios of up to 100x are
+supported for upsampling and downsampling. Full support is provided for
+various coordinate systems, including the various chroma siting conventions
+(e.g. JPEG and MPEG2) as well as interlaced images.
