@@ -129,6 +129,16 @@ typename Map::mapped_type search_enum_map(const Map &map, const Key &key, const 
 	return it == map.end() ? throw zimg::error::EnumOutOfRange{ msg } : it->second;
 }
 
+template <class Map, class Key>
+typename Map::mapped_type search_itu_enum_map(const Map &map, const Key &key, const char *msg)
+{
+	if (static_cast<int>(key) < 0 || static_cast<int>(key) > 255)
+		throw zimg::error::EnumOutOfRange{ msg };
+
+	auto it = map.find(key);
+	return it == map.end() ? throw zimg::error::NoColorspaceConversion{ msg } : it->second;
+}
+
 zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 {
 	static const zimg::static_enum_map<zimg_cpu_type_e, zimg::CPUClass, 12> map{
@@ -214,7 +224,7 @@ zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e
 		{ ZIMG_MATRIX_2020_NCL,    zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
 		{ ZIMG_MATRIX_2020_CL,     zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
 	};
-	return search_enum_map(map, matrix, "unrecognized matrix coefficients");
+	return search_itu_enum_map(map, matrix, "unrecognized matrix coefficients");
 }
 
 zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_characteristics_e transfer)
@@ -227,7 +237,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 		{ ZIMG_TRANSFER_2020_12,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_LINEAR,      zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR },
 	};
-	return search_enum_map(map, transfer, "unrecognized transfer characteristics");
+	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
 }
 
 zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e primaries)
@@ -239,7 +249,7 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 		{ ZIMG_PRIMARIES_240M,        zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
 		{ ZIMG_PRIMARIES_2020,        zimg::colorspace::ColorPrimaries::PRIMARIES_2020 },
 	};
-	return search_enum_map(map, primaries, "unrecognized color primaries");
+	return search_itu_enum_map(map, primaries, "unrecognized color primaries");
 }
 
 zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
@@ -693,32 +703,63 @@ public:
 };
 
 
-GraphBuilder::state import_graph_state(const zimg_image_format &src)
+void import_graph_state_common(const zimg_image_format &src, GraphBuilder::state *out)
 {
 	API_VERSION_ASSERT(src.version);
 
-	GraphBuilder::state state{};
+	if (src.version >= 2) {
+		out->width = src.width;
+		out->height = src.height;
+		out->type = translate_pixel_type(src.pixel_type);
+		out->subsample_w = src.subsample_w;
+		out->subsample_h = src.subsample_h;
+		out->color = translate_color_family(src.color_family);
+
+		out->colorspace.matrix = translate_matrix(src.matrix_coefficients);
+		out->colorspace.transfer = translate_transfer(src.transfer_characteristics);
+		out->colorspace.primaries = translate_primaries(src.color_primaries);
+
+		out->depth = src.depth ? src.depth : zimg::default_pixel_format(out->type).depth;
+		out->fullrange = translate_pixel_range(src.pixel_range);
+
+		out->parity = translate_field_parity(src.field_parity);
+		std::tie(out->chroma_location_w, out->chroma_location_h) = translate_chroma_location(src.chroma_location);
+	}
+}
+
+std::pair<GraphBuilder::state, GraphBuilder::state> import_graph_state(const zimg_image_format &src, const zimg_image_format &dst)
+{
+	API_VERSION_ASSERT(src.version);
+	API_VERSION_ASSERT(dst.version);
+	_zassert_d(src.version == dst.version, "image format versions do not match");
+
+	GraphBuilder::state src_state{};
+	GraphBuilder::state dst_state{};
+
+	import_graph_state_common(src, &src_state);
+	import_graph_state_common(dst, &dst_state);
 
 	if (src.version >= 2) {
-		state.width = src.width;
-		state.height = src.height;
-		state.type = translate_pixel_type(src.pixel_type);
-		state.subsample_w = src.subsample_w;
-		state.subsample_h = src.subsample_h;
-		state.color = translate_color_family(src.color_family);
+		// Accept unenumerated colorspaces if they form the basic no-op case.
+		if (src.color_family == dst.color_family &&
+		    src.matrix_coefficients == dst.matrix_coefficients &&
+		    src.transfer_characteristics == dst.transfer_characteristics &&
+		    src.color_primaries == dst.color_primaries)
+		{
+			src_state.colorspace = zimg::colorspace::ColorspaceDefinition{};
+			dst_state.colorspace = zimg::colorspace::ColorspaceDefinition{};
+		} else {
+			src_state.colorspace.matrix = translate_matrix(src.matrix_coefficients);
+			src_state.colorspace.transfer = translate_transfer(src.transfer_characteristics);
+			src_state.colorspace.primaries = translate_primaries(src.color_primaries);
 
-		state.colorspace.matrix = translate_matrix(src.matrix_coefficients);
-		state.colorspace.transfer = translate_transfer(src.transfer_characteristics);
-		state.colorspace.primaries = translate_primaries(src.color_primaries);
-
-		state.depth = src.depth ? src.depth : zimg::default_pixel_format(state.type).depth;
-		state.fullrange = translate_pixel_range(src.pixel_range);
-
-		state.parity = translate_field_parity(src.field_parity);
-		std::tie(state.chroma_location_w, state.chroma_location_h) = translate_chroma_location(src.chroma_location);
+			dst_state.colorspace.matrix = translate_matrix(dst.matrix_coefficients);
+			dst_state.colorspace.transfer = translate_transfer(dst.transfer_characteristics);
+			dst_state.colorspace.primaries = translate_primaries(dst.color_primaries);
+		}
 	}
 
-	return state;
+	return{ src_state, dst_state };
 }
 
 GraphBuilder::params import_graph_params(const zimg_filter_graph_params &src)
@@ -918,9 +959,11 @@ zimg_filter_graph *zimg2_filter_graph_build(const zimg_image_format *src_format,
 
 	try {
 		GraphBuilder builder;
-		GraphBuilder::state src_state = import_graph_state(*src_format);
-		GraphBuilder::state dst_state = import_graph_state(*dst_format);
+		GraphBuilder::state src_state;
+		GraphBuilder::state dst_state;
 		GraphBuilder::params graph_params;
+
+		std::tie(src_state, dst_state) = import_graph_state(*src_format, *dst_format);
 
 		if (params)
 			graph_params = import_graph_params(*params);

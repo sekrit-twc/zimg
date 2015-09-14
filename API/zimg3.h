@@ -229,6 +229,10 @@ typedef enum zimg_chroma_location_e {
  * not require a fully specified colorspace. The primaries must be defined if
  * the transfer function is defined, and the matrix coefficients must likewise
  * be defined if the transfer function is defined.
+ *
+ * Unenumerated values between 0 and 255, inclusive, may be specified for any
+ * colorspace parameter. In such a case, no conversion will be possible unless
+ * the input and output spaces are exactly equivalent.
  */
 typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_RGB         = 0,
