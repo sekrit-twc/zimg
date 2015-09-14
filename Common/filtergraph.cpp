@@ -7,6 +7,7 @@
 #include "filtergraph.h"
 #include "linebuffer.h"
 #include "pixel.h"
+#include "zassert.h"
 #include "zfilter.h"
 
 namespace zimg {;
@@ -87,8 +88,7 @@ public:
 
 	void *alloc_context(unsigned id, size_t size)
 	{
-		if (m_context_table[id])
-			throw ZimgLogicError{ "context already allocated" };
+		_zassert(!m_context_table[id], "context already allocated");
 
 		m_context_table[id] = m_alloc.allocate(size);
 		return m_context_table[id];
@@ -149,8 +149,7 @@ class GraphNode {
 
 		void assert_guard_pattern() const
 		{
-			if (guard_pattern != GUARD_PATTERN)
-				throw ZimgLogicError{ "buffer overflow detected" };
+			_zassert(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
 		}
 	};
 
@@ -589,8 +588,8 @@ public:
 		else if (!m_is_source)
 			init_context_node(alloc, context);
 
-		if (alloc.count() > context_size)
-			throw ZimgLogicError{ "buffer overflow detected" };
+		_zassert(alloc.count() <= context_size, "buffer overflow detected");
+		_zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
 	void reset_context(ExecutionState *state)

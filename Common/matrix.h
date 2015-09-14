@@ -4,7 +4,7 @@
 #define ZIMG_MATRIX_H_
 
 #include <vector>
-#include "except.h"
+#include "zassert.h"
 
 namespace zimg {;
 
@@ -79,10 +79,8 @@ class RowMatrix {
 
 	void check_bounds(size_t i, size_t j) const
 	{
-		if (i >= m_rows)
-			throw ZimgLogicError{ "row index out of bounds" };
-		if (j >= m_cols)
-			throw ZimgLogicError{ "column index out of bounds" };
+		_zassert(i < m_rows, "row index out of bounds");
+		_zassert(j < m_cols, "column index out of bounds");
 	}
 
 	T &element_ref(size_t i, size_t j)
