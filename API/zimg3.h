@@ -333,7 +333,7 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * If the image is subsampled, a number of scanlines in units of the chroma
  * subsampling (e.g. 2 lines for 4:2:0) must be processed.
  *
- * If the callback fails, processing will be aborted and non-zero value will
+ * If the callback fails, processing will be aborted and a non-zero value will
  * be returned to the caller of {@link zimg2_filter_graph_process}, but the
  * return code of the callback will not be propagated.
  *
@@ -357,7 +357,7 @@ void zimg2_filter_graph_free(zimg_filter_graph *ptr);
  *
  * The filter graph does not allocate memory during processing and generally
  * will not fail unless a user-provided callback fails. To facilitate this,
- * memory allocate is delgated to the caller.
+ * memory allocation is delgated to the caller.
  *
  * @pre out != 0
  * @param ptr graph handle
@@ -422,10 +422,10 @@ typedef struct zimg_image_format {
 	unsigned subsample_w;                                     /**< Horizontal subsampling factor log2 (default 0). */
 	unsigned subsample_h;                                     /**< Vertical subsampling factor log2 (default 0). */
 
-	zimg_color_family_e color_family;                         /**< Color family (default UNSPECIFIED). */
-	zimg_matrix_coefficients_e matrix_coefficients;           /**< YUV transform matrix (default UNSPECIFIED). */
-	zimg_transfer_characteristics_e transfer_characteristics; /**< Transfer characteristics (default UNSPECIFIED). */
-	zimg_color_primaries_e color_primaries;                   /**< Color primaries (default UNSPECIFIED). */
+	zimg_color_family_e color_family;                         /**< Color family (default ZIMG_COLOR_GREY). */
+	zimg_matrix_coefficients_e matrix_coefficients;           /**< YUV transform matrix (default ZIMG_MATRIX_UNSPECIFIED). */
+	zimg_transfer_characteristics_e transfer_characteristics; /**< Transfer characteristics (default ZIMG_TRANSFER_UNSPECIFIED). */
+	zimg_color_primaries_e color_primaries;                   /**< Color primaries (default ZIMG_PRIMARIES_UNSPECIFIED). */
 
 	unsigned depth;                                           /**< Bit depth (default 8 bits per byte). */
 	zimg_pixel_range_e pixel_range;                           /**< Pixel range. Required for integer formats. */
