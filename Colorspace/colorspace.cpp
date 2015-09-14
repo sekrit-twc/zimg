@@ -26,7 +26,7 @@ bool is_valid_csp(const ColorspaceDefinition &csp)
 ColorspaceConversion::ColorspaceConversion(const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu)
 try :
 	m_pixel_adapter{ create_pixel_adapter(cpu) }
-{	
+{
 	if (!is_valid_csp(in) || !is_valid_csp(out))
 		throw ZimgIllegalArgument{ "invalid colorspace definition" };
 

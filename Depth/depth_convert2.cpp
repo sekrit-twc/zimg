@@ -82,7 +82,7 @@ DepthConvert2::DepthConvert2(unsigned width, unsigned height, const PixelFormat 
 	m_height{ height }
 {
 	if (pixel_out.type != PixelType::HALF && pixel_out.type != PixelType::FLOAT)
-		throw ZimgLogicError{ "DepthConvert only converts to floating point types" };
+		throw zimg::error::InternalError{ "DepthConvert only converts to floating point types" };
 
 	int32_t range = pixel_in.type < PixelType::HALF ? integer_range(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 1;
 	int32_t offset = pixel_in.type < PixelType::HALF ? integer_offset(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 0;

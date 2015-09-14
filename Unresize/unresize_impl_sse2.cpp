@@ -300,7 +300,7 @@ void filter_plane_v_sse2(const BilinearContext &ctx, const ImagePlane<const floa
 		for (ptrdiff_t j = 0; j < mod(src_width, 4); j += 4) {
 			__m128 w = i < ctx.dst_width ? _mm_load_ps(&dst_prev[j]) : _mm_setzero_ps();
 			__m128 z = _mm_load_ps(&dst_ptr[j]);
-			
+
 			w = _mm_mul_ps(u, w);
 			w = _mm_sub_ps(z, w);
 
@@ -317,12 +317,12 @@ public:
 
 	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
+		throw zimg::error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
 	}
 
 	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
+		throw zimg::error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
 	}
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override

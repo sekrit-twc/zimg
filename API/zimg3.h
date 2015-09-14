@@ -54,21 +54,56 @@ unsigned zimg2_get_api_version(void);
 /**
  * Library error codes.
  *
- * API functions may return error codes not listed in this header.
- * The user should not rely solely on specific error codes being returned,
- * but also gracefully handle error categories (multiples of 100 and 1000).
+ * The error code is a 15-bit quantity with a 5-bit category indicator in the
+ * upper bits and a 10-bit error code in the lower bits. The library may also
+ * return negative error codes which do not belong to any category, as well as
+ * error codes with a category of 0.
  *
+ * API functions may return error codes not listed in this header.
  * Functions returning error codes return 0 on success.
  */
 typedef enum zimg_error_code_e {
-	ZIMG_ERROR_UNKNOWN          = -1,
-	ZIMG_ERROR_SUCCESS          = 0,
-#if 0
-	ZIMG_ERROR_LOGIC            = 100, /**< Internal logic error. */
-#endif
-	ZIMG_ERROR_OUT_OF_MEMORY    = 200, /**< Error allocating internal structures. */
-	ZIMG_ERROR_ILLEGAL_ARGUMENT = 300, /**< Illegal value provided for argument. */
-	ZIMG_ERROR_UNSUPPORTED      = 400, /**< Operation not supported. */
+	ZIMG_ERROR_UNKNOWN = -1,
+	ZIMG_ERROR_SUCCESS = 0,
+
+	ZIMG_ERROR_OUT_OF_MEMORY        = 1, /**< Not always detected on some platforms. */
+	ZIMG_ERROR_USER_CALLBACK_FAILED = 2, /**< User-defined callback failed. */
+
+	/**
+	 * An API invariant was violated, or an impossible operation was requested.
+	 *
+	 * It is the responsibility of the caller to ensure that such conditions do
+	 * not occur. Not all illegal operations are detected by the library, and in
+	 * general undefined behaviour may occur.
+	 */
+	ZIMG_ERROR_LOGIC                 = (1 << 10),
+	ZIMG_ERROR_GREYSCALE_SUBSAMPLING = ZIMG_ERROR_LOGIC + 1, /**< Attempt to subsample greyscale image */
+	ZIMG_ERROR_COLOR_FAMILY_MISMATCH = ZIMG_ERROR_LOGIC + 2, /**< Illegal combination of color family and matrix coefficients. */
+	ZIMG_ERROR_IMAGE_NOT_DIVISIBLE   = ZIMG_ERROR_LOGIC + 3, /**< Image dimension does not fit a modulo constraint. */
+	ZIMG_ERROR_BIT_DEPTH_OVERFLOW    = ZIMG_ERROR_LOGIC + 4, /**< Bit depth greater than underlying storage format. */
+
+	/**
+	 * A function parameter was passed an illegal value.
+	 *
+	 * While all API errors result from illegal parameters, this category
+	 * indicates a locally determinable error, such as an out of range enum.
+	 */
+	ZIMG_ERROR_ILLEGAL_ARGUMENT  = (2 << 10),
+	ZIMG_ERROR_ENUM_OUT_OF_RANGE = ZIMG_ERROR_ILLEGAL_ARGUMENT + 1, /**< Value not in enumeration. */
+	ZIMG_ERROR_ZERO_IMAGE_SIZE   = ZIMG_ERROR_ILLEGAL_ARGUMENT + 2, /**< Image width or height is zero. */
+
+	/**
+	 * A requested conversion was not supported by the library.
+	 *
+	 * Some conversions are well-defined but not implemented by the library.
+	 * If the conversion is logically impossible, {@link ZIMG_ERROR_LOGIC} may
+	 * occur.
+	 */
+	ZIMG_ERROR_UNSUPPORTED_OPERATION      = (3 << 10),
+	ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING    = ZIMG_ERROR_UNSUPPORTED_OPERATION + 1, /**< Subsampling format not supported. */
+	ZIMG_ERROR_NO_COLORSPACE_CONVERSION   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 2, /**< No conversion between colorspaces. */
+	ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION = ZIMG_ERROR_UNSUPPORTED_OPERATION + 3, /**< No conversion between field parity. */
+	ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 4, /**< Resampling filter not available for given image size. */
 } zimg_error_code_e;
 
 /**
@@ -280,7 +315,7 @@ typedef struct zimg_image_buffer_const {
  * parameter to a subsequent call.
  *
  * From a strict standards point-of-view, the use of the union to alias the
- * const and mutable buffers may be undefined behaviour in C++ (but not C).
+ * const and mutable buffers may be undefined behavior in C++ (but not C).
  * This has not been observed to impact GCC and MSVC compilers.
  *
  * @see zimg_image_buffer_const

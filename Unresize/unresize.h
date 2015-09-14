@@ -126,8 +126,8 @@ public:
 	 * @param shift_w horizontal center shift relative to upsampled image
 	 * @param shift_h vertical center shift relative to upsampled image
 	 * @param cpu create kernel optimized for given cpu
-	 * @throws ZimgIllegalArgument on invalid dimensions
-	 * @throws ZimgOutOfMemory if out of memory
+	 * @throws IllegalArgument on invalid dimensions
+	 * @throws OutOfMemory if out of memory
 	 */
 	Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu);
 
@@ -150,7 +150,7 @@ public:
 	 * @param src input image
 	 * @param dst output image
 	 * @param tmp temporary buffer (@see Unresize::tmp_size)
-	 * @throws ZimgUnsupportedError if pixel type not supported
+	 * @throws UnsupportedOperation if pixel type not supported
 	 */
 	void process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
 };

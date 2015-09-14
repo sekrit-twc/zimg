@@ -35,7 +35,7 @@ PairFilter::PairFilter(IZimgFilter *first, IZimgFilter *second) :
 	m_second_attr = second->get_image_attributes();
 
 	if (m_first_flags.color != m_second_flags.color)
-		throw ZimgLogicError{ "filter pair must be both color or both grey" };
+		throw zimg::error::InternalError{ "filter pair must be both color or both grey" };
 
 	m_first_step = first->get_simultaneous_lines();
 	m_second_step = second->get_simultaneous_lines();

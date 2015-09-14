@@ -74,32 +74,40 @@ void record_exception_message(const T &e)
 	g_last_error_msg[sizeof(g_last_error_msg) - 1] = '\0';
 }
 
-zimg_error_code_e handle_exception(const zimg::ZimgException &e)
+zimg_error_code_e handle_exception(std::exception_ptr eptr)
 {
 	zimg_error_code_e code = ZIMG_ERROR_UNKNOWN;
 
+#define CATCH(type, error_code) catch (const type &e) { record_exception_message(e); code = (error_code); }
+#define FATAL(type, error_code, msg) catch (const type &e) { _zassert_d(false, msg); record_exception_message(e); code = (error_code); }
 	try {
-		throw e;
-	} catch (const zimg::ZimgUnknownError &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_UNKNOWN;
-	} catch (const zimg::ZimgLogicError &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_UNKNOWN;
-	} catch (const zimg::ZimgOutOfMemory &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_OUT_OF_MEMORY;
-	} catch (const zimg::ZimgIllegalArgument &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_ILLEGAL_ARGUMENT;
-	} catch (const zimg::ZimgUnsupportedError &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_UNSUPPORTED;
-	} catch (const zimg::ZimgException &e) {
-		record_exception_message(e);
-		code = ZIMG_ERROR_UNKNOWN;
+		std::rethrow_exception(eptr);
 	}
 
+	CATCH(zimg::error::UnknownError,            ZIMG_ERROR_UNKNOWN)
+	CATCH(zimg::error::OutOfMemory,             ZIMG_ERROR_OUT_OF_MEMORY)
+	CATCH(zimg::error::UserCallbackFailed,      ZIMG_ERROR_USER_CALLBACK_FAILED)
+
+	CATCH(zimg::error::GreyscaleSubsampling,    ZIMG_ERROR_GREYSCALE_SUBSAMPLING)
+	CATCH(zimg::error::ColorFamilyMismatch,     ZIMG_ERROR_COLOR_FAMILY_MISMATCH)
+	CATCH(zimg::error::ImageNotDivislbe,        ZIMG_ERROR_IMAGE_NOT_DIVISIBLE)
+	CATCH(zimg::error::BitDepthOverflow,        ZIMG_ERROR_BIT_DEPTH_OVERFLOW)
+	CATCH(zimg::error::LogicError,              ZIMG_ERROR_LOGIC)
+
+	CATCH(zimg::error::EnumOutOfRange,          ZIMG_ERROR_ENUM_OUT_OF_RANGE)
+	CATCH(zimg::error::ZeroImageSize,           ZIMG_ERROR_ZERO_IMAGE_SIZE)
+	CATCH(zimg::error::IllegalArgument,         ZIMG_ERROR_ILLEGAL_ARGUMENT)
+
+	CATCH(zimg::error::UnsupportedSubsampling,  ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING)
+	CATCH(zimg::error::NoColorspaceConversion,  ZIMG_ERROR_NO_COLORSPACE_CONVERSION)
+	CATCH(zimg::error::NoFieldParityConversion, ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION)
+	CATCH(zimg::error::ResamplingNotAvailable,  ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE)
+	CATCH(zimg::error::UnsupportedOperation,    ZIMG_ERROR_UNSUPPORTED_OPERATION)
+
+	FATAL(zimg::error::InternalError,           ZIMG_ERROR_UNKNOWN, "internal error generated")
+	FATAL(zimg::error::Exception,               ZIMG_ERROR_UNKNOWN, "unregistered error generated")
+#undef CATCH
+#undef FATAL
 	g_last_error = code;
 	return code;
 }
@@ -112,6 +120,13 @@ zimg_error_code_e handle_exception(const std::bad_alloc &e)
 	g_last_error = code;
 
 	return code;
+}
+
+template <class Map, class Key>
+typename Map::mapped_type search_enum_map(const Map &map, const Key &key, const char *msg)
+{
+	auto it = map.find(key);
+	return it == map.end() ? throw zimg::error::EnumOutOfRange{ msg } : it->second;
 }
 
 zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
@@ -132,8 +147,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_X86_AVX2,  zimg::CPUClass::CPU_X86_AVX2 },
 #endif
 	};
-	auto it = map.find(cpu);
-	return it == map.end() ? zimg::CPUClass::CPU_NONE : it->second;
+	return search_enum_map(map, cpu, "unrecognized cpu type");
 }
 
 zimg::PixelType translate_pixel_type(zimg_pixel_type_e pixel_type)
@@ -144,8 +158,7 @@ zimg::PixelType translate_pixel_type(zimg_pixel_type_e pixel_type)
 		{ ZIMG_PIXEL_HALF,  zimg::PixelType::HALF },
 		{ ZIMG_PIXEL_FLOAT, zimg::PixelType::FLOAT },
 	};
-	auto it = map.find(pixel_type);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel type" } : it->second;
+	return search_enum_map(map, pixel_type, "unrecognized pixel type");
 }
 
 bool translate_pixel_range(zimg_pixel_range_e range)
@@ -154,8 +167,7 @@ bool translate_pixel_range(zimg_pixel_range_e range)
 		{ ZIMG_RANGE_LIMITED, false },
 		{ ZIMG_RANGE_FULL,    true },
 	};
-	auto it = map.find(range);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid pixel range" } : it->second;
+	return search_enum_map(map, range, "unrecognized pixel range");
 }
 
 ColorFamily translate_color_family(zimg_color_family_e family)
@@ -165,8 +177,7 @@ ColorFamily translate_color_family(zimg_color_family_e family)
 		{ ZIMG_COLOR_RGB,  ColorFamily::COLOR_RGB },
 		{ ZIMG_COLOR_YUV,  ColorFamily::COLOR_YUV},
 	};
-	auto it = map.find(family);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color fmaily" } : it->second;
+	return search_enum_map(map, family, "unrecognized color family");
 }
 
 FieldParity translate_field_parity(zimg_field_parity_e field)
@@ -176,8 +187,7 @@ FieldParity translate_field_parity(zimg_field_parity_e field)
 		{ ZIMG_FIELD_TOP,         FieldParity::FIELD_TOP },
 		{ ZIMG_FIELD_BOTTOM,      FieldParity::FIELD_BOTTOM },
 	};
-	auto it = map.find(field);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid field parity" } : it->second;
+	return search_enum_map(map, field, "unrecognized field parity");
 }
 
 std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
@@ -190,8 +200,7 @@ std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(zimg_chrom
 		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_BOTTOM } },
 		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_BOTTOM } },
 	};
-	auto it = map.find(chromaloc);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid chroma location" } : it->second;
+	return search_enum_map(map, chromaloc, "unregonized chroma location");
 }
 
 zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e matrix)
@@ -205,8 +214,7 @@ zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e
 		{ ZIMG_MATRIX_2020_NCL,    zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
 		{ ZIMG_MATRIX_2020_CL,     zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
 	};
-	auto it = map.find(matrix);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid matrix coefficients" } : it->second;
+	return search_enum_map(map, matrix, "unrecognized matrix coefficients");
 }
 
 zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_characteristics_e transfer)
@@ -219,8 +227,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 		{ ZIMG_TRANSFER_2020_12,     zimg::colorspace::TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_LINEAR,      zimg::colorspace::TransferCharacteristics::TRANSFER_LINEAR },
 	};
-	auto it = map.find(transfer);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid transfer characteristics" } : it->second;
+	return search_enum_map(map, transfer, "unrecognized transfer characteristics");
 }
 
 zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e primaries)
@@ -232,8 +239,7 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 		{ ZIMG_PRIMARIES_240M,        zimg::colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
 		{ ZIMG_PRIMARIES_2020,        zimg::colorspace::ColorPrimaries::PRIMARIES_2020 },
 	};
-	auto it = map.find(primaries);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid color primaries" } : it->second;
+	return search_enum_map(map, primaries, "unrecognized color primaries");
 }
 
 zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
@@ -244,8 +250,7 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 		{ ZIMG_DITHER_RANDOM,          zimg::depth::DitherType::DITHER_RANDOM },
 		{ ZIMG_DITHER_ERROR_DIFFUSION, zimg::depth::DitherType::DITHER_ERROR_DIFFUSION },
 	};
-	auto it = map.find(dither);
-	return it == map.end() ? throw zimg::ZimgIllegalArgument{ "invalid dither" } : it->second;
+	return search_enum_map(map, dither, "urecognized dither type");
 }
 
 zimg::resize::Filter *translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
@@ -268,7 +273,7 @@ zimg::resize::Filter *translate_resize_filter(zimg_resample_filter_e filter_type
 			param_a = std::isnan(param_a) ? 3.0 : std::floor(param_a);
 			return new zimg::resize::LanczosFilter{ (int)param_a };
 		default:
-			throw zimg::ZimgIllegalArgument{ "invalid resize filter" };
+			throw zimg::error::EnumOutOfRange{ "unrecognized resampling filter" };
 		}
 	} catch (const std::bad_alloc &) {
 		throw zimg::ZimgOutOfMemory{};
@@ -389,31 +394,41 @@ public:
 
 		void validate() const
 		{
+			if (!width || !height)
+				throw zimg::error::ZeroImageSize{ "image dimensions must be non-zero" };
+
 			if (color == ColorFamily::COLOR_GREY) {
 				if (subsample_w || subsample_h)
-					throw zimg::ZimgUnsupportedError{ "cannot subsample greyscale image" };
+					throw zimg::error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
 				if (colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED ||
 					colorspace.transfer != zimg::colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED ||
 					colorspace.primaries != zimg::colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED)
-					throw zimg::ZimgUnsupportedError{ "cannot specify colorspace of greyscale image" };
+					throw zimg::error::NoColorspaceConversion{ "cannot specify colorspace of greyscale image" };
 			}
 
 			if (color == ColorFamily::COLOR_RGB) {
 				if (subsample_w || subsample_h)
-					throw zimg::ZimgUnsupportedError{ "cannot subsample RGB image" };
+					throw zimg::error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
 				if (colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED &&
 					colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
-					throw zimg::ZimgUnsupportedError{ "RGB image cannot be YUV" };
+					throw zimg::error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
 			}
 
+			if (color == ColorFamily::COLOR_YUV) {
+				if (colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
+					throw zimg::error::ColorFamilyMismatch{ "YUV color family cannot be RGB" };
+			}
 
 			if (subsample_h > 1 && parity != FieldParity::FIELD_PROGRESSIVE)
-				throw zimg::ZimgUnsupportedError{ "subsampling factor too great for interlaced image" };
+				throw zimg::error::UnsupportedSubsampling{ "vertical subsampling greater than 2x is not supported" };
 			if (subsample_w > 2 || subsample_h > 2)
-				throw zimg::ZimgUnsupportedError{ "subsampling factor too great" };
+				throw zimg::error::UnsupportedSubsampling{ "subsampling greater than 4x is not supported" };
+
+			if (width % (1 << subsample_w) || height % (1 << subsample_h))
+				throw zimg::error::ImageNotDivislbe{ "image dimensions must be divisible by subsampling factor" };
 
 			if (depth > (unsigned)zimg::default_pixel_format(type).depth)
-				throw zimg::ZimgLogicError{ "bit depth exceeds limits of type" };
+				throw zimg::error::BitDepthOverflow{ "bit depth exceeds limits of type" };
 		}
 
 		bool is_greyscale() const
@@ -489,7 +504,7 @@ private:
 	void convert_colorspace(const zimg::colorspace::ColorspaceDefinition &colorspace, const params *params)
 	{
 		if (m_state.is_greyscale())
-			throw zimg::ZimgUnsupportedError{ "cannot convert colorspace of greyscale image" };
+			throw zimg::error::NoColorspaceConversion{ "cannot apply colorspace conversion to greyscale image" };
 
 		std::unique_ptr<zimg::IZimgFilter> filter;
 		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
@@ -632,7 +647,7 @@ public:
 	void set_source(const state &source)
 	{
 		if (m_dirty || m_graph)
-			throw zimg::ZimgLogicError{ "source already set" };
+			throw zimg::error::InternalError{ "source already set" };
 
 		source.validate();
 
@@ -643,11 +658,11 @@ public:
 	zimg::FilterGraph *build(const state &target, const params *params)
 	{
 		if (m_dirty || !m_graph)
-			throw zimg::ZimgLogicError{ "graph already built" };
+			throw zimg::error::InternalError{ "graph already built" };
 		if (m_state.parity != target.parity)
-			throw zimg::ZimgUnsupportedError{ "cannot convert between field parity" };
+			throw zimg::error::NoFieldParityConversion{ "conversion between field parity not supported" };
 		if (m_state.is_greyscale() && !target.is_greyscale())
-			throw zimg::ZimgUnsupportedError{ "cannot convert between greyscale and color image" };
+			throw zimg::error::NoColorspaceConversion{ "conversion between greyscale and color image not supported" };
 
 		target.validate();
 		convert_depth(zimg::default_pixel_format(select_working_type(target)), params);
@@ -768,8 +783,8 @@ unsigned zimg2_select_buffer_mask(unsigned count)
   zimg_error_code_e ret = ZIMG_ERROR_SUCCESS; \
   try {
 #define EX_END \
-  } catch (const zimg::ZimgException &e) { \
-    ret = handle_exception(e); \
+  } catch (const zimg::error::Exception &) { \
+    ret = handle_exception(std::current_exception()); \
   } \
   return ret;
 
@@ -912,8 +927,8 @@ zimg_filter_graph *zimg2_filter_graph_build(const zimg_image_format *src_format,
 
 		builder.set_source(src_state);
 		return builder.build(dst_state, params ? &graph_params : nullptr);
-	} catch (const zimg::ZimgException &e) {
-		handle_exception(e);
+	} catch (const zimg::error::Exception &) {
+		handle_exception(std::current_exception());
 		return nullptr;
 	} catch (const std::bad_alloc &e) {
 		handle_exception(e);

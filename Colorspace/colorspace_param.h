@@ -81,7 +81,7 @@ bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
  *
  * @param matrix matrix coefficients
  * @return conversion function as matrix
- * @throws ZimgIllegalArgument on unsupported matrix
+ * @throws IllegalArgument on invalid matrix
  */
 Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix);
 
@@ -97,7 +97,7 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix);
  *
  * @param primaries primaries
  * @param conversion function as matrix
- * @throws ZimgIllegalArgument on unsupported primaries
+ * @throws IllegalArgument on invalid primaries
  */
 Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries);
 

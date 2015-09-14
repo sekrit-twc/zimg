@@ -74,7 +74,7 @@ PixelAdapter *create_pixel_adapter(CPUClass cpu);
  * @param matrix matrix coefficients
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
- * @throws ZimgIllegalArgument on unsupported matrix
+ * @throws IllegalArgument on unsupported matrix
  */
 Operation *create_ncl_yuv_to_rgb_operation(MatrixCoefficients matrix, CPUClass cpu);
 
@@ -91,7 +91,7 @@ Operation *create_ncl_rgb_to_yuv_operation(MatrixCoefficients matrix, CPUClass c
  * @param transfer transfer characteristics
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
- * @throws ZimgIllegalArgument on unsupported transfer
+ * @throws IllegalArgument on unsupported transfer
  */
 Operation *create_gamma_to_linear_operation(TransferCharacteristics transfer, CPUClass cpu);
 
@@ -122,7 +122,7 @@ Operation *create_2020_cl_rgb_to_yuv_operation(CPUClass cpu);
  * @param primaries_in input primaries
  * @param primaries_out output primaries
  * @param cpu create operation optimized for given cpu
- * @throws ZimgIlegalArgument on unsupported primaries
+ * @throws IllegalArgument on unsupported primaries
  */
 Operation *create_gamut_operation(ColorPrimaries primaries_in, ColorPrimaries primaries_out, CPUClass cpu);
 

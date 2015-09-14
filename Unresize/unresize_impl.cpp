@@ -17,12 +17,12 @@ public:
 
 	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
+		throw zimg::error::UnsupportedOperation{ "f16 not supported in C impl" };
 	}
 
 	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
+		throw zimg::error::UnsupportedOperation{ "f16 not supported in C impl" };
 	}
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override
@@ -62,9 +62,9 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 	UnresizeImpl *ret = nullptr;
 
 	if (dst_width == src_width && dst_height == src_height)
-		throw ZimgIllegalArgument("input dimensions must differ from output");
+		throw zimg::error::IllegalArgument("input dimensions must differ from output");
 	if (dst_width > src_width || dst_height > src_height)
-		throw ZimgIllegalArgument("input dimension must be greater than output");
+		throw zimg::error::IllegalArgument("input dimension must be greater than output");
 
 	if (dst_width != src_width)
 		hcontext = create_bilinear_context(dst_width, src_width, shift_w);

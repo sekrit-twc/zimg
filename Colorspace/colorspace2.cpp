@@ -9,30 +9,16 @@
 namespace zimg {;
 namespace colorspace {;
 
-namespace {;
-
-bool is_valid_csp(const ColorspaceDefinition &csp)
-{
-	ColorspaceConversion2 c;
-	return !(csp.matrix == MatrixCoefficients::MATRIX_2020_CL && csp.transfer == TransferCharacteristics::TRANSFER_LINEAR);
-}
-
-} // namespace
-
-
 ColorspaceConversion2::ColorspaceConversion2(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu)
 try :
 	m_width{ width },
 	m_height{ height }
 {
-	if (!is_valid_csp(in) || !is_valid_csp(out))
-		throw ZimgIllegalArgument{ "invalid colorspace definition" };
-
 	for (const auto &func : get_operation_path(in, out)) {
 		m_operations.emplace_back(func(cpu));
 	}
 } catch (const std::bad_alloc &) {
-	throw ZimgOutOfMemory{};
+	throw zimg::error::OutOfMemory{};
 }
 
 ZimgFilterFlags ColorspaceConversion2::get_flags() const

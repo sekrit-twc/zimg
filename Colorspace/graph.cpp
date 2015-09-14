@@ -60,7 +60,7 @@ class ColorspaceGraph {
 	{
 		auto it = std::find(m_vertices.begin(), m_vertices.end(), csp);
 		if (it == m_vertices.end())
-			throw ZimgLogicError{ "colorspace not present in graph" };
+			throw zimg::error::NoColorspaceConversion{ "colorspace not present in database" };
 
 		return it - m_vertices.begin();
 	}
@@ -108,7 +108,7 @@ class ColorspaceGraph {
 			}
 		}
 
-		throw ZimgLogicError{ "no path between colorspaces" };
+		throw zimg::error::NoColorspaceConversion{ "no path between colorspaces" };
 	}
 
 	ColorspaceGraph()
