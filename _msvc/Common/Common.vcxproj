@@ -32,6 +32,7 @@
     <ClInclude Include="..\..\Common\pixel.h" />
     <ClInclude Include="..\..\Common\plane.h" />
     <ClInclude Include="..\..\Common\static_map.h" />
+    <ClInclude Include="..\..\Common\zassert.h" />
     <ClInclude Include="..\..\Common\zfilter.h" />
     <ClInclude Include="..\..\Common\ztypes.h" />
   </ItemGroup>
