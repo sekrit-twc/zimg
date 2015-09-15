@@ -169,15 +169,15 @@ Example_api_example_SOURCES = Example/api_example.cpp
 Example_api_example_LDADD = $(EXAMPLE_LDADD)
 
 Example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-Example_api_example_c_SOURCES = Example/api_example_c.c
+Example_api_example_c_SOURCES = Example/api_example_c.c Example/.dummy.cpp
 Example_api_example_c_LDADD = $(EXAMPLE_LDADD)
 
 Example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 Example_interlace_example_SOURCES = Example/interlace_example.cpp
 Example_interlace_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
-						   
-						   
+
+
 if TESTAPP
 noinst_PROGRAMS += zimg-test
 noinst_LTLIBRARIES += libtestcommon.la
