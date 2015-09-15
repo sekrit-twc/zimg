@@ -271,6 +271,8 @@ std::tuple<unsigned, unsigned, unsigned> RandomDither::get_dither_params(unsigne
 	return std::make_tuple(0U, offset, RAND_NUM);
 }
 
+const unsigned RandomDither::RAND_NUM;
+
 
 ErrorDiffusion::ErrorDiffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
 	m_func{},
