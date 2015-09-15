@@ -141,7 +141,7 @@ template <class T>
 void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned first_line, unsigned last_line, unsigned first_col, unsigned last_col)
 {
 	for (unsigned n = first_line; n < last_line; ++n) {
-		std::copy_n((const char *)src[n] + first_col, last_col - first_col, (char *)dst[n]);
+		std::copy_n((const char *)src[n] + first_col, last_col - first_col, (char *)dst[n] + first_col);
 	}
 }
 
