@@ -729,6 +729,10 @@ public:
 		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, parent_uv, filter });
 		m_node = m_node_set.back().get();
 
+		parent->add_ref();
+		if (parent_uv)
+			parent_uv->add_ref();
+
 		if (flags.color)
 			m_node_uv = m_node;
 	}
@@ -745,6 +749,7 @@ public:
 
 		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER_UV, m_id_counter++, parent, filter });
 		m_node_uv = m_node_set.back().get();
+		parent->add_ref();
 	}
 
 	void complete()
