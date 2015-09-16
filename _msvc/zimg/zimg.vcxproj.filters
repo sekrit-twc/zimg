@@ -1,0 +1,351 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\API">
+      <UniqueIdentifier>{8271d8a6-f76f-40f4-8e8c-9ef0e553e9ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\API">
+      <UniqueIdentifier>{289c7a39-8e39-4358-90d6-d6633f462111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{19b99e51-a02c-40fa-a38e-9b8efb20eaec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common">
+      <UniqueIdentifier>{43981eb7-75d4-4956-aa0b-78d0dcc8ef93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Colorspace">
+      <UniqueIdentifier>{4d03e1cb-b474-45f4-a4d8-35a930a754f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Colorspace">
+      <UniqueIdentifier>{18d6242f-0636-4b59-8ace-dbf2e65154cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Depth">
+      <UniqueIdentifier>{412cdbe8-4c08-4630-a73b-4c53d4b127aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Depth">
+      <UniqueIdentifier>{03402363-a191-4be0-ba18-b4cc5d361785}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Resize">
+      <UniqueIdentifier>{21b5f66f-a197-4d9d-88ed-b2f13e917b42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unresize">
+      <UniqueIdentifier>{cfae0a30-5d6d-495e-9de7-dfda15a56e4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resize">
+      <UniqueIdentifier>{d905d84f-429b-4b6b-91ed-1b6d4f8d3752}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unresize">
+      <UniqueIdentifier>{d663766c-e085-4347-a5fd-ca2fca946145}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\API\zimg.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg++.hpp">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg2.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg2++.hpp">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg3.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg3++.hpp">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\align.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\alloc.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\cpuinfo.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\except.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\filtergraph.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\linebuffer.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\matrix.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\mux_filter.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\osdep.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\pair_filter.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\pixel.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\plane.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\static_map.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\zassert.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\zfilter.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\ztypes.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\colorspace.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\colorspace_param.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\colorspace2.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\graph.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\matrix3.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\operation.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\operation_impl.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Colorspace\operation_impl_x86.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert_x86.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert2.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither_impl.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither_impl_x86.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither2.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\error_diffusion.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\quantize.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\quantize_avx2.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\quantize_sse2.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\filter.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl_x86.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl2.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize2.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\bilinear.h">
+      <Filter>Header Files\Unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\unresize.h">
+      <Filter>Header Files\Unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\unresize_impl.h">
+      <Filter>Header Files\Unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Unresize\unresize_impl_x86.h">
+      <Filter>Header Files\Unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\copy_filter.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth2.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\API\zimg.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\API\zimg2.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\API\zimg3.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\filtergraph.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\mux_filter.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pair_filter.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\colorspace.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\colorspace_param.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\colorspace2.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\graph.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\matrix3.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\operation.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\operation_impl.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\operation_impl_avx2.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp">
+      <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert_avx2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert_sse2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_impl.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_impl_avx2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_impl_sse2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_impl_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\error_diffusion.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\filter.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize2.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\bilinear.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_avx2.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_sse2.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Unresize\unresize_impl_x86.cpp">
+      <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C8629E57-4D6F-40FA-82FC-B39824195932}</ProjectGuid>
+    <RootNamespace>zimg</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>z</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>z</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>z</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>z</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\API\zimg++.hpp" />
+    <ClInclude Include="..\..\API\zimg.h" />
+    <ClInclude Include="..\..\API\zimg2++.hpp" />
+    <ClInclude Include="..\..\API\zimg2.h" />
+    <ClInclude Include="..\..\API\zimg3++.hpp" />
+    <ClInclude Include="..\..\API\zimg3.h" />
+    <ClInclude Include="..\..\Colorspace\colorspace.h" />
+    <ClInclude Include="..\..\Colorspace\colorspace2.h" />
+    <ClInclude Include="..\..\Colorspace\colorspace_param.h" />
+    <ClInclude Include="..\..\Colorspace\graph.h" />
+    <ClInclude Include="..\..\Colorspace\matrix3.h" />
+    <ClInclude Include="..\..\Colorspace\operation.h" />
+    <ClInclude Include="..\..\Colorspace\operation_impl.h" />
+    <ClInclude Include="..\..\Colorspace\operation_impl_x86.h" />
+    <ClInclude Include="..\..\Common\align.h" />
+    <ClInclude Include="..\..\Common\alloc.h" />
+    <ClInclude Include="..\..\Common\copy_filter.h" />
+    <ClInclude Include="..\..\Common\cpuinfo.h" />
+    <ClInclude Include="..\..\Common\except.h" />
+    <ClInclude Include="..\..\Common\filtergraph.h" />
+    <ClInclude Include="..\..\Common\linebuffer.h" />
+    <ClInclude Include="..\..\Common\matrix.h" />
+    <ClInclude Include="..\..\Common\mux_filter.h" />
+    <ClInclude Include="..\..\Common\osdep.h" />
+    <ClInclude Include="..\..\Common\pair_filter.h" />
+    <ClInclude Include="..\..\Common\pixel.h" />
+    <ClInclude Include="..\..\Common\plane.h" />
+    <ClInclude Include="..\..\Common\static_map.h" />
+    <ClInclude Include="..\..\Common\zassert.h" />
+    <ClInclude Include="..\..\Common\zfilter.h" />
+    <ClInclude Include="..\..\Common\ztypes.h" />
+    <ClInclude Include="..\..\Depth\depth.h" />
+    <ClInclude Include="..\..\Depth\depth2.h" />
+    <ClInclude Include="..\..\Depth\depth_convert.h" />
+    <ClInclude Include="..\..\Depth\depth_convert2.h" />
+    <ClInclude Include="..\..\Depth\depth_convert_x86.h" />
+    <ClInclude Include="..\..\Depth\dither.h" />
+    <ClInclude Include="..\..\Depth\dither2.h" />
+    <ClInclude Include="..\..\Depth\dither_impl.h" />
+    <ClInclude Include="..\..\Depth\dither_impl_x86.h" />
+    <ClInclude Include="..\..\Depth\error_diffusion.h" />
+    <ClInclude Include="..\..\Depth\quantize.h" />
+    <ClInclude Include="..\..\Depth\quantize_avx2.h" />
+    <ClInclude Include="..\..\Depth\quantize_sse2.h" />
+    <ClInclude Include="..\..\Resize\filter.h" />
+    <ClInclude Include="..\..\Resize\resize.h" />
+    <ClInclude Include="..\..\Resize\resize2.h" />
+    <ClInclude Include="..\..\Resize\resize_impl.h" />
+    <ClInclude Include="..\..\Resize\resize_impl2.h" />
+    <ClInclude Include="..\..\Resize\resize_impl_x86.h" />
+    <ClInclude Include="..\..\Unresize\bilinear.h" />
+    <ClInclude Include="..\..\Unresize\unresize.h" />
+    <ClInclude Include="..\..\Unresize\unresize_impl.h" />
+    <ClInclude Include="..\..\Unresize\unresize_impl_x86.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\API\zimg.cpp" />
+    <ClCompile Include="..\..\API\zimg2.cpp" />
+    <ClCompile Include="..\..\API\zimg3.cpp" />
+    <ClCompile Include="..\..\Colorspace\colorspace.cpp" />
+    <ClCompile Include="..\..\Colorspace\colorspace2.cpp" />
+    <ClCompile Include="..\..\Colorspace\colorspace_param.cpp" />
+    <ClCompile Include="..\..\Colorspace\graph.cpp" />
+    <ClCompile Include="..\..\Colorspace\matrix3.cpp" />
+    <ClCompile Include="..\..\Colorspace\operation.cpp" />
+    <ClCompile Include="..\..\Colorspace\operation_impl.cpp" />
+    <ClCompile Include="..\..\Colorspace\operation_impl_avx2.cpp" />
+    <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp" />
+    <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp" />
+    <ClCompile Include="..\..\Common\filtergraph.cpp" />
+    <ClCompile Include="..\..\Common\mux_filter.cpp" />
+    <ClCompile Include="..\..\Common\pair_filter.cpp" />
+    <ClCompile Include="..\..\Depth\depth.cpp" />
+    <ClCompile Include="..\..\Depth\depth2.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert2.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert_avx2.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert_sse2.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert_x86.cpp" />
+    <ClCompile Include="..\..\Depth\dither.cpp" />
+    <ClCompile Include="..\..\Depth\dither2.cpp" />
+    <ClCompile Include="..\..\Depth\dither_impl.cpp" />
+    <ClCompile Include="..\..\Depth\dither_impl_avx2.cpp" />
+    <ClCompile Include="..\..\Depth\dither_impl_sse2.cpp" />
+    <ClCompile Include="..\..\Depth\dither_impl_x86.cpp" />
+    <ClCompile Include="..\..\Depth\error_diffusion.cpp" />
+    <ClCompile Include="..\..\Resize\filter.cpp" />
+    <ClCompile Include="..\..\Resize\resize.cpp" />
+    <ClCompile Include="..\..\Resize\resize2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp" />
+    <ClCompile Include="..\..\Unresize\bilinear.cpp" />
+    <ClCompile Include="..\..\Unresize\unresize.cpp" />
+    <ClCompile Include="..\..\Unresize\unresize_impl.cpp" />
+    <ClCompile Include="..\..\Unresize\unresize_impl_avx2.cpp" />
+    <ClCompile Include="..\..\Unresize\unresize_impl_sse2.cpp" />
+    <ClCompile Include="..\..\Unresize\unresize_impl_x86.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
