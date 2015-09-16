@@ -216,59 +216,50 @@ private:
 		}
 	}
 
-	void simulate_source(SimulationState *sim, unsigned i, bool uv)
+	void simulate_source(SimulationState *sim, unsigned first, unsigned last, bool uv)
 	{
 		unsigned step = 1 << m_data.source_info.subsample_h;
-		unsigned line = uv ? i * step : i;
 		unsigned pos = sim->pos(m_id);
 
-		if (pos > i)
-			set_cache_lines(pos - line);
-		else
-			sim->pos(m_id) = mod(line, step) + step;
+		first <<= uv ? m_data.source_info.subsample_h : 0;
+		last <<= uv ? m_data.source_info.subsample_h : 0;
+
+		if (pos < last)
+			pos = mod(last, step) + step;
+
+		sim->pos(m_id) = pos;
+		set_cache_lines(pos - first);
 	}
 
-	void simulate_node_uv(SimulationState *sim, unsigned i)
+	void simulate_node_uv(SimulationState *sim, unsigned first, unsigned last)
 	{
 		unsigned pos = sim->pos(m_id);
 
-		if (pos > i) {
-			set_cache_lines(pos - i);
-		} else {
-			for (; pos <= i; pos += m_data.node_info.step) {
-				auto range = m_filter->get_required_row_range(pos);
+		for (; pos < last; pos += m_data.node_info.step) {
+			auto range = m_filter->get_required_row_range(pos);
 
-				for (unsigned ii = range.first; ii < range.second; ++ii) {
-					m_data.node_info.parent->simulate(sim, ii, true);
-				}
-			}
-
-			set_cache_lines(pos - i);
-			sim->pos(m_id) = pos;
+			m_data.node_info.parent->simulate(sim, range.first, range.second, true);
 		}
+
+		sim->pos(m_id) = pos;
+		set_cache_lines(pos - first);
 	}
 
-	void simulate_node(SimulationState *sim, unsigned i)
+	void simulate_node(SimulationState *sim, unsigned first, unsigned last)
 	{
 		unsigned pos = sim->pos(m_id);
 
-		if (pos > i) {
-			set_cache_lines(pos - i);
-		} else {
-			for (; pos <= i; pos += m_data.node_info.step) {
-				auto range = m_filter->get_required_row_range(pos);
+		for (; pos < last; pos += m_data.node_info.step) {
+			auto range = m_filter->get_required_row_range(pos);
 
-				for (unsigned ii = range.first; ii < range.second; ++ii) {
-					m_data.node_info.parent->simulate(sim, ii, false);
+			m_data.node_info.parent->simulate(sim, range.first, range.second, false);
 
-					if (m_data.node_info.parent_uv)
-						m_data.node_info.parent_uv->simulate(sim, ii, true);
-				}
-			}
-
-			set_cache_lines(pos - i);
-			sim->pos(m_id) = pos;
+			if (m_data.node_info.parent_uv)
+				m_data.node_info.parent_uv->simulate(sim, range.first, range.second, true);
 		}
+
+		sim->pos(m_id) = pos;
+		set_cache_lines(pos - first);
 	}
 
 	void init_context_node_uv(LinearAllocator &alloc, node_context *context) const
@@ -506,14 +497,14 @@ public:
 		return m_ref_count;
 	}
 
-	void simulate(SimulationState *sim, unsigned i, bool uv = false)
+	void simulate(SimulationState *sim, unsigned first, unsigned last, bool uv = false)
 	{
 		if (m_is_source)
-			simulate_source(sim, i, uv);
+			simulate_source(sim, first, last, uv);
 		else if (m_data.node_info.is_uv)
-			simulate_node_uv(sim, i);
+			simulate_node_uv(sim, first, last);
 		else
-			simulate_node(sim, i);
+			simulate_node(sim, first, last);
 	}
 
 	bool entire_row() const
@@ -786,12 +777,10 @@ public:
 		SimulationState sim{ m_id_counter };
 
 		for (unsigned i = 0; i < node_attr.height; i += (1 << subsample_h)) {
-			for (unsigned ii = i; ii < i + (1 << subsample_h); ++ii) {
-				m_node->simulate(&sim, ii);
-			}
+			m_node->simulate(&sim, i, i + (1 << subsample_h));
 
 			if (m_node_uv)
-				m_node_uv->simulate(&sim, i >> subsample_h, true);
+				m_node_uv->simulate(&sim, i >> subsample_h, (i >> subsample_h) + 1, true);
 		}
 
 		m_subsample_w = subsample_w;
