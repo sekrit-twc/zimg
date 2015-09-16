@@ -172,7 +172,9 @@ class GraphNode {
 			bool is_uv;
 		} node_info;
 
-		data_union() {};
+		data_union(source_tag) : source_info{} {};
+		data_union(filter_tag) : node_info{} {};
+		data_union(filter_uv_tag) : node_info{} {};
 	} m_data;
 public:
 	static const source_tag SOURCE;
@@ -447,8 +449,8 @@ private:
 		return &static_cast<const ZimgImageBufferConst &>(*output_buffer);
 	}
 public:
-	GraphNode(source_tag, unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
-		m_data{},
+	GraphNode(source_tag tag, unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
+		m_data{ tag },
 		m_cache_lines{ 1U << subsample_h },
 		m_ref_count{},
 		m_id{ id },
@@ -462,8 +464,8 @@ public:
 		m_data.source_info.color = color;
 	}
 
-	GraphNode(filter_tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, IZimgFilter *filter) :
-		m_data{},
+	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, IZimgFilter *filter) :
+		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
 		m_id{ id },
@@ -478,14 +480,15 @@ public:
 		m_filter.reset(filter);
 	}
 
-	GraphNode(filter_uv_tag, unsigned id, GraphNode *parent, IZimgFilter *filter) :
-		m_data{},
+	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, IZimgFilter *filter) :
+		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
 		m_id{ id },
 		m_is_source{ false }
 	{
 		m_data.node_info.parent = parent;
+		m_data.node_info.parent_uv = nullptr;
 		m_data.node_info.flags = filter->get_flags();
 		m_data.node_info.step = filter->get_simultaneous_lines();
 		m_data.node_info.is_uv = true;
