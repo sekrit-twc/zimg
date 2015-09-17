@@ -2,6 +2,7 @@
 #include <memory>
 #include "Common/align.h"
 #include "Common/alloc.h"
+#include "Common/copy_filter.h"
 #include "Common/linebuffer.h"
 #include "Common/pair_filter.h"
 #include "Common/pixel.h"
@@ -20,42 +21,6 @@ bool resize_h_first(double xscale, double yscale)
 
 	return h_first_cost < v_first_cost;
 }
-
-class CopyFilter : public ZimgFilter {
-	unsigned m_width;
-	unsigned m_height;
-	PixelType m_type;
-public:
-	CopyFilter(unsigned width, unsigned height, PixelType type) :
-		m_width{ width },
-		m_height{ height },
-		m_type{ type }
-	{
-	}
-
-	ZimgFilterFlags get_flags() const override
-	{
-		ZimgFilterFlags flags{};
-
-		flags.same_row = 1;
-		flags.in_place = 1;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_type };
-	}
-
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
-	{
-		LineBuffer<const void> src_buf{ src };
-		LineBuffer<void> dst_buf{ dst };
-
-		copy_buffer_lines(src_buf, dst_buf, i, i + 1, left * pixel_size(m_type), right * pixel_size(m_type));
-	}
-};
 
 } // namespace
 

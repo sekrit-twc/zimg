@@ -34,6 +34,7 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Colorspace/operation_impl.h \
 					 Common/align.h \
 					 Common/alloc.h \
+					 Common/copy_filter.h \
 					 Common/cpuinfo.h \
 					 Common/except.h \
 					 Common/filtergraph.h \

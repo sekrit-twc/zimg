@@ -134,14 +134,19 @@ const LineBuffer<T> &buffer_cast(const LineBuffer<U> &x)
  * @param src input buffer
  * @param dst output buffer
  * @param bytes number of bytes per line
- * @param first index of top line
- * @param last index of bottom line
+ * @param first_line index of top line
+ * @param last_line index of bottom line
+ * @param first_byte offset of first byte in line
+ * @param last_byte offset of last byte in line
  */
 template <class T>
-void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned first_line, unsigned last_line, unsigned first_col, unsigned last_col)
+void copy_buffer_lines(const LineBuffer<const T> &src, LineBuffer<T> &dst, unsigned first_line, unsigned last_line, unsigned first_byte, unsigned last_byte)
 {
 	for (unsigned n = first_line; n < last_line; ++n) {
-		std::copy_n((const char *)src[n] + first_col, last_col - first_col, (char *)dst[n] + first_col);
+		const char *src_p = reinterpret_cast<const char *>(src[n]);
+		char *dst_p = reinterpret_cast<char *>(dst[n]);
+
+		std::copy(src_p + first_byte, src_p + last_byte, dst_p + first_byte);
 	}
 }
 

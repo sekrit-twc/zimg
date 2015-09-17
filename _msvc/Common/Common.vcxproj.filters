@@ -63,6 +63,9 @@
     <ClInclude Include="..\..\Common\zassert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\copy_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\filtergraph.cpp">

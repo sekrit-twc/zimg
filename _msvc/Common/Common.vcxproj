@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\Common\align.h" />
     <ClInclude Include="..\..\Common\alloc.h" />
+    <ClInclude Include="..\..\Common\copy_filter.h" />
     <ClInclude Include="..\..\Common\cpuinfo.h" />
     <ClInclude Include="..\..\Common\except.h" />
     <ClInclude Include="..\..\Common\filtergraph.h" />
