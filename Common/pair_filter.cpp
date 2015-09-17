@@ -63,9 +63,9 @@ unsigned PairFilter::get_cache_line_count() const
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return m_first_attr.height;
 	else if (m_second_flags.same_row && m_first_step == m_second_step)
-		return m_second_buffering;
+		return select_zimg_buffer_mask(m_second_buffering) + 1;
 	else
-		return m_first_step + m_second_buffering - 1;
+		return select_zimg_buffer_mask(m_first_step + m_second_buffering - 1) + 1;
 }
 
 size_t PairFilter::get_cache_size_one_plane() const
