@@ -68,7 +68,7 @@ public:
 			throw std::bad_alloc{};
 
 		std::copy(init.begin(), init.end(), m_head.array.begin());
-		std::sort(m_head.array.begin(), m_head.array.begin() + Sz, m_head.get_value_comp());
+		std::sort(m_head.array.begin(), m_head.array.begin() + init.size(), m_head.get_value_comp());
 	}
 
 	size_type size() const
