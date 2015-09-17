@@ -522,12 +522,15 @@ public:
 		return entire_row;
 	}
 
-	IZimgFilter::image_attributes get_image_attributes() const
+	IZimgFilter::image_attributes get_image_attributes(bool uv = false) const
 	{
-		if (m_is_source)
-			return{ m_data.source_info.width, m_data.source_info.height, m_data.source_info.type };
-		else
+		if (m_is_source) {
+			unsigned width = m_data.source_info.width >> (uv ? m_data.source_info.subsample_w : 0);
+			unsigned height = m_data.source_info.height >> (uv ? m_data.source_info.subsample_h : 0);
+			return{ width, height, m_data.source_info.type };
+		} else {
 			return m_filter->get_image_attributes();
+		}
 	}
 
 	size_t get_context_size() const
@@ -750,8 +753,8 @@ public:
 	{
 		check_incomplete();
 
-		auto node_attr = m_node->get_image_attributes();
-		auto node_attr_uv = m_node_uv ? m_node_uv->get_image_attributes() : node_attr;
+		auto node_attr = m_node->get_image_attributes(false);
+		auto node_attr_uv = m_node_uv ? m_node_uv->get_image_attributes(true) : node_attr;
 		unsigned subsample_w = 0;
 		unsigned subsample_h = 0;
 
