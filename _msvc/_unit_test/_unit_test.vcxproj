@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\UnitTest\Common\copy_filter_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\filtergraph_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Common\filter_validator.cpp" />
     <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c" />
     <ClCompile Include="..\..\UnitTest\main.cpp" />
   </ItemGroup>
