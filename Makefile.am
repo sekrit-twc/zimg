@@ -90,7 +90,7 @@ include_HEADERS = API/zimg.h \
 				  API/zimg3++.hpp
 
 
-libzimg_la_LDFLAGS = -no-undefined -version-info 1
+libzimg_la_LDFLAGS = -no-undefined -version-info 2
 
 
 vszimg_la_SOURCES = vszimg/vszimg.c \
