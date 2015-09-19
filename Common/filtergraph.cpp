@@ -188,7 +188,7 @@ private:
 		last <<= uv ? m_data.source_info.subsample_h : 0;
 
 		if (pos < last)
-			pos = mod(last, step) + step;
+			pos = mod(last - 1, step) + step;
 
 		sim->pos(m_id) = pos;
 		set_cache_lines(pos - first);
