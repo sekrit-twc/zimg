@@ -16,6 +16,21 @@
     <Filter Include="Source Files\Common">
       <UniqueIdentifier>{86276802-4df9-45cb-9ce2-f649ac779b0c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{fd883c35-b1ef-4927-9fe5-17c821f75cfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Extra">
+      <UniqueIdentifier>{ca29a763-cb63-4d3f-95f1-1475b2f0cc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Extra">
+      <UniqueIdentifier>{afa47098-0626-408e-8476-68caddb67045}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Extra\sha1">
+      <UniqueIdentifier>{c0a84f8e-bc1b-49f6-baee-5dfddfafe528}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Extra\sha1">
+      <UniqueIdentifier>{234ab586-8a2a-482d-9b2f-b83cbda196ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\UnitTest\main.cpp">
@@ -24,5 +39,16 @@
     <ClCompile Include="..\..\UnitTest\Common\filtergraph_test.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c">
+      <Filter>Source Files\Extra\sha1</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h">
+      <Filter>Header Files\Extra\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UnitTest\Extra\sha1\config.h">
+      <Filter>Header Files\Extra\sha1</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,7 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\UnitTest\Common\filtergraph_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c" />
     <ClCompile Include="..\..\UnitTest\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\UnitTest\Common\filter_validator.h" />
+    <ClInclude Include="..\..\UnitTest\Extra\sha1\config.h" />
+    <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}</ProjectGuid>
@@ -78,7 +84,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -92,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -108,7 +114,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -126,7 +132,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..;$(SolutionDir)..\UnitTest;$(SolutionDir)..\UnitTest\Extra;$(SolutionDir)..\UnitTest\Extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
