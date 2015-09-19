@@ -30,14 +30,14 @@ static const unsigned short ORDERED_DITHERS[ORDERED_DITHER_NUM] = {
 };
 
 template <class T, class U>
-void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither_len, const void *src, void *dst, float scale, float offset, unsigned bits, unsigned width)
+void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither_mask, const void *src, void *dst, float scale, float offset, unsigned bits, unsigned width)
 {
 	const T *src_p = reinterpret_cast<const T *>(src);
 	U *dst_p = reinterpret_cast<U *>(dst);
 
 	for (unsigned i = 0; i < width; ++i) {
 		float x = static_cast<float>(src_p[i]) * scale + offset;
-		float d = dither[(dither_offset + i) % dither_len];
+		float d = dither[(dither_offset + i) & dither_mask];
 
 		x += d;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
@@ -211,7 +211,7 @@ void OrderedDitherBase::process(void *ctx, const ZimgImageBufferConst &src, cons
 		auto dither_params = get_dither_params(i, left);
 		const float *dither = m_dither.data() + std::get<0>(dither_params);
 		unsigned dither_offset = std::get<1>(dither_params);
-		unsigned dither_len = std::get<2>(dither_params);
+		unsigned dither_mask = std::get<2>(dither_params);
 
 		if (m_f16c) {
 			m_f16c(src_p, tmp, right - left);
@@ -219,7 +219,7 @@ void OrderedDitherBase::process(void *ctx, const ZimgImageBufferConst &src, cons
 		}
 
 		if (m_func)
-			m_func(dither, dither_offset, dither_len, src_p, dst_p, m_scale, m_offset, m_depth, right - left);
+			m_func(dither, dither_offset, dither_mask, src_p, dst_p, m_scale, m_offset, m_depth, right - left);
 	}
 }
 
@@ -232,7 +232,7 @@ NoneDither::NoneDither(unsigned width, unsigned height, const PixelFormat &pixel
 
 std::tuple<unsigned, unsigned, unsigned> NoneDither::get_dither_params(unsigned i, unsigned left) const
 {
-	return std::make_tuple(0U, 0U, 16U);
+	return std::make_tuple(0U, 0U, 15U);
 }
 
 BayerDither::BayerDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
@@ -247,7 +247,7 @@ BayerDither::BayerDither(unsigned width, unsigned height, const PixelFormat &pix
 
 std::tuple<unsigned, unsigned, unsigned> BayerDither::get_dither_params(unsigned i, unsigned left) const
 {
-	return std::make_tuple((i % ORDERED_DITHER_SIZE) * ORDERED_DITHER_SIZE, left % ORDERED_DITHER_SIZE, ORDERED_DITHER_SIZE);
+	return std::make_tuple((i % ORDERED_DITHER_SIZE) * ORDERED_DITHER_SIZE, left % ORDERED_DITHER_SIZE, ORDERED_DITHER_SIZE - 1);
 }
 
 RandomDither::RandomDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
@@ -268,7 +268,7 @@ std::tuple<unsigned, unsigned, unsigned> RandomDither::get_dither_params(unsigne
 	unsigned offset = mt() % (RAND_NUM / AlignmentOf<float>::value);
 
 //	return std::make_tuple((i % 64) * 64, left % 64, 64);
-	return std::make_tuple(0U, offset, RAND_NUM);
+	return std::make_tuple(0U, offset, RAND_NUM - 1);
 }
 
 const unsigned RandomDither::RAND_NUM;
