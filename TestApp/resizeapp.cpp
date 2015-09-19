@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include "Common/cpuinfo.h"
+#include "Common/pair_filter.h"
 #include "Common/pixel.h"
 #include "Common/plane.h"
 #include "Common/static_map.h"
@@ -143,10 +144,20 @@ int resize_main(int argc, const char **argv)
 	if (!c.filter)
 		c.filter.reset(new resize::BilinearFilter{});
 
-	std::unique_ptr<IZimgFilter> resize{ resize::create_resize2(*c.filter, c.pixtype, pixel_size(c.pixtype) * 8, in.width(), in.height(), c.width, c.height,
-	                                                            c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu) };
+	auto filter_pair = resize::create_resize2(*c.filter, c.pixtype, pixel_size(c.pixtype) * 8, in.width(), in.height(), c.width, c.height,
+	                                          c.shift_w, c.shift_h, c.sub_w, c.sub_h, c.cpu);
+	std::unique_ptr<IZimgFilter> filter1{ filter_pair.first };
+	std::unique_ptr<IZimgFilter> filter2{ filter_pair.second };
 
-	execute(resize.get(), in, out, c.times, c.pixtype);
+	if (filter2) {
+		std::unique_ptr<IZimgFilter> pair_filter{ new PairFilter{ filter1.get(), filter2.get() } };
+		filter1.release();
+		filter2.release();
+
+		filter1 = std::move(pair_filter);
+	}
+
+	execute(filter1.get(), in, out, c.times, c.pixtype);
 	write_frame_bmp(out, c.outfile);
 
 	return 0;

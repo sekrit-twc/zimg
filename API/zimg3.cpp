@@ -606,21 +606,30 @@ private:
 		                        ((m_state.subsample_w || subsample_w) && m_state.chroma_location_w != chroma_location_w) ||
 		                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h);
 
-		std::unique_ptr<zimg::IZimgFilter> filter;
-		std::unique_ptr<zimg::IZimgFilter> filter_uv;
+		std::unique_ptr<zimg::IZimgFilter> filter1;
+		std::unique_ptr<zimg::IZimgFilter> filter2;
+		std::unique_ptr<zimg::IZimgFilter> filter1_uv;
+		std::unique_ptr<zimg::IZimgFilter> filter2_uv;
 
 		if (do_resize_luma) {
 			double shift_h = luma_shift_factor(m_state.parity, m_state.height, height);
-
-			filter.reset(
-				zimg::resize::create_resize2(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
-				                             0.0, shift_h, m_state.width, m_state.height, cpu));
+			auto filter_pair = zimg::resize::create_resize2(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
+			                                                0.0, shift_h, m_state.width, m_state.height, cpu);
+			filter1.reset(filter_pair.first);
+			filter2.reset(filter_pair.second);
 
 			if (m_state.is_rgb()) {
-				std::unique_ptr<zimg::IZimgFilter> mux{ new zimg::MuxFilter{ filter.get(), nullptr } };
-				filter.release();
+				std::unique_ptr<zimg::IZimgFilter> mux;
 
-				filter = std::move(mux);
+				mux.reset(new zimg::MuxFilter{ filter1.get(), nullptr });
+				filter1.release();
+				filter1 = std::move(mux);
+
+				if (filter2) {
+					mux.reset(new zimg::MuxFilter{ filter2.get(), nullptr });
+					filter2.release();
+					filter2 = std::move(mux);
+				}
 			}
 		}
 		if (m_state.is_yuv() && do_resize_chroma) {
@@ -632,15 +641,20 @@ private:
 			unsigned chroma_width_out = width >> subsample_w;
 			unsigned chroma_height_out = height >> subsample_h;
 
-			filter_uv.reset(
-				zimg::resize::create_resize2(*resample_filter_uv, m_state.type, m_state.depth, chroma_width_in, chroma_height_in, chroma_width_out, chroma_height_out,
-				                             shift_w, shift_h, chroma_width_in, chroma_height_in, cpu));
+			auto filter_pair = zimg::resize::create_resize2(*resample_filter_uv, m_state.type, m_state.depth, chroma_width_in, chroma_height_in, chroma_width_out, chroma_height_out,
+			                                                shift_w, shift_h, chroma_width_in, chroma_height_in, cpu);
+			filter1_uv.reset(filter_pair.first);
+			filter2_uv.reset(filter_pair.second);
 		}
 
-		if (filter)
-			attach_filter(std::move(filter));
-		if (filter_uv)
-			attach_filter_uv(std::move(filter_uv));
+		if (filter1)
+			attach_filter(std::move(filter1));
+		if (filter2)
+			attach_filter(std::move(filter2));
+		if (filter1_uv)
+			attach_filter_uv(std::move(filter1_uv));
+		if (filter2_uv)
+			attach_filter_uv(std::move(filter2_uv));
 
 		m_state.width = width;
 		m_state.height = height;
