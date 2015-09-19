@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\UnitTest\Common\audit_buffer.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Common\mux_filter_test.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h">
