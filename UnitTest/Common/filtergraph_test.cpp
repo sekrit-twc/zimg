@@ -10,343 +10,32 @@
 #include "Common/zfilter.h"
 
 #include "gtest/gtest.h"
+#include "audit_buffer.h"
+#include "mock_filter.h"
 
 namespace {;
 
 template <class T>
-T splat_byte(unsigned char b)
-{
-	T ret;
-
-	for (size_t i = 0; i < sizeof(ret); ++i) {
-		reinterpret_cast<char *>(&ret)[i] = b;
-	}
-	return ret;
-}
-
-template <class T>
-class AuditImage {
-	zimg::AlignedVector<T> m_vector[3];
-	unsigned m_width[3];
-	unsigned m_height[3];
-	ptrdiff_t m_stride[3];
-	T *m_image_ptr[3];
-	T m_test_val[3] = { splat_byte<T>(0xCD), splat_byte<T>(0xCD), splat_byte<T>(0xCD) };
-	T m_guard_val = splat_byte<T>(0xFE);
-
-	void add_guard_bytes()
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			T *image_base = m_image_ptr[p];
-			ptrdiff_t stride_x = m_stride[p] / sizeof(T);
-
-			if (!image_base)
-				continue;
-
-			std::fill_n(image_base - stride_x, stride_x, m_guard_val);
-
-			for (unsigned i = 0; i < m_height[p]; ++i) {
-				T *line_base = image_base + i * stride_x;
-
-				std::fill_n(line_base - zimg::AlignmentOf<T>::value, zimg::AlignmentOf<T>::value, m_guard_val);
-				std::fill_n(line_base + m_width[p], stride_x - m_width[p], m_guard_val);
-			}
-
-			std::fill_n(image_base + m_height[p] * stride_x, stride_x, m_guard_val);
-		}
-	}
-
-	void check_guard_bytes()
-	{
-		const auto pred = [=](T x) { return x != m_guard_val; };
-
-		for (unsigned p = 0; p < 3; ++p) {
-			T *image_base = m_image_ptr[p];
-			ptrdiff_t stride_x = m_stride[p] / sizeof(T);
-
-			if (!image_base)
-				continue;
-
-			auto it = std::find_if(image_base - stride_x, image_base, pred);
-			ASSERT_TRUE(it == image_base) << "header guard bytes corrupted";
-
-			for (unsigned i = 0; i < m_height[p]; ++i) {
-				T *line_base = image_base + i * stride_x;
-
-				it = std::find_if(line_base - zimg::AlignmentOf<T>::value, line_base, pred);
-				ASSERT_TRUE(it == line_base) << "line guard header corrupted at: " << i;
-
-				it = std::find_if(line_base + m_width[p], line_base + stride_x, pred);
-				ASSERT_TRUE(it == line_base + stride_x) << "line guard footer corrupted at: " << i;
-			}
-
-			it = std::find_if(image_base + m_height[p] * stride_x, image_base + (m_height[p] + 1) * stride_x, pred);
-			ASSERT_TRUE(it == image_base + (m_height[p] + 1) * stride_x) << "footer guard bytes corrupted";
-		}
-	}
+class AuditImage : public AuditBuffer<T> {
+	unsigned m_width;
+	unsigned m_height;
 public:
 	AuditImage(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h, bool color) :
-		m_width{},
-		m_height{},
-		m_stride{},
-		m_image_ptr{}
+		AuditBuffer<T>(width, height, -1, subsample_w, subsample_h, color),
+		m_width{ width },
+		m_height{ height }
 	{
-		for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
-			unsigned width_p = width >> (p ? subsample_w : 0);
-			unsigned height_p = height >> (p ? subsample_h : 0);
-
-			unsigned guarded_width = zimg::align(width_p, zimg::AlignmentOf<T>::value) + 2 * zimg::AlignmentOf<T>::value;
-			unsigned guarded_height = height_p + 2;
-
-			m_width[p] = width_p;
-			m_height[p] = height_p;
-			m_stride[p] = (ptrdiff_t)(guarded_width * sizeof(T));
-
-			m_vector[p].resize((size_t)guarded_width * guarded_height);
-			m_image_ptr[p] = m_vector[p].data() + m_stride[p] / sizeof(T);
-		}
-
-		add_guard_bytes();
-	}
-
-	void set_test_byte(unsigned char x, unsigned p)
-	{
-		m_test_val[p] = splat_byte<T>(x);
-	}
-
-	void set_test_byte(unsigned char x)
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			set_test_byte(x, p);
-		}
 	}
 
 	void validate()
 	{
-		for (unsigned p = 0; p < 3; ++p) {
-			T *image_base = m_image_ptr[p];
-			ptrdiff_t stride_x = m_stride[p] / sizeof(T);
-
-			for (unsigned i = 0; i < m_height[p]; ++i) {
-				T *line_base = image_base + i * stride_x;
-
-				auto it = std::find_if(line_base, line_base + m_width[p], [=](T x) { return x != m_test_val[p]; });
-				ASSERT_TRUE(it == line_base + m_width[p]) << "validation failure at: " << p << " (" << i << ", " << it - line_base << ")";
-			}
-		}
-		check_guard_bytes();
-	}
-
-	void default_fill()
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			T *image_base = m_image_ptr[p];
-			ptrdiff_t stride_x = m_stride[p] / sizeof(T);
-
-			for (unsigned i = 0; i < m_height[p]; ++i) {
-				T *line_base = image_base + i * stride_x;
-
-				std::fill_n(line_base, m_width[p], m_test_val[p]);
-			}
-		}
-	}
-
-	zimg::ZimgImageBuffer as_image_buffer()
-	{
-		zimg::ZimgImageBuffer buf;
-
-		for (unsigned p = 0; p < 3; ++p) {
-			buf.data[p] = m_image_ptr[p];
-			buf.stride[p] = m_stride[p];
-			buf.mask[p] = -1;
-		}
-		return buf;
-	}
-};
-
-class MockFilter : public zimg::IZimgFilter {
-protected:
-	struct context {
-		unsigned last_line = 0;
-		unsigned last_left = 0;
-		unsigned last_right = 0;
-	};
-
-	image_attributes m_attr;
-	zimg::ZimgFilterFlags m_flags;
-	mutable unsigned m_total_calls;
-	unsigned m_simultaneous_lines;
-	unsigned m_horizontal_support;
-public:
-	MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags = {}) :
-		m_attr{ width, height, type },
-		m_flags(flags),
-		m_total_calls{},
-		m_simultaneous_lines{ 1 },
-		m_horizontal_support{}
-	{
-	}
-
-	unsigned get_total_calls() const
-	{
-		return m_total_calls;
-	}
-
-	void set_simultaneous_lines(unsigned n)
-	{
-		m_simultaneous_lines = n;
-	}
-
-	void set_horizontal_support(unsigned n)
-	{
-		m_horizontal_support = n;
-	}
-
-	zimg::ZimgFilterFlags get_flags() const override
-	{
-		return m_flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return m_attr;
-	}
-
-	pair_unsigned get_required_row_range(unsigned i) const override
-	{
-		EXPECT_LT(i, m_attr.height);
-
-		if (m_flags.entire_plane)
-			return{ 0, m_attr.height };
-		else
-			return{ i, std::min(i + m_simultaneous_lines, m_attr.height) };
-	}
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
-	{
-		EXPECT_LE(left, right);
-		EXPECT_LE(right, m_attr.width);
-
-		if (m_flags.entire_row)
-			return{ 0, m_attr.width };
-		else
-			return{ std::max(left, m_horizontal_support) - left, std::min(right + m_horizontal_support, m_attr.width) };
-	}
-
-	unsigned get_simultaneous_lines() const override
-	{
-		return m_flags.entire_plane ? m_attr.height : m_simultaneous_lines;
-	}
-
-	unsigned get_max_buffering() const override
-	{
-		return m_flags.entire_plane ? (unsigned)-1 : 1;
-	}
-
-	size_t get_context_size() const override
-	{
-		return sizeof(context);
-	}
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
-	{
-		EXPECT_LE(left, right);
-		EXPECT_LE(right, m_attr.width);
-		return 0;
-	}
-
-	void init_context(void *ctx) const override
-	{
-		new (ctx) context{};
-	}
-
-	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		context *audit_ctx = reinterpret_cast<context *>(ctx);
-
-		ASSERT_LT(i, m_attr.height);
-		ASSERT_LT(left, right);
-		ASSERT_LE(right, m_attr.width);
-
-		if (m_flags.has_state && left == audit_ctx->last_left && right == audit_ctx->last_right)
-			ASSERT_GE(i, audit_ctx->last_line);
-
-		if (m_flags.entire_row) {
-			ASSERT_EQ(0, left);
-			ASSERT_EQ(m_attr.width, right);
-		}
-
-		if (m_flags.entire_plane)
-			ASSERT_EQ(i, 0);
-
-		for (unsigned p = 0; p < (m_flags.color ? 3U : 1U); ++p) {
-			if (!m_flags.in_place)
-				ASSERT_NE(src.data[p], dst.data[p]);
-			if (m_flags.entire_plane) {
-				ASSERT_EQ((unsigned)-1, src.mask[p]);
-				ASSERT_EQ((unsigned)-1, dst.mask[p]);
-			}
-		}
-
-		audit_ctx->last_line = i;
-		audit_ctx->last_left = left;
-		audit_ctx->last_right = right;
-		++m_total_calls;
-	}
-};
-
-template <class T>
-class SplatFilter : public MockFilter {
-	T m_src_val = 0xCD;
-	T m_dst_val = 0xCD;
-
-	void assert_pixel_size(zimg::PixelType type)
-	{
-		ASSERT_EQ(zimg::pixel_size(type), sizeof(T));
-	}
-public:
-	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags = {}) :
-		MockFilter(width, height, type, flags)
-	{
-		assert_pixel_size(type);
-	}
-
-	void set_input_test_byte(unsigned char x)
-	{
-		m_src_val = splat_byte<T>(x);
-	}
-
-	void set_output_test_byte(unsigned char x)
-	{
-		m_dst_val = splat_byte<T>(x);
-	}
-
-	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		context *audit_ctx = reinterpret_cast<context *>(ctx);
-
-		MockFilter::process(ctx, src, dst, tmp, i, left, right);
-		pair_unsigned row_range = get_required_row_range(i);
-		pair_unsigned col_range = get_required_col_range(left, right);
-
-		for (unsigned p = 0; p < (m_flags.color ? 3U : 1U); ++p) {
-			zimg::LineBuffer<const T> src_buf{ src, p };
-			zimg::LineBuffer<T> dst_buf{ dst, p };
-
-			for (unsigned ii = row_range.first; ii < row_range.second; ++ii) {
-				auto it = std::find_if(src_buf[ii] + col_range.first, src_buf[ii] + col_range.second, [=](T x) { return x != m_src_val; });
-				ASSERT_TRUE(it == src_buf[ii] + col_range.second) <<
-					"found invalid value at position: (" << ii << ", " << it - src_buf[ii] << ")";
-			}
-
-			for (unsigned ii = i; ii < std::min(i + get_simultaneous_lines(), m_attr.height); ++ii) {
-				std::fill(dst_buf[ii] + left, dst_buf[ii] + right, m_dst_val);
-			}
+		for (unsigned i = 0; i < m_height; ++i) {
+			ASSERT_FALSE(AuditBuffer<T>::detect_write(i, 0, m_width)) << "unexpected write at line: " << i;
 		}
 	}
 };
 
-} // namespace
+}
 
 
 TEST(FilterGraphTest, test_noop)
@@ -434,11 +123,11 @@ TEST(FilterGraphTest, test_basic)
 		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
 		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
 
-		filter1->set_input_test_byte(test_byte1);
-		filter1->set_output_test_byte(test_byte2);
+		filter1->set_input_val(test_byte1);
+		filter1->set_output_val(test_byte2);
 
-		filter2->set_input_test_byte(test_byte2);
-		filter2->set_output_test_byte(test_byte3);
+		filter2->set_input_val(test_byte2);
+		filter2->set_output_val(test_byte3);
 
 		zimg::FilterGraph graph{ w, h, type, 0, 0, !!x };
 
@@ -452,10 +141,10 @@ TEST(FilterGraphTest, test_basic)
 		AuditImage<uint16_t> dst_image{ w, h, 0, 0, !!x };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
-		src_image.set_test_byte(test_byte1);
+		src_image.set_fill_val(test_byte1);
 		src_image.default_fill();
 		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
-		dst_image.set_test_byte(test_byte3);
+		dst_image.set_fill_val(test_byte3);
 
 		ASSERT_EQ(1U, filter1->get_total_calls());
 		ASSERT_EQ(h, filter2->get_total_calls());
@@ -495,11 +184,11 @@ TEST(FilterGraphTest, test_skip_plane)
 		SplatFilter<float> *filter1 = filter1_uptr.get();
 		SplatFilter<float> *filter2 = filter2_uptr.get();
 
-		filter1->set_input_test_byte(test_byte1);
-		filter1->set_output_test_byte(test_byte2);
+		filter1->set_input_val(test_byte1);
+		filter1->set_output_val(test_byte2);
 
-		filter2->set_input_test_byte(test_byte2);
-		filter2->set_output_test_byte(test_byte3);
+		filter2->set_input_val(test_byte2);
+		filter2->set_output_val(test_byte3);
 
 		zimg::FilterGraph graph{ w, h, type, 0, 0, true };
 
@@ -518,19 +207,19 @@ TEST(FilterGraphTest, test_skip_plane)
 		AuditImage<float> dst_image{ w, h, 0, 0, true };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
-		src_image.set_test_byte(test_byte1);
+		src_image.set_fill_val(test_byte1);
 		src_image.default_fill();
 
 		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
 
 		if (x) {
-			dst_image.set_test_byte(test_byte3, 0);
-			dst_image.set_test_byte(test_byte2, 1);
-			dst_image.set_test_byte(test_byte2, 2);
+			dst_image.set_fill_val(test_byte3, 0);
+			dst_image.set_fill_val(test_byte2, 1);
+			dst_image.set_fill_val(test_byte2, 2);
 		} else {
-			dst_image.set_test_byte(test_byte2, 0);
-			dst_image.set_test_byte(test_byte3, 1);
-			dst_image.set_test_byte(test_byte3, 2);
+			dst_image.set_fill_val(test_byte2, 0);
+			dst_image.set_fill_val(test_byte3, 1);
+			dst_image.set_fill_val(test_byte3, 2);
 		}
 
 		ASSERT_EQ(h, filter1->get_total_calls());
@@ -561,11 +250,11 @@ TEST(FilterGraphTest, test_support)
 		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
 		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
 
-		filter1->set_input_test_byte(test_byte1);
-		filter1->set_output_test_byte(test_byte2);
+		filter1->set_input_val(test_byte1);
+		filter1->set_output_val(test_byte2);
 
-		filter2->set_input_test_byte(test_byte2);
-		filter2->set_output_test_byte(test_byte3);
+		filter2->set_input_val(test_byte2);
+		filter2->set_output_val(test_byte3);
 
 		if (x) {
 			filter1->set_horizontal_support(5);
@@ -593,7 +282,7 @@ TEST(FilterGraphTest, test_support)
 		AuditImage<uint16_t> dst_image{ w, h, 0, 0, false };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
-		src_image.set_test_byte(test_byte1);
+		src_image.set_fill_val(test_byte1);
 		src_image.default_fill();
 
 		if (x) {
@@ -605,7 +294,7 @@ TEST(FilterGraphTest, test_support)
 		}
 
 		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
-		dst_image.set_test_byte(test_byte3);
+		dst_image.set_fill_val(test_byte3);
 
 		SCOPED_TRACE("validating src");
 		src_image.validate();
@@ -683,11 +372,11 @@ TEST(FilterGraphTest, test_callback)
 				SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
 				SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
 
-				filter1->set_input_test_byte(test_byte1);
-				filter1->set_output_test_byte(test_byte2);
+				filter1->set_input_val(test_byte1);
+				filter1->set_output_val(test_byte2);
 
-				filter2->set_input_test_byte(test_byte1);
-				filter2->set_output_test_byte(test_byte2);
+				filter2->set_input_val(test_byte1);
+				filter2->set_output_val(test_byte2);
 
 				zimg::FilterGraph graph{ w, h, type, sw, sh, true };
 				graph.attach_filter(filter1);
@@ -704,9 +393,9 @@ TEST(FilterGraphTest, test_callback)
 				callback_data cb1_data = { src_image.as_image_buffer(), sw, sh, 0, test_byte1 };
 				callback_data cb2_data = { dst_image.as_image_buffer(), sw, sh, 0, test_byte3 };
 
-				src_image.set_test_byte(test_byte1);
-				tmp_image.set_test_byte(test_byte2);
-				dst_image.set_test_byte(test_byte3);
+				src_image.set_fill_val(test_byte1);
+				tmp_image.set_fill_val(test_byte2);
+				dst_image.set_fill_val(test_byte3);
 
 				graph.process(src_image.as_image_buffer(), tmp_image.as_image_buffer(), tmp.data(), { cb, &cb1_data }, { cb, &cb2_data });
 
@@ -742,8 +431,8 @@ TEST(FilterGraphTest, test_callback_failed)
 	AuditImage<uint8_t> dst_image{ w, h, 0, 0, false };
 	zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
-	src_image.set_test_byte(255);
-	dst_image.set_test_byte(0);
+	src_image.set_fill_val(255);
+	dst_image.set_fill_val(0);
 
 	src_image.default_fill();
 	dst_image.default_fill();

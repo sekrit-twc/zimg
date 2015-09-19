@@ -19,14 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\UnitTest\Common\audit_buffer.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\copy_filter_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\filtergraph_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\filter_validator.cpp" />
+    <ClCompile Include="..\..\UnitTest\Common\mock_filter.cpp" />
     <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c" />
     <ClCompile Include="..\..\UnitTest\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\UnitTest\Common\audit_buffer.h" />
     <ClInclude Include="..\..\UnitTest\Common\filter_validator.h" />
+    <ClInclude Include="..\..\UnitTest\Common\mock_filter.h" />
     <ClInclude Include="..\..\UnitTest\Extra\sha1\config.h" />
     <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h" />
   </ItemGroup>

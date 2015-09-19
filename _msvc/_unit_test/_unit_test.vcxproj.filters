@@ -48,6 +48,12 @@
     <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c">
       <Filter>Source Files\Extra\sha1</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Common\mock_filter.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Common\audit_buffer.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h">
@@ -57,6 +63,12 @@
       <Filter>Header Files\Extra\sha1</Filter>
     </ClInclude>
     <ClInclude Include="..\..\UnitTest\Common\filter_validator.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UnitTest\Common\mock_filter.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UnitTest\Common\audit_buffer.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>

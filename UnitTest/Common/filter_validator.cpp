@@ -2,11 +2,9 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <random>
 #include <string>
 
 #include "Common/align.h"
-#include "Common/linebuffer.h"
 #include "Common/pixel.h"
 #include "Common/zfilter.h"
 
@@ -16,157 +14,10 @@ extern "C" {
 	#include "sha1/sha1.h"
 }
 
+#include "audit_buffer.h"
 #include "filter_validator.h"
 
 namespace {;
-
-class AuditBuffer {
-	zimg::AlignedVector<uint8_t> m_vector[3];
-	zimg::ZimgImageBuffer m_buffer;
-	unsigned m_rowsize;
-	unsigned m_buffer_height;
-	unsigned m_pixel_size;
-	uint8_t m_guard_val = 0xFE;
-	bool m_color;
-
-	void add_guard_bytes()
-	{
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			if (m_vector[p].empty())
-				continue;
-
-			uint8_t *base = m_vector[p].data();
-			ptrdiff_t stride = m_buffer.stride[p];
-
-			std::fill_n(base, stride, m_guard_val);
-
-			for (unsigned i = 0; i < m_buffer_height; ++i) {
-				uint8_t *line_base = base + (ptrdiff_t)(i + 1) * stride;
-
-				std::fill_n(line_base, zimg::ALIGNMENT, m_guard_val);
-				std::fill_n(line_base + m_rowsize, stride - m_rowsize, m_guard_val);
-			}
-
-			std::fill_n(base + (ptrdiff_t)(m_buffer_height + 1) * stride, stride, m_guard_val);
-		}
-	}
-public:
-	AuditBuffer(unsigned width, unsigned height, zimg::PixelType type, unsigned lines, bool color) :
-		m_rowsize{ width * zimg::pixel_size(type) },
-		m_buffer_height{},
-		m_pixel_size{ (unsigned)zimg::pixel_size(type) },
-		m_color{ color }
-	{
-		unsigned mask = zimg::select_zimg_buffer_mask(lines);
-		m_buffer_height = (mask == -1) ? height : mask + 1;
-
-		for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
-			unsigned guarded_linesize = zimg::align(m_rowsize, zimg::ALIGNMENT) + 2 * zimg::ALIGNMENT;
-			unsigned guarded_linecount = m_buffer_height + 2;
-
-			m_vector[p].resize((size_t)guarded_linesize * guarded_linecount);
-
-			m_buffer.data[p] = m_vector[p].data() + guarded_linesize + zimg::ALIGNMENT;
-			m_buffer.stride[p] = guarded_linesize;
-			m_buffer.mask[p] = mask;
-		}
-
-		add_guard_bytes();
-	}
-
-	bool detect_write(unsigned i, unsigned left, unsigned right)
-	{
-		bool write = true;
-		left *= m_pixel_size;
-		right *= m_pixel_size;
-
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			zimg::LineBuffer<uint8_t> buf{ m_buffer, p };
-
-			auto it = std::find_if(buf[i] + left, buf[i] + right, [=](uint8_t x) { return x != 0; });
-			write = write && (it != buf[i] + right);
-		}
-
-		return write;
-	}
-
-	void compare(const AuditBuffer &other, unsigned i, unsigned left, unsigned right)
-	{
-		left *= m_pixel_size;
-		right *= m_pixel_size;
-
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			zimg::LineBuffer<uint8_t> this_buf{ m_buffer, p };
-			zimg::LineBuffer<uint8_t> other_buf{ other.m_buffer, p };
-
-			ASSERT_TRUE(std::equal(this_buf[i] + left, this_buf[i] + right, other_buf[i] + left)) <<
-				"mismatch at line: " << i;
-		}
-	}
-
-	void check_guard_bytes()
-	{
-		const auto pred = [=](uint8_t x) { return x != m_guard_val; };
-
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			const uint8_t *base = m_vector[p].data();
-			ptrdiff_t stride = m_buffer.stride[p];
-
-			auto it = std::find_if(base, base + stride, pred);
-			ASSERT_TRUE(it == base + stride) << "header guard bytes corrupted";
-
-			for (unsigned i = 0; i < m_buffer_height; ++i) {
-				const uint8_t *line_base = base + (ptrdiff_t)(i + 1) * stride;
-
-				it = std::find_if(line_base, line_base + zimg::ALIGNMENT, pred);
-				ASSERT_TRUE(it == line_base + zimg::ALIGNMENT) << "line guard header corrupted at: " << i;
-
-				it = std::find_if(line_base  +zimg::ALIGNMENT + m_rowsize, line_base + stride, pred);
-				ASSERT_TRUE(it == line_base + stride) << "line guard footer corrupted at: " << i;
-			}
-
-			it = std::find_if(base + (ptrdiff_t)(m_buffer_height + 1) * stride, base + (ptrdiff_t)(m_buffer_height + 2) * stride, pred);
-			ASSERT_TRUE(it == base + (ptrdiff_t)(m_buffer_height + 2) * stride) << "footer guard bytes corrupted";
-		}
-	}
-
-	void random_fill(unsigned first_row, unsigned last_row, unsigned first_col, unsigned last_col)
-	{
-		first_col *= m_pixel_size;
-		last_col *= m_pixel_size;
-
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			zimg::LineBuffer<uint8_t> buf{ m_buffer, p };
-
-			for (unsigned i = first_row; i < last_row; ++i) {
-				std::mt19937 engine{ i };
-
-				for (unsigned j = 0; j < first_col; ++j) {
-					engine();
-				}
-
-				std::generate_n(buf[i] + first_col, last_col - first_col, engine);
-			}
-		}
-	}
-
-	void zero_fill()
-	{
-		for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-			zimg::LineBuffer<uint8_t> buf{ m_buffer, p };
-
-			for (unsigned i = 0; i < m_buffer_height; ++i) {
-				std::fill_n(buf[i], m_rowsize, 0);
-			}
-		}
-	}
-
-	const zimg::ZimgImageBuffer &as_buffer() const
-	{
-		return m_buffer;
-	}
-};
-
 
 void decode_sha1(const char *str, unsigned char digest[20])
 {
@@ -176,16 +27,17 @@ void decode_sha1(const char *str, unsigned char digest[20])
 	}
 }
 
-void hash_buffer(const AuditBuffer &buf, unsigned p, unsigned width, unsigned height, zimg::PixelType type, unsigned char digest[20])
+template <class T>
+void hash_buffer(const AuditBuffer<T> &buf, unsigned p, unsigned width, unsigned height, unsigned char digest[20])
 {
-	const zimg::ZimgImageBufferConst &image_buffer = buf.as_buffer();
+	const zimg::ZimgImageBufferConst &image_buffer = buf.as_image_buffer();
 	SHA1_CTX sha_ctx;
 
 	SHA1Init(&sha_ctx);
 
 	for (unsigned i = 0; i < height; ++i) {
 		const unsigned char *ptr = (const unsigned char *)image_buffer.data[p] + (ptrdiff_t)i * image_buffer.stride[p];
-		SHA1Update(&sha_ctx, ptr, width * zimg::pixel_size(type));
+		SHA1Update(&sha_ctx, ptr, width * sizeof(T));
 	}
 
 	SHA1Final(digest, &sha_ctx);
@@ -207,6 +59,7 @@ std::string hash_to_str(const unsigned char digest[20])
 
 	return s;
 }
+
 
 void validate_flags(const zimg::IZimgFilter *filter)
 {
@@ -240,7 +93,8 @@ void validate_same_row(const zimg::IZimgFilter *filter)
 	}
 }
 
-void validate_filter_plane(const zimg::IZimgFilter *filter, AuditBuffer *src_buffer, AuditBuffer *dst_buffer)
+template <class T, class U>
+void validate_filter_plane(const zimg::IZimgFilter *filter, AuditBuffer<T> *src_buffer, AuditBuffer<U> *dst_buffer)
 {
 	auto attr = filter->get_image_attributes();
 
@@ -251,7 +105,7 @@ void validate_filter_plane(const zimg::IZimgFilter *filter, AuditBuffer *src_buf
 	filter->init_context(ctx.data());
 
 	for (unsigned i = 0; i < attr.height; i += step) {
-		filter->process(ctx.data(), src_buffer->as_buffer(), dst_buffer->as_buffer(), tmp.data(), i, 0, attr.width);
+		filter->process(ctx.data(), src_buffer->as_image_buffer(), dst_buffer->as_image_buffer(), tmp.data(), i, 0, attr.width);
 
 		for (unsigned ii = i; ii < std::min(i + step, attr.height); ++ii) {
 			ASSERT_TRUE(dst_buffer->detect_write(ii, 0, attr.width)) <<
@@ -263,17 +117,18 @@ void validate_filter_plane(const zimg::IZimgFilter *filter, AuditBuffer *src_buf
 		}
 	}
 
-	src_buffer->check_guard_bytes();
-	dst_buffer->check_guard_bytes();
+	src_buffer->assert_guard_bytes();
+	dst_buffer->assert_guard_bytes();
 }
 
-void validate_filter_buffered(const zimg::IZimgFilter *filter, unsigned src_width, unsigned src_height, zimg::PixelType src_type, const AuditBuffer &ref_buffer)
+template <class T, class U>
+void validate_filter_buffered(const zimg::IZimgFilter *filter, unsigned src_width, unsigned src_height, const AuditBuffer<U> &ref_buffer)
 {
 	auto flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
 
-	AuditBuffer src_buf{ src_width, src_height, src_type, filter->get_max_buffering(), !!flags.color };
-	AuditBuffer dst_buf{ attr.width, attr.height, attr.type, filter->get_simultaneous_lines(), !!flags.color };
+	AuditBuffer<T> src_buf{ src_width, src_height, filter->get_max_buffering(), 0, 0, !!flags.color };
+	AuditBuffer<U> dst_buf{ attr.width, attr.height, filter->get_simultaneous_lines(), 0, 0, !!flags.color };
 
 	unsigned init = flags.has_state ? 0 : attr.height / 4;
 	unsigned vstep = filter->get_simultaneous_lines();
@@ -290,25 +145,23 @@ void validate_filter_buffered(const zimg::IZimgFilter *filter, unsigned src_widt
 	for (unsigned i = init; i < attr.height; i += step) {
 		auto row_range = filter->get_required_row_range(i);
 
-		src_buf.zero_fill();
+		src_buf.default_fill();
 		src_buf.random_fill(row_range.first, row_range.second, col_range.first, col_range.second);
-		dst_buf.zero_fill();
+		dst_buf.default_fill();
 
-		filter->process(ctx.data(), src_buf.as_buffer(), dst_buf.as_buffer(), tmp.data(), i, left, right);
+		filter->process(ctx.data(), src_buf.as_image_buffer(), dst_buf.as_image_buffer(), tmp.data(), i, left, right);
 
-		src_buf.check_guard_bytes();
-		dst_buf.check_guard_bytes();
+		src_buf.assert_guard_bytes();
+		dst_buf.assert_guard_bytes();
 
 		for (unsigned ii = i; ii < std::min(i + vstep, attr.height); ++ii) {
-			dst_buf.compare(ref_buffer, ii, left, right);
+			dst_buf.assert_eq(ref_buffer, ii, left, right);
 		}
 	}
 }
 
-} // namespace
-
-
-void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsigned src_height, zimg::PixelType src_type, const char * const sha1_str[3])
+template <class T, class U>
+void validate_filter_T(const zimg::IZimgFilter *filter, unsigned src_width, unsigned src_height, const char * const sha1_str[3])
 {
 	zimg::ZimgFilterFlags flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
@@ -318,11 +171,11 @@ void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsign
 	if (flags.same_row)
 		validate_same_row(filter);
 
-	AuditBuffer src_buf{ src_width, src_height, src_type, (unsigned)-1, !!flags.color };
-	AuditBuffer dst_buf{ attr.width, attr.height, attr.type, (unsigned)-1, !!flags.color };
+	AuditBuffer<T> src_buf{ src_width, src_height, (unsigned)-1, 0, 0, !!flags.color };
+	AuditBuffer<U> dst_buf{ attr.width, attr.height, (unsigned)-1, 0, 0, !!flags.color };
 
 	src_buf.random_fill(0, src_height, 0, src_width);
-	dst_buf.zero_fill();
+	dst_buf.default_fill();
 
 	validate_filter_plane(filter, &src_buf, &dst_buf);
 
@@ -333,7 +186,7 @@ void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsign
 
 			if (sha1_str[p]) {
 				decode_sha1(sha1_str[p], expected_sha1.data());
-				hash_buffer(dst_buf, p, attr.width, attr.height, attr.type, test_sha1.data());
+				hash_buffer(dst_buf, p, attr.width, attr.height, test_sha1.data());
 
 				EXPECT_TRUE(expected_sha1 == test_sha1) <<
 					"sha1 mismatch: plane (" << p << ") expected (" << hash_to_str(expected_sha1.data()) << ") actual (" << hash_to_str(test_sha1.data()) << ")";
@@ -342,5 +195,36 @@ void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsign
 	}
 
 	if (!flags.entire_plane)
-		validate_filter_buffered(filter, src_width, src_height, src_type, dst_buf);
+		validate_filter_buffered<T, U>(filter, src_width, src_height, dst_buf);
+}
+
+} // namespace
+
+
+void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsigned src_height, zimg::PixelType src_type, const char * const sha1_str[3])
+{
+	auto attr = filter->get_image_attributes();
+
+	if (src_type == zimg::PixelType::BYTE) {
+		if (attr.type == zimg::PixelType::BYTE)
+			validate_filter_T<uint8_t, uint8_t>(filter, src_width, src_height, sha1_str);
+		else if (attr.type == zimg::PixelType::WORD || attr.type == zimg::PixelType::HALF)
+			validate_filter_T<uint8_t, uint16_t>(filter, src_width, src_height, sha1_str);
+		else
+			validate_filter_T<uint8_t, float>(filter, src_width, src_height, sha1_str);
+	} else if (src_type == zimg::PixelType::WORD || src_type == zimg::PixelType::HALF) {
+		if (attr.type == zimg::PixelType::BYTE)
+			validate_filter_T<uint16_t, uint8_t>(filter, src_width, src_height, sha1_str);
+		else if (attr.type == zimg::PixelType::WORD || attr.type == zimg::PixelType::HALF)
+			validate_filter_T<uint16_t, uint16_t>(filter, src_width, src_height, sha1_str);
+		else
+			validate_filter_T<uint16_t, float>(filter, src_width, src_height, sha1_str);
+	} else {
+		if (attr.type == zimg::PixelType::BYTE)
+			validate_filter_T<float, uint8_t>(filter, src_width, src_height, sha1_str);
+		else if (attr.type == zimg::PixelType::WORD || attr.type == zimg::PixelType::HALF)
+			validate_filter_T<float, uint16_t>(filter, src_width, src_height, sha1_str);
+		else
+			validate_filter_T<float, float>(filter, src_width, src_height, sha1_str);
+	}
 }
