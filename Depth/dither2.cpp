@@ -264,11 +264,11 @@ RandomDither::RandomDither(unsigned width, unsigned height, const PixelFormat &p
 
 std::tuple<unsigned, unsigned, unsigned> RandomDither::get_dither_params(unsigned i, unsigned left) const
 {
-	std::mt19937 mt{ (uint32_t)i + left };
-	unsigned offset = mt() % (RAND_NUM / AlignmentOf<float>::value);
+	std::mt19937 mt{ i };
+	unsigned offset = (mt() + left) % RAND_NUM;
+	unsigned mask = RAND_NUM - 1;
 
-//	return std::make_tuple((i % 64) * 64, left % 64, 64);
-	return std::make_tuple(0U, offset, RAND_NUM - 1);
+	return std::make_tuple(0U, offset, mask);
 }
 
 const unsigned RandomDither::RAND_NUM;
