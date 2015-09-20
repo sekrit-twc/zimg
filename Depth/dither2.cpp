@@ -321,6 +321,11 @@ size_t ErrorDiffusion::get_context_size() const
 	return get_context_width() * sizeof(float);
 }
 
+size_t ErrorDiffusion::get_tmp_size(unsigned, unsigned) const
+{
+	return (m_func && m_f16c) ? align(m_width, AlignmentOf<float>::value) * sizeof(float) : 0;
+}
+
 void ErrorDiffusion::init_context(void *ctx) const
 {
 	float *ctx_p = reinterpret_cast<float *>(ctx);
@@ -346,13 +351,12 @@ void ErrorDiffusion::process(void *ctx, const ZimgImageBufferConst &src, const Z
 			std::copy_n(reinterpret_cast<const char *>(src_p), m_width * pixel_size(m_pixel_out), reinterpret_cast<char *>(dst_p));
 	} else {
 		if (m_f16c) {
-			m_f16c(src_p, dst_p, m_width);
-			src_p = dst_p;
-			dst_p = reinterpret_cast<char *>(dst_buf[i]);
+			m_f16c(src_p, tmp, m_width);
+			src_p = tmp;
 		}
 
 		if (m_func)
-			m_func(src_p, dst_p, error_cur, error_top, m_scale, m_offset, m_depth, m_width);
+			m_func(src_p, dst_p, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
 	}
 }
 
