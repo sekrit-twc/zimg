@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include "Common/except.h"
+#include "Common/libm_wrapper.h"
 #include "Common/matrix.h"
 #include "filter.h"
 
@@ -16,7 +17,7 @@ const double PI = 3.14159265358979323846;
 double sinc(double x)
 {
 	// Guaranteed to not yield division by zero on IEEE machine with accurate sin(x).
-	return x == 0.0 ? 1.0 : std::sin(x * PI) / (x * PI);
+	return x == 0.0 ? 1.0 : _zimg_sin(x * PI) / (x * PI);
 }
 
 double sq(double x)

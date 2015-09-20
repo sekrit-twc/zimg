@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include "Common/cpuinfo.h"
+#include "Common/libm_wrapper.h"
 #include "matrix3.h"
 
 namespace zimg {;
@@ -20,7 +21,7 @@ inline float rec_709_gamma(float x)
 	if (x < TRANSFER_BETA)
 		x = x * 4.5f;
 	else
-		x = TRANSFER_ALPHA * std::pow(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
+		x = TRANSFER_ALPHA * _zimg_powf(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
 
 	return x;
 }
@@ -30,7 +31,7 @@ inline float rec_709_inverse_gamma(float x)
 	if (x < 4.5f * TRANSFER_BETA)
 		x = x / 4.5f;
 	else
-		x = std::pow((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
+		x = _zimg_powf((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
 
 	return x;
 }

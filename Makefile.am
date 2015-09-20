@@ -39,6 +39,8 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Common/except.h \
 					 Common/filtergraph.h \
 					 Common/filtergraph.cpp \
+					 Common/libm_wrapper.h \
+					 Common/libm_wrapper.cpp \
 					 Common/linebuffer.h \
 					 Common/matrix.h \
 					 Common/mux_filter.cpp \

@@ -161,6 +161,7 @@
     <ClInclude Include="..\..\Common\cpuinfo.h" />
     <ClInclude Include="..\..\Common\except.h" />
     <ClInclude Include="..\..\Common\filtergraph.h" />
+    <ClInclude Include="..\..\Common\libm_wrapper.h" />
     <ClInclude Include="..\..\Common\linebuffer.h" />
     <ClInclude Include="..\..\Common\matrix.h" />
     <ClInclude Include="..\..\Common\mux_filter.h" />
@@ -211,6 +212,7 @@
     <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp" />
     <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp" />
     <ClCompile Include="..\..\Common\filtergraph.cpp" />
+    <ClCompile Include="..\..\Common\libm_wrapper.cpp" />
     <ClCompile Include="..\..\Common\mux_filter.cpp" />
     <ClCompile Include="..\..\Common\pair_filter.cpp" />
     <ClCompile Include="..\..\Depth\depth.cpp" />

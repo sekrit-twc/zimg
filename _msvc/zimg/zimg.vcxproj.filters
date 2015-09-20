@@ -213,6 +213,9 @@
     <ClInclude Include="..\..\Depth\depth2.h">
       <Filter>Header Files\Depth</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\libm_wrapper.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\API\zimg.cpp">
@@ -346,6 +349,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Unresize\unresize_impl_x86.cpp">
       <Filter>Source Files\Unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\libm_wrapper.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
