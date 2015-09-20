@@ -15,7 +15,8 @@ const double PI = 3.14159265358979323846;
 
 double sinc(double x)
 {
-	return std::abs(x) < 0.0001 ? 1.0 : std::sin(x * PI) / (x * PI);
+	// Guaranteed to not yield division by zero on IEEE machine with accurate sin(x).
+	return x == 0.0 ? 1.0 : std::sin(x * PI) / (x * PI);
 }
 
 double sq(double x)
