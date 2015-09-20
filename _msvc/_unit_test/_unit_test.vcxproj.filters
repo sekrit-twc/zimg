@@ -40,6 +40,9 @@
     <Filter Include="Header Files\Extra\musl-libm">
       <UniqueIdentifier>{b0f897a4-1ed0-4995-8da4-4df7b6b46a0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Colorspace">
+      <UniqueIdentifier>{f7ac1f20-8f45-41f8-9dc3-42dce80456b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\UnitTest\main.cpp">
@@ -98,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\fpu_wrapper.c">
       <Filter>Source Files\Extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Colorspace\colorspace2_test.cpp">
+      <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
