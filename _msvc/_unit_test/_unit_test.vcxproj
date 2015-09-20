@@ -25,6 +25,8 @@
     <ClCompile Include="..\..\UnitTest\Common\filter_validator.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\mock_filter.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\mux_filter_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Depth\depth_convert2_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Depth\dither2_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c" />
     <ClCompile Include="..\..\UnitTest\main.cpp" />
   </ItemGroup>

@@ -31,6 +31,9 @@
     <Filter Include="Header Files\Extra\sha1">
       <UniqueIdentifier>{234ab586-8a2a-482d-9b2f-b83cbda196ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Depth">
+      <UniqueIdentifier>{cf644c2d-d294-490c-bd98-0cf21c087d0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\UnitTest\main.cpp">
@@ -56,6 +59,12 @@
     </ClCompile>
     <ClCompile Include="..\..\UnitTest\Common\mux_filter_test.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\depth_convert2_test.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\dither2_test.cpp">
+      <Filter>Source Files\Depth</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
