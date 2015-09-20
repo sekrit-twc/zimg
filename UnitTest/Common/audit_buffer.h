@@ -4,14 +4,15 @@
 #define ZIMG_UNIT_TEST_AUDIT_H_
 
 #include <cstdint>
-
 #include "Common/align.h"
+#include "Common/pixel.h"
 #include "Common/ztypes.h"
 
 template <class T>
 class AuditBuffer {
 	zimg::AlignedVector<T> m_vector[3];
 	zimg::ZimgImageBuffer m_buffer;
+	zimg::PixelFormat m_format;
 	unsigned m_width[3];
 	unsigned m_buffer_height[3];
 	unsigned m_subsample_w;
@@ -26,7 +27,9 @@ class AuditBuffer {
 
 	ptrdiff_t stride_T(unsigned p) const;
 public:
-	AuditBuffer(unsigned width, unsigned height, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color);
+	AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat format, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color);
+
+	void set_format(const zimg::PixelFormat &format);
 
 	void set_fill_val(unsigned char x);
 

@@ -1,7 +1,10 @@
 #include <algorithm>
+#include <limits>
 #include <random>
 #include "Common/linebuffer.h"
+#include "Common/zassert.h"
 #include "Common/zfilter.h"
+#include "Depth/quantize.h"
 
 #include "gtest/gtest.h"
 #include "audit_buffer.h"
@@ -13,6 +16,53 @@ bool contains_only(InputIt first, InputIt last, const T &value)
 {
 	return std::find_if(first, last, [=](const T &x) { return x != value; }) == last;
 }
+
+template <class T>
+T float_as(float x)
+{
+	_zassert(false, "fail");
+	return{};
+}
+
+template <>
+uint16_t float_as<uint16_t>(float x)
+{
+	return zimg::depth::float_to_half(x);
+}
+
+template <>
+float float_as<float>(float x)
+{
+	return x;
+}
+
+template <class T>
+class Mt19937Generator {
+	std::mt19937 m_gen;
+	uint32_t m_depth;
+	bool m_float;
+	bool m_chroma;
+public:
+	Mt19937Generator(unsigned p, unsigned i, unsigned left, const zimg::PixelFormat &format) :
+		m_gen{ ((uint_fast32_t)p << 30) | i },
+		m_depth{ (unsigned)format.depth },
+		m_float{ format.type == zimg::PixelType::HALF || format.type == zimg::PixelType::FLOAT },
+		m_chroma{ p > 0 || format.chroma }
+	{
+		m_gen.discard(left);
+	}
+
+	T operator()()
+	{
+		if (m_float) {
+			double x = static_cast<double>(m_gen() - std::mt19937::min()) / static_cast<double>(std::mt19937::max() - std::mt19937::min());
+			float xf = static_cast<float>(x);
+			return float_as<T>(m_chroma ? xf - 0.5f : xf);
+		} else {
+			return static_cast<T>(m_gen() & ((1 << m_depth) - 1));
+		}
+	}
+};
 
 } // namespace
 
@@ -29,7 +79,34 @@ T AuditBuffer<T>::splat_byte(unsigned char b)
 }
 
 template <class T>
-AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color) :
+void AuditBuffer<T>::add_guard_bytes()
+{
+	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+		std::fill(m_vector[p].begin(), m_vector[p].begin() + m_buffer.stride[p] / (ptrdiff_t)sizeof(T), m_guard_val);
+
+		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
+			T *line_base = (T *)m_buffer.data[p] + (ptrdiff_t)i * stride_T(p);
+
+			T *line_guard_left = line_base - zimg::AlignmentOf<T>::value;
+			T *line_guard_right = line_guard_left + stride_T(p);
+
+			std::fill(line_guard_left, line_base, m_guard_val);
+			std::fill(line_base + m_width[p], line_guard_right, m_guard_val);
+		}
+
+		std::fill(m_vector[p].end() - stride_T(p), m_vector[p].end(), m_guard_val);
+	}
+}
+
+template <class T>
+ptrdiff_t AuditBuffer<T>::stride_T(unsigned p) const
+{
+	return m_buffer.stride[p] / (ptrdiff_t)sizeof(T);
+}
+
+template <class T>
+AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat format, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color) :
+	m_format(format),
 	m_width{},
 	m_buffer_height{},
 	m_subsample_w{ subsample_w },
@@ -64,29 +141,9 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, unsigned lines, uns
 }
 
 template <class T>
-void AuditBuffer<T>::add_guard_bytes()
+void AuditBuffer<T>::set_format(const zimg::PixelFormat &format)
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-		std::fill(m_vector[p].begin(), m_vector[p].begin() + m_buffer.stride[p] / (ptrdiff_t)sizeof(T), m_guard_val);
-
-		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
-			T *line_base = (T *)m_buffer.data[p] + (ptrdiff_t)i * stride_T(p);
-
-			T *line_guard_left = line_base - zimg::AlignmentOf<T>::value;
-			T *line_guard_right = line_guard_left + stride_T(p);
-
-			std::fill(line_guard_left, line_base, m_guard_val);
-			std::fill(line_base + m_width[p], line_guard_right, m_guard_val);
-		}
-
-		std::fill(m_vector[p].end() - stride_T(p), m_vector[p].end(), m_guard_val);
-	}
-}
-
-template <class T>
-ptrdiff_t AuditBuffer<T>::stride_T(unsigned p) const
-{
-	return m_buffer.stride[p] / (ptrdiff_t)sizeof(T);
+	m_format = format;
 }
 
 template <class T>
@@ -170,9 +227,8 @@ void AuditBuffer<T>::random_fill(unsigned first_row, unsigned last_row, unsigned
 		unsigned last_col_plane = last_col << (p ? m_subsample_w : 0);
 
 		for (unsigned i = first_row_plane; i < last_row_plane; ++i) {
-			std::mt19937 engine{ (p << (uint_fast32_t)30) | i };
+			Mt19937Generator<T> engine{ p, i, first_col_plane, m_format };
 
-			engine.discard(first_col_plane);
 			std::generate(linebuf[i] + first_col_plane, linebuf[i] + last_col_plane, engine);
 		}
 	}

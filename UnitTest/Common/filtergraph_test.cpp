@@ -20,8 +20,8 @@ class AuditImage : public AuditBuffer<T> {
 	unsigned m_width;
 	unsigned m_height;
 public:
-	AuditImage(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h, bool color) :
-		AuditBuffer<T>(width, height, -1, subsample_w, subsample_h, color),
+	AuditImage(unsigned width, unsigned height, zimg::PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
+		AuditBuffer<T>(width, height, zimg::default_pixel_format(type), -1, subsample_w, subsample_h, color),
 		m_width{ width },
 		m_height{ height }
 	{
@@ -50,8 +50,8 @@ TEST(FilterGraphTest, test_noop)
 		zimg::FilterGraph graph{ w, h, type, 0, 0, !!x };
 		graph.complete();
 
-		AuditImage<uint8_t> src_image{ w, h, 0, 0, !!x };
-		AuditImage<uint8_t> dst_image{ w, h, 0, 0, !!x };
+		AuditImage<uint8_t> src_image{ w, h, type, 0, 0, !!x };
+		AuditImage<uint8_t> dst_image{ w, h, type, 0, 0, !!x };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 		src_image.default_fill();
@@ -78,8 +78,8 @@ TEST(FilterGraphTest, test_noop_subsampling)
 			zimg::FilterGraph graph{ w, h, type, sw, sh, true };
 			graph.complete();
 
-			AuditImage<uint8_t> src_image{ w, h, sw, sh, true };
-			AuditImage<uint8_t> dst_image{ w, h, sw, sh, true };
+			AuditImage<uint8_t> src_image{ w, h, type, sw, sh, true };
+			AuditImage<uint8_t> dst_image{ w, h, type, sw, sh, true };
 			zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 			src_image.default_fill();
@@ -137,8 +137,8 @@ TEST(FilterGraphTest, test_basic)
 		filter2_uptr.release();
 		graph.complete();
 
-		AuditImage<uint16_t> src_image{ w, h, 0, 0, !!x };
-		AuditImage<uint16_t> dst_image{ w, h, 0, 0, !!x };
+		AuditImage<uint16_t> src_image{ w, h, type, 0, 0, !!x };
+		AuditImage<uint16_t> dst_image{ w, h, type, 0, 0, !!x };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 		src_image.set_fill_val(test_byte1);
@@ -203,8 +203,8 @@ TEST(FilterGraphTest, test_skip_plane)
 
 		graph.complete();
 
-		AuditImage<float> src_image{ w, h, 0, 0, true };
-		AuditImage<float> dst_image{ w, h, 0, 0, true };
+		AuditImage<float> src_image{ w, h, type, 0, 0, true };
+		AuditImage<float> dst_image{ w, h, type, 0, 0, true };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 		src_image.set_fill_val(test_byte1);
@@ -278,8 +278,8 @@ TEST(FilterGraphTest, test_support)
 		filter2_uptr.release();
 		graph.complete();
 
-		AuditImage<uint16_t> src_image{ w, h, 0, 0, false };
-		AuditImage<uint16_t> dst_image{ w, h, 0, 0, false };
+		AuditImage<uint16_t> src_image{ w, h, type, 0, 0, false };
+		AuditImage<uint16_t> dst_image{ w, h, type, 0, 0, false };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 		src_image.set_fill_val(test_byte1);
@@ -385,9 +385,9 @@ TEST(FilterGraphTest, test_callback)
 				filter2_uptr.release();
 				graph.complete();
 
-				AuditImage<uint8_t> src_image{ w, h, sw, sh, true };
-				AuditImage<uint8_t> tmp_image{ w, h, sw, sh, true };
-				AuditImage<uint8_t> dst_image{ w, h, sw, sh, true };
+				AuditImage<uint8_t> src_image{ w, h, type, sw, sh, true };
+				AuditImage<uint8_t> tmp_image{ w, h, type, sw, sh, true };
+				AuditImage<uint8_t> dst_image{ w, h, type, sw, sh, true };
 				zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 				callback_data cb1_data = { src_image.as_image_buffer(), sw, sh, 0, test_byte1 };
@@ -427,8 +427,8 @@ TEST(FilterGraphTest, test_callback_failed)
 	zimg::FilterGraph graph{ w, h, type, 0, 0, false };
 	graph.complete();
 
-	AuditImage<uint8_t> src_image{ w, h, 0, 0, false };
-	AuditImage<uint8_t> dst_image{ w, h, 0, 0, false };
+	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, false };
+	AuditImage<uint8_t> dst_image{ w, h, type, 0, 0, false };
 	zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 	src_image.set_fill_val(255);
