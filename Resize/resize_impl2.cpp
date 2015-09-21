@@ -182,7 +182,6 @@ public:
 		ZimgFilterFlags flags{};
 
 		flags.entire_row = !m_is_sorted;
-		flags.entire_plane = !m_is_sorted;
 
 		return flags;
 	}
