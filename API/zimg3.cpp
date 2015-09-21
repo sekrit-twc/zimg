@@ -576,8 +576,8 @@ private:
 	void convert_resize(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h,
 	                    ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h, const params *params)
 	{
-		static const zimg::resize::BicubicFilter bicubic_filter{ 1.0 / 3.0, 1.0 / 3.0 };
-		static const zimg::resize::BilinearFilter bilinear_filter;
+		zimg::resize::BicubicFilter bicubic_filter{ 1.0 / 3.0, 1.0 / 3.0 };
+		zimg::resize::BilinearFilter bilinear_filter;
 
 		if (m_state.is_greyscale()) {
 			subsample_w = 0;
