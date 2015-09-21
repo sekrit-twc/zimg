@@ -25,7 +25,8 @@ addons:
     build_command: "make"
     branch_pattern: coverity_scan
 script:
-  - autoreconf -i
-  - ./configure --enable-x86simd --enable-testapp --enable-examples
+  - ./autogen.sh
+  - ./configure --enable-x86simd --enable-testapp --enable-example --enable-unit-test
   - make clean
   - make
+  - make check

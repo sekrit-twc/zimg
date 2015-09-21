@@ -15,16 +15,31 @@ AC_CANONICAL_HOST
 
 
 AC_ARG_ENABLE([testapp], AS_HELP_STRING([--enable-testapp], [Compile the test application. (default=no)]))
-AC_ARG_ENABLE([examples], AS_HELP_STRING([--enable-examples], [Compile example programs. (default=no)]))
+AC_ARG_ENABLE([example], AS_HELP_STRING([--enable-example], [Compile example programs. (default=no)]))
 AM_CONDITIONAL([TESTAPP], [test "x$enable_testapp" = "xyes"])
-AM_CONDITIONAL([EXAMPLES], [test "x$enable_examples" = "xyes"])
+AM_CONDITIONAL([EXAMPLES], [test "x$enable_example" = "xyes"])
+
+
+AC_ARG_ENABLE([unit-test], AS_HELP_STRING([--enable-unit-test], [Compile unit tests. (default=no)])) AM_CONDITIONAL([UNIT_TEST], [test "x$enable_unit_test" = "xyes"]) 
+AS_IF([test "x$enable_unit_test" = "xyes"],
+      [
+        AS_CASE(
+          [$host_cpu],
+          [i?86],   [CFLAGS="$CFLAGS -mfpmath=sse -msse2" CXXFLAGS="$CXXFLAGS -mfpmath=sse -msse2"],
+          [x86_64], [],
+          [AC_MSG_WARN([Could not determine how to enable IEEE-754 compliance on host. Tests may fail.])]
+        )
+        AC_CONFIG_SUBDIRS(UnitTest/Extra/googletest/googletest)
+        AC_SUBST([CONFIG_SUBDIRS], [UnitTest/Extra/googletest/googletest])
+      ],
+)
 
 
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable compilation options required for debugging. (default=no)]))
 AS_IF(
       [test "x$enable_debug" = "xyes"],
       [
-       AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])
+        AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])
       ]
 )
 
@@ -43,7 +58,7 @@ AS_CASE(
   [$host_cpu],
   [i?86],   [BITS="32"],
   [x86_64], [BITS="64"],
-  [AS_IF([test "x$enable_x86simd" = "xyes"], [AC_MSG_ERROR([--enable_x86simd was passed but host CPU type is not x86.])])]
+  [AS_IF([test "x$enable_x86simd" = "xyes"], [AC_MSG_ERROR([--enable-x86simd was passed but host CPU type is not x86.])])]
 )
 
 AS_CASE(

@@ -101,7 +101,7 @@ class GraphNode {
 	struct filter_uv_tag {};
 
 	struct node_context {
-		static const uint64_t GUARD_PATTERN = 0xDEADBEEF;
+		static const uint64_t GUARD_PATTERN = (((uint64_t)0xDEADBEEF) << 32) | 0xDEADBEEF;
 
 		const uint64_t guard_pattern = GUARD_PATTERN;
 		ZimgImageBuffer cache_buf;

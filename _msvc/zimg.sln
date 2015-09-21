@@ -36,6 +36,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_example_interlace", "_exam
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zimg", "zimg\zimg.vcxproj", "{C8629E57-4D6F-40FA-82FC-B39824195932}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_unit_test", "_unit_test\_unit_test.vcxproj", "{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8629E57-4D6F-40FA-82FC-B39824195932} = {C8629E57-4D6F-40FA-82FC-B39824195932}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -100,6 +105,14 @@ Global
 		{C8629E57-4D6F-40FA-82FC-B39824195932}.Release|Win32.Build.0 = Release|Win32
 		{C8629E57-4D6F-40FA-82FC-B39824195932}.Release|x64.ActiveCfg = Release|x64
 		{C8629E57-4D6F-40FA-82FC-B39824195932}.Release|x64.Build.0 = Release|x64
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Debug|Win32.Build.0 = Debug|Win32
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Debug|x64.ActiveCfg = Debug|x64
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Debug|x64.Build.0 = Debug|x64
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Release|Win32.ActiveCfg = Release|Win32
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Release|Win32.Build.0 = Release|Win32
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Release|x64.ActiveCfg = Release|x64
+		{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

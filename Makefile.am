@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+SUBDIRS = $(CONFIG_SUBDIRS)
+
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
 AM_CXXFLAGS = -std=c++11 $(commonflags)
@@ -201,3 +203,51 @@ zimg_test_SOURCES = TestApp/apps.h \
 
 zimg_test_LDADD = libtestcommon.la libzimg.la
 endif # TESTAPP
+
+
+if UNIT_TEST
+TESTS=UnitTest/unit_test
+
+check_LTLIBRARIES = UnitTest/musl_m.la
+check_PROGRAMS = UnitTest/unit_test
+
+UnitTest_musl_m_la_CFLAGS = $(AM_CFLAGS) -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable
+
+UnitTest_musl_m_la_SOURCES = UnitTest/Extra/musl-libm/__cos.c \
+								UnitTest/Extra/musl-libm/__rem_pio2.c \
+								UnitTest/Extra/musl-libm/__rem_pio2_large.c \
+								UnitTest/Extra/musl-libm/__sin.c \
+								UnitTest/Extra/musl-libm/cos.c \
+								UnitTest/Extra/musl-libm/fpu_wrapper.c \
+								UnitTest/Extra/musl-libm/libm.h \
+								UnitTest/Extra/musl-libm/mymath.h \
+								UnitTest/Extra/musl-libm/pow.c \
+								UnitTest/Extra/musl-libm/powf.c \
+								UnitTest/Extra/musl-libm/sin.c
+
+UnitTest_musl_m_la_LDFLAGS = -avoid-version -module
+
+UnitTest_unit_test_CPPFLAGS = -I$(srcdir)/UnitTest \
+								-I$(srcdir)/UnitTest/Extra \
+								-I$(srcdir)/UnitTest/Extra/googletest/googletest/include
+
+UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
+								UnitTest/Colorspace/colorspace2_test.cpp \
+								UnitTest/Common/audit_buffer.cpp \
+								UnitTest/Common/audit_buffer.h \
+								UnitTest/Common/copy_filter_test.cpp \
+								UnitTest/Common/filter_validator.cpp \
+								UnitTest/Common/filter_validator.h \
+								UnitTest/Common/filtergraph_test.cpp \
+								UnitTest/Common/mock_filter.cpp \
+								UnitTest/Common/mock_filter.h \
+								UnitTest/Common/mux_filter_test.cpp \
+								UnitTest/Depth/depth_convert2_test.cpp \
+								UnitTest/Depth/dither2_test.cpp \
+								UnitTest/Extra/sha1/config.h \
+								UnitTest/Extra/sha1/sha1.c \
+								UnitTest/Extra/sha1/sha1.h \
+								UnitTest/Resize/resize_impl2_test.cpp
+
+UnitTest_unit_test_LDADD = UnitTest/Extra/googletest/googletest/lib/libgtest.la UnitTest/musl_m.la libzimg.la
+endif # UNIT_TEST
