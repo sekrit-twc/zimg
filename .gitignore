@@ -17,6 +17,8 @@ Release
 .libs
 .deps/
 .dirstamp
+m4/*
+!m4/ax_pthread.m4
 Makefile
 Makefile.in
 aclocal.m4

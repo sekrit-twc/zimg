@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I m4
+
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
 AM_CXXFLAGS = -std=c++11 $(commonflags)
@@ -100,11 +102,11 @@ vszimg_la_SOURCES = vszimg/vszimg.c \
 					vszimg/VapourSynth.h \
 					vszimg/VSHelper.h
 
-vszimg_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/API -pthread
+vszimg_la_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS) -I$(srcdir)/API
 
-vszimg_la_LIBADD = libzimg.la
+vszimg_la_LIBADD = $(PTHREAD_LIBS) libzimg.la
 
-vszimg_la_LDFLAGS = -no-undefined -avoid-version -module -pthread
+vszimg_la_LDFLAGS = -no-undefined -avoid-version -module
 
 vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 

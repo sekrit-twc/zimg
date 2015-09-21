@@ -1,4 +1,5 @@
 AC_INIT([zimg], [1], [https://github.com/sekrit-twc/zimg/pulls], [zimg], [https://github.com/sekrit-twc/zimg])
+AC_CONFIG_MACRO_DIR([m4])
 
 : ${CFLAGS=""}
 : ${CXXFLAGS=""}
@@ -34,6 +35,9 @@ AS_IF([test "x$enable_x86simd" = "xyes"], [AC_DEFINE([ZIMG_X86])])
 
 AM_CONDITIONAL([X86SIMD], [test "x$enable_x86simd" = "xyes"])
 
+
+AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. vszimg may fail.]))
+AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
 
 AS_CASE(
   [$host_cpu],
