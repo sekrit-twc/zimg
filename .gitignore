@@ -7,6 +7,9 @@
 *.user
 Debug
 Release
+UnitTest/unit_test
+UnitTest/unit_test.log
+UnitTest/unit_test.trs
 
 *.o
 *.la
@@ -34,4 +37,6 @@ install-sh
 libtool
 ltmain.sh
 missing
+test-driver
+test-suite.log
 zimg-test
