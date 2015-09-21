@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Colorspace">
       <UniqueIdentifier>{f7ac1f20-8f45-41f8-9dc3-42dce80456b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Resize">
+      <UniqueIdentifier>{05879f60-0cfb-4a61-8bf8-87b4faebd882}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\UnitTest\main.cpp">
@@ -104,6 +107,9 @@
     </ClCompile>
     <ClCompile Include="..\..\UnitTest\Colorspace\colorspace2_test.cpp">
       <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_test.cpp">
+      <Filter>Source Files\Resize</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

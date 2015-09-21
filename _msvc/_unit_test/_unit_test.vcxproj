@@ -39,6 +39,7 @@
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\__sin.c" />
     <ClCompile Include="..\..\UnitTest\Extra\sha1\sha1.c" />
     <ClCompile Include="..\..\UnitTest\main.cpp" />
+    <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\UnitTest\Common\audit_buffer.h" />
