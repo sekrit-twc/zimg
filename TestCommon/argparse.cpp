@@ -18,13 +18,13 @@ int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **arg
 
 	std::string str = *argv;
 	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-	bool *out_p = reinterpret_cast<bool *>(out);
-	bool value = false;
+	int *out_p = reinterpret_cast<int *>(out);
+	int value = 0;
 
 	if (str == "true" || str == "1")
-		value = true;
+		value = 1;
 	else if (str == "false" || str =="0")
-		value = false;
+		value = 0;
 	else
 		return -1;
 
@@ -34,15 +34,15 @@ int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **arg
 
 int handle_argument_true(const ArgparseOption *, void *out, int, char **)
 {
-	bool *out_p = reinterpret_cast<bool *>(out);
-	*out_p = true;
+	int *out_p = reinterpret_cast<int *>(out);
+	*out_p = 1;
 	return 0;
 }
 
-int handle_argument_false(const ArgparseOption *,void *out, int, char **)
+int handle_argument_false(const ArgparseOption *, void *out, int, char **)
 {
-	bool *out_p = reinterpret_cast<bool *>(out);
-	*out_p = false;
+	int *out_p = reinterpret_cast<int *>(out);
+	*out_p = 0;
 	return 0;
 }
 
