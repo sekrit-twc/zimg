@@ -11,7 +11,7 @@
 
 namespace {;
 
-int handle_argument_bool(const ArgparseOption *, void *out, int argc, const char **argv)
+int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
@@ -32,21 +32,21 @@ int handle_argument_bool(const ArgparseOption *, void *out, int argc, const char
 	return 1;
 }
 
-int handle_argument_true(const ArgparseOption *, void *out, int, const char **)
+int handle_argument_true(const ArgparseOption *, void *out, int, char **)
 {
 	bool *out_p = reinterpret_cast<bool *>(out);
 	*out_p = true;
 	return 0;
 }
 
-int handle_argument_false(const ArgparseOption *,void *out, int, const char **)
+int handle_argument_false(const ArgparseOption *,void *out, int, char **)
 {
 	bool *out_p = reinterpret_cast<bool *>(out);
 	*out_p = false;
 	return 0;
 }
 
-int handle_argument_integer(const ArgparseOption *, void *out, int argc, const char **argv)
+int handle_argument_integer(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
@@ -60,7 +60,7 @@ int handle_argument_integer(const ArgparseOption *, void *out, int argc, const c
 	}
 }
 
-int handle_argument_uinteger(const ArgparseOption *, void *out, int argc, const char **argv)
+int handle_argument_uinteger(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
@@ -79,7 +79,7 @@ int handle_argument_uinteger(const ArgparseOption *, void *out, int argc, const 
 	}
 }
 
-int handle_argument_float(const ArgparseOption *, void *out, int argc, const char **argv)
+int handle_argument_float(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
@@ -93,7 +93,7 @@ int handle_argument_float(const ArgparseOption *, void *out, int argc, const cha
 	}
 }
 
-int handle_argument_string(const ArgparseOption *, void *out, int argc, const char **argv)
+int handle_argument_string(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
@@ -103,7 +103,7 @@ int handle_argument_string(const ArgparseOption *, void *out, int argc, const ch
 	return 1;
 }
 
-int handle_argument(const ArgparseOption *opt, void *out, int argc, const char **argv)
+int handle_argument(const ArgparseOption *opt, void *out, int argc, char **argv)
 {
 	void *out_p = (char *)out + opt->offset;
 
@@ -200,7 +200,7 @@ T map_find_default(const MapType &map, const K &key, const T &default_value = T{
 } // namespace
 
 
-int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, const char **argv)
+int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, char **argv)
 {
 	std::unordered_map<std::string, const ArgparseOption *> switch_short_map;
 	std::unordered_map<std::string, const ArgparseOption *> switch_long_map;

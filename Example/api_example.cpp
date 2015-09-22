@@ -388,7 +388,7 @@ void execute(const Arguments &args)
 } // namespace
 
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
 	Arguments args{};
 	int ret;
