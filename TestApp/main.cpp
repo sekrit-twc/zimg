@@ -27,7 +27,7 @@ typedef int (*main_func)(int, char **);
 void usage()
 {
 	std::cout << "TestApp subapp [args]\n";
-	//std::cout << "    colorspace - change colorspace\n";
+	std::cout << "    colorspace - change colorspace\n";
 	//std::cout << "    depth      - change depth\n";
 	//std::cout << "    resize     - resize images\n";
 	//std::cout << "    unresize   - unresize images\n";
@@ -36,7 +36,7 @@ void usage()
 main_func lookup_app(const char *name)
 {
 	static const zimg::static_string_map<main_func, 1> map{
-		{ "", nullptr }
+		{ "colorspace", colorspace_main }
 	};
 
 	auto it = map.find(name);
