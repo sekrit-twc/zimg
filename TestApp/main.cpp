@@ -1,10 +1,26 @@
 #include <iostream>
+#include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "Common/static_map.h"
 
 #include "apps.h"
 
 namespace {;
+
+zimg::CPUClass parse_cpu(const char *cpu)
+{
+	static const zimg::static_string_map<zimg::CPUClass, 4> map{
+		{ "none", zimg::CPUClass::CPU_NONE },
+		{ "auto", zimg::CPUClass::CPU_AUTO },
+#ifdef ZIMG_X86
+		{ "sse2", zimg::CPUClass::CPU_X86_SSE2 },
+		{ "avx2", zimg::CPUClass::CPU_X86_AVX2 },
+#endif
+	};
+	auto it = map.find(cpu);
+	return it == map.end() ? throw std::invalid_argument{ "bad CPU type" } : it->second;
+}
+
 
 typedef int (*main_func)(int, char **);
 
@@ -29,6 +45,23 @@ main_func lookup_app(const char *name)
 
 } // namespace
 
+
+int arg_decode_cpu(const struct ArgparseOption *, void *out, int argc, char **argv)
+{
+	if (argc < 1)
+		return -1;
+
+	zimg::CPUClass *cpu = reinterpret_cast<zimg::CPUClass *>(out);
+
+	try {
+		*cpu = parse_cpu(*argv);
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
+
+	return 1;
+}
 
 int main(int argc, char **argv)
 {
