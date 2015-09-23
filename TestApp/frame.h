@@ -3,6 +3,7 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
+#if 0
 #include <cstdint>
 #include "Common/align.h"
 
@@ -117,5 +118,6 @@ void write_frame_bmp(const Frame &frame, const char *filename);
  * @param filename name of DIB file
  */
 void write_frame_raw(const Frame &frame, const char *filename);
+#endif
 
 #endif // FRAME_H_

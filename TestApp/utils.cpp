@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -222,3 +223,4 @@ void parse_opts(const char **first, const char **last, const AppOption *options_
 		first += nargs;
 	}
 }
+#endif

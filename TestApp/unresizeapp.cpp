@@ -1,3 +1,4 @@
+#if 0
 #include <cstddef>
 #include <iostream>
 #include <iterator>
@@ -105,3 +106,4 @@ int unresize_main(int argc, const char **argv)
 
 	return 0;
 }
+#endif

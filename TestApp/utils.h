@@ -3,6 +3,7 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#if 0
 #include <cstddef>
 #include <functional>
 #include "Common/align.h"
@@ -52,5 +53,6 @@ void apply_filter(const zimg::IZimgFilter &filter, const Frame &in, Frame &out, 
 void measure_time(int times, std::function<void(void)> f);
 
 void parse_opts(const char **first, const char **last, const AppOption *options_first, const AppOption *options_last, void *dst, void *user);
+#endif
 
 #endif // UTILS_H_

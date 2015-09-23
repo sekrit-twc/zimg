@@ -1,3 +1,4 @@
+#if 0
 #include <cstddef>
 #include <cstring>
 #include <iostream>
@@ -162,3 +163,4 @@ int resize_main(int argc, const char **argv)
 
 	return 0;
 }
+#endif

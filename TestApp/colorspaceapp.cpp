@@ -1,3 +1,4 @@
+#if 0
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -191,3 +192,4 @@ int colorspace_main(int argc, const char **argv)
 
 	return 0;
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -243,3 +244,4 @@ void write_frame_raw(const Frame &frame, const char *filename)
 		}
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include <cstring>
 #include <iostream>
 #include <iterator>
@@ -165,3 +166,4 @@ int depth_main(int argc, const char **argv)
 
 	return 0;
 }
+#endif
