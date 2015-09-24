@@ -625,7 +625,7 @@ class FilterGraph::impl {
 
 		if (!entire_row) {
 			double scale = std::max((double)tail_attr.width / head_attr.width, 1.0);
-			unsigned step = mod((unsigned)std::round(HORIZONTAL_STEP * scale), ALIGNMENT);
+			unsigned step = mod((unsigned)std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT);
 			return std::min(step, tail_attr.width);
 		} else {
 			return tail_attr.width;

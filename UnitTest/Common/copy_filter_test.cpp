@@ -13,7 +13,7 @@ TEST(CopyFilterTest, test)
 	const char *expected_sha1[][3] = {
 		{ "b7399d798c5f96b4c9ac4c6cccd4c979468bdc7a" },
 		{ "43362943f1de4b51f45679a0c460f55c8bd8d2f2" },
-		{ "e28cce115314b303454b427fde07a66ecbaff62f" },
+		{ "1a25ec59d5708d3bfc36d87b05f6d7625d4a3d24" },
 		{ "078016e8752bcfb63b16c86b4ae212a51579f028" }
 	};
 

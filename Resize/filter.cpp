@@ -54,7 +54,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 		for (size_t j = 0; j < width; ++j) {
 			float coeff = (float)m[i][left + j];
-			int16_t coeff_i16 = (int16_t)std::round(coeff * (float)(1 << 14));
+			int16_t coeff_i16 = (int16_t)std::lrintf(coeff * (float)(1 << 14));
 
 			e.data[i * e.stride + j] = coeff;
 			e.data_i16[i * e.stride_i16 + j] = coeff_i16;
