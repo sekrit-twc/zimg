@@ -203,6 +203,7 @@ zimg::ZimgImageBuffer ImageFrame::as_write_buffer(unsigned plane)
 	zimg::ZimgImageBuffer buffer{};
 
 	buffer.data[0] = m_vector[plane].data();
+	buffer.stride[0] = width_to_stride(width(plane), m_pixel);
 	buffer.mask[0] = -1;
 
 	return buffer;
@@ -454,7 +455,7 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, unsigned depth_in, bool fullrange)
 {
 	const zimg::depth::DitherType dither = zimg::depth::DitherType::DITHER_NONE;
 	const zimg::CPUClass cpu = zimg::CPUClass::CPU_NONE;
@@ -465,9 +466,10 @@ zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, 
 		new zimg::FilterGraph{ width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color }
 	};
 
-	if (type != spec.type) {
+	if (type != spec.type || depth_in != (unsigned)zimg::default_pixel_format(type).depth) {
 		zimg::PixelFormat src_format = zimg::default_pixel_format(type);
 		zimg::PixelFormat dst_format = zimg::default_pixel_format(spec.type);
+		src_format.depth = depth_in;
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
@@ -492,20 +494,20 @@ zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, 
 	return graph.release();
 }
 
-void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, bool fullrange)
+void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
-	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), fullrange) };
+	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, frame.width(), frame.height(), true };
 	graph->process(frame.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 }
 
-void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, bool fullrange)
+void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
 	WindowsBitmap bmp_image{ spec.path.c_str(), (int)frame.width(), (int)frame.height(), (int)frame.planes() * 8 };
 
-	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), fullrange) };
+	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::ZimgImageBuffer line_buffer{};
@@ -545,13 +547,13 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, bool fullr
 	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, { cb, &callback_context });
 }
 
-void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, bool fullrange)
+void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
 	unsigned mmap_linesize = frame.width() * 2;
 
 	MemoryMappedFile mmap_image{ spec.path.c_str(), static_cast<size_t>(mmap_linesize) * frame.height(), MemoryMappedFile::CREATE_TAG };
 
-	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), fullrange) };
+	std::unique_ptr<zimg::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::ZimgImageBuffer line_buffer{};
@@ -615,6 +617,11 @@ ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigne
 
 void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange)
 {
+	write_to_pathspec(frame, pathspec, assumed, zimg::default_pixel_format(frame.pixel_type()).depth, fullrange);
+}
+
+void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange)
+{
 	PathSpecifier spec = parse_path_specifier(pathspec, assumed);
 
 	if (is_null_device(spec.path))
@@ -627,13 +634,13 @@ void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char
 
 	switch (spec.packing) {
 	case PackingFormat::PACK_PLANAR:
-		write_to_planar(frame, spec, fullrange);
+		write_to_planar(frame, spec, depth_in, fullrange);
 		return;
 	case PackingFormat::PACK_BMP:
-		write_to_bmp(frame, spec, fullrange);
+		write_to_bmp(frame, spec, depth_in, fullrange);
 		return;
 	case PackingFormat::PACK_YUY2:
-		write_to_yuy2(frame, spec, fullrange);
+		write_to_yuy2(frame, spec, depth_in, fullrange);
 		return;
 	}
 }

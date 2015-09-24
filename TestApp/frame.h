@@ -65,6 +65,8 @@ ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigne
 
 void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange = false);
 
+void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange);
+
 } // namespace imageframe
 
 #endif // FRAME_H_
