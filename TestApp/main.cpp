@@ -1,6 +1,9 @@
 #include <iostream>
+#include <regex>
+#include <string>
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
+#include "Common/pixel.h"
 #include "Common/static_map.h"
 
 #include "apps.h"
@@ -19,6 +22,18 @@ zimg::CPUClass parse_cpu(const char *cpu)
 	};
 	auto it = map.find(cpu);
 	return it == map.end() ? throw std::invalid_argument{ "bad CPU type" } : it->second;
+}
+
+zimg::PixelType parse_pixel_type(const char *type)
+{
+	static const zimg::static_string_map<zimg::PixelType, 4> map{
+		{ "byte", zimg::PixelType::BYTE },
+		{ "word", zimg::PixelType::WORD },
+		{ "half", zimg::PixelType::HALF },
+		{ "float", zimg::PixelType::FLOAT },
+	};
+	auto it = map.find(type);
+	return it == map.end() ? throw std::invalid_argument{ "bad pixel type" } : it->second;
 }
 
 
@@ -62,6 +77,37 @@ int arg_decode_cpu(const struct ArgparseOption *, void *out, int argc, char **ar
 
 	return 1;
 }
+
+int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char **argv)
+{
+	if (argc < 1)
+		return -1;
+
+	zimg::PixelFormat *format = reinterpret_cast<zimg::PixelFormat *>(out);
+
+	try {
+		std::regex format_regex{ R"(^(byte|word|half|float)(?::(f|l)(c|l)?(?::(\d+))?)?$)" };
+		std::cmatch match;
+
+		if (!std::regex_match(*argv, match, format_regex))
+			throw std::runtime_error{ "bad format string" };
+
+		*format = zimg::default_pixel_format(parse_pixel_type(match[1].str().c_str()));
+
+		if (match.size() >= 2 && match[2].length())
+			format->fullrange = (match[2] == "f");
+		if (match.size() >= 3 && match[3].length())
+			format->chroma = (match[3] == "c");
+		if (match.size() >= 4 && match[4].length())
+			format->depth = std::stoi(match[4]);
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
+
+	return 1;
+}
+
 
 int main(int argc, char **argv)
 {
