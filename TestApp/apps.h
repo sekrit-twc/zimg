@@ -16,9 +16,8 @@ int arg_decode_pixfmt(const struct ArgparseOption *opt, void *out, int argc, cha
 
 int colorspace_main(int argc, char **argv);
 
+int depth_main(int argc, char **argv);
 #if 0
-int depth_main(int argc, const char **argv);
-
 int resize_main(int argc, const char **argv);
 
 int unresize_main(int argc, const char **argv);

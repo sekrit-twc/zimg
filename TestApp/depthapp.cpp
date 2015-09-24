@@ -1,169 +1,185 @@
-#if 0
 #include <cstring>
 #include <iostream>
-#include <iterator>
-#include <string>
+#include <memory>
+#include <regex>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Common/plane.h"
 #include "Common/static_map.h"
 #include "Depth/depth2.h"
 #include "apps.h"
+#include "argparse.h"
 #include "frame.h"
+#include "timer.h"
 #include "utils.h"
-
-using namespace zimg;
 
 namespace {;
 
-struct AppContext {
-	const char *infile;
-	const char *outfile;
-	int width;
-	int height;
-	PixelType pixtype_in;
-	PixelType pixtype_out;
-	depth::DitherType dither;
-	int bits_in;
-	int bits_out;
-	int fullrange_in;
-	int fullrange_out;
-	int yuv;
-	const char *visualise;
-	int times;
-	CPUClass cpu;
-};
-
-int select_dither(const char **opt, const char **lastopt, void *p, void *user)
+zimg::depth::DitherType lookup_dither(const char *dither)
 {
-	static static_string_map<depth::DitherType, 4> map{
-		{ "none",            depth::DitherType::DITHER_NONE },
-		{ "ordered",         depth::DitherType::DITHER_ORDERED },
-		{ "random",          depth::DitherType::DITHER_RANDOM },
-		{ "error_diffusion", depth::DitherType::DITHER_ERROR_DIFFUSION },
+	using zimg::depth::DitherType;
+
+	static const zimg::static_string_map<DitherType, 4> map{
+		{ "none",            DitherType::DITHER_NONE },
+		{ "ordered",         DitherType::DITHER_ORDERED },
+		{ "random",          DitherType::DITHER_RANDOM },
+		{ "error_diffusion", DitherType::DITHER_ERROR_DIFFUSION },
 	};
-
-	AppContext *c = (AppContext *)p;
-
-	if (lastopt - opt < 2)
-		throw std::invalid_argument{ "insufficient arguments for option dither" };
-
-	auto it = map.find(opt[1]);
-	c->dither = (it == map.end()) ? throw std::invalid_argument{ "unsupported dither type" } : it->second;
-
-	return 2;
+	auto it = map.find(dither);
+	return it == map.end() ? throw std::invalid_argument{ "bad dither type" } : it->second;
 }
 
-const AppOption OPTIONS[] = {
-	{ "dither",    OptionType::OPTION_SPECIAL,  0, select_dither },
-	{ "bits-in",   OptionType::OPTION_INTEGER,  offsetof(AppContext, bits_in) },
-	{ "bits-out",  OptionType::OPTION_INTEGER,  offsetof(AppContext, bits_out) },
-	{ "tv-in",     OptionType::OPTION_FALSE,    offsetof(AppContext, fullrange_in) },
-	{ "pc-in",     OptionType::OPTION_TRUE,     offsetof(AppContext, fullrange_in) },
-	{ "tv-out",    OptionType::OPTION_FALSE,    offsetof(AppContext, fullrange_out) },
-	{ "pc-out",    OptionType::OPTION_TRUE,     offsetof(AppContext, fullrange_out) },
-	{ "yuv",       OptionType::OPTION_TRUE,     offsetof(AppContext, yuv) },
-	{ "rgb",       OptionType::OPTION_FALSE,    offsetof(AppContext, yuv) },
-	{ "visualise", OptionType::OPTION_STRING,   offsetof(AppContext, visualise) },
-	{ "times",     OptionType::OPTION_INTEGER,  offsetof(AppContext, times) },
-	{ "cpu",       OptionType::OPTION_CPUCLASS, offsetof(AppContext, cpu) },
+int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
+{
+	if (argc < 1)
+		return -1;
+
+	zimg::depth::DitherType *dither = reinterpret_cast<zimg::depth::DitherType *>(out);
+
+	try {
+		*dither = lookup_dither(*argv);
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
+
+	return 1;
+}
+
+int decode_force_rgb_yuv(const ArgparseOption *opt, void *out, int, char **)
+{
+	int *family = reinterpret_cast<int *>(out);
+
+	if (!strcmp(opt->long_name, "yuv"))
+		*family = 1;
+	else
+		*family = 2;
+
+	return 0;
+}
+
+
+double ns_per_sample(const ImageFrame &frame, double seconds)
+{
+	double samples = static_cast<double>(static_cast<size_t>(frame.width()) * frame.height() * 3);
+	return seconds * 1e9 / samples;
+}
+
+void execute(const zimg::IZimgFilter *filter, const zimg::IZimgFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+{
+	auto results = measure_benchmark(times, FilterExecutor{ filter, filter_uv, src_frame, dst_frame }, [](unsigned n, double d)
+	{
+		std::cout << '#' << n << ": " << d << '\n';
+	});
+
+	std::cout << "avg: " << results.first << " (" << ns_per_sample(*src_frame, results.first) << " ns/sample)\n";
+	std::cout << "min: " << results.second << " (" << ns_per_sample(*src_frame, results.second) << " ns/sample)\n";
+}
+
+
+struct Arguments {
+	const char *inpath;
+	const char *outpath;
+	unsigned width;
+	unsigned height;
+	zimg::depth::DitherType dither;
+	zimg::PixelFormat format_in;
+	zimg::PixelFormat format_out;
+	int force_color_family;
+	const char *visualise_path;
+	unsigned times;
+	zimg::CPUClass cpu;
 };
 
-void usage()
-{
-	std::cout << "depth infile outfile w h pxl_in pxl_out [--dither dither] [--bits-in bits] [--bits-out bits] [--tv-in | pc-in] [--tv-out | --pc-out] [--yuv | --rgb] [--visualise path] [--times n] [--cpu cpu]\n";
-	std::cout << "    infile               input file\n";
-	std::cout << "    outfile              output file\n";
-	std::cout << "    w                    image width\n";
-	std::cout << "    h                    image height\n";
-	std::cout << "    pxl_in               input pixel type\n";
-	std::cout << "    pxl_out              output pixel type\n";
-	std::cout << "    --dither             select dithering type\n";
-	std::cout << "    --bits-in            input bit depth (integer only)\n";
-	std::cout << "    --bits-out           output bit depth (integer only)\n";
-	std::cout << "    --tv-in | --pc-in    toggle TV vs PC range for input\n";
-	std::cout << "    --tv-out | --pc-out  toggle TV vs PC range for output\n";
-	std::cout << "    --yuv | --rgb        toggle YUV vs RGB\n";
-	std::cout << "    --visualise          path to BMP file for visualisation\n";
-	std::cout << "    --times              number of cycles\n";
-	std::cout << "    --cpu                select CPU type\n";
-}
+const ArgparseOption program_switches[] = {
+	{ OPTION_UINTEGER, "w",     "width",      offsetof(Arguments, width),              nullptr, "image width" },
+	{ OPTION_UINTEGER, "h",     "height",     offsetof(Arguments, height),             nullptr, "image height"},
+	{ OPTION_USER,     nullptr, "dither",     offsetof(Arguments, dither),             decode_dither, "select dithering method" },
+	{ OPTION_USER,     nullptr, "yuv",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret RGB image as YUV" },
+	{ OPTION_USER,     nullptr, "rgb",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret YUV image as RGB"},
+	{ OPTION_STRING,   nullptr, "visualise",  offsetof(Arguments, visualise_path),     nullptr, "path to BMP file for visualisation"},
+	{ OPTION_UINTEGER, nullptr, "times",      offsetof(Arguments, times),              nullptr, "number of benchmark cycles"},
+	{ OPTION_USER,     nullptr, "cpu",        offsetof(Arguments, cpu),                arg_decode_cpu, "select CPU type"},
+};
 
-void execute(const IZimgFilter *depth, const IZimgFilter *depth_uv, Frame &in, Frame &out, bool yuv, int times)
-{
-	auto tmp = alloc_filter_tmp(*depth, in, out);
-	auto tmp_uv = alloc_filter_tmp(*depth_uv, in, out);
+const ArgparseOption program_positional[] = {
+	{ OPTION_STRING, nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
+	{ OPTION_STRING, nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
+	{ OPTION_USER,   nullptr, "format-in",  offsetof(Arguments, format_in),  arg_decode_pixfmt, "input pixel format"},
+	{ OPTION_USER,   nullptr, "format-out", offsetof(Arguments, format_out), arg_decode_pixfmt, "output pixel format"},
+};
 
-	measure_time(times, [&]()
-	{
-		for (int p = 0; p < 3; ++p) {
-			const IZimgFilter *depth_ctx = (p > 0 && yuv) ? depth_uv : depth;
-			void *tmp_pool = (p > 0 && yuv) ? tmp_uv.data() : tmp.data();
+const char help_str[] =
+"Dithering methods: none, ordered, random, error_diffusion\n"
+"\n"
+PIXFMT_SPECIFIER_HELP_STR
+"\n"
+PATH_SPECIFIER_HELP_STR;
 
-			apply_filter(*depth_ctx, in, out, tmp_pool, p);
-		}
-	});
-}
+const ArgparseCommandLine program_def = {
+	program_switches,
+	sizeof(program_switches) / sizeof(program_switches[0]),
+	program_positional,
+	sizeof(program_positional) / sizeof(program_positional[0]),
+	"depth",
+	"convert images between pixel formats",
+	help_str
+};
 
 } // namespace
 
 
-int depth_main(int argc, const char **argv)
+int depth_main(int argc, char **argv)
 {
-	if (argc < 7) {
-		usage();
-		return -1;
+	Arguments args{};
+	int ret;
+
+	args.times = 1;
+
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
+		return ret == ARGPARSE_HELP ? 0 : ret;
+
+	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444", args.width, args.height);
+
+	bool is_yuv;
+	if (args.force_color_family == 1)
+		is_yuv = true;
+	else if (args.force_color_family == 2)
+		is_yuv = false;
+	else
+		is_yuv = src_frame.is_yuv();
+
+	if (src_frame.is_yuv() != is_yuv)
+		std::cerr << "warning: input file is of different color family than declared format\n";
+	if (src_frame.pixel_type() != args.format_in.type)
+		std::cerr << "warning: input file is of a different pixel type than declared format\n";
+
+	if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
+		throw std::logic_error{ "pixel sizes not compatible" };
+
+	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(), is_yuv, src_frame.subsample_w(), src_frame.subsample_h() };
+
+	std::unique_ptr<zimg::IZimgFilter> filter;
+	std::unique_ptr<zimg::IZimgFilter> filter_uv;
+
+	filter.reset(zimg::depth::create_depth2(
+		args.dither, src_frame.width(), src_frame.height(), args.format_in, args.format_out, args.cpu));
+
+	if (src_frame.planes() >= 3 && is_yuv) {
+		zimg::PixelFormat format_in_uv = args.format_in;
+		zimg::PixelFormat format_out_uv = args.format_out;
+
+		format_in_uv.chroma = true;
+		format_out_uv.chroma = true;
+
+		filter_uv.reset(zimg::depth::create_depth2(
+			args.dither, src_frame.width(), src_frame.height(), format_in_uv, format_out_uv, args.cpu));
 	}
 
-	AppContext c{};
+	execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
 
-	c.infile        = argv[1];
-	c.outfile       = argv[2];
-	c.width         = std::stoi(argv[3]);
-	c.height        = std::stoi(argv[4]);
-	c.pixtype_in    = select_pixel_type(argv[5]);
-	c.pixtype_out   = select_pixel_type(argv[6]);
-	c.bits_in       = -1;
-	c.bits_out      = -1;
-	c.dither        = depth::DitherType::DITHER_NONE;
-	c.fullrange_in  = 0;
-	c.fullrange_out = 0;
-	c.yuv           = 0;
-	c.visualise     = nullptr;
-	c.times         = 1;
-	c.cpu           = CPUClass::CPU_NONE;
+	if (args.visualise_path)
+		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
 
-	parse_opts(argv + 7, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
-
-	c.bits_in  = c.bits_in < 0 ? pixel_size(c.pixtype_in) * 8 : c.bits_in;
-	c.bits_out = c.bits_out < 0 ? pixel_size(c.pixtype_out) * 8 : c.bits_out;
-
-	int width = c.width;
-	int height = c.height;
-
-	Frame in{ width, height, pixel_size(c.pixtype_in), 3 };
-	Frame out{ width, height, pixel_size(c.pixtype_out), 3 };
-
-	PixelFormat pixel_in_y{ c.pixtype_in, c.bits_in, !!c.fullrange_in, false };
-	PixelFormat pixel_out_y{ c.pixtype_out, c.bits_out, !!c.fullrange_out, false };
-	PixelFormat pixel_in_uv{ c.pixtype_in, c.bits_in, !!c.fullrange_in, !!c.yuv };
-	PixelFormat pixel_out_uv{ c.pixtype_out, c.bits_out, !!c.fullrange_out, !!c.yuv };
-
-	read_frame_raw(in, c.infile);
-
-	std::unique_ptr<IZimgFilter> depth{ depth::create_depth2(c.dither, (unsigned)width, (unsigned)height, pixel_in_y, pixel_out_y, c.cpu) };
-	std::unique_ptr<IZimgFilter> depth_uv{ depth::create_depth2(c.dither, (unsigned)width, (unsigned)height, pixel_in_uv, pixel_out_uv, c.cpu) };
-	execute(depth.get(), depth_uv.get(), in, out, !!c.yuv, c.times);
-
-	write_frame_raw(out, c.outfile);
-
-	if (c.visualise) {
-		Frame bmp{ width, height, 1, 3 };
-
-		convert_frame(out, bmp, c.pixtype_out, PixelType::BYTE, !!c.fullrange_out, !!c.yuv);
-		write_frame_bmp(bmp, c.visualise);
-	}
-
+	imageframe::write_to_pathspec(dst_frame, args.outpath, "i444", args.format_out.fullrange);
 	return 0;
 }
-#endif
