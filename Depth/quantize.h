@@ -149,7 +149,7 @@ public:
 
 	T operator()(float x) const
 	{
-		int32_t u = (int32_t)(x * scale + offset + 0.5f);
+		int32_t u = (int32_t)std::lrintf(x * scale + offset);
 
 		return static_cast<T>(clamp(u, (int32_t)0, (int32_t)std::numeric_limits<T>::max()));
 	}
