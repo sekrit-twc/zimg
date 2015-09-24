@@ -42,12 +42,14 @@ TEST(DepthConvert2Test, test_limited_luma)
 	const char *expected_sha1[][3] = {
 		{ "a7096d8251091eb2188bb2bec9fee9d0495faf2c" },
 		{ "705050fb0e56681004ede72126bd264d6c4268d9" },
-		{ "5d71c3c35d4444b51d31c1739e0cf89f8071af94" },
+
+		{ "f8c1a8d19a442a5fb480d8b77a347a6326f3e640" },
 		{ "5c813b8fda21c1dd3505f165ea0e718eb9e8a427" },
 
-		{ "4184caae2bd2a3f54722cba1d561cc8720b117ce" },
-		{ "6b8aafcdd5ea647b85fd83653086432419db6956" },
-		{ "4184caae2bd2a3f54722cba1d561cc8720b117ce" },
+		{ "8907defd10af0b7c71abfb9c20147adc1b0a1f70" },
+		{ "68442b2c5704fd2792d92b15fa2e259a51c601dc" },
+
+		{ "8907defd10af0b7c71abfb9c20147adc1b0a1f70" },
 		{ "483b6bdf608afbf1fba6bbca9657a8ca3822eef1" },
 	};
 
@@ -59,12 +61,14 @@ TEST(DepthConvert2Test, test_limited_chroma)
 	const char *expected_sha1[][3] = {
 		{ "7c84d9bc8a271e543d8e6a503ffdeb651d9b60d9" },
 		{ "f0ab1d4b4fa8a87006137918c5bfb423a1020079" },
-		{ "84a629953a61dc057e02f3a7af444075d27475db" },
+
+		{ "d87519b6603f966aef1b01e014c18909e3814918" },
 		{ "19c80a38e459f74fbfa53055aff6aeddbddd0f79" },
 
-		{ "8889f7eaa2c3a10bea6827c8e5cc3acfa025fb04" },
-		{ "10613af29901e78809cfa4f419aaa32e8055ca2b" },
-		{ "8889f7eaa2c3a10bea6827c8e5cc3acfa025fb04" },
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
+		{ "ef824bbfe3dc3f9cc4094d50d48091fa5f5fec7e" },
+
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
 		{ "39ba7172306b4c4a16089265e1839d80010ec14f" },
 	};
 
@@ -76,12 +80,14 @@ TEST(DepthConvert2Test, test_full_luma)
 	const char *expected_sha1[][3] = {
 		{ "f0e4a68158eab0ab350c7161498a8eed3196c233" },
 		{ "20c77820ff7d4443a0de7991218e2f8eee551e8d" },
-		{ "9919fde3704a99ebe5de33f040189ed1cef15add" },
+
+		{ "07b6aebbfe48004c8acb12a3c76137db57ba9a0b" },
 		{ "7ad2bc4ba1be92699ec22f489ae93a8b0dc89821" },
 
-		{ "4184caae2bd2a3f54722cba1d561cc8720b117ce" },
-		{ "6b8aafcdd5ea647b85fd83653086432419db6956" },
-		{ "4184caae2bd2a3f54722cba1d561cc8720b117ce" },
+		{ "8907defd10af0b7c71abfb9c20147adc1b0a1f70" },
+		{ "68442b2c5704fd2792d92b15fa2e259a51c601dc" },
+
+		{ "8907defd10af0b7c71abfb9c20147adc1b0a1f70" },
 		{ "483b6bdf608afbf1fba6bbca9657a8ca3822eef1" },
 	};
 
@@ -93,12 +99,14 @@ TEST(DepthConvert2Test, test_full_chroma)
 	const char *expected_sha1[][3] = {
 		{ "333be81b7364a126a2a6167522b539cfad599814" },
 		{ "48a95801578c440f7180c799bdc344a873c6d8d6" },
+
 		{ "a4a5448b98ab83e68afde9582dec61d37eb610bb" },
 		{ "ad93453f70f4d010049bb6c9e29307ddeee4fa5b" },
 
-		{ "8889f7eaa2c3a10bea6827c8e5cc3acfa025fb04" },
-		{ "10613af29901e78809cfa4f419aaa32e8055ca2b" },
-		{ "8889f7eaa2c3a10bea6827c8e5cc3acfa025fb04" },
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
+		{ "ef824bbfe3dc3f9cc4094d50d48091fa5f5fec7e" },
+
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
 		{ "39ba7172306b4c4a16089265e1839d80010ec14f" },
 	};
 
