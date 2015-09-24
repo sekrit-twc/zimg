@@ -16,8 +16,8 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 	const unsigned src_w = 640;
 	const unsigned src_h = 480;
 
-	const unsigned dst_w = horizontal ? (unsigned)std::round(scale_factor * src_w) : src_w ;
-	const unsigned dst_h = horizontal ? src_h : (unsigned)std::round(scale_factor * src_h);
+	const unsigned dst_w = horizontal ? (unsigned)std::lrint(scale_factor * src_w) : src_w ;
+	const unsigned dst_h = horizontal ? src_h : (unsigned)std::lrint(scale_factor * src_h);
 
 	double subwidth = (horizontal ? src_w : src_h) * subwidth_factor;
 
@@ -94,7 +94,7 @@ TEST(ResizeImplTest, test_horizontal_down)
 	const char *expected_sha1_u16[][3] = {
 		{ "35f664a086caaa5823a8dd031e06f91cdffa47d0" },
 		{ "7ddad53e36e73b724bf28db0ae09a5f4e515c146" },
-		{ "4fe960333b212bfdf226224e5b399e421ec10d5c" },
+		{ "49d41df857ba3d444b9dfef63c810c65545d3c31" },
 		{ "3d6023567154014b605b826fda17346561e15970" }
 	};
 	const char *expected_sha1_f32[][3] = {
@@ -137,7 +137,7 @@ TEST(ResizeImplTest, test_vertical_down)
 		{ "aaef348f13b54c47b75c364a4c5db9348387753d" },
 		{ "8e8da56422e90bf16e1b3c335db4daabef8983f3" },
 		{ "637ad69f36083bff0abf2923a96e3ffe09c2bbdf" },
-		{ "e1a9d1422bf5f2f62fcae435eb44358640c54831" }
+		{ "54544c703c7e7dc8f4bf3fc53eb934c3cdcd4cd2" }
 	};
 	const char *expected_sha1_f32[][3] = {
 		{ "efa5092501e0069902209849b0b38538b82ced88" },
@@ -166,7 +166,7 @@ TEST(ResizeImplTest, test_horizontal_nonfull)
 	const char *expected_sha1_down[][3] = {
 		{ "dec8c699dbd69e5be6e37b348565dcb3e019c638" },
 		{ "7eb060e033795a8a566993629bbeb82e92838d5a" },
-		{ "c96e9563d72a0b4b4aa2b5e2d05273afd2517db3" },
+		{ "6e2769dc70f2535e8f17cadbc4e2aa4828c3127e" },
 		{ "055c27a8eb6360bfdcd6358e13283ea3ed93a236" }
 	};
 
@@ -191,7 +191,7 @@ TEST(ResizeImplTest, test_vertical_nonfull)
 		{ "49bd4c39366f7d0fe28d8c3b47ef6fc1ce27a7fb" },
 		{ "69b037df9adcb0cbe8520839ce2655ee5d80ca77" },
 		{ "4e7d4ee01e49e303cde28d481efdea7ff420affc" },
-		{ "e91ab472ba88556bc4ed9fb190bfb3beef58e779" }
+		{ "c9a2e93a707a348fce8662f2f7a896964cd47eb2" }
 	};
 
 	SCOPED_TRACE("up");
