@@ -189,6 +189,7 @@
     <ClInclude Include="..\..\Resize\resize2.h" />
     <ClInclude Include="..\..\Resize\resize_impl.h" />
     <ClInclude Include="..\..\Resize\resize_impl2.h" />
+    <ClInclude Include="..\..\Resize\resize_impl2_x86.h" />
     <ClInclude Include="..\..\Resize\resize_impl_x86.h" />
     <ClInclude Include="..\..\Unresize\bilinear.h" />
     <ClInclude Include="..\..\Unresize\unresize.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="..\..\Resize\resize2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_x86.cpp" />
