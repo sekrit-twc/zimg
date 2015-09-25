@@ -203,8 +203,8 @@ void validate_filter_buffered(const zimg::IZimgFilter *filter, unsigned src_widt
 	unsigned vstep = filter->get_simultaneous_lines();
 	unsigned step = flags.has_state ? vstep : vstep * 2;
 
-	unsigned left = flags.entire_row ? 0 : attr.width / 4;
-	unsigned right = flags.entire_row ? attr.width : attr.width / 2;
+	unsigned left = flags.entire_row ? 0 : attr.width / 4 + 1;
+	unsigned right = flags.entire_row ? attr.width : attr.width / 2 - 1;
 
 	zimg::AlignedVector<char> ctx(filter->get_context_size());
 	zimg::AlignedVector<char> tmp(filter->get_tmp_size(left, right));

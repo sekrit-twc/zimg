@@ -112,7 +112,7 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 if X86SIMD
-noinst_LTLIBRARIES += libsse2.la libavx2.la
+noinst_LTLIBRARIES += libsse.la libsse2.la libavx2.la
 
 libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
 					  Colorspace/operation_impl_x86.h \
@@ -122,8 +122,15 @@ libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
 					  Depth/dither_impl_x86.h \
 					  Resize/resize_impl_x86.cpp \
 					  Resize/resize_impl_x86.h \
+					  Resize/resize_impl2_x86.cpp \
+					  Resize/resize_impl2_x86.h \
 					  Unresize/unresize_impl_x86.cpp \
 					  Unresize/unresize_impl_x86.h
+
+
+libsse_la_SOURCES = Resize/resize_impl2_sse.cpp
+
+libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 
 
 libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
@@ -146,7 +153,7 @@ libavx2_la_SOURCES = Colorspace/operation_impl_avx2.cpp \
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
 
 
-libzimg_la_LIBADD = libsse2.la libavx2.la
+libzimg_la_LIBADD = libsse.la libsse2.la libavx2.la
 endif
 
 
@@ -249,5 +256,11 @@ UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
 								UnitTest/Extra/sha1/sha1.h \
 								UnitTest/Resize/resize_impl2_test.cpp
 
+if X86SIMD
+
+UnitTest_unit_test_SOURCES += UnitTest/Resize/resize_impl2_sse_test.cpp
+
+endif #X86SIMD
+								
 UnitTest_unit_test_LDADD = UnitTest/Extra/googletest/googletest/lib/libgtest.la UnitTest/musl_m.la libzimg.la
 endif # UNIT_TEST

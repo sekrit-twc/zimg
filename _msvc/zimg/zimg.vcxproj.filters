@@ -350,5 +350,8 @@
     <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp">
       <Filter>Source Files\Resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2_sse.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

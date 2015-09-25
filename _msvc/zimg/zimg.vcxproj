@@ -232,6 +232,10 @@
     <ClCompile Include="..\..\Resize\resize2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl2.cpp" />
+    <ClCompile Include="..\..\Resize\resize_impl2_sse.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp" />
