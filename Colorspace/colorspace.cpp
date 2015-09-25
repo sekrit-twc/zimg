@@ -1,3 +1,5 @@
+#if 0
+
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
@@ -99,3 +101,5 @@ void ColorspaceConversion::process(const ImagePlane<const void> *src, const Imag
 
 } // namespace colorspace
 } // namespace zimg
+
+#endif

@@ -2,7 +2,7 @@
 #include "Common/align.h"
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Common/plane.h"
+#include "Unresize/plane.h"
 #include "Unresize/unresize.h"
 #include "apps.h"
 #include "argparse.h"
@@ -16,7 +16,7 @@ bool is_set_pixel_format(const zimg::PixelFormat &format)
 	return format != zimg::PixelFormat{};
 }
 
-zimg::ImagePlane<void> frame_to_plane(ImageFrame &frame, unsigned plane)
+zimg::unresize::ImagePlane<void> frame_to_plane(ImageFrame &frame, unsigned plane)
 {
 	zimg::PixelFormat format = zimg::default_pixel_format(frame.pixel_type());
 	format.chroma = (plane == 1 || plane == 2) && frame.is_yuv();
@@ -25,7 +25,7 @@ zimg::ImagePlane<void> frame_to_plane(ImageFrame &frame, unsigned plane)
 	return{ buf.data[plane], (int)frame.width(), (int)frame.height(), (int)(buf.stride[plane] / zimg::pixel_size(format.type)), format };
 }
 
-zimg::ImagePlane<const void> frame_to_plane(const ImageFrame &frame, unsigned plane)
+zimg::unresize::ImagePlane<const void> frame_to_plane(const ImageFrame &frame, unsigned plane)
 {
 	return frame_to_plane(const_cast<ImageFrame &>(frame), plane);
 }

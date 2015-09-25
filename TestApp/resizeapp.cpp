@@ -5,13 +5,13 @@
 #include <regex>
 #include <string>
 #include "Common/cpuinfo.h"
-#include "Common/pair_filter.h"
 #include "Common/pixel.h"
 #include "Resize/filter.h"
 #include "Resize/resize2.h"
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
+#include "pair_filter.h"
 #include "timer.h"
 #include "utils.h"
 
@@ -200,7 +200,7 @@ int resize_main(int argc, char **argv)
 	std::unique_ptr<zimg::IZimgFilter> filter_b{ filter_pair.second };
 
 	if (filter_b) {
-		std::unique_ptr<zimg::IZimgFilter> pair{ new zimg::PairFilter{ filter_a.get(), filter_b.get() } };
+		std::unique_ptr<zimg::IZimgFilter> pair{ new PairFilter{ filter_a.get(), filter_b.get() } };
 		filter_a.release();
 		filter_b.release();
 		filter_a = std::move(pair);

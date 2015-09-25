@@ -1,11 +1,9 @@
 #include <algorithm>
-#include "align.h"
-#include "alloc.h"
-#include "except.h"
+#include "Common/align.h"
+#include "Common/alloc.h"
+#include "Common/except.h"
+#include "Common/pixel.h"
 #include "pair_filter.h"
-#include "pixel.h"
-
-namespace zimg {;
 
 struct PairFilter::cache_context {
 	void *first_ctx;
@@ -53,7 +51,7 @@ PairFilter::PairFilter(IZimgFilter *first, IZimgFilter *second) :
 
 ptrdiff_t PairFilter::get_cache_stride() const
 {
-	return align(m_first_attr.width * pixel_size(m_first_attr.type), ALIGNMENT);
+	return zimg::align(m_first_attr.width * pixel_size(m_first_attr.type), zimg::ALIGNMENT);
 }
 
 unsigned PairFilter::get_cache_line_count() const
@@ -63,9 +61,9 @@ unsigned PairFilter::get_cache_line_count() const
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return m_first_attr.height;
 	else if (m_second_flags.same_row && m_first_step == m_second_step)
-		return select_zimg_buffer_mask(m_second_buffering) + 1;
+		return zimg::select_zimg_buffer_mask(m_second_buffering) + 1;
 	else
-		return select_zimg_buffer_mask(m_first_step + m_second_buffering - 1) + 1;
+		return zimg::select_zimg_buffer_mask(m_first_step + m_second_buffering - 1) + 1;
 }
 
 size_t PairFilter::get_cache_size_one_plane() const
@@ -78,9 +76,9 @@ unsigned PairFilter::get_num_planes() const
 	return m_color ? 3 : 1;
 }
 
-ZimgFilterFlags PairFilter::get_flags() const
+zimg::ZimgFilterFlags PairFilter::get_flags() const
 {
-	ZimgFilterFlags flags{};
+	zimg::ZimgFilterFlags flags{};
 
 	flags.has_state = m_has_state;
 	flags.same_row = m_first_flags.same_row && m_second_flags.same_row;
@@ -92,21 +90,21 @@ ZimgFilterFlags PairFilter::get_flags() const
 	return flags;
 }
 
-IZimgFilter::image_attributes PairFilter::get_image_attributes() const
+zimg::IZimgFilter::image_attributes PairFilter::get_image_attributes() const
 {
 	return m_second_attr;
 }
 
-IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
+zimg::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
 {
 	auto second_range = m_second->get_required_row_range(i);
-	auto top_range = m_first->get_required_row_range(mod(second_range.first, m_first_step));
-	auto bot_range = m_first->get_required_row_range(mod(second_range.second - 1, m_first_step));
+	auto top_range = m_first->get_required_row_range(zimg::mod(second_range.first, m_first_step));
+	auto bot_range = m_first->get_required_row_range(zimg::mod(second_range.second - 1, m_first_step));
 
 	return{ top_range.first, bot_range.second };
 }
 
-IZimgFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
+zimg::IZimgFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
 {
 	auto second_range = m_second->get_required_col_range(left, right);
 	auto first_range = m_first->get_required_col_range(second_range.first, second_range.second);
@@ -136,7 +134,7 @@ unsigned PairFilter::get_max_buffering() const
 
 size_t PairFilter::get_context_size() const
 {
-	FakeAllocator alloc{};
+	zimg::FakeAllocator alloc{};
 
 	size_t first_context_size = m_first->get_context_size();
 	size_t second_context_size = m_second->get_context_size();
@@ -166,7 +164,7 @@ size_t PairFilter::get_tmp_size(unsigned left, unsigned right) const
 
 void PairFilter::init_context(void *ctx) const
 {
-	LinearAllocator alloc{ ctx };
+	zimg::LinearAllocator alloc{ ctx };
 
 	size_t first_context_size = m_first->get_context_size();
 	size_t second_context_size = m_second->get_context_size();
@@ -185,23 +183,23 @@ void PairFilter::init_context(void *ctx) const
 	}
 
 	cache->cache_line_pos = 0;
-	cache->cache_mask = select_zimg_buffer_mask(get_cache_line_count());
+	cache->cache_mask = zimg::select_zimg_buffer_mask(get_cache_line_count());
 	cache->col_left = 0;
 	cache->col_right = 0;
 }
 
-void PairFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void PairFilter::process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	cache_context *cache = static_cast<cache_context *>(ctx);
 	auto row_range = m_second->get_required_row_range(i);
 	auto col_range = m_second->get_required_col_range(left, right);
 	ptrdiff_t cache_stride = get_cache_stride();
-	ZimgImageBuffer cache_buf{};
+	zimg::ZimgImageBuffer cache_buf{};
 
 	if (left != cache->col_left || right != cache->col_right) {
 		cache->col_left = left;
 		cache->col_right = right;
-		cache->cache_line_pos = m_first_flags.has_state ? 0 : mod(row_range.first, m_first_step);
+		cache->cache_line_pos = m_first_flags.has_state ? 0 : zimg::mod(row_range.first, m_first_step);
 	}
 
 	if (m_in_place) {
@@ -219,5 +217,3 @@ void PairFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgI
 	}
 	m_second->process(cache->second_ctx, cache_buf, dst, tmp, i, left, right);
 }
-
-} // namespace zimg

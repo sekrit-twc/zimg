@@ -6,9 +6,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <type_traits>
-#include "pixel.h"
+#include "Common/pixel.h"
 
 namespace zimg {;
+namespace unresize {;
 
 /**
  * Wrapper for pointer to buffer containing image data.
@@ -141,6 +142,7 @@ inline void copy_image_plane(const ImagePlane<const T> &src, const ImagePlane<T>
 	}
 }
 
+} // namespace unresize
 } // namespace zimg
 
 #endif // ZIMG_PLANE_H_
