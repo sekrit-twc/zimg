@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\TestApp\apps.h" />
     <ClInclude Include="..\..\TestApp\frame.h" />
+    <ClInclude Include="..\..\TestApp\pair_filter.h" />
     <ClInclude Include="..\..\TestApp\timer.h" />
     <ClInclude Include="..\..\TestApp\utils.h" />
   </ItemGroup>
@@ -29,6 +30,7 @@
     <ClCompile Include="..\..\TestApp\depthapp.cpp" />
     <ClCompile Include="..\..\TestApp\frame.cpp" />
     <ClCompile Include="..\..\TestApp\main.cpp" />
+    <ClCompile Include="..\..\TestApp\pair_filter.cpp" />
     <ClCompile Include="..\..\TestApp\resizeapp.cpp" />
     <ClCompile Include="..\..\TestApp\unresizeapp.cpp" />
     <ClCompile Include="..\..\TestApp\utils.cpp" />

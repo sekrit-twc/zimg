@@ -3,7 +3,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "Common/pixel.h"
-#include "Common/plane.h"
+#include "plane.h"
 #include "unresize.h"
 #include "unresize_impl.h"
 

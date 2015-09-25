@@ -50,10 +50,7 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Common/mux_filter.cpp \
 					 Common/mux_filter.h \
 					 Common/osdep.h \
-					 Common/pair_filter.cpp \
-					 Common/pair_filter.h \
 					 Common/pixel.h \
-					 Common/plane.h \
 					 Depth/depth_convert.cpp \
 					 Depth/depth_convert.h \
 					 Depth/depth_convert2.cpp \
@@ -83,6 +80,7 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Resize/resize_impl2.h \
 					 Unresize/bilinear.cpp \
 					 Unresize/bilinear.h \
+					 Unresize/plane.h \
 					 Unresize/unresize.cpp \
 					 Unresize/unresize.h \
 					 Unresize/unresize_impl.cpp \
@@ -196,6 +194,8 @@ zimg_test_SOURCES = TestApp/apps.h \
 					TestApp/frame.cpp \
 					TestApp/frame.h \
 					TestApp/main.cpp \
+					TestApp/pair_filter.cpp \
+					TestApp/pair_filter.h \
 					TestApp/resizeapp.cpp \
 					TestApp/unresizeapp.cpp \
 					TestApp/utils.cpp \
