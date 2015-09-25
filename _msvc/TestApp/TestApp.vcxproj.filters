@@ -27,6 +27,9 @@
     <ClInclude Include="..\..\TestApp\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\TestApp\pair_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\TestApp\colorspaceapp.cpp">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\TestApp\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\TestApp\pair_filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

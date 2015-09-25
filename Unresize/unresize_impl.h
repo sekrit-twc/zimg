@@ -5,8 +5,8 @@
 
 #include <cstddef>
 #include "Common/osdep.h"
-#include "Common/plane.h"
 #include "bilinear.h"
+#include "plane.h"
 
 namespace zimg {;
 

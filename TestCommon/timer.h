@@ -3,6 +3,9 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+#include <cmath>
+#include <utility>
+
 #ifndef _WIN32
 
 #include <chrono>
@@ -26,7 +29,7 @@ public:
 
 #else
 
-#include <windows.h>
+#include <Windows.h>
 
 class Timer {
 	LARGE_INTEGER m_start;
@@ -46,5 +49,35 @@ public:
 };
 
 #endif // _WIN32
+
+
+template <class T, class U>
+std::pair<double, double> measure_benchmark(unsigned times, T func, U callback)
+{
+	Timer timer;
+	double min_time = INFINITY;
+	double sum_time = 0.0;
+
+	for (unsigned n = 0; n < times; ++n) {
+		double elapsed_cur;
+
+		timer.start();
+		func();
+		timer.stop();
+
+		elapsed_cur = timer.elapsed();
+		callback(n, elapsed_cur);
+
+		sum_time += elapsed_cur;
+		min_time = min_time < elapsed_cur ? min_time : elapsed_cur;
+	}
+	return{ sum_time / times, min_time };
+}
+
+template <class T>
+std::pair<double, double> measure_benchmark(unsigned times, T func)
+{
+	return measure_benchmark(times, func, [](unsigned, double) {});
+}
 
 #endif // TIMER_H_

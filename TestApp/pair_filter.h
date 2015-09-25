@@ -4,20 +4,18 @@
 #define ZIMG_PAIR_FILTER_H_
 
 #include <memory>
-#include "zfilter.h"
-
-namespace zimg {;
+#include "Common/zfilter.h"
 
 enum class PixelType;
 
-class PairFilter final : public IZimgFilter {
+class PairFilter final : public zimg::IZimgFilter {
 	struct cache_context;
 private:
-	std::unique_ptr<IZimgFilter> m_first;
-	std::unique_ptr<IZimgFilter> m_second;
+	std::unique_ptr<zimg::IZimgFilter> m_first;
+	std::unique_ptr<zimg::IZimgFilter> m_second;
 
-	ZimgFilterFlags m_first_flags;
-	ZimgFilterFlags m_second_flags;
+	zimg::ZimgFilterFlags m_first_flags;
+	zimg::ZimgFilterFlags m_second_flags;
 
 	image_attributes m_first_attr;
 	image_attributes m_second_attr;
@@ -38,9 +36,9 @@ private:
 
 	unsigned get_num_planes() const;
 public:
-	PairFilter(IZimgFilter *first, IZimgFilter *second);
+	PairFilter(zimg::IZimgFilter *first, zimg::IZimgFilter *second);
 
-	ZimgFilterFlags get_flags() const override;
+	zimg::ZimgFilterFlags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -58,9 +56,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
-
-}
 
 #endif // ZIMG_PAIR_FILTER_H_

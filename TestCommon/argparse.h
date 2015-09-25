@@ -20,7 +20,7 @@ typedef struct ArgparseOption {
 	const char *short_name;
 	const char *long_name;
 	size_t offset;
-	int (*func)(const struct ArgparseOption *opt, void *out, int argc, const char **argv);
+	int (*func)(const struct ArgparseOption *opt, void *out, int argc, char **argv);
 	const char *description;
 } ArgparseOption;
 
@@ -38,7 +38,7 @@ typedef struct ArgparseCommandLine {
 #define ARGPARSE_ERROR 2
 #define ARGPARSE_FATAL 3
 
-int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, const char **argv);
+int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, char **argv);
 
 #ifdef __cplusplus
 } /* extern "C" */

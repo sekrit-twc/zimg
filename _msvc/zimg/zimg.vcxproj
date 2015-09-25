@@ -166,9 +166,7 @@
     <ClInclude Include="..\..\Common\matrix.h" />
     <ClInclude Include="..\..\Common\mux_filter.h" />
     <ClInclude Include="..\..\Common\osdep.h" />
-    <ClInclude Include="..\..\Common\pair_filter.h" />
     <ClInclude Include="..\..\Common\pixel.h" />
-    <ClInclude Include="..\..\Common\plane.h" />
     <ClInclude Include="..\..\Common\static_map.h" />
     <ClInclude Include="..\..\Common\zassert.h" />
     <ClInclude Include="..\..\Common\zfilter.h" />
@@ -214,7 +212,6 @@
     <ClCompile Include="..\..\Common\filtergraph.cpp" />
     <ClCompile Include="..\..\Common\libm_wrapper.cpp" />
     <ClCompile Include="..\..\Common\mux_filter.cpp" />
-    <ClCompile Include="..\..\Common\pair_filter.cpp" />
     <ClCompile Include="..\..\Depth\depth.cpp" />
     <ClCompile Include="..\..\Depth\depth2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert.cpp" />

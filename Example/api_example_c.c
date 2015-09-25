@@ -258,7 +258,7 @@ fail:
 	return ret;
 }
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
 	ArgparseCommandLine cmd = { 0 };
 	struct Arguments args = { 0 };

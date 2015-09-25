@@ -1,193 +1,191 @@
 #include <cstddef>
-#include <cstdio>
-#include <cstring>
 #include <iostream>
-#include <iterator>
 #include <memory>
 #include <regex>
-#include <stdexcept>
 #include <string>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Common/plane.h"
 #include "Common/static_map.h"
-#include "Colorspace/colorspace2.h"
+#include "Common/zfilter.h"
 #include "Colorspace/colorspace_param.h"
-#include "apps.h"
-#include "frame.h"
-#include "utils.h"
+#include "Colorspace/colorspace2.h"
 
-using namespace zimg;
+#include "apps.h"
+#include "argparse.h"
+#include "frame.h"
+#include "timer.h"
+#include "utils.h"
 
 namespace {;
 
-struct AppContext {
-	const char *infile;
-	const char *outfile;
-	int width;
-	int height;
-	colorspace::ColorspaceDefinition csp_in;
-	colorspace::ColorspaceDefinition csp_out;
-	int fullrange_in;
-	int fullrange_out;
-	const char *visualise;
-	int times;
-	CPUClass cpu;
-	PixelType filetype;
-};
-
-const AppOption OPTIONS[] = {
-	{ "tv-in",     OptionType::OPTION_FALSE,     offsetof(AppContext, fullrange_in) },
-	{ "pc-in",     OptionType::OPTION_TRUE,      offsetof(AppContext, fullrange_in) },
-	{ "tv-out",    OptionType::OPTION_FALSE,     offsetof(AppContext, fullrange_out) },
-	{ "pc-out",    OptionType::OPTION_TRUE,      offsetof(AppContext, fullrange_out) },
-	{ "visualise", OptionType::OPTION_STRING,    offsetof(AppContext, visualise) },
-	{ "times",     OptionType::OPTION_INTEGER,   offsetof(AppContext, times) },
-	{ "cpu",       OptionType::OPTION_CPUCLASS,  offsetof(AppContext, cpu) },
-    { "filetype",  OptionType::OPTION_PIXELTYPE, offsetof(AppContext, filetype) },
-};
-
-void usage()
+zimg::colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 {
-	std::cout << "colorspace infile outfile w h csp_in csp_out [--tv-in | --pc-in] [--tv-out | --pc-out] [--visualise path] [--times n] [--cpu cpu] [--filetype type]\n";
-	std::cout << "    infile               input file\n";
-	std::cout << "    outfile              output file\n";
-	std::cout << "    w                    image width\n";
-	std::cout << "    h                    image height\n";
-	std::cout << "    csp_in               input colorspace\n";
-	std::cout << "    csp_out              output colorspace\n";
-	std::cout << "    --tv-in | --pc-in    toggle TV vs PC range for input\n";
-	std::cout << "    --tv-out | --pc-out  toggle TV vs PC range for output\n";
-	std::cout << "    --visualise          path to BMP file for visualisation\n";
-	std::cout << "    --times              number of cycles\n";
-	std::cout << "    --cpu                select CPU type\n";
-	std::cout << "    --filetype           pixel format of input/output files\n";
-}
+	using zimg::colorspace::MatrixCoefficients;
 
-colorspace::MatrixCoefficients parse_matrix(const char *matrix)
-{
-	static const static_string_map<colorspace::MatrixCoefficients, 6> map{
-		{ "unspec",   colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED },
-		{ "rgb",      colorspace::MatrixCoefficients::MATRIX_RGB },
-		{ "601",      colorspace::MatrixCoefficients::MATRIX_601 },
-		{ "709",      colorspace::MatrixCoefficients::MATRIX_709 },
-		{ "2020_ncl", colorspace::MatrixCoefficients::MATRIX_2020_NCL },
-		{ "2020_cl",  colorspace::MatrixCoefficients::MATRIX_2020_CL },
+	static const zimg::static_string_map<MatrixCoefficients, 6> map{
+		{ "unspec",   MatrixCoefficients::MATRIX_UNSPECIFIED },
+		{ "rgb",      MatrixCoefficients::MATRIX_RGB },
+		{ "601",      MatrixCoefficients::MATRIX_601 },
+		{ "709",      MatrixCoefficients::MATRIX_709 },
+		{ "2020_ncl", MatrixCoefficients::MATRIX_2020_NCL },
+		{ "2020_cl",  MatrixCoefficients::MATRIX_2020_CL },
 	};
 	auto it = map.find(matrix);
 	return it == map.end() ? throw std::invalid_argument{ "bad matrix coefficients" } : it->second;
 }
 
-colorspace::TransferCharacteristics parse_transfer(const char *transfer)
+zimg::colorspace::TransferCharacteristics parse_transfer(const char *transfer)
 {
-	static const static_string_map<colorspace::TransferCharacteristics, 3> map{
-		{ "unspec", colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED },
-		{ "linear", colorspace::TransferCharacteristics::TRANSFER_LINEAR },
-		{ "709",    colorspace::TransferCharacteristics::TRANSFER_709 },
+	using zimg::colorspace::TransferCharacteristics;
+
+	static const zimg::static_string_map<TransferCharacteristics, 3> map{
+		{ "unspec", TransferCharacteristics::TRANSFER_UNSPECIFIED },
+		{ "linear", TransferCharacteristics::TRANSFER_LINEAR },
+		{ "709",    TransferCharacteristics::TRANSFER_709 },
 	};
 	auto it = map.find(transfer);
 	return it == map.end() ? throw std::invalid_argument{ "bad transfer characteristics" } : it->second;
 }
 
-colorspace::ColorPrimaries parse_primaries(const char *primaries)
+zimg::colorspace::ColorPrimaries parse_primaries(const char *primaries)
 {
-	static const static_string_map<colorspace::ColorPrimaries, 4> map{
-		{ "unspec",  colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED },
-		{ "smpte_c", colorspace::ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ "709",     colorspace::ColorPrimaries::PRIMARIES_709 },
-		{ "2020",    colorspace::ColorPrimaries::PRIMARIES_2020 }
+	using zimg::colorspace::ColorPrimaries;
+
+	static const zimg::static_string_map<ColorPrimaries, 4> map{
+		{ "unspec",  ColorPrimaries::PRIMARIES_UNSPECIFIED },
+		{ "smpte_c", ColorPrimaries::PRIMARIES_SMPTE_C },
+		{ "709",     ColorPrimaries::PRIMARIES_709 },
+		{ "2020",    ColorPrimaries::PRIMARIES_2020 },
 	};
 	auto it = map.find(primaries);
 	return it == map.end() ? throw std::invalid_argument{ "bad primaries" } : it->second;
 }
 
-colorspace::ColorspaceDefinition parse_csp(const char *str)
+int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 {
-	colorspace::ColorspaceDefinition csp;
-	std::regex csp_regex{ R"(^(\w+):(\w+):(\w+)$)" };
-	std::cmatch match;
+	if (argc < 1)
+		return -1;
 
-	if (!std::regex_match(str, match, csp_regex))
-		throw std::runtime_error{ "bad colorspace string" };
+	zimg::colorspace::ColorspaceDefinition *csp = reinterpret_cast<zimg::colorspace::ColorspaceDefinition *>(out);
 
-	csp.matrix = parse_matrix(match[1].str().c_str());
-	csp.transfer = parse_transfer(match[2].str().c_str());
-	csp.primaries = parse_primaries(match[3].str().c_str());
+	try {
+		std::regex csp_regex{ R"(^(\w+):(\w+):(\w+)$)" };
+		std::cmatch match;
 
-	return csp;
+		if (!std::regex_match(*argv, match, csp_regex))
+			throw std::runtime_error{ "bad colorspace string" };
+
+		csp->matrix = parse_matrix(match[1].str().c_str());
+		csp->transfer = parse_transfer(match[2].str().c_str());
+		csp->primaries = parse_primaries(match[3].str().c_str());
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return -1;
+	}
+
+	return 1;
 }
 
-void execute(const colorspace::ColorspaceConversion2 &conv, const Frame &in, Frame &out, int times,
-             bool fullrange_in, bool fullrange_out, bool yuv_in, bool yuv_out, PixelType filetype)
+
+double ns_per_sample(const ImageFrame &frame, double seconds)
 {
-	int width = in.width();
-	int height = in.height();
+	double samples = static_cast<double>(static_cast<size_t>(frame.width()) * frame.height() * 3);
+	return seconds * 1e9 / samples;
+}
 
-	Frame in_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
-	Frame out_conv{ width, height, pixel_size(PixelType::FLOAT), 3 };
-
-	convert_frame(in, in_conv, filetype, PixelType::FLOAT, fullrange_in, yuv_in);
-
-	auto tmp = alloc_filter_tmp(conv, in_conv, out_conv);
-
-	measure_time(times, [&]()
+void execute(const zimg::IZimgFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+{
+	auto results = measure_benchmark(times, FilterExecutor{ filter, nullptr, src_frame, dst_frame }, [](unsigned n, double d)
 	{
-		apply_filter(conv, in_conv, out_conv, tmp.data(), 0);
+		std::cout << '#' << n << ": " << d << '\n';
 	});
 
-	convert_frame(out_conv, out, PixelType::FLOAT, filetype, fullrange_out, yuv_out);
+	std::cout << "avg: " << results.first << " (" << ns_per_sample(*src_frame, results.first) << " ns/sample)\n";
+	std::cout << "min: " << results.second << " (" << ns_per_sample(*src_frame, results.second) << " ns/sample)\n";
 }
+
+
+struct Arguments {
+	const char *inpath;
+	const char *outpath;
+	unsigned width;
+	unsigned height;
+	zimg::colorspace::ColorspaceDefinition csp_in;
+	zimg::colorspace::ColorspaceDefinition csp_out;
+	int fullrange_in;
+	int fullrange_out;
+	const char *visualise_path;
+	unsigned times;
+	zimg::CPUClass cpu;
+};
+
+const ArgparseOption program_switches[] = {
+	{ OPTION_UINTEGER, "w",     "width",     offsetof(Arguments, width),           nullptr, "image width" },
+	{ OPTION_UINTEGER, "h",     "height",    offsetof(Arguments, height),          nullptr, "image height" },
+	{ OPTION_FALSE,    nullptr, "tv-in",     offsetof(Arguments, fullrange_in),    nullptr, "input is TV range" },
+	{ OPTION_TRUE,     nullptr, "pc-in",     offsetof(Arguments, fullrange_in),    nullptr, "input is PC range" },
+	{ OPTION_FALSE,    nullptr, "tv-out",    offsetof(Arguments, fullrange_out),   nullptr, "output is TV range" },
+	{ OPTION_TRUE,     nullptr, "pc-out",    offsetof(Arguments, fullrange_out),   nullptr, "output is PC range" },
+	{ OPTION_STRING,   nullptr, "visualise", offsetof(Arguments, visualise_path),  nullptr, "path to BMP file for visualisation" },
+	{ OPTION_UINTEGER, nullptr, "times",     offsetof(Arguments, times),           nullptr, "number of benchmark cycles" },
+	{ OPTION_USER,     nullptr, "cpu",       offsetof(Arguments, cpu),             arg_decode_cpu, "select CPU type" },
+};
+
+const ArgparseOption program_positional[] = {
+	{ OPTION_STRING,   nullptr,   "inpath",         offsetof(Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING,   nullptr,   "outpath",        offsetof(Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_USER,     "csp-in",  "colorspace-in",  offsetof(Arguments, csp_in),  decode_colorspace, "input colorspace specifier" },
+	{ OPTION_USER,     "csp-out", "colorspace-out", offsetof(Arguments, csp_out), decode_colorspace, "output colorspace specifier" },
+};
+
+const char help_str[] =
+"Colorspace specifier format: matrix:transfer:primaries\n"
+"matrix:    unspec, rgb, 601, 709, 2020_ncl, 2020_cl\n"
+"transfer:  unspec, linear, 709\n"
+"primaries: unspec, smpte_c, 709, 2020\n"
+"\n"
+PATH_SPECIFIER_HELP_STR;
+
+const ArgparseCommandLine program_def = {
+	program_switches,
+	sizeof(program_switches) / sizeof(program_switches[0]),
+	program_positional,
+	sizeof(program_positional) / sizeof(program_positional[0]),
+	"colorspace",
+	"convert images between colorspaces",
+	help_str
+};
 
 } // namespace
 
 
-int colorspace_main(int argc, const char **argv)
+int colorspace_main(int argc, char **argv)
 {
-	if (argc < 7) {
-		usage();
-		return -1;
-	}
+	Arguments args{};
+	int ret;
 
-	AppContext c{};
+	args.times = 1;
 
-	c.infile        = argv[1];
-	c.outfile       = argv[2];
-	c.width         = std::stoi(argv[3]);
-	c.height        = std::stoi(argv[4]);
-	c.csp_in        = parse_csp(argv[5]);
-	c.csp_out       = parse_csp(argv[6]);
-	c.fullrange_in  = 0;
-	c.fullrange_out = 0;
-	c.visualise     = nullptr;
-	c.times         = 1;
-	c.filetype      = PixelType::FLOAT;
-	c.cpu           = CPUClass::CPU_NONE;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
+		return ret == ARGPARSE_HELP ? 0 : ret;
 
-	parse_opts(argv + 7, argv + argc, std::begin(OPTIONS), std::end(OPTIONS), &c, nullptr);
+	bool yuv_in = args.csp_in.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
+	bool yuv_out = args.csp_out.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
 
-	int width = c.width;
-	int height = c.height;
-	int pxsize = pixel_size(c.filetype);
+	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width, args.height, zimg::PixelType::FLOAT, !!args.fullrange_in);
+	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), zimg::PixelType::FLOAT, 3, yuv_out };
 
-	bool yuv_in = c.csp_in.matrix != colorspace::MatrixCoefficients::MATRIX_RGB;
-	bool yuv_out = c.csp_out.matrix != colorspace::MatrixCoefficients::MATRIX_RGB;
+	if (src_frame.is_yuv() != yuv_in)
+		std::cerr << "warning: input file is of different color family than declared format\n";
 
-	Frame in{ width, height, pxsize, 3 };
-	Frame out{ width, height, pxsize, 3 };
+	std::unique_ptr<zimg::IZimgFilter> convert{
+		new zimg::colorspace::ColorspaceConversion2{ src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu }
+	};
+	execute(convert.get(), &src_frame, &dst_frame, args.times);
 
-	read_frame_raw(in, c.infile);
+	if (args.visualise_path)
+		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
 
-	colorspace::ColorspaceConversion2 conv{ (unsigned)width, (unsigned)height, c.csp_in, c.csp_out, c.cpu };
-	execute(conv, in, out, c.times, !!c.fullrange_in, !!c.fullrange_out, yuv_in, yuv_out, c.filetype);
-
-	write_frame_raw(out, c.outfile);
-
-	if (c.visualise) {
-		Frame bmp{ width, height, 1, 3 };
-
-		convert_frame(out, bmp, c.filetype, PixelType::BYTE, !!c.fullrange_out, yuv_out);
-		write_frame_bmp(bmp, c.visualise);
-	}
-
+	imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", !!args.fullrange_out);
 	return 0;
 }

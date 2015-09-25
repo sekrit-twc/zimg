@@ -3,119 +3,70 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
-#include <cstdint>
 #include "Common/align.h"
+#include "Common/ztypes.h"
 
-/**
- * Container for planar byte-aligned image data with 3 or 4 channels.
- */
-class Frame {
-	zimg::AlignedVector<uint8_t> m_data[4];
-	int m_width;
-	int m_height;
-	int m_pxsize;
-	int m_stride;
-	int m_planes;
+#define PATH_SPECIFIER_HELP_STR \
+"Path specifier: spec@path\n" \
+"BYTE:  bmp, grey, yuy2, yv12, yv16, yv24, i420, i422, i444, rgbp, gbrp\n" \
+"WORD:  greyw, yv12w, yv16w, yv24w, i420w, i422w, i444w, rgbpw, gbrpw\n" \
+"HALF:  greyh, i420h, i422h, i444h, rgbph\n" \
+"FLOAT: greys, i420s, i422s, i444s, rgbps\n"
+
+namespace zimg {;
+
+enum class PixelType;
+
+} // namespace zimg
+
+
+class ImageFrame {
+	zimg::AlignedVector<char> m_vector[3];
+	unsigned m_width;
+	unsigned m_height;
+	zimg::PixelType m_pixel;
+	unsigned m_planes;
+	unsigned m_subsample_w;
+	unsigned m_subsample_h;
+	bool m_yuv;
 public:
-	/**
-	 * Construct an empty frame.
-	 */
-	Frame() = default;
+	ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
+	           bool yuv = false, unsigned subsample_w = 0, unsigned subsample_h = 0);
 
-	/**
-	 * Construct a frame with given dimensions.
-	 * The planes are zero-initialized.
-	 *
-	 * @param width image width
-	 * @param height image height
-	 * @param pxsize bytes per pixel
-	 * @param planes number of planes, up to 4
-	 */
-	Frame(int width, int height, int pxsize, int planes);
+	unsigned width(unsigned plane = 0) const;
 
-	/**
-	 * @return image width
-	 */
-	int width() const;
+	unsigned height(unsigned plane = 0) const;
 
-	/**
-	 * @return image height
-	 */
-	int height() const;
+	zimg::PixelType pixel_type() const;
 
-	/**
-	 * @return bytes per pixel
-	 */
-	int pxsize() const;
+	unsigned planes() const;
 
-	/**
-	 * @return distance between lines in pixels
-	 */
-	int stride() const;
+	unsigned subsample_w() const;
 
-	/**
-	 * @return number of planes
-	 */
-	int planes() const;
+	unsigned subsample_h() const;
 
-	/**
-	 * Get a pointer to a given plane.
-	 *
-	 * @param plane number of plane
-	 * @return pointer to plane
-	 */
-	unsigned char *data(int plane);
+	bool is_yuv() const;
 
-	/**
-	 * @see Frame::data(int)
-	 */
-	const unsigned char *data(int plane) const;
+	zimg::ZimgImageBufferConst as_read_buffer(unsigned plane) const;
 
-	/**
-	 * Get a pointer to a row in a plane.
-	 *
-	 * @param plane number of plane
-	 * @param row row index, counting from the image top
-	 * @return pointer to row
-	 */
-	unsigned char *row_ptr(int plane, int row);
+	zimg::ZimgImageBufferConst as_read_buffer() const;
 
-	/**
-	 * @see Frame::row_ptr(int, int)
-	 */
-	const unsigned char *row_ptr(int plane, int row) const;
+	zimg::ZimgImageBuffer as_write_buffer(unsigned plane);
+
+	zimg::ZimgImageBuffer as_write_buffer();
 };
 
-/**
- * Read a frame from a Windows DIB (.bmp).
- *
- * @param filename name of DIB file
- * @return frame
- */
-Frame read_frame_bmp(const char *filename);
 
-/**
- * Read a frame from a raw file (.yuv).
- *
- * @param frame frame to receive image data
- * @param filename name of file
- */
-void read_frame_raw(Frame &frame, const char *filename);
+namespace imageframe {;
 
-/**
- * Write a frame to a Windows DIB (.bmp).
- *
- * @param frame frame to write
- * @param filename name of DIB file
- */
-void write_frame_bmp(const Frame &frame, const char *filename);
+ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height);
 
-/**
- * Write a frame to a raw file (.yuv)
- *
- * @param frame frame to write
- * @param filename name of DIB file
- */
-void write_frame_raw(const Frame &frame, const char *filename);
+ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height, zimg::PixelType type, bool fullrange);
+
+void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange = false);
+
+void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange);
+
+} // namespace imageframe
 
 #endif // FRAME_H_
