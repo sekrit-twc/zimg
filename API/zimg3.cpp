@@ -146,7 +146,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_AUTO,      zimg::CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
 		{ ZIMG_CPU_X86_MMX,   zimg::CPUClass::CPU_NONE },
-		{ ZIMG_CPU_X86_SSE,   zimg::CPUClass::CPU_NONE },
+		{ ZIMG_CPU_X86_SSE,   zimg::CPUClass::CPU_X86_SSE },
 		{ ZIMG_CPU_X86_SSE2,  zimg::CPUClass::CPU_X86_SSE2 },
 		{ ZIMG_CPU_X86_SSE3,  zimg::CPUClass::CPU_X86_SSE2 },
 		{ ZIMG_CPU_X86_SSSE3, zimg::CPUClass::CPU_X86_SSE2 },
