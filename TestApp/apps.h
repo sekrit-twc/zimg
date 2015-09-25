@@ -19,8 +19,7 @@ int colorspace_main(int argc, char **argv);
 int depth_main(int argc, char **argv);
 
 int resize_main(int argc, char **argv);
-#if 0
-int unresize_main(int argc, const char **argv);
-#endif
+
+int unresize_main(int argc, char **argv);
 
 #endif /* APPS_H_ */
