@@ -30,6 +30,20 @@ double cube(double x)
 	return x * x * x;
 }
 
+double round_halfup(double x)
+{
+	/* When rounding on the pixel grid, the invariant
+	 *   round(x - 1) == round(x) - 1
+	 * must be preserved. This precludes the use of modes such as
+	 * half-to-even and half-away-from-zero.
+	 */
+	bool sign = std::signbit(x);
+
+	x = std::round(std::abs(x));
+	return sign ? -x : x;
+}
+
+
 FilterContext matrix_to_filter(const RowMatrix<double> &m)
 {
 	size_t width = 0;
@@ -181,23 +195,18 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 	double scale = (double)dst_dim / width;
 	double step = std::min(scale, 1.0);
 	double support = (double)f.support() / step;
-	int filter_size = std::max((int)std::ceil(support * 2), 1);
+	int filter_size = std::max((int)std::ceil(support) * 2, 1);
 
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
 	if (src_dim <= support || width <= support)
 		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
-	// Preserving center position with point upsampling filter is impossible.
-	// Instead, the top-left position is preserved to avoid mirroring artifacts.
-	if (filter_size == 1 && scale >= 1.0)
-		shift += 0.5;
-
 	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
 	for (int i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
 		double pos = (i + 0.5) / scale + shift;
-		double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
+		double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;
 
 		double total = 0.0;
 		for (int j = 0; j < filter_size; ++j) {

@@ -92,13 +92,13 @@ TEST(ResizeImplTest, test_horizontal_up)
 TEST(ResizeImplTest, test_horizontal_down)
 {
 	const char *expected_sha1_u16[][3] = {
-		{ "35f664a086caaa5823a8dd031e06f91cdffa47d0" },
+		{ "71c866436f2df395111d43ac1f10fc0dcfd4bd11" },
 		{ "7ddad53e36e73b724bf28db0ae09a5f4e515c146" },
 		{ "49d41df857ba3d444b9dfef63c810c65545d3c31" },
 		{ "3d6023567154014b605b826fda17346561e15970" }
 	};
 	const char *expected_sha1_f32[][3] = {
-		{ "e381b28a3ad48f385a596d37ee7dd68add0ddafc" },
+		{ "0f09d60179f3b4771dd800c9650dd3acee2b6360" },
 		{ "9b501da8d9d279d26ac1293fa120c4578fe36708" },
 		{ "dd37c2f6ad6fe9b2afafaf4d9598d822ece22426" },
 		{ "b8c8d10c0e9e5f4df0eead282a4279866492d6ee" }
@@ -134,13 +134,13 @@ TEST(ResizeImplTest, test_vertical_up)
 TEST(ResizeImplTest, test_vertical_down)
 {
 	const char *expected_sha1_u16[][3] = {
-		{ "aaef348f13b54c47b75c364a4c5db9348387753d" },
+		{ "abe8cf7a2949798936156d05153c3f736a991d72" },
 		{ "8e8da56422e90bf16e1b3c335db4daabef8983f3" },
 		{ "637ad69f36083bff0abf2923a96e3ffe09c2bbdf" },
 		{ "54544c703c7e7dc8f4bf3fc53eb934c3cdcd4cd2" }
 	};
 	const char *expected_sha1_f32[][3] = {
-		{ "efa5092501e0069902209849b0b38538b82ced88" },
+		{ "211cf4deb08dedf90674641baea1f8338da319cd" },
 		{ "ba6e942326feed52c173443fdb5b594fadcfbeba" },
 		{ "a624753a6386e1c296408e617afabd85424f1cc0" },
 		{ "b6e0cf62c008a995c314dd8aef3c36317b75aebf" }
@@ -164,7 +164,7 @@ TEST(ResizeImplTest, test_horizontal_nonfull)
 		{ "699d7d740af90cf2edbb74e4f60bc898961d0906" }
 	};
 	const char *expected_sha1_down[][3] = {
-		{ "dec8c699dbd69e5be6e37b348565dcb3e019c638" },
+		{ "d8c79763c48ba719a2e5ed3465234eebbc628efa" },
 		{ "7eb060e033795a8a566993629bbeb82e92838d5a" },
 		{ "6e2769dc70f2535e8f17cadbc4e2aa4828c3127e" },
 		{ "055c27a8eb6360bfdcd6358e13283ea3ed93a236" }
@@ -188,7 +188,7 @@ TEST(ResizeImplTest, test_vertical_nonfull)
 		{ "bbbafbe8b4d378ecdc58fe677f7ef7075ab5073b" }
 	};
 	const char *expected_sha1_down[][3] = {
-		{ "49bd4c39366f7d0fe28d8c3b47ef6fc1ce27a7fb" },
+		{ "d3b1bbeb2c99182738e87e18ecf47bb4cbf4c80a" },
 		{ "69b037df9adcb0cbe8520839ce2655ee5d80ca77" },
 		{ "4e7d4ee01e49e303cde28d481efdea7ff420affc" },
 		{ "c9a2e93a707a348fce8662f2f7a896964cd47eb2" }
@@ -212,7 +212,7 @@ TEST(ResizeImplTest, test_horizontal_shift)
 		{ "e3210f005fb478b27596cc4286ddfb5ee43a8f29" }
 	};
 	const char *expected_sha1_down[][3] = {
-		{ "6d4a88b20d0a64b579ba02aa752d7c9069f3a06d" },
+		{ "7c644bacfb8559df29f7f26f22c5fbcf86e0071d" },
 		{ "fa9f9935c3444281f9c6c70db0636c37cdbe6fd3" },
 		{ "a81b85cd94a38ef48f2426e8a3827e28b06a25d4" },
 		{ "4e93fb2a9b11308426692041d8977d9c03b84f06" }
@@ -236,7 +236,7 @@ TEST(ResizeImplTest, test_vertical_shift)
 		{ "b87a33751c801863f98a09203175622eab4f22e7" }
 	};
 	const char *expected_sha1_down[][3] = {
-		{ "4b040ed496db4a607db8f52dad2f9b7620af5e68" },
+		{ "0a4fed4d808564de9837b7b7525974a8d1d80994" },
 		{ "602ed07944861e627f4bfec9c43b4eb963b986d6" },
 		{ "451f8c7bd5e7ee616f53abe91c5a30d5c2abb052" },
 		{ "b2b5504733adeea43f7a4569e1564abb61b37f79" }
