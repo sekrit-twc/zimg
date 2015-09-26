@@ -1,17 +1,20 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <utility>
 
 #include "Common/align.h"
 #include "Common/pixel.h"
 #include "Common/zfilter.h"
+#include "Depth/quantize.h"
 
 #include "gtest/gtest.h"
 
 extern "C" {
-	#include "sha1/sha1.h"
+  #include "sha1/sha1.h"
 }
 
 #include "audit_buffer.h"
@@ -58,6 +61,72 @@ std::string hash_to_str(const unsigned char digest[20])
 	}
 
 	return s;
+}
+
+
+template <class T>
+std::pair<double, double> snr_line(const T *ref, const T *test, unsigned count, zimg::PixelType type)
+{
+	double signal = 0;
+	double noise = 0;
+
+	for (unsigned n = 0; n < count; ++n) {
+		signal += (double)ref[n] * (double)ref[n];
+		noise += (double)(ref[n] - test[n]) * (double)(ref[n] - test[n]);
+	}
+
+	return{ signal, noise };
+}
+
+template <>
+std::pair<double, double> snr_line<uint16_t>(const uint16_t *ref, const uint16_t *test, unsigned count, zimg::PixelType type)
+{
+	double signal = 0;
+	double noise = 0;
+
+	for (unsigned n = 0; n < count; ++n) {
+		double ref_val;
+		double test_val;
+
+		if (type == zimg::PixelType::HALF) {
+			ref_val = zimg::depth::half_to_float(ref[n]);
+			test_val = zimg::depth::half_to_float(test[n]);
+		} else {
+			ref_val = ref[n];
+			test_val = test[n];
+		}
+
+		signal += ref_val * ref_val;
+		noise += (ref_val - test_val) * (ref_val - test_val);
+	}
+
+	return{ signal, noise };
+}
+
+template <class T>
+double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigned width, unsigned height, zimg::PixelType type, bool color)
+{
+	auto ref_buf = ref.as_image_buffer();
+	auto test_buf = test.as_image_buffer();
+	double snr = 0.0;
+
+	for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
+		double signal_plane = 0.0;
+		double noise_plane = 0.0;
+
+		for (unsigned i = 0; i < height; ++i) {
+			const T *ref_ptr = (const T *)((const char *)ref_buf.data[p] + (ptrdiff_t)i * ref_buf.stride[p]);
+			const T *test_ptr = (const T *)((const char *)test_buf.data[p] + (ptrdiff_t)i * test_buf.stride[p]);
+
+			auto snr_pair = snr_line(ref_ptr, test_ptr, width, type);
+			signal_plane += snr_pair.first;
+			noise_plane += snr_pair.second;
+		}
+
+		snr = std::max(snr, signal_plane / noise_plane);
+	}
+
+	return 10.0 * std::log10(snr);
 }
 
 
@@ -198,6 +267,27 @@ void validate_filter_T(const zimg::IZimgFilter *filter, unsigned src_width, unsi
 		validate_filter_buffered<T, U>(filter, src_width, src_height, src_format, dst_buf);
 }
 
+template <class T, class U>
+void validate_filter_reference_T(const zimg::IZimgFilter *ref_filter, const zimg::IZimgFilter *test_filter,
+                                 unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
+{
+	zimg::ZimgFilterFlags flags = ref_filter->get_flags();
+	auto attr = ref_filter->get_image_attributes();
+
+	AuditBuffer<T> src_buf{ src_width, src_height, src_format, (unsigned)-1, 0, 0, !!flags.color };
+	AuditBuffer<U> ref_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), (unsigned)-1, 0, 0, !!flags.color };
+	AuditBuffer<U> test_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), (unsigned)-1, 0, 0, !!flags.color };
+
+	src_buf.random_fill(0, src_height, 0, src_width);
+	ref_buf.default_fill();
+	test_buf.default_fill();
+
+	validate_filter_plane(ref_filter, &src_buf, &ref_buf);
+	validate_filter_plane(test_filter, &src_buf, &test_buf);
+
+	EXPECT_GE(snr_buffer(ref_buf, test_buf, attr.width, attr.height, attr.type, !!flags.color), snr_thresh);
+}
+
 } // namespace
 
 
@@ -232,5 +322,52 @@ void validate_filter(const zimg::IZimgFilter *filter, unsigned src_width, unsign
 			validate_filter_T<float, uint16_t>(filter, src_width, src_height, src_format, sha1_str);
 		else
 			validate_filter_T<float, float>(filter, src_width, src_height, src_format, sha1_str);
+	}
+}
+
+void validate_filter_reference(const zimg::IZimgFilter *ref_filter, const zimg::IZimgFilter *test_filter,
+                               unsigned src_width, unsigned src_height, zimg::PixelType src_type, double snr_thresh)
+{
+	validate_filter_reference(ref_filter, test_filter, src_width, src_height, zimg::default_pixel_format(src_type), snr_thresh);
+}
+
+void validate_filter_reference(const zimg::IZimgFilter *ref_filter, const zimg::IZimgFilter *test_filter,
+                               unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
+{
+	auto ref_flags = ref_filter->get_flags();
+	auto test_flags = test_filter->get_flags();
+
+	auto ref_attr = ref_filter->get_image_attributes();
+	auto test_attr = test_filter->get_image_attributes();
+
+	zimg::PixelType src_type = src_format.type;
+	zimg::PixelType dst_type = ref_attr.type;
+
+	ASSERT_EQ(ref_flags.color, test_flags.color);
+	ASSERT_EQ(ref_attr.width, test_attr.width);
+	ASSERT_EQ(ref_attr.height, test_attr.height);
+	ASSERT_EQ(ref_attr.type, test_attr.type);
+
+	if (src_type == zimg::PixelType::BYTE) {
+		if (dst_type == zimg::PixelType::BYTE)
+			validate_filter_reference_T<uint8_t, uint8_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else if (dst_type == zimg::PixelType::WORD || dst_type == zimg::PixelType::HALF)
+			validate_filter_reference_T<uint8_t, uint16_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else
+			validate_filter_reference_T<uint8_t, float>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+	} else if (src_type == zimg::PixelType::WORD || src_type == zimg::PixelType::HALF) {
+		if (dst_type == zimg::PixelType::BYTE)
+			validate_filter_reference_T<uint16_t, uint8_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else if (dst_type == zimg::PixelType::WORD || dst_type == zimg::PixelType::HALF)
+			validate_filter_reference_T<uint16_t, uint16_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else
+			validate_filter_reference_T<uint16_t, float>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+	} else {
+		if (dst_type == zimg::PixelType::BYTE)
+			validate_filter_reference_T<float, uint8_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else if (dst_type == zimg::PixelType::WORD || dst_type == zimg::PixelType::HALF)
+			validate_filter_reference_T<float, uint16_t>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
+		else
+			validate_filter_reference_T<float, float>(ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
 	}
 }
