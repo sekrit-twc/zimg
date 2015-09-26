@@ -1,10 +1,13 @@
 #include <algorithm>
+#include <cfloat>
 #include <cstddef>
+#include <cstdint>
 #include <cmath>
 #include <vector>
 #include "Common/except.h"
 #include "Common/libm_wrapper.h"
 #include "Common/matrix.h"
+#include "Common/zassert.h"
 #include "filter.h"
 
 namespace zimg {;
@@ -65,14 +68,52 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 	for (size_t i = 0; i < m.rows(); ++i) {
 		unsigned left = (unsigned)std::min(m.row_left(i), m.cols() - width);
+		double f32_err = 0.0f;
+		double i16_err = 0;
 
+		double f32_sum = 0.0;
+		int16_t i16_sum = 0;
+		int16_t i16_greatest = 0;
+		size_t i16_greatest_idx = 0;
+
+		/**
+		 * Dither filter coefficients when rounding them to their storage format.
+		 * This minimizes accumulation of error and ensures that the filter
+		 * continues to sum as close to 1.0 as possible after rounding.
+		 */
 		for (size_t j = 0; j < width; ++j) {
-			float coeff = (float)m[i][left + j];
-			int16_t coeff_i16 = (int16_t)std::lrintf(coeff * (float)(1 << 14));
+			double coeff = m[i][left + j];
 
-			e.data[i * e.stride + j] = coeff;
+			double coeff_expected_f32 = coeff - f32_err;
+			double coeff_expected_i16 = coeff * (double)(1 << 14) - i16_err;
+
+			float coeff_f32 = (float)coeff_expected_f32;
+			int16_t coeff_i16 = (int16_t)std::lrint(coeff_expected_i16);
+
+			f32_err = (double)coeff_f32 - coeff_expected_f32;
+			i16_err = (double)coeff_i16 - coeff_expected_i16;
+
+			if (std::abs(coeff_i16) > i16_greatest) {
+				i16_greatest = coeff_i16;
+				i16_greatest_idx = j;
+			}
+
+			f32_sum += coeff_f32;
+			i16_sum += coeff_i16;
+
+			e.data[i * e.stride + j] = coeff_f32;
 			e.data_i16[i * e.stride_i16 + j] = coeff_i16;
 		}
+
+		/* The final sum may still be off by a few ULP. This can not be fixed for
+		 * floating point data, since the error is dependent on summation order,
+		 * but for integer data, the error can be added to the greatest coefficient.
+		 */
+		_zassert_d(1.0 - f32_sum <= FLT_EPSILON, "error too great");
+		_zassert_d(std::abs((1 << 14) - i16_sum) <= 1, "error too great");
+
+		e.data_i16[i * e.stride_i16 + i16_greatest_idx] += (1 << 14) - i16_sum;
+
 		e.left[i] = left;
 	}
 
