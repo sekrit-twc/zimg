@@ -16,6 +16,8 @@ namespace resize {;
 
 struct FilterContext;
 
+IZimgFilter *create_resize_impl2_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
+
 IZimgFilter *create_resize_impl2_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
 IZimgFilter *create_resize_impl2_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);

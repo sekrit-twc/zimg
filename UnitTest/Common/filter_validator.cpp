@@ -158,7 +158,7 @@ void validate_same_row(const zimg::IZimgFilter *filter)
 	for (unsigned i = 0; i < attr.height; i += step) {
 		auto range = filter->get_required_row_range(i);
 		ASSERT_EQ(i, range.first);
-		ASSERT_EQ(i + fstep, range.second);
+		ASSERT_EQ(std::min(i + fstep, attr.height), range.second);
 	}
 }
 

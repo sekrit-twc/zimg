@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <memory>
+#include <typeinfo>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Resize/filter.h"
@@ -30,12 +31,35 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 		zimg::resize::create_resize_impl2(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE)
 	};
 
+	ASSERT_NE(typeid(*filter_c), typeid(*filter_sse)) << typeid(*filter_c).name() << " " << typeid(*filter_sse).name();
+
 	validate_filter(filter_sse.get(), src_w, src_h, type, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse.get(), src_w, src_h, type, expected_snr);
 }
 
 } // namespace
 
+
+TEST(ResizeImplSSETest, test_resize_h_f32)
+{
+	const unsigned src_w = 640;
+	const unsigned dst_w = 960;
+	const unsigned h = 480;
+	const zimg::PixelType format = zimg::PixelType::FLOAT;
+
+	const char *expected_sha1[][3] = {
+		{ "1b2e37a345d315b0fa4d11e3532c70cb57b1e569" },
+		{ "df391f7157d8c283abd408b35894139ca1903872" },
+		{ "81fcfbdb9a3b31c625a3cdff1cf46da06f8af735" },
+		{ "389b609ac62a8b9276e00fdcd39b921535196a07" }
+	};
+	const double expected_snr = 120.0;
+
+	test_case(zimg::resize::BilinearFilter{}, true, src_w, h, dst_w, h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, true, src_w, h, dst_w, h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, src_w, h, dst_w, h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, dst_w, h, src_w, h, format, expected_sha1[3], expected_snr);
+}
 
 TEST(ResizeImplSSETest, test_resize_v_f32)
 {
