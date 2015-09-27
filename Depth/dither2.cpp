@@ -364,7 +364,7 @@ void ErrorDiffusion::process(void *ctx, const ZimgImageBufferConst &src, const Z
 IZimgFilter *create_dither_convert2(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (pixel_out.type != PixelType::BYTE && pixel_out.type != PixelType::WORD)
-		throw zimg::error::InternalError{ "dither only converts to integer types" };
+		throw error::InternalError{ "dither only converts to integer types" };
 
 	switch (type) {
 	case DitherType::DITHER_NONE:
@@ -376,7 +376,7 @@ IZimgFilter *create_dither_convert2(DitherType type, unsigned width, unsigned he
 	case DitherType::DITHER_ERROR_DIFFUSION:
 		return new ErrorDiffusion{ width, height, pixel_in, pixel_out, cpu };
 	default:
-		throw zimg::error::InternalError{ "unknown dither type" };
+		throw error::InternalError{ "unknown dither type" };
 	}
 }
 

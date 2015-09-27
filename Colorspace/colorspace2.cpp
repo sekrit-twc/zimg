@@ -18,7 +18,7 @@ try :
 		m_operations.emplace_back(func(cpu));
 	}
 } catch (const std::bad_alloc &) {
-	throw zimg::error::OutOfMemory{};
+	throw error::OutOfMemory{};
 }
 
 ZimgFilterFlags ColorspaceConversion2::get_flags() const

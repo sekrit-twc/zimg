@@ -45,7 +45,7 @@ void Unresize::invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane
 		m_impl->process_f32_h(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
-		throw zimg::error::UnsupportedOperation{ "only HALF and FLOAT supported for unresize" };
+		throw error::UnsupportedOperation{ "only HALF and FLOAT supported for unresize" };
 	}
 }
 
@@ -59,7 +59,7 @@ void Unresize::invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane
 		m_impl->process_f32_v(plane_cast<const float>(src), plane_cast<float>(dst), (float *)tmp);
 		break;
 	default:
-		throw zimg::error::UnsupportedOperation{ "only HALF and FLOAT supported for unresize" };
+		throw error::UnsupportedOperation{ "only HALF and FLOAT supported for unresize" };
 	}
 }
 

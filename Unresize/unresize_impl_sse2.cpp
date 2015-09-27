@@ -317,12 +317,12 @@ public:
 
 	void process_f16_h(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw zimg::error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
+		throw error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
 	}
 
 	void process_f16_v(const ImagePlane<const uint16_t> &src, const ImagePlane<uint16_t> &dst, uint16_t *tmp) const override
 	{
-		throw zimg::error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
+		throw error::UnsupportedOperation{ "f16 not supported in SSE2 impl" };
 	}
 
 	void process_f32_h(const ImagePlane<const float> &src, const ImagePlane<float> &dst, float *tmp) const override

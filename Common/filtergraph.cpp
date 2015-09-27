@@ -635,13 +635,13 @@ class FilterGraph::impl {
 	void check_incomplete() const
 	{
 		if (m_is_complete)
-			throw zimg::error::InternalError{ "cannot modify completed graph" };
+			throw error::InternalError{ "cannot modify completed graph" };
 	}
 
 	void check_complete() const
 	{
 		if (!m_is_complete)
-			throw zimg::error::InternalError{ "cannot query properties on incomplete graph" };
+			throw error::InternalError{ "cannot query properties on incomplete graph" };
 	}
 public:
 	impl(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
@@ -654,9 +654,9 @@ public:
 		m_is_complete{}
 	{
 		if (!color && (subsample_w || subsample_h))
-			throw zimg::error::InternalError{ "greyscale images can not be subsampled" };
+			throw error::InternalError{ "greyscale images can not be subsampled" };
 		if (subsample_w > 2 || subsample_h > 2)
-			throw zimg::error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
+			throw error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
 
 		m_node_set.emplace_back(new GraphNode{ GraphNode::SOURCE, m_id_counter++, width, height, type, subsample_w, subsample_h, color });
 		m_head = m_node_set.back().get();
@@ -679,9 +679,9 @@ public:
 			auto attr_uv = m_node->get_image_attributes();
 
 			if (!m_node_uv)
-				throw zimg::error::InternalError{ "cannot use color filter in greyscale graph" };
+				throw error::InternalError{ "cannot use color filter in greyscale graph" };
 			if (attr.width != attr_uv.width || attr.height != attr_uv.height || attr.type != attr_uv.type)
-				throw zimg::error::InternalError{ "cannot use color filter with mismatching Y and UV format" };
+				throw error::InternalError{ "cannot use color filter with mismatching Y and UV format" };
 
 			parent_uv = m_node_uv;
 		}
@@ -705,7 +705,7 @@ public:
 		GraphNode *parent = m_node_uv;
 
 		if (flags.color)
-			throw zimg::error::InternalError{ "cannot use color filter as UV filter" };
+			throw error::InternalError{ "cannot use color filter as UV filter" };
 
 		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER_UV, m_id_counter++, parent, filter });
 		m_node_uv = m_node_set.back().get();
@@ -729,11 +729,11 @@ public:
 		}
 
 		if (node_attr.width != node_attr_uv.width << subsample_w)
-			throw zimg::error::InternalError{ "unsupported horizontal subsampling" };
+			throw error::InternalError{ "unsupported horizontal subsampling" };
 		if (node_attr.height != node_attr_uv.height << subsample_h)
-			throw zimg::error::InternalError{ "unsupported vertical subsampling" };
+			throw error::InternalError{ "unsupported vertical subsampling" };
 		if (node_attr.type != node_attr_uv.type)
-			throw zimg::error::InternalError{ "UV pixel type can not differ" };
+			throw error::InternalError{ "UV pixel type can not differ" };
 
 		if (m_node == m_head || m_node->get_ref())
 			attach_filter(new CopyFilter{ node_attr.width, node_attr.height, node_attr.type });
@@ -870,7 +870,7 @@ FilterGraph::callback::operator bool() const
 void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right) const
 {
 	if (m_func(m_user, i, left, right))
-		throw zimg::error::UserCallbackFailed{ "user callback failed" };
+		throw error::UserCallbackFailed{ "user callback failed" };
 }
 
 

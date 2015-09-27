@@ -16,7 +16,7 @@ IZimgFilter *create_depth2(DitherType type, unsigned width, unsigned height, con
 		else
 			return create_dither_convert2(type, width, height, pixel_in, pixel_out, cpu);
 	} catch (const std::bad_alloc &) {
-		throw zimg::error::OutOfMemory{};
+		throw error::OutOfMemory{};
 	}
 }
 

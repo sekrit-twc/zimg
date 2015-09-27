@@ -113,7 +113,7 @@ public:
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
-			throw zimg::error::InternalError{ "pixel type not supported" };
+			throw error::InternalError{ "pixel type not supported" };
 	}
 
 	ZimgFilterFlags get_flags() const override
@@ -174,7 +174,7 @@ public:
 		m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
-			throw zimg::error::InternalError{ "pixel type not supported" };
+			throw error::InternalError{ "pixel type not supported" };
 	}
 
 	ZimgFilterFlags get_flags() const override
@@ -233,7 +233,7 @@ IZimgFilter *create_resize_impl2(const Filter &f, PixelType type, bool horizonta
 	unsigned dst_dim = horizontal ? dst_width : dst_height;
 
 	if (src_width != dst_width && src_height != dst_height)
-		throw zimg::error::InternalError{ "cannot resize both width and height" };
+		throw error::InternalError{ "cannot resize both width and height" };
 
 	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 

@@ -184,9 +184,9 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 	int filter_size = std::max((int)std::ceil(support * 2), 1);
 
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
-		throw zimg::error::ResamplingNotAvailable{ "image shift or subwindow too great" };
+		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
 	if (src_dim <= support || width <= support)
-		throw zimg::error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
+		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
 	// Preserving center position with point upsampling filter is impossible.
 	// Instead, the top-left position is preserved to avoid mirroring artifacts.

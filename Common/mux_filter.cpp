@@ -14,31 +14,31 @@ MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
 	ZimgFilterFlags flags{};
 
 	if (filter_flags.color || filter_flags_uv.color)
-		throw zimg::error::InternalError{ "can not mux color filters" };
+		throw error::InternalError{ "can not mux color filters" };
 
 	if (filter_uv) {
 		unsigned simultaneous_lines = filter->get_simultaneous_lines();
 		image_attributes attr = filter->get_image_attributes();
 
 		if (filter_uv->get_image_attributes() != attr)
-			throw zimg::error::InternalError{ "can not mux filters with differing output formats" };
+			throw error::InternalError{ "can not mux filters with differing output formats" };
 
 		if (filter_uv->get_simultaneous_lines() != simultaneous_lines)
-			throw zimg::error::InternalError{ "UV filter must produce the same number of lines" };
+			throw error::InternalError{ "UV filter must produce the same number of lines" };
 
 		for (unsigned i = 0; i < attr.height; i += simultaneous_lines) {
 			auto range = filter->get_required_row_range(i);
 			auto range_uv = filter_uv->get_required_row_range(i);
 
 			if (range != range_uv)
-				throw zimg::error::InternalError{ "UV filter must operate on the same row range" };
+				throw error::InternalError{ "UV filter must operate on the same row range" };
 		}
 		for (unsigned j = 0; j < attr.width; ++j) {
 			auto range = filter->get_required_col_range(j, j + 1);
 			auto range_uv = filter->get_required_col_range(j, j + 1);
 
 			if (range != range_uv)
-				throw zimg::error::InternalError{ "UV filter must operate on the same column range" };
+				throw error::InternalError{ "UV filter must operate on the same column range" };
 		}
 	}
 
