@@ -150,7 +150,7 @@ TEST(DepthConvertTest, test_non_full_integer)
 		zimg::PixelFormat dst_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
 		dst_format.chroma = format.chroma;
 
-		std::unique_ptr<zimg::IZimgFilter> convert{ zimg::depth::create_depth_convert2(w, h, format, dst_format, zimg::CPUClass::CPU_NONE) };
+		std::unique_ptr<zimg::IZimgFilter> convert{ zimg::depth::create_convert_to_float(w, h, format, dst_format, zimg::CPUClass::CPU_NONE) };
 		validate_filter(convert.get(), w, h, format, expected_sha1[idx++]);
 	}
 }

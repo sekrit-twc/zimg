@@ -58,7 +58,8 @@ depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const
 		throw error::InternalError{ "no conversion between pixel types" };
 }
 
-class DepthConvert2 : public ZimgFilter {
+
+class ConvertToFloat : public ZimgFilter {
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
 
@@ -70,8 +71,8 @@ class DepthConvert2 : public ZimgFilter {
 	unsigned m_width;
 	unsigned m_height;
 public:
-	DepthConvert2(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
-	              const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+	ConvertToFloat(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
+	               const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_func{ func },
 		m_f16c{ f16c },
 		m_pixel_in{ pixel_in.type },
@@ -156,7 +157,7 @@ public:
 } // namespace
 
 
-IZimgFilter *create_depth_convert2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;
@@ -172,7 +173,7 @@ IZimgFilter *create_depth_convert2(unsigned width, unsigned height, const PixelF
 			f16c = float_to_half_n;
 	}
 
-	return new DepthConvert2{ func, f16c, width, height, pixel_in, pixel_out };
+	return new ConvertToFloat{ func, f16c, width, height, pixel_in, pixel_out };
 }
 
 } // namespace depth
