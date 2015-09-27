@@ -28,10 +28,15 @@ IZimgFilter *create_resize_impl2_v_x86(const FilterContext &context, unsigned wi
 	IZimgFilter *ret = nullptr;
 
 	if (cpu == CPUClass::CPU_AUTO) {
-		if (caps.sse)
+		if (!ret && caps.sse2)
+			ret = create_resize_impl2_v_sse2(context, width, type, depth);
+		if (!ret && caps.sse)
 			ret = create_resize_impl2_v_sse(context, width, type, depth);
-	} else if (cpu >= CPUClass::CPU_X86_SSE) {
-		ret = create_resize_impl2_v_sse(context, width, type, depth);
+	} else {
+		if (!ret && cpu >= CPUClass::CPU_X86_SSE2)
+			ret = create_resize_impl2_v_sse2(context, width, type, depth);
+		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+			ret = create_resize_impl2_v_sse(context, width, type, depth);
 	}
 
 	return ret;

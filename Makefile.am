@@ -138,6 +138,7 @@ libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
 					 Depth/dither_impl_sse2.cpp \
 					 Depth/quantize_sse2.h \
 					 Resize/resize_impl_sse2.cpp \
+					 Resize/resize_impl2_sse2.cpp \
 					 Unresize/unresize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
@@ -258,7 +259,8 @@ UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
 
 if X86SIMD
 
-UnitTest_unit_test_SOURCES += UnitTest/Resize/resize_impl2_sse_test.cpp
+UnitTest_unit_test_SOURCES += UnitTest/Resize/resize_impl2_sse_test.cpp \
+								UnitTest/Resize/resize_impl2_sse2_test.cpp
 
 endif #X86SIMD
 								
