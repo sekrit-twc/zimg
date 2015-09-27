@@ -1,5 +1,7 @@
+#include <memory>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
+#include "Depth/depth2.h"
 #include "Depth/depth_convert2.h"
 
 #include "gtest/gtest.h"
@@ -28,8 +30,10 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			zimg::PixelFormat fmt_out = zimg::default_pixel_format(pxout);
 			fmt_out.chroma = chroma;
 
-			zimg::depth::DepthConvert2 convert{ w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE };
-			validate_filter(&convert, w, h, fmt_in, expected_sha1[sha1_idx++]);
+			std::unique_ptr<zimg::IZimgFilter> convert{
+				zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE)
+			};
+			validate_filter(convert.get(), w, h, fmt_in, expected_sha1[sha1_idx++]);
 		}
 	}
 }
@@ -37,7 +41,7 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 } // namespace
 
 
-TEST(DepthConvert2Test, test_limited_luma)
+TEST(DepthConvertTest, test_limited_luma)
 {
 	const char *expected_sha1[][3] = {
 		{ "a7096d8251091eb2188bb2bec9fee9d0495faf2c" },
@@ -56,7 +60,7 @@ TEST(DepthConvert2Test, test_limited_luma)
 	test_case(false, false, expected_sha1);
 }
 
-TEST(DepthConvert2Test, test_limited_chroma)
+TEST(DepthConvertTest, test_limited_chroma)
 {
 	const char *expected_sha1[][3] = {
 		{ "7c84d9bc8a271e543d8e6a503ffdeb651d9b60d9" },
@@ -75,7 +79,7 @@ TEST(DepthConvert2Test, test_limited_chroma)
 	test_case(false, true, expected_sha1);
 }
 
-TEST(DepthConvert2Test, test_full_luma)
+TEST(DepthConvertTest, test_full_luma)
 {
 	const char *expected_sha1[][3] = {
 		{ "f0e4a68158eab0ab350c7161498a8eed3196c233" },
@@ -94,7 +98,7 @@ TEST(DepthConvert2Test, test_full_luma)
 	test_case(true, false, expected_sha1);
 }
 
-TEST(DepthConvert2Test, test_full_chroma)
+TEST(DepthConvertTest, test_full_chroma)
 {
 	const char *expected_sha1[][3] = {
 		{ "333be81b7364a126a2a6167522b539cfad599814" },
@@ -113,7 +117,7 @@ TEST(DepthConvert2Test, test_full_chroma)
 	test_case(true, true, expected_sha1);
 }
 
-TEST(DepthConvert2Test, test_non_full_integer)
+TEST(DepthConvertTest, test_non_full_integer)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -146,7 +150,7 @@ TEST(DepthConvert2Test, test_non_full_integer)
 		zimg::PixelFormat dst_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
 		dst_format.chroma = format.chroma;
 
-		zimg::depth::DepthConvert2 convert{ w, h, format, dst_format, zimg::CPUClass::CPU_NONE };
-		validate_filter(&convert, w, h, format, expected_sha1[idx++]);
+		std::unique_ptr<zimg::IZimgFilter> convert{ zimg::depth::create_depth_convert2(w, h, format, dst_format, zimg::CPUClass::CPU_NONE) };
+		validate_filter(convert.get(), w, h, format, expected_sha1[idx++]);
 	}
 }
