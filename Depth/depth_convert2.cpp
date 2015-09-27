@@ -13,6 +13,15 @@ namespace depth {;
 
 namespace {;
 
+template <class T, class U>
+void integer_to_integer(const void *src, void *dst, unsigned shift, unsigned left, unsigned right)
+{
+	const T *src_p = reinterpret_cast<const T *>(src);
+	U *dst_p = reinterpret_cast<U *>(dst);
+
+	std::transform(src_p + left, src_p + right, dst_p + left, [=](T x) { return static_cast<U>(static_cast<unsigned>(x) << shift); });
+}
+
 template <class T>
 void integer_to_float(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
@@ -38,6 +47,21 @@ void float_to_half_n(const void *src, void *dst, unsigned left, unsigned right)
 	std::transform(src_p + left, src_p + right, dst_p + left, float_to_half);
 }
 
+
+left_shift_func select_left_shift_func(PixelType pixel_in, PixelType pixel_out)
+{
+	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
+		return integer_to_integer<uint8_t, uint8_t>;
+	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::WORD)
+		return integer_to_integer<uint8_t, uint16_t>;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::BYTE)
+		return integer_to_integer<uint16_t, uint8_t>;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
+		return integer_to_integer<uint16_t, uint16_t>;
+	else
+		throw error::InternalError{ "no conversion between pixel types" };
+}
+
 depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const zimg::PixelFormat &format_out)
 {
 	PixelType type_in = format_in.type;
@@ -57,6 +81,73 @@ depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const
 	else
 		throw error::InternalError{ "no conversion between pixel types" };
 }
+
+
+class IntegerLeftShift : public ZimgFilter {
+	left_shift_func m_func;
+
+	PixelType m_pixel_in;
+	PixelType m_pixel_out;
+	unsigned m_shift;
+
+	unsigned m_width;
+	unsigned m_height;
+public:
+	IntegerLeftShift(left_shift_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+		m_func{ func },
+		m_pixel_in{ pixel_in.type },
+		m_pixel_out{ pixel_out.type },
+		m_shift{},
+		m_width{ width },
+		m_height{ height }
+	{
+		if ((pixel_in.type != zimg::PixelType::BYTE && pixel_in.type != zimg::PixelType::WORD) ||
+		    (pixel_out.type != zimg::PixelType::BYTE && pixel_out.type != zimg::PixelType::WORD))
+			throw error::InternalError{ "cannot left shift floating point types" };
+		if (pixel_in.fullrange || pixel_out.fullrange)
+			throw error::InternalError{ "cannot left shift full-range format" };
+		if (pixel_in.chroma != pixel_out.chroma)
+			throw error::InternalError{ "cannot convert between luma and chroma" };
+		if (pixel_in.depth > pixel_out.depth)
+			throw error::InternalError{ "cannot reduce depth by left shifting" };
+		if (pixel_out.depth - pixel_in.depth > 15)
+			throw error::InternalError{ "too much shifting" };
+
+		m_shift = pixel_out.depth - pixel_in.depth;
+	}
+
+	ZimgFilterFlags get_flags() const override
+	{
+		ZimgFilterFlags flags{};
+
+		flags.same_row = true;
+		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
+
+		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_width, m_height, m_pixel_out };
+	}
+
+	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	{
+		const char *src_line = LineBuffer<const char>(src)[i];
+		char *dst_line = LineBuffer<char>(dst)[i];
+
+		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
+		unsigned line_base = mod(left, pixel_align);
+
+		src_line += pixel_size(m_pixel_in) * line_base;
+		dst_line += pixel_size(m_pixel_out) * line_base;
+
+		left -= line_base;
+		right -= line_base;
+
+		m_func(src_line, dst_line, m_shift, left, right);
+	}
+};
 
 
 class ConvertToFloat : public ZimgFilter {
@@ -155,6 +246,17 @@ public:
 };
 
 } // namespace
+
+
+IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+{
+	left_shift_func func = nullptr;
+
+	if (!func)
+		func = select_left_shift_func(pixel_in.type, pixel_out.type);
+
+	return new IntegerLeftShift{ func, width, height, pixel_in, pixel_out };
+}
 
 
 IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
