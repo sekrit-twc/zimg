@@ -37,6 +37,48 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 } // namespace
 
 
+TEST(ResizeImplSSE2Test, test_resize_h_u10)
+{
+	const unsigned src_w = 640;
+	const unsigned dst_w = 960;
+	const unsigned h = 480;
+	const zimg::PixelFormat format{ zimg::PixelType::WORD, 10 };
+
+	const char *expected_sha1[][3] = {
+		{ "8d7d269168aed9b332ccd79e2b46d661fe391642" },
+		{ "842da71bbfe74cabcff24ff269e7dfd1584f544f" },
+		{ "4daefef8cf500bf8a907a6f715f5c619fc8562b2" },
+		{ "3ab59686bc6c5a7c748ddff214d25333e2f80011" }
+	};
+	const double expected_snr = INFINITY;
+
+	test_case(zimg::resize::BilinearFilter{}, true, src_w, h, dst_w, h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, true, src_w, h, dst_w, h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, src_w, h, dst_w, h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, dst_w, h, src_w, h, format, expected_sha1[3], expected_snr);
+}
+
+TEST(ResizeImplSSE2Test, test_resize_h_u16)
+{
+	const unsigned src_w = 640;
+	const unsigned dst_w = 960;
+	const unsigned h = 480;
+	const zimg::PixelFormat format{ zimg::PixelType::WORD, 16 };
+
+	const char *expected_sha1[][3] = {
+		{ "a6b7fea8f8de785248f520f605bd7c8da66f59d5" },
+		{ "810c906d2b2b5e17703b220d64f9d3c10690cc16" },
+		{ "b74758c6d844da2d1acf48bbc75459533f47eb9f" },
+		{ "779236bf9e1d646caa8b384b283c6dfea1e12dff" }
+	};
+	const double expected_snr = INFINITY;
+
+	test_case(zimg::resize::BilinearFilter{}, true, src_w, h, dst_w, h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, true, src_w, h, dst_w, h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, src_w, h, dst_w, h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, dst_w, h, src_w, h, format, expected_sha1[3], expected_snr);
+}
+
 TEST(ResizeImplSSE2Test, test_resize_v_u10)
 {
 	const unsigned w = 640;
