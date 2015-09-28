@@ -9,6 +9,10 @@
 #include "dither2.h"
 #include "quantize.h"
 
+#ifdef _MSC_VER
+  #include <cstdlib>
+#endif
+
 #if defined(_MSC_VER) && ZIMG_X86
   #include <xmmintrin.h>
   #define mylrintf(x) _mm_cvt_ss2si(_mm_set_ss((x)))
@@ -20,6 +24,19 @@ namespace zimg {;
 namespace depth {;
 
 namespace {;
+
+#ifdef _MSC_VER
+  float HF_(const char *str)
+  {
+    _locale_t l = _create_locale(LC_ALL, "C");
+    float ret = _strtof_l(str, nullptr, l);
+    _free_locale(l);
+    return ret;
+  }
+  #define HF(x) HF_(#x)
+#else
+  #define HF(x) x
+#endif
 
 static const int ORDERED_DITHER_SIZE = 8;
 static const int ORDERED_DITHER_NUM = ORDERED_DITHER_SIZE * ORDERED_DITHER_SIZE;
@@ -260,13 +277,21 @@ std::tuple<unsigned, unsigned, unsigned> BayerDither::get_dither_params(unsigned
 RandomDither::RandomDither(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
 	OrderedDitherBase(width, height, pixel_in, pixel_out, cpu)
 {
+	// The greatest value such that rint(65535.0f + x) yields 65535.0f unchanged.
+	float safe_min = HF(-0x1.fdfffep-2);
+	float safe_max = HF(0x1.fdfffep-2);
+
 	std::mt19937 mt;
 	auto mt_min = std::mt19937::min();
 	auto mt_max = std::mt19937::max();
 
 	m_dither.resize(RAND_NUM);
 
-	std::generate(m_dither.begin(), m_dither.end(), [&](){ return (float)((double)(mt() - mt_min) / (double)(mt_max - mt_min) - 0.5) * 0.5f; });
+	std::generate(m_dither.begin(), m_dither.end(), [&]()
+	{
+		float f = (float)((double)(mt() - mt_min) / (double)(mt_max - mt_min) - 0.5);
+		return std::min(std::max(f, safe_min), safe_max);
+	});
 }
 
 std::tuple<unsigned, unsigned, unsigned> RandomDither::get_dither_params(unsigned i, unsigned left) const
