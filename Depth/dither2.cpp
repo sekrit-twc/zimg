@@ -49,7 +49,7 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 		x += d;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
 
-		dst_p[i] = static_cast<U>(mylrintf(x + d));
+		dst_p[i] = static_cast<U>(mylrintf(x));
 	}
 }
 

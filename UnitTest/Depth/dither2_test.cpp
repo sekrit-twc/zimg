@@ -119,16 +119,16 @@ TEST(DitherTest, test_bayer_dither)
 {
 	const char *expected_sha1[][3] = {
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
-		{ "473cdca62d5881a638579446b8f131d6f3e98166" },
+		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "a331ce3f1601d81e099ffd7fb2fbefa896eac0a9" },
+		{ "c4cccb53ec3d5ada8707ba52131b8a155e77f44a" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "e0dc8bcbb17937fd2c573221a2057752f434f637" },
-		{ "f899faf6f14cff8e84f7bdaf2e4cc415457f46b3" },
+		{ "b1bc4729f8d7b8768137062ad08457f36f8c730d" },
+		{ "c4a1ed5e7c7c2b6c7b4fd88348c19abd4fd904c5" },
 
-		{ "904ebf27c49a482f4b6cd949b9dc66c0f00a0993" },
-		{ "072c15f28913d1c84c3e19e36d152be754c148bb" },
+		{ "1ca1d6db60eea9d6cc1c125e3add1d7951968f9e" },
+		{ "31da13a60b8c73c58f808d406a0f2e6066ab8b8b" },
 	};
 
 	test_case<zimg::depth::BayerDither>(false, false, expected_sha1);
@@ -140,14 +140,14 @@ TEST(DitherTest, test_random_dither)
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
 		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "d5e73a6ba9358e8fab7f53c3eafe184590dd6fb2" },
+		{ "281680053d90e761dadb036d03137adf2a6a8bdb" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "ba9697be1dc62391630b5cab0093662d2f0e282b" },
-		{ "e4578bcc777bfa3782c19382b4f7e636d0d67dec" },
+		{ "b5a5d3ccf820849623d1525ab589ec4acfd9ebd0" },
+		{ "bb56dc68cb8f235180588aad03b8073e50680324" },
 
-		{ "7897550b2db75d7024d99f17b65d4d3639abead9" },
-		{ "7e0024f528edce64731273d704575ce0587f1da5" },
+		{ "3838d6d0a32f8b342ee82cbf3e5b6d992c47c878" },
+		{ "ba4d79ae069fb9dc7fbbf521be91d3fde8121e31" },
 	};
 
 	test_case<zimg::depth::RandomDither>(false, false, expected_sha1);
