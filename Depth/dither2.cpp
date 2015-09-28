@@ -323,7 +323,7 @@ public:
 		src_line += pixel_size(m_pixel_in) * line_base;
 		dst_line += pixel_size(m_pixel_out) * line_base;
 
-		std::tie(dither_table, dither_offset, dither_mask) = m_dither_table->get_dither_coeffs(i, left);
+		std::tie(dither_table, dither_offset, dither_mask) = m_dither_table->get_dither_coeffs(i, line_base);
 
 		left -= line_base;
 		right -= line_base;
