@@ -236,7 +236,7 @@ public:
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
 	{
 		std::mt19937 mt{ i };
-		unsigned offset = (mt() + left) % RAND_NUM;
+		unsigned offset = (mod(mt(), 8) + left) % RAND_NUM;
 		unsigned mask = RAND_NUM - 1;
 
 		return std::make_tuple(m_table.data(), offset, mask);

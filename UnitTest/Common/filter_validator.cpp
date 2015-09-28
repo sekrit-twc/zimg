@@ -211,6 +211,8 @@ void validate_filter_buffered(const zimg::IZimgFilter *filter, unsigned src_widt
 
 	auto col_range = filter->get_required_col_range(left, right);
 
+	filter->init_context(ctx.data());
+
 	for (unsigned i = init; i < attr.height; i += step) {
 		auto row_range = filter->get_required_row_range(i);
 
