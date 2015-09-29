@@ -118,8 +118,12 @@ libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
 					  Colorspace/operation_impl_x86.h \
 					  Depth/depth_convert_x86.cpp \
 					  Depth/depth_convert_x86.h \
+					  Depth/depth_convert2_x86.cpp \
+					  Depth/depth_convert2_x86.h \
 					  Depth/dither_impl_x86.cpp \
 					  Depth/dither_impl_x86.h \
+					  Depth/dither2_x86.cpp \
+					  Depth/dither2_x86.h \
 					  Resize/resize_impl_x86.cpp \
 					  Resize/resize_impl_x86.h \
 					  Resize/resize_impl2_x86.cpp \

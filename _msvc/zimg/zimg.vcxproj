@@ -175,9 +175,11 @@
     <ClInclude Include="..\..\Depth\depth2.h" />
     <ClInclude Include="..\..\Depth\depth_convert.h" />
     <ClInclude Include="..\..\Depth\depth_convert2.h" />
+    <ClInclude Include="..\..\Depth\depth_convert2_x86.h" />
     <ClInclude Include="..\..\Depth\depth_convert_x86.h" />
     <ClInclude Include="..\..\Depth\dither.h" />
     <ClInclude Include="..\..\Depth\dither2.h" />
+    <ClInclude Include="..\..\Depth\dither2_x86.h" />
     <ClInclude Include="..\..\Depth\dither_impl.h" />
     <ClInclude Include="..\..\Depth\dither_impl_x86.h" />
     <ClInclude Include="..\..\Depth\error_diffusion.h" />
@@ -217,11 +219,13 @@
     <ClCompile Include="..\..\Depth\depth2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert2.cpp" />
+    <ClCompile Include="..\..\Depth\depth_convert2_x86.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert_avx2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert_sse2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert_x86.cpp" />
     <ClCompile Include="..\..\Depth\dither.cpp" />
     <ClCompile Include="..\..\Depth\dither2.cpp" />
+    <ClCompile Include="..\..\Depth\dither2_x86.cpp" />
     <ClCompile Include="..\..\Depth\dither_impl.cpp" />
     <ClCompile Include="..\..\Depth\dither_impl_avx2.cpp" />
     <ClCompile Include="..\..\Depth\dither_impl_sse2.cpp" />

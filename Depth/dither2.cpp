@@ -3,11 +3,13 @@
 #include <memory>
 #include <random>
 #include <utility>
+#include "Common/cpuinfo.h"
 #include "Common/except.h"
 #include "Common/linebuffer.h"
 #include "Common/pixel.h"
 #include "depth2.h"
 #include "dither2.h"
+#include "dither2_x86.h"
 #include "quantize.h"
 
 #ifdef _MSC_VER
@@ -473,6 +475,13 @@ IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, con
 	dither_convert_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);
+
+#ifdef ZIMG_X86
+	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
+
+	if (needs_f16c)
+		f16c = select_dither_f16c_func_x86(cpu);
+#endif
 
 	if (!func)
 		func = select_ordered_dither_func(pixel_in.type, pixel_out.type);

@@ -6,6 +6,7 @@
 #include "Common/linebuffer.h"
 #include "Common/pixel.h"
 #include "depth_convert2.h"
+#include "depth_convert2_x86.h"
 #include "quantize.h"
 
 namespace zimg {;
@@ -264,6 +265,13 @@ IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const Pixe
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF || pixel_out.type == PixelType::HALF);
+
+#ifdef ZIMG_X86
+	func = select_depth_convert_func_x86(pixel_in, pixel_out, cpu);
+
+	if (needs_f16c)
+		f16c = select_depth_f16c_func_x86(pixel_out.type == PixelType::HALF, cpu);
+#endif
 
 	if (!func)
 		func = select_depth_convert_func(pixel_in, pixel_out);
