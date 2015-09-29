@@ -368,5 +368,8 @@
     <ClCompile Include="..\..\Depth\depth_convert2_x86.cpp">
       <Filter>Source Files\Depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Depth\dither2_sse2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
