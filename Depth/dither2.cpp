@@ -213,8 +213,9 @@ class RandomDitherTable : public OrderedDitherTable {
 	static const size_t RAND_NUM = 1 << 14;
 
 	AlignedVector<float> m_table;
+	std::vector<unsigned> m_row_offset;
 public:
-	RandomDitherTable()
+	RandomDitherTable(unsigned, unsigned height)
 	{
 		// The greatest value such that rint(65535.0f + x) yields 65535.0f unchanged.
 		float safe_min = HF(-0x1.fdfffep-2);
@@ -231,12 +232,18 @@ public:
 			float f = (float)((double)(mt() - mt_min) / (double)(mt_max - mt_min) - 0.5);
 			return std::min(std::max(f, safe_min), safe_max);
 		});
+
+		m_row_offset.resize(height);
+
+		for (unsigned i = 0; i < height; ++i) {
+			std::mt19937 mt{ i };
+			m_row_offset[i] = mod(mt(), 8);
+		}
 	}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
 	{
-		std::mt19937 mt{ i };
-		unsigned offset = (mod(mt(), 8) + left) % RAND_NUM;
+		unsigned offset = (m_row_offset[i] + left) % RAND_NUM;
 		unsigned mask = RAND_NUM - 1;
 
 		return std::make_tuple(m_table.data(), offset, mask);
@@ -424,7 +431,7 @@ public:
 };
 
 
-OrderedDitherTable *create_dither_table(DitherType type)
+OrderedDitherTable *create_dither_table(DitherType type, unsigned width, unsigned height)
 {
 	switch (type) {
 	case DitherType::DITHER_NONE:
@@ -432,7 +439,7 @@ OrderedDitherTable *create_dither_table(DitherType type)
 	case DitherType::DITHER_ORDERED:
 		return new BayerDitherTable{};
 	case DitherType::DITHER_RANDOM:
-		return new RandomDitherTable{};
+		return new RandomDitherTable{ width, height };
 	default:
 		throw error::IllegalArgument{ "unrecognized dither type" };
 	}
@@ -460,7 +467,7 @@ IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, con
 	if (type == DitherType::DITHER_ERROR_DIFFUSION)
 		return create_error_diffusion(width, height, pixel_in, pixel_out, cpu);
 
-	std::unique_ptr<OrderedDitherTable> table{ create_dither_table(type) };
+	std::unique_ptr<OrderedDitherTable> table{ create_dither_table(type, width, height) };
 	IZimgFilter *ret = nullptr;
 
 	dither_convert_func func = nullptr;
