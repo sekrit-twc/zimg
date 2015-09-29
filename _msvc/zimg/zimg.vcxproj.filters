@@ -213,6 +213,12 @@
     <ClInclude Include="..\..\Resize\resize_impl2_x86.h">
       <Filter>Header Files\Resize</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Depth\dither2_x86.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert2_x86.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\API\zimg.cpp">
@@ -355,6 +361,15 @@
     </ClCompile>
     <ClCompile Include="..\..\Resize\resize_impl2_sse2.cpp">
       <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither2_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert2_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither2_sse2.cpp">
+      <Filter>Source Files\Depth</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

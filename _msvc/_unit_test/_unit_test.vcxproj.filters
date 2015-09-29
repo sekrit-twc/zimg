@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_sse2_test.cpp">
       <Filter>Source Files\Resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\dither2_sse2_test.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\UnitTest\Extra\sha1\sha1.h">

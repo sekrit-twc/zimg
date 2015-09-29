@@ -1,5 +1,6 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
+#include "Depth/depth2.h"
 #include "Depth/dither2.h"
 
 #include "gtest/gtest.h"
@@ -7,8 +8,7 @@
 
 namespace {;
 
-template <class T>
-void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
+void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -30,8 +30,8 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			fmt_out.fullrange = fullrange;
 			fmt_out.chroma = chroma;
 
-			T dither{ w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE };
-			validate_filter(&dither, w, h, pxin, expected_sha1[sha1_idx++]);
+			std::unique_ptr<zimg::IZimgFilter> dither{ zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE) };
+			validate_filter(dither.get(), w, h, pxin, expected_sha1[sha1_idx++]);
 		}
 	}
 }
@@ -55,7 +55,7 @@ TEST(DitherTest, test_limited_luma)
 		{ "1170f2c7b4ad7c7d76ae79490d97ae0ce5b4a929" },
 	};
 
-	test_case<zimg::depth::NoneDither>(false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_NONE, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_limited_chroma)
@@ -74,7 +74,7 @@ TEST(DitherTest, test_limited_chroma)
 		{ "02a87cf37521da2e674c3d89491a932614a0e3aa" },
 	};
 
-	test_case<zimg::depth::NoneDither>(false, true, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_NONE, false, true, expected_sha1);
 }
 
 TEST(DitherTest, test_full_luma)
@@ -93,7 +93,7 @@ TEST(DitherTest, test_full_luma)
 		{ "b48655a46858eff58b51b266d842fa5d5600e032" },
 	};
 
-	test_case<zimg::depth::NoneDither>(true, false, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_NONE, true, false, expected_sha1);
 }
 
 TEST(DitherTest, test_full_chroma)
@@ -112,26 +112,26 @@ TEST(DitherTest, test_full_chroma)
 		{ "2b449e40db3a8d4d5a4ca4c2cd74ef38e237ac57" },
 	};
 
-	test_case<zimg::depth::NoneDither>(true, true, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_NONE, true, true, expected_sha1);
 }
 
 TEST(DitherTest, test_bayer_dither)
 {
 	const char *expected_sha1[][3] = {
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
-		{ "473cdca62d5881a638579446b8f131d6f3e98166" },
+		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "a331ce3f1601d81e099ffd7fb2fbefa896eac0a9" },
+		{ "c4cccb53ec3d5ada8707ba52131b8a155e77f44a" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "e0dc8bcbb17937fd2c573221a2057752f434f637" },
-		{ "f899faf6f14cff8e84f7bdaf2e4cc415457f46b3" },
+		{ "b1bc4729f8d7b8768137062ad08457f36f8c730d" },
+		{ "c4a1ed5e7c7c2b6c7b4fd88348c19abd4fd904c5" },
 
-		{ "904ebf27c49a482f4b6cd949b9dc66c0f00a0993" },
-		{ "072c15f28913d1c84c3e19e36d152be754c148bb" },
+		{ "1ca1d6db60eea9d6cc1c125e3add1d7951968f9e" },
+		{ "31da13a60b8c73c58f808d406a0f2e6066ab8b8b" },
 	};
 
-	test_case<zimg::depth::BayerDither>(false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_ORDERED, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_random_dither)
@@ -140,17 +140,17 @@ TEST(DitherTest, test_random_dither)
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
 		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "d5e73a6ba9358e8fab7f53c3eafe184590dd6fb2" },
+		{ "ab2d2b92cd836f28080b28474b66faab21f2f372" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "ba9697be1dc62391630b5cab0093662d2f0e282b" },
-		{ "e4578bcc777bfa3782c19382b4f7e636d0d67dec" },
+		{ "71e8c03d502ce33036e4d73478aa2932a17c7599" },
+		{ "9f782faa689eeff1400880e4bc166a4a66ac229e" },
 
-		{ "7897550b2db75d7024d99f17b65d4d3639abead9" },
-		{ "7e0024f528edce64731273d704575ce0587f1da5" },
+		{ "23e5c6cb1fdd7f9c4dcbbe66178f5a47a5d4ed3e" },
+		{ "57ecf8fc00fc554ba932237ea830e303ed559b19" },
 	};
 
-	test_case<zimg::depth::RandomDither>(false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_RANDOM, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_error_diffusion)
@@ -169,5 +169,5 @@ TEST(DitherTest, test_error_diffusion)
 		{ "834f918f24da72a31bb6deb7b1e398446cf052a2" },
 	};
 
-	test_case<zimg::depth::ErrorDiffusion>(false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::DITHER_ERROR_DIFFUSION, false, false, expected_sha1);
 }
