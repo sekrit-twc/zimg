@@ -210,6 +210,9 @@
     <ClInclude Include="..\..\Common\libm_wrapper.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl2_x86.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\API\zimg.cpp">
@@ -343,6 +346,15 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\libm_wrapper.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2_sse.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl2_sse2.cpp">
+      <Filter>Source Files\Resize</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

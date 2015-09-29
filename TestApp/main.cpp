@@ -12,10 +12,11 @@ namespace {;
 
 zimg::CPUClass parse_cpu(const char *cpu)
 {
-	static const zimg::static_string_map<zimg::CPUClass, 4> map{
+	static const zimg::static_string_map<zimg::CPUClass, 5> map{
 		{ "none", zimg::CPUClass::CPU_NONE },
 		{ "auto", zimg::CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
+		{ "sse",  zimg::CPUClass::CPU_X86_SSE },
 		{ "sse2", zimg::CPUClass::CPU_X86_SSE2 },
 		{ "avx2", zimg::CPUClass::CPU_X86_AVX2 },
 #endif

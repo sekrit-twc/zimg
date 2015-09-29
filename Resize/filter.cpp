@@ -1,10 +1,13 @@
 #include <algorithm>
+#include <cfloat>
 #include <cstddef>
+#include <cstdint>
 #include <cmath>
 #include <vector>
 #include "Common/except.h"
 #include "Common/libm_wrapper.h"
 #include "Common/matrix.h"
+#include "Common/zassert.h"
 #include "filter.h"
 
 namespace zimg {;
@@ -30,6 +33,20 @@ double cube(double x)
 	return x * x * x;
 }
 
+double round_halfup(double x)
+{
+	/* When rounding on the pixel grid, the invariant
+	 *   round(x - 1) == round(x) - 1
+	 * must be preserved. This precludes the use of modes such as
+	 * half-to-even and half-away-from-zero.
+	 */
+	bool sign = std::signbit(x);
+
+	x = std::round(std::abs(x));
+	return sign ? -x : x;
+}
+
+
 FilterContext matrix_to_filter(const RowMatrix<double> &m)
 {
 	size_t width = 0;
@@ -51,14 +68,52 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 	for (size_t i = 0; i < m.rows(); ++i) {
 		unsigned left = (unsigned)std::min(m.row_left(i), m.cols() - width);
+		double f32_err = 0.0f;
+		double i16_err = 0;
 
+		double f32_sum = 0.0;
+		int16_t i16_sum = 0;
+		int16_t i16_greatest = 0;
+		size_t i16_greatest_idx = 0;
+
+		/**
+		 * Dither filter coefficients when rounding them to their storage format.
+		 * This minimizes accumulation of error and ensures that the filter
+		 * continues to sum as close to 1.0 as possible after rounding.
+		 */
 		for (size_t j = 0; j < width; ++j) {
-			float coeff = (float)m[i][left + j];
-			int16_t coeff_i16 = (int16_t)std::lrintf(coeff * (float)(1 << 14));
+			double coeff = m[i][left + j];
 
-			e.data[i * e.stride + j] = coeff;
+			double coeff_expected_f32 = coeff - f32_err;
+			double coeff_expected_i16 = coeff * (double)(1 << 14) - i16_err;
+
+			float coeff_f32 = (float)coeff_expected_f32;
+			int16_t coeff_i16 = (int16_t)std::lrint(coeff_expected_i16);
+
+			f32_err = (double)coeff_f32 - coeff_expected_f32;
+			i16_err = (double)coeff_i16 - coeff_expected_i16;
+
+			if (std::abs(coeff_i16) > i16_greatest) {
+				i16_greatest = coeff_i16;
+				i16_greatest_idx = j;
+			}
+
+			f32_sum += coeff_f32;
+			i16_sum += coeff_i16;
+
+			e.data[i * e.stride + j] = coeff_f32;
 			e.data_i16[i * e.stride_i16 + j] = coeff_i16;
 		}
+
+		/* The final sum may still be off by a few ULP. This can not be fixed for
+		 * floating point data, since the error is dependent on summation order,
+		 * but for integer data, the error can be added to the greatest coefficient.
+		 */
+		_zassert_d(1.0 - f32_sum <= FLT_EPSILON, "error too great");
+		_zassert_d(std::abs((1 << 14) - i16_sum) <= 1, "error too great");
+
+		e.data_i16[i * e.stride_i16 + i16_greatest_idx] += (1 << 14) - i16_sum;
+
 		e.left[i] = left;
 	}
 
@@ -181,23 +236,18 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 	double scale = (double)dst_dim / width;
 	double step = std::min(scale, 1.0);
 	double support = (double)f.support() / step;
-	int filter_size = std::max((int)std::ceil(support * 2), 1);
+	int filter_size = std::max((int)std::ceil(support) * 2, 1);
 
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
 	if (src_dim <= support || width <= support)
 		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
-	// Preserving center position with point upsampling filter is impossible.
-	// Instead, the top-left position is preserved to avoid mirroring artifacts.
-	if (filter_size == 1 && scale >= 1.0)
-		shift += 0.5;
-
 	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
 	for (int i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
 		double pos = (i + 0.5) / scale + shift;
-		double begin_pos = std::floor(pos + support - filter_size + 0.5) + 0.5;
+		double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;
 
 		double total = 0.0;
 		for (int j = 0; j < filter_size; ++j) {
