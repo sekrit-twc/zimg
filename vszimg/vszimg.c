@@ -1,833 +1,878 @@
-#if 0
-
-#include <math.h>
+#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zimg2.h"
-#include "VapourSynth.h"
-#include "VSHelper.h"
+
+#ifdef _WIN32
+  #include <Windows.h>
+  typedef CRITICAL_SECTION vszimg_mutex_t;
+
+  static int vszimg_mutex_init(vszimg_mutex_t *mutex) { InitializeCriticalSection(mutex); return 0;  }
+  static int vszimg_mutex_lock(vszimg_mutex_t *mutex) { EnterCriticalSection(mutex); return 0; }
+  static int vszimg_mutex_unlock(vszimg_mutex_t *mutex) { LeaveCriticalSection(mutex); return 0; }
+  static int vszimg_mutex_destroy(vszimg_mutex_t *mutex) { DeleteCriticalSection(mutex); return 0; }
+#else
+  #include <pthread.h>
+
+  typedef pthread_mutex_t vszimg_mutex_t;
+  static int vszimg_mutex_init(vszimg_mutex_t *mutex) { return pthread_mutex_init(mutex, NULL); }
+  static int vszimg_mutex_lock(vszimg_mutex_t *mutex) { return pthread_mutex_lock(mutex); }
+  static int vszimg_mutex_unlock(vszimg_mutex_t *mutex) { return pthread_mutex_unlock(mutex); }
+  static int vszimg_mutex_destroy(vszimg_mutex_t *mutex) { return pthread_mutex_destroy(mutex); }
+#endif // _WIN32
+
+#include <zimg.h>
 
 #if ZIMG_API_VERSION < 2
   #error zAPI v2 or greater required
 #endif
 
+#include "VapourSynth.h"
+#include "VSHelper.h"
 
-static int translate_dither(const char *dither)
+typedef unsigned char vszimg_bool;
+#define VSZIMG_TRUE  1
+#define VSZIMG_FALSE 0
+
+static unsigned g_version_info[3];
+static unsigned g_api_version;
+
+
+struct string_table_entry {
+	const char *str;
+	int val;
+};
+
+
+#define ARRAY_SIZE(x) sizeof((x)) / sizeof((x)[0])
+
+const struct string_table_entry g_cpu_type_table[] = {
+	{ "none",  ZIMG_CPU_NONE },
+	{ "auto",  ZIMG_CPU_AUTO },
+#if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
+	{ "mmx",   ZIMG_CPU_X86_MMX },
+	{ "sse",   ZIMG_CPU_X86_SSE },
+	{ "sse2",  ZIMG_CPU_X86_SSE2 },
+	{ "sse3",  ZIMG_CPU_X86_SSE3 },
+	{ "ssse3", ZIMG_CPU_X86_SSSE3 },
+	{ "sse41", ZIMG_CPU_X86_SSE41 },
+	{ "sse42", ZIMG_CPU_X86_SSE42 },
+	{ "avx",   ZIMG_CPU_X86_AVX },
+	{ "f16c",  ZIMG_CPU_X86_F16C },
+	{ "avx2",  ZIMG_CPU_X86_AVX2 },
+#endif
+};
+
+const struct string_table_entry g_range_table[] = {
+	{ "limited", ZIMG_RANGE_LIMITED },
+	{ "full",    ZIMG_RANGE_FULL },
+};
+
+const struct string_table_entry g_chromaloc_table[] = {
+	{ "left",        ZIMG_CHROMA_LEFT },
+	{ "center",      ZIMG_CHROMA_CENTER },
+	{ "top_left",    ZIMG_CHROMA_TOP_LEFT },
+	{ "top",         ZIMG_CHROMA_TOP },
+	{ "bottom_left", ZIMG_CHROMA_BOTTOM_LEFT },
+	{ "bottom",      ZIMG_CHROMA_BOTTOM },
+};
+
+const struct string_table_entry g_matrix_table[] = {
+	{ "rgb",     ZIMG_MATRIX_RGB },
+	{ "709",     ZIMG_MATRIX_709 },
+	{ "unspec",  ZIMG_MATRIX_UNSPECIFIED },
+	{ "470bg",   ZIMG_MATRIX_470BG },
+	{ "170m",    ZIMG_MATRIX_170M },
+	{ "2020ncl", ZIMG_MATRIX_2020_NCL },
+	{ "2020cl",  ZIMG_MATRIX_2020_CL },
+};
+
+const struct string_table_entry g_transfer_table[] = {
+	{ "709",     ZIMG_TRANSFER_709 },
+	{ "unspec",  ZIMG_TRANSFER_UNSPECIFIED },
+	{ "601",     ZIMG_TRANSFER_601 },
+	{ "linear",  ZIMG_TRANSFER_LINEAR },
+	{ "2020_10", ZIMG_TRANSFER_2020_10 },
+	{ "2020_12", ZIMG_TRANSFER_2020_12 },
+};
+
+const struct string_table_entry g_primaries_table[] = {
+	{ "709",    ZIMG_PRIMARIES_709 },
+	{ "unspec", ZIMG_PRIMARIES_UNSPECIFIED },
+	{ "170m",   ZIMG_PRIMARIES_170M },
+	{ "240m",   ZIMG_PRIMARIES_240M },
+	{ "2020",   ZIMG_PRIMARIES_2020 },
+};
+
+const struct string_table_entry g_dither_type_table[] = {
+	{ "none",            ZIMG_DITHER_NONE },
+	{ "ordered",         ZIMG_DITHER_ORDERED },
+	{ "random",          ZIMG_DITHER_RANDOM },
+	{ "error_diffusion", ZIMG_DITHER_ERROR_DIFFUSION }
+};
+
+const struct string_table_entry g_resample_filter_table[] = {
+	{ "point",    ZIMG_RESIZE_POINT },
+	{ "bilinear", ZIMG_RESIZE_BILINEAR },
+	{ "bicubic",  ZIMG_RESIZE_BICUBIC },
+	{ "spline16", ZIMG_RESIZE_SPLINE16 },
+	{ "spline36", ZIMG_RESIZE_SPLINE36 },
+	{ "lanczos",  ZIMG_RESIZE_LANCZOS }
+};
+
+
+static int table_lookup_str(const struct string_table_entry *table, size_t n, const char *str, int *out)
 {
-	if (!strcmp(dither, "none"))
-		return ZIMG_DITHER_NONE;
-	else if (!strcmp(dither, "ordered"))
-		return ZIMG_DITHER_ORDERED;
-	else if (!strcmp(dither, "random"))
-		return ZIMG_DITHER_RANDOM;
-	else if (!strcmp(dither, "error_diffusion"))
-		return ZIMG_DITHER_ERROR_DIFFUSION;
-	else
-		return ZIMG_DITHER_NONE;
+	size_t i = 0;
+
+	for (i = 0; i < n; ++i) {
+		if (!strcmp(table[i].str, str)) {
+			*out = table[i].val;
+			return 0;
+		}
+	}
+	return 1;
 }
 
-static int translate_pixel(const VSFormat *format)
+static int propGetUintDef(const VSAPI *vsapi, const VSMap *map, const char *key, int *out, int def)
+{
+	int err = 0;
+	int64_t x;
+
+	if ((x = vsapi->propGetInt(map, key, 0, &err)), err)
+		x = def;
+
+	if (x < INT_MIN || x > INT_MAX) {
+		return 1;
+	} else {
+		*out = (unsigned)x;
+		return 0;
+	}
+}
+
+static int propGetSintDef(const VSAPI *vsapi, const VSMap *map, const char *key, int *out, int def)
+{
+	int err = 0;
+	int64_t x;
+
+	if ((x = vsapi->propGetInt(map, key, 0, &err)), err)
+		x = def;
+
+	if (x < 0 || x > INT_MAX) {
+		return 1;
+	} else {
+		*out = (int)x;
+		return 0;
+	}
+}
+
+static double propGetFloatDef(const VSAPI *vsapi, const VSMap *map, const char *key, double def)
+{
+	int err = 0;
+	double x;
+
+	if ((x = vsapi->propGetFloat(map, key, 0, &err)), err)
+		x = def;
+
+	return x;
+}
+
+static int tryGetEnumStr(const VSAPI *vsapi, const VSMap *map, const char *key, int *out, vszimg_bool *flag, const struct string_table_entry *table, size_t table_size)
+{
+	int err = 0;
+	const char *enum_str;
+
+	if ((enum_str = vsapi->propGetData(map, key, 0, &err)), err) {
+		*flag = VSZIMG_FALSE;
+		return 0;
+	}
+
+	if (table_lookup_str(table, table_size, enum_str, out)) {
+		return 1;
+	} else {
+		*flag = VSZIMG_TRUE;
+		return 0;
+	}
+}
+
+static int tryGetEnum(const VSAPI *vsapi, const VSMap *map, const char *key, int *out, vszimg_bool *flag, const struct string_table_entry *table, size_t table_size)
+{
+	char key_str[64];
+	int64_t enum_int;
+	int err = 0;
+
+	if ((enum_int = vsapi->propGetInt(map, key, 0, &err)), !err) {
+		if (enum_int < INT_MIN || enum_int > INT_MAX) {
+			return 1;
+		} else {
+			*out = (int)enum_int;
+			*flag = VSZIMG_TRUE;
+			return 0;
+		}
+	} else {
+		sprintf(key_str, "%s_s", key);
+		return tryGetEnumStr(vsapi, map, key_str, out, flag, table, table_size);
+	}
+}
+
+
+static int translate_pixel_type(const VSFormat *format, zimg_pixel_type_e *out)
 {
 	if (format->sampleType == stInteger && format->bytesPerSample == 1)
-		return ZIMG_PIXEL_BYTE;
+		*out = ZIMG_PIXEL_BYTE;
 	else if (format->sampleType == stInteger && format->bytesPerSample == 2)
-		return ZIMG_PIXEL_WORD;
-	else if (format->sampleType == stFloat && format->bitsPerSample == 16)
-		return ZIMG_PIXEL_HALF;
-	else if (format->sampleType == stFloat && format->bitsPerSample == 32)
-		return ZIMG_PIXEL_FLOAT;
+		*out = ZIMG_PIXEL_WORD;
+	else if (format->sampleType == stFloat && format->bytesPerSample == 2)
+		*out = ZIMG_PIXEL_HALF;
+	else if (format->sampleType == stFloat && format->bytesPerSample == 4)
+		*out = ZIMG_PIXEL_FLOAT;
 	else
-		return -1;
+		return 1;
+
+	return 0;
 }
 
-static int translate_filter(const char *filter)
+static int translate_color_family(VSColorFamily cf, zimg_color_family_e *out, zimg_matrix_coefficients_e *out_matrix)
 {
-	if (!strcmp(filter, "point"))
-		return ZIMG_RESIZE_POINT;
-	else if (!strcmp(filter, "bilinear"))
-		return ZIMG_RESIZE_BILINEAR;
-	else if (!strcmp(filter, "bicubic"))
-		return ZIMG_RESIZE_BICUBIC;
-	else if (!strcmp(filter, "spline16"))
-		return ZIMG_RESIZE_SPLINE16;
-	else if (!strcmp(filter, "spline36"))
-		return ZIMG_RESIZE_SPLINE36;
-	else if (!strcmp(filter, "lanczos"))
-		return ZIMG_RESIZE_LANCZOS;
+	switch (cf) {
+	case cmGray:
+		*out = ZIMG_COLOR_GREY;
+		*out_matrix = ZIMG_MATRIX_UNSPECIFIED;
+		return 0;
+	case cmRGB:
+		*out = ZIMG_COLOR_RGB;
+		*out_matrix = ZIMG_MATRIX_RGB;
+		return 0;
+	case cmYUV:
+	case cmYCoCg:
+		*out = ZIMG_COLOR_YUV;
+		*out_matrix = ZIMG_MATRIX_UNSPECIFIED;
+		return 0;
+	default:
+		return 1;
+	}
+}
+
+static int translate_vsformat(const VSFormat *vsformat, zimg_image_format *format, char *err_msg)
+{
+#define FAIL(msg) \
+  do { \
+    sprintf(err_msg, (msg)); \
+    return 1; \
+  } while (0)
+
+	if (translate_pixel_type(vsformat, &format->pixel_type))
+		FAIL("incompatible pixel type");
+
+	format->subsample_w = vsformat->subSamplingW;
+	format->subsample_h = vsformat->subSamplingH;
+
+	if (translate_color_family(vsformat->colorFamily, &format->color_family, &format->matrix_coefficients))
+		FAIL("incompatible color family");
+
+	format->depth = vsformat->bitsPerSample;
+	format->pixel_range = (format->color_family == ZIMG_COLOR_RGB) ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED;
+
+	format->field_parity = ZIMG_FIELD_PROGRESSIVE;
+	format->chroma_location = (format->subsample_w || format->subsample_h) ? ZIMG_CHROMA_LEFT : ZIMG_CHROMA_CENTER;
+
+	return 0;
+#undef FAIL
+}
+
+static vszimg_bool image_format_eq(const zimg_image_format *a, const zimg_image_format *b)
+{
+	vszimg_bool ret = VSZIMG_TRUE;
+
+	ret = ret && a->width == b->width;
+	ret = ret && a->height == b->height;
+	ret = ret && a->pixel_type == b->pixel_type;
+	ret = ret && a->subsample_w == b->subsample_w;
+	ret = ret && a->subsample_h == b->subsample_h;
+	ret = ret && a->color_family == b->color_family;
+
+	if (a->color_family != ZIMG_COLOR_GREY) {
+		ret = ret && a->matrix_coefficients == b->matrix_coefficients;
+		ret = ret && a->transfer_characteristics == b->transfer_characteristics;
+		ret = ret && a->color_primaries == b->color_primaries;
+	}
+
+	ret = ret && a->depth == b->depth;
+	ret = ret && a->pixel_range == b->pixel_range;
+	ret = ret && a->field_parity == b->field_parity;
+
+	if (a->color_family == ZIMG_COLOR_YUV && (a->subsample_w || a->subsample_h))
+		ret = ret && a->chroma_location == b->chroma_location;
+
+	return ret;
+}
+
+static void format_zimg_error(char *err_msg, size_t n)
+{
+	zimg_error_code_e err_code;
+	int offset;
+
+	err_code = zimg_get_last_error(NULL, 0);
+	offset = sprintf(err_msg, "zimg %d: ", err_code);
+	zimg_get_last_error(err_msg + offset, n - offset);
+}
+
+static int import_frame_props(const VSAPI *vsapi, const VSMap *props, zimg_image_format *format, char *err_msg)
+{
+#define FAIL(name) \
+  do { \
+    sprintf(err_msg, "%s: bad value", (name)); \
+	return 1; \
+  } while (0)
+#define COPY_INT_POSITIVE(name, out, invalid) \
+  do { \
+    int tmp; \
+    if (propGetSintDef(vsapi, props, name, &tmp, out)) \
+	  FAIL(name); \
+    if (tmp >= 0 && tmp != invalid) \
+      (out) = tmp; \
+  } while (0)
+
+	int64_t tmp_i64;
+	int err = 0;
+
+	COPY_INT_POSITIVE("_ChromaLocation", format->chroma_location, -1);
+
+	if ((tmp_i64 = vsapi->propGetInt(props, "_ColorRange", 0, &err)), !err) {
+		if (tmp_i64 == 0)
+			format->pixel_range = ZIMG_RANGE_FULL;
+		else if (tmp_i64 == 1)
+			format->pixel_range = ZIMG_RANGE_LIMITED;
+		else
+			FAIL("_ColorRange");
+	}
+
+	/* Ignore UNSPECIFIED values from properties, since the user can specify them. */
+	COPY_INT_POSITIVE("_Matrix", format->matrix_coefficients, ZIMG_MATRIX_UNSPECIFIED);
+	COPY_INT_POSITIVE("_Transfer", format->transfer_characteristics, ZIMG_TRANSFER_UNSPECIFIED);
+	COPY_INT_POSITIVE("_Primaries", format->color_primaries, ZIMG_PRIMARIES_UNSPECIFIED);
+
+	if ((tmp_i64 = vsapi->propGetInt(props, "_FieldBased", 0, &err)), !err) {
+		if (tmp_i64 != 0)
+			FAIL("_FieldBased");
+	}
+
+	return 0;
+#undef FAIL
+#undef COPY_INT_POSITIVE
+}
+
+static void export_frame_props(const VSAPI *vsapi, const zimg_image_format *format, VSMap *props)
+{
+#define COPY_INT_POSITIVE(name, val) \
+  do {; \
+    if (val >= 0) \
+	  vsapi->propSetInt(props, (name), (val), paReplace); \
+    else \
+	  vsapi->propDeleteKey(props, (name)); \
+  } while (0)
+
+	char version_str[64];
+
+	sprintf(version_str, "%u.%u.%u", g_version_info[0], g_version_info[1], g_version_info[2]);
+
+	vsapi->propSetInt(props, "ZimgApiVersion", g_api_version, paReplace);
+	vsapi->propSetData(props, "ZimgVersion", version_str, (int)strlen(version_str) + 1, paReplace);
+
+	COPY_INT_POSITIVE("_ChromaLocation", format->chroma_location);
+
+	if (format->pixel_range == ZIMG_RANGE_FULL)
+		vsapi->propSetInt(props, "_ColorRange", 0, paReplace);
+	else if (format->pixel_range == ZIMG_RANGE_LIMITED)
+		vsapi->propSetInt(props, "_ColorRange", 1, paReplace);
 	else
-		return ZIMG_RESIZE_POINT;
+		vsapi->propDeleteKey(props, "_ColorRange");
+
+	COPY_INT_POSITIVE("_Matrix", format->matrix_coefficients);
+	COPY_INT_POSITIVE("_Transfer", format->transfer_characteristics);
+	COPY_INT_POSITIVE("_Primaries", format->color_primaries);
+
+	vsapi->propSetInt(props, "_FieldBased", 0, paReplace);
+#undef COPY_INT_POSITIVE
 }
 
-/* Offset needed to go from 4:4:4 to chroma location at given subsampling, relative to 4:4:4 grid. */
-static double chroma_h_mpeg1_distance(const char *chroma_loc, int subsample)
+static void propagate_sar(const VSAPI *vsapi, const VSMap *src_props, VSMap *dst_props, const zimg_image_format *src_format, const zimg_image_format *dst_format)
 {
-	return (!strcmp(chroma_loc, "mpeg2") && subsample == 1) ? -0.5 : 0.0;
-}
-
-/* Adjustment to shift needed to convert between chroma locations. */
-static double chroma_adjust_h(const char *loc_in, const char *loc_out, int subsample_in, int subsample_out)
-{
-	double scale = 1.0f / (double)(1 << subsample_in);
-	double to_444_offset = -chroma_h_mpeg1_distance(loc_in, subsample_in) * scale;
-	double from_444_offset = chroma_h_mpeg1_distance(loc_out, subsample_out) * scale;
-
-	return to_444_offset + from_444_offset;
-}
-
-static double chroma_adjust_v(const char *loc_in, const char *loc_out, int subsample_in, int subsample_out)
-{
-	return 0.0;
-}
-
-static int64_t propGetIntDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, int64_t default_value)
-{
-	int64_t x;
+	int64_t sar_num = 0;
+	int64_t sar_den = 0;
 	int err;
 
-	x = vsapi->propGetInt(map, key, index, &err);
-	return err ? default_value : x;
-}
+	if ((sar_num = vsapi->propGetInt(src_props, "_SARNum", 0, &err)), err)
+		sar_num = 0;
+	if ((sar_den = vsapi->propGetInt(src_props, "_SARDen", 0, &err)), err)
+		sar_den = 0;
 
-static double propGetFloatDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, double default_value)
-{
-	double x;
-	int err;
+	if (sar_num <= 0 || sar_den <= 0) {
+		vsapi->propDeleteKey(dst_props, "_SARNum");
+		vsapi->propDeleteKey(dst_props, "_SARDen");
+	} else {
+		muldivRational(&sar_num, &sar_den, dst_format->width, src_format->width);
+		muldivRational(&sar_num, &sar_den, src_format->height, dst_format->height);
 
-	x = vsapi->propGetFloat(map, key, index, &err);
-	return err ? default_value : x;
-}
-
-static const char *propGetDataDefault(const VSAPI *vsapi, const VSMap *map, const char *key, int index, const char *default_value)
-{
-	const char *x;
-	int err;
-
-	x = vsapi->propGetData(map, key, index, &err);
-	return err ? default_value : x;
+		vsapi->propSetInt(dst_props, "_SARNum", sar_num, paReplace);
+		vsapi->propSetInt(dst_props, "_SARDen", sar_den, paReplace);
+	}
 }
 
 
-typedef struct vs_colorspace_data {
-	zimg_filter *filter;
+struct vszimg_graph_data {
+	zimg_filter_graph *graph;
+	zimg_image_format src_format;
+	zimg_image_format dst_format;
+	int ref_count;
+};
+
+struct vszimg_data {
+	struct vszimg_graph_data *graph_data;
+	vszimg_mutex_t graph_mutex;
+	vszimg_bool graph_mutex_initialized;
+
 	VSNodeRef *node;
 	VSVideoInfo vi;
-	int matrix_out;
-	int transfer_out;
-	int primaries_out;
-} vs_colorspace_data;
+	zimg_filter_graph_params params;
 
-static void VS_CC vs_colorspace_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
+	zimg_matrix_coefficients_e matrix;
+	zimg_transfer_characteristics_e transfer;
+	zimg_color_primaries_e primaries;
+	zimg_pixel_range_e range;
+	zimg_chroma_location_e chromaloc;
+
+	zimg_matrix_coefficients_e matrix_in;
+	zimg_transfer_characteristics_e transfer_in;
+	zimg_color_primaries_e primaries_in;
+	zimg_pixel_range_e range_in;
+	zimg_chroma_location_e chromaloc_in;
+
+	vszimg_bool have_matrix;
+	vszimg_bool have_transfer;
+	vszimg_bool have_primaries;
+	vszimg_bool have_range;
+	vszimg_bool have_chromaloc;
+
+	vszimg_bool have_matrix_in;
+	vszimg_bool have_transfer_in;
+	vszimg_bool have_primaries_in;
+	vszimg_bool have_range_in;
+	vszimg_bool have_chromaloc_in;
+};
+
+static void _vszimg_default_init(struct vszimg_data *data)
 {
-	const vs_colorspace_data *data = *instanceData;
+	memset(data, 0, sizeof(*data));
+
+	data->graph_data = NULL;
+	data->graph_mutex_initialized = VSZIMG_FALSE;
+	data->node = NULL;
+}
+
+static void _vszimg_destroy(struct vszimg_data *data, const VSAPI *vsapi)
+{
+	if (data->graph_data)
+		zimg2_filter_graph_free(data->graph_data->graph);
+	if (data->graph_mutex_initialized)
+		vszimg_mutex_destroy(&data->graph_mutex);
+
+	free(data->graph_data);
+	vsapi->freeNode(data->node);
+}
+
+static void _vszimg_set_src_colorspace(const struct vszimg_data *data, zimg_image_format *src_format)
+{
+	if (data->have_matrix_in)
+		src_format->matrix_coefficients = data->matrix_in;
+	if (data->have_transfer_in)
+		src_format->transfer_characteristics = data->transfer_in;
+	if (data->have_primaries_in)
+		src_format->color_primaries = data->primaries_in;
+	if (data->have_range_in)
+		src_format->pixel_range = data->range_in;
+	if (data->have_chromaloc_in)
+		src_format->chroma_location = data->chromaloc_in;
+}
+
+static void _vszimg_set_dst_colorspace(const struct vszimg_data *data, const zimg_image_format *src_format, zimg_image_format *dst_format)
+{
+	/* Avoid propagating source matrix coefficients if the target is RGB. */
+	if (dst_format->color_family != ZIMG_COLOR_RGB)
+		dst_format->matrix_coefficients = src_format->matrix_coefficients;
+
+	dst_format->transfer_characteristics = src_format->transfer_characteristics;
+	dst_format->color_primaries = src_format->color_primaries;
+
+	/* Avoid propagating source pixel range and chroma location if color family changes. */
+	if (dst_format->color_family == src_format->color_family) {
+		dst_format->pixel_range = src_format->pixel_range;
+		dst_format->chroma_location = src_format->chroma_location;
+	}
+
+	if (data->have_matrix)
+		dst_format->matrix_coefficients = data->matrix;
+	if (data->have_transfer)
+		dst_format->transfer_characteristics = data->transfer;
+	if (data->have_primaries)
+		dst_format->color_primaries = data->primaries;
+	if (data->have_range)
+		dst_format->pixel_range = data->range;
+	if (data->have_chromaloc)
+		dst_format->chroma_location = data->chromaloc;
+}
+
+static void _vszimg_release_graph_data_unsafe(struct vszimg_graph_data *graph_data)
+{
+	if (!graph_data)
+		return;
+	if (--graph_data->ref_count == 0) {
+		zimg2_filter_graph_free(graph_data->graph);
+		free(graph_data);
+	}
+}
+
+static void _vszimg_release_graph_data(struct vszimg_data *data, struct vszimg_graph_data *graph_data)
+{
+	if (!graph_data)
+		return;
+	if (vszimg_mutex_lock(&data->graph_mutex))
+		return;
+
+	_vszimg_release_graph_data_unsafe(graph_data);
+
+	vszimg_mutex_unlock(&data->graph_mutex);
+}
+
+static struct vszimg_graph_data *_vszimg_get_graph_data(struct vszimg_data *data, const zimg_image_format *src_format, const zimg_image_format *dst_format,
+                                                        char *err_msg, size_t err_msg_size)
+{
+	struct vszimg_graph_data *graph_data = NULL;
+	struct vszimg_graph_data *ret = NULL;
+	vszimg_bool mutex_locked = VSZIMG_FALSE;
+	vszimg_bool allocate_new;
+
+	if (vszimg_mutex_lock(&data->graph_mutex)) {
+		sprintf(err_msg, "error locking mutex");
+		goto fail;
+	}
+	mutex_locked = VSZIMG_TRUE;
+
+	allocate_new = !data->graph_data ||
+	               (!image_format_eq(&data->graph_data->src_format, src_format) ||
+	                !image_format_eq(&data->graph_data->dst_format, dst_format));
+
+	if (allocate_new) {
+		if (!(graph_data = malloc(sizeof(*graph_data)))) {
+			sprintf(err_msg, "error allocating vszimg_graph_data");
+			goto fail;
+		}
+		graph_data->graph = NULL;
+		graph_data->ref_count = 1;
+
+		if (!(graph_data->graph = zimg2_filter_graph_build(src_format, dst_format, &data->params))) {
+			format_zimg_error(err_msg, err_msg_size);
+			goto fail;
+		}
+
+		graph_data->src_format = *src_format;
+		graph_data->dst_format = *dst_format;
+
+		_vszimg_release_graph_data_unsafe(data->graph_data);
+
+		++graph_data->ref_count;
+		data->graph_data = graph_data;
+
+		ret = graph_data;
+		graph_data = NULL;
+	} else {
+		++data->graph_data->ref_count;
+		ret = data->graph_data;
+	}
+fail:
+	if (mutex_locked)
+		vszimg_mutex_unlock(&data->graph_mutex);
+
+	_vszimg_release_graph_data(data, graph_data);
+	return ret;
+}
+
+static void VS_CC vszimg_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
+{
+	struct vszimg_data *data = *instanceData;
 	vsapi->setVideoInfo(&data->vi, 1, node);
 }
 
-static const VSFrameRef * VS_CC vs_colorspace_get_frame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
+static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
-	vs_colorspace_data *data = *instanceData;
-	VSFrameRef *ret = 0;
-	char fail_str[1024];
-	int err = 0;
+	struct vszimg_data *data = *instanceData;
+	struct vszimg_graph_data *graph_data = NULL;
+	const VSFrameRef *src_frame = NULL;
+	VSFrameRef *dst_frame = NULL;
+	VSFrameRef *ret = NULL;
+	void *tmp = NULL;
+	char err_msg[1024];
+	int err_flag = 1;
 
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
 	} else if (activationReason == arAllFramesReady) {
-		const VSFrameRef *src_frame = 0;
-		VSFrameRef *dst_frame = 0;
-		void *tmp = 0;
-
-		const void *src_plane[3];
-		void *dst_plane[3];
-		ptrdiff_t src_stride[3];
-		ptrdiff_t dst_stride[3];
-		int width;
-		int height;
+		zimg_image_buffer_const src_buf = { ZIMG_API_VERSION };
+		zimg_image_buffer dst_buf = { { ZIMG_API_VERSION } };
+		zimg_image_format src_format;
+		zimg_image_format dst_format;
+		const VSFormat *src_vsformat;
+		const VSFormat *dst_vsformat;
+		const VSMap *src_props;
+		VSMap *dst_props;
 		size_t tmp_size;
-		VSMap *props;
-		unsigned p;
+		int p;
 
-		width = data->vi.width;
-		height = data->vi.height;
+		zimg2_image_format_default(&src_format, ZIMG_API_VERSION);
+		zimg2_image_format_default(&dst_format, ZIMG_API_VERSION);
 
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
-		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
+		src_props = vsapi->getFramePropsRO(src_frame);
 
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
+		src_vsformat = vsapi->getFrameFormat(src_frame);
+		dst_vsformat = data->vi.format ? data->vi.format : src_vsformat;
+
+		src_format.width = vsapi->getFrameWidth(src_frame, 0);
+		src_format.height = vsapi->getFrameHeight(src_frame, 0);
+
+		dst_format.width = data->vi.width ? (unsigned)data->vi.width : src_format.width;
+		dst_format.height = data->vi.height ? (unsigned)data->vi.height : src_format.height;
+
+		if (translate_vsformat(src_vsformat, &src_format, err_msg))
+			goto fail;
+		if (translate_vsformat(dst_vsformat, &dst_format, err_msg))
+			goto fail;
+
+		_vszimg_set_src_colorspace(data, &src_format);
+
+		if (import_frame_props(vsapi, src_props, &src_format, err_msg))
+			goto fail;
+
+		_vszimg_set_dst_colorspace(data, &src_format, &dst_format);
+
+		if (!(graph_data = _vszimg_get_graph_data(data, &src_format, &dst_format, err_msg, sizeof(err_msg))))
+			goto fail;
+
+		dst_frame = vsapi->newVideoFrame(dst_vsformat, dst_format.width, dst_format.height, src_frame, core);
+		dst_props = vsapi->getFramePropsRW(dst_frame);
+
+		for (p = 0; p < src_vsformat->numPlanes; ++p) {
+			src_buf.data[p] = vsapi->getReadPtr(src_frame, p);
+			src_buf.stride[p] = vsapi->getStride(src_frame, p);
+			src_buf.mask[p] = -1;
+		}
+		for (p = 0; p < dst_vsformat->numPlanes; ++p) {
+			dst_buf.m.data[p] = vsapi->getWritePtr(dst_frame, p);
+			dst_buf.m.stride[p] = vsapi->getStride(dst_frame, p);
+			dst_buf.m.mask[p] = -1;
+		}
+
+		if (zimg2_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
+			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
 		}
 
-		VS_ALIGNED_MALLOC(&tmp, tmp_size, 32);
+		VS_ALIGNED_MALLOC(&tmp, tmp_size, 64);
 		if (!tmp) {
-			strcpy(fail_str, "error allocating temporary buffer");
-			err = 1;
+			sprintf(err_msg, "error allocating temporary buffer");
 			goto fail;
 		}
 
-		for (p = 0; p < 3; ++p) {
-			src_plane[p] = vsapi->getReadPtr(src_frame, p);
-			src_stride[p] = vsapi->getStride(src_frame, p);
-
-			dst_plane[p] = vsapi->getWritePtr(dst_frame, p);
-			dst_stride[p] = vsapi->getStride(dst_frame, p);
-		}
-
-		if ((err = zimg2_plane_filter_process(data->filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
+		if (zimg2_filter_graph_process(graph_data->graph, &src_buf, &dst_buf, tmp, NULL, NULL, NULL, NULL)) {
+			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
 		}
 
-		props = vsapi->getFramePropsRW(dst_frame);
-		vsapi->propSetInt(props, "_Matrix", data->matrix_out, paReplace);
-		vsapi->propSetInt(props, "_Transfer", data->transfer_out, paReplace);
-		vsapi->propSetInt(props, "_Primaries", data->primaries_out, paReplace);
+		propagate_sar(vsapi, src_props, dst_props, &src_format, &dst_format);
+		export_frame_props(vsapi, &dst_format, dst_props);
 
 		ret = dst_frame;
-		dst_frame = 0;
-	fail:
-		vsapi->freeFrame(src_frame);
-		vsapi->freeFrame(dst_frame);
-		VS_ALIGNED_FREE(tmp);
+		dst_frame = NULL;
 	}
 
-	if (err)
-		vsapi->setFilterError(fail_str, frameCtx);
+	err_flag = 0;
+fail:
+	if (err_flag)
+		vsapi->setFilterError(err_msg, frameCtx);
 
+	_vszimg_release_graph_data(data, graph_data);
+	vsapi->freeFrame(src_frame);
+	vsapi->freeFrame(dst_frame);
 	return ret;
 }
 
-static void VS_CC vs_colorspace_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
+static void VS_CC vszimg_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
-	vs_colorspace_data *data = instanceData;
-	zimg2_filter_free(data->filter);
-	vsapi->freeNode(data->node);
+	struct vszimg_data *data = instanceData;
+
+	_vszimg_destroy(data, vsapi);
 	free(data);
 }
 
-static void VS_CC vs_colorspace_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
+static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
-	vs_colorspace_data *data = 0;
-	zimg_colorspace_params params;
-	zimg_filter *filter = 0;
-	char fail_str[1024];
+	struct vszimg_data *data = NULL;
 
-	VSNodeRef *node = 0;
 	const VSVideoInfo *node_vi;
 	const VSFormat *node_fmt;
-	VSVideoInfo vi;
+	int format_id;
 
-	node = vsapi->propGetNode(in, "clip", 0, 0);
-	node_vi = vsapi->getVideoInfo(node);
-	node_fmt = node_vi->format;
+	char err_msg[64];
 
-	if (!isConstantFormat(node_vi)) {
-		strcpy(fail_str, "clip must have a defined format");
-		goto fail;
-	}
-	if (node_fmt->numPlanes < 3 || node_fmt->subSamplingW || node_fmt->subSamplingH) {
-		strcpy(fail_str, "colorspace conversion can only be performed on 4:4:4 clips");
-		goto fail;
-	}
+#define FAIL_BAD_VALUE(name) \
+  do { \
+    sprintf(err_msg, "%s: bad value", (name)); \
+    goto fail; \
+  } while (0)
 
-	zimg2_colorspace_params_default(&params, ZIMG_API_VERSION);
+#define TRY_GET_ENUM(name, out, flag, table) \
+  do { \
+    int enum_tmp; \
+    if (tryGetEnum(vsapi, in, (name), &enum_tmp, &(flag), (table), ARRAY_SIZE((table)))) \
+      FAIL_BAD_VALUE(name); \
+    if ((flag)) \
+      (out) = enum_tmp; \
+  } while (0)
 
-	params.width = node_vi->width;
-	params.height = node_vi->height;
-
-	params.matrix_in = (int)vsapi->propGetInt(in, "matrix_in", 0, 0);
-	params.transfer_in = (int)vsapi->propGetInt(in, "transfer_in", 0, 0);
-	params.primaries_in = (int)vsapi->propGetInt(in, "primaries_in", 0, 0);
-
-	params.matrix_out = (int)propGetIntDefault(vsapi, in, "matrix_out", 0, params.matrix_in);
-	params.transfer_out = (int)propGetIntDefault(vsapi, in, "transfer_out", 0, params.transfer_in);
-	params.primaries_out = (int)propGetIntDefault(vsapi, in, "primaries_out", 0, params.primaries_in);
-
-	params.pixel_type = translate_pixel(node_fmt);
-	params.depth = node_fmt->bitsPerSample;
-	params.range_in = (int)!!propGetIntDefault(vsapi, in, "fullrange_in", 0, params.matrix_in == ZIMG_MATRIX_RGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
-	params.range_out = (int)!!propGetIntDefault(vsapi, in, "fullrange_out", 0, params.matrix_out == ZIMG_MATRIX_RGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
-
-	vi = *node_vi;
-	vi.format = vsapi->registerFormat(params.matrix_out == ZIMG_MATRIX_RGB ? cmRGB : cmYUV,
-	                                  node_fmt->sampleType, node_fmt->bitsPerSample, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
-
-	if (!(filter = zimg2_colorspace_create(&params))) {
-		zimg_get_last_error(fail_str, sizeof(fail_str));
-		goto fail;
-	}
-	if (!(data = malloc(sizeof(*data)))) {
-		strcpy(fail_str, "error allocating vs_colorspace_data");
-		goto fail;
-	}
-
-	data->filter = filter;
-	data->node = node;
-	data->vi = vi;
-	data->matrix_out = params.matrix_out;
-	data->transfer_out = params.transfer_out;
-	data->primaries_out = params.primaries_out;
-
-	vsapi->createFilter(in, out, "colorspace", vs_colorspace_init, vs_colorspace_get_frame, vs_colorspace_free, fmParallel, 0, data, core);
-	return;
-fail:
-	vsapi->setError(out, fail_str);
-	vsapi->freeNode(node);
-	zimg2_filter_free(filter);
-	free(data);
-}
-
-
-typedef struct vs_depth_data {
-	zimg_filter *filter;
-	zimg_filter *filter_uv;
-	VSNodeRef *node;
-	VSVideoInfo vi;
-	int fullrange;
-} vs_depth_data;
-
-static void VS_CC vs_depth_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
-{
-	const vs_depth_data *data = *instanceData;
-	vsapi->setVideoInfo(&data->vi, 1, node);
-}
-
-static const VSFrameRef * VS_CC vs_depth_get_frame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
-{
-	vs_depth_data *data = *instanceData;
-	VSFrameRef *ret = 0;
-	char fail_str[1024];
-	int err = 0;
-
-	if (activationReason == arInitial) {
-		vsapi->requestFrameFilter(n, data->node, frameCtx);
-	} else {
-		const VSFrameRef *src_frame = 0;
-		VSFrameRef *dst_frame = 0;
-		void *tmp = 0;
-
-		const void *src_plane[3] = { 0 };
-		void *dst_plane[3] = { 0 };
-		ptrdiff_t src_stride[3] = { 0 };
-		ptrdiff_t dst_stride[3] = { 0 };
-		int width;
-		int height;
-		unsigned num_planes;
-		size_t tmp_size;
-		size_t tmp_size_uv;
-		VSMap *props;
-		unsigned p;
-
-		width = data->vi.width;
-		height = data->vi.height;
-		num_planes = data->vi.format->numPlanes;
-
-		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
-		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
-
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
-			goto fail;
-		}
-		if (data->filter_uv) {
-			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, &tmp_size_uv))) {
-				zimg_get_last_error(fail_str, sizeof(fail_str));
-				goto fail;
-			}
-		} else {
-			tmp_size_uv = 0;
-		}
-
-		VS_ALIGNED_MALLOC(&tmp, VSMAX(tmp_size, tmp_size_uv), 32);
-		if (!tmp) {
-			strcpy(fail_str, "error allocating temporary buffer");
-			err = 1;
-			goto fail;
-		}
-
-		for (p = 0; p < num_planes; ++p) {
-			const zimg_filter *filter;
-
-			if ((p == 1 || p == 2) && data->filter_uv)
-				filter = data->filter_uv;
-			else
-				filter = data->filter;
-
-			src_plane[0] = vsapi->getReadPtr(src_frame, p);
-			src_stride[0] = vsapi->getStride(src_frame, p);
-
-			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
-			dst_stride[0] = vsapi->getStride(dst_frame, p);
-
-			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
-				zimg_get_last_error(fail_str, sizeof(fail_str));
-				goto fail;
-			}
-		}
-
-		props = vsapi->getFramePropsRW(dst_frame);
-		vsapi->propSetInt(props, "_ColorRange", !data->fullrange, paReplace);
-
-		ret = dst_frame;
-		dst_frame = 0;
-	fail:
-		vsapi->freeFrame(src_frame);
-		vsapi->freeFrame(dst_frame);
-		VS_ALIGNED_FREE(tmp);
-	}
-
-	if (err)
-		vsapi->setFilterError(fail_str, frameCtx);
-
-	return ret;
-}
-
-static void VS_CC vs_depth_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
-{
-	vs_depth_data *data = instanceData;
-	zimg2_filter_free(data->filter);
-	zimg2_filter_free(data->filter_uv);
-	vsapi->freeNode(data->node);
-	free(data);
-}
-
-static void VS_CC vs_depth_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
-{
-	vs_depth_data *data = 0;
-	zimg_depth_params params;
-	zimg_filter *filter = 0;
-	zimg_filter *filter_uv = 0;
-	char fail_str[1024];
-	int err;
-
-	VSNodeRef *node = 0;
-	const VSVideoInfo *node_vi;
-	const VSFormat *node_fmt;
-	VSVideoInfo vi;
-
-	const char *dither_str;
-	int sample_type;
-	int depth;
-
-	node = vsapi->propGetNode(in, "clip", 0, 0);
-	node_vi = vsapi->getVideoInfo(node);
-	node_fmt = node_vi->format;
-
-	if (!isConstantFormat(node_vi)) {
-		strcpy(fail_str, "clip must have a defined format");
-		goto fail;
-	}
-
-	sample_type = (int)propGetIntDefault(vsapi, in, "sample", 0, node_fmt->sampleType);
-	depth = (int)propGetIntDefault(vsapi, in, "depth", 0, node_fmt->bitsPerSample);
-
-	if (sample_type != stInteger && sample_type != stFloat) {
-		strcpy(fail_str, "invalid sample type: must be stInteger or stFloat");
-		goto fail;
-	}
-	if (sample_type == stFloat && depth != 16 && depth != 32) {
-		strcpy(fail_str, "invalid depth: must be 16 or 32 for stFloat");
-		goto fail;
-	}
-	if (sample_type == stInteger && (depth <= 0 || depth > 16)) {
-		strcpy(fail_str, "invalid depth: must be between 1-16 for stInteger");
-		goto fail;
-	}
-
-	vi = *node_vi;
-	vi.format = vsapi->registerFormat(node_fmt->colorFamily, sample_type, depth < 8 ? 8 : depth, node_fmt->subSamplingW, node_fmt->subSamplingH, core);
-
-	if (!vi.format) {
-		strcpy(fail_str, "unable to register output VSFormat");
-		goto fail;
-	}
-
-	zimg2_depth_params_default(&params, ZIMG_API_VERSION);
-
-	params.width = node_vi->width;
-	params.height = node_vi->height;
-
-	dither_str = vsapi->propGetData(in, "dither", 0, &err);
-	if (!err)
-		params.dither_type = translate_dither(dither_str);
-
-	params.chroma = 0;
-
-	params.pixel_in = translate_pixel(node_fmt);
-	params.depth_in = node_fmt->bitsPerSample;
-	params.range_in = (int)propGetIntDefault(vsapi, in, "range_in", 0, node_fmt->colorFamily == cmRGB ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED);
-
-	params.pixel_out = translate_pixel(vi.format);
-	params.depth_out = depth;
-	params.range_out = (int)propGetIntDefault(vsapi, in, "range_out", 0, params.range_in);
-
-	if (!(filter = zimg2_depth_create(&params))) {
-		zimg_get_last_error(fail_str, sizeof(fail_str));
-		goto fail;
-	}
-
-	if (node_fmt->colorFamily == cmYUV || node_fmt->colorFamily == cmYCoCg) {
-		params.width = params.width >> node_fmt->subSamplingW;
-		params.height = params.height >> node_fmt->subSamplingH;
-		params.chroma = 1;
-
-		if (!(filter_uv = zimg2_depth_create(&params))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
-			goto fail;
-		}
-	}
+#define TRY_GET_ENUM_STR(name, out, table) \
+  do { \
+    int enum_tmp; \
+    vszimg_bool flag; \
+    if (tryGetEnumStr(vsapi, in, (name), &enum_tmp, &flag, (table), ARRAY_SIZE((table)))) \
+      FAIL_BAD_VALUE(name); \
+    if ((flag)) \
+      (out) = enum_tmp; \
+  } while (0)
 
 	if (!(data = malloc(sizeof(*data)))) {
-		strcpy(fail_str, "error allocating vs_depth_data");
+		sprintf(err_msg, "error allocating vszimg_data");
 		goto fail;
 	}
 
-	data->filter = filter;
-	data->filter_uv = filter_uv;
-	data->node = node;
-	data->vi = vi;
-	data->fullrange = params.range_out == ZIMG_RANGE_FULL;
+	_vszimg_default_init(data);
 
-	vsapi->createFilter(in, out, "depth", vs_depth_init, vs_depth_get_frame, vs_depth_free, fmParallel, 0, data, core);
-	return;
-fail:
-	vsapi->setError(out, fail_str);
-	vsapi->freeNode(node);
-	zimg2_filter_free(filter);
-	zimg2_filter_free(filter_uv);
-	free(data);
-}
-
-
-typedef struct vs_resize_data {
-	zimg_filter *filter;
-	zimg_filter *filter_uv;
-	VSNodeRef *node;
-	VSVideoInfo vi;
-	int mpeg2;
-} vs_resize_data;
-
-static void VS_CC vs_resize_init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
-{
-	const vs_resize_data *data = *instanceData;
-	vsapi->setVideoInfo(&data->vi, 1, node);
-}
-
-static const VSFrameRef * VS_CC vs_resize_get_frame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
-{
-	vs_resize_data *data = *instanceData;
-	VSFrameRef *ret = 0;
-	char fail_str[1024];
-	int err = 0;
-
-	if (activationReason == arInitial) {
-		vsapi->requestFrameFilter(n, data->node, frameCtx);
-	} else {
-		const VSFrameRef *src_frame = 0;
-		VSFrameRef *dst_frame = 0;
-		void *tmp = 0;
-
-		const void *src_plane[3] = { 0 };
-		void *dst_plane[3] = { 0 };
-		ptrdiff_t src_stride[3] = { 0 };
-		ptrdiff_t dst_stride[3] = { 0 };
-		int width;
-		int height;
-		unsigned num_planes;
-		size_t tmp_size;
-		size_t tmp_size_uv;
-		VSMap *props;
-		unsigned p;
-
-		width = data->vi.width;
-		height = data->vi.height;
-		num_planes = data->vi.format->numPlanes;
-
-		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
-		dst_frame = vsapi->newVideoFrame(data->vi.format, width, height, src_frame, core);
-
-		if ((err = zimg2_plane_filter_get_tmp_size(data->filter, &tmp_size))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
-			goto fail;
-		}
-		if (data->filter_uv) {
-			if ((err = zimg2_plane_filter_get_tmp_size(data->filter_uv, &tmp_size_uv))) {
-				zimg_get_last_error(fail_str, sizeof(fail_str));
-				goto fail;
-			}
-		} else {
-			tmp_size_uv = 0;
-		}
-
-		VS_ALIGNED_MALLOC(&tmp, VSMAX(tmp_size, tmp_size_uv), 32);
-		if (!tmp) {
-			strcpy(fail_str, "error allocating temporary buffer");
-			err = 1;
-			goto fail;
-		}
-
-		for (p = 0; p < num_planes; ++p) {
-			const zimg_filter *filter;
-
-			if ((p == 1 || p == 2) && data->filter_uv)
-				filter = data->filter_uv;
-			else
-				filter = data->filter;
-
-			src_plane[0] = vsapi->getReadPtr(src_frame, p);
-			src_stride[0] = vsapi->getStride(src_frame, p);
-
-			dst_plane[0] = vsapi->getWritePtr(dst_frame, p);
-			dst_stride[0] = vsapi->getStride(dst_frame, p);
-
-			if ((err = zimg2_plane_filter_process(filter, tmp, src_plane, dst_plane, src_stride, dst_stride))) {
-				zimg_get_last_error(fail_str, sizeof(fail_str));
-				goto fail;
-			}
-		}
-
-		props = vsapi->getFramePropsRW(dst_frame);
-		vsapi->propSetInt(props, "_ChromaLocation", data->mpeg2 ? 0 : 1, paReplace);
-
-		ret = dst_frame;
-		dst_frame = 0;
-	fail:
-		vsapi->freeFrame(src_frame);
-		vsapi->freeFrame(dst_frame);
-		VS_ALIGNED_FREE(tmp);
+	if (vszimg_mutex_init(&data->graph_mutex)) {
+		sprintf(err_msg, "error initializing mutex");
+		goto fail;
 	}
+	data->graph_mutex_initialized = VSZIMG_TRUE;
 
-	if (err)
-		vsapi->setFilterError(fail_str, frameCtx);
-
-	return ret;
-}
-
-static void VS_CC vs_resize_free(void *instanceData, VSCore *core, const VSAPI *vsapi)
-{
-	vs_resize_data *data = instanceData;
-	vsapi->freeNode(data->node);
-	zimg2_filter_free(data->filter);
-	zimg2_filter_free(data->filter_uv);
-	free(data);
-}
-
-static void VS_CC vs_resize_create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
-{
-	vs_resize_data *data = 0;
-	zimg_resize_params params;
-	zimg_filter *filter = 0;
-	zimg_filter *filter_uv = 0;
-	char fail_str[1024];
-	int err = 0;
-
-	VSNodeRef *node = 0;
-	const VSVideoInfo *node_vi;
-	const VSFormat *node_fmt;
-	VSVideoInfo vi;
-
-	const char *filter_str;
-	unsigned subsampling_w;
-	unsigned subsampling_h;
-	int mpeg2 = 0;
-
-	node = vsapi->propGetNode(in, "clip", 0, 0);
-	node_vi = vsapi->getVideoInfo(node);
+	data->node = vsapi->propGetNode(in, "clip", 0, NULL);
+	node_vi = vsapi->getVideoInfo(data->node);
 	node_fmt = node_vi->format;
 
-	if (!isConstantFormat(node_vi)) {
-		strcpy(fail_str, "clip must have constant format");
-		goto fail;
-	}
+	data->vi = *node_vi;
 
-	zimg2_resize_params_default(&params, ZIMG_API_VERSION);
+	zimg2_filter_graph_params_default(&data->params, ZIMG_API_VERSION);
 
-	params.src_width = node_vi->width;
-	params.src_height = node_vi->height;
-	params.dst_width = (unsigned)vsapi->propGetInt(in, "width", 0, 0);
-	params.dst_height = (unsigned)vsapi->propGetInt(in, "height", 0, 0);
+	if (propGetUintDef(vsapi, in, "width", &data->vi.width, node_vi->width))
+		FAIL_BAD_VALUE("width");
+	if (propGetUintDef(vsapi, in, "height", &data->vi.height, node_vi->height))
+		FAIL_BAD_VALUE("height");
 
-	params.pixel_type = translate_pixel(node_fmt);
-	params.depth = node_fmt->bitsPerSample;
+	if (propGetSintDef(vsapi, in, "format", &format_id, pfNone))
+		FAIL_BAD_VALUE("format");
+	data->vi.format = (format_id == pfNone) ? node_fmt : vsapi->getFormatPreset(format_id, core);
 
-	params.shift_w = propGetFloatDefault(vsapi, in, "shift_w", 0, params.shift_w);
-	params.shift_h = propGetFloatDefault(vsapi, in, "shift_h", 0, params.shift_h);
-	params.subwidth = propGetFloatDefault(vsapi, in, "subwidth", 0, params.subwidth);
-	params.subheight = propGetFloatDefault(vsapi, in, "subheight", 0, params.subheight);
+	TRY_GET_ENUM("matrix", data->matrix, data->have_matrix, g_matrix_table);
+	TRY_GET_ENUM("transfer", data->transfer, data->have_transfer, g_transfer_table);
+	TRY_GET_ENUM("primaries", data->primaries, data->have_primaries, g_primaries_table);
+	TRY_GET_ENUM("range", data->range, data->have_range, g_range_table);
+	TRY_GET_ENUM("chromaloc", data->chromaloc, data->have_chromaloc, g_chromaloc_table);
 
-	filter_str = vsapi->propGetData(in, "filter", 0, &err);
-	if (!err)
-		params.filter_type = translate_filter(filter_str);
+	TRY_GET_ENUM("matrix_in", data->matrix_in, data->have_matrix_in, g_matrix_table);
+	TRY_GET_ENUM("transfer_in", data->transfer_in, data->have_transfer_in, g_transfer_table);
+	TRY_GET_ENUM("primaries_in", data->primaries_in, data->have_primaries_in, g_primaries_table);
+	TRY_GET_ENUM("range_in", data->range_in, data->have_range_in, g_range_table);
+	TRY_GET_ENUM("chromaloc_in", data->chromaloc_in, data->have_chromaloc_in, g_chromaloc_table);
 
-	params.filter_param_a = propGetFloatDefault(vsapi, in, "filter_param_a", 0, params.filter_param_a);
-	params.filter_param_b = propGetFloatDefault(vsapi, in, "filter_param_b", 0, params.filter_param_b);
+	TRY_GET_ENUM_STR("resample_filter", data->params.resample_filter, g_resample_filter_table);
+	data->params.filter_param_a = propGetFloatDef(vsapi, in, "filter_param_a", data->params.filter_param_a);
+	data->params.filter_param_b = propGetFloatDef(vsapi, in, "filter_param_b", data->params.filter_param_b);
 
-	subsampling_w = (int)propGetIntDefault(vsapi, in, "subsample_w", 0, node_fmt->subSamplingW);
-	subsampling_h = (int)propGetIntDefault(vsapi, in, "subsample_h", 0, node_fmt->subSamplingH);
+	TRY_GET_ENUM_STR("resample_filter_uv", data->params.resample_filter_uv, g_resample_filter_table);
+	data->params.filter_param_a_uv = propGetFloatDef(vsapi, in, "filter_param_a_uv", data->params.filter_param_a_uv);
+	data->params.filter_param_b_uv = propGetFloatDef(vsapi, in, "filter_param_b_uv", data->params.filter_param_b_uv);
 
-	if ((node_fmt->colorFamily != cmYUV && node_fmt->colorFamily != cmYCoCg) && (subsampling_w || subsampling_h)) {
-		strcpy(fail_str, "subsampling not allowed for colorfamily");
-		goto fail;
-	}
+	TRY_GET_ENUM_STR("dither_type", data->params.dither_type, g_dither_type_table);
+	TRY_GET_ENUM_STR("cpu_type", data->params.cpu_type, g_cpu_type_table);
 
-	vi = *node_vi;
-	vi.width = params.dst_width;
-	vi.height = params.dst_height;
-	vi.format = vsapi->registerFormat(node_fmt->colorFamily, node_fmt->sampleType, node_fmt->bitsPerSample, subsampling_w, subsampling_h, core);
+#undef FAIL_BAD_VALUE
+#undef TRY_GET_ENUM
+#undef TRY_GET_ENUM_STR
 
-	if (!(filter = zimg2_resize_create(&params))) {
-		zimg_get_last_error(fail_str, sizeof(fail_str));
-		goto fail;
-	}
+	/* Basic compatibility check. */
+	if (isConstantFormat(node_vi) && isConstantFormat(&data->vi)) {
+		zimg_image_format src_format;
+		zimg_image_format dst_format;
 
-	if (node_fmt->subSamplingW || node_fmt->subSamplingH || subsampling_w || subsampling_h) {
-		zimg_resize_params params_uv;
+		zimg2_image_format_default(&src_format, ZIMG_API_VERSION);
+		zimg2_image_format_default(&dst_format, ZIMG_API_VERSION);
 
-		double scale_w = 1.0 / (double)(1 << node_fmt->subSamplingW);
-		double scale_h = 1.0 / (double)(1 << node_fmt->subSamplingH);
+		src_format.width = node_vi->width;
+		src_format.height = node_vi->height;
 
-		const char *chroma_loc_in = propGetDataDefault(vsapi, in, "chroma_loc_in", 0, "mpeg2");
-		const char *chroma_loc_out = propGetDataDefault(vsapi, in, "chroma_loc_out", 0, chroma_loc_in);
+		dst_format.width = data->vi.width;
+		dst_format.height = data->vi.height;
 
-		zimg2_resize_params_default(&params_uv, ZIMG_API_VERSION);
-
-		params_uv.src_width = params.src_width >> node_fmt->subSamplingW;
-		params_uv.src_height = params.src_height >> node_fmt->subSamplingH;
-		params_uv.dst_width = params.dst_width >> subsampling_w;
-		params_uv.dst_height = params.dst_height >> subsampling_h;
-
-		params_uv.pixel_type = params.pixel_type;
-		params_uv.depth = params.depth;
-
-		params_uv.shift_w = params.shift_w * scale_w;
-		params_uv.shift_h = params.shift_h * scale_h;
-		params_uv.subwidth = params.subwidth * scale_w;
-		params_uv.subheight = params.subheight * scale_h;
-
-		params_uv.shift_w += chroma_adjust_h(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingW, subsampling_w);
-		params_uv.shift_h += chroma_adjust_v(chroma_loc_in, chroma_loc_out, node_fmt->subSamplingH, subsampling_h);
-
-		filter_str = vsapi->propGetData(in, "filter_uv", 0, &err);
-		if (!err) {
-			params_uv.filter_type = translate_filter(filter_str);
-		} else {
-			params_uv.filter_type = params.filter_type;
-			params_uv.filter_param_a = params.filter_param_a;
-			params_uv.filter_param_b = params.filter_param_b;
-		}
-
-		params_uv.filter_param_a = propGetFloatDefault(vsapi, in, "filter_param_a_uv", 0, params_uv.filter_param_a);
-		params_uv.filter_param_b = propGetFloatDefault(vsapi, in, "filter_param_b_uv", 0, params_uv.filter_param_b);
-
-		if (!(filter_uv = zimg2_resize_create(&params_uv))) {
-			zimg_get_last_error(fail_str, sizeof(fail_str));
+		if (translate_vsformat(node_vi->format, &src_format, err_msg))
 			goto fail;
-		}
-
-		mpeg2 = !strcmp(chroma_loc_out, "mpeg2") && (subsampling_w || subsampling_h);
+		if (translate_vsformat(data->vi.format, &dst_format, err_msg))
+			goto fail;
 	}
 
-	if (!(data = malloc(sizeof(*data)))) {
-		strcpy(fail_str, "error allocating vs_resize_data");
-		goto fail;
-	}
-
-	data->filter = filter;
-	data->filter_uv = filter_uv;
-	data->node = node;
-	data->vi = vi;
-	data->mpeg2 = mpeg2;
-
-	vsapi->createFilter(in, out, "resize", vs_resize_init, vs_resize_get_frame, vs_resize_free, fmParallel, 0, data, core);
+	vsapi->createFilter(in, out, "format", vszimg_init, vszimg_get_frame, vszimg_free, fmParallel, 0, data, core);
 	return;
 fail:
-	vsapi->setError(out, fail_str);
-	vsapi->freeNode(node);
-	zimg2_filter_free(filter);
-	zimg2_filter_free(filter_uv);
+	vsapi->setError(out, err_msg);
+	_vszimg_destroy(data, vsapi);
 	free(data);
-}
-
-
-static void VS_CC vs_set_cpu(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
-{
-	const char *cpu = vsapi->propGetData(in, "cpu", 0, 0);
-
-	if (!strcmp(cpu, "none"))
-		zimg_set_cpu(ZIMG_CPU_NONE);
-	else if (!strcmp(cpu, "auto"))
-		zimg_set_cpu(ZIMG_CPU_AUTO);
-#if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
-	else if (!strcmp(cpu, "mmx"))
-		zimg_set_cpu(ZIMG_CPU_X86_MMX);
-	else if (!strcmp(cpu, "sse"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSE);
-	else if (!strcmp(cpu, "sse2"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSE2);
-	else if (!strcmp(cpu, "sse3"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSE3);
-	else if (!strcmp(cpu, "ssse3"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSSE3);
-	else if (!strcmp(cpu, "sse41"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSE41);
-	else if (!strcmp(cpu, "sse42"))
-		zimg_set_cpu(ZIMG_CPU_X86_SSE42);
-	else if (!strcmp(cpu, "avx"))
-		zimg_set_cpu(ZIMG_CPU_X86_AVX);
-	else if (!strcmp(cpu, "f16c"))
-		zimg_set_cpu(ZIMG_CPU_X86_F16C);
-	else if (!strcmp(cpu, "avx2"))
-		zimg_set_cpu(ZIMG_CPU_X86_AVX2);
-#endif
-	else
-		zimg_set_cpu(ZIMG_CPU_NONE);
 }
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin)
 {
+#define INT_OPT(x) #x":int:opt;"
+#define FLOAT_OPT(x) #x":float:opt;"
+#define DATA_OPT(x) #x":data:opt;"
+#define ENUM_OPT(x) INT_OPT(x)DATA_OPT(x ## _s)
+	static const char FORMAT_DEFINITION[] =
+		"clip:clip;"
+		INT_OPT(width)
+		INT_OPT(height)
+		INT_OPT(format)
+		ENUM_OPT(matrix)
+		ENUM_OPT(transfer)
+		ENUM_OPT(primaries)
+		ENUM_OPT(range)
+		ENUM_OPT(chromaloc)
+		ENUM_OPT(matrix_in)
+		ENUM_OPT(transfer_in)
+		ENUM_OPT(primaries_in)
+		ENUM_OPT(range_in)
+		ENUM_OPT(chromaloc_in)
+		DATA_OPT(resample_filter)
+		FLOAT_OPT(filter_param_a)
+		FLOAT_OPT(filter_param_b)
+		DATA_OPT(resample_filter_uv)
+		FLOAT_OPT(filter_param_a_uv)
+		FLOAT_OPT(filter_param_b_uv)
+		DATA_OPT(dither_type)
+		DATA_OPT(cpu_type);
+#undef INT_OPT
+#undef FLOAT_OPT
+#undef DATA_OPT
+#undef ENUM_OPT
+
+	zimg2_get_version_info(&g_version_info[0], &g_version_info[1], &g_version_info[2]);
+	g_api_version = zimg2_get_api_version();
+
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
 
-	registerFunc("Colorspace",
-	             "clip:clip;"
-	             "matrix_in:int;"
-	             "transfer_in:int;"
-	             "primaries_in:int;"
-	             "matrix_out:int:opt;"
-	             "transfer_out:int:opt;"
-	             "primaries_out:int:opt;"
-	             "range_in:int:opt;"
-	             "range_out:int:opt;",
-	             vs_colorspace_create, 0, plugin);
-	registerFunc("Depth",
-	             "clip:clip;"
-	             "dither:data:opt;"
-	             "sample:int:opt;"
-	             "depth:int:opt;"
-	             "range_in:int:opt;"
-	             "range_out:int:opt;",
-	             vs_depth_create, 0, plugin);
-	registerFunc("Resize",
-	             "clip:clip;"
-	             "width:int;"
-	             "height:int;"
-	             "filter:data:opt;"
-	             "filter_param_a:float:opt;"
-	             "filter_param_b:float:opt;"
-	             "shift_w:float:opt;"
-	             "shift_h:float:opt;"
-	             "subwidth:float:opt;"
-	             "subheight:float:opt;"
-	             "filter_uv:data:opt;"
-	             "filter_param_a_uv:float:opt;"
-	             "filter_param_b_uv:float:opt;"
-	             "subsample_w:int:opt;"
-	             "subsample_h:int:opt;"
-	             "chroma_loc_in:data:opt;"
-	             "chroma_loc_out:data:opt;",
-	             vs_resize_create, 0, plugin);
-
-	registerFunc("SetCPU", "cpu:data;", vs_set_cpu, 0, plugin);
-
-	zimg_set_cpu(ZIMG_CPU_AUTO);
+	registerFunc("Format", FORMAT_DEFINITION, vszimg_create, NULL, plugin);
 }
-
-#endif
