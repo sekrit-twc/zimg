@@ -43,18 +43,13 @@
 #include "libm.h"
 
 #ifdef _MSC_VER
-  #include <stdlib.h>
+  #include <math.h>
 #endif
 
 static float get_0x1p120f(void)
 {
 #ifdef _MSC_VER
-	static float x;
-
-	if (x == 0)
-		x = atof("0x1p120f");
-
-	return x;
+	return ldexpf(1.0, 120);
 #else
 	return 0x1p120f;
 #endif

@@ -20,18 +20,13 @@
 #include "libm.h"
 
 #ifdef _MSC_VER
-  #include <stdlib.h>
+  #include <math.h>
 #endif
 
 static double get_0x1p24(void)
 {
 #ifdef _MSC_VER
-	static double x;
-
-	if (x == 0)
-		x = atof("0x1p24");
-
-	return x;
+	return ldexp(1.0, 24);
 #else
 	return 0x1p24;
 #endif
