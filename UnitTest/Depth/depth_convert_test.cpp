@@ -1,8 +1,8 @@
 #include <memory>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Depth/depth2.h"
-#include "Depth/depth_convert2.h"
+#include "Depth/depth.h"
+#include "Depth/depth_convert.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"
@@ -31,7 +31,7 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			fmt_out.chroma = chroma;
 
 			std::unique_ptr<zimg::IZimgFilter> convert{
-				zimg::depth::create_depth2(zimg::depth::DitherType::DITHER_NONE, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE)
+				zimg::depth::create_depth(zimg::depth::DitherType::DITHER_NONE, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE)
 			};
 			validate_filter(convert.get(), w, h, fmt_in, expected_sha1[sha1_idx++]);
 		}

@@ -108,40 +108,7 @@
     <ClInclude Include="..\..\Colorspace\operation_impl.h">
       <Filter>Header Files\Colorspace</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Depth\depth.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\depth_convert.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\depth_convert_x86.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\depth_convert2.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\dither.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\dither_impl.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\dither_impl_x86.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\dither2.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\error_diffusion.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Depth\quantize.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\quantize_avx2.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\quantize_sse2.h">
       <Filter>Header Files\Depth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Resize\filter.h">
@@ -177,20 +144,11 @@
     <ClInclude Include="..\..\Common\copy_filter.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Depth\depth2.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Common\libm_wrapper.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Resize\resize_impl2_x86.h">
       <Filter>Header Files\Resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\dither2_x86.h">
-      <Filter>Header Files\Depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Depth\depth_convert2_x86.h">
-      <Filter>Header Files\Depth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\API\zimg.h">
       <Filter>Header Files\API</Filter>
@@ -200,6 +158,21 @@
     </ClInclude>
     <ClInclude Include="..\..\Colorspace\colorspace.h">
       <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth_convert_x86.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\depth.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither.h">
+      <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Depth\dither_x86.h">
+      <Filter>Header Files\Depth</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -223,48 +196,6 @@
     </ClCompile>
     <ClCompile Include="..\..\Colorspace\operation_impl.cpp">
       <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert_avx2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert_sse2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert_x86.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither_impl.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither_impl_avx2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither_impl_sse2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither_impl_x86.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\error_diffusion.cpp">
-      <Filter>Source Files\Depth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Resize\filter.cpp">
       <Filter>Source Files\Resize</Filter>
@@ -320,20 +251,29 @@
     <ClCompile Include="..\..\Resize\resize_impl2_sse2.cpp">
       <Filter>Source Files\Resize</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Depth\dither2_x86.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\depth_convert2_x86.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Depth\dither2_sse2.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\API\zimg.cpp">
       <Filter>Source Files\API</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Colorspace\colorspace.cpp">
       <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth_convert_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\depth.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_sse2.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Depth\dither_x86.cpp">
+      <Filter>Source Files\Depth</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

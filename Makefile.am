@@ -49,20 +49,10 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Common/pixel.h \
 					 Depth/depth_convert.cpp \
 					 Depth/depth_convert.h \
-					 Depth/depth_convert2.cpp \
-					 Depth/depth_convert2.h \
 					 Depth/depth.cpp \
 					 Depth/depth.h \
-					 Depth/depth2.cpp \
-					 Depth/depth2.h \
 					 Depth/dither.cpp \
 					 Depth/dither.h \
-					 Depth/dither2.cpp \
-					 Depth/dither2.h \
-					 Depth/dither_impl.cpp \
-					 Depth/dither_impl.h \
-					 Depth/error_diffusion.cpp \
-					 Depth/error_diffusion.h \
 					 Depth/quantize.h \
 					 Resize/filter.cpp \
 					 Resize/filter.h \
@@ -107,12 +97,8 @@ noinst_LTLIBRARIES += libsse.la libsse2.la libavx2.la
 
 libzimg_la_SOURCES += Depth/depth_convert_x86.cpp \
 					  Depth/depth_convert_x86.h \
-					  Depth/depth_convert2_x86.cpp \
-					  Depth/depth_convert2_x86.h \
-					  Depth/dither_impl_x86.cpp \
-					  Depth/dither_impl_x86.h \
-					  Depth/dither2_x86.cpp \
-					  Depth/dither2_x86.h \
+					  Depth/dither_x86.cpp \
+					  Depth/dither_x86.h \
 					  Resize/resize_impl_x86.cpp \
 					  Resize/resize_impl_x86.h \
 					  Resize/resize_impl2_x86.cpp \
@@ -126,10 +112,7 @@ libsse_la_SOURCES = Resize/resize_impl2_sse.cpp
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 
 
-libsse2_la_SOURCES = Depth/depth_convert_sse2.cpp \
-					 Depth/dither_impl_sse2.cpp \
-					 Depth/dither2_sse2.cpp \
-					 Depth/quantize_sse2.h \
+libsse2_la_SOURCES = Depth/dither_sse2.cpp \
 					 Resize/resize_impl_sse2.cpp \
 					 Resize/resize_impl2_sse2.cpp \
 					 Unresize/unresize_impl_sse2.cpp
@@ -137,10 +120,7 @@ libsse2_la_SOURCES = Depth/depth_convert_sse2.cpp \
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 
 
-libavx2_la_SOURCES = Depth/depth_convert_avx2.cpp \
-					 Depth/dither_impl_avx2.cpp \
-					 Depth/quantize_avx2.h \
-					 Resize/resize_impl_avx2.cpp \
+libavx2_la_SOURCES = Resize/resize_impl_avx2.cpp \
 					 Unresize/unresize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
@@ -242,8 +222,8 @@ UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
 								UnitTest/Common/mock_filter.cpp \
 								UnitTest/Common/mock_filter.h \
 								UnitTest/Common/mux_filter_test.cpp \
-								UnitTest/Depth/depth_convert2_test.cpp \
-								UnitTest/Depth/dither2_test.cpp \
+								UnitTest/Depth/depth_convert_test.cpp \
+								UnitTest/Depth/dither_test.cpp \
 								UnitTest/Extra/sha1/config.h \
 								UnitTest/Extra/sha1/sha1.c \
 								UnitTest/Extra/sha1/sha1.h \
@@ -251,7 +231,7 @@ UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
 
 if X86SIMD
 
-UnitTest_unit_test_SOURCES += UnitTest/Depth/dither2_sse2_test.cpp \
+UnitTest_unit_test_SOURCES += UnitTest/Depth/dither_sse2_test.cpp \
 								UnitTest/Resize/resize_impl2_sse_test.cpp \
 								UnitTest/Resize/resize_impl2_sse2_test.cpp
 

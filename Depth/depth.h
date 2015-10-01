@@ -1,82 +1,28 @@
-#if 0
 #pragma once
 
 #ifndef ZIMG_DEPTH_DEPTH_H_
 #define ZIMG_DEPTH_DEPTH_H_
 
-#include <cstddef>
 #include <memory>
+#include "Common/zfilter.h"
 
 namespace zimg {;
 
 enum class CPUClass;
-
-template <class T>
-class ImagePlane;
+struct PixelFormat;
 
 namespace depth {;
 
-class DepthConvert;
-class DitherConvert;
-
-#ifndef ZIMG_DEPTH_DEPTH2_H_
-/**
- * Enum for dithering modes.
- */
 enum class DitherType {
 	DITHER_NONE,
 	DITHER_ORDERED,
 	DITHER_RANDOM,
 	DITHER_ERROR_DIFFUSION
 };
-#endif
 
-/**
- * Depth: converts between pixel types and bit depths.
- *
- * Each instance is applicable only for its given dither type.
- */
-class Depth {
-	std::shared_ptr<DepthConvert> m_depth;
-	std::shared_ptr<DitherConvert> m_dither;
-	bool m_error_diffusion;
-public:
-	/**
-	 * Initialize a null context. Cannot be used for execution.
-	 */
-	Depth() = default;
-
-	/**
-	 * Initialize a context to apply a given dither type.
-	 *
-	 * @param type dither type
-	 * @param cpu create context optimized for given cpu
-	 * @throws ZimgIllegalArgument on invalid dither type
-	 * @throws ZimgOutOfMemory if out of memory
-	 */
-	Depth(DitherType type, CPUClass cpu);
-
-	/**
-	 * Get the size of the temporary buffer required by the conversion.
-	 *
-	 * @param width width of image line.
-	 * @return the size of the temporary buffer in units of floats
-	 */
-	size_t tmp_size(int width) const;
-
-	/**
-	 * Process an image.
-	 *
-	 * @param src input plane
-	 * @param dst output plane
-	 * @param tmp temporary buffer (@see Depth::tmp_size)
-	 * @throws ZimgUnsupportedError if conversion not supported
-	 */
-	void process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
-};
+IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DEPTH_H_
-#endif
+#endif // ZIMG_DEPTH_DEPTH2_H_

@@ -4,7 +4,7 @@
 #include <emmintrin.h>
 #include "Common/align.h"
 #include "Common/osdep.h"
-#include "dither2_x86.h"
+#include "dither_x86.h"
 
 namespace zimg {;
 namespace depth {;

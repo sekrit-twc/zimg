@@ -5,8 +5,8 @@
 #include <typeinfo>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Depth/depth2.h"
-#include "Depth/dither2.h"
+#include "Depth/depth.h"
+#include "Depth/dither.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"

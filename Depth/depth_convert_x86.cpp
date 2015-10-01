@@ -1,37 +1,26 @@
-#if 0
 #ifdef ZIMG_X86
 
-#include "Common/cpuinfo.h"
 #include "depth_convert_x86.h"
 
 namespace zimg {;
 namespace depth {;
 
-DepthConvert *create_depth_convert_x86(CPUClass cpu)
+left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_out, CPUClass cpu)
 {
-	X86Capabilities caps = query_x86_capabilities();
-	DepthConvert *ret;
+	return nullptr;
+}
 
-	if (cpu == CPUClass::CPU_AUTO) {
-		if (caps.avx2)
-			ret = create_depth_convert_avx2();
-		else if (caps.sse2)
-			ret = create_depth_convert_sse2();
-		else
-			ret = nullptr;
-	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
-		ret = create_depth_convert_avx2();
-	} else if (cpu >= CPUClass::CPU_X86_SSE2) {
-		ret = create_depth_convert_sse2();
-	} else {
-		ret = nullptr;
-	}
+depth_convert_func select_depth_convert_func_x86(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu)
+{
+	return nullptr;
+}
 
-	return ret;
+depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu)
+{
+	return nullptr;
 }
 
 } // namespace depth
 } // namespace zimg
 
 #endif // ZIMG_X86
-#endif

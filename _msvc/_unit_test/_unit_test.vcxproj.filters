@@ -72,12 +72,6 @@
     <ClCompile Include="..\..\UnitTest\Common\mux_filter_test.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Depth\depth_convert2_test.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Depth\dither2_test.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\__cos.c">
       <Filter>Source Files\Extra\musl-libm</Filter>
     </ClCompile>
@@ -114,11 +108,17 @@
     <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_sse2_test.cpp">
       <Filter>Source Files\Resize</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Depth\dither2_sse2_test.cpp">
-      <Filter>Source Files\Depth</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\UnitTest\Colorspace\colorspace_test.cpp">
       <Filter>Source Files\Colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\depth_convert_test.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\dither_sse2_test.cpp">
+      <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Depth\dither_test.cpp">
+      <Filter>Source Files\Depth</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

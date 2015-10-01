@@ -12,7 +12,7 @@
 #include "Common/static_map.h"
 #include "Common/zassert.h"
 #include "Common/zfilter.h"
-#include "Depth/depth2.h"
+#include "Depth/depth.h"
 
 #include "frame.h"
 #include "mmap.h"
@@ -303,7 +303,7 @@ zimg::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned width, u
 		dst_format.fullrange = fullrange;
 
 		std::unique_ptr<zimg::IZimgFilter> filter{
-			zimg::depth::create_depth2(dither, width, height, src_format, dst_format, cpu)
+			zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu)
 		};
 
 		graph->attach_filter(filter.get());
@@ -313,7 +313,7 @@ zimg::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned width, u
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter.reset(zimg::depth::create_depth2(dither, width, height, src_format, dst_format, cpu));
+			filter.reset(zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu));
 			graph->attach_filter_uv(filter.get());
 			filter.release();
 		}
@@ -474,7 +474,7 @@ zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, 
 		dst_format.fullrange = fullrange;
 
 		std::unique_ptr<zimg::IZimgFilter> filter{
-			zimg::depth::create_depth2(dither, width, height, src_format, dst_format, cpu)
+			zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu)
 		};
 
 		graph->attach_filter(filter.get());
@@ -484,7 +484,7 @@ zimg::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, 
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter.reset(zimg::depth::create_depth2(dither, width, height, src_format, dst_format, cpu));
+			filter.reset(zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu));
 			graph->attach_filter_uv(filter.get());
 			filter.release();
 		}

@@ -185,52 +185,6 @@ inline uint16_t float_to_half(float f32)
 #undef FLOAT_HALF_MANT_SHIFT
 #undef FLOAT_HALF_EXP_ADJUST
 
-template <class T>
-class IntegerToFloat {
-	float offset;
-	float scale;
-public:
-	IntegerToFloat(int bits, bool fullrange, bool chroma) :
-		offset{ (float)integer_offset(bits, fullrange, chroma) },
-		scale{ 1.0f / (float)integer_range(bits, fullrange, chroma) }
-	{}
-
-	float operator()(T x) const
-	{
-		return (static_cast<float>(x) - offset) * scale;
-	}
-};
-
-template <class T>
-class FloatToInteger {
-	float offset;
-	float scale;
-public:
-	FloatToInteger(int bits, bool fullrange, bool chroma) :
-		offset{ (float)integer_offset(bits, fullrange, chroma) },
-		scale{ (float)integer_range(bits, fullrange, chroma) }
-	{}
-
-	T operator()(float x) const
-	{
-		int32_t u = (int32_t)std::lrintf(x * scale + offset);
-
-		return static_cast<T>(clamp(u, (int32_t)0, (int32_t)std::numeric_limits<T>::max()));
-	}
-};
-
-template <class T>
-IntegerToFloat<T> make_integer_to_float(const PixelFormat &fmt)
-{
-	return{ fmt.depth, fmt.fullrange, fmt.chroma };
-}
-
-template <class T>
-FloatToInteger<T> make_float_to_integer(const PixelFormat &fmt)
-{
-	return{ fmt.depth, fmt.fullrange, fmt.chroma };
-}
-
 } // namespace depth
 } // namespace zimg
 

@@ -16,7 +16,7 @@
 #include "Common/zfilter.h"
 #include "Colorspace/colorspace.h"
 #include "Colorspace/colorspace_param.h"
-#include "Depth/depth2.h"
+#include "Depth/depth.h"
 #include "Resize/filter.h"
 #include "Resize/resize2.h"
 #include "zimg.h"
@@ -544,7 +544,7 @@ private:
 		src_format.depth = m_state.depth;
 		src_format.fullrange = m_state.fullrange;
 
-		filter.reset(zimg::depth::create_depth2(dither_type, m_state.width, m_state.height, src_format, format, cpu));
+		filter.reset(zimg::depth::create_depth(dither_type, m_state.width, m_state.height, src_format, format, cpu));
 
 		if (m_state.is_yuv()) {
 			zimg::PixelFormat src_format_uv = src_format;
@@ -554,7 +554,7 @@ private:
 			format_uv.chroma = true;
 
 			filter_uv.reset(
-				zimg::depth::create_depth2(dither_type, m_state.width >> m_state.subsample_w, m_state.height >> m_state.subsample_h,
+				zimg::depth::create_depth(dither_type, m_state.width >> m_state.subsample_w, m_state.height >> m_state.subsample_h,
 				                           src_format_uv, format_uv, cpu));
 		} else if (m_state.is_rgb()) {
 			std::unique_ptr<zimg::IZimgFilter> mux{ new zimg::MuxFilter{ filter.get(), filter_uv.get() } };

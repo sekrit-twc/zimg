@@ -26,9 +26,9 @@
     <ClCompile Include="..\..\UnitTest\Common\filter_validator.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\mock_filter.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\mux_filter_test.cpp" />
-    <ClCompile Include="..\..\UnitTest\Depth\depth_convert2_test.cpp" />
-    <ClCompile Include="..\..\UnitTest\Depth\dither2_sse2_test.cpp" />
-    <ClCompile Include="..\..\UnitTest\Depth\dither2_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Depth\depth_convert_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Depth\dither_sse2_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Depth\dither_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\cos.c" />
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\fpu_wrapper.c" />
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\pow.c" />

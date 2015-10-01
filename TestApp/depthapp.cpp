@@ -5,7 +5,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Common/static_map.h"
-#include "Depth/depth2.h"
+#include "Depth/depth.h"
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
@@ -161,7 +161,7 @@ int depth_main(int argc, char **argv)
 	std::unique_ptr<zimg::IZimgFilter> filter;
 	std::unique_ptr<zimg::IZimgFilter> filter_uv;
 
-	filter.reset(zimg::depth::create_depth2(
+	filter.reset(zimg::depth::create_depth(
 		args.dither, src_frame.width(), src_frame.height(), args.format_in, args.format_out, args.cpu));
 
 	if (src_frame.planes() >= 3 && is_yuv) {
@@ -171,7 +171,7 @@ int depth_main(int argc, char **argv)
 		format_in_uv.chroma = true;
 		format_out_uv.chroma = true;
 
-		filter_uv.reset(zimg::depth::create_depth2(
+		filter_uv.reset(zimg::depth::create_depth(
 			args.dither, src_frame.width(), src_frame.height(), format_in_uv, format_out_uv, args.cpu));
 	}
 

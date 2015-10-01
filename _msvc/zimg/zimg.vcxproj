@@ -166,20 +166,11 @@
     <ClInclude Include="..\..\Common\zfilter.h" />
     <ClInclude Include="..\..\Common\ztypes.h" />
     <ClInclude Include="..\..\Depth\depth.h" />
-    <ClInclude Include="..\..\Depth\depth2.h" />
     <ClInclude Include="..\..\Depth\depth_convert.h" />
-    <ClInclude Include="..\..\Depth\depth_convert2.h" />
-    <ClInclude Include="..\..\Depth\depth_convert2_x86.h" />
     <ClInclude Include="..\..\Depth\depth_convert_x86.h" />
     <ClInclude Include="..\..\Depth\dither.h" />
-    <ClInclude Include="..\..\Depth\dither2.h" />
-    <ClInclude Include="..\..\Depth\dither2_x86.h" />
-    <ClInclude Include="..\..\Depth\dither_impl.h" />
-    <ClInclude Include="..\..\Depth\dither_impl_x86.h" />
-    <ClInclude Include="..\..\Depth\error_diffusion.h" />
+    <ClInclude Include="..\..\Depth\dither_x86.h" />
     <ClInclude Include="..\..\Depth\quantize.h" />
-    <ClInclude Include="..\..\Depth\quantize_avx2.h" />
-    <ClInclude Include="..\..\Depth\quantize_sse2.h" />
     <ClInclude Include="..\..\Resize\filter.h" />
     <ClInclude Include="..\..\Resize\resize.h" />
     <ClInclude Include="..\..\Resize\resize2.h" />
@@ -204,25 +195,14 @@
     <ClCompile Include="..\..\Common\libm_wrapper.cpp" />
     <ClCompile Include="..\..\Common\mux_filter.cpp" />
     <ClCompile Include="..\..\Depth\depth.cpp" />
-    <ClCompile Include="..\..\Depth\depth2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert2.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert2_x86.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert_avx2.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert_sse2.cpp" />
     <ClCompile Include="..\..\Depth\depth_convert_x86.cpp" />
     <ClCompile Include="..\..\Depth\dither.cpp" />
-    <ClCompile Include="..\..\Depth\dither2.cpp" />
-    <ClCompile Include="..\..\Depth\dither2_sse2.cpp">
+    <ClCompile Include="..\..\Depth\dither_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Depth\dither2_x86.cpp" />
-    <ClCompile Include="..\..\Depth\dither_impl.cpp" />
-    <ClCompile Include="..\..\Depth\dither_impl_avx2.cpp" />
-    <ClCompile Include="..\..\Depth\dither_impl_sse2.cpp" />
-    <ClCompile Include="..\..\Depth\dither_impl_x86.cpp" />
-    <ClCompile Include="..\..\Depth\error_diffusion.cpp" />
+    <ClCompile Include="..\..\Depth\dither_x86.cpp" />
     <ClCompile Include="..\..\Resize\filter.cpp" />
     <ClCompile Include="..\..\Resize\resize.cpp" />
     <ClCompile Include="..\..\Resize\resize2.cpp" />

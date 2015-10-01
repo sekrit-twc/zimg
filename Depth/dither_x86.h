@@ -2,10 +2,10 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_DEPTH_DITHER2_X86_H_
-#define ZIMG_DEPTH_DITHER2_X86_H_
+#ifndef ZIMG_DEPTH_DITHER_X86_H_
+#define ZIMG_DEPTH_DITHER_X86_H_
 
-#include "dither2.h"
+#include "dither.h"
 
 namespace zimg {;
 namespace depth {;
