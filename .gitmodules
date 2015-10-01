@@ -1,3 +1,3 @@
-[submodule "UnitTest/Extra/googletest"]
-	path = UnitTest/Extra/googletest
+[submodule "test/extra/googletest"]
+	path = test/extra/googletest
 	url = https://github.com/google/googletest.git

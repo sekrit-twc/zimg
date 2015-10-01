@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{B85E6CC0-ED80-487D-805A-DA3597A15CE6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testapp", "testapp\testapp.vcxproj", "{B85E6CC0-ED80-487D-805A-DA3597A15CE6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C8629E57-4D6F-40FA-82FC-B39824195932} = {C8629E57-4D6F-40FA-82FC-B39824195932}
 		{3849AF96-797C-4322-AD39-810D8367684D} = {3849AF96-797C-4322-AD39-810D8367684D}
@@ -20,7 +20,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_example_api", "_example_ap
 		{3849AF96-797C-4322-AD39-810D8367684D} = {3849AF96-797C-4322-AD39-810D8367684D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCommon", "TestCommon\TestCommon.vcxproj", "{3849AF96-797C-4322-AD39-810D8367684D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testcommon", "testcommon\testcommon.vcxproj", "{3849AF96-797C-4322-AD39-810D8367684D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_example_api_c", "_example_api_c\_example_api_c.vcxproj", "{A8C79983-2F34-4E94-A86C-C44130FAB928}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -36,7 +36,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_example_interlace", "_exam
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zimg", "zimg\zimg.vcxproj", "{C8629E57-4D6F-40FA-82FC-B39824195932}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_unit_test", "_unit_test\_unit_test.vcxproj", "{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "unit_test\unit_test.vcxproj", "{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C8629E57-4D6F-40FA-82FC-B39824195932} = {C8629E57-4D6F-40FA-82FC-B39824195932}
 	EndProjectSection

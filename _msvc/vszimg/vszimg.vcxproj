@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\vszimg\VapourSynth.h" />
-    <ClInclude Include="..\..\vszimg\VSHelper.h" />
+    <ClInclude Include="..\..\src\vszimg\VapourSynth.h" />
+    <ClInclude Include="..\..\src\vszimg\VSHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\vszimg\vszimg.c" />
+    <ClCompile Include="..\..\src\vszimg\vszimg.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DB71496E-6A65-49EA-AC40-F3F47C77161F}</ProjectGuid>
@@ -78,7 +78,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\API</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg\api</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -92,7 +92,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\API</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg\api</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -108,7 +108,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\API</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg\api</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -126,7 +126,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\API</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg\api</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;UNICODE;STRICT;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

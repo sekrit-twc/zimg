@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Example\interlace_example.cpp">
+    <ClCompile Include="..\..\doc\example\interlace_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

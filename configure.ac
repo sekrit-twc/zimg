@@ -29,8 +29,8 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
           [x86_64], [],
           [AC_MSG_WARN([Could not determine how to enable IEEE-754 compliance on host. Tests may fail.])]
         )
-        AC_CONFIG_SUBDIRS(UnitTest/Extra/googletest/googletest)
-        AC_SUBST([CONFIG_SUBDIRS], [UnitTest/Extra/googletest/googletest])
+        AC_CONFIG_SUBDIRS(test/extra/googletest/googletest)
+        AC_SUBST([CONFIG_SUBDIRS], [test/extra/googletest/googletest])
       ],
 )
 

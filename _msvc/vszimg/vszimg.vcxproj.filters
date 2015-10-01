@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\vszimg\VapourSynth.h">
+    <ClInclude Include="..\..\src\vszimg\VapourSynth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\vszimg\VSHelper.h">
+    <ClInclude Include="..\..\src\vszimg\VSHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\vszimg\vszimg.c">
+    <ClCompile Include="..\..\src\vszimg\vszimg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

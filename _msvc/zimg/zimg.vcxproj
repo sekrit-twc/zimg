@@ -85,7 +85,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
@@ -98,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
@@ -113,7 +113,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
@@ -130,7 +130,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src\zimg</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
@@ -141,83 +141,92 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\API\zimg++.hpp" />
-    <ClInclude Include="..\..\API\zimg.h" />
-    <ClInclude Include="..\..\Colorspace\colorspace.h" />
-    <ClInclude Include="..\..\Colorspace\colorspace_param.h" />
-    <ClInclude Include="..\..\Colorspace\graph.h" />
-    <ClInclude Include="..\..\Colorspace\matrix3.h" />
-    <ClInclude Include="..\..\Colorspace\operation.h" />
-    <ClInclude Include="..\..\Colorspace\operation_impl.h" />
-    <ClInclude Include="..\..\Common\align.h" />
-    <ClInclude Include="..\..\Common\alloc.h" />
-    <ClInclude Include="..\..\Common\copy_filter.h" />
-    <ClInclude Include="..\..\Common\cpuinfo.h" />
-    <ClInclude Include="..\..\Common\except.h" />
-    <ClInclude Include="..\..\Common\filtergraph.h" />
-    <ClInclude Include="..\..\Common\libm_wrapper.h" />
-    <ClInclude Include="..\..\Common\linebuffer.h" />
-    <ClInclude Include="..\..\Common\matrix.h" />
-    <ClInclude Include="..\..\Common\mux_filter.h" />
-    <ClInclude Include="..\..\Common\osdep.h" />
-    <ClInclude Include="..\..\Common\pixel.h" />
-    <ClInclude Include="..\..\Common\static_map.h" />
-    <ClInclude Include="..\..\Common\zassert.h" />
-    <ClInclude Include="..\..\Common\zfilter.h" />
-    <ClInclude Include="..\..\Common\ztypes.h" />
-    <ClInclude Include="..\..\Depth\depth.h" />
-    <ClInclude Include="..\..\Depth\depth_convert.h" />
-    <ClInclude Include="..\..\Depth\depth_convert_x86.h" />
-    <ClInclude Include="..\..\Depth\dither.h" />
-    <ClInclude Include="..\..\Depth\dither_x86.h" />
-    <ClInclude Include="..\..\Depth\quantize.h" />
-    <ClInclude Include="..\..\Resize\filter.h" />
-    <ClInclude Include="..\..\Resize\resize.h" />
-    <ClInclude Include="..\..\Resize\resize_impl.h" />
-    <ClInclude Include="..\..\Resize\resize_impl_x86.h" />
-    <ClInclude Include="..\..\Unresize\bilinear.h" />
-    <ClInclude Include="..\..\Unresize\unresize.h" />
-    <ClInclude Include="..\..\Unresize\unresize_impl.h" />
-    <ClInclude Include="..\..\Unresize\unresize_impl_x86.h" />
+    <ClInclude Include="..\..\src\zimg\api\zimg++.hpp" />
+    <ClInclude Include="..\..\src\zimg\api\zimg.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\colorspace.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\colorspace_param.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\graph.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\matrix3.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\operation.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\operation_impl.h" />
+    <ClInclude Include="..\..\src\zimg\common\align.h" />
+    <ClInclude Include="..\..\src\zimg\common\alloc.h" />
+    <ClInclude Include="..\..\src\zimg\common\copy_filter.h" />
+    <ClInclude Include="..\..\src\zimg\common\cpuinfo.h" />
+    <ClInclude Include="..\..\src\zimg\common\except.h" />
+    <ClInclude Include="..\..\src\zimg\common\filtergraph.h" />
+    <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h" />
+    <ClInclude Include="..\..\src\zimg\common\linebuffer.h" />
+    <ClInclude Include="..\..\src\zimg\common\matrix.h" />
+    <ClInclude Include="..\..\src\zimg\common\mux_filter.h" />
+    <ClInclude Include="..\..\src\zimg\common\osdep.h" />
+    <ClInclude Include="..\..\src\zimg\common\pixel.h" />
+    <ClInclude Include="..\..\src\zimg\common\static_map.h" />
+    <ClInclude Include="..\..\src\zimg\common\zassert.h" />
+    <ClInclude Include="..\..\src\zimg\common\zfilter.h" />
+    <ClInclude Include="..\..\src\zimg\common\ztypes.h" />
+    <ClInclude Include="..\..\src\zimg\depth\depth.h" />
+    <ClInclude Include="..\..\src\zimg\depth\depth_convert.h" />
+    <ClInclude Include="..\..\src\zimg\depth\depth_convert_x86.h" />
+    <ClInclude Include="..\..\src\zimg\depth\dither.h" />
+    <ClInclude Include="..\..\src\zimg\depth\dither_x86.h" />
+    <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
+    <ClInclude Include="..\..\src\zimg\resize\filter.h" />
+    <ClInclude Include="..\..\src\zimg\resize\resize.h" />
+    <ClInclude Include="..\..\src\zimg\resize\resize_impl.h" />
+    <ClInclude Include="..\..\src\zimg\resize\resize_impl_x86.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\bilinear.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\plane.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\unresize.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\unresize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\API\zimg.cpp" />
-    <ClCompile Include="..\..\Colorspace\colorspace.cpp" />
-    <ClCompile Include="..\..\Colorspace\colorspace_param.cpp" />
-    <ClCompile Include="..\..\Colorspace\graph.cpp" />
-    <ClCompile Include="..\..\Colorspace\matrix3.cpp" />
-    <ClCompile Include="..\..\Colorspace\operation.cpp" />
-    <ClCompile Include="..\..\Colorspace\operation_impl.cpp" />
-    <ClCompile Include="..\..\Common\filtergraph.cpp" />
-    <ClCompile Include="..\..\Common\libm_wrapper.cpp" />
-    <ClCompile Include="..\..\Common\mux_filter.cpp" />
-    <ClCompile Include="..\..\Depth\depth.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert.cpp" />
-    <ClCompile Include="..\..\Depth\depth_convert_x86.cpp" />
-    <ClCompile Include="..\..\Depth\dither.cpp" />
-    <ClCompile Include="..\..\Depth\dither_sse2.cpp">
+    <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\colorspace.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\graph.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp" />
+    <ClCompile Include="..\..\src\zimg\common\filtergraph.cpp" />
+    <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp" />
+    <ClCompile Include="..\..\src\zimg\common\mux_filter.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Depth\dither_x86.cpp" />
-    <ClCompile Include="..\..\Resize\filter.cpp" />
-    <ClCompile Include="..\..\Resize\resize.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl_sse.cpp">
+    <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\resize.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp" />
-    <ClCompile Include="..\..\Unresize\bilinear.cpp" />
-    <ClCompile Include="..\..\Unresize\unresize.cpp" />
-    <ClCompile Include="..\..\Unresize\unresize_impl.cpp" />
-    <ClCompile Include="..\..\Unresize\unresize_impl_avx2.cpp" />
-    <ClCompile Include="..\..\Unresize\unresize_impl_sse2.cpp" />
-    <ClCompile Include="..\..\Unresize\unresize_impl_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\unresize.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_avx2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_sse2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_x86.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
