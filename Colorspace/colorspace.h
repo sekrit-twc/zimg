@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef ZIMG_COLORSPACE_COLORSPACE_H_
@@ -72,3 +73,4 @@ public:
 } // namespace zimg
 
 #endif // ZIMG_COLORSPACE_COLORSPACE_H_
+#endif

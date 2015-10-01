@@ -14,7 +14,7 @@ namespace colorspace {;
 enum class MatrixCoefficients;
 enum class TransferCharacteristics;
 enum class ColorPrimaries;
-
+#if 0
 /**
  * Base class for implementations of pixel format conversion.
  */
@@ -41,7 +41,7 @@ public:
 	 */
 	virtual void f16_from_f32(const float *src, uint16_t *dst, int width) const = 0;
 };
-
+#endif
 /**
  * Base class for colorspace conversion operations.
  */
@@ -60,14 +60,14 @@ public:
 	 */
 	virtual void process(float * const *ptr, int width) const = 0;
 };
-
+#if 0
 /**
  * Create a concrete pixel adapter.
  *
  * @param cpu create adapter optimized for given cpu
  */
 PixelAdapter *create_pixel_adapter(CPUClass cpu);
-
+#endif
 /**
  * Create an operation converting from YUV to RGB via a 3x3 matrix.
  *

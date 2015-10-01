@@ -6,11 +6,11 @@
 
 namespace zimg {;
 namespace colorspace {;
-
+#if 0
 PixelAdapter::~PixelAdapter()
 {
 }
-
+#endif
 Operation::~Operation()
 {
 }

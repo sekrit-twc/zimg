@@ -12,7 +12,7 @@ namespace zimg {;
 namespace colorspace {;
 
 namespace {;
-
+#if 0
 class PixelAdapterC : public PixelAdapter {
 public:
 	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
@@ -25,7 +25,7 @@ public:
 		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
 	}
 };
-
+#endif
 class MatrixOperationC : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m)
@@ -176,7 +176,7 @@ MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 		}
 	}
 }
-
+#if 0
 PixelAdapter *create_pixel_adapter(CPUClass cpu)
 {
 	PixelAdapter *ret = nullptr;
@@ -188,7 +188,7 @@ PixelAdapter *create_pixel_adapter(CPUClass cpu)
 
 	return ret;
 }
-
+#endif
 Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
 	Operation *ret = nullptr;

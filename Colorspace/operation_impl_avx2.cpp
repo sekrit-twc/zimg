@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include <immintrin.h>
@@ -175,3 +176,4 @@ Operation *create_matrix_operation_avx2(const Matrix3x3 &m)
 } // namespace zimg
 
 #endif // ZIMG_x86
+#endif
