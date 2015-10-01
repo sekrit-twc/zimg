@@ -7,7 +7,7 @@
 #include <system_error>
 #include <utility>
 
-#include <zimg3++.hpp>
+#include <zimg++.hpp>
 
 #include "aligned_malloc.h"
 #include "argparse.h"

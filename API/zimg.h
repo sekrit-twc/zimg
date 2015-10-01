@@ -1,158 +1,539 @@
-#ifndef ZIMG_H_
-#define ZIMG_H_
+#ifndef ZIMG3_H_
+#define ZIMG3_H_
+
+#include <limits.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {;
 #endif
 
-#include <stddef.h>
-
-#define ZIMG_API_VERSION 1
-
-#define ZIMG_ERROR_UNKNOWN           -1
-#define ZIMG_ERROR_LOGIC            100 /* Internal logic error. */
-#define ZIMG_ERROR_OUT_OF_MEMORY    200 /* Error allocating internal structures. */
-#define ZIMG_ERROR_ILLEGAL_ARGUMENT 300 /* Illegal value provided for argument. */
-#define ZIMG_ERROR_UNSUPPORTED      400 /* Operation not supported. */
+/** @file */
 
 /**
- * Return the last error code. Error information is thread-local.
- * A descriptive error message is placed in the [n]-byte buffer located at [err_msg].
+ * Greatest version of API described by this header.
+ *
+ * Generally, later versions of the API are backwards-compatible
+ * with prior versions. In order to maintain compatibility with the maximum
+ * number of library versions, the user should pass the lowest required
+ * API version wherever possible to relevant API functions.
+ *
+ * A number of structure definitions described in this header begin with
+ * a member indicating the API version used by the caller. Whenver such
+ * a structure is a parameter to a function, the version field should be set
+ * to the API version corresponding to its layout to ensure that the library
+ * does not access memory beyond the end of the structure.
  */
-int zimg_get_last_error(char *err_msg, size_t n);
+#define ZIMG_API_VERSION 2
 
-/* Set the last error to 0 and clear the stored error message. */
+/**
+ * Get the version number of the library.
+ *
+ * This function should not be used to query for API details.
+ * Instead, use {@link zimg2_get_api_version} to obtain the API version.
+ *
+ * @see zimg2_get_api_version
+ *
+ * @pre major != 0 && minor != 0 && micro != 0
+ * @param[out] major set to the major version
+ * @param[out] minor set to the minor verison
+ * @param[out] micro set to the micro (patch) version
+ */
+void zimg2_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
+
+/**
+ * Get the API version supported by the library.
+ * The API version is separate from the library version.
+ *
+ * @see zimg2_get_version_info
+ *
+ * @return API version number
+ */
+unsigned zimg2_get_api_version(void);
+
+/**
+ * Library error codes.
+ *
+ * The error code is a 15-bit quantity with a 5-bit category indicator in the
+ * upper bits and a 10-bit error code in the lower bits. The library may also
+ * return negative error codes which do not belong to any category, as well as
+ * error codes with a category of 0.
+ *
+ * API functions may return error codes not listed in this header.
+ * Functions returning error codes return 0 on success.
+ */
+typedef enum zimg_error_code_e {
+	ZIMG_ERROR_UNKNOWN = -1,
+	ZIMG_ERROR_SUCCESS = 0,
+
+	ZIMG_ERROR_OUT_OF_MEMORY        = 1, /**< Not always detected on some platforms. */
+	ZIMG_ERROR_USER_CALLBACK_FAILED = 2, /**< User-defined callback failed. */
+
+	/**
+	 * An API invariant was violated, or an impossible operation was requested.
+	 *
+	 * It is the responsibility of the caller to ensure that such conditions do
+	 * not occur. Not all illegal operations are detected by the library, and in
+	 * general undefined behaviour may occur.
+	 */
+	ZIMG_ERROR_LOGIC                 = (1 << 10),
+	ZIMG_ERROR_GREYSCALE_SUBSAMPLING = ZIMG_ERROR_LOGIC + 1, /**< Attempt to subsample greyscale image */
+	ZIMG_ERROR_COLOR_FAMILY_MISMATCH = ZIMG_ERROR_LOGIC + 2, /**< Illegal combination of color family and matrix coefficients. */
+	ZIMG_ERROR_IMAGE_NOT_DIVISIBLE   = ZIMG_ERROR_LOGIC + 3, /**< Image dimension does not fit a modulo constraint. */
+	ZIMG_ERROR_BIT_DEPTH_OVERFLOW    = ZIMG_ERROR_LOGIC + 4, /**< Bit depth greater than underlying storage format. */
+
+	/**
+	 * A function parameter was passed an illegal value.
+	 *
+	 * While all API errors result from illegal parameters, this category
+	 * indicates a locally determinable error, such as an out of range enum.
+	 */
+	ZIMG_ERROR_ILLEGAL_ARGUMENT  = (2 << 10),
+	ZIMG_ERROR_ENUM_OUT_OF_RANGE = ZIMG_ERROR_ILLEGAL_ARGUMENT + 1, /**< Value not in enumeration. */
+	ZIMG_ERROR_ZERO_IMAGE_SIZE   = ZIMG_ERROR_ILLEGAL_ARGUMENT + 2, /**< Image width or height is zero. */
+
+	/**
+	 * A requested conversion was not supported by the library.
+	 *
+	 * Some conversions are well-defined but not implemented by the library.
+	 * If the conversion is logically impossible, {@link ZIMG_ERROR_LOGIC} may
+	 * occur.
+	 */
+	ZIMG_ERROR_UNSUPPORTED_OPERATION      = (3 << 10),
+	ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING    = ZIMG_ERROR_UNSUPPORTED_OPERATION + 1, /**< Subsampling format not supported. */
+	ZIMG_ERROR_NO_COLORSPACE_CONVERSION   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 2, /**< No conversion between colorspaces. */
+	ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION = ZIMG_ERROR_UNSUPPORTED_OPERATION + 3, /**< No conversion between field parity. */
+	ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 4, /**< Resampling filter not available for given image size. */
+} zimg_error_code_e;
+
+/**
+ * Get information regarding the last error to occur.
+ *
+ * The error code is stored per-thread. It is not reset when a function
+ * completes successfully, but only upon calling {@link zimg_clear_last_error}.
+ *
+ * @see zimg_clear_last_error
+ *
+ * @param[out] err_msg buffer to receive the error message, may be NULL
+ * @param n length of {@p err_msg} buffer in bytes
+ * @return error code
+ */
+zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n);
+
+/**
+ * Clear the stored error code.
+ *
+ * @see zimg_get_last_error
+ *
+ * @post zimg_get_last_error() == 0
+ */
 void zimg_clear_last_error(void);
 
 
-#define ZIMG_CPU_NONE 0
-#define ZIMG_CPU_AUTO 1
-
+/**
+ * CPU feature set constants.
+ *
+ * Available values are defined on a per-architecture basis.
+ * Constants are not implied to be in any particular order.
+ */
+typedef enum zimg_cpu_type_e {
+	ZIMG_CPU_NONE = 0, /**< Portable C-based implementation. */
+	ZIMG_CPU_AUTO = 1, /**< Runtime CPU detection. */
 #if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
-  #define ZIMG_CPU_X86_MMX   1000
-  #define ZIMG_CPU_X86_SSE   1001
-  #define ZIMG_CPU_X86_SSE2  1002
-  #define ZIMG_CPU_X86_SSE3  1003
-  #define ZIMG_CPU_X86_SSSE3 1004
-  #define ZIMG_CPU_X86_SSE41 1005
-  #define ZIMG_CPU_X86_SSE42 1006
-  #define ZIMG_CPU_X86_AVX   1007
-  #define ZIMG_CPU_X86_F16C  1008
-  #define ZIMG_CPU_X86_AVX2  1009
+	ZIMG_CPU_X86_MMX   = 1000,
+	ZIMG_CPU_X86_SSE   = 1001,
+	ZIMG_CPU_X86_SSE2  = 1002,
+	ZIMG_CPU_X86_SSE3  = 1003,
+	ZIMG_CPU_X86_SSSE3 = 1004,
+	ZIMG_CPU_X86_SSE41 = 1005,
+	ZIMG_CPU_X86_SSE42 = 1006,
+	ZIMG_CPU_X86_AVX   = 1007,
+	ZIMG_CPU_X86_F16C  = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
+	ZIMG_CPU_X86_AVX2  = 1009,
 #endif
+} zimg_cpu_type_e;
 
 /**
- * Set the desired CPU type to [cpu]. The result is set globally.
- * This function is thread-safe.
- */
-void zimg_set_cpu(int cpu);
-
-
-#define ZIMG_PIXEL_BYTE  0 /* Unsigned integer, one byte per sample. */
-#define ZIMG_PIXEL_WORD  1 /* Unsigned integer, two bytes per sample. */
-#define ZIMG_PIXEL_HALF  2 /* IEEE-754 half precision (binary16). */
-#define ZIMG_PIXEL_FLOAT 3 /* IEEE-754 single precision (binary32). */
-
-
-/* Chosen to match ITU-T H.264 and H.265 */
-#define ZIMG_MATRIX_RGB        0
-#define ZIMG_MATRIX_709        1
-#define ZIMG_MATRIX_470BG      5
-#define ZIMG_MATRIX_170M       6 /* Equivalent to 5. */
-#define ZIMG_MATRIX_2020_NCL   9
-#define ZIMG_MATRIX_2020_CL   10
-
-#define ZIMG_TRANSFER_709      1
-#define ZIMG_TRANSFER_601      6 /* Equivalent to 1. */
-#define ZIMG_TRANSFER_LINEAR   8
-#define ZIMG_TRANSFER_2020_10 14 /* Equivalent to 1. */
-#define ZIMG_TRANSFER_2020_12 15 /* Equivalent to 1. */
-
-#define ZIMG_PRIMARIES_709     1
-#define ZIMG_PRIMARIES_170M    6
-#define ZIMG_PRIMARIES_240M    7 /* Equivalent to 6. */
-#define ZIMG_PRIMARIES_2020    9
-
-typedef struct zimg_colorspace_context zimg_colorspace_context;
-
-/**
- * Create a context to convert between the described colorspaces.
- * On error, a NULL pointer is returned.
- */
-zimg_colorspace_context *zimg_colorspace_create(int matrix_in, int transfer_in, int primaries_in,
-                                                int matrix_out, int transfer_out, int primaries_out);
-
-/* Get the temporary buffer size in bytes required to process a frame with [width] using [ctx]. */
-size_t zimg_colorspace_tmp_size(zimg_colorspace_context *ctx, int width);
-
-/**
- * Process a frame. The input and output must contain 3 planes.
- * On success, 0 is returned, else a corresponding error code.
- */
-int zimg_colorspace_process(zimg_colorspace_context *ctx, const void * const src[3], void * const dst[3], void *tmp,
-                            int width, int height, const int src_stride[3], const int dst_stride[3], int pixel_type);
-
-/* Delete the context. */
-void zimg_colorspace_delete(zimg_colorspace_context *ctx);
-
-
-#define ZIMG_DITHER_NONE            0
-#define ZIMG_DITHER_ORDERED         1
-#define ZIMG_DITHER_RANDOM          2
-#define ZIMG_DITHER_ERROR_DIFFUSION 3
-
-typedef struct zimg_depth_context zimg_depth_context;
-
-/**
- * Create a context to convert between pixel formats using the given [dither_type].
- * On error, a NULL pointer is returned.
- */
-zimg_depth_context *zimg_depth_create(int dither_type);
-
-/* Get the temporary buffer size in bytes required to process a plane with [width] using [ctx]. */
-size_t zimg_depth_tmp_size(zimg_depth_context *ctx, int width);
-
-/* Process a plane. On success, 0 is returned, else a corresponding error code. */
-int zimg_depth_process(zimg_depth_context *ctx, const void *src, void *dst, void *tmp,
-                       int width, int height, int src_stride, int dst_stride,
-                       int pixel_in, int pixel_out, int depth_in, int depth_out, int fullrange_in, int fullrange_out, int chroma);
-
-/* Delete the context. */
-void zimg_depth_delete(zimg_depth_context *ctx);
-
-
-#define ZIMG_RESIZE_POINT    0
-#define ZIMG_RESIZE_BILINEAR 1
-#define ZIMG_RESIZE_BICUBIC  2
-#define ZIMG_RESIZE_SPLINE16 3
-#define ZIMG_RESIZE_SPLINE36 4
-#define ZIMG_RESIZE_LANCZOS  5
-
-typedef struct zimg_resize_context zimg_resize_context;
-
-/**
- * Create a context to apply the given resampling ratio.
+ * Pixel format constants.
  *
- * The meaning of [filter_param_a] and [filter_param_b] depend on the selected filter.
- * Passing NAN for either filter parameter results in a default value being used.
- * For lanczos, "a" is the number of taps, and for bicubic, they are the "b" and "c" parameters.
- *
- * On error, a NULL pointer is returned.
+ * The use of the {@link ZIMG_PIXEL_HALF} format is likely to be slow
+ * on CPU architectures that do not support hardware binary16 operations.
  */
-zimg_resize_context *zimg_resize_create(int filter_type, int src_width, int src_height, int dst_width, int dst_height,
-                                        double shift_w, double shift_h, double subwidth, double subheight,
-                                        double filter_param_a, double filter_param_b);
+typedef enum zimg_pixel_type_e {
+	ZIMG_PIXEL_BYTE  = 0, /**< Unsigned integer, one byte per sample. */
+	ZIMG_PIXEL_WORD  = 1, /**< Unsigned integer, two bytes per sample. */
+	ZIMG_PIXEL_HALF  = 2, /**< IEEE-754 half precision (binary16). */
+	ZIMG_PIXEL_FLOAT = 3, /**< IEEE-754 single precision (binary32). */
+} zimg_pixel_type_e;
 
-/* Get the temporary buffer size in bytes required to process a plane with [pixel_type]. */
-size_t zimg_resize_tmp_size(zimg_resize_context *ctx, int pixel_type);
+/**
+ * Pixel range constants for integer formats.
+ *
+ * Additional range types may be defined besides ZIMG_RANGE_LIMITED and
+ * ZIMG_RANGE_FULL. Users should not treat range as a boolean quantity.
+ */
+typedef enum zimg_pixel_range_e {
+	ZIMG_RANGE_LIMITED = 0, /**< Studio (TV) legal range, 16-235 in 8 bits. */
+	ZIMG_RANGE_FULL    = 1, /**< Full (PC) dynamic range, 0-255 in 8 bits. */
+} zimg_pixel_range_e;
 
-/* Process a plane. On success, 0 is returned, else a corresponding error code. */
-int zimg_resize_process(zimg_resize_context *ctx, const void *src, void *dst, void *tmp,
-                        int src_width, int src_height, int dst_width, int dst_height,
-                        int src_stride, int dst_stride, int pixel_type);
+/**
+ * Color family constants.
+ */
+typedef enum zimg_color_family_e {
+	ZIMG_COLOR_GREY = 0, /**< Single image plane. */
+	ZIMG_COLOR_RGB  = 1, /**< Generic RGB color image. */
+	ZIMG_COLOR_YUV  = 2, /**< Generic YUV color image. */
+} zimg_color_family_e;
 
-/* Delete the context. */
-void zimg_resize_delete(zimg_resize_context *ctx);
+/**
+ * Field parity constants.
+ *
+ * It is possible to process interlaced images with the library by separating
+ * them into their individual fields. Each field can then be resized by
+ * specifying the appropriate field parity to maintain correct alignment.
+ */
+typedef enum zimg_field_parity_e {
+	ZIMG_FIELD_PROGRESSIVE = 0, /**< Progressive scan image. */
+	ZIMG_FIELD_TOP         = 1, /**< Top field of interlaced image. */
+	ZIMG_FIELD_BOTTOM      = 2, /**< Bottom field of interlaced image. */
+} zimg_field_parity_e;
+
+/**
+ * Chroma location constants.
+ *
+ * These constants mirror those defined in ITU-T H.264 and H.265.
+ *
+ * The ITU-T standards define these constants only for 4:2:0 subsampled
+ * images, but as an extension, the library also interprets them for other
+ * subsampled formats. When used with interlaced images, the field parity must
+ * also be provided.
+ *
+ * Chroma location is always treated as centered on unsubsampled axes.
+ */
+typedef enum zimg_chroma_location_e {
+	ZIMG_CHROMA_LEFT        = 0, /**< MPEG-2 */
+	ZIMG_CHROMA_CENTER      = 1, /**< MPEG-1/JPEG */
+	ZIMG_CHROMA_TOP_LEFT    = 2, /**< DV */
+	ZIMG_CHROMA_TOP         = 3,
+	ZIMG_CHROMA_BOTTOM_LEFT = 4,
+	ZIMG_CHROMA_BOTTOM      = 5,
+} zimg_chroma_location_e;
+
+/**
+ * Colorspace definition constants.
+ *
+ * These constants mirror those defined in ITU-T H.264 and H.265.
+ *
+ * The UNSPECIFIED value is intended to allow colorspace conversions which do
+ * not require a fully specified colorspace. The primaries must be defined if
+ * the transfer function is defined, and the matrix coefficients must likewise
+ * be defined if the transfer function is defined.
+ *
+ * Unenumerated values between 0 and 255, inclusive, may be specified for any
+ * colorspace parameter. In such a case, no conversion will be possible unless
+ * the input and output spaces are exactly equivalent.
+ */
+typedef enum zimg_matrix_coefficients_e {
+	ZIMG_MATRIX_RGB         = 0,
+	ZIMG_MATRIX_709         = 1,
+	ZIMG_MATRIX_UNSPECIFIED = 2,
+	ZIMG_MATRIX_470BG       = 5,
+	ZIMG_MATRIX_170M        = 6, /* Equivalent to 5. */
+	ZIMG_MATRIX_2020_NCL    = 9,
+	ZIMG_MATRIX_2020_CL     = 10,
+} zimg_matrix_coefficients_e;
+
+typedef enum zimg_transfer_characteristics_e {
+	ZIMG_TRANSFER_709         = 1,
+	ZIMG_TRANSFER_UNSPECIFIED = 2,
+	ZIMG_TRANSFER_601         = 6,  /* Equivalent to 1. */
+	ZIMG_TRANSFER_LINEAR      = 8,
+	ZIMG_TRANSFER_2020_10     = 14, /* Equivalent to 1. */
+	ZIMG_TRANSFER_2020_12     = 15, /* Equivalent to 1. */
+} zimg_transfer_characteristics_e;
+
+typedef enum zimg_color_primaries_e {
+	ZIMG_PRIMARIES_709         = 1,
+	ZIMG_PRIMARIES_UNSPECIFIED = 2,
+	ZIMG_PRIMARIES_170M        = 6,
+	ZIMG_PRIMARIES_240M        = 7, /* Equivalent to 6. */
+	ZIMG_PRIMARIES_2020        = 9,
+} zimg_color_primaries_e;
+
+/**
+ * Dither method constants.
+ */
+typedef enum zimg_dither_type_e {
+	ZIMG_DITHER_NONE            = 0, /**< Round to nearest. */
+	ZIMG_DITHER_ORDERED         = 1, /**< Bayer patterend dither. */
+	ZIMG_DITHER_RANDOM          = 2, /**< Pseudo-random noise of magnitude 0.5. */
+	ZIMG_DITHER_ERROR_DIFFUSION = 3, /**< Floyd-Steinberg error diffusion. */
+} zimg_dither_type_e;
+
+/**
+ * Resampling method constants.
+ */
+typedef enum zimg_resample_filter_e {
+	ZIMG_RESIZE_POINT    = 0, /**< Nearest-neighbor filter, never anti-aliased. */
+	ZIMG_RESIZE_BILINEAR = 1, /**< Bilinear interpolation. */
+	ZIMG_RESIZE_BICUBIC  = 2, /**< Bicubic convolution (separable) filter. */
+	ZIMG_RESIZE_SPLINE16 = 3, /**< "Spline16" filter from AviSynth. */
+	ZIMG_RESIZE_SPLINE36 = 4, /**< "Spline36" filter from AviSynth. */
+	ZIMG_RESIZE_LANCZOS  = 5, /**< Lanczos resampling filter with variable number of taps. */
+} zimg_resample_filter_e;
+
+
+ /**
+  * Read-only buffer structure.
+  *
+  * Image data is read and written from a circular array described by
+  * this structure. This structure is used for input parameters, and the
+  * {@link zimg_image_buffer} structure for output parameters.
+  *
+  * The circular array holds a power-of-2 number of image scanlines,
+  * where the beginning of the i-th row of the p-th plane is stored at
+  * (data[p] + (ptrdiff_t)(i & mask[p]) * stride[p]).
+  *
+  * The row index mask can be set to the special value of UINT_MAX (-1)
+  * to indicate a fully allocated image plane. Filter instances will
+  * not read or write beyond image bounds, and no padding is necessary.
+  *
+  * Generally, the image stride must be a multiple of the alignment
+  * imposed by the target CPU architecture, which is up to 64 bytes on
+  * x86 and AMD64. The stride may be negative.
+  */
+typedef struct zimg_image_buffer_const {
+	unsigned version;    /**< @see ZIMG_API_VERSION */
+	const void *data[3]; /**< per-plane data buffers, order is R-G-B or Y-U-V */
+	ptrdiff_t stride[3]; /**< per-plane stride in bytes */
+	unsigned mask[3];    /**< per-plane row index mask */
+} zimg_image_buffer_const;
+
+/**
+ * Writable buffer structure.
+ *
+ * This union overlays a read-only {@link zimg_image_buffer_const} and a
+ * corresponding structure with writable data pointers. This allows a buffer
+ * used as an output parameter to one API call to be reused as an input
+ * parameter to a subsequent call.
+ *
+ * From a strict standards point-of-view, the use of the union to alias the
+ * const and mutable buffers may be undefined behavior in C++ (but not C).
+ * This has not been observed to impact GCC and MSVC compilers.
+ *
+ * @see zimg_image_buffer_const
+ */
+typedef union zimg_image_buffer {
+	struct {
+		unsigned version;
+		void *data[3];
+		ptrdiff_t stride[3];
+		unsigned mask[3];
+	} m;
+
+	zimg_image_buffer_const c;
+} zimg_image_buffer;
+
+
+/**
+ * Convert a number of lines to a {@link zimg_image_buffer} mask.
+ *
+ * @param count number of lines, can be UINT_MAX
+ * @return buffer mask, can be UINT_MAX
+ */
+unsigned zimg2_select_buffer_mask(unsigned count);
+
+
+/**
+ * Handle to an image processing contxt.
+ *
+ * The filter graph constitutes a series of indivdual image manipulations
+ * that are executed in sequence to convert an image between formats.
+ *
+ * A format is defined as the set of attributes that uniquely define the
+ * memory representation and interpretation of an image, including its
+ * resolution, colorspace, chroma format, and storage.
+ */
+typedef struct zimg_filter_graph zimg_filter_graph;
+
+/**
+ * User callback for custom input/output.
+ *
+ * The filter graph can be used either to process an in-memory planar image,
+ * as defined by a {@link zimg_image_buffer} with a mask of UINT_MAX, or to
+ * process images stored in arbitrary packed formats or other address spaces.
+ *
+ * If provided to {@link zimg2_filter_graph_process}, the callback will be
+ * called before image data is read from the input and output buffers.
+ * The callback may be invoked on the same pixels multiple times, in which
+ * case those pixels must be re-read unless the buffer mask is UINT_MAX.
+ *
+ * If the image is subsampled, a number of scanlines in units of the chroma
+ * subsampling (e.g. 2 lines for 4:2:0) must be processed.
+ *
+ * If the callback fails, processing will be aborted and a non-zero value will
+ * be returned to the caller of {@link zimg2_filter_graph_process}, but the
+ * return code of the callback will not be propagated.
+ *
+ * @param user user-defined private data
+ * @param i index of first line to read/write
+ * @param left index of left column in line
+ * @param right index of right column in line plus one
+ * @return zero on success or non-zero on failure
+ */
+typedef int (*zimg_filter_graph_callback)(void *user, unsigned i, unsigned left, unsigned right);
+
+/**
+ * Delete the filter graph.
+ *
+ * @param ptr graph handle, may be NULL
+ */
+void zimg2_filter_graph_free(zimg_filter_graph *ptr);
+
+/**
+ * Query the size of the temporary buffer required to execute the graph.
+ *
+ * The filter graph does not allocate memory during processing and generally
+ * will not fail unless a user-provided callback fails. To facilitate this,
+ * memory allocation is delgated to the caller.
+ *
+ * @pre out != 0
+ * @param ptr graph handle
+ * @param[out] out set to the size of the buffer in bytes
+ * @return error code
+ */
+zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out);
+
+/**
+ * Query the maximum number of lines required in the input buffer.
+ *
+ * When reading an image through a user-defined callback function, the loaded
+ * image data is stored in a buffer of sufficient size for the granularity of
+ * the image filters used.
+ *
+ * @pre out != 0
+ * @param ptr graph handle
+ * @param[out] out set to the number of scanlines
+ * @return error code
+ */
+zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out);
+
+/**
+ * Query the maximum number of lines required in the output buffer.
+ *
+ * @pre out != 0
+ * @param ptr graph handle
+ * @param[out] out set to the number of scanlines
+ * @return error code
+ * @see zimg2_filter_grpah_get_input_buffering
+ */
+zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out);
+
+/**
+ * Process an image with the filter graph.
+ *
+ * @param ptr graph handle
+ * @param[in] src input image buffer
+ * @param[out] dst output image buffer
+ * @param tmp temporary buffer
+ * @param unpack_cb user-defined input callback, may be NULL
+ * @param unpack_user private data for callback
+ * @param pack_cb user-defined output callback, may be NULL
+ * @param pack_user private data for callback
+ * @return error code
+ */
+zimg_error_code_e zimg2_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
+                                             zimg_filter_graph_callback unpack_cb, void *unpack_user,
+                                             zimg_filter_graph_callback pack_cb, void *pack_user);
+
+
+/**
+ * Image format descriptor.
+ */
+typedef struct zimg_image_format {
+	unsigned version;                                         /**< @see ZIMG_API_VERSION */
+
+	unsigned width;                                           /**< Image width (required). */
+	unsigned height;                                          /**< Image height (required). */
+	zimg_pixel_type_e pixel_type;                             /**< Pixel type (required). */
+
+	unsigned subsample_w;                                     /**< Horizontal subsampling factor log2 (default 0). */
+	unsigned subsample_h;                                     /**< Vertical subsampling factor log2 (default 0). */
+
+	zimg_color_family_e color_family;                         /**< Color family (default ZIMG_COLOR_GREY). */
+	zimg_matrix_coefficients_e matrix_coefficients;           /**< YUV transform matrix (default ZIMG_MATRIX_UNSPECIFIED). */
+	zimg_transfer_characteristics_e transfer_characteristics; /**< Transfer characteristics (default ZIMG_TRANSFER_UNSPECIFIED). */
+	zimg_color_primaries_e color_primaries;                   /**< Color primaries (default ZIMG_PRIMARIES_UNSPECIFIED). */
+
+	unsigned depth;                                           /**< Bit depth (default 8 bits per byte). */
+	zimg_pixel_range_e pixel_range;                           /**< Pixel range. Required for integer formats. */
+
+	zimg_field_parity_e field_parity;                         /**< Field parity (default ZIMG_FIELD_PROGRESSIVE). */
+	zimg_chroma_location_e chroma_location;                   /**< Chroma location (default ZIMG_CHROMA_LEFT). */
+} zimg_image_format;
+
+/**
+ * Graph filter parameters.
+ */
+typedef struct zimg_filter_graph_params {
+	unsigned version;                          /**< @see ZIMG_API_VERSION */
+
+	zimg_resample_filter_e resample_filter;    /**< Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
+
+	/**
+	 * Parameters for resampling filter.
+	 *
+	 * The meaning of this value depends on the filter selected.
+	 *
+	 * For ZIMG_RESIZE_BICUBIC, {@p filter_param_a} and {@p filter_param_b} are
+	 * the "b" and "c" parameters. If one parameter is specified, the other must
+	 * also be specified to avoid unexpected behavior.
+	 *
+	 * For ZIMG_RESIZE_LANCZOS, {@p filter_param_a} is the number of filter taps.
+	 *
+	 * The default value is NAN, which results in a library default being used.
+	 */
+	double filter_param_a;
+	double filter_param_b;                     /**< @see filter_param_a */
+
+	zimg_resample_filter_e resample_filter_uv; /**< Chroma resampling filter (default ZIMG_RESIZE_BILINEAR) */
+	double filter_param_a_uv;                  /**< @see filter_param_a */
+	double filter_param_b_uv;                  /**< @see filter_param_a */
+
+	zimg_dither_type_e dither_type;            /**< Dithering method (default ZIMG_DITHER_NONE). */
+
+	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default (ZIMG_CPU_AUTO). */
+} zimg_filter_graph_params;
+
+/**
+ * Initialize image format structure with default values.
+ *
+ * @param[out] ptr structure to be initialized
+ * @param version API version used by caller
+ */
+void zimg2_image_format_default(zimg_image_format *ptr, unsigned version);
+
+/**
+ * Initialize parameters structure with default values.
+ *
+ * @param[out] ptr structure to be initialized
+ * @param version API version used by caller
+ */
+void zimg2_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version);
+
+/**
+ * Create a graph converting the specified formats.
+ *
+ * Upon failure, a NULL pointer is returned. The function
+ * {@link zimg_get_last_error} may be called to obtain the failure reason.
+ *
+ * @param[in] src_format input image format
+ * @param[in] dst_format output image format
+ * @param[in] params filter parameters, may be NULL
+ * @return graph handle, or NULL on failure
+ */
+zimg_filter_graph *zimg2_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params);
 
 #ifdef __cplusplus
 } /* extern "C" */

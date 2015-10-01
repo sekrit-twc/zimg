@@ -22,7 +22,7 @@
   static int vszimg_mutex_destroy(vszimg_mutex_t *mutex) { return pthread_mutex_destroy(mutex); }
 #endif // _WIN32
 
-#include <zimg3.h>
+#include <zimg.h>
 
 #if ZIMG_API_VERSION < 2
   #error zAPI v2 or greater required

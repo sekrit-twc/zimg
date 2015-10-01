@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <zimg3.h>
+#include <zimg.h>
 
 #include "aligned_malloc.h"
 #include "argparse.h"

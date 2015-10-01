@@ -20,8 +20,6 @@ noinst_LTLIBRARIES =
 pkglib_LTLIBRARIES = vszimg.la
 
 libzimg_la_SOURCES = API/zimg.cpp \
-					 API/zimg2.cpp \
-					 API/zimg3.cpp \
 					 Colorspace/colorspace.cpp \
 					 Colorspace/colorspace.h \
 					 Colorspace/colorspace_param.cpp \
@@ -87,11 +85,7 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Unresize/unresize_impl.h
 
 include_HEADERS = API/zimg.h \
-				  API/zimg2.h \
-				  API/zimg3.h \
-				  API/zimg++.hpp \
-				  API/zimg2++.hpp \
-				  API/zimg3++.hpp
+				  API/zimg++.hpp
 
 
 libzimg_la_LDFLAGS = -no-undefined -version-info 2

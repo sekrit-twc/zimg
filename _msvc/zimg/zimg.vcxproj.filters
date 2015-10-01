@@ -51,24 +51,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\API\zimg.h">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\API\zimg++.hpp">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\API\zimg2.h">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\API\zimg2++.hpp">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\API\zimg3.h">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\API\zimg3++.hpp">
-      <Filter>Header Files\API</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Common\align.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
@@ -219,17 +201,14 @@
     <ClInclude Include="..\..\Depth\depth_convert2_x86.h">
       <Filter>Header Files\Depth</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\API\zimg.h">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\API\zimg++.hpp">
+      <Filter>Header Files\API</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\API\zimg.cpp">
-      <Filter>Source Files\API</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\API\zimg2.cpp">
-      <Filter>Source Files\API</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\API\zimg3.cpp">
-      <Filter>Source Files\API</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\filtergraph.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
@@ -370,6 +349,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Depth\dither2_sse2.cpp">
       <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\API\zimg.cpp">
+      <Filter>Source Files\API</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -143,10 +143,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\API\zimg++.hpp" />
     <ClInclude Include="..\..\API\zimg.h" />
-    <ClInclude Include="..\..\API\zimg2++.hpp" />
-    <ClInclude Include="..\..\API\zimg2.h" />
-    <ClInclude Include="..\..\API\zimg3++.hpp" />
-    <ClInclude Include="..\..\API\zimg3.h" />
     <ClInclude Include="..\..\Colorspace\colorspace.h" />
     <ClInclude Include="..\..\Colorspace\colorspace2.h" />
     <ClInclude Include="..\..\Colorspace\colorspace_param.h" />
@@ -200,8 +196,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\API\zimg.cpp" />
-    <ClCompile Include="..\..\API\zimg2.cpp" />
-    <ClCompile Include="..\..\API\zimg3.cpp" />
     <ClCompile Include="..\..\Colorspace\colorspace.cpp" />
     <ClCompile Include="..\..\Colorspace\colorspace2.cpp" />
     <ClCompile Include="..\..\Colorspace\colorspace_param.cpp" />
