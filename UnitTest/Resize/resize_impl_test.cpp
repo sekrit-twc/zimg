@@ -4,7 +4,7 @@
 #include "Common/pixel.h"
 #include "Common/zfilter.h"
 #include "Resize/filter.h"
-#include "Resize/resize_impl2.h"
+#include "Resize/resize_impl.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"
@@ -33,7 +33,7 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 		SCOPED_TRACE(resample_filter->support());
 
 		std::unique_ptr<zimg::IZimgFilter> filter;
-		filter.reset(zimg::resize::create_resize_impl2(*resample_filter, format.type, horizontal, format.depth,
+		filter.reset(zimg::resize::create_resize_impl(*resample_filter, format.type, horizontal, format.depth,
 		                                               src_w, src_h, dst_w, dst_h, shift, subwidth, zimg::CPUClass::CPU_NONE));
 
 		ASSERT_TRUE(filter);

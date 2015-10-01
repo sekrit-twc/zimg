@@ -1,11 +1,9 @@
-#if 0
 #ifdef ZIMG_X86
 
-#include <cstddef>
+#include <algorithm>
 #include <cstdint>
 #include <emmintrin.h>
 #include "Common/align.h"
-#include "Common/except.h"
 #include "Common/linebuffer.h"
 #include "Common/osdep.h"
 #include "Common/pixel.h"
@@ -17,20 +15,58 @@ namespace resize {;
 
 namespace {;
 
-inline FORCE_INLINE void transpose4_ps(__m128 &x0, __m128 &x1, __m128 &x2, __m128 &x3)
+inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
 {
-	__m128d t0 = _mm_castps_pd(_mm_unpacklo_ps(x0, x1));
-	__m128d t1 = _mm_castps_pd(_mm_unpacklo_ps(x2, x3));
-	__m128d t2 = _mm_castps_pd(_mm_unpackhi_ps(x0, x1));
-	__m128d t3 = _mm_castps_pd(_mm_unpackhi_ps(x2, x3));
-	__m128d o0 = _mm_unpacklo_pd(t0, t1);
-	__m128d o1 = _mm_unpackhi_pd(t0, t1);
-	__m128d o2 = _mm_unpacklo_pd(t2, t3);
-	__m128d o3 = _mm_unpackhi_pd(t2, t3);
-	x0 = _mm_castpd_ps(o0);
-	x1 = _mm_castpd_ps(o1);
-	x2 = _mm_castpd_ps(o2);
-	x3 = _mm_castpd_ps(o3);
+	switch (count - 1) {
+	case 6:
+		dst[1] = _mm_extract_epi16(x, 1);
+	case 5:
+		dst[2] = _mm_extract_epi16(x, 2);
+	case 4:
+		dst[3] = _mm_extract_epi16(x, 3);
+	case 3:
+		dst[4] = _mm_extract_epi16(x, 4);
+	case 2:
+		dst[5] = _mm_extract_epi16(x, 5);
+	case 1:
+		dst[6] = _mm_extract_epi16(x, 6);
+	case 0:
+		dst[7] = _mm_extract_epi16(x, 7);
+	}
+}
+
+inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
+{
+	switch (count - 1) {
+	case 6:
+		dst[6] = _mm_extract_epi16(x, 6);
+	case 5:
+		dst[5] = _mm_extract_epi16(x, 5);
+	case 4:
+		dst[4] = _mm_extract_epi16(x, 4);
+	case 3:
+		dst[3] = _mm_extract_epi16(x, 3);
+	case 2:
+		dst[2] = _mm_extract_epi16(x, 2);
+	case 1:
+		dst[1] = _mm_extract_epi16(x, 1);
+	case 0:
+		dst[0] = _mm_extract_epi16(x, 0);
+	}
+}
+
+inline FORCE_INLINE void scatter8_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
+                                        uint16_t *dst4, uint16_t *dst5, uint16_t *dst6, uint16_t *dst7,
+                                        __m128i x)
+{
+	*dst0 = _mm_extract_epi16(x, 0);
+	*dst1 = _mm_extract_epi16(x, 1);
+	*dst2 = _mm_extract_epi16(x, 2);
+	*dst3 = _mm_extract_epi16(x, 3);
+	*dst4 = _mm_extract_epi16(x, 4);
+	*dst5 = _mm_extract_epi16(x, 5);
+	*dst6 = _mm_extract_epi16(x, 6);
+	*dst7 = _mm_extract_epi16(x, 7);
 }
 
 inline FORCE_INLINE void transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3, __m128i &x4, __m128i &x5, __m128i &x6, __m128i &x7)
@@ -66,647 +102,572 @@ inline FORCE_INLINE void transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &x2,
 	x7 = _mm_unpackhi_epi64(tt5, tt7);
 }
 
-inline FORCE_INLINE void transpose_line_8x8_epi16(const uint16_t *p0, const uint16_t *p1, const uint16_t *p2, const uint16_t *p3, const uint16_t *p4, const uint16_t *p5, const uint16_t *p6, const uint16_t *p7, uint16_t *dst, unsigned n)
+void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
+                              const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
+                              unsigned left, unsigned right)
 {
-	for (unsigned j = 0; j < mod(n, 8); j += 8) {
+	for (unsigned j = left; j < right; j += 8) {
 		__m128i x0, x1, x2, x3, x4, x5, x6, x7;
 
-		x0 = _mm_load_si128((const __m128i *)&p0[j]);
-		x1 = _mm_load_si128((const __m128i *)&p1[j]);
-		x2 = _mm_load_si128((const __m128i *)&p2[j]);
-		x3 = _mm_load_si128((const __m128i *)&p3[j]);
-		x4 = _mm_load_si128((const __m128i *)&p4[j]);
-		x5 = _mm_load_si128((const __m128i *)&p5[j]);
-		x6 = _mm_load_si128((const __m128i *)&p6[j]);
-		x7 = _mm_load_si128((const __m128i *)&p7[j]);
+		x0 = _mm_load_si128((const __m128i *)(src_p0 + j));
+		x1 = _mm_load_si128((const __m128i *)(src_p1 + j));
+		x2 = _mm_load_si128((const __m128i *)(src_p2 + j));
+		x3 = _mm_load_si128((const __m128i *)(src_p3 + j));
+		x4 = _mm_load_si128((const __m128i *)(src_p4 + j));
+		x5 = _mm_load_si128((const __m128i *)(src_p5 + j));
+		x6 = _mm_load_si128((const __m128i *)(src_p6 + j));
+		x7 = _mm_load_si128((const __m128i *)(src_p7 + j));
 
 		transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
 
-		_mm_store_si128((__m128i *)&dst[(j + 0) * 8], x0);
-		_mm_store_si128((__m128i *)&dst[(j + 1) * 8], x1);
-		_mm_store_si128((__m128i *)&dst[(j + 2) * 8], x2);
-		_mm_store_si128((__m128i *)&dst[(j + 3) * 8], x3);
-		_mm_store_si128((__m128i *)&dst[(j + 4) * 8], x4);
-		_mm_store_si128((__m128i *)&dst[(j + 5) * 8], x5);
-		_mm_store_si128((__m128i *)&dst[(j + 6) * 8], x6);
-		_mm_store_si128((__m128i *)&dst[(j + 7) * 8], x7);
-	}
-	for (unsigned j = mod(n, 8); j < n; ++j) {
-		dst[j * 8 + 0] = p0[j];
-		dst[j * 8 + 1] = p1[j];
-		dst[j * 8 + 2] = p2[j];
-		dst[j * 8 + 3] = p3[j];
-		dst[j * 8 + 4] = p4[j];
-		dst[j * 8 + 5] = p5[j];
-		dst[j * 8 + 6] = p6[j];
-		dst[j * 8 + 7] = p7[j];
+		_mm_store_si128((__m128i *)(dst + 0), x0);
+		_mm_store_si128((__m128i *)(dst + 8), x1);
+		_mm_store_si128((__m128i *)(dst + 16), x2);
+		_mm_store_si128((__m128i *)(dst + 24), x3);
+		_mm_store_si128((__m128i *)(dst + 32), x4);
+		_mm_store_si128((__m128i *)(dst + 40), x5);
+		_mm_store_si128((__m128i *)(dst + 48), x6);
+		_mm_store_si128((__m128i *)(dst + 56), x7);
+
+		dst += 64;
 	}
 }
 
-inline FORCE_INLINE void transpose_line_4x4_ps(const float *p0, const float *p1, const float *p2, const float *p3, float *dst, unsigned n)
+inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi, uint16_t limit)
 {
-	for (unsigned j = 0; j < mod(n, 4); j += 4) {
-		__m128 x0, x1, x2, x3;
+	const __m128i round = _mm_set1_epi32(1 << 13);
+	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
+	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
-		x0 = _mm_load_ps(&p0[j]);
-		x1 = _mm_load_ps(&p1[j]);
-		x2 = _mm_load_ps(&p2[j]);
-		x3 = _mm_load_ps(&p3[j]);
-
-		transpose4_ps(x0, x1, x2, x3);
-
-		_mm_store_ps(&dst[(j + 0) * 4], x0);
-		_mm_store_ps(&dst[(j + 1) * 4], x1);
-		_mm_store_ps(&dst[(j + 2) * 4], x2);
-		_mm_store_ps(&dst[(j + 3) * 4], x3);
-	}
-	for (unsigned j = mod(n, 4); j < n; ++j) {
-		dst[j * 4 + 0] = p0[j];
-		dst[j * 4 + 1] = p1[j];
-		dst[j * 4 + 2] = p2[j];
-		dst[j * 4 + 3] = p3[j];
-	}
-}
-
-inline FORCE_INLINE void transpose_block_8x8_epi16(const uint16_t cache[8 * 16], uint16_t *p0, uint16_t *p1, uint16_t *p2, uint16_t *p3, uint16_t *p4, uint16_t *p5, uint16_t *p6, uint16_t *p7)
-{
-	__m128i x0, x1, x2, x3, x4, x5, x6, x7;
-
-	x0 = _mm_load_si128((const __m128i *)&cache[0 * 8]);
-	x1 = _mm_load_si128((const __m128i *)&cache[1 * 8]);
-	x2 = _mm_load_si128((const __m128i *)&cache[2 * 8]);
-	x3 = _mm_load_si128((const __m128i *)&cache[3 * 8]);
-	x4 = _mm_load_si128((const __m128i *)&cache[4 * 8]);
-	x5 = _mm_load_si128((const __m128i *)&cache[5 * 8]);
-	x6 = _mm_load_si128((const __m128i *)&cache[6 * 8]);
-	x7 = _mm_load_si128((const __m128i *)&cache[7 * 8]);
-
-	transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
-
-	_mm_store_si128((__m128i *)p0, x0);
-	_mm_store_si128((__m128i *)p1, x1);
-	_mm_store_si128((__m128i *)p2, x2);
-	_mm_store_si128((__m128i *)p3, x3);
-	_mm_store_si128((__m128i *)p4, x4);
-	_mm_store_si128((__m128i *)p5, x5);
-	_mm_store_si128((__m128i *)p6, x6);
-	_mm_store_si128((__m128i *)p7, x7);
-}
-
-inline FORCE_INLINE void transpose_block_4x4_ps(const float cache[4 * 4], float *p0, float *p1, float *p2, float *p3)
-{
-	__m128 x0, x1, x2, x3;
-
-	x0 = _mm_load_ps(&cache[0 * 4]);
-	x1 = _mm_load_ps(&cache[1 * 4]);
-	x2 = _mm_load_ps(&cache[2 * 4]);
-	x3 = _mm_load_ps(&cache[3 * 4]);
-
-	transpose4_ps(x0, x1, x2, x3);
-
-	_mm_store_ps(p0, x0);
-	_mm_store_ps(p1, x1);
-	_mm_store_ps(p2, x2);
-	_mm_store_ps(p3, x3);
-}
-
-inline FORCE_INLINE void scatter_epi16(__m128i x, uint16_t *p0, uint16_t *p1, uint16_t *p2, uint16_t *p3, uint16_t *p4, uint16_t *p5, uint16_t *p6, uint16_t *p7)
-{
-	*p0 = _mm_extract_epi16(x, 0);
-	*p1 = _mm_extract_epi16(x, 1);
-	*p2 = _mm_extract_epi16(x, 2);
-	*p3 = _mm_extract_epi16(x, 3);
-	*p4 = _mm_extract_epi16(x, 4);
-	*p5 = _mm_extract_epi16(x, 5);
-	*p6 = _mm_extract_epi16(x, 6);
-	*p7 = _mm_extract_epi16(x, 7);
-}
-
-inline FORCE_INLINE void scatter_ps(__m128 x, float *p0, float *p1, float *p2, float *p3)
-{
-	ALIGNED(16) float tmp[4];
-
-	_mm_store_ps(tmp, x);
-	*p0 = tmp[0];
-	*p1 = tmp[1];
-	*p2 = tmp[2];
-	*p3 = tmp[3];
-}
-
-inline FORCE_INLINE void fmadd_epi16_epi32(__m128i a, __m128i b, __m128i &accum0, __m128i &accum1)
-{
-	__m128i lo, hi, uplo, uphi;
-
-	lo = _mm_mullo_epi16(a, b);
-	hi = _mm_mulhi_epi16(a, b);
-
-	uplo = _mm_unpacklo_epi16(lo, hi);
-	uphi = _mm_unpackhi_epi16(lo, hi);
-
-	accum0 = _mm_add_epi32(accum0, uplo);
-	accum1 = _mm_add_epi32(accum1, uphi);
-}
-
-inline FORCE_INLINE __m128i pack_i30_to_epi16(__m128i lo, __m128i hi)
-{
-	__m128i offset = _mm_set1_epi32(1 << 13);
-
-	lo = _mm_add_epi32(lo, offset);
-	hi = _mm_add_epi32(hi, offset);
+	lo = _mm_add_epi32(lo, round);
+	hi = _mm_add_epi32(hi, round);
 
 	lo = _mm_srai_epi32(lo, 14);
 	hi = _mm_srai_epi32(hi, 14);
 
-	return  _mm_packs_epi32(lo, hi);
+	lo = _mm_packs_epi32(lo, hi);
+	lo = _mm_min_epi16(lo, lim);
+	lo = _mm_sub_epi16(lo, i16_min);
+	return lo;
 }
 
-template <unsigned N>
-void filter_line_u16_h(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
+
+template <bool DoLoop, unsigned Tail>
+__m128i resize_line8_h_u16_sse2_xiter(unsigned j,
+                                      const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                      const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
 {
-	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
+	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
 
-	const int16_t *filter_data = filter.data_i16.data();
-	const unsigned *filter_left = filter.left.data();
-	unsigned filter_stride = filter.stride_i16;
+	const int16_t *filter_coeffs = filter_data + j * filter_stride;
+	const uint16_t *src_p = src_ptr + (filter_left[j] - src_base) * 8;
 
-	unsigned src_width = src.width();
-	unsigned dst_width = dst.width();
+	__m128i accum_lo = _mm_setzero_si128();
+	__m128i accum_hi = _mm_setzero_si128();
+	__m128i x0, x1, xl, xh, c, coeffs;
 
-	uint16_t *dst_ptr0 = dst[n + 0];
-	uint16_t *dst_ptr1 = dst[n + 1];
-	uint16_t *dst_ptr2 = dst[n + 2];
-	uint16_t *dst_ptr3 = dst[n + 3];
-	uint16_t *dst_ptr4 = dst[n + 4];
-	uint16_t *dst_ptr5 = dst[n + 5];
-	uint16_t *dst_ptr6 = dst[n + 6];
-	uint16_t *dst_ptr7 = dst[n + 7];
+	unsigned k_end = DoLoop ? mod(filter_width, 8) : 0;
 
-	uint16_t *ttmp = (uint16_t *)tmp;
-	ALIGNED(16) uint16_t cache[8 * 8];
+	for (unsigned k = 0; k < k_end; k += 8) {
+		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k));
 
-	transpose_line_8x8_epi16(src[n + 0], src[n + 1], src[n + 2], src[n + 3], src[n + 4], src[n + 5], src[n + 6], src[n + 7], ttmp, src_width);
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 0) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 1) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
 
-	for (unsigned j = 0; j < mod(dst_width, 8); ++j) {
-		const int16_t *filter_row = &filter_data[j * filter_stride];
-		unsigned left = filter_left[j];
-		__m128i accum_lo = _mm_setzero_si128();
-		__m128i accum_hi = _mm_setzero_si128();
-		__m128i x0, x1, lo, hi, c;
-		__m128i result;
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
 
-#define ITER(xiter) \
-  do { \
-    x0 = _mm_load_si128((const __m128i *)&ttmp[(left + (xiter) + 0) * 8]); \
-    x0 = _mm_add_epi16(x0, INT16_MIN_EPI16); \
-    x1 = _mm_load_si128((const __m128i *)&ttmp[(left + (xiter) + 1) * 8]); \
-    x1 = _mm_add_epi16(x1, INT16_MIN_EPI16); \
-    c = _mm_loadu_si128((const __m128i *)&filter_row[(xiter)]); \
-    c = _mm_shuffle_epi32(c, _MM_SHUFFLE(0, 0, 0, 0)); \
-    lo = _mm_unpacklo_epi16(x0, x1); \
-    lo = _mm_madd_epi16(c, lo); \
-    hi = _mm_unpackhi_epi16(x0, x1); \
-    hi = _mm_madd_epi16(c, hi); \
-    accum_lo = _mm_add_epi32(accum_lo, lo); \
-    accum_hi = _mm_add_epi32(accum_hi, hi); \
-  } while (0);
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
 
-		if (N) {
-			switch (N) {
-			case 8: case 7: ITER(6);
-			case 6: case 5: ITER(4);
-			case 4: case 3: ITER(2);
-			case 2: case 1: ITER(0);
-			}
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 2) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 3) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 4) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 5) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 6) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 7) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+
+	if (Tail >= 2) {
+		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k_end));
+
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 0) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 1) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+
+	if (Tail >= 4) {
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 2) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 3) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+
+	if (Tail >= 6) {
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 4) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 5) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+
+	if (Tail >= 8) {
+		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
+		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 6) * 8));
+		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 7) * 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+
+	accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+	return accum_lo;
+}
+
+template <bool DoLoop, unsigned Tail>
+void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                             const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned left, unsigned right, uint16_t limit)
+{
+	unsigned src_base = mod(filter_left[left], 8);
+
+	unsigned vec_begin = align(left, 8);
+	unsigned vec_end = mod(right, 8);
+
+	uint16_t * RESTRICT dst_p0 = dst_ptr[0];
+	uint16_t * RESTRICT dst_p1 = dst_ptr[1];
+	uint16_t * RESTRICT dst_p2 = dst_ptr[2];
+	uint16_t * RESTRICT dst_p3 = dst_ptr[3];
+	uint16_t * RESTRICT dst_p4 = dst_ptr[4];
+	uint16_t * RESTRICT dst_p5 = dst_ptr[5];
+	uint16_t * RESTRICT dst_p6 = dst_ptr[6];
+	uint16_t * RESTRICT dst_p7 = dst_ptr[7];
+
+#define XITER resize_line8_h_u16_sse2_xiter<DoLoop, Tail>
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
+	for (unsigned j = left; j < vec_begin; ++j) {
+		__m128i x = XITER(j, XARGS);
+		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+	}
+
+	for (unsigned j = vec_begin; j < vec_end; j += 8) {
+		__m128i x0, x1, x2, x3, x4, x5, x6, x7;
+
+		x0 = XITER(j + 0, XARGS);
+		x1 = XITER(j + 1, XARGS);
+		x2 = XITER(j + 2, XARGS);
+		x3 = XITER(j + 3, XARGS);
+		x4 = XITER(j + 4, XARGS);
+		x5 = XITER(j + 5, XARGS);
+		x6 = XITER(j + 6, XARGS);
+		x7 = XITER(j + 7, XARGS);
+
+		transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
+
+		_mm_store_si128((__m128i *)(dst_p0 + j), x0);
+		_mm_store_si128((__m128i *)(dst_p1 + j), x1);
+		_mm_store_si128((__m128i *)(dst_p2 + j), x2);
+		_mm_store_si128((__m128i *)(dst_p3 + j), x3);
+		_mm_store_si128((__m128i *)(dst_p4 + j), x4);
+		_mm_store_si128((__m128i *)(dst_p5 + j), x5);
+		_mm_store_si128((__m128i *)(dst_p6 + j), x6);
+		_mm_store_si128((__m128i *)(dst_p7 + j), x7);
+	}
+
+	for (unsigned j = vec_end; j < right; ++j) {
+		__m128i x = XITER(j, XARGS);
+		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+	}
+#undef XITER
+#undef XARGS
+}
+
+const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_small[] = {
+	resize_line8_h_u16_sse2<false, 2>,
+	resize_line8_h_u16_sse2<false, 2>,
+	resize_line8_h_u16_sse2<false, 4>,
+	resize_line8_h_u16_sse2<false, 4>,
+	resize_line8_h_u16_sse2<false, 6>,
+	resize_line8_h_u16_sse2<false, 6>,
+	resize_line8_h_u16_sse2<false, 8>,
+	resize_line8_h_u16_sse2<false, 8>
+};
+
+const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_large[] = {
+	resize_line8_h_u16_sse2<true, 0>,
+	resize_line8_h_u16_sse2<true, 2>,
+	resize_line8_h_u16_sse2<true, 2>,
+	resize_line8_h_u16_sse2<true, 4>,
+	resize_line8_h_u16_sse2<true, 4>,
+	resize_line8_h_u16_sse2<true, 6>,
+	resize_line8_h_u16_sse2<true, 6>,
+	resize_line8_h_u16_sse2<true, 8>,
+};
+
+
+template <unsigned N, bool ReadAccum, bool WriteToAccum>
+inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned accum_base,
+                                                         const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
+                                                         const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
+                                                         const uint32_t *accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
+{
+	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
+
+	__m128i accum_lo = _mm_setzero_si128();
+	__m128i accum_hi = _mm_setzero_si128();
+	__m128i x0, x1, xl, xh;
+
+	if (N >= 0) {
+		x0 = _mm_load_si128((const __m128i *)(src_p0 + j));
+		x1 = _mm_load_si128((const __m128i *)(src_p1 + j));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c01, xl);
+		xh = _mm_madd_epi16(c01, xh);
+
+		if (ReadAccum) {
+			accum_lo = _mm_add_epi32(_mm_load_si128((const __m128i *)(accum_p + j - accum_base + 0)), xl);
+			accum_hi = _mm_add_epi32(_mm_load_si128((const __m128i *)(accum_p + j - accum_base + 4)), xh);
 		} else {
-			for (unsigned k = 0; k < filter.filter_width; k += 2) {
-				ITER(k);
-			}
-		}
-#undef ITER
-
-		result = pack_i30_to_epi16(accum_lo, accum_hi);
-		result = _mm_sub_epi16(result, INT16_MIN_EPI16);
-
-		_mm_store_si128((__m128i *)&cache[(j % 8) * 8], result);
-
-		if (j % 8 == 7) {
-			unsigned dst_j = j - 7;
-			transpose_block_8x8_epi16(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j], &dst_ptr4[dst_j], &dst_ptr5[dst_j], &dst_ptr6[dst_j], &dst_ptr7[dst_j]);
+			accum_lo = xl;
+			accum_hi = xh;
 		}
 	}
-	for (unsigned j = mod(dst_width, 8); j < dst_width; ++j) {
-		const int16_t *filter_row = &filter_data[j * filter_stride];
-		unsigned left = filter_left[j];
-		__m128i accum_lo = _mm_setzero_si128();
-		__m128i accum_hi = _mm_setzero_si128();
-		__m128i result;
+	if (N >= 2) {
+		x0 = _mm_load_si128((const __m128i *)(src_p2 + j));
+		x1 = _mm_load_si128((const __m128i *)(src_p3 + j));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
 
-		for (unsigned k = 0; k < filter.filter_width; k += 2) {
-			__m128i x0, x1, lo, hi, c;
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c23, xl);
+		xh = _mm_madd_epi16(c23, xh);
 
-			x0 = _mm_load_si128((const __m128i *)&ttmp[(left + k + 0) * 8]);
-			x0 = _mm_add_epi16(x0, INT16_MIN_EPI16);
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+	if (N >= 4) {
+		x0 = _mm_load_si128((const __m128i *)(src_p4 + j));
+		x1 = _mm_load_si128((const __m128i *)(src_p5 + j));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
 
-			x1 = _mm_load_si128((const __m128i *)&ttmp[(left + k + 1) * 8]);
-			x1 = _mm_add_epi16(x1, INT16_MIN_EPI16);
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c45, xl);
+		xh = _mm_madd_epi16(c45, xh);
 
-			lo = _mm_unpacklo_epi16(x0, x1);
-			hi = _mm_unpackhi_epi16(x0, x1);
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
+	if (N >= 6) {
+		x0 = _mm_load_si128((const __m128i *)(src_p6 + j));
+		x1 = _mm_load_si128((const __m128i *)(src_p7 + j));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
 
-			c = _mm_loadu_si128((const __m128i *)&filter_row[k]);
-			c = _mm_shuffle_epi32(c, _MM_SHUFFLE(0, 0, 0, 0));
-			lo = _mm_madd_epi16(c, lo);
-			hi = _mm_madd_epi16(c, hi);
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c67, xl);
+		xh = _mm_madd_epi16(c67, xh);
 
-			accum_lo = _mm_add_epi32(accum_lo, lo);
-			accum_hi = _mm_add_epi32(accum_hi, hi);
-		}
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	}
 
-		result = pack_i30_to_epi16(accum_lo, accum_hi);
-		result = _mm_sub_epi16(result, INT16_MIN_EPI16);
-
-		scatter_epi16(result, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j], &dst_ptr4[j], &dst_ptr5[j], &dst_ptr6[j], &dst_ptr7[j]);
+	if (WriteToAccum) {
+		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 0), accum_lo);
+		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 4), accum_hi);
+		return _mm_setzero_si128();
+	} else {
+		return export_i30_u16(accum_lo, accum_hi, limit);
 	}
 }
 
-template <unsigned N>
-void filter_line_fp_h(const FilterContext &filter, const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp)
+template <unsigned N, bool ReadAccum, bool WriteToAccum>
+void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t *dst, uint32_t *accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const float *filter_data = filter.data.data();
-	const unsigned *filter_left = filter.left.data();
-	unsigned filter_stride = filter.stride;
+	const uint16_t * RESTRICT src_p0 = src_lines[0];
+	const uint16_t * RESTRICT src_p1 = src_lines[1];
+	const uint16_t * RESTRICT src_p2 = src_lines[2];
+	const uint16_t * RESTRICT src_p3 = src_lines[3];
+	const uint16_t * RESTRICT src_p4 = src_lines[4];
+	const uint16_t * RESTRICT src_p5 = src_lines[5];
+	const uint16_t * RESTRICT src_p6 = src_lines[6];
+	const uint16_t * RESTRICT src_p7 = src_lines[7];
+	uint16_t * RESTRICT dst_p = dst;
+	uint32_t * RESTRICT accum_p = accum;
 
-	unsigned src_width = src.width();
-	unsigned dst_width = dst.width();
+	unsigned vec_begin = align(left, 8);
+	unsigned vec_end = mod(right, 8);
+	unsigned accum_base = mod(left, 8);
 
-	float *dst_ptr0 = dst[n + 0];
-	float *dst_ptr1 = dst[n + 1];
-	float *dst_ptr2 = dst[n + 2];
-	float *dst_ptr3 = dst[n + 3];
+	const __m128i c01 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[0]), _mm_set1_epi16(filter_data[1]));
+	const __m128i c23 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[2]), _mm_set1_epi16(filter_data[3]));
+	const __m128i c45 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[4]), _mm_set1_epi16(filter_data[5]));
+	const __m128i c67 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[6]), _mm_set1_epi16(filter_data[7]));
 
-	float *ttmp = (float *)tmp;
-	ALIGNED(16) float cache[4 * 4];
+	__m128i out;
 
-	transpose_line_4x4_ps(src[n + 0], src[n + 1], src[n + 2], src[n + 3], ttmp, src_width);
+#define XITER resize_line_v_u16_sse2_xiter<N, ReadAccum, WriteToAccum>
+#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
+	if (left != vec_begin) {
+		out = XITER(vec_begin - 8, XARGS);
 
-	for (unsigned j = 0; j < mod(dst_width, 4); ++j) {
-		const float *filter_row = &filter_data[j * filter_stride];
-		unsigned left = filter_left[j];
-		__m128 accum0 = _mm_setzero_ps();
-		__m128 accum1 = _mm_setzero_ps();
-		__m128 x, c;
-
-#define ITER(xiter) \
-  do { \
-    x = _mm_load_ps(&ttmp[(left + (xiter)) * 4]); \
-    c = _mm_load_ps1(&filter_row[xiter]); \
-    x = _mm_mul_ps(c, x); \
-    if ((xiter) % 2) accum1 = _mm_add_ps(accum1, x); else accum0 = _mm_add_ps(accum0, x); \
-  } while (0);
-
-		if (N) {
-			switch (N) {
-			case 8: ITER(7);
-			case 7: ITER(6);
-			case 6: ITER(5);
-			case 5: ITER(4);
-			case 4: ITER(3);
-			case 3: ITER(2);
-			case 2: ITER(1);
-			case 1: ITER(0);
-			}
-		} else {
-			for (unsigned k = 0; k < filter.filter_width; k += 4) {
-				ITER(k + 3);
-				ITER(k + 2);
-				ITER(k + 1);
-				ITER(k + 0);
-			}
-		}
-#undef ITER
-
-		if (N != 1)
-			accum0 = _mm_add_ps(accum0, accum1);
-
-		_mm_store_ps(&cache[(j % 4) * 4], accum0);
-
-		if (j % 4 == 3) {
-			unsigned dst_j = j - 3;
-			transpose_block_4x4_ps(cache, &dst_ptr0[dst_j], &dst_ptr1[dst_j], &dst_ptr2[dst_j], &dst_ptr3[dst_j]);
-		}
+		if (!WriteToAccum)
+			mm_store_left_epi16(dst_p + vec_begin - 8, out, vec_begin - left);
 	}
-	for (unsigned j = mod(dst_width, 4); j < dst_width; ++j) {
-		const float *filter_row = &filter_data[j * filter_stride];
-		unsigned left = filter_left[j];
-		__m128 accum = _mm_setzero_ps();
 
-		for (unsigned k = 0; k < filter.filter_width; ++k) {
-			__m128 x = _mm_load_ps(&ttmp[(left + k) * 4]);
-			__m128 c = _mm_load_ps1(&filter_row[k]);
+	for (unsigned j = vec_begin; j < vec_end; j += 8) {
+		out = XITER(j, XARGS);
 
-			x = _mm_mul_ps(c, x);
-			accum = _mm_add_ps(accum, x);
-		}
-
-		scatter_ps(accum, &dst_ptr0[j], &dst_ptr1[j], &dst_ptr2[j], &dst_ptr3[j]);
+		if (!WriteToAccum)
+			_mm_store_si128((__m128i *)(dst_p + j), out);
 	}
+
+	if (right != vec_end) {
+		out = XITER(vec_end, XARGS);
+
+		if (!WriteToAccum)
+			mm_store_right_epi16(dst_p + vec_end, out, right - vec_end);
+	}
+#undef XITER
+#undef XARGS
 }
 
-void filter_line_u16_v(const FilterContext &filter, const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp)
-{
-	__m128i INT16_MIN_EPI16 = _mm_set1_epi16(INT16_MIN);
+const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_jt_a[] = {
+	resize_line_v_u16_sse2<0, false, false>,
+	resize_line_v_u16_sse2<0, false, false>,
+	resize_line_v_u16_sse2<2, false, false>,
+	resize_line_v_u16_sse2<2, false, false>,
+	resize_line_v_u16_sse2<4, false, false>,
+	resize_line_v_u16_sse2<4, false, false>,
+	resize_line_v_u16_sse2<6, false, false>,
+	resize_line_v_u16_sse2<6, false, false>,
+};
 
-	const int16_t *filter_data = filter.data_i16.data();
-	const unsigned *filter_left = filter.left.data();
-	unsigned filter_stride = filter.stride_i16;
+const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_jt_b[] = {
+	resize_line_v_u16_sse2<0, true, false>,
+	resize_line_v_u16_sse2<0, true, false>,
+	resize_line_v_u16_sse2<2, true, false>,
+	resize_line_v_u16_sse2<2, true, false>,
+	resize_line_v_u16_sse2<4, true, false>,
+	resize_line_v_u16_sse2<4, true, false>,
+	resize_line_v_u16_sse2<6, true, false>,
+	resize_line_v_u16_sse2<6, true, false>,
+};
 
-	unsigned width = dst.width();
 
-	const int16_t *filter_row = &filter_data[n * filter_stride];
-	unsigned top = filter_left[n];
-	uint16_t *dst_ptr = dst[n];
-	uint32_t *accum_tmp = (uint32_t *)tmp;
-
-	for (unsigned k = 0; k < mod(filter.filter_width, 4); k += 4) {
-		const uint16_t *src_ptr0 = src[top + k + 0];
-		const uint16_t *src_ptr1 = src[top + k + 1];
-		const uint16_t *src_ptr2 = src[top + k + 2];
-		const uint16_t *src_ptr3 = src[top + k + 3];
-
-		__m128i coeff0 = _mm_set1_epi16(filter_row[k + 0]);
-		__m128i coeff1 = _mm_set1_epi16(filter_row[k + 1]);
-		__m128i coeff2 = _mm_set1_epi16(filter_row[k + 2]);
-		__m128i coeff3 = _mm_set1_epi16(filter_row[k + 3]);
-
-		for (unsigned j = 0; j < mod(width, 8); j += 8) {
-			__m128i x0, x1, x2, x3;
-			__m128i packed;
-
-			__m128i accum0l = _mm_setzero_si128();
-			__m128i accum0h = _mm_setzero_si128();
-			__m128i accum1l = _mm_setzero_si128();
-			__m128i accum1h = _mm_setzero_si128();
-
-			x0 = _mm_load_si128((const __m128i *)&src_ptr0[j]);
-			x0 = _mm_add_epi16(x0, INT16_MIN_EPI16);
-			fmadd_epi16_epi32(coeff0, x0, accum0l, accum0h);
-
-			x1 = _mm_load_si128((const __m128i *)&src_ptr1[j]);
-			x1 = _mm_add_epi16(x1, INT16_MIN_EPI16);
-			fmadd_epi16_epi32(coeff1, x1, accum1l, accum1h);
-
-			x2 = _mm_load_si128((const __m128i *)&src_ptr2[j]);
-			x2 = _mm_add_epi16(x2, INT16_MIN_EPI16);
-			fmadd_epi16_epi32(coeff2, x2, accum0l, accum0h);
-
-			x3 = _mm_load_si128((const __m128i *)&src_ptr3[j]);
-			x3 = _mm_add_epi16(x3, INT16_MIN_EPI16);
-			fmadd_epi16_epi32(coeff3, x3, accum1l, accum1h);
-
-			accum0l = _mm_add_epi32(accum0l, accum1l);
-			accum0h = _mm_add_epi32(accum0h, accum1h);
-
-			if (k) {
-				accum0l = _mm_add_epi32(accum0l, _mm_load_si128((const __m128i *)&accum_tmp[j + 0]));
-				accum0h = _mm_add_epi32(accum0h, _mm_load_si128((const __m128i *)&accum_tmp[j + 4]));
-			}
-
-			if (k == filter.filter_width - 4) {
-				packed = pack_i30_to_epi16(accum0l, accum0h);
-				packed = _mm_sub_epi16(packed, INT16_MIN_EPI16);
-				_mm_store_si128((__m128i *)&dst_ptr[j], packed);
-			} else {
-				_mm_store_si128((__m128i *)&accum_tmp[j + 0], accum0l);
-				_mm_store_si128((__m128i *)&accum_tmp[j + 4], accum0h);
-			}
-		}
-	}
-	if (filter.filter_width % 4) {
-		unsigned m = filter.filter_width % 4;
-		unsigned k = filter.filter_width - m;
-
-		const uint16_t *src_ptr0 = src[top + k + 0];
-		const uint16_t *src_ptr1 = src[top + k + 1];
-		const uint16_t *src_ptr2 = src[top + k + 2];
-
-		__m128i coeff0 = _mm_set1_epi16(filter_row[k + 0]);
-		__m128i coeff1 = _mm_set1_epi16(filter_row[k + 1]);
-		__m128i coeff2 = _mm_set1_epi16(filter_row[k + 2]);
-
-		for (unsigned j = 0; j < mod(width, 8); j += 8) {
-			__m128i x0, x1, x2;
-			__m128i packed;
-
-			__m128i accum0l = _mm_setzero_si128();
-			__m128i accum0h = _mm_setzero_si128();
-			__m128i accum1l = _mm_setzero_si128();
-			__m128i accum1h = _mm_setzero_si128();
-
-			switch (m) {
-			case 3:
-				x2 = _mm_load_si128((const __m128i *)&src_ptr2[j]);
-				x2 = _mm_add_epi16(x2, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff2, x2, accum0l, accum0h);
-			case 2:
-				x1 = _mm_load_si128((const __m128i *)&src_ptr1[j]);
-				x1 = _mm_add_epi16(x1, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff1, x1, accum1l, accum1h);
-			case 1:
-				x0 = _mm_load_si128((const __m128i *)&src_ptr0[j]);
-				x0 = _mm_add_epi16(x0, INT16_MIN_EPI16);
-				fmadd_epi16_epi32(coeff0, x0, accum0l, accum0h);
-			}
-
-			accum0l = _mm_add_epi32(accum0l, accum1l);
-			accum0h = _mm_add_epi32(accum0h, accum1h);
-
-			if (k) {
-				accum0l = _mm_add_epi32(accum0l, _mm_load_si128((const __m128i *)&accum_tmp[j + 0]));
-				accum0h = _mm_add_epi32(accum0h, _mm_load_si128((const __m128i *)&accum_tmp[j + 4]));
-			}
-
-			packed = pack_i30_to_epi16(accum0l, accum0h);
-			packed = _mm_sub_epi16(packed, INT16_MIN_EPI16);
-
-			_mm_store_si128((__m128i *)&dst_ptr[j], packed);
-		}
-	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 8), width, ScalarPolicy_U16{});
-}
-
-void filter_line_fp_v(const FilterContext &filter, const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n)
-{
-	const float *filter_data = filter.data.data();
-	const unsigned *filter_left = filter.left.data();
-	unsigned filter_stride = filter.stride;
-
-	unsigned width = dst.width();
-
-	const float *filter_row = &filter_data[n * filter_stride];
-	unsigned top = filter_left[n];
-	float *dst_ptr = dst[n];
-
-	for (unsigned k = 0; k < mod(filter.filter_width, 4); k += 4) {
-		const float *src_ptr0 = src[top + k + 0];
-		const float *src_ptr1 = src[top + k + 1];
-		const float *src_ptr2 = src[top + k + 2];
-		const float *src_ptr3 = src[top + k + 3];
-
-		__m128 coeff0 = _mm_set_ps1(filter_row[k + 0]);
-		__m128 coeff1 = _mm_set_ps1(filter_row[k + 1]);
-		__m128 coeff2 = _mm_set_ps1(filter_row[k + 2]);
-		__m128 coeff3 = _mm_set_ps1(filter_row[k + 3]);
-
-		for (unsigned j = 0; j < mod(width, 4); j += 4) {
-			__m128 x0, x1, x2, x3;
-			__m128 accum0, accum1;
-
-			x0 = _mm_load_ps(src_ptr0 + j);
-			accum0 = _mm_mul_ps(coeff0, x0);
-
-			x1 = _mm_load_ps(src_ptr1 + j);
-			accum1 = _mm_mul_ps(coeff1, x1);
-
-			x2 = _mm_load_ps(src_ptr2 + j);
-			x2 = _mm_mul_ps(coeff2, x2);
-			accum0 = _mm_add_ps(accum0, x2);
-
-			x3 = _mm_load_ps(src_ptr3 + j);
-			x3 = _mm_mul_ps(coeff3, x3);
-			accum1 = _mm_add_ps(accum1, x3);
-
-			accum0 = _mm_add_ps(accum0, accum1);
-
-			if (k)
-				accum0 = _mm_add_ps(accum0, _mm_load_ps(&dst_ptr[j]));
-
-			_mm_store_ps(&dst_ptr[j], accum0);
-		}
-	}
-	if (filter.filter_width % 4) {
-		unsigned m = filter.filter_width % 4;
-		unsigned k = filter.filter_width - m;
-
-		const float *src_ptr0 = src[top + k + 0];
-		const float *src_ptr1 = src[top + k + 1];
-		const float *src_ptr2 = src[top + k + 2];
-
-		__m128 coeff0 = _mm_set_ps1(filter_row[k + 0]);
-		__m128 coeff1 = _mm_set_ps1(filter_row[k + 1]);
-		__m128 coeff2 = _mm_set_ps1(filter_row[k + 2]);
-
-		for (unsigned j = 0; j < mod(width, 4); j += 4) {
-			__m128 x0, x1, x2;
-
-			__m128 accum0 = _mm_setzero_ps();
-			__m128 accum1 = _mm_setzero_ps();
-
-			switch (m) {
-			case 3:
-				x2 = _mm_load_ps(&src_ptr2[j]);
-				accum0 = _mm_mul_ps(coeff2, x2);
-			case 2:
-				x1 = _mm_load_ps(&src_ptr1[j]);
-				accum1 = _mm_mul_ps(coeff1, x1);
-			case 1:
-				x0 = _mm_load_ps(&src_ptr0[j]);
-				x0 = _mm_mul_ps(coeff0, x0);
-				accum0 = _mm_add_ps(accum0, x0);
-			}
-
-			accum0 = _mm_add_ps(accum0, accum1);
-
-			if (k)
-				accum0 = _mm_add_ps(accum0, _mm_load_ps(&dst_ptr[j]));
-
-			_mm_store_ps(&dst_ptr[j], accum0);
-		}
-	}
-	filter_line_v_scalar(filter, src, dst, n, n + 1, mod(width, 4), width, ScalarPolicy_F32{});
-}
-
-class ResizeImplSSE2_H : public ResizeImpl {
+class ResizeImplH_U16_SSE2 final : public ResizeImplH {
+	decltype(&resize_line8_h_u16_sse2<false, 0>) m_func;
+	uint16_t m_pixel_max;
 public:
-	ResizeImplSSE2_H(const FilterContext &filter) : ResizeImpl(filter, true)
-	{}
-
-	size_t tmp_size(PixelType type, unsigned width) const override
+	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) :
+		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, zimg::PixelType::WORD }),
+		m_func{},
+		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
 	{
-		return output_buffering(type) * align((size_t)(m_filter.input_width + 16) * pixel_size(type), ALIGNMENT);
+		if (filter.filter_width > 8)
+			m_func = resize_line8_h_u16_sse2_jt_large[filter.filter_width % 8];
+		else
+			m_func = resize_line8_h_u16_sse2_jt_small[filter.filter_width - 1];
 	}
 
-	unsigned output_buffering(PixelType type) const override
+	unsigned get_simultaneous_lines() const override
 	{
-		return type == PixelType::FLOAT ? 4 : 8;
+		return 8;
 	}
 
-	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
+	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-#define CASE(x) case (x): filter_line_u16_h<x>(m_filter, src, dst, n, tmp); break;
-		switch (m_filter.filter_width) {
-			CASE(8) CASE(7) CASE(6) CASE(5) CASE(4) CASE(3) CASE(2) CASE(1)
-		default:
-			filter_line_u16_h<0>(m_filter, src, dst, n, tmp);
+		auto range = get_required_col_range(left, right);
+		return 8 * ((range.second - mod(range.first, 8) + 8) * sizeof(uint16_t));
+	}
+
+	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	{
+		LineBuffer<const uint16_t> src_buf{ src };
+		LineBuffer<uint16_t> dst_buf{ dst };
+		auto range = get_required_col_range(left, right);
+
+		const uint16_t *src_ptr[8] = { 0 };
+		uint16_t *dst_ptr[8] = { 0 };
+		uint16_t *transpose_buf = reinterpret_cast<uint16_t *>(tmp);
+		unsigned height = get_image_attributes().height;
+
+		for (unsigned n = 0; n < 8; ++n) {
+			src_ptr[n] = src_buf[std::min(i + n, height - 1)];
 		}
-#undef CASE
-	}
 
-	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
-	{
-		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
-	}
+		transpose_line_8x8_epi16(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], src_ptr[4], src_ptr[5], src_ptr[6], src_ptr[7],
+		                         mod(range.first, 8), align(range.second, 8));
 
-	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
-	{
-#define CASE(x) case (x): filter_line_fp_h<x>(m_filter, src, dst, n, tmp); break;
-		switch (m_filter.filter_width) {
-			CASE(8) CASE(7) CASE(6) CASE(5) CASE(4) CASE(3) CASE(2) CASE(1)
-		default:
-			filter_line_fp_h<0>(m_filter, src, dst, n, tmp);
+		for (unsigned n = 0; n < 8; ++n) {
+			dst_ptr[n] = dst_buf[std::min(i + n, height - 1)];
 		}
-#undef CASE
+
+		m_func(m_filter.left.data(), m_filter.data_i16.data(), m_filter.stride_i16, m_filter.filter_width,
+		       transpose_buf, dst_ptr, left, right, m_pixel_max);
 	}
 };
 
-class ResizeImplSSE2_V : public ResizeImpl {
+
+class ResizeImplV_U16_SSE2 final : public ResizeImplV {
+	uint16_t m_pixel_max;
 public:
-	ResizeImplSSE2_V(const FilterContext &filter) : ResizeImpl(filter, false)
-	{}
-
-	size_t tmp_size(PixelType type, unsigned width) const override
+	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) :
+		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, zimg::PixelType::WORD }),
+		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
 	{
-		return type == PixelType::WORD ? sizeof(uint32_t) * width : 0;
 	}
 
-	void process_u16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
+	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		filter_line_u16_v(m_filter, src, dst, n, tmp);
+		if (m_filter.filter_width > 4)
+			return (align(right, 8) - mod(left, 8)) * sizeof(uint32_t);
+		else
+			return 0;
 	}
 
-	void process_f16(const LineBuffer<uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned n, void *tmp) const override
+	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		throw ZimgUnsupportedError{ "f16 not supported in SSE2 impl" };
-	}
+		LineBuffer<const uint16_t> src_buf{ src };
+		LineBuffer<uint16_t> dst_buf{ dst };
 
-	void process_f32(const LineBuffer<float> &src, LineBuffer<float> &dst, unsigned n, void *tmp) const override
-	{
-		filter_line_fp_v(m_filter, src, dst, n);
+		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
+		unsigned filter_width = m_filter.filter_width;
+		unsigned src_height = m_filter.input_width;
+
+		const uint16_t *src_lines[8] = { 0 };
+		uint16_t *dst_line = dst_buf[i];
+		uint32_t *accum_buf = reinterpret_cast<uint32_t *>(tmp);
+
+		unsigned k_end = align(filter_width, 8) - 8;
+		unsigned top = m_filter.left[i];
+
+		for (unsigned k = 0; k < k_end; k += 8) {
+			for (unsigned n = 0; n < 8; ++n) {
+				src_lines[n] = src_buf[std::min(top + k + n, src_height - 1)];
+			}
+
+			if (k == 0)
+				resize_line_v_u16_sse2<6, false, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			else
+				resize_line_v_u16_sse2<6, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		}
+
+		for (unsigned n = 0; n < 8; ++n) {
+			src_lines[n] = src_buf[std::min(top + k_end + n, src_height - 1)];
+		}
+
+		if (k_end == 0)
+			resize_line_v_u16_sse2_jt_a[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		else
+			resize_line_v_u16_sse2_jt_b[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 	}
 };
 
 } // namespace
 
 
-ResizeImpl *create_resize_impl_sse2(const FilterContext &filter, bool horizontal)
+IZimgFilter *create_resize_impl2_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	if (horizontal)
-		return new ResizeImplSSE2_H{ filter };
-	else
-		return new ResizeImplSSE2_V{ filter };
+	IZimgFilter *ret = nullptr;
+
+	if (type == zimg::PixelType::WORD)
+		ret = new ResizeImplH_U16_SSE2{ context, height, depth };
+
+	return ret;
+}
+
+IZimgFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+{
+	IZimgFilter *ret = nullptr;
+
+	if (type == zimg::PixelType::WORD)
+		ret = new ResizeImplV_U16_SSE2{ context, width, depth };
+
+	return ret;
 }
 
 } // namespace resize
 } // namespace zimg
 
 #endif // ZIMG_X86
-#endif

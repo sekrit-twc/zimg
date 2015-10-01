@@ -1,4 +1,3 @@
-#if 0
 #ifdef ZIMG_X86
 
 #include "Common/cpuinfo.h"
@@ -7,24 +6,37 @@
 namespace zimg {;
 namespace resize {;
 
-ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal, CPUClass cpu)
+IZimgFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	ResizeImpl *ret;
+	IZimgFilter *ret = nullptr;
 
 	if (cpu == CPUClass::CPU_AUTO) {
-		if (caps.avx2)
-			ret = create_resize_impl_avx2(filter, horizontal);
-		else if (caps.sse2)
-			ret = create_resize_impl_sse2(filter, horizontal);
-		else
-			ret = nullptr;
-	} else if (cpu >= CPUClass::CPU_X86_AVX2) {
-		ret = create_resize_impl_avx2(filter, horizontal);
-	} else if (cpu >= CPUClass::CPU_X86_SSE2) {
-		ret = create_resize_impl_sse2(filter, horizontal);
+		if (!ret && caps.sse)
+			ret = create_resize_impl_h_sse(context, height, type, depth);
 	} else {
-		ret = nullptr;
+		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+			ret = create_resize_impl_h_sse(context, height, type, depth);
+	}
+
+	return ret;
+}
+
+IZimgFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
+{
+	X86Capabilities caps = query_x86_capabilities();
+	IZimgFilter *ret = nullptr;
+
+	if (cpu == CPUClass::CPU_AUTO) {
+		if (!ret && caps.sse2)
+			ret = create_resize_impl_v_sse2(context, width, type, depth);
+		if (!ret && caps.sse)
+			ret = create_resize_impl_v_sse(context, width, type, depth);
+	} else {
+		if (!ret && cpu >= CPUClass::CPU_X86_SSE2)
+			ret = create_resize_impl_v_sse2(context, width, type, depth);
+		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+			ret = create_resize_impl_v_sse(context, width, type, depth);
 	}
 
 	return ret;
@@ -34,4 +46,3 @@ ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal,
 } // namespace zimg
 
 #endif // ZIMG_X86
-#endif

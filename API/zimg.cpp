@@ -18,7 +18,7 @@
 #include "Colorspace/colorspace_param.h"
 #include "Depth/depth.h"
 #include "Resize/filter.h"
-#include "Resize/resize2.h"
+#include "Resize/resize.h"
 #include "zimg.h"
 
 #define API_VERSION_ASSERT(x) _zassert_d((x) >= 2 && (x) <= ZIMG_API_VERSION, "API version invalid")
@@ -613,8 +613,8 @@ private:
 
 		if (do_resize_luma) {
 			double shift_h = luma_shift_factor(m_state.parity, m_state.height, height);
-			auto filter_pair = zimg::resize::create_resize2(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
-			                                                0.0, shift_h, m_state.width, m_state.height, cpu);
+			auto filter_pair = zimg::resize::create_resize(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
+			                                               0.0, shift_h, m_state.width, m_state.height, cpu);
 			filter1.reset(filter_pair.first);
 			filter2.reset(filter_pair.second);
 
@@ -641,8 +641,8 @@ private:
 			unsigned chroma_width_out = width >> subsample_w;
 			unsigned chroma_height_out = height >> subsample_h;
 
-			auto filter_pair = zimg::resize::create_resize2(*resample_filter_uv, m_state.type, m_state.depth, chroma_width_in, chroma_height_in, chroma_width_out, chroma_height_out,
-			                                                shift_w, shift_h, chroma_width_in, chroma_height_in, cpu);
+			auto filter_pair = zimg::resize::create_resize(*resample_filter_uv, m_state.type, m_state.depth, chroma_width_in, chroma_height_in, chroma_width_out, chroma_height_out,
+			                                               shift_w, shift_h, chroma_width_in, chroma_height_in, cpu);
 			filter1_uv.reset(filter_pair.first);
 			filter2_uv.reset(filter_pair.second);
 		}

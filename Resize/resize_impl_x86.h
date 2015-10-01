@@ -1,35 +1,34 @@
-#if 0
 #pragma once
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
-#define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
+#ifndef ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
+#define ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
 
 namespace zimg {;
 
 enum class CPUClass;
+enum class PixelType;
+
+class IZimgFilter;
 
 namespace resize {;
 
 struct FilterContext;
-class ResizeImpl;
 
-ResizeImpl *create_resize_impl_sse2(const FilterContext &filter, bool horizontal);
+IZimgFilter *create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
 
-ResizeImpl *create_resize_impl_avx2(const FilterContext &filter, bool horizontal);
+IZimgFilter *create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
-/**
- * Create an appropriate x86 optimized ResizeImpl for the given CPU.
- *
- * @see create_resize_impl
- */
-ResizeImpl *create_resize_impl_x86(const FilterContext &filter, bool horizontal, CPUClass cpu);
+IZimgFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
+
+IZimgFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
+
+IZimgFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg
 
-#endif // ZIMG_RESIZE_RESIZE_IMPL_X86_H_
+#endif // ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
 
 #endif // ZIMG_X86
-#endif

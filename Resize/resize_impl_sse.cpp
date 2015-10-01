@@ -8,8 +8,8 @@
 #include "Common/linebuffer.h"
 #include "Common/zfilter.h"
 #include "filter.h"
-#include "resize_impl2.h"
-#include "resize_impl2_x86.h"
+#include "resize_impl.h"
+#include "resize_impl_x86.h"
 
 namespace zimg {;
 namespace resize {;
@@ -396,7 +396,7 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize_impl2_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+IZimgFilter *create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	IZimgFilter *ret = nullptr;
 
@@ -406,7 +406,7 @@ IZimgFilter *create_resize_impl2_h_sse(const FilterContext &context, unsigned he
 	return ret;
 }
 
-IZimgFilter *create_resize_impl2_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+IZimgFilter *create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	IZimgFilter *ret = nullptr;
 

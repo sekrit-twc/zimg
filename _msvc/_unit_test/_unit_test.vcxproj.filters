@@ -99,15 +99,6 @@
     <ClCompile Include="..\..\UnitTest\Extra\musl-libm\fpu_wrapper.c">
       <Filter>Source Files\Extra\musl-libm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_test.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_sse_test.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\UnitTest\Resize\resize_impl2_sse2_test.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\UnitTest\Colorspace\colorspace_test.cpp">
       <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
@@ -119,6 +110,15 @@
     </ClCompile>
     <ClCompile Include="..\..\UnitTest\Depth\dither_test.cpp">
       <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Resize\resize_impl_sse2_test.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Resize\resize_impl_test.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTest\Resize\resize_impl_sse_test.cpp">
+      <Filter>Source Files\Resize</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

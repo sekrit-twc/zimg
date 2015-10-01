@@ -173,10 +173,7 @@
     <ClInclude Include="..\..\Depth\quantize.h" />
     <ClInclude Include="..\..\Resize\filter.h" />
     <ClInclude Include="..\..\Resize\resize.h" />
-    <ClInclude Include="..\..\Resize\resize2.h" />
     <ClInclude Include="..\..\Resize\resize_impl.h" />
-    <ClInclude Include="..\..\Resize\resize_impl2.h" />
-    <ClInclude Include="..\..\Resize\resize_impl2_x86.h" />
     <ClInclude Include="..\..\Resize\resize_impl_x86.h" />
     <ClInclude Include="..\..\Unresize\bilinear.h" />
     <ClInclude Include="..\..\Unresize\unresize.h" />
@@ -205,20 +202,15 @@
     <ClCompile Include="..\..\Depth\dither_x86.cpp" />
     <ClCompile Include="..\..\Resize\filter.cpp" />
     <ClCompile Include="..\..\Resize\resize.cpp" />
-    <ClCompile Include="..\..\Resize\resize2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl2.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl2_sse.cpp">
+    <ClCompile Include="..\..\Resize\resize_impl_sse.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2_sse2.cpp">
+    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp" />
-    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp" />
     <ClCompile Include="..\..\Resize\resize_impl_x86.cpp" />
     <ClCompile Include="..\..\Unresize\bilinear.cpp" />
     <ClCompile Include="..\..\Unresize\unresize.cpp" />

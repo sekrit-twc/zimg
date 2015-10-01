@@ -58,12 +58,8 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Resize/filter.h \
 					 Resize/resize.cpp \
 					 Resize/resize.h \
-					 Resize/resize2.cpp \
-					 Resize/resize2.h \
 					 Resize/resize_impl.cpp \
 					 Resize/resize_impl.h \
-					 Resize/resize_impl2.cpp \
-					 Resize/resize_impl2.h \
 					 Unresize/bilinear.cpp \
 					 Unresize/bilinear.h \
 					 Unresize/plane.h \
@@ -101,27 +97,23 @@ libzimg_la_SOURCES += Depth/depth_convert_x86.cpp \
 					  Depth/dither_x86.h \
 					  Resize/resize_impl_x86.cpp \
 					  Resize/resize_impl_x86.h \
-					  Resize/resize_impl2_x86.cpp \
-					  Resize/resize_impl2_x86.h \
 					  Unresize/unresize_impl_x86.cpp \
 					  Unresize/unresize_impl_x86.h
 
 
-libsse_la_SOURCES = Resize/resize_impl2_sse.cpp
+libsse_la_SOURCES = Resize/resize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 
 
 libsse2_la_SOURCES = Depth/dither_sse2.cpp \
 					 Resize/resize_impl_sse2.cpp \
-					 Resize/resize_impl2_sse2.cpp \
 					 Unresize/unresize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 
 
-libavx2_la_SOURCES = Resize/resize_impl_avx2.cpp \
-					 Unresize/unresize_impl_avx2.cpp
+libavx2_la_SOURCES = Unresize/unresize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
 
@@ -227,13 +219,13 @@ UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
 								UnitTest/Extra/sha1/config.h \
 								UnitTest/Extra/sha1/sha1.c \
 								UnitTest/Extra/sha1/sha1.h \
-								UnitTest/Resize/resize_impl2_test.cpp
+								UnitTest/Resize/resize_impl_test.cpp
 
 if X86SIMD
 
 UnitTest_unit_test_SOURCES += UnitTest/Depth/dither_sse2_test.cpp \
-								UnitTest/Resize/resize_impl2_sse_test.cpp \
-								UnitTest/Resize/resize_impl2_sse2_test.cpp
+								UnitTest/Resize/resize_impl_sse_test.cpp \
+								UnitTest/Resize/resize_impl_sse2_test.cpp
 
 endif #X86SIMD
 

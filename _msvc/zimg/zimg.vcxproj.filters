@@ -114,21 +114,6 @@
     <ClInclude Include="..\..\Resize\filter.h">
       <Filter>Header Files\Resize</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Resize\resize.h">
-      <Filter>Header Files\Resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Resize\resize_impl.h">
-      <Filter>Header Files\Resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Resize\resize_impl_x86.h">
-      <Filter>Header Files\Resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Resize\resize_impl2.h">
-      <Filter>Header Files\Resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Resize\resize2.h">
-      <Filter>Header Files\Resize</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Unresize\bilinear.h">
       <Filter>Header Files\Unresize</Filter>
     </ClInclude>
@@ -146,9 +131,6 @@
     </ClInclude>
     <ClInclude Include="..\..\Common\libm_wrapper.h">
       <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Resize\resize_impl2_x86.h">
-      <Filter>Header Files\Resize</Filter>
     </ClInclude>
     <ClInclude Include="..\..\API\zimg.h">
       <Filter>Header Files\API</Filter>
@@ -173,6 +155,15 @@
     </ClInclude>
     <ClInclude Include="..\..\Depth\dither_x86.h">
       <Filter>Header Files\Depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize_impl_x86.h">
+      <Filter>Header Files\Resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Resize\resize.h">
+      <Filter>Header Files\Resize</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -200,27 +191,6 @@
     <ClCompile Include="..\..\Resize\filter.cpp">
       <Filter>Source Files\Resize</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Resize\resize.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl_avx2.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize2.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Unresize\bilinear.cpp">
       <Filter>Source Files\Unresize</Filter>
     </ClCompile>
@@ -241,15 +211,6 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\libm_wrapper.cpp">
       <Filter>Source Files\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2_x86.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2_sse.cpp">
-      <Filter>Source Files\Resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Resize\resize_impl2_sse2.cpp">
-      <Filter>Source Files\Resize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\API\zimg.cpp">
       <Filter>Source Files\API</Filter>
@@ -274,6 +235,21 @@
     </ClCompile>
     <ClCompile Include="..\..\Depth\dither_x86.cpp">
       <Filter>Source Files\Depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_sse.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_sse2.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize_impl_x86.cpp">
+      <Filter>Source Files\Resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Resize\resize.cpp">
+      <Filter>Source Files\Resize</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

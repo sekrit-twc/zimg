@@ -6,7 +6,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Resize/filter.h"
-#include "Resize/resize_impl2.h"
+#include "Resize/resize_impl.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"
@@ -25,10 +25,10 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
 
 	std::unique_ptr<zimg::IZimgFilter> filter_c{
-		zimg::resize::create_resize_impl2(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_NONE)
+		zimg::resize::create_resize_impl(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_NONE)
 	};
 	std::unique_ptr<zimg::IZimgFilter> filter_sse{
-		zimg::resize::create_resize_impl2(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE)
+		zimg::resize::create_resize_impl(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE)
 	};
 
 	ASSERT_NE(typeid(*filter_c), typeid(*filter_sse)) << typeid(*filter_c).name() << " " << typeid(*filter_sse).name();

@@ -3,7 +3,7 @@
 #include <memory>
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
-#include "Resize/resize_impl2.h"
+#include "Resize/resize_impl.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"
@@ -22,11 +22,11 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
 
 	std::unique_ptr<zimg::IZimgFilter> filter_c{
-		zimg::resize::create_resize_impl2(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
+		zimg::resize::create_resize_impl(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
 	                                      0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_NONE)
 	};
 	std::unique_ptr<zimg::IZimgFilter> filter_sse2{
-		zimg::resize::create_resize_impl2(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
+		zimg::resize::create_resize_impl(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
 		                                  0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE2)
 	};
 

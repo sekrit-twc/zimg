@@ -7,7 +7,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Resize/filter.h"
-#include "Resize/resize2.h"
+#include "Resize/resize.h"
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
@@ -192,9 +192,9 @@ int resize_main(int argc, char **argv)
 
 	ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 
-	auto filter_pair = zimg::resize::create_resize2(*args.filter, src_frame.pixel_type(), args.working_format.depth,
-	                                                src_frame.width(), src_frame.height(), dst_frame.width(), dst_frame.height(),
-	                                                args.shift_w, args.shift_h, args.subwidth, args.subheight, args.cpu);
+	auto filter_pair = zimg::resize::create_resize(*args.filter, src_frame.pixel_type(), args.working_format.depth,
+	                                               src_frame.width(), src_frame.height(), dst_frame.width(), dst_frame.height(),
+	                                               args.shift_w, args.shift_h, args.subwidth, args.subheight, args.cpu);
 
 	std::unique_ptr<zimg::IZimgFilter> filter_a{ filter_pair.first };
 	std::unique_ptr<zimg::IZimgFilter> filter_b{ filter_pair.second };
