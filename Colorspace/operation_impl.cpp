@@ -31,36 +31,36 @@ public:
 	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m)
 	{}
 
-	void process(float * const *ptr, int width) const override
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
-		for (int i = 0; i < width; ++i) {
+		for (unsigned i = left; i < right; ++i) {
 			float a, b, c;
 			float x, y, z;
 
-			a = ptr[0][i];
-			b = ptr[1][i];
-			c = ptr[2][i];
+			a = src[0][i];
+			b = src[1][i];
+			c = src[2][i];
 
 			x = m_matrix[0][0] * a + m_matrix[0][1] * b + m_matrix[0][2] * c;
 			y = m_matrix[1][0] * a + m_matrix[1][1] * b + m_matrix[1][2] * c;
 			z = m_matrix[2][0] * a + m_matrix[2][1] * b + m_matrix[2][2] * c;
 
-			ptr[0][i] = x;
-			ptr[1][i] = y;
-			ptr[2][i] = z;
+			dst[0][i] = x;
+			dst[1][i] = y;
+			dst[2][i] = z;
 		}
 	}
 };
 
 class Rec709GammaOperationC : public Operation {
 public:
-	void process(float * const *ptr, int width) const override
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
-		for (int p = 0; p < 3; ++p) {
-			for (int i = 0; i < width; ++i) {
-				float x = ptr[p][i];
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
 
-				ptr[p][i] = rec_709_gamma(x);
+				dst[p][i] = rec_709_gamma(x);
 			}
 		}
 	}
@@ -68,13 +68,13 @@ public:
 
 class Rec709InverseGammaOperationC : public Operation {
 public:
-	void process(float * const *ptr, int width) const override
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
-		for (int p = 0; p < 3; ++p) {
-			for (int i = 0; i < width; ++i) {
-				float x = ptr[p][i];
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
 
-				ptr[p][i] = rec_709_inverse_gamma(x);
+				dst[p][i] = rec_709_inverse_gamma(x);
 			}
 		}
 	}
@@ -82,7 +82,7 @@ public:
 
 class Rec2020CLToRGBOperationC : public Operation {
 public:
-	void process(float * const *ptr, int width) const override
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
 		float kr = (float)REC_2020_KR;
 		float kb = (float)REC_2020_KB;
@@ -93,10 +93,10 @@ public:
 		float pr = 0.4969147f;
 		float nr = -0.8591209f;
 
-		for (int i = 0; i < width; ++i) {
-			float y = ptr[0][i];
-			float u = ptr[1][i];
-			float v = ptr[2][i];
+		for (unsigned i = left; i < right; ++i) {
+			float y = src[0][i];
+			float u = src[1][i];
+			float v = src[2][i];
 
 			float r, g, b;
 			float b_minus_y, r_minus_y;
@@ -117,16 +117,16 @@ public:
 			y = rec_709_inverse_gamma(y);
 			g = (y - kr * r - kb * b) / kg;
 
-			ptr[0][i] = r;
-			ptr[1][i] = g;
-			ptr[2][i] = b;
+			dst[0][i] = r;
+			dst[1][i] = g;
+			dst[2][i] = b;
 		}
 	}
 };
 
 class Rec2020CLToYUVOperationC : public Operation {
 public:
-	void process(float * const *ptr, int width) const override
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
 		float kr = (float)REC_2020_KR;
 		float kb = (float)REC_2020_KB;
@@ -137,10 +137,10 @@ public:
 		float pr = 0.4969147f;
 		float nr = -0.8591209f;
 
-		for (int i = 0; i < width; ++i) {
-			float r = ptr[0][i];
-			float g = ptr[1][i];
-			float b = ptr[2][i];
+		for (unsigned i = left; i < right; ++i) {
+			float r = src[0][i];
+			float g = src[1][i];
+			float b = src[2][i];
 
 			float y = rec_709_gamma(kr * r + kg * g + kb * b);
 			float u, v;
@@ -158,9 +158,9 @@ public:
 			else
 				v = (r - y) / (2.0f * pr);
 
-			ptr[0][i] = y;
-			ptr[1][i] = u;
-			ptr[2][i] = v;
+			dst[0][i] = y;
+			dst[1][i] = u;
+			dst[2][i] = v;
 		}
 	}
 };

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Common/except.h"
 #include "Common/linebuffer.h"
 #include "Common/pixel.h"
@@ -39,24 +40,24 @@ IZimgFilter::image_attributes ColorspaceConversion2::get_image_attributes() cons
 
 void ColorspaceConversion2::process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
 {
-	float *buf[3];
-	unsigned count = right - left;
+	const float *src_ptr[3];
+	float *dst_ptr[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		LineBuffer<const float> src_buf{ src, p };
-		LineBuffer<float> dst_buf{ dst, p };
-
-		const float *src_p = src_buf[i] + left;
-		float *dst_p = dst_buf[i] + left;
-
-		if (src_p != dst_p)
-			std::copy_n(src_p, count, dst_p);
-
-		buf[p] = dst_p;
+		src_ptr[p] = LineBuffer<const float>{ src, p }[i];
+		dst_ptr[p] = LineBuffer<float>{ dst, p }[i];
 	}
 
-	for (auto &o : m_operations) {
-		o->process(buf, count);
+	if (m_operations.empty()) {
+		for (unsigned p = 0; p < 3; ++p) {
+			std::copy(src_ptr[p] + left, src_ptr[p] + right, dst_ptr[p] + left);
+		}
+	} else {
+		m_operations[0]->process(src_ptr, dst_ptr, left, right);
+
+		for (size_t i = 1; i < m_operations.size(); ++i) {
+			m_operations[i]->process(dst_ptr, dst_ptr, left, right);
+		}
 	}
 }
 

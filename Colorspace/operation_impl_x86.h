@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifdef ZIMG_X86
@@ -60,3 +61,4 @@ Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu);
 #endif // ZIMG_COLORSPACE_OPERATION_IMPL_X86_H_
 
 #endif // ZIMG_X86
+#endif

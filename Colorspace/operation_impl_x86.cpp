@@ -1,3 +1,4 @@
+#if 0
 #ifdef ZIMG_X86
 
 #include "Common/cpuinfo.h"
@@ -90,3 +91,4 @@ Operation *create_rec709_inverse_gamma_operation_x86(CPUClass cpu)
 } // namespace zimg
 
 #endif // ZIMG_X86
+#endif

@@ -53,12 +53,14 @@ public:
 	virtual ~Operation() = 0;
 
 	/**
-	 * Apply operation to pixels in-place, overwriting the input.
+	 * Apply operation to pixels.
 	 *
-	 * @param ptr pointer to three image scanline pointers
-	 * @param width number of samples
+	 * @param src pointer to pointer to input channels
+	 * @param dst pointer to pointer to output channels
+	 * @param left left column index
+	 * @param right right column index
 	 */
-	virtual void process(float * const *ptr, int width) const = 0;
+	virtual void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const = 0;
 };
 #if 0
 /**
