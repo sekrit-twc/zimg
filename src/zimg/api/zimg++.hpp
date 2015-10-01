@@ -1,5 +1,5 @@
-#ifndef ZIMG3PLUSPLUS_HPP_
-#define ZIMG3PLUSPLUS_HPP_
+#ifndef ZIMGPLUSPLUS_HPP_
+#define ZIMGPLUSPLUS_HPP_
 
 #include "zimg.h"
 
@@ -114,4 +114,4 @@ public:
 
 } // namespace zimgxx
 
-#endif // ZIMG3PLUSPLUS_HPP_
+#endif // ZIMGPLUSPLUS_HPP_

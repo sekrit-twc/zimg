@@ -1,5 +1,5 @@
-#ifndef ZIMG3_H_
-#define ZIMG3_H_
+#ifndef ZIMG_H_
+#define ZIMG_H_
 
 #include <limits.h>
 #include <stddef.h>

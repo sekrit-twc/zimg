@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_DEPTH_DEPTH_CONVERT2_H_
-#define ZIMG_DEPTH_DEPTH_CONVERT2_H_
+#ifndef ZIMG_DEPTH_DEPTH_CONVERT_H_
+#define ZIMG_DEPTH_DEPTH_CONVERT_H_
 
 #include "common/zfilter.h"
 
@@ -25,4 +25,4 @@ IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const Pixe
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DEPTH_CONVERT2_H_
+#endif // ZIMG_DEPTH_DEPTH_CONVERT_H_

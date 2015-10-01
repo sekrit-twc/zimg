@@ -35,6 +35,6 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu);
 } // depth
 } // zimg
 
-#endif // ZIMG_DEPTH_DITHER2_X86_H_
+#endif // ZIMG_DEPTH_DITHER_X86_H_
 
 #endif // ZIMG_X86

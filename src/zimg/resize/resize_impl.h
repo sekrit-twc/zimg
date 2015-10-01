@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_RESIZE_RESIZE_IMPL2_H_
-#define ZIMG_RESIZE_RESIZE_IMPL2_H_
+#ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
+#define ZIMG_RESIZE_RESIZE_IMPL_H_
 
 #include "common/zfilter.h"
 #include "filter.h"
@@ -55,4 +55,4 @@ IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal
 } // namespace resize
 } // namespace zimg
 
-#endif // ZIMG_RESIZE_RESIZE_IMPL2_H_
+#endif // ZIMG_RESIZE_RESIZE_IMPL_H_

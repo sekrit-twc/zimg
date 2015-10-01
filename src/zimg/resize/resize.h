@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_RESIZE_RESIZE2_H_
-#define ZIMG_RESIZE_RESIZE2_H_
+#ifndef ZIMG_RESIZE_RESIZE_H_
+#define ZIMG_RESIZE_RESIZE_H_
 
 #include <utility>
 #include "common/zfilter.h"
@@ -24,4 +24,4 @@ std::pair<IZimgFilter *, IZimgFilter *> create_resize(
 } // namespace resize
 } // namespace zimg
 
-#endif // ZIMG_RESIZE_RESIZE2_H_
+#endif // ZIMG_RESIZE_RESIZE_H_

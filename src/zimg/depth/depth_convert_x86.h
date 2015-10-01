@@ -19,6 +19,6 @@ depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu);
 } // depth
 } // zimg
 
-#endif // ZIMG_DEPTH_DEPTH_CONVERT2_X86_H_
+#endif // ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
 
 #endif // ZIMG_X86

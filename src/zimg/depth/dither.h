@@ -26,4 +26,4 @@ IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, con
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DITHER2_H_
+#endif // ZIMG_DEPTH_DITHER_H_

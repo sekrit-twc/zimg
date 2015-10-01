@@ -2,8 +2,8 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
-#define ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
+#ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
+#define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
 namespace zimg {;
 
@@ -29,6 +29,6 @@ IZimgFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned wid
 } // namespace resize
 } // namespace zimg
 
-#endif // ZIMG_RESIZE_RESIZE_IMPL2_X86_H_
+#endif // ZIMG_RESIZE_RESIZE_IMPL_X86_H_
 
 #endif // ZIMG_X86
