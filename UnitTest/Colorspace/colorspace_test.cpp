@@ -1,7 +1,7 @@
 #include "Common/cpuinfo.h"
 #include "Common/pixel.h"
 #include "Colorspace/colorspace_param.h"
-#include "Colorspace/colorspace2.h"
+#include "Colorspace/colorspace.h"
 
 #include "gtest/gtest.h"
 #include "Common/filter_validator.h"
@@ -14,7 +14,7 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned h = 480;
 
 	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
-	zimg::colorspace::ColorspaceConversion2 convert{ w, h, csp_in, csp_out, zimg::CPUClass::CPU_NONE };
+	zimg::colorspace::ColorspaceConversion convert{ w, h, csp_in, csp_out, zimg::CPUClass::CPU_NONE };
 	validate_filter(&convert, w, h, format, expected_sha1);
 }
 

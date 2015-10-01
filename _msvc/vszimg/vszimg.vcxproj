@@ -24,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\vszimg\vszimg.c" />
-    <ClCompile Include="..\..\vszimg\vszimg2.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DB71496E-6A65-49EA-AC40-F3F47C77161F}</ProjectGuid>

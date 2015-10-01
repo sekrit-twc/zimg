@@ -8,7 +8,7 @@
 #include "Common/static_map.h"
 #include "Common/zfilter.h"
 #include "Colorspace/colorspace_param.h"
-#include "Colorspace/colorspace2.h"
+#include "Colorspace/colorspace.h"
 
 #include "apps.h"
 #include "argparse.h"
@@ -179,7 +179,7 @@ int colorspace_main(int argc, char **argv)
 		std::cerr << "warning: input file is of different color family than declared format\n";
 
 	std::unique_ptr<zimg::IZimgFilter> convert{
-		new zimg::colorspace::ColorspaceConversion2{ src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu }
+		new zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu }
 	};
 	execute(convert.get(), &src_frame, &dst_frame, args.times);
 

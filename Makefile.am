@@ -24,8 +24,6 @@ libzimg_la_SOURCES = API/zimg.cpp \
 					 Colorspace/colorspace.h \
 					 Colorspace/colorspace_param.cpp \
 					 Colorspace/colorspace_param.h \
-					 Colorspace/colorspace2.cpp \
-					 Colorspace/colorspace2.h \
 					 Colorspace/graph.cpp \
 					 Colorspace/graph.h \
 					 Colorspace/matrix3.cpp \
@@ -107,9 +105,7 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la libavx2.la
 
-libzimg_la_SOURCES += Colorspace/operation_impl_x86.cpp \
-					  Colorspace/operation_impl_x86.h \
-					  Depth/depth_convert_x86.cpp \
+libzimg_la_SOURCES += Depth/depth_convert_x86.cpp \
 					  Depth/depth_convert_x86.h \
 					  Depth/depth_convert2_x86.cpp \
 					  Depth/depth_convert2_x86.h \
@@ -130,8 +126,7 @@ libsse_la_SOURCES = Resize/resize_impl2_sse.cpp
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 
 
-libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
-					 Depth/depth_convert_sse2.cpp \
+libsse2_la_SOURCES = Depth/depth_convert_sse2.cpp \
 					 Depth/dither_impl_sse2.cpp \
 					 Depth/dither2_sse2.cpp \
 					 Depth/quantize_sse2.h \
@@ -142,8 +137,7 @@ libsse2_la_SOURCES = Colorspace/operation_impl_sse2.cpp \
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 
 
-libavx2_la_SOURCES = Colorspace/operation_impl_avx2.cpp \
-					 Depth/depth_convert_avx2.cpp \
+libavx2_la_SOURCES = Depth/depth_convert_avx2.cpp \
 					 Depth/dither_impl_avx2.cpp \
 					 Depth/quantize_avx2.h \
 					 Resize/resize_impl_avx2.cpp \
@@ -238,7 +232,7 @@ UnitTest_unit_test_CPPFLAGS = -I$(srcdir)/UnitTest \
 								-I$(srcdir)/UnitTest/Extra/googletest/googletest/include
 
 UnitTest_unit_test_SOURCES = UnitTest/main.cpp \
-								UnitTest/Colorspace/colorspace2_test.cpp \
+								UnitTest/Colorspace/colorspace_test.cpp \
 								UnitTest/Common/audit_buffer.cpp \
 								UnitTest/Common/audit_buffer.h \
 								UnitTest/Common/copy_filter_test.cpp \

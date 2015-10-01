@@ -14,7 +14,7 @@
 #include "Common/static_map.h"
 #include "Common/zassert.h"
 #include "Common/zfilter.h"
-#include "Colorspace/colorspace2.h"
+#include "Colorspace/colorspace.h"
 #include "Colorspace/colorspace_param.h"
 #include "Depth/depth2.h"
 #include "Resize/filter.h"
@@ -522,7 +522,7 @@ private:
 		if (m_state.colorspace == colorspace)
 			return;
 
-		filter.reset(new zimg::colorspace::ColorspaceConversion2{ m_state.width, m_state.height, m_state.colorspace, colorspace, cpu });
+		filter.reset(new zimg::colorspace::ColorspaceConversion{ m_state.width, m_state.height, m_state.colorspace, colorspace, cpu });
 		attach_filter(std::move(filter));
 
 		m_state.color = colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB ? ColorFamily::COLOR_RGB : ColorFamily::COLOR_YUV;

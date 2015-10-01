@@ -93,13 +93,7 @@
     <ClInclude Include="..\..\Common\ztypes.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Colorspace\colorspace.h">
-      <Filter>Header Files\Colorspace</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Colorspace\colorspace_param.h">
-      <Filter>Header Files\Colorspace</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Colorspace\colorspace2.h">
       <Filter>Header Files\Colorspace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Colorspace\graph.h">
@@ -112,9 +106,6 @@
       <Filter>Header Files\Colorspace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Colorspace\operation_impl.h">
-      <Filter>Header Files\Colorspace</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Colorspace\operation_impl_x86.h">
       <Filter>Header Files\Colorspace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Depth\depth.h">
@@ -207,6 +198,9 @@
     <ClInclude Include="..\..\API\zimg++.hpp">
       <Filter>Header Files\API</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Colorspace\colorspace.h">
+      <Filter>Header Files\Colorspace</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\filtergraph.cpp">
@@ -215,13 +209,7 @@
     <ClCompile Include="..\..\Common\mux_filter.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Colorspace\colorspace.cpp">
-      <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Colorspace\colorspace_param.cpp">
-      <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Colorspace\colorspace2.cpp">
       <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Colorspace\graph.cpp">
@@ -234,15 +222,6 @@
       <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Colorspace\operation_impl.cpp">
-      <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Colorspace\operation_impl_avx2.cpp">
-      <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp">
-      <Filter>Source Files\Colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp">
       <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Depth\depth.cpp">
@@ -352,6 +331,9 @@
     </ClCompile>
     <ClCompile Include="..\..\API\zimg.cpp">
       <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Colorspace\colorspace.cpp">
+      <Filter>Source Files\Colorspace</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

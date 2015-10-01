@@ -144,13 +144,11 @@
     <ClInclude Include="..\..\API\zimg++.hpp" />
     <ClInclude Include="..\..\API\zimg.h" />
     <ClInclude Include="..\..\Colorspace\colorspace.h" />
-    <ClInclude Include="..\..\Colorspace\colorspace2.h" />
     <ClInclude Include="..\..\Colorspace\colorspace_param.h" />
     <ClInclude Include="..\..\Colorspace\graph.h" />
     <ClInclude Include="..\..\Colorspace\matrix3.h" />
     <ClInclude Include="..\..\Colorspace\operation.h" />
     <ClInclude Include="..\..\Colorspace\operation_impl.h" />
-    <ClInclude Include="..\..\Colorspace\operation_impl_x86.h" />
     <ClInclude Include="..\..\Common\align.h" />
     <ClInclude Include="..\..\Common\alloc.h" />
     <ClInclude Include="..\..\Common\copy_filter.h" />
@@ -197,15 +195,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\API\zimg.cpp" />
     <ClCompile Include="..\..\Colorspace\colorspace.cpp" />
-    <ClCompile Include="..\..\Colorspace\colorspace2.cpp" />
     <ClCompile Include="..\..\Colorspace\colorspace_param.cpp" />
     <ClCompile Include="..\..\Colorspace\graph.cpp" />
     <ClCompile Include="..\..\Colorspace\matrix3.cpp" />
     <ClCompile Include="..\..\Colorspace\operation.cpp" />
     <ClCompile Include="..\..\Colorspace\operation_impl.cpp" />
-    <ClCompile Include="..\..\Colorspace\operation_impl_avx2.cpp" />
-    <ClCompile Include="..\..\Colorspace\operation_impl_sse2.cpp" />
-    <ClCompile Include="..\..\Colorspace\operation_impl_x86.cpp" />
     <ClCompile Include="..\..\Common\filtergraph.cpp" />
     <ClCompile Include="..\..\Common\libm_wrapper.cpp" />
     <ClCompile Include="..\..\Common\mux_filter.cpp" />

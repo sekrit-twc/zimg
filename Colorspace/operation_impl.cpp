@@ -6,26 +6,12 @@
 #include "matrix3.h"
 #include "operation.h"
 #include "operation_impl.h"
-#include "operation_impl_x86.h"
 
 namespace zimg {;
 namespace colorspace {;
 
 namespace {;
-#if 0
-class PixelAdapterC : public PixelAdapter {
-public:
-	void f16_to_f32(const uint16_t *src, float *dst, int width) const override
-	{
-		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
-	}
 
-	void f16_from_f32(const float *src, uint16_t *dst, int width) const override
-	{
-		throw ZimgUnsupportedError{ "f16 not supported in C impl" };
-	}
-};
-#endif
 class MatrixOperationC : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m)
@@ -176,53 +162,21 @@ MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 		}
 	}
 }
-#if 0
-PixelAdapter *create_pixel_adapter(CPUClass cpu)
-{
-	PixelAdapter *ret = nullptr;
-#ifdef ZIMG_X86
-//	ret = create_pixel_adapter_x86(cpu);
-#endif
-	if (!ret)
-		ret = new PixelAdapterC{};
 
-	return ret;
-}
-#endif
+
 Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
-	Operation *ret = nullptr;
-#ifdef ZIMG_X86
-//	ret = create_matrix_operation_x86(m, cpu);
-#endif
-	if (!ret)
-		ret = new MatrixOperationC{ m };
-
-	return ret;
+	return new MatrixOperationC{ m };
 }
 
 Operation *create_rec709_gamma_operation(CPUClass cpu)
 {
-	Operation *ret = nullptr;
-#ifdef ZIMG_X86
-//	ret = create_rec709_gamma_operation_x86(cpu);
-#endif
-	if (!ret)
-		ret = new Rec709GammaOperationC{};
-
-	return ret;
+	return new Rec709GammaOperationC{};
 }
 
 Operation *create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
-	Operation *ret = nullptr;
-#ifdef ZIMG_X86
-//	ret = create_rec709_inverse_gamma_operation_x86(cpu);
-#endif
-	if (!ret)
-		ret = new Rec709InverseGammaOperationC{};
-
-	return ret;
+	return new Rec709InverseGammaOperationC{};
 }
 
 Operation *create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)

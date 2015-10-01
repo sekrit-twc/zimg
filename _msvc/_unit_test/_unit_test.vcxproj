@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\UnitTest\Colorspace\colorspace2_test.cpp" />
+    <ClCompile Include="..\..\UnitTest\Colorspace\colorspace_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\audit_buffer.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\copy_filter_test.cpp" />
     <ClCompile Include="..\..\UnitTest\Common\filtergraph_test.cpp" />
