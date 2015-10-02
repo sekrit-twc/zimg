@@ -16,7 +16,7 @@ struct zerror {
 };
 
 struct zimage_buffer_const : zimg_image_buffer_const {
-	zimage_buffer_const()
+	zimage_buffer_const() : zimg_image_buffer_const()
 	{
 		version = ZIMG_API_VERSION;
 	}
@@ -25,7 +25,7 @@ struct zimage_buffer_const : zimg_image_buffer_const {
 struct zimage_buffer {
 	zimg_image_buffer _;
 
-	zimage_buffer()
+	zimage_buffer() : _()
 	{
 		_.m.version = ZIMG_API_VERSION;
 	}
