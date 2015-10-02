@@ -797,7 +797,7 @@ GraphBuilder::params import_graph_params(const zimg_filter_graph_params &src)
 } // namespace
 
 
-void zimg2_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
+void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 {
 	_zassert_d(major, "null pointer");
 	_zassert_d(minor, "null pointer");
@@ -808,7 +808,7 @@ void zimg2_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 	*micro = VERSION_INFO[2];
 }
 
-unsigned zimg2_get_api_version(void)
+unsigned zimg_get_api_version(void)
 {
 	return ZIMG_API_VERSION;
 }
@@ -829,7 +829,7 @@ void zimg_clear_last_error(void)
 	g_last_error = ZIMG_ERROR_SUCCESS;
 }
 
-unsigned zimg2_select_buffer_mask(unsigned count)
+unsigned zimg_select_buffer_mask(unsigned count)
 {
 	return zimg::select_zimg_buffer_mask(count);
 }
@@ -843,12 +843,12 @@ unsigned zimg2_select_buffer_mask(unsigned count)
   } \
   return ret;
 
-void zimg2_filter_graph_free(zimg_filter_graph *ptr)
+void zimg_filter_graph_free(zimg_filter_graph *ptr)
 {
 	delete ptr;
 }
 
-zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
+zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
 {
 	_zassert_d(ptr, "null pointer");
 	_zassert_d(out, "null pointer");
@@ -858,7 +858,7 @@ zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, 
 	EX_END
 }
 
-zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out)
+zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
 	_zassert_d(ptr, "null pointer");
 	_zassert_d(out, "null pointer");
@@ -868,7 +868,7 @@ zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph
 	EX_END
 }
 
-zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out)
+zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
 	_zassert_d(ptr, "null pointer");
 	_zassert_d(out, "null pointer");
@@ -878,7 +878,7 @@ zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_grap
 	EX_END
 }
 
-zimg_error_code_e zimg2_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
+zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
                                              zimg_filter_graph_callback unpack_cb, void *unpack_user,
                                              zimg_filter_graph_callback pack_cb, void *pack_user)
 {
@@ -916,7 +916,7 @@ zimg_error_code_e zimg2_filter_graph_process(const zimg_filter_graph *ptr, const
 #undef EX_BEGIN
 #undef EX_END
 
-void zimg2_image_format_default(zimg_image_format *ptr, unsigned version)
+void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 {
 	_zassert_d(ptr, "null pointer");
 	API_VERSION_ASSERT(version);
@@ -944,7 +944,7 @@ void zimg2_image_format_default(zimg_image_format *ptr, unsigned version)
 	}
 }
 
-void zimg2_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version)
+void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version)
 {
 	_zassert_d(ptr, "null pointer");
 	API_VERSION_ASSERT(version);
@@ -966,7 +966,7 @@ void zimg2_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned v
 	}
 }
 
-zimg_filter_graph *zimg2_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params)
+zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params)
 {
 	_zassert_d(src_format, "null pointer");
 	_zassert_d(dst_format, "null pointer");

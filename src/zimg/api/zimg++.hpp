@@ -39,14 +39,14 @@ struct zimage_buffer {
 struct zimage_format : zimg_image_format {
 	zimage_format()
 	{
-		zimg2_image_format_default(this, ZIMG_API_VERSION);
+		zimg_image_format_default(this, ZIMG_API_VERSION);
 	}
 };
 
 struct zfilter_graph_params : zimg_filter_graph_params {
 	zfilter_graph_params()
 	{
-		zimg2_filter_graph_params_default(this, ZIMG_API_VERSION);
+		zimg_filter_graph_params_default(this, ZIMG_API_VERSION);
 	}
 };
 
@@ -70,27 +70,27 @@ public:
 
 	~FilterGraph()
 	{
-		zimg2_filter_graph_free(m_graph);
+		zimg_filter_graph_free(m_graph);
 	}
 
 	size_t get_tmp_size() const
 	{
 		size_t ret;
-		check(zimg2_filter_graph_get_tmp_size(m_graph, &ret));
+		check(zimg_filter_graph_get_tmp_size(m_graph, &ret));
 		return ret;
 	}
 
 	unsigned get_input_buffering() const
 	{
 		unsigned ret;
-		check(zimg2_filter_graph_get_input_buffering(m_graph, &ret));
+		check(zimg_filter_graph_get_input_buffering(m_graph, &ret));
 		return ret;
 	}
 
 	unsigned get_output_buffering() const
 	{
 		unsigned ret;
-		check(zimg2_filter_graph_get_output_buffering(m_graph, &ret));
+		check(zimg_filter_graph_get_output_buffering(m_graph, &ret));
 		return ret;
 	}
 
@@ -98,14 +98,14 @@ public:
 	             zimg_filter_graph_callback unpack_cb = 0, void *unpack_user = 0,
 	             zimg_filter_graph_callback pack_cb = 0, void *pack_user = 0) const
 	{
-		check(zimg2_filter_graph_process(m_graph, src, dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
+		check(zimg_filter_graph_process(m_graph, src, dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
 	}
 
 	static zimg_filter_graph *build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params = 0)
 	{
 		zimg_filter_graph *graph;
 
-		if (!(graph = zimg2_filter_graph_build(src_format, dst_format, params)))
+		if (!(graph = zimg_filter_graph_build(src_format, dst_format, params)))
 			throw zerror();
 
 		return graph;

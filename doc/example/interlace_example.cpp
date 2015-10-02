@@ -113,7 +113,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	std::shared_ptr<void> handle;
 	unsigned char *ptr;
 
-	unsigned mask = zimg2_select_buffer_mask(count);
+	unsigned mask = zimg_select_buffer_mask(count);
 	size_t channel_size[3] = { 0 };
 	size_t pixel_size;
 

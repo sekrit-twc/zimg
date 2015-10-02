@@ -30,26 +30,26 @@ extern "C" {;
  * Get the version number of the library.
  *
  * This function should not be used to query for API details.
- * Instead, use {@link zimg2_get_api_version} to obtain the API version.
+ * Instead, use {@link zimg_get_api_version} to obtain the API version.
  *
- * @see zimg2_get_api_version
+ * @see zimg_get_api_version
  *
  * @pre major != 0 && minor != 0 && micro != 0
  * @param[out] major set to the major version
  * @param[out] minor set to the minor verison
  * @param[out] micro set to the micro (patch) version
  */
-void zimg2_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
+void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
 
 /**
  * Get the API version supported by the library.
  * The API version is separate from the library version.
  *
- * @see zimg2_get_version_info
+ * @see zimg_get_version_info
  *
  * @return API version number
  */
-unsigned zimg2_get_api_version(void);
+unsigned zimg_get_api_version(void);
 
 /**
  * Library error codes.
@@ -342,7 +342,7 @@ typedef union zimg_image_buffer {
  * @param count number of lines, can be UINT_MAX
  * @return buffer mask, can be UINT_MAX
  */
-unsigned zimg2_select_buffer_mask(unsigned count);
+unsigned zimg_select_buffer_mask(unsigned count);
 
 
 /**
@@ -364,7 +364,7 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * as defined by a {@link zimg_image_buffer} with a mask of UINT_MAX, or to
  * process images stored in arbitrary packed formats or other address spaces.
  *
- * If provided to {@link zimg2_filter_graph_process}, the callback will be
+ * If provided to {@link zimg_filter_graph_process}, the callback will be
  * called before image data is read from the input and output buffers.
  * The callback may be invoked on the same pixels multiple times, in which
  * case those pixels must be re-read unless the buffer mask is UINT_MAX.
@@ -373,7 +373,7 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * subsampling (e.g. 2 lines for 4:2:0) must be processed.
  *
  * If the callback fails, processing will be aborted and a non-zero value will
- * be returned to the caller of {@link zimg2_filter_graph_process}, but the
+ * be returned to the caller of {@link zimg_filter_graph_process}, but the
  * return code of the callback will not be propagated.
  *
  * @param user user-defined private data
@@ -389,7 +389,7 @@ typedef int (*zimg_filter_graph_callback)(void *user, unsigned i, unsigned left,
  *
  * @param ptr graph handle, may be NULL
  */
-void zimg2_filter_graph_free(zimg_filter_graph *ptr);
+void zimg_filter_graph_free(zimg_filter_graph *ptr);
 
 /**
  * Query the size of the temporary buffer required to execute the graph.
@@ -403,7 +403,7 @@ void zimg2_filter_graph_free(zimg_filter_graph *ptr);
  * @param[out] out set to the size of the buffer in bytes
  * @return error code
  */
-zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out);
+zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out);
 
 /**
  * Query the maximum number of lines required in the input buffer.
@@ -417,7 +417,7 @@ zimg_error_code_e zimg2_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, 
  * @param[out] out set to the number of scanlines
  * @return error code
  */
-zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out);
+zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
 /**
  * Query the maximum number of lines required in the output buffer.
@@ -428,7 +428,7 @@ zimg_error_code_e zimg2_filter_graph_get_input_buffering(const zimg_filter_graph
  * @return error code
  * @see zimg2_filter_grpah_get_input_buffering
  */
-zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out);
+zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
 /**
  * Process an image with the filter graph.
@@ -443,9 +443,9 @@ zimg_error_code_e zimg2_filter_graph_get_output_buffering(const zimg_filter_grap
  * @param pack_user private data for callback
  * @return error code
  */
-zimg_error_code_e zimg2_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
-                                             zimg_filter_graph_callback unpack_cb, void *unpack_user,
-                                             zimg_filter_graph_callback pack_cb, void *pack_user);
+zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
+                                            zimg_filter_graph_callback unpack_cb, void *unpack_user,
+                                            zimg_filter_graph_callback pack_cb, void *pack_user);
 
 
 /**
@@ -512,7 +512,7 @@ typedef struct zimg_filter_graph_params {
  * @param[out] ptr structure to be initialized
  * @param version API version used by caller
  */
-void zimg2_image_format_default(zimg_image_format *ptr, unsigned version);
+void zimg_image_format_default(zimg_image_format *ptr, unsigned version);
 
 /**
  * Initialize parameters structure with default values.
@@ -520,7 +520,7 @@ void zimg2_image_format_default(zimg_image_format *ptr, unsigned version);
  * @param[out] ptr structure to be initialized
  * @param version API version used by caller
  */
-void zimg2_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version);
+void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version);
 
 /**
  * Create a graph converting the specified formats.
@@ -533,7 +533,7 @@ void zimg2_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned v
  * @param[in] params filter parameters, may be NULL
  * @return graph handle, or NULL on failure
  */
-zimg_filter_graph *zimg2_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params);
+zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params);
 
 #ifdef __cplusplus
 } /* extern "C" */

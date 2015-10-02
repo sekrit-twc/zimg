@@ -162,8 +162,8 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 	unsigned p;
 	int ret = 1;
 
-	zimg2_image_format_default(&src_format, ZIMG_API_VERSION);
-	zimg2_image_format_default(&dst_format, ZIMG_API_VERSION);
+	zimg_image_format_default(&src_format, ZIMG_API_VERSION);
+	zimg_image_format_default(&dst_format, ZIMG_API_VERSION);
 
 	src_format.width = args->in_w;
 	src_format.height = args->in_h;
@@ -183,11 +183,11 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 
 	dst_format.color_family = ZIMG_COLOR_YUV;
 
-	if (!(graph = zimg2_filter_graph_build(&src_format, &dst_format, 0))) {
+	if (!(graph = zimg_filter_graph_build(&src_format, &dst_format, 0))) {
 		print_zimg_error();
 		goto fail;
 	}
-	if ((ret = zimg2_filter_graph_get_tmp_size(graph, &tmp_size))) {
+	if ((ret = zimg_filter_graph_get_tmp_size(graph, &tmp_size))) {
 		print_zimg_error();
 		goto fail;
 	}
@@ -207,14 +207,14 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 		dst_buf.m.mask[p] = -1;
 	}
 
-	if ((ret = zimg2_filter_graph_process(graph, &src_buf, &dst_buf, tmp, 0, 0, 0, 0))) {
+	if ((ret = zimg_filter_graph_process(graph, &src_buf, &dst_buf, tmp, 0, 0, 0, 0))) {
 		print_zimg_error();
 		goto fail;
 	}
 
 	ret = 0;
 fail:
-	zimg2_filter_graph_free(graph);
+	zimg_filter_graph_free(graph);
 	aligned_free(tmp);
 	return ret;
 }

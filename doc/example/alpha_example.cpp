@@ -50,7 +50,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(unsigned
 	zimgxx::zimage_buffer buffer;
 	std::shared_ptr<void> handle;
 
-	unsigned mask = zimg2_select_buffer_mask(count);
+	unsigned mask = zimg_select_buffer_mask(count);
 	ptrdiff_t stride = width % 64 ? width - width % 64 + 64 : width;
 	size_t plane_size = (size_t)stride * ((mask == (unsigned)-1) ? height : mask + 1);
 

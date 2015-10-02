@@ -474,7 +474,7 @@ static void _vszimg_default_init(struct vszimg_data *data)
 static void _vszimg_destroy(struct vszimg_data *data, const VSAPI *vsapi)
 {
 	if (data->graph_data)
-		zimg2_filter_graph_free(data->graph_data->graph);
+		zimg_filter_graph_free(data->graph_data->graph);
 	if (data->graph_mutex_initialized)
 		vszimg_mutex_destroy(&data->graph_mutex);
 
@@ -528,7 +528,7 @@ static void _vszimg_release_graph_data_unsafe(struct vszimg_graph_data *graph_da
 	if (!graph_data)
 		return;
 	if (--graph_data->ref_count == 0) {
-		zimg2_filter_graph_free(graph_data->graph);
+		zimg_filter_graph_free(graph_data->graph);
 		free(graph_data);
 	}
 }
@@ -571,7 +571,7 @@ static struct vszimg_graph_data *_vszimg_get_graph_data(struct vszimg_data *data
 		graph_data->graph = NULL;
 		graph_data->ref_count = 1;
 
-		if (!(graph_data->graph = zimg2_filter_graph_build(src_format, dst_format, &data->params))) {
+		if (!(graph_data->graph = zimg_filter_graph_build(src_format, dst_format, &data->params))) {
 			format_zimg_error(err_msg, err_msg_size);
 			goto fail;
 		}
@@ -629,8 +629,8 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 		size_t tmp_size;
 		int p;
 
-		zimg2_image_format_default(&src_format, ZIMG_API_VERSION);
-		zimg2_image_format_default(&dst_format, ZIMG_API_VERSION);
+		zimg_image_format_default(&src_format, ZIMG_API_VERSION);
+		zimg_image_format_default(&dst_format, ZIMG_API_VERSION);
 
 		src_frame = vsapi->getFrameFilter(n, data->node, frameCtx);
 		src_props = vsapi->getFramePropsRO(src_frame);
@@ -673,7 +673,7 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			dst_buf.m.mask[p] = -1;
 		}
 
-		if (zimg2_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
+		if (zimg_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
 			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
 		}
@@ -684,7 +684,7 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			goto fail;
 		}
 
-		if (zimg2_filter_graph_process(graph_data->graph, &src_buf, &dst_buf, tmp, NULL, NULL, NULL, NULL)) {
+		if (zimg_filter_graph_process(graph_data->graph, &src_buf, &dst_buf, tmp, NULL, NULL, NULL, NULL)) {
 			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
 		}
@@ -769,7 +769,7 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
 
 	data->vi = *node_vi;
 
-	zimg2_filter_graph_params_default(&data->params, ZIMG_API_VERSION);
+	zimg_filter_graph_params_default(&data->params, ZIMG_API_VERSION);
 
 	if (propGetUintDef(vsapi, in, "width", &data->vi.width, node_vi->width))
 		FAIL_BAD_VALUE("width");
@@ -812,8 +812,8 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
 		zimg_image_format src_format;
 		zimg_image_format dst_format;
 
-		zimg2_image_format_default(&src_format, ZIMG_API_VERSION);
-		zimg2_image_format_default(&dst_format, ZIMG_API_VERSION);
+		zimg_image_format_default(&src_format, ZIMG_API_VERSION);
+		zimg_image_format_default(&dst_format, ZIMG_API_VERSION);
 
 		src_format.width = node_vi->width;
 		src_format.height = node_vi->height;
@@ -869,8 +869,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 #undef DATA_OPT
 #undef ENUM_OPT
 
-	zimg2_get_version_info(&g_version_info[0], &g_version_info[1], &g_version_info[2]);
-	g_api_version = zimg2_get_api_version();
+	zimg_get_version_info(&g_version_info[0], &g_version_info[1], &g_version_info[2]);
+	g_api_version = zimg_get_api_version();
 
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
 
