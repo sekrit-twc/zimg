@@ -323,13 +323,13 @@ static int import_frame_props(const VSAPI *vsapi, const VSMap *props, zimg_image
 #define FAIL(name) \
   do { \
     sprintf(err_msg, "%s: bad value", (name)); \
-	return 1; \
+    return 1; \
   } while (0)
 #define COPY_INT_POSITIVE(name, out, invalid) \
   do { \
     int tmp; \
     if (propGetSintDef(vsapi, props, name, &tmp, out)) \
-	  FAIL(name); \
+      FAIL(name); \
     if (tmp >= 0 && tmp != invalid) \
       (out) = tmp; \
   } while (0)
@@ -366,11 +366,11 @@ static int import_frame_props(const VSAPI *vsapi, const VSMap *props, zimg_image
 static void export_frame_props(const VSAPI *vsapi, const zimg_image_format *format, VSMap *props)
 {
 #define COPY_INT_POSITIVE(name, val) \
-  do {; \
+  do { \
     if (val >= 0) \
-	  vsapi->propSetInt(props, (name), (val), paReplace); \
+      vsapi->propSetInt(props, (name), (val), paReplace); \
     else \
-	  vsapi->propDeleteKey(props, (name)); \
+      vsapi->propDeleteKey(props, (name)); \
   } while (0)
 
 	char version_str[64];
