@@ -60,7 +60,7 @@ struct BitmapFileData {
 
 	BitmapFileData() = default;
 
-	explicit BitmapFileData(size_t file_size, void *file_base, bool new_image)
+	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
 		unsigned char *ptr = reinterpret_cast<unsigned char *>(file_base);
 
@@ -134,7 +134,7 @@ class WindowsBitmap::impl {
 	}
 public:
 	impl(MemoryMappedFile *mmap, bool writable) :
-		m_mmap{ mmap },
+		m_mmap{},
 		m_bitmap{},
 		m_writable{ writable }
 	{
@@ -143,6 +143,7 @@ public:
 
 		m_bitmap = BitmapFileData{ mmap->size(), const_cast<void *>(mmap->read_ptr()), false };
 		m_bitmap.validate(mmap->size());
+		m_mmap.reset(mmap);
 	}
 
 	impl(const char *path, int width, int height, int bit_count) :
