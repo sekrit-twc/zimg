@@ -613,7 +613,6 @@ class FilterGraph::impl {
 	unsigned m_id_counter;
 	unsigned m_subsample_w;
 	unsigned m_subsample_h;
-	bool m_is_color;
 	bool m_is_complete;
 
 	unsigned get_horizontal_step() const
