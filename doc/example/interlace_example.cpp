@@ -24,13 +24,13 @@ struct Arguments {
 	unsigned out_h;
 };
 
-static const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   0, "inpath",     offsetof(struct Arguments, inpath),  0, "input path specifier" },
-	{ OPTION_STRING,   0, "outpath",    offsetof(struct Arguments, outpath), 0, "output path specifier" },
-	{ OPTION_UINTEGER, 0, "in_width",   offsetof(struct Arguments, in_w),    0, "input width" },
-	{ OPTION_UINTEGER, 0, "in_height",  offsetof(struct Arguments, in_h),    0, "input height" },
-	{ OPTION_UINTEGER, 0, "out_width",  offsetof(struct Arguments, out_w),   0, "output width" },
-	{ OPTION_UINTEGER, 0, "out_height", offsetof(struct Arguments, out_h),   0, "output height" }
+const ArgparseOption program_positional[] = {
+	{ OPTION_STRING,   nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING,   nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_UINTEGER, nullptr, "in_width",   offsetof(struct Arguments, in_w),    nullptr, "input width" },
+	{ OPTION_UINTEGER, nullptr, "in_height",  offsetof(struct Arguments, in_h),    nullptr, "input height" },
+	{ OPTION_UINTEGER, nullptr, "out_width",  offsetof(struct Arguments, out_w),   nullptr, "output width" },
+	{ OPTION_UINTEGER, nullptr, "out_height", offsetof(struct Arguments, out_h),   nullptr, "output height" }
 };
 
 const ArgparseCommandLine program_def = {
