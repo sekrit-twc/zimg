@@ -127,26 +127,35 @@ Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix)
 Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 {
 	Matrix3x3 ret;
-	double kr, kg, kb;
-	double uscale;
-	double vscale;
 
-	get_yuv_constants(&kr, &kb, matrix);
-	kg = 1.0 - kr - kb;
-	uscale = 1.0 / (2.0 - 2.0 * kb);
-	vscale = 1.0 / (2.0 - 2.0 * kr);
+	if (matrix != MatrixCoefficients::MATRIX_YCGCO) {
+		double kr, kg, kb;
+		double uscale;
+		double vscale;
 
-	ret[0][0] = kr;
-	ret[0][1] = kg;
-	ret[0][2] = kb;
+		get_yuv_constants(&kr, &kb, matrix);
+		kg = 1.0 - kr - kb;
+		uscale = 1.0 / (2.0 - 2.0 * kb);
+		vscale = 1.0 / (2.0 - 2.0 * kr);
 
-	ret[1][0] = -kr * uscale;
-	ret[1][1] = -kg * uscale;
-	ret[1][2] = (1.0 - kb) * uscale;
+		ret[0][0] = kr;
+		ret[0][1] = kg;
+		ret[0][2] = kb;
 
-	ret[2][0] = (1.0 - kr) * vscale;
-	ret[2][1] = -kg * vscale;
-	ret[2][2] = -kb * vscale;
+		ret[1][0] = -kr * uscale;
+		ret[1][1] = -kg * uscale;
+		ret[1][2] = (1.0 - kb) * uscale;
+
+		ret[2][0] = (1.0 - kr) * vscale;
+		ret[2][1] = -kg * vscale;
+		ret[2][2] = -kb * vscale;
+	} else {
+		ret = {
+			{  0.25, 0.5,  0.25 },
+			{ -0.25, 0.5, -0.25 },
+			{  0.5,  0,   -0.5 }
+		};
+	}
 
 	return ret;
 }

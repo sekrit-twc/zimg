@@ -22,11 +22,12 @@ zimg::colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 {
 	using zimg::colorspace::MatrixCoefficients;
 
-	static const zimg::static_string_map<MatrixCoefficients, 6> map{
+	static const zimg::static_string_map<MatrixCoefficients, 7> map{
 		{ "unspec",   MatrixCoefficients::MATRIX_UNSPECIFIED },
 		{ "rgb",      MatrixCoefficients::MATRIX_RGB },
 		{ "601",      MatrixCoefficients::MATRIX_601 },
 		{ "709",      MatrixCoefficients::MATRIX_709 },
+		{ "ycgco",    MatrixCoefficients::MATRIX_YCGCO },
 		{ "2020_ncl", MatrixCoefficients::MATRIX_2020_NCL },
 		{ "2020_cl",  MatrixCoefficients::MATRIX_2020_CL },
 	};

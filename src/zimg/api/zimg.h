@@ -240,6 +240,7 @@ typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_UNSPECIFIED = 2,
 	ZIMG_MATRIX_470BG       = 5,
 	ZIMG_MATRIX_170M        = 6, /* Equivalent to 5. */
+	ZIMG_MATRIX_YCGCO       = 8,
 	ZIMG_MATRIX_2020_NCL    = 9,
 	ZIMG_MATRIX_2020_CL     = 10,
 } zimg_matrix_coefficients_e;
@@ -305,7 +306,7 @@ typedef enum zimg_resample_filter_e {
   */
 typedef struct zimg_image_buffer_const {
 	unsigned version;    /**< @see ZIMG_API_VERSION */
-	const void *data[3]; /**< per-plane data buffers, order is R-G-B or Y-U-V */
+	const void *data[3]; /**< per-plane data buffers, order is R-G-B, Y-U-V, or Y-Cg-Co */
 	ptrdiff_t stride[3]; /**< per-plane stride in bytes */
 	unsigned mask[3];    /**< per-plane row index mask */
 } zimg_image_buffer_const;

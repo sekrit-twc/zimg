@@ -215,12 +215,13 @@ std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(zimg_chrom
 
 zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e matrix)
 {
-	static const zimg::static_enum_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 7> map{
+	static const zimg::static_enum_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 8> map{
 		{ ZIMG_MATRIX_RGB,         zimg::colorspace::MatrixCoefficients::MATRIX_RGB },
 		{ ZIMG_MATRIX_709,         zimg::colorspace::MatrixCoefficients::MATRIX_709 },
 		{ ZIMG_MATRIX_UNSPECIFIED, zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED },
 		{ ZIMG_MATRIX_470BG,       zimg::colorspace::MatrixCoefficients::MATRIX_601 },
 		{ ZIMG_MATRIX_170M,        zimg::colorspace::MatrixCoefficients::MATRIX_601 },
+		{ ZIMG_MATRIX_YCGCO,       zimg::colorspace::MatrixCoefficients::MATRIX_YCGCO },
 		{ ZIMG_MATRIX_2020_NCL,    zimg::colorspace::MatrixCoefficients::MATRIX_2020_NCL },
 		{ ZIMG_MATRIX_2020_CL,     zimg::colorspace::MatrixCoefficients::MATRIX_2020_CL },
 	};

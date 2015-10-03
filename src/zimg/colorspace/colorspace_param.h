@@ -32,6 +32,7 @@ enum class MatrixCoefficients {
 	MATRIX_RGB,
 	MATRIX_601,
 	MATRIX_709,
+	MATRIX_YCGCO,
 	MATRIX_2020_NCL,
 	MATRIX_2020_CL
 };

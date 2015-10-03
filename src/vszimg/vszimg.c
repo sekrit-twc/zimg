@@ -84,6 +84,7 @@ const struct string_table_entry g_matrix_table[] = {
 	{ "unspec",  ZIMG_MATRIX_UNSPECIFIED },
 	{ "470bg",   ZIMG_MATRIX_470BG },
 	{ "170m",    ZIMG_MATRIX_170M },
+	{ "ycgco",   ZIMG_MATRIX_YCGCO },
 	{ "2020ncl", ZIMG_MATRIX_2020_NCL },
 	{ "2020cl",  ZIMG_MATRIX_2020_CL },
 };
@@ -245,9 +246,12 @@ static int translate_color_family(VSColorFamily cf, zimg_color_family_e *out, zi
 		*out_matrix = ZIMG_MATRIX_RGB;
 		return 0;
 	case cmYUV:
-	case cmYCoCg:
 		*out = ZIMG_COLOR_YUV;
 		*out_matrix = ZIMG_MATRIX_UNSPECIFIED;
+		return 0;
+	case cmYCoCg:
+		*out = ZIMG_COLOR_YUV;
+		*out_matrix = ZIMG_MATRIX_YCGCO;
 		return 0;
 	default:
 		return 1;
@@ -559,10 +563,6 @@ static int graph_pack_yuy2(void *user, unsigned i, unsigned left, unsigned right
 
 	return 0;
 }
-
-static int prepare_unpack_callback(const zimg_filter_graph *graph, VSPresetFormat packing_format, zimg_filter_graph_callback *cb, struct unpack_callback_data *cb_data,
-                                   VSFrameRef **handle, zimg_image_buffer_const **src_buf, char *err_msg, size_t err_msg_size)
-{}
 
 
 struct vszimg_graph_data {
