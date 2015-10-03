@@ -190,8 +190,8 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % 64 ? row_size - row_size % 64 + 64 : row_size;
 
-		buffer._.m.mask[p] = mask_plane;
-		buffer._.m.stride[p] = stride;
+		buffer.mask(p) = mask_plane;
+		buffer.stride(p) = stride;
 		channel_size[p] = (size_t)stride * count_plane;
 	}
 
@@ -199,7 +199,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	ptr = reinterpret_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
-		buffer._.m.data[p] = ptr;
+		buffer.data(p) = ptr;
 		ptr += channel_size[p];
 	}
 
@@ -307,12 +307,12 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = reinterpret_cast<Callback *>(user);
 	const void *img = reinterpret_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
-	const zimg_image_buffer &buf = cb->buffer->_;
+	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (char *)buf.m.data[p] + (ptrdiff_t)(i & buf.m.mask[p]) * buf.m.stride[p];
+		buf_data[p] = (char *)buf.data(p) + (ptrdiff_t)(i & buf.mask(p)) * buf.stride(p);
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {
@@ -330,12 +330,12 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = reinterpret_cast<Callback *>(user);
 	void *img = reinterpret_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
-	const zimg_image_buffer_const &buf = cb->buffer->as_const();
+	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	const void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (const char *)buf.data[p] + (ptrdiff_t)(i & buf.mask[p]) * buf.stride[p];
+		buf_data[p] = (const char *)buf.data(p) + (ptrdiff_t)(i & buf.mask(p)) * buf.stride(p);
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {

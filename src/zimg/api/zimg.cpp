@@ -297,13 +297,13 @@ zimg::graph::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 
 	API_VERSION_ASSERT(src.m.version);
 
-#define COPY_ARRAY(x, y) std::copy(std::begin(x), std::end(x), y)
 	if (src.m.version >= 2) {
-		COPY_ARRAY(src.m.data, dst.data);
-		COPY_ARRAY(src.m.stride, dst.stride);
-		COPY_ARRAY(src.m.mask, dst.mask);
+		for (unsigned p = 0; p < 3; ++p) {
+			dst.data[p] = src.m.plane[p].data;
+			dst.stride[p] = src.m.plane[p].stride;
+			dst.mask[p] = src.m.plane[p].mask;
+		}
 	}
-#undef COPY_ARRAY
 	return dst;
 }
 
@@ -313,13 +313,13 @@ zimg::graph::ZimgImageBufferConst import_image_buffer(const zimg_image_buffer_co
 
 	API_VERSION_ASSERT(src.version);
 
-#define COPY_ARRAY(x, y) std::copy(std::begin(x), std::end(x), y)
 	if (src.version >= 2) {
-		COPY_ARRAY(src.data, dst.data);
-		COPY_ARRAY(src.stride, dst.stride);
-		COPY_ARRAY(src.mask, dst.mask);
+		for (unsigned p = 0; p < 3; ++p) {
+			dst.data[p] = src.plane[p].data;
+			dst.stride[p] = src.plane[p].stride;
+			dst.mask[p] = src.plane[p].mask;
+		}
 	}
-#undef COPY_ARRAY
 	return dst;
 }
 
@@ -887,21 +887,21 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	_zassert_d(src, "null pointer");
 	_zassert_d(dst, "null pointer");
 
-	POINTER_ALIGNMENT_ASSERT(src->data[0]);
-	POINTER_ALIGNMENT_ASSERT(src->data[1]);
-	POINTER_ALIGNMENT_ASSERT(src->data[2]);
+	POINTER_ALIGNMENT_ASSERT(src->plane[0].data);
+	POINTER_ALIGNMENT_ASSERT(src->plane[1].data);
+	POINTER_ALIGNMENT_ASSERT(src->plane[2].data);
 
-	STRIDE_ALIGNMENT_ASSERT(src->stride[0]);
-	STRIDE_ALIGNMENT_ASSERT(src->stride[1]);
-	STRIDE_ALIGNMENT_ASSERT(src->stride[2]);
+	STRIDE_ALIGNMENT_ASSERT(src->plane[0].stride);
+	STRIDE_ALIGNMENT_ASSERT(src->plane[1].stride);
+	STRIDE_ALIGNMENT_ASSERT(src->plane[2].stride);
 
-	POINTER_ALIGNMENT_ASSERT(dst->m.data[0]);
-	POINTER_ALIGNMENT_ASSERT(dst->m.data[1]);
-	POINTER_ALIGNMENT_ASSERT(dst->m.data[2]);
+	POINTER_ALIGNMENT_ASSERT(dst->m.plane[0].data);
+	POINTER_ALIGNMENT_ASSERT(dst->m.plane[1].data);
+	POINTER_ALIGNMENT_ASSERT(dst->m.plane[2].data);
 
-	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[0]);
-	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[1]);
-	STRIDE_ALIGNMENT_ASSERT(dst->m.stride[2]);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[0].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[1].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[2].stride);
 
 	POINTER_ALIGNMENT_ASSERT(tmp);
 

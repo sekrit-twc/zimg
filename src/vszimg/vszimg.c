@@ -450,12 +450,12 @@ struct pack_callback_data {
 
 static const void *buffer_get_line_const(const zimg_image_buffer_const *buf, unsigned p, unsigned i)
 {
-	return (const char *)buf->data[p] + (ptrdiff_t)(i & buf->mask[p]) * buf->stride[p];
+	return (const char *)buf->plane[p].data + (ptrdiff_t)(i & buf->plane[p].mask) * buf->plane[p].stride;
 }
 
 static void *buffer_get_line(const zimg_image_buffer *buf, unsigned p, unsigned i)
 {
-	return (char *)buf->m.data[p] + (ptrdiff_t)(i & buf->m.mask[p]) * buf->m.stride[p];
+	return (char *)buf->m.plane[p].data + (ptrdiff_t)(i & buf->m.plane[p].mask) * buf->m.plane[p].stride;
 }
 
 static int graph_unpack_bgr32(void *user, unsigned i, unsigned left, unsigned right)
@@ -829,14 +829,14 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 		dst_props = vsapi->getFramePropsRW(dst_frame);
 
 		for (p = 0; p < src_vsformat->numPlanes; ++p) {
-			src_plane_buf.data[p] = vsapi->getReadPtr(src_frame, p);
-			src_plane_buf.stride[p] = vsapi->getStride(src_frame, p);
-			src_plane_buf.mask[p] = -1;
+			src_plane_buf.plane[p].data = vsapi->getReadPtr(src_frame, p);
+			src_plane_buf.plane[p].stride = vsapi->getStride(src_frame, p);
+			src_plane_buf.plane[p].mask = -1;
 		}
 		for (p = 0; p < dst_vsformat->numPlanes; ++p) {
-			dst_plane_buf.m.data[p] = vsapi->getWritePtr(dst_frame, p);
-			dst_plane_buf.m.stride[p] = vsapi->getStride(dst_frame, p);
-			dst_plane_buf.m.mask[p] = -1;
+			dst_plane_buf.m.plane[p].data = vsapi->getWritePtr(dst_frame, p);
+			dst_plane_buf.m.plane[p].stride = vsapi->getStride(dst_frame, p);
+			dst_plane_buf.m.plane[p].mask = -1;
 		}
 
 		if (zimg_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
@@ -859,9 +859,9 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			src_frame_line = vsapi->newVideoFrame(planar_format, src_format.width, src_format.height, NULL, core);
 
 			for (p = 0; p < planar_format->numPlanes; ++p) {
-				src_line_buf.m.data[p] = vsapi->getWritePtr(src_frame_line, p);
-				src_line_buf.m.stride[p] = vsapi->getStride(src_frame_line, p);
-				src_line_buf.m.mask[p] = mask;
+				src_line_buf.m.plane[p].data = vsapi->getWritePtr(src_frame_line, p);
+				src_line_buf.m.plane[p].stride = vsapi->getStride(src_frame_line, p);
+				src_line_buf.m.plane[p].mask = mask;
 			}
 
 			unpack_cb_data.plane_buf = &src_plane_buf;
@@ -889,9 +889,9 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			dst_frame_line = vsapi->newVideoFrame(planar_format, dst_format.width, count, NULL, core);
 
 			for (p = 0; p < planar_format->numPlanes; ++p) {
-				dst_line_buf.m.data[p] = vsapi->getWritePtr(dst_frame_line, p);
-				dst_line_buf.m.stride[p] = vsapi->getStride(dst_frame_line, p);
-				dst_line_buf.m.mask[p] = mask;
+				dst_line_buf.m.plane[p].data = vsapi->getWritePtr(dst_frame_line, p);
+				dst_line_buf.m.plane[p].stride = vsapi->getStride(dst_frame_line, p);
+				dst_line_buf.m.plane[p].mask = mask;
 			}
 
 			pack_cb_data.plane_buf = &dst_plane_buf;

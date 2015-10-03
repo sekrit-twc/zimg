@@ -20,6 +20,36 @@ struct zimage_buffer_const : zimg_image_buffer_const {
 	{
 		version = ZIMG_API_VERSION;
 	}
+
+	const void *data(unsigned plane = 0) const
+	{
+		return this->plane[plane].data;
+	}
+
+	const void *&data(unsigned plane = 0)
+	{
+		return this->plane[plane].data;
+	}
+
+	ptrdiff_t stride(unsigned plane = 0) const
+	{
+		return this->plane[plane].stride;
+	}
+
+	ptrdiff_t &stride(unsigned plane = 0)
+	{
+		return this->plane[plane].stride;
+	}
+
+	unsigned mask(unsigned plane = 0) const
+	{
+		return this->plane[plane].mask;
+	}
+
+	unsigned &mask(unsigned plane = 0)
+	{
+		return this->plane[plane].mask;
+	}
 };
 
 struct zimage_buffer {
@@ -33,6 +63,36 @@ struct zimage_buffer {
 	const zimg_image_buffer_const &as_const() const
 	{
 		return _.c;
+	}
+
+	void *data(unsigned plane = 0) const
+	{
+		return _.m.plane[plane].data;
+	}
+
+	void *&data(unsigned plane = 0)
+	{
+		return _.m.plane[plane].data;
+	}
+
+	ptrdiff_t stride(unsigned plane = 0) const
+	{
+		return _.m.plane[plane].stride;
+	}
+
+	ptrdiff_t &stride(unsigned plane = 0)
+	{
+		return _.m.plane[plane].stride;
+	}
+
+	unsigned mask(unsigned plane = 0) const
+	{
+		return _.m.plane[plane].mask;
+	}
+
+	unsigned &mask(unsigned plane = 0)
+	{
+		return _.m.plane[plane].mask;
 	}
 };
 

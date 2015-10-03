@@ -294,7 +294,7 @@ typedef enum zimg_resample_filter_e {
   *
   * The circular array holds a power-of-2 number of image scanlines,
   * where the beginning of the i-th row of the p-th plane is stored at
-  * (data[p] + (ptrdiff_t)(i & mask[p]) * stride[p]).
+  * (plane[p].data + (ptrdiff_t)(i & plane[p].mask) * plane[p].stride).
   *
   * The row index mask can be set to the special value of UINT_MAX (-1)
   * to indicate a fully allocated image plane. Filter instances will
@@ -305,10 +305,13 @@ typedef enum zimg_resample_filter_e {
   * x86 and AMD64. The stride may be negative.
   */
 typedef struct zimg_image_buffer_const {
-	unsigned version;    /**< @see ZIMG_API_VERSION */
-	const void *data[3]; /**< per-plane data buffers, order is R-G-B, Y-U-V, or Y-Cg-Co */
-	ptrdiff_t stride[3]; /**< per-plane stride in bytes */
-	unsigned mask[3];    /**< per-plane row index mask */
+	unsigned version; /**< @see ZIMG_API_VERSION */
+
+	struct {
+		const void *data; /**< plane data buffer */
+		ptrdiff_t stride; /**< plane stride in bytes */
+		unsigned mask;    /**< plane row index mask */
+	} plane[3];
 } zimg_image_buffer_const;
 
 /**
@@ -328,9 +331,12 @@ typedef struct zimg_image_buffer_const {
 typedef union zimg_image_buffer {
 	struct {
 		unsigned version;
-		void *data[3];
-		ptrdiff_t stride[3];
-		unsigned mask[3];
+
+		struct {
+			void *data;       /**< plane data buffer */
+			ptrdiff_t stride; /**< plane stride in bytes */
+			unsigned mask;    /**< plane row index mask */
+		} plane[3];
 	} m;
 
 	zimg_image_buffer_const c;

@@ -132,8 +132,8 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % 64 ? row_size - row_size % 64 + 64 : row_size;
 
-		buffer._.m.mask[p] = mask_plane;
-		buffer._.m.stride[p] = stride;
+		buffer.mask(p) = mask_plane;
+		buffer.stride(p) = stride;
 		channel_size[p] = (size_t)stride * count_plane;
 	}
 
@@ -141,7 +141,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	ptr = reinterpret_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
-		buffer._.m.data[p] = ptr;
+		buffer.data(p) = ptr;
 		ptr += channel_size[p];
 	}
 
@@ -156,7 +156,7 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = reinterpret_cast<Callback *>(user);
-	const zimg_image_buffer &buf = cb->buffer->_;
+	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	unsigned file_phase = cb->top_field ? 0 : 1;
 
 	uint8_t *src_p[4];
@@ -175,10 +175,10 @@ int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 	left = left % 2 ? left - 1 : left;
 	right = right % 2 ? right + 1 : right;
 
-	buf_pp[0] = (uint8_t *)buf.m.data[0] + (ptrdiff_t)((i + 0) & buf.m.mask[0]) * buf.m.stride[0] + left;
-	buf_pp[1] = (uint8_t *)buf.m.data[0] + (ptrdiff_t)((i + 1) & buf.m.mask[0]) * buf.m.stride[0] + left;
-	buf_pp[2] = (uint8_t *)buf.m.data[1] + (ptrdiff_t)((i / 2) & buf.m.mask[1]) * buf.m.stride[1] + left / 2;
-	buf_pp[3] = (uint8_t *)buf.m.data[2] + (ptrdiff_t)((i / 2) & buf.m.mask[2]) * buf.m.stride[2] + left / 2;
+	buf_pp[0] = (uint8_t *)buf.data(0) + (ptrdiff_t)((i + 0) & buf.mask(0)) * buf.stride(0) + left;
+	buf_pp[1] = (uint8_t *)buf.data(0) + (ptrdiff_t)((i + 1) & buf.mask(0)) * buf.stride(0) + left;
+	buf_pp[2] = (uint8_t *)buf.data(1) + (ptrdiff_t)((i / 2) & buf.mask(1)) * buf.stride(1) + left / 2;
+	buf_pp[3] = (uint8_t *)buf.data(2) + (ptrdiff_t)((i / 2) & buf.mask(2)) * buf.stride(2) + left / 2;
 
 	// Since the fields are being processed individually, double the line numbers.
 	img_pp[0] = (uint8_t *)cb->file->image_base[0] + ((i + 0) * 2 + file_phase) * cb->file->width + left;

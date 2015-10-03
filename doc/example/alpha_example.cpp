@@ -103,8 +103,8 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % 64 ? row_size - row_size % 64 + 64 : row_size;
 
-		buffer._.m.mask[p] = mask_plane;
-		buffer._.m.stride[p] = stride;
+		buffer.mask(p) = mask_plane;
+		buffer.stride(p) = stride;
 		channel_size[p] = (size_t)stride * count_plane;
 	}
 
@@ -112,7 +112,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	ptr = reinterpret_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
-		buffer._.m.data[p] = ptr;
+		buffer.data(p) = ptr;
 		ptr += channel_size[p];
 	}
 
@@ -231,15 +231,15 @@ void pack_bgra_premul(const void * const planar[4], void *bgra, unsigned left, u
 int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = reinterpret_cast<Callback *>(user);
-	const zimg_image_buffer &rgb_buf = cb->rgb_buf->_;
-	const zimg_image_buffer &alpha_buf = cb->alpha_buf->_;
+	const zimgxx::zimage_buffer &rgb_buf = *cb->rgb_buf;
+	const zimgxx::zimage_buffer &alpha_buf = *cb->alpha_buf;
 	const void *packed_data = cb->bmp->read_ptr() + i * cb->bmp->stride();
 	void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (char *)rgb_buf.m.data[p] + (ptrdiff_t)(i & rgb_buf.m.mask[p]) * rgb_buf.m.stride[p];
+		planar_data[p] = (char *)rgb_buf.data(p) + (ptrdiff_t)(i & rgb_buf.mask(p)) * rgb_buf.stride(p);
 	}
-	planar_data[3] = (char *)alpha_buf.m.data[0] + (ptrdiff_t)(i & alpha_buf.m.mask[0]) * alpha_buf.m.stride[0];
+	planar_data[3] = (char *)alpha_buf.data() + (ptrdiff_t)(i & alpha_buf.mask()) * alpha_buf.stride();
 
 	if (cb->premultiply)
 		unpack_bgra_premul(packed_data, planar_data, left, right);
@@ -252,15 +252,15 @@ int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback * cb = reinterpret_cast<Callback *>(user);
-	const zimg_image_buffer_const &rgb_buf = cb->rgb_buf->as_const();
-	const zimg_image_buffer_const &alpha_buf = cb->alpha_buf->as_const();
+	const zimgxx::zimage_buffer &rgb_buf = *cb->rgb_buf;
+	const zimgxx::zimage_buffer &alpha_buf = *cb->alpha_buf;
 	void *packed_data = cb->bmp->write_ptr() + i * cb->bmp->stride();
 	const void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (const char *)rgb_buf.data[p] + (ptrdiff_t)(i & rgb_buf.mask[p]) * rgb_buf.stride[p];
+		planar_data[p] = (const char *)rgb_buf.data(p) + (ptrdiff_t)(i & rgb_buf.mask(p)) * rgb_buf.stride(p);
 	}
-	planar_data[3] = (const char *)alpha_buf.data[0] + (ptrdiff_t)(i & alpha_buf.mask[0]) * alpha_buf.stride[0];
+	planar_data[3] = (const char *)alpha_buf.data() + (ptrdiff_t)(i & alpha_buf.mask()) * alpha_buf.stride();
 
 	if (cb->premultiply)
 		pack_bgra_premul(planar_data, packed_data, left, right);
