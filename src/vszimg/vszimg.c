@@ -262,16 +262,27 @@ static int translate_vsformat(const VSFormat *vsformat, zimg_image_format *forma
     return 1; \
   } while (0)
 
-	if (translate_pixel_type(vsformat, &format->pixel_type))
-		FAIL("incompatible pixel type");
+	if (vsformat->id == pfCompatBGR32) {
+		format->color_family = ZIMG_COLOR_RGB;
+		format->matrix_coefficients = ZIMG_MATRIX_RGB;
+		format->pixel_type = ZIMG_PIXEL_BYTE;
+		format->depth = 8;
+	} else if (vsformat->id == pfCompatYUY2) {
+		format->color_family = ZIMG_COLOR_YUV;
+		format->matrix_coefficients = ZIMG_MATRIX_UNSPECIFIED;
+		format->pixel_type = ZIMG_PIXEL_BYTE;
+		format->depth = 8;
+	} else {
+		if (translate_color_family(vsformat->colorFamily, &format->color_family, &format->matrix_coefficients))
+			FAIL("incompatible color family");
+		if (translate_pixel_type(vsformat, &format->pixel_type))
+			FAIL("incompatible pixel type");
+
+		format->depth = vsformat->bitsPerSample;
+	}
 
 	format->subsample_w = vsformat->subSamplingW;
 	format->subsample_h = vsformat->subSamplingH;
-
-	if (translate_color_family(vsformat->colorFamily, &format->color_family, &format->matrix_coefficients))
-		FAIL("incompatible color family");
-
-	format->depth = vsformat->bitsPerSample;
 	format->pixel_range = (format->color_family == ZIMG_COLOR_RGB) ? ZIMG_RANGE_FULL : ZIMG_RANGE_LIMITED;
 
 	format->field_parity = ZIMG_FIELD_PROGRESSIVE;
@@ -419,6 +430,139 @@ static void propagate_sar(const VSAPI *vsapi, const VSMap *src_props, VSMap *dst
 		vsapi->propSetInt(dst_props, "_SARDen", sar_den, paReplace);
 	}
 }
+
+
+struct unpack_callback_data {
+	const zimg_image_buffer_const *plane_buf;
+	const zimg_image_buffer *line_buf;
+	unsigned height;
+};
+
+struct pack_callback_data {
+	const zimg_image_buffer *plane_buf;
+	const zimg_image_buffer_const *line_buf;
+	unsigned height;
+};
+
+static const void *buffer_get_line_const(const zimg_image_buffer_const *buf, unsigned p, unsigned i)
+{
+	return (const char *)buf->data[p] + (ptrdiff_t)(i & buf->mask[p]) * buf->stride[p];
+}
+
+static void *buffer_get_line(const zimg_image_buffer *buf, unsigned p, unsigned i)
+{
+	return (char *)buf->m.data[p] + (ptrdiff_t)(i & buf->m.mask[p]) * buf->m.stride[p];
+}
+
+static int graph_unpack_bgr32(void *user, unsigned i, unsigned left, unsigned right)
+{
+	struct unpack_callback_data *cb = user;
+	const uint8_t *bgr32 = buffer_get_line_const(cb->plane_buf, 0, cb->height - i - 1);
+	uint8_t *planar_r = buffer_get_line(cb->line_buf, 0, i);
+	uint8_t *planar_g = buffer_get_line(cb->line_buf, 1, i);
+	uint8_t *planar_b = buffer_get_line(cb->line_buf, 2, i);
+	unsigned j;
+
+	for (j = left; j < right; ++j) {
+		uint8_t r, g, b;
+
+		b = bgr32[j * 4 + 0];
+		g = bgr32[j * 4 + 1];
+		r = bgr32[j * 4 + 2];
+
+		planar_r[j] = r;
+		planar_g[j] = g;
+		planar_b[j] = b;
+	}
+
+	return 0;
+}
+
+static int graph_unpack_yuy2(void *user, unsigned i, unsigned left, unsigned right)
+{
+	struct unpack_callback_data *cb = user;
+	const uint8_t *yuy2 = buffer_get_line_const(cb->plane_buf, 0, i);
+	uint8_t *planar_y = buffer_get_line(cb->line_buf, 0, i);
+	uint8_t *planar_u = buffer_get_line(cb->line_buf, 1, i);
+	uint8_t *planar_v = buffer_get_line(cb->line_buf, 2, i);
+	unsigned j;
+
+	left = left % 2 ? left - 1 : left;
+	right = right % 2 ? right + 1 : right;
+
+	for (j = left; j < right; j += 2) {
+		uint8_t y0, y1, u, v;
+
+		y0 = yuy2[j * 2 + 0];
+		u  = yuy2[j * 2 + 1];
+		y1 = yuy2[j * 2 + 2];
+		v  = yuy2[j * 2 + 3];
+
+		planar_y[j + 0] = y0;
+		planar_y[j + 1] = y1;
+		planar_u[j / 2] = u;
+		planar_v[j / 2] = v;
+	}
+
+	return 0;
+}
+
+static int graph_pack_bgr32(void *user, unsigned i, unsigned left, unsigned right)
+{
+	struct pack_callback_data *cb = user;
+	const uint8_t *planar_r = buffer_get_line_const(cb->line_buf, 0, i);
+	const uint8_t *planar_g = buffer_get_line_const(cb->line_buf, 1, i);
+	const uint8_t *planar_b = buffer_get_line_const(cb->line_buf, 2, i);
+	uint8_t *bgr32 = buffer_get_line(cb->plane_buf, 0, cb->height - i - 1);
+	unsigned j;
+
+	for (j = left; j < right; ++j) {
+		uint8_t r, g, b;
+
+		r = planar_r[j];
+		g = planar_g[j];
+		b = planar_b[j];
+
+		bgr32[j * 4 + 0] = b;
+		bgr32[j * 4 + 1] = g;
+		bgr32[j * 4 + 2] = r;
+	}
+
+	return 0;
+}
+
+static int graph_pack_yuy2(void *user, unsigned i, unsigned left, unsigned right)
+{
+	struct pack_callback_data *cb = user;
+	const uint8_t *planar_y = buffer_get_line_const(cb->line_buf, 0, i);
+	const uint8_t *planar_u = buffer_get_line_const(cb->line_buf, 1, i);
+	const uint8_t *planar_v = buffer_get_line_const(cb->line_buf, 2, i);
+	uint8_t *yuy2 = buffer_get_line(cb->plane_buf, 0, i);
+	unsigned j;
+
+	left = left % 2 ? left - 1 : left;
+	right = right % 2 ? right + 1 : right;
+
+	for (j = left; j < right; j += 2) {
+		uint8_t y0, y1, u, v;
+
+		y0 = planar_y[j + 0];
+		y1 = planar_y[j + 1];
+		u = planar_u[j / 2];
+		v = planar_v[j / 2];
+
+		yuy2[j * 2 + 0] = y0;
+		yuy2[j * 2 + 1] = u;
+		yuy2[j * 2 + 2] = y1;
+		yuy2[j * 2 + 3] = v;
+	}
+
+	return 0;
+}
+
+static int prepare_unpack_callback(const zimg_filter_graph *graph, VSPresetFormat packing_format, zimg_filter_graph_callback *cb, struct unpack_callback_data *cb_data,
+                                   VSFrameRef **handle, zimg_image_buffer_const **src_buf, char *err_msg, size_t err_msg_size)
+{}
 
 
 struct vszimg_graph_data {
@@ -611,6 +755,8 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 	const VSFrameRef *src_frame = NULL;
 	VSFrameRef *dst_frame = NULL;
 	VSFrameRef *ret = NULL;
+	VSFrameRef *src_frame_line = NULL;
+	VSFrameRef *dst_frame_line = NULL;
 	void *tmp = NULL;
 	char err_msg[1024];
 	int err_flag = 1;
@@ -618,8 +764,19 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 	if (activationReason == arInitial) {
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
 	} else if (activationReason == arAllFramesReady) {
-		zimg_image_buffer_const src_buf = { ZIMG_API_VERSION };
-		zimg_image_buffer dst_buf = { { ZIMG_API_VERSION } };
+		zimg_image_buffer_const src_plane_buf = { ZIMG_API_VERSION };
+		zimg_image_buffer dst_plane_buf = { { ZIMG_API_VERSION } };
+
+		zimg_image_buffer src_line_buf = { { ZIMG_API_VERSION } };
+		zimg_image_buffer dst_line_buf = { { ZIMG_API_VERSION } };
+
+		const zimg_image_buffer_const *src_buf;
+		const zimg_image_buffer *dst_buf;
+		zimg_filter_graph_callback unpack_cb = NULL;
+		zimg_filter_graph_callback pack_cb = NULL;
+		struct unpack_callback_data unpack_cb_data = { 0 };
+		struct pack_callback_data pack_cb_data = { 0 };
+
 		zimg_image_format src_format;
 		zimg_image_format dst_format;
 		const VSFormat *src_vsformat;
@@ -637,6 +794,15 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 
 		src_vsformat = vsapi->getFrameFormat(src_frame);
 		dst_vsformat = data->vi.format ? data->vi.format : src_vsformat;
+
+		if (src_vsformat->colorFamily == cmCompat && src_vsformat->id != pfCompatBGR32 && src_vsformat->id != pfCompatYUY2) {
+			sprintf(err_msg, "unsupported COMPAT type: %d (%s)", src_vsformat->id, src_vsformat->name);
+			goto fail;
+		}
+		if (dst_vsformat->colorFamily == cmCompat && dst_vsformat->id != pfCompatBGR32 && dst_vsformat->id != pfCompatYUY2) {
+			sprintf(err_msg, "unsupported COMPAT type: %d (%s)", dst_vsformat->id, dst_vsformat->name);
+			goto fail;
+		}
 
 		src_format.width = vsapi->getFrameWidth(src_frame, 0);
 		src_format.height = vsapi->getFrameHeight(src_frame, 0);
@@ -663,19 +829,79 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 		dst_props = vsapi->getFramePropsRW(dst_frame);
 
 		for (p = 0; p < src_vsformat->numPlanes; ++p) {
-			src_buf.data[p] = vsapi->getReadPtr(src_frame, p);
-			src_buf.stride[p] = vsapi->getStride(src_frame, p);
-			src_buf.mask[p] = -1;
+			src_plane_buf.data[p] = vsapi->getReadPtr(src_frame, p);
+			src_plane_buf.stride[p] = vsapi->getStride(src_frame, p);
+			src_plane_buf.mask[p] = -1;
 		}
 		for (p = 0; p < dst_vsformat->numPlanes; ++p) {
-			dst_buf.m.data[p] = vsapi->getWritePtr(dst_frame, p);
-			dst_buf.m.stride[p] = vsapi->getStride(dst_frame, p);
-			dst_buf.m.mask[p] = -1;
+			dst_plane_buf.m.data[p] = vsapi->getWritePtr(dst_frame, p);
+			dst_plane_buf.m.stride[p] = vsapi->getStride(dst_frame, p);
+			dst_plane_buf.m.mask[p] = -1;
 		}
 
 		if (zimg_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
 			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
+		}
+
+		if (src_vsformat->colorFamily == cmCompat) {
+			const VSFormat *planar_format = vsapi->registerFormat(cmYUV, stInteger, 8, src_format.subsample_w, src_format.subsample_h, core);
+			unsigned count;
+			unsigned mask;
+
+			if (zimg_filter_graph_get_input_buffering(graph_data->graph, &count)) {
+				format_zimg_error(err_msg, sizeof(err_msg));
+				goto fail;
+			}
+			mask = zimg_select_buffer_mask(count);
+			count = (mask == (unsigned)-1) ? src_format.height : mask + 1;
+
+			src_frame_line = vsapi->newVideoFrame(planar_format, src_format.width, src_format.height, NULL, core);
+
+			for (p = 0; p < planar_format->numPlanes; ++p) {
+				src_line_buf.m.data[p] = vsapi->getWritePtr(src_frame_line, p);
+				src_line_buf.m.stride[p] = vsapi->getStride(src_frame_line, p);
+				src_line_buf.m.mask[p] = mask;
+			}
+
+			unpack_cb_data.plane_buf = &src_plane_buf;
+			unpack_cb_data.line_buf = &src_line_buf;
+			unpack_cb_data.height = src_format.height;
+			unpack_cb = src_vsformat->id == pfCompatBGR32 ? graph_unpack_bgr32 : graph_unpack_yuy2;
+
+			src_buf = &src_line_buf.c;
+		} else {
+			src_buf = &src_plane_buf;
+		}
+
+		if (dst_vsformat->colorFamily == cmCompat) {
+			const VSFormat *planar_format = vsapi->registerFormat(cmYUV, stInteger, 8, dst_format.subsample_w, dst_format.subsample_h, core);
+			unsigned count;
+			unsigned mask;
+
+			if (zimg_filter_graph_get_output_buffering(graph_data->graph, &count)) {
+				format_zimg_error(err_msg, sizeof(err_msg));
+				goto fail;
+			}
+			mask = zimg_select_buffer_mask(count);
+			count = (mask == (unsigned)-1) ? dst_format.height : mask + 1;
+
+			dst_frame_line = vsapi->newVideoFrame(planar_format, dst_format.width, count, NULL, core);
+
+			for (p = 0; p < planar_format->numPlanes; ++p) {
+				dst_line_buf.m.data[p] = vsapi->getWritePtr(dst_frame_line, p);
+				dst_line_buf.m.stride[p] = vsapi->getStride(dst_frame_line, p);
+				dst_line_buf.m.mask[p] = mask;
+			}
+
+			pack_cb_data.plane_buf = &dst_plane_buf;
+			pack_cb_data.line_buf = &dst_line_buf.c;
+			pack_cb_data.height = dst_format.height;
+			pack_cb = dst_vsformat->id == pfCompatBGR32 ? graph_pack_bgr32 : graph_pack_yuy2;
+
+			dst_buf = &dst_line_buf;
+		} else {
+			dst_buf = &dst_plane_buf;
 		}
 
 		VS_ALIGNED_MALLOC(&tmp, tmp_size, 64);
@@ -684,7 +910,7 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			goto fail;
 		}
 
-		if (zimg_filter_graph_process(graph_data->graph, &src_buf, &dst_buf, tmp, NULL, NULL, NULL, NULL)) {
+		if (zimg_filter_graph_process(graph_data->graph, src_buf, dst_buf, tmp, unpack_cb, &unpack_cb_data, pack_cb, &pack_cb_data)) {
 			format_zimg_error(err_msg, sizeof(err_msg));
 			goto fail;
 		}
@@ -704,6 +930,8 @@ fail:
 	_vszimg_release_graph_data(data, graph_data);
 	vsapi->freeFrame(src_frame);
 	vsapi->freeFrame(dst_frame);
+	vsapi->freeFrame(src_frame_line);
+	vsapi->freeFrame(dst_frame_line);
 	return ret;
 }
 
