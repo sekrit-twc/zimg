@@ -158,6 +158,7 @@
     <ClInclude Include="..\..\src\zimg\common\matrix.h" />
     <ClInclude Include="..\..\src\zimg\common\osdep.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
+    <ClInclude Include="..\..\src\zimg\common\propagate_const.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />

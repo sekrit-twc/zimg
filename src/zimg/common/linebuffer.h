@@ -4,28 +4,10 @@
 #define ZIMG_LINEBUFFER_H_
 
 #include <algorithm>
-#include <type_traits>
 #include "graph/ztypes.h"
+#include "propagate_const.h"
 
 namespace zimg {;
-
-template <class T, bool Value>
-struct add_const_if_const;
-
-template <class T>
-struct add_const_if_const<T, true> {
-	typedef const T type;
-};
-
-template <class T>
-struct add_const_if_const<T, false> {
-	typedef T type;
-};
-
-template <class T, class U>
-struct propagate_const {
-	typedef typename add_const_if_const<U, std::is_const<T>::value>::type type;
-};
 
 /**
  * Buffer interface providing a rolling window of k rows.

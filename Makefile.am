@@ -42,6 +42,7 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/common/matrix.h \
 					 src/zimg/common/osdep.h \
 					 src/zimg/common/pixel.h \
+					 src/zimg/common/propagate_const.h \
 					 src/zimg/depth/depth_convert.cpp \
 					 src/zimg/depth/depth_convert.h \
 					 src/zimg/depth/depth.cpp \
