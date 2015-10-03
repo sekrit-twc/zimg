@@ -8,6 +8,7 @@
 #include "zfilter.h"
 
 namespace zimg {;
+namespace graph {;
 
 class CopyFilter : public ZimgFilter {
 	image_attributes m_attr;
@@ -44,6 +45,7 @@ public:
 	}
 };
 
+} // namespace graph
 } // namespace zimg
 
 #endif // ZIMG_GRAPH_COPY_FILTER_H_

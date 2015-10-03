@@ -8,14 +8,14 @@
 
 enum class PixelType;
 
-class PairFilter final : public zimg::IZimgFilter {
+class PairFilter final : public zimg::graph::IZimgFilter {
 	struct cache_context;
 private:
-	std::unique_ptr<zimg::IZimgFilter> m_first;
-	std::unique_ptr<zimg::IZimgFilter> m_second;
+	std::unique_ptr<zimg::graph::IZimgFilter> m_first;
+	std::unique_ptr<zimg::graph::IZimgFilter> m_second;
 
-	zimg::ZimgFilterFlags m_first_flags;
-	zimg::ZimgFilterFlags m_second_flags;
+	zimg::graph::ZimgFilterFlags m_first_flags;
+	zimg::graph::ZimgFilterFlags m_second_flags;
 
 	image_attributes m_first_attr;
 	image_attributes m_second_attr;
@@ -36,9 +36,9 @@ private:
 
 	unsigned get_num_planes() const;
 public:
-	PairFilter(zimg::IZimgFilter *first, zimg::IZimgFilter *second);
+	PairFilter(zimg::graph::IZimgFilter *first, zimg::graph::IZimgFilter *second);
 
-	zimg::ZimgFilterFlags get_flags() const override;
+	zimg::graph::ZimgFilterFlags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -56,7 +56,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 #endif // ZIMG_PAIR_FILTER_H_

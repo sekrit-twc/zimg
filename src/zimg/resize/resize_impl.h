@@ -13,7 +13,7 @@ enum class PixelType;
 
 namespace resize {;
 
-class ResizeImplH : public ZimgFilter {
+class ResizeImplH : public graph::ZimgFilter {
 protected:
 	FilterContext m_filter;
 	image_attributes m_attr;
@@ -21,7 +21,7 @@ protected:
 
 	ResizeImplH(const FilterContext &filter, const image_attributes &attr);
 public:
-	ZimgFilterFlags get_flags() const override;
+	graph::ZimgFilterFlags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -32,7 +32,7 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-class ResizeImplV : public ZimgFilter {
+class ResizeImplV : public graph::ZimgFilter {
 protected:
 	FilterContext m_filter;
 	image_attributes m_attr;
@@ -40,7 +40,7 @@ protected:
 
 	ResizeImplV(const FilterContext &filter, const image_attributes &attr);
 public:
-	ZimgFilterFlags get_flags() const override;
+	graph::ZimgFilterFlags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -49,8 +49,8 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-                                double shift, double subwidth, CPUClass cpu);
+graph::IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+                                       double shift, double subwidth, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

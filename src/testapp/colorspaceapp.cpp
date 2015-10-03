@@ -94,7 +94,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::IZimgFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const zimg::graph::IZimgFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
 	auto results = measure_benchmark(times, FilterExecutor{ filter, nullptr, src_frame, dst_frame }, [](unsigned n, double d)
 	{
@@ -179,7 +179,7 @@ int colorspace_main(int argc, char **argv)
 	if (src_frame.is_yuv() != yuv_in)
 		std::cerr << "warning: input file is of different color family than declared format\n";
 
-	std::unique_ptr<zimg::IZimgFilter> convert{
+	std::unique_ptr<zimg::graph::IZimgFilter> convert{
 		new zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu }
 	};
 	execute(convert.get(), &src_frame, &dst_frame, args.times);

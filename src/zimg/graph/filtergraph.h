@@ -17,9 +17,12 @@ zimg_filter_graph::~zimg_filter_graph()
 
 namespace zimg {;
 
+enum class PixelType;
+
+namespace graph {;
+
 class IZimgFilter;
 
-enum class PixelType;
 
 class FilterGraph : public zimg_filter_graph {
 	class impl;
@@ -63,6 +66,7 @@ public:
 	void process(const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const;
 };
 
+} // namespace graph
 } // namespace zimg
 
 #endif // ZIMG_GRAPH_FILTERGRAPH_H_

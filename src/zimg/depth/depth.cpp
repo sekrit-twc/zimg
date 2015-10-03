@@ -1,6 +1,7 @@
-#include "graph/copy_filter.h"
 #include "common/except.h"
 #include "common/pixel.h"
+#include "graph/copy_filter.h"
+#include "graph/zfilter.h"
 #include "depth.h"
 #include "depth_convert.h"
 #include "dither.h"
@@ -22,12 +23,12 @@ bool is_lossless_conversion(const PixelFormat &pixel_in, const PixelFormat &pixe
 } // namespace
 
 
-IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	try
 	{
 		if (pixel_in == pixel_out)
-			return new CopyFilter{ width, height, pixel_in.type };
+			return new graph::CopyFilter{ width, height, pixel_in.type };
 		else if (is_lossless_conversion(pixel_in, pixel_out))
 			return create_left_shift(width, height, pixel_in, pixel_out, cpu);
 		else if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)

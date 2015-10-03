@@ -12,6 +12,7 @@
 #include "zfilter.h"
 
 namespace zimg {;
+namespace graph {;
 namespace {;
 
 class SimulationState {
@@ -917,4 +918,5 @@ void FilterGraph::process(const ZimgImageBufferConst &src, const ZimgImageBuffer
 	m_impl->process(src, dst, tmp, unpack_cb, pack_cb);
 }
 
+} // namespace graph
 } // namespace zimg

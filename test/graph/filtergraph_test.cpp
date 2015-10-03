@@ -47,7 +47,7 @@ TEST(FilterGraphTest, test_noop)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		zimg::FilterGraph graph{ w, h, type, 0, 0, !!x };
+		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, !!x };
 		graph.complete();
 
 		AuditImage<uint8_t> src_image{ w, h, type, 0, 0, !!x };
@@ -75,7 +75,7 @@ TEST(FilterGraphTest, test_noop_subsampling)
 			SCOPED_TRACE(sw);
 			SCOPED_TRACE(sh);
 
-			zimg::FilterGraph graph{ w, h, type, sw, sh, true };
+			zimg::graph::FilterGraph graph{ w, h, type, sw, sh, true };
 			graph.complete();
 
 			AuditImage<uint8_t> src_image{ w, h, type, sw, sh, true };
@@ -106,13 +106,13 @@ TEST(FilterGraphTest, test_basic)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		zimg::ZimgFilterFlags flags1{};
+		zimg::graph::ZimgFilterFlags flags1{};
 		flags1.has_state = true;
 		flags1.entire_row = true;
 		flags1.entire_plane = true;
 		flags1.color = !!x;
 
-		zimg::ZimgFilterFlags flags2{};
+		zimg::graph::ZimgFilterFlags flags2{};
 		flags2.has_state = true;
 		flags2.entire_row = false;
 		flags2.entire_plane = false;
@@ -129,7 +129,7 @@ TEST(FilterGraphTest, test_basic)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::FilterGraph graph{ w, h, type, 0, 0, !!x };
+		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, !!x };
 
 		graph.attach_filter(filter1);
 		filter1_uptr.release();
@@ -169,12 +169,12 @@ TEST(FilterGraphTest, test_skip_plane)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		zimg::ZimgFilterFlags flags1{};
+		zimg::graph::ZimgFilterFlags flags1{};
 		flags1.has_state = true;
 		flags1.entire_row = true;
 		flags1.color = true;
 
-		zimg::ZimgFilterFlags flags2{};
+		zimg::graph::ZimgFilterFlags flags2{};
 		flags2.has_state = false;
 		flags2.entire_row = true;
 		flags2.color = false;
@@ -190,7 +190,7 @@ TEST(FilterGraphTest, test_skip_plane)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::FilterGraph graph{ w, h, type, 0, 0, true };
+		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
 
 		graph.attach_filter(filter1);
 		filter1_uptr.release();
@@ -270,7 +270,7 @@ TEST(FilterGraphTest, test_support)
 			filter2->set_simultaneous_lines(5);
 		}
 
-		zimg::FilterGraph graph{ w, h, type, 0, 0, false };
+		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
 
 		graph.attach_filter(filter1);
 		filter1_uptr.release();
@@ -322,7 +322,7 @@ TEST(FilterGraphTest, test_callback)
 	const uint8_t test_byte3 = 0xDC;
 
 	struct callback_data {
-		zimg::ZimgImageBuffer buffer;
+		zimg::graph::ZimgImageBuffer buffer;
 		unsigned subsample_w;
 		unsigned subsample_h;
 		unsigned call_count;
@@ -363,7 +363,7 @@ TEST(FilterGraphTest, test_callback)
 				SCOPED_TRACE(sh);
 				SCOPED_TRACE(!!x);
 
-				zimg::ZimgFilterFlags flags{};
+				zimg::graph::ZimgFilterFlags flags{};
 				flags.entire_row = !!x;
 				flags.color = false;
 
@@ -378,7 +378,7 @@ TEST(FilterGraphTest, test_callback)
 				filter2->set_input_val(test_byte1);
 				filter2->set_output_val(test_byte2);
 
-				zimg::FilterGraph graph{ w, h, type, sw, sh, true };
+				zimg::graph::FilterGraph graph{ w, h, type, sw, sh, true };
 				graph.attach_filter(filter1);
 				filter1_uptr.release();
 				graph.attach_filter_uv(filter2);
@@ -424,7 +424,7 @@ TEST(FilterGraphTest, test_callback_failed)
 		return 1;
 	};
 
-	zimg::FilterGraph graph{ w, h, type, 0, 0, false };
+	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
 	graph.complete();
 
 	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, false };

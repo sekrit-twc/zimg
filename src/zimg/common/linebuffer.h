@@ -53,7 +53,7 @@ public:
 	 */
 	LineBuffer() = default;
 
-	explicit LineBuffer(const ZimgImageBufferTemplate<typename propagate_const<T, void>::type> &buffer, unsigned plane = 0) :
+	explicit LineBuffer(const graph::ZimgImageBufferTemplate<typename propagate_const<T, void>::type> &buffer, unsigned plane = 0) :
 		m_ptr{ buffer.data[plane] },
 		m_stride{ buffer.stride[plane] },
 		m_mask{ buffer.mask[plane] }

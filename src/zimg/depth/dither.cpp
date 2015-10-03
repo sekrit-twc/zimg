@@ -3,10 +3,12 @@
 #include <memory>
 #include <random>
 #include <utility>
+#include "common/align.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
+#include "graph/zfilter.h"
 #include "depth.h"
 #include "dither.h"
 #include "dither_x86.h"
@@ -252,7 +254,7 @@ public:
 	}
 };
 
-class OrderedDither : public ZimgFilter {
+class OrderedDither : public graph::ZimgFilter {
 	std::unique_ptr<OrderedDitherTable> m_dither_table;
 	dither_convert_func m_func;
 	dither_f16c_func m_f16c;
@@ -286,9 +288,9 @@ public:
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
 
-	ZimgFilterFlags get_flags() const override
+	graph::ZimgFilterFlags get_flags() const override
 	{
-		ZimgFilterFlags flags{};
+		graph::ZimgFilterFlags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
@@ -317,7 +319,7 @@ public:
 		return size;
 	}
 
-	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *ctx, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		const char *src_line = LineBuffer<const char>{ src }[i];
 		char *dst_line = LineBuffer<char>{ dst }[i];
@@ -346,7 +348,7 @@ public:
 	}
 };
 
-class ErrorDiffusion : public ZimgFilter {
+class ErrorDiffusion : public graph::ZimgFilter {
 public:
 	typedef void(*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
@@ -380,9 +382,9 @@ public:
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
 
-	ZimgFilterFlags get_flags() const override
+	graph::ZimgFilterFlags get_flags() const override
 	{
-		ZimgFilterFlags flags{};
+		graph::ZimgFilterFlags flags{};
 
 		flags.has_state = true;
 		flags.same_row = true;
@@ -412,7 +414,7 @@ public:
 		std::fill_n(reinterpret_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
 	}
 
-	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned, unsigned) const
+	void process(void *ctx, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned, unsigned) const
 	{
 		const void *src_p = LineBuffer<const void>(src)[i];
 		void *dst_p = LineBuffer<void>(dst)[i];
@@ -447,7 +449,7 @@ OrderedDitherTable *create_dither_table(DitherType type, unsigned width, unsigne
 	}
 }
 
-IZimgFilter *create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::IZimgFilter *create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	ErrorDiffusion::ed_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
@@ -464,13 +466,13 @@ IZimgFilter *create_error_diffusion(unsigned width, unsigned height, const Pixel
 } // namespace
 
 
-IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (type == DitherType::DITHER_ERROR_DIFFUSION)
 		return create_error_diffusion(width, height, pixel_in, pixel_out, cpu);
 
 	std::unique_ptr<OrderedDitherTable> table{ create_dither_table(type, width, height) };
-	IZimgFilter *ret = nullptr;
+	graph::IZimgFilter *ret = nullptr;
 
 	dither_convert_func func = nullptr;
 	dither_f16c_func f16c = nullptr;

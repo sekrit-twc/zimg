@@ -7,7 +7,7 @@
 
 #include "graph/zfilter.h"
 
-class MockFilter : public zimg::IZimgFilter {
+class MockFilter : public zimg::graph::IZimgFilter {
 protected:
 	struct context {
 		unsigned last_line;
@@ -16,13 +16,13 @@ protected:
 	};
 
 	image_attributes m_attr;
-	zimg::ZimgFilterFlags m_flags;
+	zimg::graph::ZimgFilterFlags m_flags;
 	mutable unsigned m_total_calls;
 	unsigned m_simultaneous_lines;
 	unsigned m_horizontal_support;
 	unsigned m_vertical_support;
 public:
-	MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags = {});
+	MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags = {});
 
 	unsigned get_total_calls() const;
 
@@ -33,7 +33,7 @@ public:
 	void set_vertical_support(unsigned n);
 
 	// IZimgFilter
-	zimg::ZimgFilterFlags get_flags() const override;
+	zimg::graph::ZimgFilterFlags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -51,7 +51,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 template <class T>
@@ -62,7 +62,7 @@ class SplatFilter : public MockFilter {
 	T m_dst_val;
 	bool m_input_checking;
 public:
-	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags = {});
+	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags = {});
 
 	void set_input_val(unsigned char x);
 
@@ -70,7 +70,7 @@ public:
 
 	void enable_input_checking(bool enabled);
 
-	void process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 extern template class SplatFilter<uint8_t>;

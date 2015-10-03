@@ -5,6 +5,7 @@
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
+#include "graph/zfilter.h"
 #include "depth_convert.h"
 #include "depth_convert_x86.h"
 #include "quantize.h"
@@ -84,7 +85,7 @@ depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const
 }
 
 
-class IntegerLeftShift : public ZimgFilter {
+class IntegerLeftShift : public graph::ZimgFilter {
 	left_shift_func m_func;
 
 	PixelType m_pixel_in;
@@ -117,9 +118,9 @@ public:
 		m_shift = pixel_out.depth - pixel_in.depth;
 	}
 
-	ZimgFilterFlags get_flags() const override
+	graph::ZimgFilterFlags get_flags() const override
 	{
-		ZimgFilterFlags flags{};
+		graph::ZimgFilterFlags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
@@ -132,7 +133,7 @@ public:
 		return{ m_width, m_height, m_pixel_out };
 	}
 
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		const char *src_line = LineBuffer<const char>(src)[i];
 		char *dst_line = LineBuffer<char>(dst)[i];
@@ -151,7 +152,7 @@ public:
 };
 
 
-class ConvertToFloat : public ZimgFilter {
+class ConvertToFloat : public graph::ZimgFilter {
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
 
@@ -190,9 +191,9 @@ public:
 		m_offset = static_cast<float>(-offset * (1.0 / range));
 	}
 
-	ZimgFilterFlags get_flags() const override
+	graph::ZimgFilterFlags get_flags() const override
 	{
-		ZimgFilterFlags flags{};
+		graph::ZimgFilterFlags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
@@ -221,7 +222,7 @@ public:
 		return size;
 	}
 
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		const char *src_line = LineBuffer<const char>{ src }[i];
 		char *dst_line = LineBuffer<char>{ dst }[i];
@@ -249,7 +250,7 @@ public:
 } // namespace
 
 
-IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	left_shift_func func = nullptr;
 
@@ -260,7 +261,7 @@ IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelForma
 }
 
 
-IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;

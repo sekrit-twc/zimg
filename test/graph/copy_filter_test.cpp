@@ -20,7 +20,7 @@ TEST(CopyFilterTest, test)
 	for (unsigned x = 0; x < 4; ++x) {
 		SCOPED_TRACE(static_cast<int>(types[x]));
 
-		zimg::CopyFilter copy{ w, h, types[x] };
+		zimg::graph::CopyFilter copy{ w, h, types[x] };
 		validate_filter(&copy, w, h, types[x], expected_sha1[x]);
 	}
 }

@@ -4,7 +4,6 @@
 #include "common/pixel.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
-#include "colorspace.h"
 #include "graph.h"
 
 namespace zimg {;
@@ -22,9 +21,9 @@ try :
 	throw error::OutOfMemory{};
 }
 
-ZimgFilterFlags ColorspaceConversion::get_flags() const
+graph::ZimgFilterFlags ColorspaceConversion::get_flags() const
 {
-	ZimgFilterFlags flags{};
+	graph::ZimgFilterFlags flags{};
 
 	flags.same_row = true;
 	flags.in_place = true;
@@ -33,12 +32,12 @@ ZimgFilterFlags ColorspaceConversion::get_flags() const
 	return flags;
 }
 
-IZimgFilter::image_attributes ColorspaceConversion::get_image_attributes() const
+graph::IZimgFilter::image_attributes ColorspaceConversion::get_image_attributes() const
 {
 	return{ m_width, m_height, PixelType::FLOAT };
 }
 
-void ColorspaceConversion::process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
+void ColorspaceConversion::process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
 {
 	const float *src_ptr[3];
 	float *dst_ptr[3];

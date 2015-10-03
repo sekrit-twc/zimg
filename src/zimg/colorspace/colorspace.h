@@ -13,7 +13,7 @@ namespace colorspace {;
 
 struct ColorspaceDefinition;
 
-class ColorspaceConversion final : public ZimgFilter {
+class ColorspaceConversion final : public graph::ZimgFilter {
 	std::vector<std::shared_ptr<Operation>> m_operations;
 	unsigned m_width;
 	unsigned m_height;
@@ -24,9 +24,9 @@ public:
 
 	image_attributes get_image_attributes() const override;
 
-	ZimgFilterFlags get_flags() const override;
+	graph::ZimgFilterFlags get_flags() const override;
 
-	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace colorspace

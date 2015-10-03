@@ -7,6 +7,7 @@
 #include "zfilter.h"
 
 namespace zimg {;
+namespace graph {;
 
 class MuxFilter final : public IZimgFilter {
 	std::unique_ptr<IZimgFilter> m_filter;
@@ -36,6 +37,7 @@ public:
 	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
+} // namespace graph
 } // namespace zimg
 
 #endif // ZIMG_GRAPH_MUX_FILTER_H_

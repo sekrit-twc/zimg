@@ -9,20 +9,13 @@
 #include "common/align.h"
 #include "ztypes.h"
 
-struct zimg_filter {
-	virtual inline ~zimg_filter() = 0;
-};
-
-zimg_filter::~zimg_filter()
-{
-}
-
-
 namespace zimg {;
 
 enum class PixelType;
 
-class IZimgFilter : public zimg_filter {
+namespace graph {;
+
+class IZimgFilter {
 public:
 	struct image_attributes {
 		unsigned width;
@@ -127,6 +120,7 @@ inline unsigned select_zimg_buffer_mask(unsigned count)
 	return 0;
 }
 
+} // namespace graph
 } // namespace zimg
 
 #endif // ZIMG_GRAPH_ZFILTER_H_

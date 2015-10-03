@@ -291,9 +291,9 @@ zimg::resize::Filter *translate_resize_filter(zimg_resample_filter_e filter_type
 	}
 }
 
-zimg::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
+zimg::graph::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 {
-	zimg::ZimgImageBuffer dst{};
+	zimg::graph::ZimgImageBuffer dst{};
 
 	API_VERSION_ASSERT(src.m.version);
 
@@ -307,9 +307,9 @@ zimg::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 	return dst;
 }
 
-zimg::ZimgImageBufferConst import_image_buffer(const zimg_image_buffer_const &src)
+zimg::graph::ZimgImageBufferConst import_image_buffer(const zimg_image_buffer_const &src)
 {
-	zimg::ZimgImageBufferConst dst{};
+	zimg::graph::ZimgImageBufferConst dst{};
 
 	API_VERSION_ASSERT(src.version);
 
@@ -458,7 +458,7 @@ public:
 		}
 	};
 private:
-	std::unique_ptr<zimg::FilterGraph> m_graph;
+	std::unique_ptr<zimg::graph::FilterGraph> m_graph;
 	state m_state;
 	bool m_dirty;
 
@@ -498,14 +498,14 @@ private:
 		       (m_state.subsample_h && m_state.chroma_location_h != target.chroma_location_h);
 	}
 
-	void attach_filter(std::unique_ptr<zimg::IZimgFilter> &&filter)
+	void attach_filter(std::unique_ptr<zimg::graph::IZimgFilter> &&filter)
 	{
 		m_graph->attach_filter(filter.get());
 		filter.release();
 		m_dirty = true;
 	}
 
-	void attach_filter_uv(std::unique_ptr<zimg::IZimgFilter> &&filter)
+	void attach_filter_uv(std::unique_ptr<zimg::graph::IZimgFilter> &&filter)
 	{
 		m_graph->attach_filter_uv(filter.get());
 		filter.release();
@@ -517,7 +517,7 @@ private:
 		if (m_state.is_greyscale())
 			throw zimg::error::NoColorspaceConversion{ "cannot apply colorspace conversion to greyscale image" };
 
-		std::unique_ptr<zimg::IZimgFilter> filter;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter;
 		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
 
 		if (m_state.colorspace == colorspace)
@@ -535,8 +535,8 @@ private:
 		zimg::depth::DitherType dither_type = params ? params->dither_type : zimg::depth::DitherType::DITHER_NONE;
 		zimg::PixelFormat src_format = zimg::default_pixel_format(m_state.type);
 
-		std::unique_ptr<zimg::IZimgFilter> filter;
-		std::unique_ptr<zimg::IZimgFilter> filter_uv;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter_uv;
 		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
 
 		if (src_format == format)
@@ -558,7 +558,7 @@ private:
 				zimg::depth::create_depth(dither_type, m_state.width >> m_state.subsample_w, m_state.height >> m_state.subsample_h,
 				                           src_format_uv, format_uv, cpu));
 		} else if (m_state.is_rgb()) {
-			std::unique_ptr<zimg::IZimgFilter> mux{ new zimg::MuxFilter{ filter.get(), filter_uv.get() } };
+			std::unique_ptr<zimg::graph::IZimgFilter> mux{ new zimg::graph::MuxFilter{ filter.get(), filter_uv.get() } };
 			filter.release();
 			filter_uv.release();
 
@@ -607,10 +607,10 @@ private:
 		                        ((m_state.subsample_w || subsample_w) && m_state.chroma_location_w != chroma_location_w) ||
 		                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h);
 
-		std::unique_ptr<zimg::IZimgFilter> filter1;
-		std::unique_ptr<zimg::IZimgFilter> filter2;
-		std::unique_ptr<zimg::IZimgFilter> filter1_uv;
-		std::unique_ptr<zimg::IZimgFilter> filter2_uv;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter1;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter2;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter1_uv;
+		std::unique_ptr<zimg::graph::IZimgFilter> filter2_uv;
 
 		if (do_resize_luma) {
 			double shift_h = luma_shift_factor(m_state.parity, m_state.height, height);
@@ -620,14 +620,14 @@ private:
 			filter2.reset(filter_pair.second);
 
 			if (m_state.is_rgb()) {
-				std::unique_ptr<zimg::IZimgFilter> mux;
+				std::unique_ptr<zimg::graph::IZimgFilter> mux;
 
-				mux.reset(new zimg::MuxFilter{ filter1.get(), nullptr });
+				mux.reset(new zimg::graph::MuxFilter{ filter1.get(), nullptr });
 				filter1.release();
 				filter1 = std::move(mux);
 
 				if (filter2) {
-					mux.reset(new zimg::MuxFilter{ filter2.get(), nullptr });
+					mux.reset(new zimg::graph::MuxFilter{ filter2.get(), nullptr });
 					filter2.release();
 					filter2 = std::move(mux);
 				}
@@ -676,11 +676,11 @@ public:
 
 		source.validate();
 
-		m_graph.reset(new zimg::FilterGraph{ source.width, source.height, source.type, source.subsample_w, source.subsample_h, source.color != ColorFamily::COLOR_GREY });
+		m_graph.reset(new zimg::graph::FilterGraph{ source.width, source.height, source.type, source.subsample_w, source.subsample_h, source.color != ColorFamily::COLOR_GREY });
 		m_state = source;
 	}
 
-	zimg::FilterGraph *build(const state &target, const params *params)
+	zimg::graph::FilterGraph *build(const state &target, const params *params)
 	{
 		if (m_dirty || !m_graph)
 			throw zimg::error::InternalError{ "graph already built" };
@@ -832,7 +832,7 @@ void zimg_clear_last_error(void)
 
 unsigned zimg_select_buffer_mask(unsigned count)
 {
-	return zimg::select_zimg_buffer_mask(count);
+	return zimg::graph::select_zimg_buffer_mask(count);
 }
 
 #define EX_BEGIN \
@@ -855,7 +855,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 	_zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::FilterGraph>(ptr)->get_tmp_size();
+	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_tmp_size();
 	EX_END
 }
 
@@ -865,7 +865,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
 	_zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::FilterGraph>(ptr)->get_input_buffering();
+	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_input_buffering();
 	EX_END
 }
 
@@ -875,7 +875,7 @@ zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph
 	_zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::FilterGraph>(ptr)->get_output_buffering();
+	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_output_buffering();
 	EX_END
 }
 
@@ -906,9 +906,9 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	POINTER_ALIGNMENT_ASSERT(tmp);
 
 	EX_BEGIN
-	const zimg::FilterGraph *graph = assert_dynamic_cast<const zimg::FilterGraph>(ptr);
-	zimg::ZimgImageBufferConst src_buf = import_image_buffer(*src);
-	zimg::ZimgImageBuffer dst_buf = import_image_buffer(*dst);
+	const zimg::graph::FilterGraph *graph = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr);
+	zimg::graph::ZimgImageBufferConst src_buf = import_image_buffer(*src);
+	zimg::graph::ZimgImageBuffer dst_buf = import_image_buffer(*dst);
 
 	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
 	EX_END

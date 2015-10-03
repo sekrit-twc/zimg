@@ -61,9 +61,9 @@ unsigned PairFilter::get_cache_line_count() const
 	else if (m_first_flags.entire_plane || m_second_flags.entire_plane)
 		return m_first_attr.height;
 	else if (m_second_flags.same_row && m_first_step == m_second_step)
-		return zimg::select_zimg_buffer_mask(m_second_buffering) + 1;
+		return zimg::graph::select_zimg_buffer_mask(m_second_buffering) + 1;
 	else
-		return zimg::select_zimg_buffer_mask(m_first_step + m_second_buffering - 1) + 1;
+		return zimg::graph::select_zimg_buffer_mask(m_first_step + m_second_buffering - 1) + 1;
 }
 
 size_t PairFilter::get_cache_size_one_plane() const
@@ -76,9 +76,9 @@ unsigned PairFilter::get_num_planes() const
 	return m_color ? 3 : 1;
 }
 
-zimg::ZimgFilterFlags PairFilter::get_flags() const
+zimg::graph::ZimgFilterFlags PairFilter::get_flags() const
 {
-	zimg::ZimgFilterFlags flags{};
+	zimg::graph::ZimgFilterFlags flags{};
 
 	flags.has_state = m_has_state;
 	flags.same_row = m_first_flags.same_row && m_second_flags.same_row;
@@ -90,12 +90,12 @@ zimg::ZimgFilterFlags PairFilter::get_flags() const
 	return flags;
 }
 
-zimg::IZimgFilter::image_attributes PairFilter::get_image_attributes() const
+zimg::graph::IZimgFilter::image_attributes PairFilter::get_image_attributes() const
 {
 	return m_second_attr;
 }
 
-zimg::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
+zimg::graph::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
 {
 	auto second_range = m_second->get_required_row_range(i);
 	auto top_range = m_first->get_required_row_range(zimg::mod(second_range.first, m_first_step));
@@ -104,7 +104,7 @@ zimg::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) 
 	return{ top_range.first, bot_range.second };
 }
 
-zimg::IZimgFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
+zimg::graph::IZimgFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
 {
 	auto second_range = m_second->get_required_col_range(left, right);
 	auto first_range = m_first->get_required_col_range(second_range.first, second_range.second);
@@ -183,18 +183,18 @@ void PairFilter::init_context(void *ctx) const
 	}
 
 	cache->cache_line_pos = 0;
-	cache->cache_mask = zimg::select_zimg_buffer_mask(get_cache_line_count());
+	cache->cache_mask = zimg::graph::select_zimg_buffer_mask(get_cache_line_count());
 	cache->col_left = 0;
 	cache->col_right = 0;
 }
 
-void PairFilter::process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void PairFilter::process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	cache_context *cache = static_cast<cache_context *>(ctx);
 	auto row_range = m_second->get_required_row_range(i);
 	auto col_range = m_second->get_required_col_range(left, right);
 	ptrdiff_t cache_stride = get_cache_stride();
-	zimg::ZimgImageBuffer cache_buf{};
+	zimg::graph::ZimgImageBuffer cache_buf{};
 
 	if (left != cache->col_left || right != cache->col_right) {
 		cache->col_left = left;

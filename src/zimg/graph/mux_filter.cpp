@@ -5,6 +5,7 @@
 #include "mux_filter.h"
 
 namespace zimg{;
+namespace graph {;
 
 MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
 	m_flags{}
@@ -145,4 +146,5 @@ void MuxFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgIm
 	}
 }
 
+} // namespace graph
 } // namespace zimg

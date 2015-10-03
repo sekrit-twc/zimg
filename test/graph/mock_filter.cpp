@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "mock_filter.h"
 
-MockFilter::MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags) :
+MockFilter::MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags) :
 	m_attr{ width, height, type },
 	m_flags{ flags },
 	m_total_calls{},
@@ -37,17 +37,17 @@ void MockFilter::set_vertical_support(unsigned n)
 		m_vertical_support = n;
 }
 
-zimg::ZimgFilterFlags MockFilter::get_flags() const
+zimg::graph::ZimgFilterFlags MockFilter::get_flags() const
 {
 	return m_flags;
 }
 
-zimg::IZimgFilter::image_attributes MockFilter::get_image_attributes() const
+zimg::graph::IZimgFilter::image_attributes MockFilter::get_image_attributes() const
 {
 	return m_attr;
 }
 
-zimg::IZimgFilter::pair_unsigned MockFilter::get_required_row_range(unsigned i) const
+zimg::graph::IZimgFilter::pair_unsigned MockFilter::get_required_row_range(unsigned i) const
 {
 	if (get_flags().entire_plane) {
 		EXPECT_EQ(0U, i);
@@ -59,7 +59,7 @@ zimg::IZimgFilter::pair_unsigned MockFilter::get_required_row_range(unsigned i) 
 	}
 }
 
-zimg::IZimgFilter::pair_unsigned MockFilter::get_required_col_range(unsigned left, unsigned right) const
+zimg::graph::IZimgFilter::pair_unsigned MockFilter::get_required_col_range(unsigned left, unsigned right) const
 {
 	if (get_flags().entire_row) {
 		EXPECT_EQ(0U, left);
@@ -99,7 +99,7 @@ void MockFilter::init_context(void *ctx) const
 	new (ctx) context{};
 }
 
-void MockFilter::process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void MockFilter::process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	context *audit_ctx = reinterpret_cast<context *>(ctx);
 	auto flags = get_flags();
@@ -148,7 +148,7 @@ T SplatFilter<T>::splat_byte(unsigned char b)
 }
 
 template <class T>
-SplatFilter<T>::SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::ZimgFilterFlags &flags) :
+SplatFilter<T>::SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags) :
 	MockFilter(width, height, type, flags),
 	m_src_val{ splat_byte(0xCD) },
 	m_dst_val{ splat_byte(0xDC) },
@@ -175,7 +175,7 @@ void SplatFilter<T>::enable_input_checking(bool enabled)
 }
 
 template <class T>
-void SplatFilter<T>::process(void *ctx, const zimg::ZimgImageBufferConst &src, const zimg::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void SplatFilter<T>::process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	MockFilter::process(ctx, src, dst, tmp, i, left, right);
 

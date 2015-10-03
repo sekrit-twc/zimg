@@ -11,7 +11,7 @@
 template <class T>
 class AuditBuffer {
 	zimg::AlignedVector<T> m_vector[3];
-	zimg::ZimgImageBuffer m_buffer;
+	zimg::graph::ZimgImageBuffer m_buffer;
 	zimg::PixelFormat m_format;
 	unsigned m_width[3];
 	unsigned m_buffer_height[3];
@@ -45,7 +45,7 @@ public:
 
 	void default_fill();
 
-	const zimg::ZimgImageBuffer &as_image_buffer() const;
+	const zimg::graph::ZimgImageBuffer &as_image_buffer() const;
 };
 
 extern template class AuditBuffer<uint8_t>;

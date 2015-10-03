@@ -561,7 +561,7 @@ public:
 		return 8 * ((range.second - mod(range.first, 8) + 8) * sizeof(uint16_t));
 	}
 
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		LineBuffer<const uint16_t> src_buf{ src };
 		LineBuffer<uint16_t> dst_buf{ dst };
@@ -606,7 +606,7 @@ public:
 			return 0;
 	}
 
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		LineBuffer<const uint16_t> src_buf{ src };
 		LineBuffer<uint16_t> dst_buf{ dst };
@@ -647,9 +647,9 @@ public:
 } // namespace
 
 
-IZimgFilter *create_resize_impl2_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+graph::IZimgFilter *create_resize_impl2_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	IZimgFilter *ret = nullptr;
+	graph::IZimgFilter *ret = nullptr;
 
 	if (type == zimg::PixelType::WORD)
 		ret = new ResizeImplH_U16_SSE2{ context, height, depth };
@@ -657,9 +657,9 @@ IZimgFilter *create_resize_impl2_h_sse2(const FilterContext &context, unsigned h
 	return ret;
 }
 
-IZimgFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+graph::IZimgFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
-	IZimgFilter *ret = nullptr;
+	graph::IZimgFilter *ret = nullptr;
 
 	if (type == zimg::PixelType::WORD)
 		ret = new ResizeImplV_U16_SSE2{ context, width, depth };

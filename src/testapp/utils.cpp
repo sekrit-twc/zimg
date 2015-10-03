@@ -11,10 +11,10 @@ struct FilterExecutor::data {
 	zimg::AlignedVector<char> tmp;
 };
 
-void FilterExecutor::exec_grey(const zimg::IZimgFilter *filter, unsigned plane)
+void FilterExecutor::exec_grey(const zimg::graph::IZimgFilter *filter, unsigned plane)
 {
-	zimg::ZimgImageBufferConst src_buffer = m_src_frame->as_read_buffer(plane);
-	zimg::ZimgImageBuffer dst_buffer = m_dst_frame->as_write_buffer(plane);
+	zimg::graph::ZimgImageBufferConst src_buffer = m_src_frame->as_read_buffer(plane);
+	zimg::graph::ZimgImageBuffer dst_buffer = m_dst_frame->as_write_buffer(plane);
 
 	auto attr = filter->get_image_attributes();
 	unsigned step = filter->get_simultaneous_lines();
@@ -28,8 +28,8 @@ void FilterExecutor::exec_grey(const zimg::IZimgFilter *filter, unsigned plane)
 
 void FilterExecutor::exec_color()
 {
-	zimg::ZimgImageBufferConst src_buffer = m_src_frame->as_read_buffer();
-	zimg::ZimgImageBuffer dst_buffer = m_dst_frame->as_write_buffer();
+	zimg::graph::ZimgImageBufferConst src_buffer = m_src_frame->as_read_buffer();
+	zimg::graph::ZimgImageBuffer dst_buffer = m_dst_frame->as_write_buffer();
 
 	auto attr = m_filter->get_image_attributes();
 	unsigned step = m_filter->get_simultaneous_lines();
@@ -41,7 +41,7 @@ void FilterExecutor::exec_color()
 	}
 }
 
-FilterExecutor::FilterExecutor(const zimg::IZimgFilter *filter, const zimg::IZimgFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame) :
+FilterExecutor::FilterExecutor(const zimg::graph::IZimgFilter *filter, const zimg::graph::IZimgFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame) :
 	m_data{ std::make_shared<data>() },
 	m_filter{ filter },
 	m_filter_uv{ filter_uv },
@@ -57,13 +57,13 @@ FilterExecutor::FilterExecutor(const zimg::IZimgFilter *filter, const zimg::IZim
 
 void FilterExecutor::operator()()
 {
-	zimg::ZimgFilterFlags flags = m_filter->get_flags();
+	zimg::graph::ZimgFilterFlags flags = m_filter->get_flags();
 
 	if (!flags.color) {
 		unsigned planes = m_dst_frame->planes();
 
 		for (unsigned p = 0; p < planes; ++p) {
-			const zimg::IZimgFilter *filter = (m_filter_uv && (p == 1 || p == 2)) ? m_filter_uv : m_filter;
+			const zimg::graph::IZimgFilter *filter = (m_filter_uv && (p == 1 || p == 2)) ? m_filter_uv : m_filter;
 			exec_grey(filter, p);
 		}
 	} else {

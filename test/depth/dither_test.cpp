@@ -1,5 +1,6 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "graph/zfilter.h"
 #include "depth/depth.h"
 #include "depth/dither.h"
 
@@ -30,7 +31,7 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			fmt_out.fullrange = fullrange;
 			fmt_out.chroma = chroma;
 
-			std::unique_ptr<zimg::IZimgFilter> dither{ zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE) };
+			std::unique_ptr<zimg::graph::IZimgFilter> dither{ zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE) };
 			validate_filter(dither.get(), w, h, pxin, expected_sha1[sha1_idx++]);
 		}
 	}

@@ -6,6 +6,7 @@
 #include <cstddef>
 
 namespace zimg {;
+namespace graph {;
 
 const unsigned API_VERSION = 2;
 
@@ -35,6 +36,7 @@ struct ZimgFilterFlags {
 	unsigned char color;
 };
 
+} // namespace graph
 } // namespace zimg
 
 #endif // ZIMG_GRAPH_ZTYPES_H_

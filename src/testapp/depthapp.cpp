@@ -5,6 +5,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
+#include "graph/zfilter.h"
 #include "depth/depth.h"
 #include "apps.h"
 #include "argparse.h"
@@ -64,7 +65,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::IZimgFilter *filter, const zimg::IZimgFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const zimg::graph::IZimgFilter *filter, const zimg::graph::IZimgFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
 	auto results = measure_benchmark(times, FilterExecutor{ filter, filter_uv, src_frame, dst_frame }, [](unsigned n, double d)
 	{
@@ -158,8 +159,8 @@ int depth_main(int argc, char **argv)
 
 	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(), is_yuv, src_frame.subsample_w(), src_frame.subsample_h() };
 
-	std::unique_ptr<zimg::IZimgFilter> filter;
-	std::unique_ptr<zimg::IZimgFilter> filter_uv;
+	std::unique_ptr<zimg::graph::IZimgFilter> filter;
+	std::unique_ptr<zimg::graph::IZimgFilter> filter_uv;
 
 	filter.reset(zimg::depth::create_depth(
 		args.dither, src_frame.width(), src_frame.height(), args.format_in, args.format_out, args.cpu));

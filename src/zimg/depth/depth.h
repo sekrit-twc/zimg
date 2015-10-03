@@ -4,12 +4,18 @@
 #define ZIMG_DEPTH_DEPTH_H_
 
 #include <memory>
-#include "graph/zfilter.h"
 
 namespace zimg {;
 
 enum class CPUClass;
 struct PixelFormat;
+
+namespace graph {;
+
+class IZimgFilter;
+
+} // namespace graph
+
 
 namespace depth {;
 
@@ -20,7 +26,7 @@ enum class DitherType {
 	DITHER_ERROR_DIFFUSION
 };
 
-IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+graph::IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

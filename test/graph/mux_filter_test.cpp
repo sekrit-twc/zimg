@@ -25,7 +25,7 @@ TEST(MuxFilterTest, test_one_filter)
 			SCOPED_TRACE(!!state);
 			SCOPED_TRACE(!!entire_row);
 
-			zimg::ZimgFilterFlags flags{};
+			zimg::graph::ZimgFilterFlags flags{};
 			flags.has_state = !!state;
 			flags.entire_row = !!entire_row;
 
@@ -35,7 +35,7 @@ TEST(MuxFilterTest, test_one_filter)
 			filter->set_output_val(test_byte);
 			filter->enable_input_checking(false);
 
-			zimg::MuxFilter mux{ filter.get(), nullptr };
+			zimg::graph::MuxFilter mux{ filter.get(), nullptr };
 			filter.release();
 
 			auto mux_flags = mux.get_flags();
@@ -82,11 +82,11 @@ TEST(MuxFilterTest, test_two_filter)
 			SCOPED_TRACE(!!state);
 			SCOPED_TRACE(!!entire_row);
 
-			zimg::ZimgFilterFlags flags1{};
+			zimg::graph::ZimgFilterFlags flags1{};
 			flags1.has_state = false;
 			flags1.entire_row = false;
 
-			zimg::ZimgFilterFlags flags2{};
+			zimg::graph::ZimgFilterFlags flags2{};
 			flags2.has_state = !!state;
 			flags2.entire_row = !!entire_row;
 
@@ -103,7 +103,7 @@ TEST(MuxFilterTest, test_two_filter)
 			filter2->set_output_val(test_byte2);
 			filter2->enable_input_checking(false);
 
-			zimg::MuxFilter mux{ filter1.get(), filter2.get() };
+			zimg::graph::MuxFilter mux{ filter1.get(), filter2.get() };
 			filter1.release();
 			filter2.release();
 

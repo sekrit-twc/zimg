@@ -5,6 +5,7 @@
 #include <typeinfo>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "graph/zfilter.h"
 #include "depth/depth.h"
 #include "depth/dither.h"
 
@@ -24,8 +25,8 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 		return;
 	}
 
-	std::unique_ptr<zimg::IZimgFilter> filter_c{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE) };
-	std::unique_ptr<zimg::IZimgFilter> filter_sse2{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2) };
+	std::unique_ptr<zimg::graph::IZimgFilter> filter_c{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE) };
+	std::unique_ptr<zimg::graph::IZimgFilter> filter_sse2{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2) };
 
 	validate_filter(filter_sse2.get(), w, h, pixel_in, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);

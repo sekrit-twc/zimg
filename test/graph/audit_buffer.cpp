@@ -115,7 +115,7 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat f
 	m_guard_val{ splat_byte(0xFE) },
 	m_color{ color }
 {
-	unsigned mask = zimg::select_zimg_buffer_mask(lines);
+	unsigned mask = zimg::graph::select_zimg_buffer_mask(lines);
 
 	for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
 		unsigned width_plane = p ? width >> subsample_w : width;
@@ -247,7 +247,7 @@ void AuditBuffer<T>::default_fill()
 }
 
 template <class T>
-const zimg::ZimgImageBuffer &AuditBuffer<T>::as_image_buffer() const
+const zimg::graph::ZimgImageBuffer &AuditBuffer<T>::as_image_buffer() const
 {
 	return m_buffer;
 }
