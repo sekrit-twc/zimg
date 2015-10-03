@@ -4,7 +4,7 @@
 #define ZIMG_PAIR_FILTER_H_
 
 #include <memory>
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 enum class PixelType;
 

@@ -2,12 +2,12 @@
 #include <memory>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 
 #include "gtest/gtest.h"
-#include "common/filter_validator.h"
+#include "graph/filter_validator.h"
 
 namespace {;
 

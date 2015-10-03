@@ -4,10 +4,10 @@
 
 #include "common/align.h"
 #include "common/except.h"
-#include "common/filtergraph.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
-#include "common/zfilter.h"
+#include "graph/filtergraph.h"
+#include "graph/zfilter.h"
 
 #include "gtest/gtest.h"
 #include "audit_buffer.h"

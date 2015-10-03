@@ -4,7 +4,7 @@
 #define ZIMG_DEPTH_DEPTH_H_
 
 #include <memory>
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 namespace zimg {;
 

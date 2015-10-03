@@ -3,7 +3,7 @@
 #include <random>
 #include "common/linebuffer.h"
 #include "common/zassert.h"
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 #include "depth/quantize.h"
 
 #include "gtest/gtest.h"

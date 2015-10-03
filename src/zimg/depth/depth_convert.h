@@ -3,7 +3,7 @@
 #ifndef ZIMG_DEPTH_DEPTH_CONVERT_H_
 #define ZIMG_DEPTH_DEPTH_CONVERT_H_
 
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 namespace zimg {;
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#ifndef ZIMG_MOCK_FILTER_H_
-#define ZIMG_MOCK_FILTER_H_
+#ifndef ZIMG_GRAPH_MOCK_FILTER_H_
+#define ZIMG_GRAPH_MOCK_FILTER_H_
 
 #include <cstdint>
 
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 class MockFilter : public zimg::IZimgFilter {
 protected:
@@ -77,4 +77,4 @@ extern template class SplatFilter<uint8_t>;
 extern template class SplatFilter<uint16_t>;
 extern template class SplatFilter<float>;
 
-#endif // ZIMG_MOCK_FILTER_H_
+#endif // ZIMG_GRAPH_MOCK_FILTER_H_

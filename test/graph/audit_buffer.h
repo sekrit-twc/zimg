@@ -1,12 +1,12 @@
 #pragma once
 
-#ifndef ZIMG_UNIT_TEST_AUDIT_H_
-#define ZIMG_UNIT_TEST_AUDIT_H_
+#ifndef ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
+#define ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
 
 #include <cstdint>
 #include "common/align.h"
 #include "common/pixel.h"
-#include "common/ztypes.h"
+#include "graph/ztypes.h"
 
 template <class T>
 class AuditBuffer {
@@ -52,4 +52,4 @@ extern template class AuditBuffer<uint8_t>;
 extern template class AuditBuffer<uint16_t>;
 extern template class AuditBuffer<float>;
 
-#endif // ZIMG_UNIT_TEST_AUDIT_H_
+#endif // ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_

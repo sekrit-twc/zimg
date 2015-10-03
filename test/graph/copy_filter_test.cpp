@@ -1,8 +1,8 @@
-#include "common/copy_filter.h"
 #include "common/pixel.h"
+#include "graph/copy_filter.h"
 
 #include "gtest/gtest.h"
-#include "common/filter_validator.h"
+#include "filter_validator.h"
 
 TEST(CopyFilterTest, test)
 {

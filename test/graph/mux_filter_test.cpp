@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <memory>
-#include "common/mux_filter.h"
 #include "common/pixel.h"
-#include "common/zfilter.h"
+#include "graph/mux_filter.h"
+#include "graph/zfilter.h"
 
 #include "gtest/gtest.h"
 #include "filter_validator.h"

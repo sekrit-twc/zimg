@@ -1,7 +1,7 @@
 #include <algorithm>
-#include "align.h"
-#include "alloc.h"
-#include "except.h"
+#include "common/align.h"
+#include "common/alloc.h"
+#include "common/except.h"
 #include "mux_filter.h"
 
 namespace zimg{;

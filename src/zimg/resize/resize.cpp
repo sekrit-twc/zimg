@@ -2,9 +2,9 @@
 #include <memory>
 #include "common/align.h"
 #include "common/alloc.h"
-#include "common/copy_filter.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
+#include "graph/copy_filter.h"
 #include "resize.h"
 #include "resize_impl.h"
 

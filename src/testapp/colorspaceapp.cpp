@@ -6,7 +6,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 #include "colorspace/colorspace_param.h"
 #include "colorspace/colorspace.h"
 

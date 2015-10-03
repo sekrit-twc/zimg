@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <type_traits>
-#include "ztypes.h"
+#include "graph/ztypes.h"
 
 namespace zimg {;
 

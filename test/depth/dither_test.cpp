@@ -4,7 +4,7 @@
 #include "depth/dither.h"
 
 #include "gtest/gtest.h"
-#include "common/filter_validator.h"
+#include "graph/filter_validator.h"
 
 namespace {;
 

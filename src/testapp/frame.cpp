@@ -7,11 +7,11 @@
 #include <string>
 #include "common/align.h"
 #include "common/cpuinfo.h"
-#include "common/filtergraph.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "common/zfilter.h"
+#include "graph/filtergraph.h"
+#include "graph/zfilter.h"
 #include "depth/depth.h"
 
 #include "frame.h"

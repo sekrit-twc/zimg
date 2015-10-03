@@ -49,6 +49,12 @@
     <Filter Include="Source Files\unresize">
       <UniqueIdentifier>{d663766c-e085-4347-a5fd-ca2fca946145}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graph">
+      <UniqueIdentifier>{085eef1b-be71-4f84-b116-4f272ec7eb0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graph">
+      <UniqueIdentifier>{35afa172-952c-4706-8c02-d51082bca12f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -81,16 +87,10 @@
     <ClInclude Include="..\..\src\zimg\common\alloc.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\copy_filter.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\cpuinfo.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\except.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\filtergraph.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h">
@@ -100,9 +100,6 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\matrix.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\mux_filter.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\osdep.h">
@@ -115,12 +112,6 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\zassert.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\zfilter.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\ztypes.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\depth\depth.h">
@@ -168,6 +159,21 @@
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl_x86.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\mux_filter.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\zfilter.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\ztypes.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -191,13 +197,7 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\common\filtergraph.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\common\mux_filter.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp">
@@ -253,6 +253,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_x86.cpp">
       <Filter>Source Files\unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\mux_filter.cpp">
+      <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,14 +1,14 @@
 #include <algorithm>
 #include <cstdint>
 #include <vector>
-#include "align.h"
-#include "alloc.h"
+#include "common/align.h"
+#include "common/alloc.h"
+#include "common/except.h"
+#include "common/linebuffer.h"
+#include "common/pixel.h"
+#include "common/zassert.h"
 #include "copy_filter.h"
-#include "except.h"
 #include "filtergraph.h"
-#include "linebuffer.h"
-#include "pixel.h"
-#include "zassert.h"
 #include "zfilter.h"
 
 namespace zimg {;

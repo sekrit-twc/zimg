@@ -1,4 +1,4 @@
-#include "common/copy_filter.h"
+#include "graph/copy_filter.h"
 #include "common/except.h"
 #include "common/pixel.h"
 #include "depth.h"

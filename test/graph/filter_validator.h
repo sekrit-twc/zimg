@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_UNIT_TEST_FILTER_VALIDATOR_H_
-#define ZIMG_UNIT_TEST_FILTER_VALIDATOR_H_
+#ifndef ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_
+#define ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_
 
 namespace zimg {;
 
@@ -23,4 +23,4 @@ void validate_filter_reference(const zimg::IZimgFilter *ref_filter, const zimg::
 void validate_filter_reference(const zimg::IZimgFilter *ref_filter, const zimg::IZimgFilter *test_filter,
                                unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh);
 
-#endif // ZIMG_UNIT_TEST_FILTER_VALIDATOR_H_
+#endif // ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_

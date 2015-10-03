@@ -34,17 +34,12 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/colorspace/operation_impl.h \
 					 src/zimg/common/align.h \
 					 src/zimg/common/alloc.h \
-					 src/zimg/common/copy_filter.h \
 					 src/zimg/common/cpuinfo.h \
 					 src/zimg/common/except.h \
-					 src/zimg/common/filtergraph.h \
-					 src/zimg/common/filtergraph.cpp \
 					 src/zimg/common/libm_wrapper.h \
 					 src/zimg/common/libm_wrapper.cpp \
 					 src/zimg/common/linebuffer.h \
 					 src/zimg/common/matrix.h \
-					 src/zimg/common/mux_filter.cpp \
-					 src/zimg/common/mux_filter.h \
 					 src/zimg/common/osdep.h \
 					 src/zimg/common/pixel.h \
 					 src/zimg/depth/depth_convert.cpp \
@@ -54,6 +49,11 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/depth/dither.cpp \
 					 src/zimg/depth/dither.h \
 					 src/zimg/depth/quantize.h \
+					 src/zimg/graph/copy_filter.h \
+					 src/zimg/graph/filtergraph.h \
+					 src/zimg/graph/filtergraph.cpp \
+					 src/zimg/graph/mux_filter.cpp \
+					 src/zimg/graph/mux_filter.h \
 					 src/zimg/resize/filter.cpp \
 					 src/zimg/resize/filter.h \
 					 src/zimg/resize/resize.cpp \
@@ -209,20 +209,20 @@ test_unit_test_CPPFLAGS = -I$(srcdir)/src/zimg \
 
 test_unit_test_SOURCES = test/main.cpp \
 							test/colorspace/colorspace_test.cpp \
-							test/common/audit_buffer.cpp \
-							test/common/audit_buffer.h \
-							test/common/copy_filter_test.cpp \
-							test/common/filter_validator.cpp \
-							test/common/filter_validator.h \
-							test/common/filtergraph_test.cpp \
-							test/common/mock_filter.cpp \
-							test/common/mock_filter.h \
-							test/common/mux_filter_test.cpp \
 							test/depth/depth_convert_test.cpp \
 							test/depth/dither_test.cpp \
 							test/extra/sha1/config.h \
 							test/extra/sha1/sha1.c \
 							test/extra/sha1/sha1.h \
+							test/graph/audit_buffer.cpp \
+							test/graph/audit_buffer.h \
+							test/graph/copy_filter_test.cpp \
+							test/graph/filter_validator.cpp \
+							test/graph/filter_validator.h \
+							test/graph/filtergraph_test.cpp \
+							test/graph/mock_filter.cpp \
+							test/graph/mock_filter.h \
+							test/graph/mux_filter_test.cpp \
 							test/resize/resize_impl_test.cpp
 
 if X86SIMD

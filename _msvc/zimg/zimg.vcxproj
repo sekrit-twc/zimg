@@ -151,26 +151,26 @@
     <ClInclude Include="..\..\src\zimg\colorspace\operation_impl.h" />
     <ClInclude Include="..\..\src\zimg\common\align.h" />
     <ClInclude Include="..\..\src\zimg\common\alloc.h" />
-    <ClInclude Include="..\..\src\zimg\common\copy_filter.h" />
     <ClInclude Include="..\..\src\zimg\common\cpuinfo.h" />
     <ClInclude Include="..\..\src\zimg\common\except.h" />
-    <ClInclude Include="..\..\src\zimg\common\filtergraph.h" />
     <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h" />
     <ClInclude Include="..\..\src\zimg\common\linebuffer.h" />
     <ClInclude Include="..\..\src\zimg\common\matrix.h" />
-    <ClInclude Include="..\..\src\zimg\common\mux_filter.h" />
     <ClInclude Include="..\..\src\zimg\common\osdep.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
-    <ClInclude Include="..\..\src\zimg\common\zfilter.h" />
-    <ClInclude Include="..\..\src\zimg\common\ztypes.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth_convert.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth_convert_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\dither.h" />
     <ClInclude Include="..\..\src\zimg\depth\dither_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
+    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h" />
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
+    <ClInclude Include="..\..\src\zimg\graph\mux_filter.h" />
+    <ClInclude Include="..\..\src\zimg\graph\zfilter.h" />
+    <ClInclude Include="..\..\src\zimg\graph\ztypes.h" />
     <ClInclude Include="..\..\src\zimg\resize\filter.h" />
     <ClInclude Include="..\..\src\zimg\resize\resize.h" />
     <ClInclude Include="..\..\src\zimg\resize\resize_impl.h" />
@@ -189,9 +189,7 @@
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp" />
-    <ClCompile Include="..\..\src\zimg\common\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp" />
-    <ClCompile Include="..\..\src\zimg\common\mux_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp" />
@@ -201,6 +199,8 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\mux_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp" />

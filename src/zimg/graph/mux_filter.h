@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef ZIMG_GRAPH_MUX_FILTER_H_
+#define ZIMG_GRAPH_MUX_FILTER_H_
+
 #include <memory>
 #include "zfilter.h"
 
@@ -34,3 +37,5 @@ public:
 };
 
 } // namespace zimg
+
+#endif // ZIMG_GRAPH_MUX_FILTER_H_

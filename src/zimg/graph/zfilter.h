@@ -1,12 +1,12 @@
 #pragma once
 
-#ifndef ZIMG_ZFILTER_H_
-#define ZIMG_ZFILTER_H_
+#ifndef ZIMG_GRAPH_ZFILTER_H_
+#define ZIMG_GRAPH_ZFILTER_H_
 
 #include <cstddef>
 #include <limits>
 #include <utility>
-#include "align.h"
+#include "common/align.h"
 #include "ztypes.h"
 
 struct zimg_filter {
@@ -129,4 +129,4 @@ inline unsigned select_zimg_buffer_mask(unsigned count)
 
 } // namespace zimg
 
-#endif // ZIMG_ZFILTER_H_
+#endif // ZIMG_GRAPH_ZFILTER_H_

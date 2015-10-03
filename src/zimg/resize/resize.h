@@ -4,7 +4,7 @@
 #define ZIMG_RESIZE_RESIZE_H_
 
 #include <utility>
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 namespace zimg {;
 

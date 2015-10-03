@@ -4,8 +4,7 @@
 #define ZIMG_DEPTH_DITHER_H_
 
 #include <tuple>
-#include "common/align.h"
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 
 namespace zimg {;
 

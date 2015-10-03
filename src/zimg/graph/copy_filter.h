@@ -1,10 +1,10 @@
 #pragma once
 
-#ifndef ZIMG_COPY_FILTER_H_
-#define ZIMG_COPY_FILTER_H_
+#ifndef ZIMG_GRAPH_COPY_FILTER_H_
+#define ZIMG_GRAPH_COPY_FILTER_H_
 
-#include "linebuffer.h"
-#include "pixel.h"
+#include "common/linebuffer.h"
+#include "common/pixel.h"
 #include "zfilter.h"
 
 namespace zimg {;
@@ -46,4 +46,4 @@ public:
 
 } // namespace zimg
 
-#endif // ZIMG_COPY_FILTER_H_
+#endif // ZIMG_GRAPH_COPY_FILTER_H_

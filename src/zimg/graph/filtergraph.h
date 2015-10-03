@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_FILTERGRAPH_H_
-#define ZIMG_FILTERGRAPH_H_
+#ifndef ZIMG_GRAPH_FILTERGRAPH_H_
+#define ZIMG_GRAPH_FILTERGRAPH_H_
 
 #include <memory>
 #include "ztypes.h"
@@ -65,4 +65,4 @@ public:
 
 } // namespace zimg
 
-#endif // ZIMG_FILTERGRAPH_H_
+#endif // ZIMG_GRAPH_FILTERGRAPH_H_

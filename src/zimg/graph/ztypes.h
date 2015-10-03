@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_ZTYPES_H_
-#define ZIMG_ZTYPES_H_
+#ifndef ZIMG_GRAPH_ZTYPES_H_
+#define ZIMG_GRAPH_ZTYPES_H_
 
 #include <cstddef>
 
@@ -37,4 +37,4 @@ struct ZimgFilterFlags {
 
 } // namespace zimg
 
-#endif // ZIMG_ZTYPES_H_
+#endif // ZIMG_GRAPH_ZTYPES_H_

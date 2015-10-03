@@ -3,7 +3,7 @@
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
-#include "common/zfilter.h"
+#include "graph/zfilter.h"
 #include "filter.h"
 #include "resize_impl.h"
 
