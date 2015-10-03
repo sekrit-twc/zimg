@@ -154,7 +154,7 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 {
 	zimg_filter_graph *graph = 0;
 	zimg_image_buffer_const src_buf = { ZIMG_API_VERSION };
-	zimg_image_buffer dst_buf = { { ZIMG_API_VERSION } };
+	zimg_image_buffer dst_buf = { ZIMG_API_VERSION };
 	zimg_image_format src_format;
 	zimg_image_format dst_format;
 	size_t tmp_size;
@@ -202,9 +202,9 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 		src_buf.plane[p].stride = src_stride[p];
 		src_buf.plane[p].mask = -1;
 
-		dst_buf.m.plane[p].data = dst_p[p];
-		dst_buf.m.plane[p].stride = dst_stride[p];
-		dst_buf.m.plane[p].mask = -1;
+		dst_buf.plane[p].data = dst_p[p];
+		dst_buf.plane[p].stride = dst_stride[p];
+		dst_buf.plane[p].mask = -1;
 	}
 
 	if ((ret = zimg_filter_graph_process(graph, &src_buf, &dst_buf, tmp, 0, 0, 0, 0))) {

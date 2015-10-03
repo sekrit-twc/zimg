@@ -39,6 +39,12 @@ static unsigned g_version_info[3];
 static unsigned g_api_version;
 
 
+typedef union zimg_image_buffer_u {
+	zimg_image_buffer_const c;
+	zimg_image_buffer m;
+} zimg_image_buffer_u;
+
+
 struct string_table_entry {
 	const char *str;
 	int val;
@@ -455,7 +461,7 @@ static const void *buffer_get_line_const(const zimg_image_buffer_const *buf, uns
 
 static void *buffer_get_line(const zimg_image_buffer *buf, unsigned p, unsigned i)
 {
-	return (char *)buf->m.plane[p].data + (ptrdiff_t)(i & buf->m.plane[p].mask) * buf->m.plane[p].stride;
+	return (char *)buf->plane[p].data + (ptrdiff_t)(i & buf->plane[p].mask) * buf->plane[p].stride;
 }
 
 static int graph_unpack_bgr32(void *user, unsigned i, unsigned left, unsigned right)
@@ -765,10 +771,10 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 		vsapi->requestFrameFilter(n, data->node, frameCtx);
 	} else if (activationReason == arAllFramesReady) {
 		zimg_image_buffer_const src_plane_buf = { ZIMG_API_VERSION };
-		zimg_image_buffer dst_plane_buf = { { ZIMG_API_VERSION } };
+		zimg_image_buffer dst_plane_buf = { ZIMG_API_VERSION };
 
-		zimg_image_buffer src_line_buf = { { ZIMG_API_VERSION } };
-		zimg_image_buffer dst_line_buf = { { ZIMG_API_VERSION } };
+		zimg_image_buffer_u src_line_buf = { { ZIMG_API_VERSION } };
+		zimg_image_buffer_u dst_line_buf = { { ZIMG_API_VERSION } };
 
 		const zimg_image_buffer_const *src_buf;
 		const zimg_image_buffer *dst_buf;
@@ -834,9 +840,9 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			src_plane_buf.plane[p].mask = -1;
 		}
 		for (p = 0; p < dst_vsformat->numPlanes; ++p) {
-			dst_plane_buf.m.plane[p].data = vsapi->getWritePtr(dst_frame, p);
-			dst_plane_buf.m.plane[p].stride = vsapi->getStride(dst_frame, p);
-			dst_plane_buf.m.plane[p].mask = -1;
+			dst_plane_buf.plane[p].data = vsapi->getWritePtr(dst_frame, p);
+			dst_plane_buf.plane[p].stride = vsapi->getStride(dst_frame, p);
+			dst_plane_buf.plane[p].mask = -1;
 		}
 
 		if (zimg_filter_graph_get_tmp_size(graph_data->graph, &tmp_size)) {
@@ -865,7 +871,7 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			}
 
 			unpack_cb_data.plane_buf = &src_plane_buf;
-			unpack_cb_data.line_buf = &src_line_buf;
+			unpack_cb_data.line_buf = &src_line_buf.m;
 			unpack_cb_data.height = src_format.height;
 			unpack_cb = src_vsformat->id == pfCompatBGR32 ? graph_unpack_bgr32 : graph_unpack_yuy2;
 
@@ -899,7 +905,7 @@ static const VSFrameRef * VS_CC vszimg_get_frame(int n, int activationReason, vo
 			pack_cb_data.height = dst_format.height;
 			pack_cb = dst_vsformat->id == pfCompatBGR32 ? graph_pack_bgr32 : graph_pack_yuy2;
 
-			dst_buf = &dst_line_buf;
+			dst_buf = &dst_line_buf.m;
 		} else {
 			dst_buf = &dst_plane_buf;
 		}

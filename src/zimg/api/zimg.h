@@ -317,31 +317,17 @@ typedef struct zimg_image_buffer_const {
 /**
  * Writable buffer structure.
  *
- * This union overlays a read-only {@link zimg_image_buffer_const} and a
- * corresponding structure with writable data pointers. This allows a buffer
- * used as an output parameter to one API call to be reused as an input
- * parameter to a subsequent call.
- *
- * From a strict standards point-of-view, the use of the union to alias the
- * const and mutable buffers may be undefined behavior in C++ (but not C).
- * This has not been observed to impact GCC and MSVC compilers.
- *
  * @see zimg_image_buffer_const
  */
-typedef union zimg_image_buffer {
+typedef struct zimg_image_buffer {
+	unsigned version;
+
 	struct {
-		unsigned version;
-
-		struct {
-			void *data;       /**< plane data buffer */
-			ptrdiff_t stride; /**< plane stride in bytes */
-			unsigned mask;    /**< plane row index mask */
-		} plane[3];
-	} m;
-
-	zimg_image_buffer_const c;
+		void *data;       /**< plane data buffer */
+		ptrdiff_t stride; /**< plane stride in bytes */
+		unsigned mask;    /**< plane row index mask */
+	} plane[3];
 } zimg_image_buffer;
-
 
 /**
  * Convert a number of lines to a {@link zimg_image_buffer} mask.

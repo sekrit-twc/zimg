@@ -277,8 +277,8 @@ void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultip
 	zimgxx::zimage_format in_format_alpha = get_alpha_format(in_bmp, premultiply);
 	zimgxx::zimage_format out_format_alpha = get_alpha_format(out_bmp, premultiply);
 
-	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(&in_format, &out_format) };
-	zimgxx::FilterGraph graph_alpha{ zimgxx::FilterGraph::build(&in_format_alpha, &out_format_alpha) };
+	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format) };
+	zimgxx::FilterGraph graph_alpha{ zimgxx::FilterGraph::build(in_format_alpha, out_format_alpha) };
 
 	unsigned input_buffering = std::max(graph.get_input_buffering(), graph_alpha.get_input_buffering());
 	unsigned output_buffering = std::max(graph.get_output_buffering(), graph_alpha.get_output_buffering());
@@ -295,8 +295,8 @@ void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultip
 	Callback unpack_cb_data{ const_cast<WindowsBitmap *>(in_bmp), &in_rgb_buf.first, &in_alpha_plane_buf.first, premultiply };
 	Callback pack_cb_data{ out_bmp, &out_rgb_plane_buf.first, &out_alpha_buf.first, premultiply };
 
-	graph.process(&in_rgb_buf.first.as_const(), &out_rgb_plane_buf.first._, tmp.get(), unpack_bgra, &unpack_cb_data, nullptr, nullptr);
-	graph_alpha.process(&in_alpha_plane_buf.first.as_const(), &out_alpha_buf.first._, tmp.get(), nullptr, nullptr, pack_bgra, &pack_cb_data);
+	graph.process(in_rgb_buf.first.as_const(), out_rgb_plane_buf.first, tmp.get(), unpack_bgra, &unpack_cb_data, nullptr, nullptr);
+	graph_alpha.process(in_alpha_plane_buf.first.as_const(), out_alpha_buf.first, tmp.get(), nullptr, nullptr, pack_bgra, &pack_cb_data);
 }
 
 void execute(const Arguments &args)

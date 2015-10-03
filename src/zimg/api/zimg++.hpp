@@ -57,17 +57,20 @@ struct zimage_buffer_const : zimg_image_buffer_const {
 	}
 };
 
-struct zimage_buffer {
-	zimg_image_buffer _;
-
-	zimage_buffer() : _()
+struct zimage_buffer : zimg_image_buffer {
+	zimage_buffer() : zimg_image_buffer()
 	{
-		_.m.version = ZIMG_API_VERSION;
+		version = ZIMG_API_VERSION;
 	}
 
-	const zimg_image_buffer_const &as_const() const
+	const zimage_buffer_const as_const() const
 	{
-		return _.c;
+		union {
+			zimage_buffer m;
+			zimage_buffer_const c;
+		} u = { *this };
+
+		return u.c;
 	}
 
 	void *line_at(unsigned i, unsigned p = 0) const
@@ -77,32 +80,32 @@ struct zimage_buffer {
 
 	void *data(unsigned p = 0) const
 	{
-		return _.m.plane[p].data;
+		return plane[p].data;
 	}
 
 	void *&data(unsigned p = 0)
 	{
-		return _.m.plane[p].data;
+		return plane[p].data;
 	}
 
 	ptrdiff_t stride(unsigned p = 0) const
 	{
-		return _.m.plane[p].stride;
+		return plane[p].stride;
 	}
 
 	ptrdiff_t &stride(unsigned p = 0)
 	{
-		return _.m.plane[p].stride;
+		return plane[p].stride;
 	}
 
 	unsigned mask(unsigned p = 0) const
 	{
-		return _.m.plane[p].mask;
+		return plane[p].mask;
 	}
 
 	unsigned &mask(unsigned p = 0)
 	{
-		return _.m.plane[p].mask;
+		return plane[p].mask;
 	}
 };
 
@@ -164,18 +167,18 @@ public:
 		return ret;
 	}
 
-	void process(const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
+	void process(const zimg_image_buffer_const &src, const zimg_image_buffer &dst, void *tmp,
 	             zimg_filter_graph_callback unpack_cb = 0, void *unpack_user = 0,
 	             zimg_filter_graph_callback pack_cb = 0, void *pack_user = 0) const
 	{
-		check(zimg_filter_graph_process(m_graph, src, dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
+		check(zimg_filter_graph_process(m_graph, &src, &dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
 	}
 
-	static zimg_filter_graph *build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params = 0)
+	static zimg_filter_graph *build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_filter_graph_params *params = 0)
 	{
 		zimg_filter_graph *graph;
 
-		if (!(graph = zimg_filter_graph_build(src_format, dst_format, params)))
+		if (!(graph = zimg_filter_graph_build(&src_format, &dst_format, params)))
 			throw zerror();
 
 		return graph;

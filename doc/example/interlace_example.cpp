@@ -201,8 +201,8 @@ void process(const YV12Image &in_data, const YV12Image &out_data)
 	zimgxx::zimage_format out_format_t = get_image_format(out_data, true);
 	zimgxx::zimage_format out_format_b = get_image_format(out_data, false);
 
-	zimgxx::FilterGraph graph_t{ zimgxx::FilterGraph::build(&in_format_t, &out_format_t) };
-	zimgxx::FilterGraph graph_b{ zimgxx::FilterGraph::build(&in_format_b, &out_format_b) };
+	zimgxx::FilterGraph graph_t{ zimgxx::FilterGraph::build(in_format_t, out_format_t) };
+	zimgxx::FilterGraph graph_b{ zimgxx::FilterGraph::build(in_format_b, out_format_b) };
 
 	unsigned input_buffering_t = graph_t.get_input_buffering();
 	unsigned input_buffering_b = graph_b.get_input_buffering();
@@ -222,13 +222,13 @@ void process(const YV12Image &in_data, const YV12Image &out_data)
 	Callback unpack_data = { &in_buf.first, &in_data, false, true };
 	Callback pack_data = { &out_buf.first, &out_data, true, true };
 
-	graph_t.process(&in_buf.first.as_const(), &out_buf.first._, tmp_buf.get(),
+	graph_t.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 
 	unpack_data.top_field = false;
 	pack_data.top_field = false;
 
-	graph_b.process(&in_buf.first.as_const(), &out_buf.first._, tmp_buf.get(),
+	graph_b.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 }
 

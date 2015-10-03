@@ -295,13 +295,13 @@ zimg::graph::ZimgImageBuffer import_image_buffer(const zimg_image_buffer &src)
 {
 	zimg::graph::ZimgImageBuffer dst{};
 
-	API_VERSION_ASSERT(src.m.version);
+	API_VERSION_ASSERT(src.version);
 
-	if (src.m.version >= 2) {
+	if (src.version >= 2) {
 		for (unsigned p = 0; p < 3; ++p) {
-			dst.data[p] = src.m.plane[p].data;
-			dst.stride[p] = src.m.plane[p].stride;
-			dst.mask[p] = src.m.plane[p].mask;
+			dst.data[p] = src.plane[p].data;
+			dst.stride[p] = src.plane[p].stride;
+			dst.mask[p] = src.plane[p].mask;
 		}
 	}
 	return dst;
@@ -895,13 +895,13 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	STRIDE_ALIGNMENT_ASSERT(src->plane[1].stride);
 	STRIDE_ALIGNMENT_ASSERT(src->plane[2].stride);
 
-	POINTER_ALIGNMENT_ASSERT(dst->m.plane[0].data);
-	POINTER_ALIGNMENT_ASSERT(dst->m.plane[1].data);
-	POINTER_ALIGNMENT_ASSERT(dst->m.plane[2].data);
+	POINTER_ALIGNMENT_ASSERT(dst->plane[0].data);
+	POINTER_ALIGNMENT_ASSERT(dst->plane[1].data);
+	POINTER_ALIGNMENT_ASSERT(dst->plane[2].data);
 
-	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[0].stride);
-	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[1].stride);
-	STRIDE_ALIGNMENT_ASSERT(dst->m.plane[2].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst->plane[0].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst->plane[1].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst->plane[2].stride);
 
 	POINTER_ALIGNMENT_ASSERT(tmp);
 

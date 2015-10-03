@@ -354,7 +354,7 @@ void process(const ImageFile &in_data, const ImageFile &out_data)
 	zimgxx::zimage_format in_format = get_image_format(in_data);
 	zimgxx::zimage_format out_format = get_image_format(out_data);
 
-	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(&in_format, &out_format) };
+	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format) };
 	unsigned input_buffering = graph.get_input_buffering();
 	unsigned output_buffering = graph.get_output_buffering();
 	size_t tmp_size = graph.get_tmp_size();
@@ -370,7 +370,7 @@ void process(const ImageFile &in_data, const ImageFile &out_data)
 	Callback unpack_cb_data = { &in_buf.first, &in_data };
 	Callback pack_cb_data = { &out_buf.first, &out_data };
 
-	graph.process(&in_buf.first.as_const(), &out_buf.first._, tmp_buf.get(),
+	graph.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	              unpack_image, &unpack_cb_data, pack_image, &pack_cb_data);
 }
 
