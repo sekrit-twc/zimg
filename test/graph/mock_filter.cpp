@@ -4,9 +4,9 @@
 #include "gtest/gtest.h"
 #include "mock_filter.h"
 
-MockFilter::MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags) :
+MockFilter::MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::IZimgFilter::filter_flags &flags) :
 	m_attr{ width, height, type },
-	m_flags{ flags },
+	m_flags(flags),
 	m_total_calls{},
 	m_simultaneous_lines{ flags.entire_plane ? (unsigned)-1 : 1 },
 	m_horizontal_support{},
@@ -37,7 +37,7 @@ void MockFilter::set_vertical_support(unsigned n)
 		m_vertical_support = n;
 }
 
-zimg::graph::ZimgFilterFlags MockFilter::get_flags() const
+zimg::graph::IZimgFilter::filter_flags MockFilter::get_flags() const
 {
 	return m_flags;
 }
@@ -148,7 +148,7 @@ T SplatFilter<T>::splat_byte(unsigned char b)
 }
 
 template <class T>
-SplatFilter<T>::SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags) :
+SplatFilter<T>::SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::IZimgFilter::filter_flags &flags) :
 	MockFilter(width, height, type, flags),
 	m_src_val{ splat_byte(0xCD) },
 	m_dst_val{ splat_byte(0xDC) },

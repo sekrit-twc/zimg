@@ -131,7 +131,7 @@ class GraphNode {
 		struct {
 			GraphNode *parent;
 			GraphNode *parent_uv;
-			ZimgFilterFlags flags;
+			IZimgFilter::filter_flags flags;
 			unsigned step;
 			bool is_uv;
 		} node_info;
@@ -670,7 +670,7 @@ public:
 	{
 		check_incomplete();
 
-		ZimgFilterFlags flags = filter->get_flags();
+		IZimgFilter::filter_flags flags = filter->get_flags();
 		GraphNode *parent = m_node;
 		GraphNode *parent_uv = nullptr;
 
@@ -701,7 +701,7 @@ public:
 	{
 		check_incomplete();
 
-		ZimgFilterFlags flags = filter->get_flags();
+		IZimgFilter::filter_flags flags = filter->get_flags();
 		GraphNode *parent = m_node_uv;
 
 		if (flags.color)

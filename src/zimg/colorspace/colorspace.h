@@ -24,7 +24,7 @@ public:
 
 	image_attributes get_image_attributes() const override;
 
-	graph::ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	void process(void *ctx, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };

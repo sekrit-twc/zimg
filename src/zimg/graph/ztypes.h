@@ -23,15 +23,6 @@ struct ZimgImageBufferTemplate {
 typedef ZimgImageBufferTemplate<const void> ZimgImageBufferConst;
 typedef ZimgImageBufferTemplate<void> ZimgImageBuffer;
 
-struct ZimgFilterFlags {
-	unsigned char has_state;
-	unsigned char same_row;
-	unsigned char in_place;
-	unsigned char entire_row;
-	unsigned char entire_plane;
-	unsigned char color;
-};
-
 } // namespace graph
 } // namespace zimg
 

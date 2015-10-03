@@ -57,7 +57,7 @@ FilterExecutor::FilterExecutor(const zimg::graph::IZimgFilter *filter, const zim
 
 void FilterExecutor::operator()()
 {
-	zimg::graph::ZimgFilterFlags flags = m_filter->get_flags();
+	zimg::graph::IZimgFilter::filter_flags flags = m_filter->get_flags();
 
 	if (!flags.color) {
 		unsigned planes = m_dst_frame->planes();

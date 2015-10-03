@@ -288,9 +288,9 @@ public:
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
 
-	graph::ZimgFilterFlags get_flags() const override
+	filter_flags get_flags() const override
 	{
-		graph::ZimgFilterFlags flags{};
+		filter_flags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
@@ -382,9 +382,9 @@ public:
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
 
-	graph::ZimgFilterFlags get_flags() const override
+	filter_flags get_flags() const override
 	{
-		graph::ZimgFilterFlags flags{};
+		filter_flags flags{};
 
 		flags.has_state = true;
 		flags.same_row = true;

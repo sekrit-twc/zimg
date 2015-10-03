@@ -21,7 +21,7 @@ protected:
 
 	ResizeImplH(const FilterContext &filter, const image_attributes &attr);
 public:
-	graph::ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -40,7 +40,7 @@ protected:
 
 	ResizeImplV(const FilterContext &filter, const image_attributes &attr);
 public:
-	graph::ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 

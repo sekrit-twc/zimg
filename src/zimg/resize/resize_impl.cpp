@@ -170,9 +170,9 @@ ResizeImplH::ResizeImplH(const FilterContext &filter, const image_attributes &at
 {
 }
 
-graph::ZimgFilterFlags ResizeImplH::get_flags() const
+graph::IZimgFilter::filter_flags ResizeImplH::get_flags() const
 {
-	graph::ZimgFilterFlags flags{};
+	graph::IZimgFilter::filter_flags flags{};
 
 	flags.same_row = true;
 	flags.entire_row = !m_is_sorted;
@@ -215,9 +215,9 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, const image_attributes &at
 {
 }
 
-graph::ZimgFilterFlags ResizeImplV::get_flags() const
+graph::IZimgFilter::filter_flags ResizeImplV::get_flags() const
 {
-	graph::ZimgFilterFlags flags{};
+	graph::IZimgFilter::filter_flags flags{};
 
 	flags.entire_row = !m_is_sorted;
 

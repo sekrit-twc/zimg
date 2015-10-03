@@ -10,9 +10,8 @@ namespace graph {;
 MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
 	m_flags{}
 {
-	ZimgFilterFlags filter_flags = filter->get_flags();
-	ZimgFilterFlags filter_flags_uv = filter_uv ? filter_uv->get_flags() : filter_flags;
-	ZimgFilterFlags flags{};
+	IZimgFilter::filter_flags filter_flags = filter->get_flags();
+	IZimgFilter::filter_flags filter_flags_uv = filter_uv ? filter_uv->get_flags() : filter_flags;
 
 	if (filter_flags.color || filter_flags_uv.color)
 		throw error::InternalError{ "can not mux color filters" };
@@ -54,7 +53,7 @@ MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
 	m_filter_uv.reset(filter_uv);
 }
 
-ZimgFilterFlags MuxFilter::get_flags() const
+IZimgFilter::filter_flags MuxFilter::get_flags() const
 {
 	return m_flags;
 }

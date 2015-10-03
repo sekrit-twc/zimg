@@ -14,8 +14,8 @@ private:
 	std::unique_ptr<zimg::graph::IZimgFilter> m_first;
 	std::unique_ptr<zimg::graph::IZimgFilter> m_second;
 
-	zimg::graph::ZimgFilterFlags m_first_flags;
-	zimg::graph::ZimgFilterFlags m_second_flags;
+	filter_flags m_first_flags;
+	filter_flags m_second_flags;
 
 	image_attributes m_first_attr;
 	image_attributes m_second_attr;
@@ -38,7 +38,7 @@ private:
 public:
 	PairFilter(zimg::graph::IZimgFilter *first, zimg::graph::IZimgFilter *second);
 
-	zimg::graph::ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 

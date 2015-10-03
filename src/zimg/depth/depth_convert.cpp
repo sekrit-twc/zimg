@@ -118,9 +118,9 @@ public:
 		m_shift = pixel_out.depth - pixel_in.depth;
 	}
 
-	graph::ZimgFilterFlags get_flags() const override
+	filter_flags get_flags() const override
 	{
-		graph::ZimgFilterFlags flags{};
+		filter_flags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
@@ -191,9 +191,9 @@ public:
 		m_offset = static_cast<float>(-offset * (1.0 / range));
 	}
 
-	graph::ZimgFilterFlags get_flags() const override
+	filter_flags get_flags() const override
 	{
-		graph::ZimgFilterFlags flags{};
+		filter_flags flags{};
 
 		flags.same_row = true;
 		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));

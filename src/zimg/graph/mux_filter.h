@@ -12,11 +12,11 @@ namespace graph {;
 class MuxFilter final : public IZimgFilter {
 	std::unique_ptr<IZimgFilter> m_filter;
 	std::unique_ptr<IZimgFilter> m_filter_uv;
-	ZimgFilterFlags m_flags;
+	filter_flags m_flags;
 public:
 	MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv);
 
-	ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 

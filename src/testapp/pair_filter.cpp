@@ -76,9 +76,9 @@ unsigned PairFilter::get_num_planes() const
 	return m_color ? 3 : 1;
 }
 
-zimg::graph::ZimgFilterFlags PairFilter::get_flags() const
+zimg::graph::IZimgFilter::filter_flags PairFilter::get_flags() const
 {
-	zimg::graph::ZimgFilterFlags flags{};
+	filter_flags flags{};
 
 	flags.has_state = m_has_state;
 	flags.same_row = m_first_flags.same_row && m_second_flags.same_row;

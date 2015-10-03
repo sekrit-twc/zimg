@@ -17,6 +17,15 @@ namespace graph {;
 
 class IZimgFilter {
 public:
+	struct filter_flags {
+		bool has_state : 1;
+		bool same_row : 1;
+		bool in_place : 1;
+		bool entire_row : 1;
+		bool entire_plane : 1;
+		bool color : 1;
+	};
+
 	struct image_attributes {
 		unsigned width;
 		unsigned height;
@@ -27,7 +36,7 @@ public:
 
 	virtual inline ~IZimgFilter() = 0;
 
-	virtual ZimgFilterFlags get_flags() const = 0;
+	virtual filter_flags get_flags() const = 0;
 
 	virtual image_attributes get_image_attributes() const = 0;
 

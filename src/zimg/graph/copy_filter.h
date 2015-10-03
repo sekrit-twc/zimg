@@ -18,9 +18,9 @@ public:
 	{
 	}
 
-	ZimgFilterFlags get_flags() const override
+	filter_flags get_flags() const override
 	{
-		ZimgFilterFlags flags{};
+		filter_flags flags{};
 
 		flags.same_row = 1;
 		flags.in_place = 1;

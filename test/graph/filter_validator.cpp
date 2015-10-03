@@ -232,7 +232,7 @@ void validate_filter_buffered(const zimg::graph::IZimgFilter *filter, unsigned s
 template <class T, class U>
 void validate_filter_T(const zimg::graph::IZimgFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
 {
-	zimg::graph::ZimgFilterFlags flags = filter->get_flags();
+	zimg::graph::IZimgFilter::filter_flags flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
 
 	validate_flags(filter);
@@ -271,7 +271,7 @@ template <class T, class U>
 void validate_filter_reference_T(const zimg::graph::IZimgFilter *ref_filter, const zimg::graph::IZimgFilter *test_filter,
                                  unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
 {
-	zimg::graph::ZimgFilterFlags flags = ref_filter->get_flags();
+	zimg::graph::IZimgFilter::filter_flags flags = ref_filter->get_flags();
 	auto attr = ref_filter->get_image_attributes();
 
 	AuditBuffer<T> src_buf{ src_width, src_height, src_format, (unsigned)-1, 0, 0, !!flags.color };

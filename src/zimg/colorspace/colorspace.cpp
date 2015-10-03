@@ -21,9 +21,9 @@ try :
 	throw error::OutOfMemory{};
 }
 
-graph::ZimgFilterFlags ColorspaceConversion::get_flags() const
+graph::IZimgFilter::filter_flags ColorspaceConversion::get_flags() const
 {
-	graph::ZimgFilterFlags flags{};
+	filter_flags flags{};
 
 	flags.same_row = true;
 	flags.in_place = true;

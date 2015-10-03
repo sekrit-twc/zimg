@@ -16,13 +16,13 @@ protected:
 	};
 
 	image_attributes m_attr;
-	zimg::graph::ZimgFilterFlags m_flags;
+	filter_flags m_flags;
 	mutable unsigned m_total_calls;
 	unsigned m_simultaneous_lines;
 	unsigned m_horizontal_support;
 	unsigned m_vertical_support;
 public:
-	MockFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags = {});
+	MockFilter(unsigned width, unsigned height, zimg::PixelType type, const filter_flags &flags = {});
 
 	unsigned get_total_calls() const;
 
@@ -33,7 +33,7 @@ public:
 	void set_vertical_support(unsigned n);
 
 	// IZimgFilter
-	zimg::graph::ZimgFilterFlags get_flags() const override;
+	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
 
@@ -62,7 +62,7 @@ class SplatFilter : public MockFilter {
 	T m_dst_val;
 	bool m_input_checking;
 public:
-	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ZimgFilterFlags &flags = {});
+	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::IZimgFilter::filter_flags &flags = {});
 
 	void set_input_val(unsigned char x);
 
