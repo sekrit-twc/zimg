@@ -134,8 +134,6 @@ void validate_flags(const zimg::graph::IZimgFilter *filter)
 {
 	auto flags = filter->get_flags();
 
-	ASSERT_EQ(zimg::graph::API_VERSION, flags.version);
-
 	if (flags.entire_plane && !flags.entire_row)
 		FAIL() << "filter must set entire_row if entire_plane is set";
 	if (flags.in_place && !flags.same_row)

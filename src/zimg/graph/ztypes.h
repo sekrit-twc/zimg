@@ -8,11 +8,8 @@
 namespace zimg {;
 namespace graph {;
 
-const unsigned API_VERSION = 2;
-
 template <class T>
 struct ZimgImageBufferTemplate {
-	unsigned version = API_VERSION;
 	T *data[3];
 	ptrdiff_t stride[3];
 	unsigned mask[3];
@@ -27,7 +24,6 @@ typedef ZimgImageBufferTemplate<const void> ZimgImageBufferConst;
 typedef ZimgImageBufferTemplate<void> ZimgImageBuffer;
 
 struct ZimgFilterFlags {
-	unsigned version = API_VERSION;
 	unsigned char has_state;
 	unsigned char same_row;
 	unsigned char in_place;
