@@ -237,9 +237,9 @@ int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 	void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (char *)rgb_buf.data(p) + (ptrdiff_t)(i & rgb_buf.mask(p)) * rgb_buf.stride(p);
+		planar_data[p] = (char *)rgb_buf.line_at(i, p);
 	}
-	planar_data[3] = (char *)alpha_buf.data() + (ptrdiff_t)(i & alpha_buf.mask()) * alpha_buf.stride();
+	planar_data[3] = (char *)alpha_buf.line_at(i);
 
 	if (cb->premultiply)
 		unpack_bgra_premul(packed_data, planar_data, left, right);
@@ -258,9 +258,9 @@ int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 	const void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (const char *)rgb_buf.data(p) + (ptrdiff_t)(i & rgb_buf.mask(p)) * rgb_buf.stride(p);
+		planar_data[p] = (const char *)rgb_buf.line_at(i, p);
 	}
-	planar_data[3] = (const char *)alpha_buf.data() + (ptrdiff_t)(i & alpha_buf.mask()) * alpha_buf.stride();
+	planar_data[3] = (const char *)alpha_buf.line_at(i);
 
 	if (cb->premultiply)
 		pack_bgra_premul(planar_data, packed_data, left, right);

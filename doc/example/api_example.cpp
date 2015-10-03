@@ -312,7 +312,7 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 	void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (char *)buf.data(p) + (ptrdiff_t)(i & buf.mask(p)) * buf.stride(p);
+		buf_data[p] = (char *)buf.line_at(i, p);
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {
@@ -335,7 +335,7 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 	const void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (const char *)buf.data(p) + (ptrdiff_t)(i & buf.mask(p)) * buf.stride(p);
+		buf_data[p] = (const char *)buf.line_at(i, p);
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {

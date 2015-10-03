@@ -175,10 +175,10 @@ int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 	left = left % 2 ? left - 1 : left;
 	right = right % 2 ? right + 1 : right;
 
-	buf_pp[0] = (uint8_t *)buf.data(0) + (ptrdiff_t)((i + 0) & buf.mask(0)) * buf.stride(0) + left;
-	buf_pp[1] = (uint8_t *)buf.data(0) + (ptrdiff_t)((i + 1) & buf.mask(0)) * buf.stride(0) + left;
-	buf_pp[2] = (uint8_t *)buf.data(1) + (ptrdiff_t)((i / 2) & buf.mask(1)) * buf.stride(1) + left / 2;
-	buf_pp[3] = (uint8_t *)buf.data(2) + (ptrdiff_t)((i / 2) & buf.mask(2)) * buf.stride(2) + left / 2;
+	buf_pp[0] = (uint8_t *)buf.line_at(i + 0, 0);
+	buf_pp[1] = (uint8_t *)buf.line_at(i + 1, 0);
+	buf_pp[2] = (uint8_t *)buf.line_at(i / 2, 1);
+	buf_pp[3] = (uint8_t *)buf.line_at(i / 2, 2);
 
 	// Since the fields are being processed individually, double the line numbers.
 	img_pp[0] = (uint8_t *)cb->file->image_base[0] + ((i + 0) * 2 + file_phase) * cb->file->width + left;

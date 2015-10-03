@@ -21,34 +21,39 @@ struct zimage_buffer_const : zimg_image_buffer_const {
 		version = ZIMG_API_VERSION;
 	}
 
-	const void *data(unsigned plane = 0) const
+	const void *line_at(unsigned i, unsigned p = 0) const
 	{
-		return this->plane[plane].data;
+		return (const char *)data(p) + (ptrdiff_t)(i & mask(p)) * stride(p);
 	}
 
-	const void *&data(unsigned plane = 0)
+	const void *data(unsigned p = 0) const
 	{
-		return this->plane[plane].data;
+		return plane[p].data;
 	}
 
-	ptrdiff_t stride(unsigned plane = 0) const
+	const void *&data(unsigned p = 0)
 	{
-		return this->plane[plane].stride;
+		return plane[p].data;
 	}
 
-	ptrdiff_t &stride(unsigned plane = 0)
+	ptrdiff_t stride(unsigned p = 0) const
 	{
-		return this->plane[plane].stride;
+		return plane[p].stride;
 	}
 
-	unsigned mask(unsigned plane = 0) const
+	ptrdiff_t &stride(unsigned p = 0)
 	{
-		return this->plane[plane].mask;
+		return plane[p].stride;
 	}
 
-	unsigned &mask(unsigned plane = 0)
+	unsigned mask(unsigned p = 0) const
 	{
-		return this->plane[plane].mask;
+		return plane[p].mask;
+	}
+
+	unsigned &mask(unsigned p = 0)
+	{
+		return plane[p].mask;
 	}
 };
 
@@ -65,34 +70,39 @@ struct zimage_buffer {
 		return _.c;
 	}
 
-	void *data(unsigned plane = 0) const
+	void *line_at(unsigned i, unsigned p = 0) const
 	{
-		return _.m.plane[plane].data;
+		return (char *)data(p) + (ptrdiff_t)(i & mask(p)) * stride(p);
 	}
 
-	void *&data(unsigned plane = 0)
+	void *data(unsigned p = 0) const
 	{
-		return _.m.plane[plane].data;
+		return _.m.plane[p].data;
 	}
 
-	ptrdiff_t stride(unsigned plane = 0) const
+	void *&data(unsigned p = 0)
 	{
-		return _.m.plane[plane].stride;
+		return _.m.plane[p].data;
 	}
 
-	ptrdiff_t &stride(unsigned plane = 0)
+	ptrdiff_t stride(unsigned p = 0) const
 	{
-		return _.m.plane[plane].stride;
+		return _.m.plane[p].stride;
 	}
 
-	unsigned mask(unsigned plane = 0) const
+	ptrdiff_t &stride(unsigned p = 0)
 	{
-		return _.m.plane[plane].mask;
+		return _.m.plane[p].stride;
 	}
 
-	unsigned &mask(unsigned plane = 0)
+	unsigned mask(unsigned p = 0) const
 	{
-		return _.m.plane[plane].mask;
+		return _.m.plane[p].mask;
+	}
+
+	unsigned &mask(unsigned p = 0)
+	{
+		return _.m.plane[p].mask;
 	}
 };
 
