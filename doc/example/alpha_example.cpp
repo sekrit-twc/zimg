@@ -18,18 +18,23 @@ struct Arguments {
 	const char *outpath;
 	unsigned out_w;
 	unsigned out_h;
+	int premultiply;
+};
+
+const ArgparseOption program_switches[] = {
+	{ OPTION_BOOL, nullptr, "premultiply", offsetof(Arguments, premultiply), nullptr, "color channels premultiplied by alpha" },
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path specifier" },
-	{ OPTION_STRING,   nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path specifier" },
-	{ OPTION_UINTEGER, nullptr, "out_width",  offsetof(struct Arguments, out_w),   nullptr, "output width" },
-	{ OPTION_UINTEGER, nullptr, "out_height", offsetof(struct Arguments, out_h),   nullptr, "output height" }
+	{ OPTION_STRING,   nullptr, "inpath",     offsetof(Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING,   nullptr, "outpath",    offsetof(Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_UINTEGER, nullptr, "out_width",  offsetof(Arguments, out_w),   nullptr, "output width" },
+	{ OPTION_UINTEGER, nullptr, "out_height", offsetof(Arguments, out_h),   nullptr, "output height" }
 };
 
 const ArgparseCommandLine program_def = {
-	nullptr,
-	0,
+	program_switches,
+	sizeof(program_switches) / sizeof(program_switches[0]),
 	program_positional,
 	sizeof(program_positional) / sizeof(program_positional[0]),
 	"alpha_example",
@@ -39,27 +44,76 @@ const ArgparseCommandLine program_def = {
 
 
 struct Callback {
-	const zimgxx::zimage_buffer *buffer;
-	const zimgxx::zimage_buffer *alpha_buffer;
 	WindowsBitmap *bmp;
+	zimgxx::zimage_buffer *rgb_buf;
+	zimgxx::zimage_buffer *alpha_buf;
+	bool premultiply;
 };
 
+zimgxx::zimage_format get_image_format(const WindowsBitmap *bmp, bool premultiply)
+{
+	zimgxx::zimage_format format;
 
-std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(unsigned width, unsigned height, unsigned count)
+	format.width = bmp->width();
+	format.height = bmp->height();
+	format.pixel_type = premultiply ? ZIMG_PIXEL_BYTE : ZIMG_PIXEL_WORD;
+
+	format.color_family = ZIMG_COLOR_RGB;
+	format.pixel_range = ZIMG_RANGE_FULL;
+
+	return format;
+}
+
+zimgxx::zimage_format get_alpha_format(const WindowsBitmap *bmp, bool premultiply)
+{
+	zimgxx::zimage_format format;
+
+	format.width = bmp->width();
+	format.height = bmp->height();
+	format.pixel_type = ZIMG_PIXEL_BYTE;
+
+	format.color_family = ZIMG_COLOR_GREY;
+	format.pixel_range = ZIMG_RANGE_FULL;
+
+	return format;
+}
+
+std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zimgxx::zimage_format &format, unsigned count)
 {
 	zimgxx::zimage_buffer buffer;
 	std::shared_ptr<void> handle;
+	unsigned char *ptr;
 
 	unsigned mask = zimg_select_buffer_mask(count);
-	ptrdiff_t stride = width % 64 ? width - width % 64 + 64 : width;
-	size_t plane_size = (size_t)stride * ((mask == (unsigned)-1) ? height : mask + 1);
+	size_t channel_size[3] = { 0 };
+	size_t pixel_size;
 
-	handle.reset(aligned_malloc(3 * plane_size, 64), aligned_free);
+	count = (mask == (unsigned)-1) ? format.height : mask + 1;
 
-	for (unsigned p = 0; p < 3; ++p) {
-		buffer._.m.data[p] = (char *)handle.get() + p * plane_size;
+	if (format.pixel_type == ZIMG_PIXEL_FLOAT)
+		pixel_size = sizeof(float);
+	else if (format.pixel_type == ZIMG_PIXEL_WORD || format.pixel_type == ZIMG_PIXEL_HALF)
+		pixel_size = sizeof(uint16_t);
+	else
+		pixel_size = sizeof(uint8_t);
+
+	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
+		unsigned count_plane = p ? count : count >> format.subsample_h;
+		unsigned mask_plane = (mask == (unsigned)-1) ? mask : mask >> format.subsample_h;
+		size_t row_size = format.width * pixel_size;
+		ptrdiff_t stride = row_size % 64 ? row_size - row_size % 64 + 64 : row_size;
+
+		buffer._.m.mask[p] = mask_plane;
 		buffer._.m.stride[p] = stride;
-		buffer._.m.mask[p] = mask;
+		channel_size[p] = (size_t)stride * count_plane;
+	}
+
+	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
+	ptr = reinterpret_cast<unsigned char *>(handle.get());
+
+	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
+		buffer._.m.data[p] = ptr;
+		ptr += channel_size[p];
 	}
 
 	return{ buffer, handle };
@@ -70,146 +124,179 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 	return{ aligned_malloc(size, 64), &aligned_free };
 }
 
-std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_plane(unsigned width, unsigned height)
+void unpack_bgra_straight(const void *bgra, void * const planar[4], unsigned left, unsigned right)
 {
-	ptrdiff_t stride = width % 64 ? width - width % 64 + 64 : width;
+	const uint8_t *packed_bgra = reinterpret_cast<const uint8_t *>(bgra);
+	uint16_t *planar_r = reinterpret_cast<uint16_t *>(planar[0]);
+	uint16_t *planar_g = reinterpret_cast<uint16_t *>(planar[1]);
+	uint16_t *planar_b = reinterpret_cast<uint16_t *>(planar[2]);
+	uint8_t *planar_a = reinterpret_cast<uint8_t *>(planar[3]);
 
-	std::shared_ptr<void> handle{ aligned_malloc((size_t)stride * height, 64), aligned_free };
-	zimgxx::zimage_buffer buffer{};
+	for (unsigned j = left; j < right; ++j) {
+		uint16_t r, g, b;
+		uint8_t a;
 
-	buffer._.m.data[0] = handle.get();
-	buffer._.m.stride[0] = stride;
-	buffer._.m.mask[0] = -1;
+		r = packed_bgra[j * 4 + 2];
+		g = packed_bgra[j * 4 + 1];
+		b = packed_bgra[j * 4 + 0];
+		a = packed_bgra[j * 4 + 3];
 
-	return{ buffer, handle };
-}
+		r = (uint16_t)((uint32_t)r * a * 65535 / (255 * 255));
+		g = (uint16_t)((uint32_t)g * a * 65535 / (255 * 255));
+		b = (uint16_t)((uint32_t)b * a * 65535 / (255 * 255));
 
-void *buffer_at_line(const zimgxx::zimage_buffer &buffer, unsigned p, unsigned i)
-{
-	void *base = buffer._.m.data[p];
-	ptrdiff_t stride = buffer._.m.stride[p];
-	unsigned mask = buffer._.m.mask[p];
-
-	return reinterpret_cast<char *>(base) + (ptrdiff_t)(i & mask) * stride;
-}
-
-int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
-{
-	const Callback *callback = reinterpret_cast<Callback *>(user);
-	const uint8_t *bgra = reinterpret_cast<const uint8_t *>(callback->bmp->read_ptr() + (ptrdiff_t)i * callback->bmp->stride());
-	uint8_t *planes[4];
-
-	for (unsigned p = 0; p < 3; ++p) {
-		planes[p] = reinterpret_cast<uint8_t *>(buffer_at_line(*callback->buffer, p, i));
+		planar_r[j] = r;
+		planar_g[j] = g;
+		planar_b[j] = b;
+		planar_a[j] = a;
 	}
-	planes[3] = reinterpret_cast<uint8_t *>(buffer_at_line(*callback->alpha_buffer, 0, i));
+}
+
+void unpack_bgra_premul(const void *bgra, void * const planar[4], unsigned left, unsigned right)
+{
+	const uint8_t *packed_bgra = reinterpret_cast<const uint8_t *>(bgra);
+	uint8_t *planar_r = reinterpret_cast<uint8_t *>(planar[0]);
+	uint8_t *planar_g = reinterpret_cast<uint8_t *>(planar[1]);
+	uint8_t *planar_b = reinterpret_cast<uint8_t *>(planar[2]);
+	uint8_t *planar_a = reinterpret_cast<uint8_t *>(planar[3]);
 
 	for (unsigned j = left; j < right; ++j) {
 		uint8_t r, g, b, a;
 
-		r = bgra[j * 4 + 2];
-		g = bgra[j * 4 + 1];
-		b = bgra[j * 4 + 0];
-		a = bgra[j * 4 + 3];
+		r = packed_bgra[j * 4 + 2];
+		g = packed_bgra[j * 4 + 1];
+		b = packed_bgra[j * 4 + 0];
+		a = packed_bgra[j * 4 + 3];
 
-		planes[0][j] = r;
-		planes[1][j] = g;
-		planes[2][j] = b;
-		planes[3][j] = a;
+		planar_r[j] = r;
+		planar_g[j] = g;
+		planar_b[j] = b;
+		planar_a[j] = a;
 	}
-
-	return 0;
 }
 
-int pack_bgr(void *user, unsigned i, unsigned left, unsigned right)
+void pack_bgra_straight(const void * const planar[4], void *bgra, unsigned left, unsigned right)
 {
-	const Callback *callback = reinterpret_cast<Callback *>(user);
-	uint8_t *bgra = reinterpret_cast<uint8_t *>(callback->bmp->write_ptr() + (ptrdiff_t)i * callback->bmp->stride());
-	const uint8_t *planes[3];
+	const uint16_t *planar_r = reinterpret_cast<const uint16_t *>(planar[0]);
+	const uint16_t *planar_g = reinterpret_cast<const uint16_t *>(planar[1]);
+	const uint16_t *planar_b = reinterpret_cast<const uint16_t *>(planar[2]);
+	const uint8_t *planar_a = reinterpret_cast<const uint8_t *>(planar[3]);
+	uint8_t *packed_bgra = reinterpret_cast<uint8_t *>(bgra);
+
+	for (unsigned j = left; j < right; ++j) {
+		uint16_t r, g, b;
+		uint8_t a, a_eff;
+
+		r = planar_r[j];
+		g = planar_g[j];
+		b = planar_b[j];
+		a = planar_a[j];
+
+		a_eff = std::max(a, (uint8_t)1);
+
+		r = (uint16_t)((uint32_t)r * 255 * 255 / ((uint32_t)65535 * a_eff));
+		g = (uint16_t)((uint32_t)g * 255 * 255 / ((uint32_t)65535 * a_eff));
+		b = (uint16_t)((uint32_t)b * 255 * 255 / ((uint32_t)65535 * a_eff));
+
+		packed_bgra[j * 4 + 0] = (uint8_t)b;
+		packed_bgra[j * 4 + 1] = (uint8_t)g;
+		packed_bgra[j * 4 + 2] = (uint8_t)r;
+		packed_bgra[j * 4 + 3] = a;
+	}
+}
+
+void pack_bgra_premul(const void * const planar[4], void *bgra, unsigned left, unsigned right)
+{
+	const uint8_t *planar_r = reinterpret_cast<const uint8_t *>(planar[0]);
+	const uint8_t *planar_g = reinterpret_cast<const uint8_t *>(planar[1]);
+	const uint8_t *planar_b = reinterpret_cast<const uint8_t *>(planar[2]);
+	const uint8_t *planar_a = reinterpret_cast<const uint8_t *>(planar[3]);
+	uint8_t *packed_bgra = reinterpret_cast<uint8_t *>(bgra);
+
+	for (unsigned j = left; j < right; ++j) {
+		uint8_t r, g, b, a;
+
+		r = planar_r[j];
+		g = planar_g[j];
+		b = planar_b[j];
+		a = planar_a[j];
+
+		packed_bgra[j * 4 + 0] = b;
+		packed_bgra[j * 4 + 1] = g;
+		packed_bgra[j * 4 + 2] = r;
+		packed_bgra[j * 4 + 3] = a;
+	}
+}
+
+int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
+{
+	const Callback *cb = reinterpret_cast<Callback *>(user);
+	const zimg_image_buffer &rgb_buf = cb->rgb_buf->_;
+	const zimg_image_buffer &alpha_buf = cb->alpha_buf->_;
+	const void *packed_data = cb->bmp->read_ptr() + i * cb->bmp->stride();
+	void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planes[p] = reinterpret_cast<const uint8_t *>(buffer_at_line(*callback->buffer, p, i));
+		planar_data[p] = (char *)rgb_buf.m.data[p] + (ptrdiff_t)(i & rgb_buf.m.mask[p]) * rgb_buf.m.stride[p];
 	}
+	planar_data[3] = (char *)alpha_buf.m.data[0] + (ptrdiff_t)(i & alpha_buf.m.mask[0]) * alpha_buf.m.stride[0];
 
-	for (unsigned j = left; j < right; ++j) {
-		uint8_t r, g, b;
-
-		r = planes[0][j];
-		g = planes[1][j];
-		b = planes[2][j];
-
-		bgra[j * 4 + 0] = b;
-		bgra[j * 4 + 1] = g;
-		bgra[j * 4 + 2] = r;
-	}
+	if (cb->premultiply)
+		unpack_bgra_premul(packed_data, planar_data, left, right);
+	else
+		unpack_bgra_straight(packed_data, planar_data, left, right);
 
 	return 0;
 }
 
-int pack_alpha(void *user, unsigned i, unsigned left, unsigned right)
+int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback *callback = reinterpret_cast<Callback *>(user);
-	uint8_t *bgra = reinterpret_cast<uint8_t *>(callback->bmp->write_ptr() + (ptrdiff_t)i * callback->bmp->stride());
-	const uint8_t *alpha = reinterpret_cast<const uint8_t *>(buffer_at_line(*callback->buffer, 0, i));
+	const Callback * cb = reinterpret_cast<Callback *>(user);
+	const zimg_image_buffer_const &rgb_buf = cb->rgb_buf->as_const();
+	const zimg_image_buffer_const &alpha_buf = cb->alpha_buf->as_const();
+	void *packed_data = cb->bmp->write_ptr() + i * cb->bmp->stride();
+	const void *planar_data[4];
 
-	for (unsigned j = left; j < right; ++j) {
-		bgra[j * 4 + 3] = alpha[j];
+	for (unsigned p = 0; p < 3; ++p) {
+		planar_data[p] = (const char *)rgb_buf.data[p] + (ptrdiff_t)(i & rgb_buf.mask[p]) * rgb_buf.stride[p];
 	}
+	planar_data[3] = (const char *)alpha_buf.data[0] + (ptrdiff_t)(i & alpha_buf.mask[0]) * alpha_buf.stride[0];
+
+	if (cb->premultiply)
+		pack_bgra_premul(planar_data, packed_data, left, right);
+	else
+		pack_bgra_straight(planar_data, packed_data, left, right);
 
 	return 0;
 }
 
-void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp)
+void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultiply)
 {
-	zimgxx::zimage_format in_format{};
-	zimgxx::zimage_format out_format{};
-	zimgxx::zimage_format in_format_alpha{};
-	zimgxx::zimage_format out_format_alpha{};
+	zimgxx::zimage_format in_format = get_image_format(in_bmp, premultiply);
+	zimgxx::zimage_format out_format = get_image_format(out_bmp, premultiply);
+	zimgxx::zimage_format in_format_alpha = get_alpha_format(in_bmp, premultiply);
+	zimgxx::zimage_format out_format_alpha = get_alpha_format(out_bmp, premultiply);
 
-	in_format.width = in_bmp->width();
-	in_format.height = in_bmp->height();
-	in_format.pixel_type = ZIMG_PIXEL_BYTE;
-	in_format.color_family = ZIMG_COLOR_RGB;
-
-	out_format.width = out_bmp->width();
-	out_format.height = out_bmp->height();
-	out_format.pixel_type = ZIMG_PIXEL_BYTE;
-	out_format.color_family = ZIMG_COLOR_RGB;
-
-	in_format_alpha.width = in_bmp->width();
-	in_format_alpha.height = in_bmp->height();
-	in_format_alpha.pixel_type = ZIMG_PIXEL_BYTE;
-	in_format_alpha.color_family = ZIMG_COLOR_GREY;
-
-	out_format_alpha.width = out_bmp->width();
-	out_format_alpha.height = out_bmp->height();
-	out_format_alpha.pixel_type = ZIMG_PIXEL_BYTE;
-	out_format_alpha.color_family = ZIMG_COLOR_GREY;
-
-	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(&in_format, &out_format, nullptr) };
-	zimgxx::FilterGraph graph_alpha{ zimgxx::FilterGraph::build(&in_format_alpha, &out_format_alpha, nullptr) };
+	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(&in_format, &out_format) };
+	zimgxx::FilterGraph graph_alpha{ zimgxx::FilterGraph::build(&in_format_alpha, &out_format_alpha) };
 
 	unsigned input_buffering = std::max(graph.get_input_buffering(), graph_alpha.get_input_buffering());
 	unsigned output_buffering = std::max(graph.get_output_buffering(), graph_alpha.get_output_buffering());
 	size_t tmp_size = std::max(graph.get_tmp_size(), graph_alpha.get_tmp_size());
 
-	auto alpha = allocate_plane(in_bmp->width(), in_bmp->height());
-	auto in_buf = allocate_buffer(in_bmp->width(), in_bmp->height(), input_buffering);
-	auto out_buf = allocate_buffer(out_bmp->width(), out_bmp->height(), output_buffering);
-	auto tmp_buf = allocate_buffer(tmp_size);
+	auto in_rgb_buf = allocate_buffer(in_format, input_buffering);
+	auto in_alpha_plane_buf = allocate_buffer(in_format_alpha, -1);
 
-	Callback unpack_cb_data = { &in_buf.first, &alpha.first, const_cast<WindowsBitmap *>(in_bmp) };
-	Callback pack_cb_data = { &out_buf.first, nullptr, out_bmp };
+	auto out_rgb_plane_buf = allocate_buffer(out_format, -1);
+	auto out_alpha_buf = allocate_buffer(out_format_alpha, output_buffering);
 
-	graph.process(&in_buf.first.as_const(), &out_buf.first._, tmp_buf.get(),
-	              unpack_bgra, &unpack_cb_data, pack_bgr, &pack_cb_data);
-	graph_alpha.process(&alpha.first.as_const(), &out_buf.first._, tmp_buf.get(),
-	                    nullptr, nullptr, pack_alpha, &pack_cb_data);
+	auto tmp = allocate_buffer(tmp_size);
 
-	alpha.second.reset();
-	in_buf.second.reset();
-	out_buf.second.reset();
-	tmp_buf.reset();
+	Callback unpack_cb_data{ const_cast<WindowsBitmap *>(in_bmp), &in_rgb_buf.first, &in_alpha_plane_buf.first, premultiply };
+	Callback pack_cb_data{ out_bmp, &out_rgb_plane_buf.first, &out_alpha_buf.first, premultiply };
+
+	graph.process(&in_rgb_buf.first.as_const(), &out_rgb_plane_buf.first._, tmp.get(), unpack_bgra, &unpack_cb_data, nullptr, nullptr);
+	graph_alpha.process(&in_alpha_plane_buf.first.as_const(), &out_alpha_buf.first._, tmp.get(), nullptr, nullptr, pack_bgra, &pack_cb_data);
 }
 
 void execute(const Arguments &args)
@@ -223,7 +310,7 @@ void execute(const Arguments &args)
 		throw std::runtime_error{ "no alpha component in bitmap" };
 
 	out_bmp = std::make_shared<WindowsBitmap>(args.outpath, args.out_w, args.out_h, 32);
-	process(in_bmp.get(), out_bmp.get());
+	process(in_bmp.get(), out_bmp.get(), !!args.premultiply);
 }
 
 } // namespace
