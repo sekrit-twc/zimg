@@ -4,7 +4,7 @@
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
 #include <cstddef>
-#include "common/osdep.h"
+#include "common/ccdep.h"
 #include "bilinear.h"
 #include "plane.h"
 

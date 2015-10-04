@@ -1,6 +1,6 @@
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/osdep.h"
 #include "bilinear.h"
 #include "unresize_impl.h"
 #include "unresize_impl_x86.h"

@@ -5,9 +5,9 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/osdep.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"

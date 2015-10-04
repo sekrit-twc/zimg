@@ -1,6 +1,6 @@
 #ifdef ZIMG_X86
 #include <immintrin.h>
-#include "common/osdep.h"
+#include "common/ccdep.h"
 #include "bilinear.h"
 #include "unresize_impl.h"
 #include "unresize_impl_x86.h"
@@ -293,7 +293,7 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 			__m256 coeff5 = _mm256_broadcast_ss(&matrix_row[k + 5]);
 			__m256 coeff6 = _mm256_broadcast_ss(&matrix_row[k + 6]);
 			__m256 coeff7 = _mm256_broadcast_ss(&matrix_row[k + 7]);
-				
+
 			for (ptrdiff_t j = 0; j < mod(src_width, 8); j += 8) {
 				__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 				__m256 accum0, accum1;
@@ -402,7 +402,7 @@ void filter_plane_v_avx2(const BilinearContext &ctx, const ImagePlane<const T> &
 
 			policy.store_8(&dst_ptr[j], z);
 		}
-		
+
 		filter_scanline_v_forward(ctx, src, dst, i, mod(src_width, 8), src_width, policy);
 	}
 

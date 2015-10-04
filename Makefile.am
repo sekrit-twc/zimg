@@ -34,13 +34,13 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/colorspace/operation_impl.h \
 					 src/zimg/common/align.h \
 					 src/zimg/common/alloc.h \
+					 src/zimg/common/ccdep.h \
 					 src/zimg/common/cpuinfo.h \
 					 src/zimg/common/except.h \
 					 src/zimg/common/libm_wrapper.h \
 					 src/zimg/common/libm_wrapper.cpp \
 					 src/zimg/common/linebuffer.h \
 					 src/zimg/common/matrix.h \
-					 src/zimg/common/osdep.h \
 					 src/zimg/common/pixel.h \
 					 src/zimg/common/propagate_const.h \
 					 src/zimg/depth/depth_convert.cpp \

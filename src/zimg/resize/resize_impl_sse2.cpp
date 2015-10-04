@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <emmintrin.h>
 #include "common/align.h"
+#include "common/ccdep.h"
 #include "common/linebuffer.h"
-#include "common/osdep.h"
 #include "common/pixel.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"

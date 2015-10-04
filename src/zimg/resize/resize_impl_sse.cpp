@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <xmmintrin.h>
 #include "common/align.h"
-#include "common/osdep.h"
+#include "common/ccdep.h"
 #include "common/pixel.h"
 #include "common/linebuffer.h"
 #include "graph/zfilter.h"

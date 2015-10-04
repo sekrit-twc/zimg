@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <emmintrin.h>
 #include "common/align.h"
-#include "common/osdep.h"
+#include "common/ccdep.h"
 #include "dither_x86.h"
 
 namespace zimg {;
