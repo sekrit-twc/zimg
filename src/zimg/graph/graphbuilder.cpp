@@ -92,10 +92,8 @@ void validate_state(const GraphBuilder::state &state)
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)
 			throw error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
-		if (state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED ||
-			state.colorspace.transfer != zimg::colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED ||
-			state.colorspace.primaries != zimg::colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED)
-			throw error::NoColorspaceConversion{ "cannot specify colorspace of greyscale image" };
+		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
+			throw error::ColorFamilyMismatch{ "GREY color family cannot be RGB" };
 	}
 
 	if (is_rgb(state)) {
@@ -127,7 +125,13 @@ void validate_state(const GraphBuilder::state &state)
 
 bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
-	return source.colorspace != target.colorspace;
+	colorspace::ColorspaceDefinition csp_in = source.colorspace;
+	colorspace::ColorspaceDefinition csp_out = target.colorspace;
+
+	if (is_greyscale(source))
+		csp_in.matrix = csp_out.matrix;
+
+	return csp_in != csp_out;
 }
 
 bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &target)
@@ -137,28 +141,16 @@ bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &t
 
 bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
-	return source.width != target.width ||
-	       source.height != target.height ||
-	       source.subsample_w != target.subsample_w ||
-	       source.subsample_h != target.subsample_h ||
-	       (source.subsample_w && source.chroma_location_w != target.chroma_location_w) ||
-	       (source.subsample_h && source.chroma_location_h != target.chroma_location_h);
-}
-
-PixelType select_working_type(const GraphBuilder::state &source, const GraphBuilder::state &target)
-{
-	if (needs_colorspace(source, target)) {
-		return PixelType::FLOAT;
-	} else if (needs_resize(source, target)) {
-		if (source.type == PixelType::BYTE)
-			return PixelType::WORD;
-		else if (source.type == PixelType::HALF)
-			return PixelType::FLOAT;
-		else
-			return source.type;
-	} else {
-		return source.type;
-	}
+	if (is_greyscale(source) || is_greyscale(target))
+		return source.width != target.width ||
+		       source.height != target.height;
+	else
+		return source.width != target.width ||
+	           source.height != target.height ||
+	           source.subsample_w != target.subsample_w ||
+	           source.subsample_h != target.subsample_h ||
+	           (source.subsample_w && source.chroma_location_w != target.chroma_location_w) ||
+	           (source.subsample_h && source.chroma_location_h != target.chroma_location_h);
 }
 
 } // namespace
@@ -233,6 +225,44 @@ void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 	filter.release();
 }
 
+void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
+{
+	if (m_state.color == ColorFamily::COLOR_GREY)
+		return;
+	if (m_state.color == ColorFamily::COLOR_RGB)
+		throw error::InternalError{ "cannot discard chroma planes from RGB" };
+	if (matrix == colorspace::MatrixCoefficients::MATRIX_RGB)
+		throw error::InternalError{ "GREY color family cannot be RGB" };
+
+	m_graph->color_to_grey();
+	m_state.color = ColorFamily::COLOR_GREY;
+	m_state.colorspace.matrix = matrix;
+}
+
+void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
+                                 ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
+{
+	if (color == ColorFamily::COLOR_GREY)
+		return;
+	if (color == ColorFamily::COLOR_RGB && matrix != colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED && matrix != colorspace::MatrixCoefficients::MATRIX_RGB)
+		throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
+
+	if (!subsample_w)
+		chroma_location_w = ChromaLocationW::CHROMA_W_CENTER;
+	if (!subsample_h)
+		chroma_location_h = ChromaLocationH::CHROMA_H_CENTER;
+
+	m_graph->grey_to_color(color == ColorFamily::COLOR_YUV, subsample_w, subsample_h, m_state.depth);
+
+	m_state.subsample_w = subsample_w;
+	m_state.subsample_h = subsample_h;
+	m_state.color = color;
+	m_state.colorspace.matrix = matrix;
+
+	m_state.chroma_location_w = chroma_location_w;
+	m_state.chroma_location_h = chroma_location_h;
+}
+
 void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params)
 {
 	if (!m_factory)
@@ -288,6 +318,8 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	FilterFactory::filter_list filter_list_uv;
 
 	if (is_yuv(m_state)) {
+		depth_params.width >>= m_state.subsample_w;
+		depth_params.height >>= m_state.subsample_h;
 		depth_params.format_in.chroma = true;
 		depth_params.format_out.chroma = true;
 
@@ -456,10 +488,6 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 
 	if (m_state.parity != target.parity)
 		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
-	if (is_greyscale(m_state) != is_greyscale(target))
-		throw error::NoColorspaceConversion{ "conversion between greyscale and color image not supported" };
-
-	convert_depth(default_pixel_format(select_working_type(m_state, target)), params);
 
 	while (true) {
 		if (needs_colorspace(m_state, target)) {
@@ -467,9 +495,25 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			spec.subsample_w = 0;
 			spec.subsample_h = 0;
 
+			if (is_greyscale(m_state))
+				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
+
+			if (m_state.type != PixelType::FLOAT)
+				convert_depth(default_pixel_format(PixelType::FLOAT), params);
+
 			convert_resize(spec, params);
 			convert_colorspace(target.colorspace, params);
+
+			if (is_greyscale(target))
+				color_to_grey(target.colorspace.matrix);
+		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
+			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
+			if (m_state.type == PixelType::BYTE)
+				convert_depth(default_pixel_format(PixelType::WORD), params);
+			if (m_state.type == PixelType::HALF)
+				convert_depth(default_pixel_format(PixelType::FLOAT), params);
+
 			resize_spec spec{ m_state };
 			spec.width = target.width;
 			spec.height = target.height;
@@ -485,6 +529,8 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			format.fullrange = target.fullrange;
 
 			convert_depth(format, params);
+		} else if (is_greyscale(m_state) && !is_greyscale(target)) {
+			grey_to_color(target.color, target.colorspace.matrix, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
 		} else {
 			break;
 		}

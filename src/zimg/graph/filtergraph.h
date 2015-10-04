@@ -28,9 +28,8 @@ class FilterGraph : public zimg_filter_graph {
 	class impl;
 public:
 	class callback {
-	public:
 		typedef int (*func_type)(void *user, unsigned i, unsigned left, unsigned right);
-	private:
+
 		func_type m_func;
 		void *m_user;
 	public:
@@ -41,8 +40,6 @@ public:
 		explicit operator bool() const;
 
 		void operator()(unsigned i, unsigned left, unsigned right) const;
-
-		friend class FilterGraph;
 	};
 private:
 	std::unique_ptr<impl> m_impl;
@@ -54,6 +51,10 @@ public:
 	void attach_filter(ImageFilter *filter);
 
 	void attach_filter_uv(ImageFilter *filter);
+
+	void color_to_grey();
+
+	void grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth);
 
 	void complete();
 

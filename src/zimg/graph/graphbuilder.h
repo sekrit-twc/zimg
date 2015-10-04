@@ -163,6 +163,11 @@ private:
 
 	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter);
 
+	void color_to_grey(colorspace::MatrixCoefficients matrix);
+
+	void grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
+	                   ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h);
+
 	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params);
 
 	void convert_depth(const PixelFormat &format, const params *params);

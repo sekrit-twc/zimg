@@ -15,6 +15,115 @@ namespace zimg {;
 namespace graph {;
 namespace {;
 
+class ColorExtendFilter : public CopyFilter {
+	bool m_rgb;
+public:
+	ColorExtendFilter(const image_attributes &attr, bool rgb) :
+		CopyFilter{ attr.width, attr.height, attr.type },
+		m_rgb{ rgb }
+	{
+	}
+
+	filter_flags get_flags() const override
+	{
+		filter_flags flags = CopyFilter::get_flags();
+
+		flags.in_place = false;
+		flags.color = true;
+
+		return flags;
+	}
+
+	void process(void *, const ImageBufferConst &src, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	{
+		CopyFilter::process(nullptr, src, dst, nullptr, i, left, right);
+
+		if (m_rgb) {
+			ImageBuffer dst_p;
+
+			for (unsigned p = 1; p < 3; ++p) {
+				dst_p.data[0] = dst.data[p];
+				dst_p.stride[0] = dst.stride[p];
+				dst_p.mask[0] = dst.mask[p];
+
+				CopyFilter::process(nullptr, src, dst_p, nullptr, i, left, right);
+			}
+		}
+	}
+};
+
+class ChromaInitializeFilter : public ImageFilterBase {
+	image_attributes m_attr;
+	unsigned m_subsample_w;
+	unsigned m_subsample_h;
+
+	union {
+		uint8_t b;
+		uint16_t w;
+		float f;
+	} m_value;
+
+	template <class T>
+	void fill(T *ptr, const T &val, unsigned left, unsigned right) const
+	{
+		std::fill(ptr + left, ptr + right, val);
+	}
+public:
+	ChromaInitializeFilter(image_attributes attr, unsigned subsample_w, unsigned subsample_h, unsigned depth) :
+		m_attr{ attr.width >> subsample_w, attr.height >> subsample_h, attr.type },
+		m_subsample_w{ subsample_w },
+		m_subsample_h{ subsample_h },
+		m_value{}
+	{
+		if (attr.type == PixelType::BYTE)
+			m_value.b = static_cast<uint8_t>(1U << (depth - 1));
+		else if (attr.type == PixelType::WORD)
+			m_value.w = static_cast<uint8_t>(1U << (depth - 1));
+		else if (attr.type == PixelType::HALF)
+			m_value.w = 0;
+		else if (attr.type == PixelType::FLOAT)
+			m_value.f = 0.0f;
+	}
+
+	filter_flags get_flags() const override
+	{
+		filter_flags flags{};
+
+		flags.same_row = true;
+		flags.in_place = true;
+
+		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return m_attr;
+	}
+
+	pair_unsigned get_required_row_range(unsigned i) const
+	{
+		return{ i << m_subsample_h, (i + 1) << m_subsample_h };
+	}
+
+	pair_unsigned get_required_col_range(unsigned left, unsigned right) const
+	{
+		return{ left << m_subsample_w, right << m_subsample_w };
+	}
+
+	void process(void *, const ImageBufferConst &, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	{
+		void *dst_p = LineBuffer<void>(dst)[i];
+
+		if (m_attr.type == PixelType::BYTE)
+			fill(reinterpret_cast<uint8_t *>(dst_p), m_value.b, left, right);
+		else if (m_attr.type == PixelType::WORD || m_attr.type == PixelType::HALF)
+			fill(reinterpret_cast<uint16_t *>(dst_p), m_value.w, left, right);
+		else if (m_attr.type == PixelType::FLOAT)
+			fill(reinterpret_cast<float *>(dst_p), m_value.f, left, right);
+	}
+};
+
+
 class SimulationState {
 	std::vector<unsigned> m_cache_pos;
 public:
@@ -712,6 +821,49 @@ public:
 		parent->add_ref();
 	}
 
+	void color_to_grey()
+	{
+		check_incomplete();
+
+		if (!m_node_uv)
+			throw error::InternalError{ "cannot remove chroma from greyscale image" };
+
+		auto attr = m_node->get_image_attributes();
+		std::unique_ptr<ImageFilter> filter{ new CopyFilter{ attr.width, attr.height, attr.type } };
+		GraphNode *parent = m_node;
+
+		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, nullptr, filter.get() });
+		m_node = m_node_set.back().get();
+		m_node_uv = nullptr;
+		filter.release();
+
+		parent->add_ref();
+	}
+
+	void grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth)
+	{
+		check_incomplete();
+
+		if (m_node_uv)
+			throw error::InternalError{ "cannot add chroma to color image" };
+
+		std::unique_ptr<ImageFilter> filter{ new ColorExtendFilter{ m_node->get_image_attributes(), !yuv } };
+		GraphNode *parent = m_node;
+
+		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, nullptr, filter.get() });
+		m_node = m_node_set.back().get();
+		m_node_uv = m_node;
+		filter.release();
+
+		parent->add_ref();
+
+		if (yuv) {
+			filter.reset(new ChromaInitializeFilter{ m_node->get_image_attributes(), subsample_w, subsample_h, depth });
+			attach_filter_uv(filter.get());
+			filter.release();
+		}
+	}
+
 	void complete()
 	{
 		check_incomplete();
@@ -891,6 +1043,16 @@ void FilterGraph::attach_filter(ImageFilter *filter)
 void FilterGraph::attach_filter_uv(ImageFilter *filter)
 {
 	m_impl->attach_filter_uv(filter);
+}
+
+void FilterGraph::color_to_grey()
+{
+	m_impl->color_to_grey();
+}
+
+void FilterGraph::grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth)
+{
+	m_impl->grey_to_color(yuv, subsample_w, subsample_h, depth);
 }
 
 void FilterGraph::complete()

@@ -232,6 +232,166 @@ TEST(FilterGraphTest, test_skip_plane)
 	}
 }
 
+TEST(FilterGraphTest, test_color_to_grey)
+{
+	const unsigned w = 640;
+	const unsigned h = 480;
+	const zimg::PixelType type = zimg::PixelType::BYTE;
+
+	const uint8_t test_byte1 = 0xCD;
+	const uint8_t test_byte2 = 0xDC;
+
+	zimg::graph::ImageFilter::filter_flags flags{};
+	flags.has_state = true;
+	flags.entire_row = true;
+	flags.color = true;
+
+	std::unique_ptr<SplatFilter<uint8_t>> filter_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags} };
+	SplatFilter<uint8_t> *filter = filter_uptr.get();
+
+	filter->set_input_val(test_byte1);
+	filter->set_output_val(test_byte2);
+
+	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
+
+	graph.attach_filter(filter);
+	filter_uptr.release();
+
+	graph.color_to_grey();
+	graph.complete();
+
+	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, true };
+	AuditImage<uint8_t> dst_image{ w, h, type, 0, 0, false };
+	zimg::AlignedVector<char> tmp(graph.get_tmp_size());
+
+	src_image.set_fill_val(test_byte1);
+	src_image.default_fill();
+
+	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+
+	dst_image.set_fill_val(test_byte2);
+
+	ASSERT_EQ(h, filter->get_total_calls());
+
+	SCOPED_TRACE("validating src");
+	src_image.validate();
+	SCOPED_TRACE("validating dst");
+	dst_image.validate();
+}
+
+TEST(FilterGraphTest, test_grey_to_color_rgb)
+{
+	const unsigned w = 640;
+	const unsigned h = 480;
+	const zimg::PixelType type = zimg::PixelType::BYTE;
+
+	const uint8_t test_byte1 = 0xCD;
+	const uint8_t test_byte2 = 0xDD;
+	const uint8_t test_byte3 = 0xDC;
+
+	zimg::graph::ImageFilter::filter_flags flags1{};
+	flags1.has_state = true;
+	flags1.entire_row = true;
+	flags1.color = false;
+
+	zimg::graph::ImageFilter::filter_flags flags2{};
+	flags2.has_state = true;
+	flags2.entire_row = true;
+	flags2.color = true;
+
+	std::unique_ptr<SplatFilter<uint8_t>> filter1_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags1 } };
+	std::unique_ptr<SplatFilter<uint8_t>> filter2_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags2 } };
+	SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
+	SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
+
+	filter1->set_input_val(test_byte1);
+	filter1->set_output_val(test_byte2);
+
+	filter2->set_input_val(test_byte2);
+	filter2->set_output_val(test_byte3);
+
+	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
+
+	graph.attach_filter(filter1);
+	filter1_uptr.release();
+
+	graph.grey_to_color(false, 0, 0, 8);
+
+	graph.attach_filter(filter2);
+	filter2_uptr.release();
+
+	graph.complete();
+
+	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, false };
+	AuditImage<uint8_t> dst_image{ w, h, type, 0, 0, true };
+	zimg::AlignedVector<char> tmp(graph.get_tmp_size());
+
+	src_image.set_fill_val(test_byte1);
+	src_image.default_fill();
+
+	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+
+	dst_image.set_fill_val(test_byte3);
+
+	ASSERT_EQ(h, filter1->get_total_calls());
+	ASSERT_EQ(h, filter2->get_total_calls());
+
+	SCOPED_TRACE("validating src");
+	src_image.validate();
+	SCOPED_TRACE("validating dst");
+	dst_image.validate();
+}
+
+TEST(FilterGraphTest, test_grey_to_color_yuv)
+{
+	const unsigned w = 640;
+	const unsigned h = 480;
+	const zimg::PixelType type = zimg::PixelType::BYTE;
+
+	const uint8_t test_byte1 = 0xCD;
+	const uint8_t test_byte2 = 0xDD;
+	const uint8_t test_byte2_uv = 128;
+
+	zimg::graph::ImageFilter::filter_flags flags{};
+	flags.has_state = true;
+	flags.entire_row = true;
+	flags.color = false;
+
+	std::unique_ptr<SplatFilter<uint8_t>> filter_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags } };
+	SplatFilter<uint8_t> *filter = filter_uptr.get();
+
+	filter->set_input_val(test_byte1);
+	filter->set_output_val(test_byte2);
+
+	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
+
+	graph.attach_filter(filter);
+	filter_uptr.release();
+
+	graph.grey_to_color(true, 1, 1, 8);
+	graph.complete();
+
+	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, false };
+	AuditImage<uint8_t> dst_image{ w, h, type, 1, 1, true };
+	zimg::AlignedVector<char> tmp(graph.get_tmp_size());
+
+	src_image.set_fill_val(test_byte1);
+	src_image.default_fill();
+
+	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+
+	dst_image.set_fill_val(test_byte2, 0);
+	dst_image.set_fill_val(test_byte2_uv, 1);
+	dst_image.set_fill_val(test_byte2_uv, 2);
+
+	ASSERT_EQ(h, filter->get_total_calls());
+
+	SCOPED_TRACE("validating src");
+	src_image.validate();
+	SCOPED_TRACE("validating dst");
+	dst_image.validate();
+}
+
 TEST(FilterGraphTest, test_support)
 {
 	const unsigned w = 1024;
