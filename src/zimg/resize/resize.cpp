@@ -25,7 +25,7 @@ bool resize_h_first(double xscale, double yscale)
 } // namespace
 
 
-std::pair<graph::IZimgFilter *, graph::IZimgFilter *> create_resize(
+std::pair<graph::ImageFilter *, graph::ImageFilter *> create_resize(
 	const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
 	double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
@@ -40,8 +40,8 @@ std::pair<graph::IZimgFilter *, graph::IZimgFilter *> create_resize(
 		return{ create_resize_impl(filter, type, true, depth, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu), nullptr };
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
-		std::unique_ptr<graph::IZimgFilter> stage1;
-		std::unique_ptr<graph::IZimgFilter> stage2;
+		std::unique_ptr<graph::ImageFilter> stage1;
+		std::unique_ptr<graph::ImageFilter> stage2;
 
 		if (h_first) {
 			stage1.reset(create_resize_impl(filter, type, true, depth, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu));

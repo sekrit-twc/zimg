@@ -13,7 +13,7 @@ enum class PixelType;
 
 namespace resize {;
 
-class ResizeImplH : public graph::ZimgFilter {
+class ResizeImplH : public graph::ImageFilterBase {
 protected:
 	FilterContext m_filter;
 	image_attributes m_attr;
@@ -32,7 +32,7 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-class ResizeImplV : public graph::ZimgFilter {
+class ResizeImplV : public graph::ImageFilterBase {
 protected:
 	FilterContext m_filter;
 	image_attributes m_attr;
@@ -49,7 +49,7 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-graph::IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
                                        double shift, double subwidth, CPUClass cpu);
 
 } // namespace resize

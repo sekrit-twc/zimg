@@ -12,7 +12,7 @@ enum class CPUClass;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 } // namespace graph
 
@@ -23,9 +23,9 @@ typedef void (*left_shift_func)(const void *src, void *dst, unsigned shift, unsi
 typedef void (*depth_convert_func)(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
 typedef void (*depth_f16c_func)(const void *src, void *dst, unsigned left, unsigned right);
 
-graph::IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+graph::ImageFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-graph::IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+graph::ImageFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

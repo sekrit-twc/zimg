@@ -12,7 +12,7 @@ enum class PixelType;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 } // namespace graph
 
@@ -21,15 +21,15 @@ namespace resize {;
 
 struct FilterContext;
 
-graph::IZimgFilter *create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
+graph::ImageFilter *create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
 
-graph::IZimgFilter *create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
+graph::ImageFilter *create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
-graph::IZimgFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
+graph::ImageFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
-graph::IZimgFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
+graph::ImageFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
 
-graph::IZimgFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);
+graph::ImageFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

@@ -15,7 +15,7 @@ struct PairFilter::cache_context {
 	unsigned col_right;
 };
 
-PairFilter::PairFilter(IZimgFilter *first, IZimgFilter *second) :
+PairFilter::PairFilter(ImageFilter *first, ImageFilter *second) :
 	m_first_flags{},
 	m_second_flags{},
 	m_first_attr{},
@@ -76,7 +76,7 @@ unsigned PairFilter::get_num_planes() const
 	return m_color ? 3 : 1;
 }
 
-zimg::graph::IZimgFilter::filter_flags PairFilter::get_flags() const
+zimg::graph::ImageFilter::filter_flags PairFilter::get_flags() const
 {
 	filter_flags flags{};
 
@@ -90,12 +90,12 @@ zimg::graph::IZimgFilter::filter_flags PairFilter::get_flags() const
 	return flags;
 }
 
-zimg::graph::IZimgFilter::image_attributes PairFilter::get_image_attributes() const
+zimg::graph::ImageFilter::image_attributes PairFilter::get_image_attributes() const
 {
 	return m_second_attr;
 }
 
-zimg::graph::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
+zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
 {
 	auto second_range = m_second->get_required_row_range(i);
 	auto top_range = m_first->get_required_row_range(zimg::mod(second_range.first, m_first_step));
@@ -104,7 +104,7 @@ zimg::graph::IZimgFilter::pair_unsigned PairFilter::get_required_row_range(unsig
 	return{ top_range.first, bot_range.second };
 }
 
-zimg::graph::IZimgFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
+zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
 {
 	auto second_range = m_second->get_required_col_range(left, right);
 	auto first_range = m_first->get_required_col_range(second_range.first, second_range.second);
@@ -188,13 +188,13 @@ void PairFilter::init_context(void *ctx) const
 	cache->col_right = 0;
 }
 
-void PairFilter::process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void PairFilter::process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	cache_context *cache = static_cast<cache_context *>(ctx);
 	auto row_range = m_second->get_required_row_range(i);
 	auto col_range = m_second->get_required_col_range(left, right);
 	ptrdiff_t cache_stride = get_cache_stride();
-	zimg::graph::ZimgImageBuffer cache_buf{};
+	zimg::graph::ImageBuffer cache_buf{};
 
 	if (left != cache->col_left || right != cache->col_right) {
 		cache->col_left = left;

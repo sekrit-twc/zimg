@@ -47,13 +47,13 @@ public:
 
 	bool is_yuv() const;
 
-	zimg::graph::ZimgImageBufferConst as_read_buffer(unsigned plane) const;
+	zimg::graph::ImageBufferConst as_read_buffer(unsigned plane) const;
 
-	zimg::graph::ZimgImageBufferConst as_read_buffer() const;
+	zimg::graph::ImageBufferConst as_read_buffer() const;
 
-	zimg::graph::ZimgImageBuffer as_write_buffer(unsigned plane);
+	zimg::graph::ImageBuffer as_write_buffer(unsigned plane);
 
-	zimg::graph::ZimgImageBuffer as_write_buffer();
+	zimg::graph::ImageBuffer as_write_buffer();
 };
 
 

@@ -7,7 +7,7 @@
 
 #include "graph/zfilter.h"
 
-class MockFilter : public zimg::graph::IZimgFilter {
+class MockFilter : public zimg::graph::ImageFilter {
 protected:
 	struct context {
 		unsigned last_line;
@@ -32,7 +32,7 @@ public:
 
 	void set_vertical_support(unsigned n);
 
-	// IZimgFilter
+	// ImageFilter
 	filter_flags get_flags() const override;
 
 	image_attributes get_image_attributes() const override;
@@ -51,7 +51,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 template <class T>
@@ -62,7 +62,7 @@ class SplatFilter : public MockFilter {
 	T m_dst_val;
 	bool m_input_checking;
 public:
-	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::IZimgFilter::filter_flags &flags = {});
+	SplatFilter(unsigned width, unsigned height, zimg::PixelType type, const zimg::graph::ImageFilter::filter_flags &flags = {});
 
 	void set_input_val(unsigned char x);
 
@@ -70,7 +70,7 @@ public:
 
 	void enable_input_checking(bool enabled);
 
-	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 extern template class SplatFilter<uint8_t>;

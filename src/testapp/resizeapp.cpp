@@ -142,7 +142,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::graph::IZimgFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const zimg::graph::ImageFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
 	auto results = measure_benchmark(times, FilterExecutor{ filter, nullptr, src_frame, dst_frame }, [](unsigned n, double d)
 	{
@@ -196,11 +196,11 @@ int resize_main(int argc, char **argv)
 	                                               src_frame.width(), src_frame.height(), dst_frame.width(), dst_frame.height(),
 	                                               args.shift_w, args.shift_h, args.subwidth, args.subheight, args.cpu);
 
-	std::unique_ptr<zimg::graph::IZimgFilter> filter_a{ filter_pair.first };
-	std::unique_ptr<zimg::graph::IZimgFilter> filter_b{ filter_pair.second };
+	std::unique_ptr<zimg::graph::ImageFilter> filter_a{ filter_pair.first };
+	std::unique_ptr<zimg::graph::ImageFilter> filter_b{ filter_pair.second };
 
 	if (filter_b) {
-		std::unique_ptr<zimg::graph::IZimgFilter> pair{ new PairFilter{ filter_a.get(), filter_b.get() } };
+		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_a.get(), filter_b.get() } };
 		filter_a.release();
 		filter_b.release();
 		filter_a = std::move(pair);

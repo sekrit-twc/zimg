@@ -21,7 +21,7 @@ try :
 	throw error::OutOfMemory{};
 }
 
-graph::IZimgFilter::filter_flags ColorspaceConversion::get_flags() const
+graph::ImageFilter::filter_flags ColorspaceConversion::get_flags() const
 {
 	filter_flags flags{};
 
@@ -32,12 +32,12 @@ graph::IZimgFilter::filter_flags ColorspaceConversion::get_flags() const
 	return flags;
 }
 
-graph::IZimgFilter::image_attributes ColorspaceConversion::get_image_attributes() const
+graph::ImageFilter::image_attributes ColorspaceConversion::get_image_attributes() const
 {
 	return{ m_width, m_height, PixelType::FLOAT };
 }
 
-void ColorspaceConversion::process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
+void ColorspaceConversion::process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const
 {
 	const float *src_ptr[3];
 	float *dst_ptr[3];

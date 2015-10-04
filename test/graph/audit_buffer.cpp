@@ -247,7 +247,7 @@ void AuditBuffer<T>::default_fill()
 }
 
 template <class T>
-const zimg::graph::ZimgImageBuffer &AuditBuffer<T>::as_image_buffer() const
+const zimg::graph::ImageBuffer &AuditBuffer<T>::as_image_buffer() const
 {
 	return m_buffer;
 }

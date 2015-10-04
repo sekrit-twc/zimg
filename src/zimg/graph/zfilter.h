@@ -15,7 +15,7 @@ enum class PixelType;
 
 namespace graph {;
 
-class IZimgFilter {
+class ImageFilter {
 public:
 	struct filter_flags {
 		bool has_state : 1;
@@ -34,7 +34,7 @@ public:
 
 	typedef std::pair<unsigned, unsigned> pair_unsigned;
 
-	virtual inline ~IZimgFilter() = 0;
+	virtual inline ~ImageFilter() = 0;
 
 	virtual filter_flags get_flags() const = 0;
 
@@ -54,12 +54,12 @@ public:
 
 	virtual void init_context(void *ctx) const = 0;
 
-	virtual void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
+	virtual void process(void *ctx, const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
 };
 
-class ZimgFilter : public IZimgFilter {
+class ImageFilterBase : public ImageFilter {
 public:
-	virtual inline ~ZimgFilter() = 0;
+	virtual inline ~ImageFilterBase() = 0;
 
 	pair_unsigned get_required_row_range(unsigned i) const override
 	{
@@ -96,20 +96,20 @@ public:
 	}
 };
 
-IZimgFilter::~IZimgFilter()
+ImageFilter::~ImageFilter()
 {
 }
 
-ZimgFilter::~ZimgFilter()
+ImageFilterBase::~ImageFilterBase()
 {
 }
 
-inline bool operator==(const IZimgFilter::image_attributes &a, const IZimgFilter::image_attributes &b)
+inline bool operator==(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b)
 {
 	return a.width == b.width && a.height == b.height && a.type == b.type;
 }
 
-inline bool operator!=(const IZimgFilter::image_attributes &a, const IZimgFilter::image_attributes &b)
+inline bool operator!=(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b)
 {
 	return !operator==(a, b);
 }

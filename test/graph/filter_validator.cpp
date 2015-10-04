@@ -33,7 +33,7 @@ void decode_sha1(const char *str, unsigned char digest[20])
 template <class T>
 void hash_buffer(const AuditBuffer<T> &buf, unsigned p, unsigned width, unsigned height, unsigned char digest[20])
 {
-	const zimg::graph::ZimgImageBufferConst &image_buffer = buf.as_image_buffer();
+	const zimg::graph::ImageBufferConst &image_buffer = buf.as_image_buffer();
 	SHA1_CTX sha_ctx;
 
 	SHA1Init(&sha_ctx);
@@ -130,7 +130,7 @@ double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigne
 }
 
 
-void validate_flags(const zimg::graph::IZimgFilter *filter)
+void validate_flags(const zimg::graph::ImageFilter *filter)
 {
 	auto flags = filter->get_flags();
 
@@ -145,7 +145,7 @@ void validate_flags(const zimg::graph::IZimgFilter *filter)
 		FAIL() << "filter must output entire image if entire_plane is set";
 }
 
-void validate_same_row(const zimg::graph::IZimgFilter *filter)
+void validate_same_row(const zimg::graph::ImageFilter *filter)
 {
 	auto flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
@@ -161,7 +161,7 @@ void validate_same_row(const zimg::graph::IZimgFilter *filter)
 }
 
 template <class T, class U>
-void validate_filter_plane(const zimg::graph::IZimgFilter *filter, AuditBuffer<T> *src_buffer, AuditBuffer<U> *dst_buffer)
+void validate_filter_plane(const zimg::graph::ImageFilter *filter, AuditBuffer<T> *src_buffer, AuditBuffer<U> *dst_buffer)
 {
 	auto attr = filter->get_image_attributes();
 
@@ -189,7 +189,7 @@ void validate_filter_plane(const zimg::graph::IZimgFilter *filter, AuditBuffer<T
 }
 
 template <class T, class U>
-void validate_filter_buffered(const zimg::graph::IZimgFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const AuditBuffer<U> &ref_buffer)
+void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const AuditBuffer<U> &ref_buffer)
 {
 	auto flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
@@ -230,9 +230,9 @@ void validate_filter_buffered(const zimg::graph::IZimgFilter *filter, unsigned s
 }
 
 template <class T, class U>
-void validate_filter_T(const zimg::graph::IZimgFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
+void validate_filter_T(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
 {
-	zimg::graph::IZimgFilter::filter_flags flags = filter->get_flags();
+	zimg::graph::ImageFilter::filter_flags flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
 
 	validate_flags(filter);
@@ -268,10 +268,10 @@ void validate_filter_T(const zimg::graph::IZimgFilter *filter, unsigned src_widt
 }
 
 template <class T, class U>
-void validate_filter_reference_T(const zimg::graph::IZimgFilter *ref_filter, const zimg::graph::IZimgFilter *test_filter,
+void validate_filter_reference_T(const zimg::graph::ImageFilter *ref_filter, const zimg::graph::ImageFilter *test_filter,
                                  unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
 {
-	zimg::graph::IZimgFilter::filter_flags flags = ref_filter->get_flags();
+	zimg::graph::ImageFilter::filter_flags flags = ref_filter->get_flags();
 	auto attr = ref_filter->get_image_attributes();
 
 	AuditBuffer<T> src_buf{ src_width, src_height, src_format, (unsigned)-1, 0, 0, !!flags.color };
@@ -291,12 +291,12 @@ void validate_filter_reference_T(const zimg::graph::IZimgFilter *ref_filter, con
 } // namespace
 
 
-void validate_filter(const zimg::graph::IZimgFilter *filter, unsigned src_width, unsigned src_height, zimg::PixelType src_type, const char * const sha1_str[3])
+void validate_filter(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, zimg::PixelType src_type, const char * const sha1_str[3])
 {
 	validate_filter(filter, src_width, src_height, zimg::default_pixel_format(src_type), sha1_str);
 }
 
-void validate_filter(const zimg::graph::IZimgFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
+void validate_filter(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
 {
 	zimg::PixelType src_type = src_format.type;
 	auto attr = filter->get_image_attributes();
@@ -325,13 +325,13 @@ void validate_filter(const zimg::graph::IZimgFilter *filter, unsigned src_width,
 	}
 }
 
-void validate_filter_reference(const zimg::graph::IZimgFilter *ref_filter, const zimg::graph::IZimgFilter *test_filter,
+void validate_filter_reference(const zimg::graph::ImageFilter *ref_filter, const zimg::graph::ImageFilter *test_filter,
                                unsigned src_width, unsigned src_height, zimg::PixelType src_type, double snr_thresh)
 {
 	validate_filter_reference(ref_filter, test_filter, src_width, src_height, zimg::default_pixel_format(src_type), snr_thresh);
 }
 
-void validate_filter_reference(const zimg::graph::IZimgFilter *ref_filter, const zimg::graph::IZimgFilter *test_filter,
+void validate_filter_reference(const zimg::graph::ImageFilter *ref_filter, const zimg::graph::ImageFilter *test_filter,
                                unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
 {
 	auto ref_flags = ref_filter->get_flags();

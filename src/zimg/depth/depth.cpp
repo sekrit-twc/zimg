@@ -23,7 +23,7 @@ bool is_lossless_conversion(const PixelFormat &pixel_in, const PixelFormat &pixe
 } // namespace
 
 
-graph::IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::ImageFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	try
 	{

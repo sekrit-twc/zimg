@@ -9,12 +9,12 @@
 namespace zimg {;
 namespace graph {;
 
-class MuxFilter final : public IZimgFilter {
-	std::unique_ptr<IZimgFilter> m_filter;
-	std::unique_ptr<IZimgFilter> m_filter_uv;
+class MuxFilter final : public ImageFilter {
+	std::unique_ptr<ImageFilter> m_filter;
+	std::unique_ptr<ImageFilter> m_filter_uv;
 	filter_flags m_flags;
 public:
-	MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv);
+	MuxFilter(ImageFilter *filter, ImageFilter *filter_uv);
 
 	filter_flags get_flags() const override;
 
@@ -34,7 +34,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 } // namespace graph

@@ -85,7 +85,7 @@ depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const
 }
 
 
-class IntegerLeftShift : public graph::ZimgFilter {
+class IntegerLeftShift : public graph::ImageFilterBase {
 	left_shift_func m_func;
 
 	PixelType m_pixel_in;
@@ -133,7 +133,7 @@ public:
 		return{ m_width, m_height, m_pixel_out };
 	}
 
-	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		const char *src_line = LineBuffer<const char>(src)[i];
 		char *dst_line = LineBuffer<char>(dst)[i];
@@ -152,7 +152,7 @@ public:
 };
 
 
-class ConvertToFloat : public graph::ZimgFilter {
+class ConvertToFloat : public graph::ImageFilterBase {
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
 
@@ -222,7 +222,7 @@ public:
 		return size;
 	}
 
-	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
 		const char *src_line = LineBuffer<const char>{ src }[i];
 		char *dst_line = LineBuffer<char>{ dst }[i];
@@ -250,7 +250,7 @@ public:
 } // namespace
 
 
-graph::IZimgFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::ImageFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	left_shift_func func = nullptr;
 
@@ -261,7 +261,7 @@ graph::IZimgFilter *create_left_shift(unsigned width, unsigned height, const Pix
 }
 
 
-graph::IZimgFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+graph::ImageFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;

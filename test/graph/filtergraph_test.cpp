@@ -106,13 +106,13 @@ TEST(FilterGraphTest, test_basic)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		zimg::graph::IZimgFilter::filter_flags flags1{};
+		zimg::graph::ImageFilter::filter_flags flags1{};
 		flags1.has_state = true;
 		flags1.entire_row = true;
 		flags1.entire_plane = true;
 		flags1.color = !!x;
 
-		zimg::graph::IZimgFilter::filter_flags flags2{};
+		zimg::graph::ImageFilter::filter_flags flags2{};
 		flags2.has_state = true;
 		flags2.entire_row = false;
 		flags2.entire_plane = false;
@@ -169,12 +169,12 @@ TEST(FilterGraphTest, test_skip_plane)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		zimg::graph::IZimgFilter::filter_flags flags1{};
+		zimg::graph::ImageFilter::filter_flags flags1{};
 		flags1.has_state = true;
 		flags1.entire_row = true;
 		flags1.color = true;
 
-		zimg::graph::IZimgFilter::filter_flags flags2{};
+		zimg::graph::ImageFilter::filter_flags flags2{};
 		flags2.has_state = false;
 		flags2.entire_row = true;
 		flags2.color = false;
@@ -322,7 +322,7 @@ TEST(FilterGraphTest, test_callback)
 	const uint8_t test_byte3 = 0xDC;
 
 	struct callback_data {
-		zimg::graph::ZimgImageBuffer buffer;
+		zimg::graph::ImageBuffer buffer;
 		unsigned subsample_w;
 		unsigned subsample_h;
 		unsigned call_count;
@@ -363,7 +363,7 @@ TEST(FilterGraphTest, test_callback)
 				SCOPED_TRACE(sh);
 				SCOPED_TRACE(!!x);
 
-				zimg::graph::IZimgFilter::filter_flags flags{};
+				zimg::graph::ImageFilter::filter_flags flags{};
 				flags.entire_row = !!x;
 				flags.color = false;
 

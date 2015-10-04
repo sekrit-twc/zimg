@@ -28,7 +28,7 @@ class Filter;
 namespace graph {;
 
 class FilterGraph;
-class IZimgFilter;
+class ImageFilter;
 
 class FilterFactory {
 public:
@@ -67,7 +67,7 @@ public:
 		CPUClass cpu;
 	};
 
-	typedef std::vector<std::unique_ptr<IZimgFilter>> filter_list;
+	typedef std::vector<std::unique_ptr<ImageFilter>> filter_list;
 
 	virtual ~FilterFactory() = 0;
 
@@ -159,9 +159,9 @@ private:
 	FilterFactory *m_factory;
 	state m_state;
 
-	void attach_filter(std::unique_ptr<IZimgFilter> &&filter);
+	void attach_filter(std::unique_ptr<ImageFilter> &&filter);
 
-	void attach_filter_uv(std::unique_ptr<IZimgFilter> &&filter);
+	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter);
 
 	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params);
 

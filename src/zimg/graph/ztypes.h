@@ -9,19 +9,19 @@ namespace zimg {;
 namespace graph {;
 
 template <class T>
-struct ZimgImageBufferTemplate {
+struct ImageBufferTemplate {
 	T *data[3];
 	ptrdiff_t stride[3];
 	unsigned mask[3];
 
-	operator const ZimgImageBufferTemplate<const T> &() const
+	operator const ImageBufferTemplate<const T> &() const
 	{
-		return reinterpret_cast<const ZimgImageBufferTemplate<const T> &>(*this);
+		return reinterpret_cast<const ImageBufferTemplate<const T> &>(*this);
 	}
 };
 
-typedef ZimgImageBufferTemplate<const void> ZimgImageBufferConst;
-typedef ZimgImageBufferTemplate<void> ZimgImageBuffer;
+typedef ImageBufferTemplate<const void> ImageBufferConst;
+typedef ImageBufferTemplate<void> ImageBuffer;
 
 } // namespace graph
 } // namespace zimg

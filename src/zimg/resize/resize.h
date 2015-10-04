@@ -13,7 +13,7 @@ enum class PixelType;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 } // namespace graph
 
@@ -22,7 +22,7 @@ namespace resize {;
 
 class Filter;
 
-std::pair<graph::IZimgFilter *, graph::IZimgFilter *> create_resize(
+std::pair<graph::ImageFilter *, graph::ImageFilter *> create_resize(
 	const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
 	double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 

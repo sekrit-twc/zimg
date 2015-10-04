@@ -7,11 +7,11 @@
 namespace zimg{;
 namespace graph {;
 
-MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
+MuxFilter::MuxFilter(ImageFilter *filter, ImageFilter *filter_uv) :
 	m_flags{}
 {
-	IZimgFilter::filter_flags filter_flags = filter->get_flags();
-	IZimgFilter::filter_flags filter_flags_uv = filter_uv ? filter_uv->get_flags() : filter_flags;
+	ImageFilter::filter_flags filter_flags = filter->get_flags();
+	ImageFilter::filter_flags filter_flags_uv = filter_uv ? filter_uv->get_flags() : filter_flags;
 
 	if (filter_flags.color || filter_flags_uv.color)
 		throw error::InternalError{ "can not mux color filters" };
@@ -53,22 +53,22 @@ MuxFilter::MuxFilter(IZimgFilter *filter, IZimgFilter *filter_uv) :
 	m_filter_uv.reset(filter_uv);
 }
 
-IZimgFilter::filter_flags MuxFilter::get_flags() const
+ImageFilter::filter_flags MuxFilter::get_flags() const
 {
 	return m_flags;
 }
 
-IZimgFilter::image_attributes MuxFilter::get_image_attributes() const
+ImageFilter::image_attributes MuxFilter::get_image_attributes() const
 {
 	return m_filter->get_image_attributes();
 }
 
-IZimgFilter::pair_unsigned MuxFilter::get_required_row_range(unsigned i) const
+ImageFilter::pair_unsigned MuxFilter::get_required_row_range(unsigned i) const
 {
 	return m_filter->get_required_row_range(i);
 }
 
-IZimgFilter::pair_unsigned MuxFilter::get_required_col_range(unsigned left, unsigned right) const
+ImageFilter::pair_unsigned MuxFilter::get_required_col_range(unsigned left, unsigned right) const
 {
 	return m_filter->get_required_col_range(left, right);
 }
@@ -116,7 +116,7 @@ void MuxFilter::init_context(void *ctx) const
 	(m_filter_uv ? m_filter_uv : m_filter)->init_context(ptr);
 }
 
-void MuxFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void MuxFilter::process(void *ctx, const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	LinearAllocator alloc{ ctx };
 	size_t context_size = m_filter->get_context_size();
@@ -128,9 +128,9 @@ void MuxFilter::process(void *ctx, const ZimgImageBufferConst &src, const ZimgIm
 	context[2] = alloc.allocate(context_size_uv);
 
 	for (unsigned p = 0; p < 3; ++p) {
-		ZimgImageBufferConst src_p{};
-		ZimgImageBuffer dst_p{};
-		IZimgFilter *filter;
+		ImageBufferConst src_p{};
+		ImageBuffer dst_p{};
+		ImageFilter *filter;
 
 		src_p.data[0] = src.data[p];
 		src_p.stride[0] = src.stride[p];

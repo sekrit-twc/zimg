@@ -25,7 +25,7 @@ TEST(MuxFilterTest, test_one_filter)
 			SCOPED_TRACE(!!state);
 			SCOPED_TRACE(!!entire_row);
 
-			zimg::graph::IZimgFilter::filter_flags flags{};
+			zimg::graph::ImageFilter::filter_flags flags{};
 			flags.has_state = !!state;
 			flags.entire_row = !!entire_row;
 
@@ -82,11 +82,11 @@ TEST(MuxFilterTest, test_two_filter)
 			SCOPED_TRACE(!!state);
 			SCOPED_TRACE(!!entire_row);
 
-			zimg::graph::IZimgFilter::filter_flags flags1{};
+			zimg::graph::ImageFilter::filter_flags flags1{};
 			flags1.has_state = false;
 			flags1.entire_row = false;
 
-			zimg::graph::IZimgFilter::filter_flags flags2{};
+			zimg::graph::ImageFilter::filter_flags flags2{};
 			flags2.has_state = !!state;
 			flags2.entire_row = !!entire_row;
 

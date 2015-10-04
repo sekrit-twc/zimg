@@ -13,7 +13,7 @@ struct PixelFormat;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 } // namespace graph
 
@@ -26,7 +26,7 @@ typedef void (*dither_convert_func)(const float *dither, unsigned dither_offset,
                                     const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
 typedef void (*dither_f16c_func)(const void *src, void *dst, unsigned left, unsigned right);
 
-graph::IZimgFilter *create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+graph::ImageFilter *create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

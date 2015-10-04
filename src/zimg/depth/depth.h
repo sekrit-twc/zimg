@@ -12,7 +12,7 @@ struct PixelFormat;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 } // namespace graph
 
@@ -26,7 +26,7 @@ enum class DitherType {
 	DITHER_ERROR_DIFFUSION
 };
 
-graph::IZimgFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+graph::ImageFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

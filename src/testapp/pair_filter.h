@@ -8,11 +8,11 @@
 
 enum class PixelType;
 
-class PairFilter final : public zimg::graph::IZimgFilter {
+class PairFilter final : public zimg::graph::ImageFilter {
 	struct cache_context;
 private:
-	std::unique_ptr<zimg::graph::IZimgFilter> m_first;
-	std::unique_ptr<zimg::graph::IZimgFilter> m_second;
+	std::unique_ptr<zimg::graph::ImageFilter> m_first;
+	std::unique_ptr<zimg::graph::ImageFilter> m_second;
 
 	filter_flags m_first_flags;
 	filter_flags m_second_flags;
@@ -36,7 +36,7 @@ private:
 
 	unsigned get_num_planes() const;
 public:
-	PairFilter(zimg::graph::IZimgFilter *first, zimg::graph::IZimgFilter *second);
+	PairFilter(zimg::graph::ImageFilter *first, zimg::graph::ImageFilter *second);
 
 	filter_flags get_flags() const override;
 
@@ -56,7 +56,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg::graph::ZimgImageBufferConst &src, const zimg::graph::ZimgImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 #endif // ZIMG_PAIR_FILTER_H_

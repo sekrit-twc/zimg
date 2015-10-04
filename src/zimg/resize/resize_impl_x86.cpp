@@ -6,10 +6,10 @@
 namespace zimg {;
 namespace resize {;
 
-graph::IZimgFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
+graph::ImageFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	graph::IZimgFilter *ret = nullptr;
+	graph::ImageFilter *ret = nullptr;
 
 	if (cpu == CPUClass::CPU_AUTO) {
 		if (!ret && caps.sse)
@@ -22,10 +22,10 @@ graph::IZimgFilter *create_resize_impl_h_x86(const FilterContext &context, unsig
 	return ret;
 }
 
-graph::IZimgFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
+graph::ImageFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	graph::IZimgFilter *ret = nullptr;
+	graph::ImageFilter *ret = nullptr;
 
 	if (cpu == CPUClass::CPU_AUTO) {
 		if (!ret && caps.sse2)

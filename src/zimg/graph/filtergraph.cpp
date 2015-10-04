@@ -30,14 +30,14 @@ public:
 
 class ExecutionState {
 	LinearAllocator m_alloc;
-	const ZimgImageBufferConst *m_src_buf;
-	const ZimgImageBuffer *m_dst_buf;
+	const ImageBufferConst *m_src_buf;
+	const ImageBuffer *m_dst_buf;
 	FilterGraph::callback m_unpack_cb;
 	FilterGraph::callback m_pack_cb;
 	void **m_context_table;
 	void *m_base;
 public:
-	ExecutionState(unsigned id_counter, const ZimgImageBufferConst &src_buf, const ZimgImageBuffer &dst_buf, void *pool,
+	ExecutionState(unsigned id_counter, const ImageBufferConst &src_buf, const ImageBuffer &dst_buf, void *pool,
 	               FilterGraph::callback unpack_cb, FilterGraph::callback pack_cb) :
 		m_alloc{ pool },
 		m_src_buf{ &src_buf },
@@ -64,12 +64,12 @@ public:
 		return m_context_table[id];
 	}
 
-	const ZimgImageBufferConst &get_input_buffer() const
+	const ImageBufferConst &get_input_buffer() const
 	{
 		return *m_src_buf;
 	}
 
-	const ZimgImageBuffer &get_output_buffer() const
+	const ImageBuffer &get_output_buffer() const
 	{
 		return *m_dst_buf;
 	}
@@ -105,7 +105,7 @@ class GraphNode {
 		static const uint64_t GUARD_PATTERN = (((uint64_t)0xDEADBEEF) << 32) | 0xDEADBEEF;
 
 		const uint64_t guard_pattern = GUARD_PATTERN;
-		ZimgImageBuffer cache_buf;
+		ImageBuffer cache_buf;
 		unsigned cache_pos;
 		unsigned source_left;
 		unsigned source_right;
@@ -131,7 +131,7 @@ class GraphNode {
 		struct {
 			GraphNode *parent;
 			GraphNode *parent_uv;
-			IZimgFilter::filter_flags flags;
+			ImageFilter::filter_flags flags;
 			unsigned step;
 			bool is_uv;
 		} node_info;
@@ -145,7 +145,7 @@ public:
 	static const filter_tag FILTER;
 	static const filter_uv_tag FILTER_UV;
 private:
-	std::unique_ptr<IZimgFilter> m_filter;
+	std::unique_ptr<ImageFilter> m_filter;
 	unsigned m_cache_lines;
 	unsigned m_ref_count;
 	unsigned m_id;
@@ -298,7 +298,7 @@ private:
 		context->source_right = std::max(context->source_right, right);
 	}
 
-	const ZimgImageBufferConst *generate_line_source(ExecutionState *state, unsigned i, bool uv)
+	const ImageBufferConst *generate_line_source(ExecutionState *state, unsigned i, bool uv)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
@@ -322,18 +322,18 @@ private:
 		return &state->get_input_buffer();
 	}
 
-	const ZimgImageBufferConst *generate_line_node_uv(ExecutionState *state, const ZimgImageBuffer *external, unsigned i)
+	const ImageBufferConst *generate_line_node_uv(ExecutionState *state, const ImageBuffer *external, unsigned i)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
-		const ZimgImageBuffer *output_buffer = external ? external : &context->cache_buf;
+		const ImageBuffer *output_buffer = external ? external : &context->cache_buf;
 		unsigned pos = context->cache_pos;
 
 		for (; pos <= i; pos += m_data.node_info.step) {
-			const ZimgImageBufferConst *input_buffer = nullptr;
-			ZimgImageBufferConst input_buffer_one;
-			ZimgImageBuffer output_buffer_one;
+			const ImageBufferConst *input_buffer = nullptr;
+			ImageBufferConst input_buffer_one;
+			ImageBuffer output_buffer_one;
 
 			auto range = m_filter->get_required_row_range(pos);
 
@@ -357,20 +357,20 @@ private:
 		}
 		context->cache_pos = pos;
 
-		return &static_cast<const ZimgImageBufferConst &>(*output_buffer);
+		return &static_cast<const ImageBufferConst &>(*output_buffer);
 	}
 
-	const ZimgImageBufferConst *generate_line_node(ExecutionState *state, const ZimgImageBuffer *external, unsigned i)
+	const ImageBufferConst *generate_line_node(ExecutionState *state, const ImageBuffer *external, unsigned i)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
-		const ZimgImageBuffer *output_buffer = external ? external : &context->cache_buf;
+		const ImageBuffer *output_buffer = external ? external : &context->cache_buf;
 		unsigned pos = context->cache_pos;
 
 		for (; pos <= i; pos += m_data.node_info.step) {
-			const ZimgImageBufferConst *input_buffer = nullptr;
-			const ZimgImageBufferConst *input_buffer_uv = nullptr;
+			const ImageBufferConst *input_buffer = nullptr;
+			const ImageBufferConst *input_buffer_uv = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
 
@@ -382,7 +382,7 @@ private:
 			}
 
 			if (m_data.node_info.parent_uv) {
-				ZimgImageBufferConst input_buffer_yuv;
+				ImageBufferConst input_buffer_yuv;
 
 				input_buffer_yuv.data[0] = input_buffer->data[0];
 				input_buffer_yuv.stride[0] = input_buffer->stride[0];
@@ -401,7 +401,7 @@ private:
 		}
 		context->cache_pos = pos;
 
-		return &static_cast<const ZimgImageBufferConst &>(*output_buffer);
+		return &static_cast<const ImageBufferConst &>(*output_buffer);
 	}
 public:
 	GraphNode(source_tag tag, unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
@@ -419,7 +419,7 @@ public:
 		m_data.source_info.color = color;
 	}
 
-	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, IZimgFilter *filter) :
+	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, ImageFilter *filter) :
 		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
@@ -435,7 +435,7 @@ public:
 		m_filter.reset(filter);
 	}
 
-	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, IZimgFilter *filter) :
+	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, ImageFilter *filter) :
 		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
@@ -486,7 +486,7 @@ public:
 		return entire_row;
 	}
 
-	IZimgFilter::image_attributes get_image_attributes(bool uv = false) const
+	ImageFilter::image_attributes get_image_attributes(bool uv = false) const
 	{
 		if (m_is_source) {
 			unsigned width = m_data.source_info.width >> (uv ? m_data.source_info.subsample_w : 0);
@@ -585,7 +585,7 @@ public:
 			set_tile_region_node(state, left, right);
 	}
 
-	const ZimgImageBufferConst *generate_line(ExecutionState *state, const ZimgImageBuffer *external, unsigned i, bool uv)
+	const ImageBufferConst *generate_line(ExecutionState *state, const ImageBuffer *external, unsigned i, bool uv)
 	{
 		if (m_is_source)
 			return generate_line_source(state, i, uv);
@@ -666,11 +666,11 @@ public:
 			m_node_uv = m_head;
 	}
 
-	void attach_filter(IZimgFilter *filter)
+	void attach_filter(ImageFilter *filter)
 	{
 		check_incomplete();
 
-		IZimgFilter::filter_flags flags = filter->get_flags();
+		ImageFilter::filter_flags flags = filter->get_flags();
 		GraphNode *parent = m_node;
 		GraphNode *parent_uv = nullptr;
 
@@ -697,11 +697,11 @@ public:
 			m_node_uv = m_node;
 	}
 
-	void attach_filter_uv(IZimgFilter *filter)
+	void attach_filter_uv(ImageFilter *filter)
 	{
 		check_incomplete();
 
-		IZimgFilter::filter_flags flags = filter->get_flags();
+		ImageFilter::filter_flags flags = filter->get_flags();
 		GraphNode *parent = m_node_uv;
 
 		if (flags.color)
@@ -804,7 +804,7 @@ public:
 		return lines;
 	}
 
-	void process(const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
+	void process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
 	{
 		check_complete();
 
@@ -883,12 +883,12 @@ FilterGraph::~FilterGraph()
 {
 }
 
-void FilterGraph::attach_filter(IZimgFilter *filter)
+void FilterGraph::attach_filter(ImageFilter *filter)
 {
 	m_impl->attach_filter(filter);
 }
 
-void FilterGraph::attach_filter_uv(IZimgFilter *filter)
+void FilterGraph::attach_filter_uv(ImageFilter *filter)
 {
 	m_impl->attach_filter_uv(filter);
 }
@@ -913,7 +913,7 @@ unsigned FilterGraph::get_output_buffering() const
 	return m_impl->get_output_buffering();
 }
 
-void FilterGraph::process(const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
+void FilterGraph::process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
 {
 	m_impl->process(src, dst, tmp, unpack_cb, pack_cb);
 }

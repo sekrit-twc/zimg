@@ -115,7 +115,7 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
 			LineBuffer<const uint16_t> src_buf{ src };
@@ -144,7 +144,7 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ZimgImageBufferConst &src, const graph::ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD) {
 			LineBuffer<const uint16_t> src_buf{ src };
@@ -170,9 +170,9 @@ ResizeImplH::ResizeImplH(const FilterContext &filter, const image_attributes &at
 {
 }
 
-graph::IZimgFilter::filter_flags ResizeImplH::get_flags() const
+graph::ImageFilter::filter_flags ResizeImplH::get_flags() const
 {
-	graph::IZimgFilter::filter_flags flags{};
+	graph::ImageFilter::filter_flags flags{};
 
 	flags.same_row = true;
 	flags.entire_row = !m_is_sorted;
@@ -180,17 +180,17 @@ graph::IZimgFilter::filter_flags ResizeImplH::get_flags() const
 	return flags;
 }
 
-graph::IZimgFilter::image_attributes ResizeImplH::get_image_attributes() const
+graph::ImageFilter::image_attributes ResizeImplH::get_image_attributes() const
 {
 	return m_attr;
 }
 
-graph::IZimgFilter::pair_unsigned ResizeImplH::get_required_row_range(unsigned i) const
+graph::ImageFilter::pair_unsigned ResizeImplH::get_required_row_range(unsigned i) const
 {
 	return{ i, std::min(i + get_simultaneous_lines(), get_image_attributes().height) };
 }
 
-graph::IZimgFilter::pair_unsigned ResizeImplH::get_required_col_range(unsigned left, unsigned right) const
+graph::ImageFilter::pair_unsigned ResizeImplH::get_required_col_range(unsigned left, unsigned right) const
 {
 	if (m_is_sorted) {
 		unsigned col_left = m_filter.left[left];
@@ -215,21 +215,21 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, const image_attributes &at
 {
 }
 
-graph::IZimgFilter::filter_flags ResizeImplV::get_flags() const
+graph::ImageFilter::filter_flags ResizeImplV::get_flags() const
 {
-	graph::IZimgFilter::filter_flags flags{};
+	graph::ImageFilter::filter_flags flags{};
 
 	flags.entire_row = !m_is_sorted;
 
 	return flags;
 }
 
-graph::IZimgFilter::image_attributes ResizeImplV::get_image_attributes() const
+graph::ImageFilter::image_attributes ResizeImplV::get_image_attributes() const
 {
 	return m_attr;
 }
 
-graph::IZimgFilter::pair_unsigned ResizeImplV::get_required_row_range(unsigned i) const
+graph::ImageFilter::pair_unsigned ResizeImplV::get_required_row_range(unsigned i) const
 {
 	unsigned bot = std::min(i + get_simultaneous_lines(), get_image_attributes().height);
 
@@ -257,10 +257,10 @@ unsigned ResizeImplV::get_max_buffering() const
 }
 
 
-graph::IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
                                        double shift, double subwidth, CPUClass cpu)
 {
-	graph::IZimgFilter *ret = nullptr;
+	graph::ImageFilter *ret = nullptr;
 
 	unsigned src_dim = horizontal ? src_width : src_height;
 	unsigned dst_dim = horizontal ? dst_width : dst_height;
@@ -277,7 +277,7 @@ graph::IZimgFilter *create_resize_impl(const Filter &f, PixelType type, bool hor
 #endif
 	if (!ret)
 		ret = horizontal ?
-		      static_cast<graph::IZimgFilter *>(new ResizeImplH_C{ filter_ctx, dst_height, type, depth }) :
+		      static_cast<graph::ImageFilter *>(new ResizeImplH_C{ filter_ctx, dst_height, type, depth }) :
 		      new ResizeImplV_C{ filter_ctx, dst_width, type, depth };
 
 	return ret;

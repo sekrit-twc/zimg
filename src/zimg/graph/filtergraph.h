@@ -21,7 +21,7 @@ enum class PixelType;
 
 namespace graph {;
 
-class IZimgFilter;
+class ImageFilter;
 
 
 class FilterGraph : public zimg_filter_graph {
@@ -51,9 +51,9 @@ public:
 
 	~FilterGraph();
 
-	void attach_filter(IZimgFilter *filter);
+	void attach_filter(ImageFilter *filter);
 
-	void attach_filter_uv(IZimgFilter *filter);
+	void attach_filter_uv(ImageFilter *filter);
 
 	void complete();
 
@@ -63,7 +63,7 @@ public:
 
 	unsigned get_output_buffering() const;
 
-	void process(const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const;
+	void process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const;
 };
 
 } // namespace graph

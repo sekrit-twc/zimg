@@ -170,7 +170,7 @@ FilterFactory::~FilterFactory()
 
 auto DefaultFilterFactory::create_colorspace(const colorspace_params &params) -> filter_list
 {
-	std::unique_ptr<IZimgFilter> filter{
+	std::unique_ptr<ImageFilter> filter{
 		new colorspace::ColorspaceConversion{ params.width, params.height, params.csp_in, params.csp_out, params.cpu }
 	};
 
@@ -179,7 +179,7 @@ auto DefaultFilterFactory::create_colorspace(const colorspace_params &params) ->
 
 auto DefaultFilterFactory::create_depth(const depth_params &params) -> filter_list
 {
-	std::unique_ptr<IZimgFilter> filter{
+	std::unique_ptr<ImageFilter> filter{
 		depth::create_depth(params.type, params.width, params.height, params.format_in, params.format_out, params.cpu)
 	};
 
@@ -191,7 +191,7 @@ auto DefaultFilterFactory::create_resize(const resize_params &params) -> filter_
 	auto filter_pair = resize::create_resize(*params.filter, params.type, params.depth,
 	                                         params.width_in, params.height_in, params.width_out, params.height_out,
 	                                         params.shift_w, params.shift_h, params.subwidth, params.subheight, params.cpu);
-	std::unique_ptr<IZimgFilter> filters[2] = { std::unique_ptr<IZimgFilter>{ filter_pair.first}, std::unique_ptr<IZimgFilter>{ filter_pair.second } };
+	std::unique_ptr<ImageFilter> filters[2] = { std::unique_ptr<ImageFilter>{ filter_pair.first}, std::unique_ptr<ImageFilter>{ filter_pair.second } };
 
 	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 2) };
 }
@@ -215,7 +215,7 @@ GraphBuilder::~GraphBuilder()
 {
 }
 
-void GraphBuilder::attach_filter(std::unique_ptr<IZimgFilter> &&filter)
+void GraphBuilder::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {
 	if (!filter)
 		return;
@@ -224,7 +224,7 @@ void GraphBuilder::attach_filter(std::unique_ptr<IZimgFilter> &&filter)
 	filter.release();
 }
 
-void GraphBuilder::attach_filter_uv(std::unique_ptr<IZimgFilter> &&filter)
+void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 {
 	if (!filter)
 		return;
@@ -294,7 +294,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		filter_list_uv = m_factory->create_depth(depth_params);
 	} else if (is_rgb(m_state)) {
 		for (auto &&filter : filter_list) {
-			std::unique_ptr<IZimgFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
+			std::unique_ptr<ImageFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
 			filter.release();
 			filter = std::move(mux);
 		}
@@ -378,7 +378,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 
 		if (is_rgb(m_state)) {
 			for (auto &&filter : filter_list) {
-				std::unique_ptr<IZimgFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
+				std::unique_ptr<ImageFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
 				filter.release();
 				filter = std::move(mux);
 			}

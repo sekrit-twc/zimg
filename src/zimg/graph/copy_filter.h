@@ -10,7 +10,7 @@
 namespace zimg {;
 namespace graph {;
 
-class CopyFilter : public ZimgFilter {
+class CopyFilter : public ImageFilterBase {
 	image_attributes m_attr;
 public:
 	CopyFilter(unsigned width, unsigned height, PixelType type) :
@@ -33,7 +33,7 @@ public:
 		return m_attr;
 	}
 
-	void process(void *, const ZimgImageBufferConst &src, const ZimgImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ImageBufferConst &src, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		LineBuffer<const void> src_buf{ src };
 		LineBuffer<void> dst_buf{ dst };
