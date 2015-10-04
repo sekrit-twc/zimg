@@ -23,7 +23,7 @@ namespace resize {;
 class Filter;
 
 std::pair<graph::ImageFilter *, graph::ImageFilter *> create_resize(
-	const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
+	const Filter &filter, PixelType type, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
 	double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
 
 } // namespace resize

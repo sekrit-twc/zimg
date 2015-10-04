@@ -26,14 +26,14 @@ bool resize_h_first(double xscale, double yscale)
 
 
 std::pair<graph::ImageFilter *, graph::ImageFilter *> create_resize(
-	const Filter &filter, PixelType type, unsigned depth, int src_width, int src_height, int dst_width, int dst_height,
+	const Filter &filter, PixelType type, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
 	double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu)
 {
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
 	if (skip_h && skip_v) {
-		return{ new graph::CopyFilter{ (unsigned)src_width, (unsigned)src_height, type }, nullptr };
+		return{ new graph::CopyFilter{ src_width, src_height, type }, nullptr };
 	} else if (skip_h) {
 		return{ create_resize_impl(filter, type, false, depth, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu), nullptr };
 	} else if (skip_v) {
