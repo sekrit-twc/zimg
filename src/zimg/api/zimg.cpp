@@ -12,13 +12,11 @@
 #include "common/static_map.h"
 #include "common/zassert.h"
 #include "graph/filtergraph.h"
-#include "graph/mux_filter.h"
+#include "graph/graphbuilder.h"
 #include "graph/zfilter.h"
-#include "colorspace/colorspace.h"
 #include "colorspace/colorspace_param.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
-#include "resize/resize.h"
 #include "zimg.h"
 
 #define API_VERSION_ASSERT(x) _zassert_d((x) >= 2 && (x) <= ZIMG_API_VERSION, "API version invalid")
@@ -31,30 +29,6 @@ THREAD_LOCAL zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 THREAD_LOCAL char g_last_error_msg[1024];
 
 const unsigned VERSION_INFO[] = { 1, 95, 0 };
-
-
-enum class ColorFamily {
-	COLOR_GREY,
-	COLOR_RGB,
-	COLOR_YUV
-};
-
-enum class FieldParity {
-	FIELD_PROGRESSIVE,
-	FIELD_TOP,
-	FIELD_BOTTOM
-};
-
-enum class ChromaLocationW {
-	CHROMA_W_LEFT,
-	CHROMA_W_CENTER
-};
-
-enum class ChromaLocationH {
-	CHROMA_H_CENTER,
-	CHROMA_H_TOP,
-	CHROMA_H_BOTTOM
-};
 
 
 template <class T, class U>
@@ -180,35 +154,35 @@ bool translate_pixel_range(zimg_pixel_range_e range)
 	return search_enum_map(map, range, "unrecognized pixel range");
 }
 
-ColorFamily translate_color_family(zimg_color_family_e family)
+zimg::graph::GraphBuilder::ColorFamily translate_color_family(zimg_color_family_e family)
 {
-	static const zimg::static_enum_map<zimg_color_family_e, ColorFamily, 3> map{
-		{ ZIMG_COLOR_GREY, ColorFamily::COLOR_GREY },
-		{ ZIMG_COLOR_RGB,  ColorFamily::COLOR_RGB },
-		{ ZIMG_COLOR_YUV,  ColorFamily::COLOR_YUV},
+	static const zimg::static_enum_map<zimg_color_family_e, zimg::graph::GraphBuilder::ColorFamily, 3> map{
+		{ ZIMG_COLOR_GREY, zimg::graph::GraphBuilder::ColorFamily::COLOR_GREY },
+		{ ZIMG_COLOR_RGB,  zimg::graph::GraphBuilder::ColorFamily::COLOR_RGB },
+		{ ZIMG_COLOR_YUV,  zimg::graph::GraphBuilder::ColorFamily::COLOR_YUV},
 	};
 	return search_enum_map(map, family, "unrecognized color family");
 }
 
-FieldParity translate_field_parity(zimg_field_parity_e field)
+zimg::graph::GraphBuilder::FieldParity translate_field_parity(zimg_field_parity_e field)
 {
-	static const zimg::static_enum_map<zimg_field_parity_e, FieldParity, 3> map{
-		{ ZIMG_FIELD_PROGRESSIVE, FieldParity::FIELD_PROGRESSIVE },
-		{ ZIMG_FIELD_TOP,         FieldParity::FIELD_TOP },
-		{ ZIMG_FIELD_BOTTOM,      FieldParity::FIELD_BOTTOM },
+	static const zimg::static_enum_map<zimg_field_parity_e, zimg::graph::GraphBuilder::FieldParity, 3> map{
+		{ ZIMG_FIELD_PROGRESSIVE, zimg::graph::GraphBuilder::FieldParity::FIELD_PROGRESSIVE },
+		{ ZIMG_FIELD_TOP,         zimg::graph::GraphBuilder::FieldParity::FIELD_TOP },
+		{ ZIMG_FIELD_BOTTOM,      zimg::graph::GraphBuilder::FieldParity::FIELD_BOTTOM },
 	};
 	return search_enum_map(map, field, "unrecognized field parity");
 }
 
-std::pair<ChromaLocationW, ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
+std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder::ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
 {
-	static const zimg::static_enum_map<zimg_chroma_location_e, std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
-		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_TOP,         { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_BOTTOM } },
-		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_BOTTOM } },
+	static const zimg::static_enum_map<zimg_chroma_location_e, std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder::ChromaLocationH>, 6> map{
+		{ ZIMG_CHROMA_LEFT,        { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_CENTER } },
+		{ ZIMG_CHROMA_CENTER,      { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_CENTER } },
+		{ ZIMG_CHROMA_TOP_LEFT,    { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_TOP } },
+		{ ZIMG_CHROMA_TOP,         { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_TOP } },
+		{ ZIMG_CHROMA_BOTTOM_LEFT, { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM } },
+		{ ZIMG_CHROMA_BOTTOM,      { zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM } },
 	};
 	return search_enum_map(map, chromaloc, "unregonized chroma location");
 }
@@ -323,402 +297,7 @@ zimg::graph::ZimgImageBufferConst import_image_buffer(const zimg_image_buffer_co
 	return dst;
 }
 
-
-double chroma_shift_raw(ChromaLocationW loc, FieldParity)
-{
-	if (loc == ChromaLocationW::CHROMA_W_LEFT)
-		return -0.5;
-	else
-		return 0.0;
-}
-
-double chroma_shift_raw(ChromaLocationH loc, FieldParity parity)
-{
-	double shift;
-
-	if (loc == ChromaLocationH::CHROMA_H_TOP)
-		shift = -0.5;
-	else if (loc == ChromaLocationH::CHROMA_H_BOTTOM)
-		shift = 0.5;
-	else
-		shift = 0;
-
-	if (parity == FieldParity::FIELD_TOP)
-		shift = (shift - 0.5) / 2.0;
-	else if (parity == FieldParity::FIELD_BOTTOM)
-		shift = (shift + 0.5) / 2.0;
-
-	return shift;
-}
-
-template <class T>
-double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned subsample_out, FieldParity parity, unsigned src_dim, unsigned dst_dim)
-{
-	double shift = 0.0;
-	double sub_scale = 1.0 / (1 << subsample_in);
-
-	if (subsample_in)
-		shift -= sub_scale * chroma_shift_raw(loc_in, parity);
-	if (subsample_out)
-		shift += sub_scale * chroma_shift_raw(loc_out, parity) * (double)src_dim / dst_dim;
-
-	return shift;
-}
-
-double luma_shift_factor(FieldParity parity, unsigned src_height, unsigned dst_height)
-{
-	double shift = 0.0;
-
-	if (parity == FieldParity::FIELD_TOP)
-		shift = -0.25;
-	else if (parity == FieldParity::FIELD_BOTTOM)
-		shift = 0.25;
-
-	return shift * (double)src_height / dst_height - shift;
-}
-
-class GraphBuilder {
-public:
-	struct params {
-		std::unique_ptr<zimg::resize::Filter> filter;
-		std::unique_ptr<zimg::resize::Filter> filter_uv;
-		zimg::depth::DitherType dither_type;
-		zimg::CPUClass cpu;
-	};
-
-	struct state {
-		unsigned width;
-		unsigned height;
-		zimg::PixelType type;
-		unsigned subsample_w;
-		unsigned subsample_h;
-
-		ColorFamily color;
-		zimg::colorspace::ColorspaceDefinition colorspace;
-
-		unsigned depth;
-		bool fullrange;
-
-		FieldParity parity;
-		ChromaLocationW chroma_location_w;
-		ChromaLocationH chroma_location_h;
-
-		void validate() const
-		{
-			if (!width || !height)
-				throw zimg::error::ZeroImageSize{ "image dimensions must be non-zero" };
-
-			if (color == ColorFamily::COLOR_GREY) {
-				if (subsample_w || subsample_h)
-					throw zimg::error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
-				if (colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED ||
-					colorspace.transfer != zimg::colorspace::TransferCharacteristics::TRANSFER_UNSPECIFIED ||
-					colorspace.primaries != zimg::colorspace::ColorPrimaries::PRIMARIES_UNSPECIFIED)
-					throw zimg::error::NoColorspaceConversion{ "cannot specify colorspace of greyscale image" };
-			}
-
-			if (color == ColorFamily::COLOR_RGB) {
-				if (subsample_w || subsample_h)
-					throw zimg::error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
-				if (colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED &&
-					colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
-					throw zimg::error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
-			}
-
-			if (color == ColorFamily::COLOR_YUV) {
-				if (colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
-					throw zimg::error::ColorFamilyMismatch{ "YUV color family cannot be RGB" };
-			}
-
-			if (subsample_h > 1 && parity != FieldParity::FIELD_PROGRESSIVE)
-				throw zimg::error::UnsupportedSubsampling{ "vertical subsampling greater than 2x is not supported" };
-			if (subsample_w > 2 || subsample_h > 2)
-				throw zimg::error::UnsupportedSubsampling{ "subsampling greater than 4x is not supported" };
-
-			if (width % (1 << subsample_w) || height % (1 << subsample_h))
-				throw zimg::error::ImageNotDivislbe{ "image dimensions must be divisible by subsampling factor" };
-
-			if (depth > (unsigned)zimg::default_pixel_format(type).depth)
-				throw zimg::error::BitDepthOverflow{ "bit depth exceeds limits of type" };
-		}
-
-		bool is_greyscale() const
-		{
-			return color == ColorFamily::COLOR_GREY;
-		}
-
-		bool is_rgb() const
-		{
-			return color == ColorFamily::COLOR_RGB;
-		}
-
-		bool is_yuv() const
-		{
-			return color == ColorFamily::COLOR_YUV;
-		}
-	};
-private:
-	std::unique_ptr<zimg::graph::FilterGraph> m_graph;
-	state m_state;
-	bool m_dirty;
-
-	zimg::PixelType select_working_type(const state &target) const
-	{
-		if (needs_colorspace(target)) {
-			return zimg::PixelType::FLOAT;
-		} else if (needs_resize(target)) {
-			if (m_state.type == zimg::PixelType::BYTE)
-				return zimg::PixelType::WORD;
-			else if (m_state.type == zimg::PixelType::HALF)
-				return zimg::PixelType::FLOAT;
-			else
-				return m_state.type;
-		} else {
-			return m_state.type;
-		}
-	}
-
-	bool needs_colorspace(const state &target) const
-	{
-		return m_state.colorspace != target.colorspace;
-	}
-
-	bool needs_depth(const state &target) const
-	{
-		return m_state.type != target.type || m_state.depth != target.depth || m_state.fullrange != target.fullrange;
-	}
-
-	bool needs_resize(const state &target) const
-	{
-		return m_state.width != target.width ||
-		       m_state.height != target.height ||
-		       m_state.subsample_w != target.subsample_w ||
-		       m_state.subsample_h != target.subsample_h ||
-		       (m_state.subsample_w && m_state.chroma_location_w != target.chroma_location_w) ||
-		       (m_state.subsample_h && m_state.chroma_location_h != target.chroma_location_h);
-	}
-
-	void attach_filter(std::unique_ptr<zimg::graph::IZimgFilter> &&filter)
-	{
-		m_graph->attach_filter(filter.get());
-		filter.release();
-		m_dirty = true;
-	}
-
-	void attach_filter_uv(std::unique_ptr<zimg::graph::IZimgFilter> &&filter)
-	{
-		m_graph->attach_filter_uv(filter.get());
-		filter.release();
-		m_dirty = true;
-	}
-
-	void convert_colorspace(const zimg::colorspace::ColorspaceDefinition &colorspace, const params *params)
-	{
-		if (m_state.is_greyscale())
-			throw zimg::error::NoColorspaceConversion{ "cannot apply colorspace conversion to greyscale image" };
-
-		std::unique_ptr<zimg::graph::IZimgFilter> filter;
-		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
-
-		if (m_state.colorspace == colorspace)
-			return;
-
-		filter.reset(new zimg::colorspace::ColorspaceConversion{ m_state.width, m_state.height, m_state.colorspace, colorspace, cpu });
-		attach_filter(std::move(filter));
-
-		m_state.color = colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB ? ColorFamily::COLOR_RGB : ColorFamily::COLOR_YUV;
-		m_state.colorspace = colorspace;
-	}
-
-	void convert_depth(const zimg::PixelFormat &format, const params *params)
-	{
-		zimg::depth::DitherType dither_type = params ? params->dither_type : zimg::depth::DitherType::DITHER_NONE;
-		zimg::PixelFormat src_format = zimg::default_pixel_format(m_state.type);
-
-		std::unique_ptr<zimg::graph::IZimgFilter> filter;
-		std::unique_ptr<zimg::graph::IZimgFilter> filter_uv;
-		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
-
-		if (src_format == format)
-			return;
-
-		src_format.depth = m_state.depth;
-		src_format.fullrange = m_state.fullrange;
-
-		filter.reset(zimg::depth::create_depth(dither_type, m_state.width, m_state.height, src_format, format, cpu));
-
-		if (m_state.is_yuv()) {
-			zimg::PixelFormat src_format_uv = src_format;
-			zimg::PixelFormat format_uv = format;
-
-			src_format_uv.chroma = true;
-			format_uv.chroma = true;
-
-			filter_uv.reset(
-				zimg::depth::create_depth(dither_type, m_state.width >> m_state.subsample_w, m_state.height >> m_state.subsample_h,
-				                           src_format_uv, format_uv, cpu));
-		} else if (m_state.is_rgb()) {
-			std::unique_ptr<zimg::graph::IZimgFilter> mux{ new zimg::graph::MuxFilter{ filter.get(), filter_uv.get() } };
-			filter.release();
-			filter_uv.release();
-
-			filter = std::move(mux);
-		}
-
-		attach_filter(std::move(filter));
-		if (filter_uv)
-			attach_filter_uv(std::move(filter_uv));
-
-		m_state.type = format.type;
-		m_state.depth = format.depth;
-		m_state.fullrange = format.fullrange;
-	}
-
-	void convert_resize(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h,
-	                    ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h, const params *params)
-	{
-		zimg::resize::BicubicFilter bicubic_filter{ 1.0 / 3.0, 1.0 / 3.0 };
-		zimg::resize::BilinearFilter bilinear_filter;
-
-		if (m_state.is_greyscale()) {
-			subsample_w = 0;
-			subsample_h = 0;
-		}
-		if (!subsample_w)
-			chroma_location_w = ChromaLocationW::CHROMA_W_CENTER;
-		if (!subsample_h)
-			chroma_location_h = ChromaLocationH::CHROMA_H_CENTER;
-
-		if (m_state.width == width &&
-		    m_state.height == height &&
-		    m_state.subsample_w == subsample_w &&
-		    m_state.subsample_h == subsample_h &&
-		    m_state.chroma_location_w == chroma_location_w &&
-		    m_state.chroma_location_h == chroma_location_h)
-			return;
-
-		const zimg::resize::Filter *resample_filter = params ? params->filter.get() : &bicubic_filter;
-		const zimg::resize::Filter *resample_filter_uv = params ? params->filter_uv.get() : &bilinear_filter;
-		zimg::CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
-
-		bool do_resize_luma = m_state.width != width || m_state.height != height;
-		bool do_resize_chroma = (m_state.width >> m_state.subsample_w != width >> subsample_w) ||
-		                        (m_state.height >> m_state.subsample_h != height >> subsample_h) ||
-		                        ((m_state.subsample_w || subsample_w) && m_state.chroma_location_w != chroma_location_w) ||
-		                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h);
-
-		std::unique_ptr<zimg::graph::IZimgFilter> filter1;
-		std::unique_ptr<zimg::graph::IZimgFilter> filter2;
-		std::unique_ptr<zimg::graph::IZimgFilter> filter1_uv;
-		std::unique_ptr<zimg::graph::IZimgFilter> filter2_uv;
-
-		if (do_resize_luma) {
-			double shift_h = luma_shift_factor(m_state.parity, m_state.height, height);
-			auto filter_pair = zimg::resize::create_resize(*resample_filter, m_state.type, m_state.depth, m_state.width, m_state.height, width, height,
-			                                               0.0, shift_h, m_state.width, m_state.height, cpu);
-			filter1.reset(filter_pair.first);
-			filter2.reset(filter_pair.second);
-
-			if (m_state.is_rgb()) {
-				std::unique_ptr<zimg::graph::IZimgFilter> mux;
-
-				mux.reset(new zimg::graph::MuxFilter{ filter1.get(), nullptr });
-				filter1.release();
-				filter1 = std::move(mux);
-
-				if (filter2) {
-					mux.reset(new zimg::graph::MuxFilter{ filter2.get(), nullptr });
-					filter2.release();
-					filter2 = std::move(mux);
-				}
-			}
-		}
-		if (m_state.is_yuv() && do_resize_chroma) {
-			double shift_w = chroma_shift_factor(m_state.chroma_location_w, chroma_location_w, m_state.subsample_w, subsample_w, m_state.parity, m_state.width, width);
-			double shift_h = chroma_shift_factor(m_state.chroma_location_h, chroma_location_h, m_state.subsample_h, subsample_h, m_state.parity, m_state.height, height);
-
-			unsigned chroma_width_in = m_state.width >> m_state.subsample_w;
-			unsigned chroma_height_in = m_state.height >> m_state.subsample_h;
-			unsigned chroma_width_out = width >> subsample_w;
-			unsigned chroma_height_out = height >> subsample_h;
-
-			auto filter_pair = zimg::resize::create_resize(*resample_filter_uv, m_state.type, m_state.depth, chroma_width_in, chroma_height_in, chroma_width_out, chroma_height_out,
-			                                               shift_w, shift_h, chroma_width_in, chroma_height_in, cpu);
-			filter1_uv.reset(filter_pair.first);
-			filter2_uv.reset(filter_pair.second);
-		}
-
-		if (filter1)
-			attach_filter(std::move(filter1));
-		if (filter2)
-			attach_filter(std::move(filter2));
-		if (filter1_uv)
-			attach_filter_uv(std::move(filter1_uv));
-		if (filter2_uv)
-			attach_filter_uv(std::move(filter2_uv));
-
-		m_state.width = width;
-		m_state.height = height;
-		m_state.subsample_w = subsample_w;
-		m_state.subsample_h = subsample_h;
-		m_state.chroma_location_w = chroma_location_w;
-		m_state.chroma_location_h = chroma_location_h;
-	}
-public:
-	GraphBuilder() : m_graph{}, m_state{}, m_dirty{}
-	{
-	}
-
-	void set_source(const state &source)
-	{
-		if (m_dirty || m_graph)
-			throw zimg::error::InternalError{ "source already set" };
-
-		source.validate();
-
-		m_graph.reset(new zimg::graph::FilterGraph{ source.width, source.height, source.type, source.subsample_w, source.subsample_h, source.color != ColorFamily::COLOR_GREY });
-		m_state = source;
-	}
-
-	zimg::graph::FilterGraph *build(const state &target, const params *params)
-	{
-		if (m_dirty || !m_graph)
-			throw zimg::error::InternalError{ "graph already built" };
-		if (m_state.parity != target.parity)
-			throw zimg::error::NoFieldParityConversion{ "conversion between field parity not supported" };
-		if (m_state.is_greyscale() && !target.is_greyscale())
-			throw zimg::error::NoColorspaceConversion{ "conversion between greyscale and color image not supported" };
-
-		target.validate();
-		convert_depth(zimg::default_pixel_format(select_working_type(target)), params);
-
-		while (true) {
-			if (needs_colorspace(target)) {
-				unsigned width_444 = std::min(m_state.width, target.width);
-				unsigned height_444 = std::min(m_state.height, target.height);
-
-				convert_resize(width_444, height_444, 0, 0, ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_CENTER, params);
-				convert_colorspace(target.colorspace, params);
-			} else if (needs_resize(target)) {
-				convert_resize(target.width, target.height, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h, params);
-			} else if (needs_depth(target)) {
-				zimg::PixelFormat format = zimg::default_pixel_format(target.type);
-				format.depth = target.depth;
-				format.fullrange = target.fullrange;
-
-				convert_depth(format, params);
-			} else {
-				break;
-			}
-		}
-
-		m_graph->complete();
-		return m_graph.release();
-	}
-};
-
-
-void import_graph_state_common(const zimg_image_format &src, GraphBuilder::state *out)
+void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphBuilder::state *out)
 {
 	API_VERSION_ASSERT(src.version);
 
@@ -742,14 +321,14 @@ void import_graph_state_common(const zimg_image_format &src, GraphBuilder::state
 	}
 }
 
-std::pair<GraphBuilder::state, GraphBuilder::state> import_graph_state(const zimg_image_format &src, const zimg_image_format &dst)
+std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> import_graph_state(const zimg_image_format &src, const zimg_image_format &dst)
 {
 	API_VERSION_ASSERT(src.version);
 	API_VERSION_ASSERT(dst.version);
 	_zassert_d(src.version == dst.version, "image format versions do not match");
 
-	GraphBuilder::state src_state{};
-	GraphBuilder::state dst_state{};
+	zimg::graph::GraphBuilder::state src_state{};
+	zimg::graph::GraphBuilder::state dst_state{};
 
 	import_graph_state_common(src, &src_state);
 	import_graph_state_common(dst, &dst_state);
@@ -777,11 +356,11 @@ std::pair<GraphBuilder::state, GraphBuilder::state> import_graph_state(const zim
 	return{ src_state, dst_state };
 }
 
-GraphBuilder::params import_graph_params(const zimg_filter_graph_params &src)
+zimg::graph::GraphBuilder::params import_graph_params(const zimg_filter_graph_params &src)
 {
 	API_VERSION_ASSERT(src.version);
 
-	GraphBuilder::params params{};
+	zimg::graph::GraphBuilder::params params{};
 
 	if (src.version >= 2) {
 		params.filter.reset(translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b));
@@ -973,18 +552,19 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 	_zassert_d(dst_format, "null pointer");
 
 	try {
-		GraphBuilder builder;
-		GraphBuilder::state src_state;
-		GraphBuilder::state dst_state;
-		GraphBuilder::params graph_params;
+		zimg::graph::GraphBuilder::state src_state;
+		zimg::graph::GraphBuilder::state dst_state;
+		zimg::graph::GraphBuilder::params graph_params;
+		zimg::graph::DefaultFilterFactory factory;
 
 		std::tie(src_state, dst_state) = import_graph_state(*src_format, *dst_format);
-
 		if (params)
 			graph_params = import_graph_params(*params);
 
-		builder.set_source(src_state);
-		return builder.build(dst_state, params ? &graph_params : nullptr);
+		return zimg::graph::GraphBuilder{}.set_factory(&factory).
+		                                   set_source(src_state).
+		                                   connect_graph(dst_state, params ? &graph_params : nullptr).
+		                                   complete_graph();
 	} catch (const zimg::error::Exception &) {
 		handle_exception(std::current_exception());
 		return nullptr;

@@ -169,6 +169,7 @@
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
     <ClInclude Include="..\..\src\zimg\graph\copy_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
+    <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
     <ClInclude Include="..\..\src\zimg\graph\mux_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\zfilter.h" />
     <ClInclude Include="..\..\src\zimg\graph\ztypes.h" />
@@ -201,6 +202,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\mux_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize.cpp" />

@@ -53,6 +53,8 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/graph/copy_filter.h \
 					 src/zimg/graph/filtergraph.h \
 					 src/zimg/graph/filtergraph.cpp \
+					 src/zimg/graph/graphbuilder.h \
+					 src/zimg/graph/graphbuilder.cpp \
 					 src/zimg/graph/mux_filter.cpp \
 					 src/zimg/graph/mux_filter.h \
 					 src/zimg/resize/filter.cpp \
