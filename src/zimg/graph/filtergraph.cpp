@@ -9,7 +9,7 @@
 #include "common/zassert.h"
 #include "copy_filter.h"
 #include "filtergraph.h"
-#include "zfilter.h"
+#include "image_filter.h"
 
 namespace zimg {;
 namespace graph {;

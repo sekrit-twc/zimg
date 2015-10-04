@@ -6,7 +6,7 @@
 #include <cstdint>
 #include "common/align.h"
 #include "common/pixel.h"
-#include "graph/ztypes.h"
+#include "graph/image_buffer.h"
 
 template <class T>
 class AuditBuffer {

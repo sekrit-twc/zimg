@@ -8,7 +8,7 @@
 
 #include "common/align.h"
 #include "common/pixel.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth/quantize.h"
 
 #include "gtest/gtest.h"

@@ -4,7 +4,7 @@
 #define ZIMG_GRAPH_MUX_FILTER_H_
 
 #include <memory>
-#include "zfilter.h"
+#include "image_filter.h"
 
 namespace zimg {;
 namespace graph {;

@@ -5,7 +5,7 @@
 
 #include "common/linebuffer.h"
 #include "common/pixel.h"
-#include "zfilter.h"
+#include "image_filter.h"
 
 namespace zimg {;
 namespace graph {;

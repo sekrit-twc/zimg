@@ -8,7 +8,7 @@
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth.h"
 #include "dither.h"
 #include "dither_x86.h"

@@ -3,7 +3,7 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_H_
 
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "filter.h"
 
 namespace zimg {;

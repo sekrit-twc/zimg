@@ -2,7 +2,7 @@
 #include <memory>
 #include "common/pixel.h"
 #include "graph/mux_filter.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 
 #include "gtest/gtest.h"
 #include "filter_validator.h"

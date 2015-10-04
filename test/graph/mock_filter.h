@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 
 class MockFilter : public zimg::graph::ImageFilter {
 protected:

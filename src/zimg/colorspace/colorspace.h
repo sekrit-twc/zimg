@@ -5,7 +5,7 @@
 
 #include <memory>
 #include <vector>
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "operation.h"
 
 namespace zimg {;

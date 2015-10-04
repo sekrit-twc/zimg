@@ -8,7 +8,7 @@
 #include "filtergraph.h"
 #include "mux_filter.h"
 #include "graphbuilder.h"
-#include "zfilter.h"
+#include "image_filter.h"
 
 namespace zimg {;
 namespace graph {;

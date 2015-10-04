@@ -1,7 +1,7 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "graph/copy_filter.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth.h"
 #include "depth_convert.h"
 #include "dither.h"

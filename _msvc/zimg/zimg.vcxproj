@@ -171,8 +171,8 @@
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
     <ClInclude Include="..\..\src\zimg\graph\mux_filter.h" />
-    <ClInclude Include="..\..\src\zimg\graph\zfilter.h" />
-    <ClInclude Include="..\..\src\zimg\graph\ztypes.h" />
+    <ClInclude Include="..\..\src\zimg\graph\image_filter.h" />
+    <ClInclude Include="..\..\src\zimg\graph\image_buffer.h" />
     <ClInclude Include="..\..\src\zimg\resize\filter.h" />
     <ClInclude Include="..\..\src\zimg\resize\resize.h" />
     <ClInclude Include="..\..\src\zimg\resize\resize_impl.h" />

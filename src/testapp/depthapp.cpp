@@ -5,7 +5,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth/depth.h"
 #include "apps.h"
 #include "argparse.h"

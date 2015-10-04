@@ -11,7 +11,7 @@
 #include "common/static_map.h"
 #include "common/zassert.h"
 #include "graph/filtergraph.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth/depth.h"
 
 #include "frame.h"

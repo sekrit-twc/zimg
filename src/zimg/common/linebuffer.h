@@ -4,7 +4,7 @@
 #define ZIMG_LINEBUFFER_H_
 
 #include <algorithm>
-#include "graph/ztypes.h"
+#include "graph/image_buffer.h"
 #include "propagate_const.h"
 
 namespace zimg {;

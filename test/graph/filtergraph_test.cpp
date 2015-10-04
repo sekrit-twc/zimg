@@ -7,7 +7,7 @@
 #include "common/linebuffer.h"
 #include "common/pixel.h"
 #include "graph/filtergraph.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 
 #include "gtest/gtest.h"
 #include "audit_buffer.h"

@@ -2,7 +2,7 @@
 #include <memory>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 

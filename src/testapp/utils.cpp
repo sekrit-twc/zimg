@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <memory>
 #include "common/align.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 
 #include "frame.h"
 #include "utils.h"

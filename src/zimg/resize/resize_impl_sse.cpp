@@ -6,7 +6,7 @@
 #include "common/ccdep.h"
 #include "common/pixel.h"
 #include "common/linebuffer.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "filter.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"

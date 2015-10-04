@@ -5,7 +5,7 @@
 #include "common/linebuffer.h"
 #include "common/pixel.h"
 #include "graph/copy_filter.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "resize.h"
 #include "resize_impl.h"
 

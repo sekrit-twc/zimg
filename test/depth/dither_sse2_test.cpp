@@ -5,7 +5,7 @@
 #include <typeinfo>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "graph/zfilter.h"
+#include "graph/image_filter.h"
 #include "depth/depth.h"
 #include "depth/dither.h"
 

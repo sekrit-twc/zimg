@@ -7,7 +7,7 @@
 #include <limits>
 #include <utility>
 #include "common/align.h"
-#include "ztypes.h"
+#include "buffer.h"
 
 namespace zimg {;
 

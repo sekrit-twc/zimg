@@ -4,7 +4,7 @@
 #define FRAME_H_
 
 #include "common/align.h"
-#include "graph/ztypes.h"
+#include "graph/image_buffer.h"
 
 #define PATH_SPECIFIER_HELP_STR \
 "Path specifier: spec@path\n" \
