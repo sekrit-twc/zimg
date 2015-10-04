@@ -200,33 +200,33 @@ test_libmusl_m_la_SOURCES = test/extra/musl-libm/__cos.c \
 							test/extra/musl-libm/sin.c
 
 test_unit_test_CPPFLAGS = -I$(srcdir)/src/zimg \
-							-I$(srcdir)/test \
-							-I$(srcdir)/test/extra \
-							-I$(srcdir)/test/extra/googletest/googletest/include
+						  -I$(srcdir)/test \
+						  -I$(srcdir)/test/extra \
+						  -I$(srcdir)/test/extra/googletest/googletest/include
 
 test_unit_test_SOURCES = test/main.cpp \
-							test/colorspace/colorspace_test.cpp \
-							test/depth/depth_convert_test.cpp \
-							test/depth/dither_test.cpp \
-							test/extra/sha1/config.h \
-							test/extra/sha1/sha1.c \
-							test/extra/sha1/sha1.h \
-							test/graph/audit_buffer.cpp \
-							test/graph/audit_buffer.h \
-							test/graph/copy_filter_test.cpp \
-							test/graph/filter_validator.cpp \
-							test/graph/filter_validator.h \
-							test/graph/filtergraph_test.cpp \
-							test/graph/mock_filter.cpp \
-							test/graph/mock_filter.h \
-							test/graph/mux_filter_test.cpp \
-							test/resize/resize_impl_test.cpp
+						 test/colorspace/colorspace_test.cpp \
+						 test/depth/depth_convert_test.cpp \
+						 test/depth/dither_test.cpp \
+						 test/extra/sha1/config.h \
+						 test/extra/sha1/sha1.c \
+						 test/extra/sha1/sha1.h \
+						 test/graph/audit_buffer.cpp \
+						 test/graph/audit_buffer.h \
+						 test/graph/copy_filter_test.cpp \
+						 test/graph/filter_validator.cpp \
+						 test/graph/filter_validator.h \
+						 test/graph/filtergraph_test.cpp \
+						 test/graph/mock_filter.cpp \
+						 test/graph/mock_filter.h \
+						 test/graph/mux_filter_test.cpp \
+						 test/resize/resize_impl_test.cpp
 
 if X86SIMD
 
 test_unit_test_SOURCES += test/depth/dither_sse2_test.cpp \
-							test/resize/resize_impl_sse_test.cpp \
-							test/resize/resize_impl_sse2_test.cpp
+						  test/resize/resize_impl_sse_test.cpp \
+						  test/resize/resize_impl_sse2_test.cpp
 
 endif #X86SIMD
 
