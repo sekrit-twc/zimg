@@ -171,14 +171,14 @@ public:
 				if (row_data[left] != static_cast<T>(0))
 					break;
 			}
-			for (right = row_data.size() - 1; right > left; --right) {
-				if (row_data[right] != static_cast<T>(0))
+			for (right = row_data.size(); right > left + 1; --right) {
+				if (row_data[right - 1] != static_cast<T>(0))
 					break;
 			}
 
 			// Shrink row if non-empty, else free row.
 			if (right - left) {
-				row_data.erase(row_data.begin() + right + 1, row_data.end());
+				row_data.erase(row_data.begin() + right, row_data.end());
 				row_data.erase(row_data.begin(), row_data.begin() + left);
 				m_offsets[i] += left;
 			} else {
