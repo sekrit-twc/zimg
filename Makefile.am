@@ -179,7 +179,7 @@ endif # TESTAPP
 
 
 if UNIT_TEST
-TESTS=test/unit_test
+TESTS = test/unit_test
 
 check_LTLIBRARIES = test/libmusl_m.la
 check_PROGRAMS = test/unit_test

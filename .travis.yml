@@ -29,4 +29,5 @@ script:
   - ./configure --enable-x86simd --enable-testapp --enable-example --enable-unit-test
   - make clean
   - make
-  - make check
+  - make test/unit_test
+  - ./test/unit_test
