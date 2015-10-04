@@ -23,11 +23,11 @@ class LineBuffer {
 	ptrdiff_t m_stride;
 	unsigned m_mask;
 
-	const T *at_line(unsigned n) const
+	T *at_line(unsigned n) const
 	{
-		const char *byte_ptr = reinterpret_cast<const char *>(m_ptr);
+		auto *byte_ptr = reinterpret_cast<typename propagate_const<T, char>::type *>(m_ptr);
 
-		return reinterpret_cast<const T *>(byte_ptr + static_cast<ptrdiff_t>(n & m_mask) * m_stride);
+		return reinterpret_cast<T *>(byte_ptr + static_cast<ptrdiff_t>(n & m_mask) * m_stride);
 	}
 public:
 	/**
@@ -71,15 +71,7 @@ public:
 	 * @param n row index
 	 * @return pointer to row
 	 */
-	T *operator[](unsigned n)
-	{
-		return const_cast<T *>(at_line(n));
-	}
-
-	/**
-	 * @see LineBuffer::operator[](unsigned)
-	 */
-	const T *operator[](unsigned n) const
+	T *operator[](unsigned n) const
 	{
 		return at_line(n);
 	}

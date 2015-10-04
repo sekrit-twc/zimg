@@ -1,4 +1,60 @@
 #include <algorithm>
+#include <memory>
+#include "graph/copy_filter.h"
+#include "unresize.h"
+#include "unresize_impl.h"
+
+namespace zimg {;
+namespace unresize {;
+
+namespace {;
+
+bool unresize_h_first(double xscale, double yscale)
+{
+	double h_first_cost = std::max(xscale, 1.0) * 2.0 + xscale * std::max(yscale, 1.0);
+	double v_first_cost = std::max(yscale, 1.0) + yscale * std::max(xscale, 1.0) * 2.0;
+
+	return h_first_cost < v_first_cost;
+}
+
+} // namespace
+
+
+std::pair<graph::ImageFilter *, graph::ImageFilter *> create_unresize(
+	PixelType type, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+	double shift_w, double shift_h, CPUClass cpu)
+{
+	bool skip_h = (src_width == dst_width && shift_w == 0);
+	bool skip_v = (src_height == dst_height && shift_h == 0);
+
+	if (skip_h && skip_v) {
+		return{ new graph::CopyFilter{ src_width, src_height, type }, nullptr };
+	} else if (skip_h) {
+		return{ create_unresize_impl(type, false, src_width, src_height, dst_width, dst_height, shift_w, cpu), nullptr };
+	} else if (skip_v) {
+		return{ create_unresize_impl(type, true, src_width, src_height, dst_width, dst_height, shift_h, cpu), nullptr };
+	} else {
+		bool h_first = unresize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
+		std::unique_ptr<graph::ImageFilter> stage1;
+		std::unique_ptr<graph::ImageFilter> stage2;
+
+		if (h_first) {
+			stage1.reset(create_unresize_impl(type, true, src_width, src_height, dst_width, src_height, shift_w, cpu));
+			stage2.reset(create_unresize_impl(type, false, dst_width, src_height, dst_width, dst_height, shift_h, cpu));
+		} else {
+			stage1.reset(create_unresize_impl(type, false, src_width, src_height, src_width, dst_height, shift_h, cpu));
+			stage2.reset(create_unresize_impl(type, true, src_width, dst_height, dst_width, dst_height, shift_w, cpu));
+		}
+
+		return{ stage1.release(), stage2.release() };
+	}
+}
+
+} // namespace unresize
+} // namespace zimg
+
+#if 0
+#include <algorithm>
 #include "common/align.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
@@ -117,3 +173,4 @@ void Unresize::process(const ImagePlane<const void> &src, const ImagePlane<void>
 
 } // namespace unresize
 } // namespace zimg
+#endif

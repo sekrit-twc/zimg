@@ -59,7 +59,7 @@ TridiagonalLU<T> tridiagonal_decompose(const RowMatrix<T> &m)
  * @param shift center shift applied to input
  * @return the scaling matrix
  */
-RowMatrix<double> bilinear_weights(int in, int out, double shift)
+RowMatrix<double> bilinear_weights(unsigned in, unsigned out, double shift)
 {
 	RowMatrix<double> m{ (size_t)out, (size_t)in };
 
@@ -68,10 +68,10 @@ RowMatrix<double> bilinear_weights(int in, int out, double shift)
 	double rightmost = in - 0.5 + shift;
 
 	// Indices corresponding to the samples stored at leftmost and rightmost.
-	int leftmost_idx = (int)std::max(std::floor(leftmost), 0.0);
-	int rightmost_idx = (int)std::min(std::floor(rightmost), (double)in - 1.0);
+	unsigned leftmost_idx = (unsigned)std::min(std::max(std::floor(leftmost), 0.0), (double)in - 1.0);
+	unsigned rightmost_idx = (unsigned)std::min(std::max(std::floor(rightmost), 0.0), (double)in - 1.0);
 
-	for (int i = 0; i < out; ++i) {
+	for (unsigned i = 0; i < out; ++i) {
 		// Position of output sample on input grid.
 		double position = (i + 0.5) * (double)in / (double)out;
 
@@ -82,8 +82,8 @@ RowMatrix<double> bilinear_weights(int in, int out, double shift)
 			m[i][rightmost_idx] = 1.0;
 		} else {
 			// Index of nearest input pixels to output position.
-			int left_idx = (int)std::floor(position - leftmost);
-			int right_idx = left_idx + 1;
+			unsigned left_idx = (unsigned)std::floor(position - leftmost);
+			unsigned right_idx = left_idx + 1;
 
 			// Distance between output position and left input.
 			double distance = position - left_idx - leftmost;
@@ -102,7 +102,7 @@ RowMatrix<double> bilinear_weights(int in, int out, double shift)
 } // namespace
 
 
-BilinearContext create_bilinear_context(int in, int out, float shift)
+BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 {
 	BilinearContext ctx;
 
@@ -121,19 +121,19 @@ BilinearContext create_bilinear_context(int in, int out, float shift)
 	for (size_t i = 0; i < rows; ++i) {
 		rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
 	}
-	size_t rowstride = (int)align(rowsize, 8);
+	size_t rowstride = (unsigned)align(rowsize, 8);
 
 	ctx.matrix_coefficients.resize(rowstride * rows);
 	ctx.matrix_row_offsets.resize(rows);
-	ctx.matrix_row_size = (int)rowsize;
-	ctx.matrix_row_stride = (int)rowstride;
+	ctx.matrix_row_size = (unsigned)rowsize;
+	ctx.matrix_row_stride = (unsigned)rowstride;
 	for (size_t i = 0; i < rows; ++i) {
 		size_t left = std::min(transpose_m.row_left(i), cols - rowsize);
 
 		for (size_t j = 0; j < transpose_m.row_right(i) - left; ++j) {
 			ctx.matrix_coefficients[i * rowstride + j] = (float)transpose_m[i][left + j];
 		}
-		ctx.matrix_row_offsets[i] = (int)left;
+		ctx.matrix_row_offsets[i] = (unsigned)left;
 	}
 
 	ctx.lu_c.resize(rows);

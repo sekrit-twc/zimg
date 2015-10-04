@@ -63,7 +63,7 @@ void resize_line_h_f32_c(const FilterContext &filter, const float *src, float *d
 	}
 }
 
-void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uint16_t> &src, LineBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
+void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uint16_t> &src, const LineBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
 {
 	const int16_t *filter_coeffs = &filter.data_i16[i * filter.stride_i16];
 	unsigned top = filter.left[i];
@@ -82,7 +82,7 @@ void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uin
 	}
 }
 
-void resize_line_v_f32_c(const FilterContext &filter, const LineBuffer<const float> &src, LineBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
+void resize_line_v_f32_c(const FilterContext &filter, const LineBuffer<const float> &src, const LineBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
 {
 	const float *filter_coeffs = &filter.data[i * filter.stride];
 	unsigned top = filter.left[i];
@@ -260,14 +260,13 @@ unsigned ResizeImplV::get_max_buffering() const
 graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
                                        double shift, double subwidth, CPUClass cpu)
 {
+	if (src_width != dst_width && src_height != dst_height)
+		throw error::InternalError{ "cannot resize both width and height" };
+
 	graph::ImageFilter *ret = nullptr;
 
 	unsigned src_dim = horizontal ? src_width : src_height;
 	unsigned dst_dim = horizontal ? dst_width : dst_height;
-
-	if (src_width != dst_width && src_height != dst_height)
-		throw error::InternalError{ "cannot resize both width and height" };
-
 	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
 
 #ifdef ZIMG_X86

@@ -67,7 +67,6 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/resize/resize_impl.h \
 					 src/zimg/unresize/bilinear.cpp \
 					 src/zimg/unresize/bilinear.h \
-					 src/zimg/unresize/plane.h \
 					 src/zimg/unresize/unresize.cpp \
 					 src/zimg/unresize/unresize.h \
 					 src/zimg/unresize/unresize_impl.cpp \

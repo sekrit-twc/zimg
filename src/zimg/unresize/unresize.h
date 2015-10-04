@@ -3,20 +3,21 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_H_
 #define ZIMG_UNRESIZE_UNRESIZE_H_
 
-#include <cstdint>
-#include <memory>
+#include <utility>
 
 namespace zimg {;
 
 enum class CPUClass;
 enum class PixelType;
 
-template <class T>
-class ImagePlane;
+namespace graph {;
+
+class ImageFilter;
+
+} // namespace graph
+
 
 namespace unresize {;
-
-class UnresizeImpl;
 
 /**
  * Unresize: reverses the effect of the bilinear scaling method.
@@ -93,67 +94,10 @@ class UnresizeImpl;
  * performing the tridiagonal algorithm to obtain x.
  *
  * Generalization to two dimensions is done by processing each dimension.
- *
- *
- * In the class comments below, "input" refers to the upsampled image
- * and "output" refers to the unresized image.
  */
-class Unresize {
-	int m_src_width;
-	int m_src_height;
-	int m_dst_width;
-	int m_dst_height;
-	std::shared_ptr<UnresizeImpl> m_impl;
-
-	size_t max_frame_size(PixelType type) const;
-
-	void invoke_impl_h(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
-
-	void invoke_impl_v(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
-public:
-	/**
-	 * Initialize a null context. Cannot be used for execution.
-	 */
-	Unresize() = default;
-
-	/**
-	 * Initialize a context to unresize a given bilinear resampling.
-	 *
-	 * @param dst_width output image width
-	 * @param dst_height output image height
-	 * @param src_width input image width
-	 * @param src_height input image height
-	 * @param shift_w horizontal center shift relative to upsampled image
-	 * @param shift_h vertical center shift relative to upsampled image
-	 * @param cpu create kernel optimized for given cpu
-	 * @throws IllegalArgument on invalid dimensions
-	 * @throws OutOfMemory if out of memory
-	 */
-	Unresize(int src_width, int src_height, int dst_width, int dst_height, float shift_w, float shift_h, CPUClass cpu);
-
-	/**
-	 * Destroy context.
-	 */
-	~Unresize();
-
-	/**
-	 * Get the size of the temporary buffer required by the filter.
-	 *
-	 * @param type pixel type to process
-	 * @return the size of temporary buffer in units of pixels
-	 */
-	size_t tmp_size(PixelType type) const;
-
-	/**
-	 * Process an image. The input and output pixel formats must match.
-	 *
-	 * @param src input image
-	 * @param dst output image
-	 * @param tmp temporary buffer (@see Unresize::tmp_size)
-	 * @throws UnsupportedOperation if pixel type not supported
-	 */
-	void process(const ImagePlane<const void> &src, const ImagePlane<void> &dst, void *tmp) const;
-};
+std::pair<graph::ImageFilter *, graph::ImageFilter *> create_unresize(
+	PixelType type, unsigned src_Width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+	double shift_w, double shift_h, CPUClass cpu);
 
 } // namespace unresize
 } // namespace zimg

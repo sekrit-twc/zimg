@@ -20,7 +20,7 @@ struct BilinearContext {
 	/**
 	 * Dimension of unresized image (N).
 	 */
-	int dst_width;
+	unsigned dst_width;
 
 	/**
 	 * Packed storage of (A') as row + offset.
@@ -36,9 +36,9 @@ struct BilinearContext {
 	 *
 	 */
 	AlignedVector<float> matrix_coefficients;
-	AlignedVector<int> matrix_row_offsets;
-	int matrix_row_size;
-	int matrix_row_stride;
+	AlignedVector<unsigned> matrix_row_offsets;
+	unsigned matrix_row_size;
+	unsigned matrix_row_stride;
 
 	/**
 	 * LU decomposition of (A' A) stored as three arrays of dimension (N).
@@ -65,7 +65,7 @@ struct BilinearContext {
  * @param shift center shift relative to upscaled vector
  * @return an initialized context
  */
-BilinearContext create_bilinear_context(int in, int out, float shift);
+BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift);
 
 } // namespace unresize
 } // namespace zimg

@@ -144,9 +144,6 @@
     <ClInclude Include="..\..\src\zimg\unresize\bilinear.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\unresize\plane.h">
-      <Filter>Header Files\unresize</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\unresize\unresize.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>

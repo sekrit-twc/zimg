@@ -1,33 +1,21 @@
 #include <iostream>
+#include <memory>
 #include "common/align.h"
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "unresize/plane.h"
 #include "unresize/unresize.h"
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
+#include "pair_filter.h"
 #include "timer.h"
+#include "utils.h"
 
 namespace {;
 
 bool is_set_pixel_format(const zimg::PixelFormat &format)
 {
 	return format != zimg::PixelFormat{};
-}
-
-zimg::unresize::ImagePlane<void> frame_to_plane(ImageFrame &frame, unsigned plane)
-{
-	zimg::PixelFormat format = zimg::default_pixel_format(frame.pixel_type());
-	format.chroma = (plane == 1 || plane == 2) && frame.is_yuv();
-
-	auto buf = frame.as_write_buffer();
-	return{ buf.data[plane], (int)frame.width(), (int)frame.height(), (int)(buf.stride[plane] / zimg::pixel_size(format.type)), format };
-}
-
-zimg::unresize::ImagePlane<const void> frame_to_plane(const ImageFrame &frame, unsigned plane)
-{
-	return frame_to_plane(const_cast<ImageFrame &>(frame), plane);
 }
 
 
@@ -80,22 +68,9 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::unresize::Unresize &filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const zimg::graph::ImageFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	zimg::PixelType pixel_type = src_frame->pixel_type();
-	zimg::AlignedVector<char> tmp(filter.tmp_size(pixel_type) * zimg::pixel_size(pixel_type));
-
-	auto exec_func = [&]
-	{
-		for (unsigned p = 0; p < src_frame->planes(); ++p) {
-			auto src_plane = frame_to_plane(*src_frame, p);
-			auto dst_plane = frame_to_plane(*dst_frame, p);
-
-			filter.process(src_plane, dst_plane, tmp.data());
-		}
-	};
-
-	auto results = measure_benchmark(times, exec_func, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor{ filter, nullptr, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -127,11 +102,20 @@ int unresize_main(int argc, char **argv)
 
 	ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 
-	zimg::unresize::Unresize filter{
-		(int)src_frame.width(), (int)src_frame.height(), (int)dst_frame.width(), (int)dst_frame.height(),
-		(float)args.shift_w, (float)args.shift_h, args.cpu
-	};
-	execute(filter, &src_frame, &dst_frame, args.times);
+	auto filter_pair = zimg::unresize::create_unresize(src_frame.pixel_type(), src_frame.width(), src_frame.height(),
+	                                                   dst_frame.width(), dst_frame.height(), args.shift_w, args.shift_h, args.cpu);
+
+	std::unique_ptr<zimg::graph::ImageFilter> filter_a{ filter_pair.first };
+	std::unique_ptr<zimg::graph::ImageFilter> filter_b{ filter_pair.second };
+
+	if (filter_b) {
+		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_a.get(), filter_b.get() } };
+		filter_a.release();
+		filter_b.release();
+		filter_a = std::move(pair);
+	}
+
+	execute(filter_a.get(), &src_frame, &dst_frame, args.times);
 
 	if (args.visualise_path)
 		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
