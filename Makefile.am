@@ -94,16 +94,14 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 if X86SIMD
-noinst_LTLIBRARIES += libsse.la libsse2.la libavx2.la
+noinst_LTLIBRARIES += libsse.la libsse2.la
 
 libzimg_la_SOURCES += src/zimg/depth/depth_convert_x86.cpp \
 					  src/zimg/depth/depth_convert_x86.h \
 					  src/zimg/depth/dither_x86.cpp \
 					  src/zimg/depth/dither_x86.h \
 					  src/zimg/resize/resize_impl_x86.cpp \
-					  src/zimg/resize/resize_impl_x86.h \
-					  src/zimg/unresize/unresize_impl_x86.cpp \
-					  src/zimg/unresize/unresize_impl_x86.h
+					  src/zimg/resize/resize_impl_x86.h
 
 
 libsse_la_SOURCES = src/zimg/resize/resize_impl_sse.cpp
@@ -112,18 +110,12 @@ libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 libsse2_la_SOURCES = src/zimg/depth/dither_sse2.cpp \
-					 src/zimg/resize/resize_impl_sse2.cpp \
-					 src/zimg/unresize/unresize_impl_sse2.cpp
+					 src/zimg/resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 libsse2_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libavx2_la_SOURCES = src/zimg/unresize/unresize_impl_avx2.cpp
-
-libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mfma -mf16c
-libavx2_la_CPPFLAGS = -I$(srcdir)/src/zimg
-
-libzimg_la_LIBADD = libsse.la libsse2.la libavx2.la
+libzimg_la_LIBADD = libsse.la libsse2.la
 endif
 
 

@@ -3,7 +3,6 @@
 #include "common/except.h"
 #include "bilinear.h"
 #include "unresize_impl.h"
-#include "unresize_impl_x86.h"
 
 namespace zimg {;
 namespace unresize {;
@@ -75,10 +74,6 @@ UnresizeImpl *create_unresize_impl(int src_width, int src_height, int dst_width,
 		vcontext = create_bilinear_context(dst_height, src_height, shift_h);
 	else
 		vcontext.matrix_row_size = 0;
-
-#ifdef ZIMG_X86
-	ret = create_unresize_impl_x86(hcontext, vcontext, cpu);
-#endif
 
 	if (!ret)
 		ret = new UnresizeImplC(hcontext, vcontext);

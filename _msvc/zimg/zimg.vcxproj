@@ -181,7 +181,6 @@
     <ClInclude Include="..\..\src\zimg\unresize\plane.h" />
     <ClInclude Include="..\..\src\zimg\unresize\unresize.h" />
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h" />
-    <ClInclude Include="..\..\src\zimg\unresize\unresize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
@@ -219,17 +218,6 @@
     <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp" />
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_sse2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_x86.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -153,9 +153,6 @@
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\unresize\unresize_impl_x86.h">
-      <Filter>Header Files\unresize</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
@@ -249,15 +246,6 @@
       <Filter>Source Files\unresize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp">
-      <Filter>Source Files\unresize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_avx2.cpp">
-      <Filter>Source Files\unresize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_sse2.cpp">
-      <Filter>Source Files\unresize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl_x86.cpp">
       <Filter>Source Files\unresize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
