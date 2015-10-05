@@ -53,7 +53,7 @@ struct string_table_entry {
 
 #define ARRAY_SIZE(x) sizeof((x)) / sizeof((x)[0])
 
-const struct string_table_entry g_cpu_type_table[] = {
+static const struct string_table_entry g_cpu_type_table[] = {
 	{ "none",  ZIMG_CPU_NONE },
 	{ "auto",  ZIMG_CPU_AUTO },
 #if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
@@ -70,12 +70,12 @@ const struct string_table_entry g_cpu_type_table[] = {
 #endif
 };
 
-const struct string_table_entry g_range_table[] = {
+static const struct string_table_entry g_range_table[] = {
 	{ "limited", ZIMG_RANGE_LIMITED },
 	{ "full",    ZIMG_RANGE_FULL },
 };
 
-const struct string_table_entry g_chromaloc_table[] = {
+static const struct string_table_entry g_chromaloc_table[] = {
 	{ "left",        ZIMG_CHROMA_LEFT },
 	{ "center",      ZIMG_CHROMA_CENTER },
 	{ "top_left",    ZIMG_CHROMA_TOP_LEFT },
@@ -84,7 +84,7 @@ const struct string_table_entry g_chromaloc_table[] = {
 	{ "bottom",      ZIMG_CHROMA_BOTTOM },
 };
 
-const struct string_table_entry g_matrix_table[] = {
+static const struct string_table_entry g_matrix_table[] = {
 	{ "rgb",     ZIMG_MATRIX_RGB },
 	{ "709",     ZIMG_MATRIX_709 },
 	{ "unspec",  ZIMG_MATRIX_UNSPECIFIED },
@@ -95,7 +95,7 @@ const struct string_table_entry g_matrix_table[] = {
 	{ "2020cl",  ZIMG_MATRIX_2020_CL },
 };
 
-const struct string_table_entry g_transfer_table[] = {
+static const struct string_table_entry g_transfer_table[] = {
 	{ "709",     ZIMG_TRANSFER_709 },
 	{ "unspec",  ZIMG_TRANSFER_UNSPECIFIED },
 	{ "601",     ZIMG_TRANSFER_601 },
@@ -104,7 +104,7 @@ const struct string_table_entry g_transfer_table[] = {
 	{ "2020_12", ZIMG_TRANSFER_2020_12 },
 };
 
-const struct string_table_entry g_primaries_table[] = {
+static const struct string_table_entry g_primaries_table[] = {
 	{ "709",    ZIMG_PRIMARIES_709 },
 	{ "unspec", ZIMG_PRIMARIES_UNSPECIFIED },
 	{ "170m",   ZIMG_PRIMARIES_170M },
@@ -112,14 +112,14 @@ const struct string_table_entry g_primaries_table[] = {
 	{ "2020",   ZIMG_PRIMARIES_2020 },
 };
 
-const struct string_table_entry g_dither_type_table[] = {
+static const struct string_table_entry g_dither_type_table[] = {
 	{ "none",            ZIMG_DITHER_NONE },
 	{ "ordered",         ZIMG_DITHER_ORDERED },
 	{ "random",          ZIMG_DITHER_RANDOM },
 	{ "error_diffusion", ZIMG_DITHER_ERROR_DIFFUSION }
 };
 
-const struct string_table_entry g_resample_filter_table[] = {
+static const struct string_table_entry g_resample_filter_table[] = {
 	{ "point",    ZIMG_RESIZE_POINT },
 	{ "bilinear", ZIMG_RESIZE_BILINEAR },
 	{ "bicubic",  ZIMG_RESIZE_BICUBIC },
