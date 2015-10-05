@@ -7,9 +7,8 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <functional>
-#include <new>
 #include <initializer_list>
+#include "zassert.h"
 
 namespace zimg {;
 
@@ -64,8 +63,7 @@ public:
 		m_head{ comp },
 		m_size{ init.size() }
 	{
-		if (init.size() > Sz)
-			throw std::bad_alloc{};
+		_zassert(init.size() <= Sz, "list size incorrect");
 
 		std::copy(init.begin(), init.end(), m_head.array.begin());
 		std::sort(m_head.array.begin(), m_head.array.begin() + init.size(), m_head.get_value_comp());
