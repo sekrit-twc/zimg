@@ -757,8 +757,8 @@ static void _vszimg_set_src_colorspace(const struct vszimg_data *data, zimg_imag
 
 static void _vszimg_set_dst_colorspace(const struct vszimg_data *data, const zimg_image_format *src_format, zimg_image_format *dst_format)
 {
-	/* Avoid propagating source matrix coefficients if the target is RGB. */
-	if (dst_format->color_family != ZIMG_COLOR_RGB)
+	/* Avoid propagating RGB matrix coefficients. */
+	if (src_format->color_family != ZIMG_COLOR_RGB && dst_format->color_family != ZIMG_COLOR_RGB)
 		dst_format->matrix_coefficients = src_format->matrix_coefficients;
 
 	dst_format->transfer_characteristics = src_format->transfer_characteristics;
