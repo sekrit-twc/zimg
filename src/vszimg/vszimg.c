@@ -694,7 +694,7 @@ struct vszimg_data {
 
 	VSNodeRef *node;
 	VSVideoInfo vi;
-	zimg_filter_graph_params params;
+	zimg_graph_builder_params params;
 
 	zimg_matrix_coefficients_e matrix;
 	zimg_transfer_characteristics_e transfer;
@@ -1043,7 +1043,7 @@ static void VS_CC vszimg_create(const VSMap *in, VSMap *out, void *userData, VSC
 
 	data->vi = *node_vi;
 
-	zimg_filter_graph_params_default(&data->params, ZIMG_API_VERSION);
+	zimg_graph_builder_params_default(&data->params, ZIMG_API_VERSION);
 
 	if (propGetUintDef(vsapi, in, "width", &data->vi.width, node_vi->width))
 		FAIL_BAD_VALUE("width");

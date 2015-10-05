@@ -469,7 +469,7 @@ typedef struct zimg_image_format {
 /**
  * Graph filter parameters.
  */
-typedef struct zimg_filter_graph_params {
+typedef struct zimg_graph_builder_params {
 	unsigned version;                          /**< @see ZIMG_API_VERSION */
 
 	zimg_resample_filter_e resample_filter;    /**< Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
@@ -497,7 +497,7 @@ typedef struct zimg_filter_graph_params {
 	zimg_dither_type_e dither_type;            /**< Dithering method (default ZIMG_DITHER_NONE). */
 
 	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default (ZIMG_CPU_AUTO). */
-} zimg_filter_graph_params;
+} zimg_graph_builder_params;
 
 /**
  * Initialize image format structure with default values.
@@ -513,7 +513,7 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version);
  * @param[out] ptr structure to be initialized
  * @param version API version used by caller
  */
-void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version);
+void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned version);
 
 /**
  * Create a graph converting the specified formats.
@@ -526,7 +526,7 @@ void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned ve
  * @param[in] params filter parameters, may be NULL
  * @return graph handle, or NULL on failure
  */
-zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params);
+zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params);
 
 #ifdef __cplusplus
 } /* extern "C" */

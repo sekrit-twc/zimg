@@ -374,7 +374,7 @@ std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> im
 	return{ src_state, dst_state };
 }
 
-zimg::graph::GraphBuilder::params import_graph_params(const zimg_filter_graph_params &src)
+zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_params &src)
 {
 	API_VERSION_ASSERT(src.version);
 
@@ -542,7 +542,7 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 	}
 }
 
-void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned version)
+void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned version)
 {
 	_zassert_d(ptr, "null pointer");
 	API_VERSION_ASSERT(version);
@@ -564,7 +564,7 @@ void zimg_filter_graph_params_default(zimg_filter_graph_params *ptr, unsigned ve
 	}
 }
 
-zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_filter_graph_params *params)
+zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params)
 {
 	_zassert_d(src_format, "null pointer");
 	_zassert_d(dst_format, "null pointer");

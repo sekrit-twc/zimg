@@ -116,10 +116,10 @@ struct zimage_format : zimg_image_format {
 	}
 };
 
-struct zfilter_graph_params : zimg_filter_graph_params {
-	zfilter_graph_params()
+struct zfilter_graph_builder_params : zimg_graph_builder_params {
+	zfilter_graph_builder_params()
 	{
-		zimg_filter_graph_params_default(this, ZIMG_API_VERSION);
+		zimg_graph_builder_params_default(this, ZIMG_API_VERSION);
 	}
 };
 
@@ -174,7 +174,7 @@ public:
 		check(zimg_filter_graph_process(m_graph, &src, &dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
 	}
 
-	static zimg_filter_graph *build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_filter_graph_params *params = 0)
+	static zimg_filter_graph *build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_graph_builder_params *params = 0)
 	{
 		zimg_filter_graph *graph;
 
