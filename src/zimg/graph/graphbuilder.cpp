@@ -357,6 +357,11 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 	ChromaLocationW chroma_location_w = spec.chroma_location_w;
 	ChromaLocationH chroma_location_h = spec.chroma_location_h;
 
+	bool image_shifted = spec.shift_w != 0.0 ||
+	                     spec.shift_h != 0.0 ||
+	                     m_state.width != spec.subwidth ||
+	                     m_state.height != spec.subheight;
+
 	if (is_greyscale(m_state)) {
 		subsample_w = 0;
 		subsample_h = 0;
@@ -372,18 +377,20 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 	    m_state.subsample_w == subsample_w &&
 	    m_state.subsample_h == subsample_h &&
 	    m_state.chroma_location_w == chroma_location_w &&
-	    m_state.chroma_location_h == chroma_location_h)
+	    m_state.chroma_location_h == chroma_location_h &&
+	    !image_shifted)
 		return;
 
 	const resize::Filter *resample_filter = params ? params->filter.get() : &bicubic_filter;
 	const resize::Filter *resample_filter_uv = params ? params->filter_uv.get() : &bilinear_filter;
 	CPUClass cpu = params ? params->cpu : CPUClass::CPU_AUTO;
 
-	bool do_resize_luma = m_state.width != spec.width || m_state.height != spec.height;
+	bool do_resize_luma = m_state.width != spec.width || m_state.height != spec.height || image_shifted;
 	bool do_resize_chroma = (m_state.width >> m_state.subsample_w != spec.width >> subsample_w) ||
 	                        (m_state.height >> m_state.subsample_h != spec.height >> subsample_h) ||
 	                        ((m_state.subsample_w || subsample_w) && m_state.chroma_location_w != chroma_location_w) ||
-	                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h);
+	                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h) ||
+	                        image_shifted;
 
 	FilterFactory::filter_list filter_list;
 	FilterFactory::filter_list filter_list_uv;
