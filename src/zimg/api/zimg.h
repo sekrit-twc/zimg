@@ -171,10 +171,13 @@ typedef enum zimg_pixel_type_e {
  *
  * Additional range types may be defined besides ZIMG_RANGE_LIMITED and
  * ZIMG_RANGE_FULL. Users should not treat range as a boolean quantity.
+ *
+ * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_pixel_range_e {
-	ZIMG_RANGE_LIMITED = 0, /**< Studio (TV) legal range, 16-235 in 8 bits. */
-	ZIMG_RANGE_FULL    = 1, /**< Full (PC) dynamic range, 0-255 in 8 bits. */
+	ZIMG_RANGE_INTERNAL = -1, /**< Not part of the API. */
+	ZIMG_RANGE_LIMITED  = 0,  /**< Studio (TV) legal range, 16-235 in 8 bits. */
+	ZIMG_RANGE_FULL     = 1,  /**< Full (PC) dynamic range, 0-255 in 8 bits. */
 } zimg_pixel_range_e;
 
 /**
@@ -210,11 +213,14 @@ typedef enum zimg_field_parity_e {
  * also be provided.
  *
  * Chroma location is always treated as centered on unsubsampled axes.
+ *
+ * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_chroma_location_e {
-	ZIMG_CHROMA_LEFT        = 0, /**< MPEG-2 */
-	ZIMG_CHROMA_CENTER      = 1, /**< MPEG-1/JPEG */
-	ZIMG_CHROMA_TOP_LEFT    = 2, /**< DV */
+	ZIMG_CHROMA_INTERNAL    = -1, /**< Not part of the API. */
+	ZIMG_CHROMA_LEFT        = 0,  /**< MPEG-2 */
+	ZIMG_CHROMA_CENTER      = 1,  /**< MPEG-1/JPEG */
+	ZIMG_CHROMA_TOP_LEFT    = 2,  /**< DV */
 	ZIMG_CHROMA_TOP         = 3,
 	ZIMG_CHROMA_BOTTOM_LEFT = 4,
 	ZIMG_CHROMA_BOTTOM      = 5,
@@ -233,19 +239,23 @@ typedef enum zimg_chroma_location_e {
  * Unenumerated values between 0 and 255, inclusive, may be specified for any
  * colorspace parameter. In such a case, no conversion will be possible unless
  * the input and output spaces are exactly equivalent.
+ *
+ * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_matrix_coefficients_e {
+	ZIMG_MATRIX_INTERNAL    = -1, /**< Not part of the API. */
 	ZIMG_MATRIX_RGB         = 0,
 	ZIMG_MATRIX_709         = 1,
 	ZIMG_MATRIX_UNSPECIFIED = 2,
 	ZIMG_MATRIX_470BG       = 5,
-	ZIMG_MATRIX_170M        = 6, /* Equivalent to 5. */
+	ZIMG_MATRIX_170M        = 6,  /* Equivalent to 5. */
 	ZIMG_MATRIX_YCGCO       = 8,
 	ZIMG_MATRIX_2020_NCL    = 9,
 	ZIMG_MATRIX_2020_CL     = 10,
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {
+	ZIMG_TRANSFER_INTERNAL    = -1, /**< Not part of the API. */
 	ZIMG_TRANSFER_709         = 1,
 	ZIMG_TRANSFER_UNSPECIFIED = 2,
 	ZIMG_TRANSFER_601         = 6,  /* Equivalent to 1. */
@@ -255,10 +265,11 @@ typedef enum zimg_transfer_characteristics_e {
 } zimg_transfer_characteristics_e;
 
 typedef enum zimg_color_primaries_e {
+	ZIMG_PRIMARIES_INTERNAL    = -1, /**< Not part of the API. */
 	ZIMG_PRIMARIES_709         = 1,
 	ZIMG_PRIMARIES_UNSPECIFIED = 2,
 	ZIMG_PRIMARIES_170M        = 6,
-	ZIMG_PRIMARIES_240M        = 7, /* Equivalent to 6. */
+	ZIMG_PRIMARIES_240M        = 7,  /* Equivalent to 6. */
 	ZIMG_PRIMARIES_2020        = 9,
 } zimg_color_primaries_e;
 
