@@ -201,22 +201,24 @@ unsigned UnresizeImplV::get_max_buffering() const
 }
 
 
-std::unique_ptr<graph::ImageFilter> create_unresize_impl(PixelType type, bool horizontal, unsigned src_width, unsigned src_height,
-                                                         unsigned dst_width, unsigned dst_height, double shift, CPUClass cpu)
+UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type) :
+	up_width{ up_width },
+	up_height{ up_height },
+	type{ type }
 {
-	if (src_width != dst_width && src_height != dst_height)
-		throw error::InternalError{ "cannot unresize both width and height" };
+}
 
+std::unique_ptr<graph::ImageFilter> UnresizeImplBuilder::create() const
+{
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	unsigned src_dim = horizontal ? src_width : src_height;
-	unsigned dst_dim = horizontal ? dst_width : dst_height;
-	BilinearContext context = create_bilinear_context(dst_dim, src_dim, shift);
+	unsigned up_dim = horizontal ? up_width : up_height;
+	BilinearContext context = create_bilinear_context(orig_dim, up_dim, shift);
 
 	if (!ret && horizontal)
-		ret = ztd::make_unique<UnresizeImplH_C>(context, dst_height, type);
+		ret = ztd::make_unique<UnresizeImplH_C>(context, up_height, type);
 	if (!ret && !horizontal)
-		ret = ztd::make_unique<UnresizeImplV_C>(context, dst_width, type);
+		ret = ztd::make_unique<UnresizeImplV_C>(context, up_width, type);
 
 	return ret;
 }

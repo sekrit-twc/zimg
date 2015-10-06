@@ -39,29 +39,51 @@ auto UnresizeConversion::create() const -> filter_pair
 	bool skip_h = (up_width == orig_width && shift_w == 0);
 	bool skip_v = (up_height == orig_height && shift_h == 0);
 
-	if (skip_h && skip_v) {
+	if (skip_h && skip_v)
 		return{ ztd::make_unique<graph::CopyFilter>(up_width, up_height, type), nullptr };
-	} else if (skip_h) {
-		return{ create_unresize_impl(type, false, up_width, up_height, orig_width, orig_height, shift_w, cpu),
-		        nullptr };
+
+	auto builder = UnresizeImplBuilder{ up_width, up_height, type }.set_cpu(cpu);
+	filter_pair ret{};
+
+	if (skip_h) {
+		ret.first = builder.set_horizontal(false).
+		                    set_orig_dim(orig_height).
+		                    set_shift(shift_h).
+		                    create();
 	} else if (skip_v) {
-		return{ create_unresize_impl(type, true, up_width, up_height, orig_width, orig_height, shift_h, cpu),
-		        nullptr };
+		ret.second = builder.set_horizontal(true).
+		                     set_orig_dim(orig_width).
+		                     set_shift(shift_w).
+		                     create();
 	} else {
 		bool h_first = unresize_h_first((double)orig_width / up_width, (double)orig_height / up_height);
-		std::unique_ptr<graph::ImageFilter> stage1;
-		std::unique_ptr<graph::ImageFilter> stage2;
 
 		if (h_first) {
-			stage1 = create_unresize_impl(type, true, up_width, up_height, orig_width, up_height, shift_w, cpu);
-			stage2 = create_unresize_impl(type, false, orig_width, up_height, orig_width, orig_height, shift_h, cpu);
-		} else {
-			stage1 = create_unresize_impl(type, false, up_width, up_height, up_width, orig_height, shift_h, cpu);
-			stage2 = create_unresize_impl(type, true, up_width, orig_height, orig_width, orig_height, shift_w, cpu);
-		}
+			ret.first = builder.set_horizontal(true).
+			                    set_orig_dim(orig_width).
+			                    set_shift(shift_w).
+			                    create();
 
-		return{ std::move(stage1), std::move(stage2) };
+			builder.up_width = orig_width;
+			ret.second = builder.set_horizontal(false).
+			                     set_orig_dim(orig_height).
+			                     set_shift(shift_h).
+			                     create();
+		} else {
+			ret.first = builder.set_horizontal(false).
+			                    set_orig_dim(orig_height).
+			                    set_shift(shift_h).
+			                    create();
+
+			builder.up_height = orig_height;
+			ret.second = builder.set_horizontal(true).
+			                     set_orig_dim(orig_width).
+			                     set_shift(shift_w).
+			                     create();
+		}
 	}
+
+	return ret;
 }
 
 } // namespace unresize
