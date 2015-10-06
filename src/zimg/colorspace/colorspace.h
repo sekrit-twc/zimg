@@ -3,31 +3,22 @@
 #ifndef ZIMG_COLORSPACE_COLORSPACE_H_
 #define ZIMG_COLORSPACE_COLORSPACE_H_
 
-#include <memory>
-#include <vector>
-#include "graph/image_filter.h"
-#include "operation.h"
-
 namespace zimg {;
+
+enum class CPUClass;
+
+namespace graph {;
+
+class ImageFilter;
+
+} // namespace graph
+
+
 namespace colorspace {;
 
 struct ColorspaceDefinition;
 
-class ColorspaceConversion final : public graph::ImageFilterBase {
-	std::vector<std::shared_ptr<Operation>> m_operations;
-	unsigned m_width;
-	unsigned m_height;
-public:
-	ColorspaceConversion() = default;
-
-	ColorspaceConversion(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
-
-	image_attributes get_image_attributes() const override;
-
-	filter_flags get_flags() const override;
-
-	void process(void *ctx, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
-};
+graph::ImageFilter *create_colorspace(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
 
 } // namespace colorspace
 } // namespace zimg

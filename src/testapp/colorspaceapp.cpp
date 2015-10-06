@@ -180,7 +180,7 @@ int colorspace_main(int argc, char **argv)
 		std::cerr << "warning: input file is of different color family than declared format\n";
 
 	std::unique_ptr<zimg::graph::ImageFilter> convert{
-		new zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu }
+		zimg::colorspace::create_colorspace(src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu)
 	};
 	execute(convert.get(), &src_frame, &dst_frame, args.times);
 

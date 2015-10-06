@@ -163,7 +163,7 @@ FilterFactory::~FilterFactory()
 auto DefaultFilterFactory::create_colorspace(const colorspace_params &params) -> filter_list
 {
 	std::unique_ptr<ImageFilter> filter{
-		new colorspace::ColorspaceConversion{ params.width, params.height, params.csp_in, params.csp_out, params.cpu }
+		colorspace::create_colorspace(params.width, params.height, params.csp_in, params.csp_out, params.cpu)
 	};
 
 	return{ std::make_move_iterator(&filter), std::make_move_iterator(&filter + 1) };

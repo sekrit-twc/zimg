@@ -1,3 +1,4 @@
+#include <memory>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "colorspace/colorspace_param.h"
@@ -5,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
+#include "graph/image_filter.h"
 
 namespace {;
 
@@ -14,8 +16,10 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned h = 480;
 
 	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
-	zimg::colorspace::ColorspaceConversion convert{ w, h, csp_in, csp_out, zimg::CPUClass::CPU_NONE };
-	validate_filter(&convert, w, h, format, expected_sha1);
+	std::unique_ptr<zimg::graph::ImageFilter> convert{
+		zimg::colorspace::create_colorspace(w, h, csp_in, csp_out, zimg::CPUClass::CPU_NONE)
+	};
+	validate_filter(convert.get(), w, h, format, expected_sha1);
 }
 
 } // namespace
