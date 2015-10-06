@@ -60,7 +60,6 @@ unsigned zimg_get_api_version(void);
  * error codes with a category of 0.
  *
  * API functions may return error codes not listed in this header.
- * Functions returning error codes return 0 on success.
  */
 typedef enum zimg_error_code_e {
 	ZIMG_ERROR_UNKNOWN = -1,
