@@ -282,7 +282,7 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 			throw zimg::error::EnumOutOfRange{ "unrecognized resampling filter" };
 		}
 	} catch (const std::bad_alloc &) {
-		throw zimg::ZimgOutOfMemory{};
+		throw zimg::error::OutOfMemory{};
 	}
 }
 

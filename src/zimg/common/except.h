@@ -6,7 +6,6 @@
 #include <stdexcept>
 
 namespace zimg {;
-
 namespace error {;
 
 class Exception : private std::runtime_error {
@@ -56,15 +55,6 @@ DECLARE_EXCEPTION(NoFieldParityConversion, UnsupportedOperation)
 #undef DECLARE_EXCEPTION
 
 } // namespace error
-
-typedef error::Exception ZimgException;
-typedef error::UnknownError ZimgUnknownError;
-typedef error::InternalError ZimgInternalError;
-typedef error::OutOfMemory ZimgOutOfMemory;
-typedef error::LogicError ZimgLogicError;
-typedef error::IllegalArgument ZimgIllegalArgument;
-typedef error::UnsupportedOperation ZimgUnsupportedError;
-
 } // namespace zimg
 
 #endif // ZIMG_EXCEPT_H_
