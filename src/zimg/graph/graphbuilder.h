@@ -7,23 +7,12 @@
 #include <vector>
 #include "common/pixel.h"
 #include "colorspace/colorspace.h"
+#include "depth/depth.h"
+#include "resize/resize.h"
 
 namespace zimg {;
 
 enum class CPUClass;
-
-namespace depth {;
-
-enum class DitherType;
-
-} // namespace depth
-
-namespace resize {;
-
-class Filter;
-
-} // namespace resize
-
 
 namespace graph {;
 
@@ -32,59 +21,24 @@ class ImageFilter;
 
 class FilterFactory {
 public:
-	struct colorspace_params {
-		unsigned width;
-		unsigned height;
-		colorspace::ColorspaceDefinition csp_in;
-		colorspace::ColorspaceDefinition csp_out;
-		CPUClass cpu;
-	};
-
-	struct depth_params {
-		unsigned width;
-		unsigned height;
-		depth::DitherType type;
-		PixelFormat format_in;
-		PixelFormat format_out;
-		CPUClass cpu;
-	};
-
-	struct resize_params {
-		const resize::Filter *filter;
-		PixelType type;
-		unsigned depth;
-
-		unsigned width_in;
-		unsigned height_in;
-		unsigned width_out;
-		unsigned height_out;
-
-		double shift_w;
-		double shift_h;
-		double subwidth;
-		double subheight;
-
-		CPUClass cpu;
-	};
-
 	typedef std::vector<std::unique_ptr<ImageFilter>> filter_list;
 
 	virtual ~FilterFactory() = 0;
 
-	virtual filter_list create_colorspace(const colorspace_params &params) = 0;
+	virtual filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) = 0;
 
-	virtual filter_list create_depth(const depth_params &params) = 0;
+	virtual filter_list create_depth(const depth::DepthConversion &conv) = 0;
 
-	virtual filter_list create_resize(const resize_params &params) = 0;
+	virtual filter_list create_resize(const resize::ResizeConversion &conv) = 0;
 };
 
 class DefaultFilterFactory : public FilterFactory {
 public:
-	filter_list create_colorspace(const colorspace_params &params) override;
+	filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) override;
 
-	filter_list create_depth(const depth_params &params) override;
+	filter_list create_depth(const depth::DepthConversion &conv) override;
 
-	filter_list create_resize(const resize_params &params) override;
+	filter_list create_resize(const resize::ResizeConversion &conv) override;
 };
 
 

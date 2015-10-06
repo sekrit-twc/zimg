@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/pixel.h"
@@ -18,12 +19,12 @@ namespace colorspace {;
 
 namespace {;
 
-class ColorspaceConversion final : public graph::ImageFilterBase {
+class ColorspaceConversionImpl final : public graph::ImageFilterBase {
 	std::vector<std::unique_ptr<Operation>> m_operations;
 	unsigned m_width;
 	unsigned m_height;
 public:
-	ColorspaceConversion(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu) :
+	ColorspaceConversionImpl(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu) :
 		m_width{ width },
 		m_height{ height }
 	{
@@ -108,15 +109,25 @@ bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
 }
 
 
-graph::ImageFilter *create_colorspace(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu)
+ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
+	width{ width },
+	height{ height },
+	csp_in{},
+	csp_out{},
+	cpu{ CPUClass::CPU_NONE }
 {
-	if (in == out) {
+}
+
+
+std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const
+{
+	if (csp_in == csp_out) {
 		std::unique_ptr<graph::ImageFilter> filter{ new graph::CopyFilter{ width, height, PixelType::FLOAT } };
 		std::unique_ptr<graph::ImageFilter> mux{ new graph::MuxFilter{ filter.get(), nullptr } };
 		filter.release();
-		return mux.release();
+		return mux;
 	} else {
-		return new ColorspaceConversion{ width, height, in, out, cpu };
+		return std::unique_ptr<graph::ImageFilter>{ new ColorspaceConversionImpl{ width, height, csp_in, csp_out, cpu } };
 	}
 }
 

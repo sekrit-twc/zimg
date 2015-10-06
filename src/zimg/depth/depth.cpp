@@ -1,3 +1,4 @@
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/pixel.h"
 #include "graph/copy_filter.h"
@@ -23,21 +24,26 @@ bool is_lossless_conversion(const PixelFormat &pixel_in, const PixelFormat &pixe
 } // namespace
 
 
-graph::ImageFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+DepthConversion::DepthConversion(unsigned width, unsigned height) :
+	width{ width },
+	height{ height },
+	pixel_in{},
+	pixel_out{},
+	dither_type{ DitherType::DITHER_NONE },
+	cpu{ CPUClass::CPU_NONE }
 {
-	try
-	{
-		if (pixel_in == pixel_out)
-			return new graph::CopyFilter{ width, height, pixel_in.type };
-		else if (is_lossless_conversion(pixel_in, pixel_out))
-			return create_left_shift(width, height, pixel_in, pixel_out, cpu);
-		else if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)
-			return create_convert_to_float(width, height, pixel_in, pixel_out, cpu);
-		else
-			return create_dither(type, width, height, pixel_in, pixel_out, cpu);
-	} catch (const std::bad_alloc &) {
-		throw error::OutOfMemory{};
-	}
+}
+
+std::unique_ptr<graph::ImageFilter> DepthConversion::create() const
+{
+	if (pixel_in == pixel_out)
+		return std::unique_ptr<graph::ImageFilter>{ new graph::CopyFilter{ width, height, pixel_in.type } };
+	else if (is_lossless_conversion(pixel_in, pixel_out))
+		return std::unique_ptr<graph::ImageFilter>{ create_left_shift(width, height, pixel_in, pixel_out, cpu) };
+	else if (pixel_out.type == PixelType::HALF || pixel_out.type == PixelType::FLOAT)
+		return std::unique_ptr<graph::ImageFilter>{ create_convert_to_float(width, height, pixel_in, pixel_out, cpu) };
+	else
+		return std::unique_ptr<graph::ImageFilter>{ create_dither(dither_type, width, height, pixel_in, pixel_out, cpu) };
 }
 
 } // namespace depth

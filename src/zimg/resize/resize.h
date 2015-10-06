@@ -3,8 +3,9 @@
 #ifndef ZIMG_RESIZE_RESIZE_H_
 #define ZIMG_RESIZE_RESIZE_H_
 
+#include <memory>
 #include <utility>
-#include "graph/image_filter.h"
+#include "common/builder.h"
 
 namespace zimg {;
 
@@ -22,9 +23,29 @@ namespace resize {;
 
 class Filter;
 
-std::pair<graph::ImageFilter *, graph::ImageFilter *> create_resize(
-	const Filter &filter, PixelType type, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-	double shift_w, double shift_h, double subwidth, double subheight, CPUClass cpu);
+struct ResizeConversion {
+	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
+
+	unsigned src_width;
+	unsigned src_height;
+	PixelType type;
+
+#include "common/builder.h"
+	BUILDER_MEMBER(unsigned, depth);
+	BUILDER_MEMBER(const Filter *, filter);
+	BUILDER_MEMBER(unsigned, dst_width);
+	BUILDER_MEMBER(unsigned, dst_height);
+	BUILDER_MEMBER(double, shift_w);
+	BUILDER_MEMBER(double, shift_h);
+	BUILDER_MEMBER(double, subwidth);
+	BUILDER_MEMBER(double, subheight);
+	BUILDER_MEMBER(CPUClass, cpu);
+#undef BUILDER_MEMBER
+
+	ResizeConversion(unsigned src_width, unsigned src_height, PixelType type);
+
+	filter_pair create() const;
+};
 
 } // namespace resize
 } // namespace zimg

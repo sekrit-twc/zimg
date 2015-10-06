@@ -3,7 +3,9 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_H_
 #define ZIMG_UNRESIZE_UNRESIZE_H_
 
+#include <memory>
 #include <utility>
+#include "common/builder.h"
 
 namespace zimg {;
 
@@ -95,9 +97,25 @@ namespace unresize {;
  *
  * Generalization to two dimensions is done by processing each dimension.
  */
-std::pair<graph::ImageFilter *, graph::ImageFilter *> create_unresize(
-	PixelType type, unsigned src_Width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-	double shift_w, double shift_h, CPUClass cpu);
+struct UnresizeConversion {
+	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
+
+	unsigned up_width;
+	unsigned up_height;
+	PixelType type;
+
+#include "common/builder.h"
+	BUILDER_MEMBER(unsigned, orig_width);
+	BUILDER_MEMBER(unsigned, orig_height);
+	BUILDER_MEMBER(double, shift_w);
+	BUILDER_MEMBER(double, shift_h);
+	BUILDER_MEMBER(CPUClass, cpu);
+#undef BUILDER_MEMBER
+
+	UnresizeConversion(unsigned up_width, unsigned up_height, PixelType type);
+
+	filter_pair create() const;
+};
 
 } // namespace unresize
 } // namespace zimg

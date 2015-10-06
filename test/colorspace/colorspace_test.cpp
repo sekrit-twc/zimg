@@ -1,5 +1,4 @@
 #include <memory>
-#include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "colorspace/colorspace_param.h"
 #include "colorspace/colorspace.h"
@@ -16,9 +15,11 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned h = 480;
 
 	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
-	std::unique_ptr<zimg::graph::ImageFilter> convert{
-		zimg::colorspace::create_colorspace(w, h, csp_in, csp_out, zimg::CPUClass::CPU_NONE)
-	};
+	auto convert = zimg::colorspace::ColorspaceConversion{ w, h, }.
+		set_csp_in(csp_in).
+		set_csp_out(csp_out).
+		create();
+
 	validate_filter(convert.get(), w, h, format, expected_sha1);
 }
 

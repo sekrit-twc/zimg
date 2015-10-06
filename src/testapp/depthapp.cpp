@@ -162,8 +162,13 @@ int depth_main(int argc, char **argv)
 	std::unique_ptr<zimg::graph::ImageFilter> filter;
 	std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
 
-	filter.reset(zimg::depth::create_depth(
-		args.dither, src_frame.width(), src_frame.height(), args.format_in, args.format_out, args.cpu));
+	auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }.
+		set_pixel_in(args.format_in).
+		set_pixel_out(args.format_out).
+		set_dither_type(args.dither).
+		set_cpu(args.cpu);
+
+	filter = conv.create();
 
 	if (src_frame.planes() >= 3 && is_yuv) {
 		zimg::PixelFormat format_in_uv = args.format_in;
@@ -172,8 +177,7 @@ int depth_main(int argc, char **argv)
 		format_in_uv.chroma = true;
 		format_out_uv.chroma = true;
 
-		filter_uv.reset(zimg::depth::create_depth(
-			args.dither, src_frame.width(), src_frame.height(), format_in_uv, format_out_uv, args.cpu));
+		filter_uv = conv.set_pixel_in(format_in_uv).set_pixel_out(format_out_uv).create();
 	}
 
 	execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);

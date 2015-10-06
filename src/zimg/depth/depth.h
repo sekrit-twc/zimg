@@ -4,6 +4,8 @@
 #define ZIMG_DEPTH_DEPTH_H_
 
 #include <memory>
+#include "common/builder.h"
+#include "common/pixel.h"
 
 namespace zimg {;
 
@@ -26,7 +28,31 @@ enum class DitherType {
 	DITHER_ERROR_DIFFUSION
 };
 
-graph::ImageFilter *create_depth(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+struct DepthConversion {
+	unsigned width;
+	unsigned height;
+
+#include "common/builder.h"
+	BUILDER_MEMBER(PixelFormat, pixel_in);
+	BUILDER_MEMBER(PixelFormat, pixel_out);
+	BUILDER_MEMBER(DitherType, dither_type);
+	BUILDER_MEMBER(CPUClass, cpu);
+#undef BUILDER_MEMBER
+
+	DepthConversion(unsigned width, unsigned height);
+
+	DepthConversion &set_pixel_in(PixelType val)
+	{
+		return set_pixel_in(default_pixel_format(val));
+	}
+
+	DepthConversion &set_pixel_out(PixelType val)
+	{
+		return set_pixel_out(default_pixel_format(val));
+	}
+
+	std::unique_ptr<graph::ImageFilter> create() const;
+};
 
 } // namespace depth
 } // namespace zimg

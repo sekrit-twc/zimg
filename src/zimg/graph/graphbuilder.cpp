@@ -1,10 +1,7 @@
 #include <iterator>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "colorspace/colorspace.h"
-#include "depth/depth.h"
 #include "resize/filter.h"
-#include "resize/resize.h"
 #include "filtergraph.h"
 #include "mux_filter.h"
 #include "graphbuilder.h"
@@ -160,31 +157,23 @@ FilterFactory::~FilterFactory()
 {
 }
 
-auto DefaultFilterFactory::create_colorspace(const colorspace_params &params) -> filter_list
+auto DefaultFilterFactory::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
 {
-	std::unique_ptr<ImageFilter> filter{
-		colorspace::create_colorspace(params.width, params.height, params.csp_in, params.csp_out, params.cpu)
-	};
-
+	auto filter = conv.create();
 	return{ std::make_move_iterator(&filter), std::make_move_iterator(&filter + 1) };
 }
 
-auto DefaultFilterFactory::create_depth(const depth_params &params) -> filter_list
+auto DefaultFilterFactory::create_depth(const depth::DepthConversion &conv) -> filter_list
 {
-	std::unique_ptr<ImageFilter> filter{
-		depth::create_depth(params.type, params.width, params.height, params.format_in, params.format_out, params.cpu)
-	};
-
+	auto filter = conv.create();
 	return{ std::make_move_iterator(&filter), std::make_move_iterator(&filter + 1) };
 }
 
-auto DefaultFilterFactory::create_resize(const resize_params &params) -> filter_list
+auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -> filter_list
 {
-	auto filter_pair = resize::create_resize(*params.filter, params.type, params.depth,
-	                                         params.width_in, params.height_in, params.width_out, params.height_out,
-	                                         params.shift_w, params.shift_h, params.subwidth, params.subheight, params.cpu);
-	std::unique_ptr<ImageFilter> filters[2] = { std::unique_ptr<ImageFilter>{ filter_pair.first}, std::unique_ptr<ImageFilter>{ filter_pair.second } };
+	auto filter_pair = conv.create();
 
+	std::unique_ptr<ImageFilter> filters[2] = { std::move(filter_pair.first), std::move(filter_pair.second) };
 	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 2) };
 }
 
@@ -274,15 +263,12 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 
 	CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
 
-	FilterFactory::colorspace_params csp_params{
-		m_state.width,
-		m_state.height,
-		m_state.colorspace,
-		colorspace,
-		cpu
-	};
+	auto conv = colorspace::ColorspaceConversion{ m_state.width, m_state.height }.
+		set_csp_in(m_state.colorspace).
+		set_csp_out(colorspace).
+		set_cpu(cpu);
 
-	for (auto &&filter : m_factory->create_colorspace(csp_params)) {
+	for (auto &&filter : m_factory->create_colorspace(conv)) {
 		attach_filter(std::move(filter));
 	}
 
@@ -305,25 +291,22 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
 	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::DITHER_NONE;
 
-	FilterFactory::depth_params depth_params{
-		m_state.width,
-		m_state.height,
-		dither_type,
-		src_format,
-		format,
-		cpu
-	};
+	auto conv = depth::DepthConversion{ m_state.width, m_state.height }.
+		set_pixel_in(src_format).
+		set_pixel_out(format).
+		set_dither_type(dither_type).
+		set_cpu(cpu);
 
-	FilterFactory::filter_list filter_list = m_factory->create_depth(depth_params);
+	FilterFactory::filter_list filter_list = m_factory->create_depth(conv);
 	FilterFactory::filter_list filter_list_uv;
 
 	if (is_yuv(m_state)) {
-		depth_params.width >>= m_state.subsample_w;
-		depth_params.height >>= m_state.subsample_h;
-		depth_params.format_in.chroma = true;
-		depth_params.format_out.chroma = true;
+		conv.width >>= m_state.subsample_w;
+		conv.height >>= m_state.subsample_h;
+		conv.pixel_in.chroma = true;
+		conv.pixel_out.chroma = true;
 
-		filter_list_uv = m_factory->create_depth(depth_params);
+		filter_list_uv = m_factory->create_depth(conv);
 	} else if (is_rgb(m_state)) {
 		for (auto &&filter : filter_list) {
 			std::unique_ptr<ImageFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
@@ -398,22 +381,18 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 	if (do_resize_luma) {
 		double extra_shift_h = luma_shift_factor(m_state.parity, m_state.height, spec.height);
 
-		FilterFactory::resize_params resize_params{
-			resample_filter,
-			m_state.type,
-			m_state.depth,
-			m_state.width,
-			m_state.height,
-			spec.width,
-			spec.height,
-			spec.shift_w,
-			spec.shift_h + extra_shift_h,
-			spec.subwidth,
-			spec.subheight,
-			cpu
-		};
+		auto conv = resize::ResizeConversion{ m_state.width, m_state.height, m_state.type }.
+			set_depth(m_state.depth).
+			set_filter(resample_filter).
+			set_dst_width(spec.width).
+			set_dst_height(spec.height).
+			set_shift_w(spec.shift_w).
+			set_shift_h(spec.shift_h + extra_shift_h).
+			set_subwidth(spec.subwidth).
+			set_subheight(spec.subheight).
+			set_cpu(cpu);
 
-		filter_list = m_factory->create_resize(resize_params);
+		filter_list = m_factory->create_resize(conv);
 
 		if (is_rgb(m_state)) {
 			for (auto &&filter : filter_list) {
@@ -435,22 +414,18 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 		unsigned chroma_width_out = spec.width >> subsample_w;
 		unsigned chroma_height_out = spec.height >> subsample_h;
 
-		FilterFactory::resize_params resize_params{
-			resample_filter_uv,
-			m_state.type,
-			m_state.depth,
-			chroma_width_in,
-			chroma_height_in,
-			chroma_width_out,
-			chroma_height_out,
-			spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w,
-			spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h,
-			spec.subwidth / (1 << m_state.subsample_w),
-			spec.subheight / (1 << m_state.subsample_h),
-			cpu
-		};
+		auto conv = resize::ResizeConversion{ chroma_width_in, chroma_height_in, m_state.type }.
+			set_depth(m_state.depth).
+			set_filter(resample_filter_uv).
+			set_dst_width(chroma_width_out).
+			set_dst_height(chroma_height_out).
+			set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w).
+			set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h).
+			set_subwidth(spec.subwidth / (1 << m_state.subsample_w)).
+			set_subheight(spec.subheight / (1 << m_state.subsample_h)).
+			set_cpu(cpu);
 
-		filter_list_uv = m_factory->create_resize(resize_params);
+		filter_list_uv = m_factory->create_resize(conv);
 	}
 
 	for (auto &&filter : filter_list) {

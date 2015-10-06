@@ -179,9 +179,12 @@ int colorspace_main(int argc, char **argv)
 	if (src_frame.is_yuv() != yuv_in)
 		std::cerr << "warning: input file is of different color family than declared format\n";
 
-	std::unique_ptr<zimg::graph::ImageFilter> convert{
-		zimg::colorspace::create_colorspace(src_frame.width(), src_frame.height(), args.csp_in, args.csp_out, args.cpu)
-	};
+	auto convert = zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height() }.
+		set_csp_in(args.csp_in).
+		set_csp_out(args.csp_out).
+		set_cpu(args.cpu).
+		create();
+
 	execute(convert.get(), &src_frame, &dst_frame, args.times);
 
 	if (args.visualise_path)

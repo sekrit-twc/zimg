@@ -102,20 +102,22 @@ int unresize_main(int argc, char **argv)
 
 	ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 
-	auto filter_pair = zimg::unresize::create_unresize(src_frame.pixel_type(), src_frame.width(), src_frame.height(),
-	                                                   dst_frame.width(), dst_frame.height(), args.shift_w, args.shift_h, args.cpu);
+	auto filter_pair = zimg::unresize::UnresizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }.
+		set_orig_width(dst_frame.width()).
+		set_orig_height(dst_frame.height()).
+		set_shift_w(args.shift_w).
+		set_shift_h(args.shift_h).
+		set_cpu(args.cpu).
+		create();
 
-	std::unique_ptr<zimg::graph::ImageFilter> filter_a{ filter_pair.first };
-	std::unique_ptr<zimg::graph::ImageFilter> filter_b{ filter_pair.second };
-
-	if (filter_b) {
-		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_a.get(), filter_b.get() } };
-		filter_a.release();
-		filter_b.release();
-		filter_a = std::move(pair);
+	if (filter_pair.second) {
+		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_pair.first.get(), filter_pair.second.get() } };
+		filter_pair.first.release();
+		filter_pair.second.release();
+		filter_pair.first = std::move(pair);
 	}
 
-	execute(filter_a.get(), &src_frame, &dst_frame, args.times);
+	execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 
 	if (args.visualise_path)
 		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);

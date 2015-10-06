@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <string>
 #include "common/align.h"
-#include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
@@ -287,9 +286,6 @@ public:
 
 zimg::graph::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
-	const zimg::depth::DitherType dither = zimg::depth::DitherType::DITHER_NONE;
-	const zimg::CPUClass cpu = zimg::CPUClass::CPU_NONE;
-
 	bool color = spec.planes >= 3;
 
 	std::unique_ptr<zimg::graph::FilterGraph> graph{
@@ -302,9 +298,11 @@ zimg::graph::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned w
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
-		std::unique_ptr<zimg::graph::ImageFilter> filter{
-			zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu)
-		};
+		auto conv = zimg::depth::DepthConversion{ width, height }.
+			set_pixel_in(src_format).
+			set_pixel_out(dst_format);
+
+		std::unique_ptr<zimg::graph::ImageFilter> filter{ conv.create() };
 
 		graph->attach_filter(filter.get());
 		filter.release();
@@ -313,7 +311,7 @@ zimg::graph::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned w
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter.reset(zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu));
+			filter = conv.set_pixel_in(src_format).set_pixel_out(dst_format).create();
 			graph->attach_filter_uv(filter.get());
 			filter.release();
 		}
@@ -457,9 +455,6 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 
 zimg::graph::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, unsigned depth_in, bool fullrange)
 {
-	const zimg::depth::DitherType dither = zimg::depth::DitherType::DITHER_NONE;
-	const zimg::CPUClass cpu = zimg::CPUClass::CPU_NONE;
-
 	bool color = spec.planes >= 3;
 
 	std::unique_ptr<zimg::graph::FilterGraph> graph{
@@ -473,9 +468,11 @@ zimg::graph::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned 
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
-		std::unique_ptr<zimg::graph::ImageFilter> filter{
-			zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu)
-		};
+		auto conv = zimg::depth::DepthConversion{ width, height }.
+			set_pixel_in(src_format).
+			set_pixel_out(dst_format);
+
+		std::unique_ptr<zimg::graph::ImageFilter> filter{ conv.create() };
 
 		graph->attach_filter(filter.get());
 		filter.release();
@@ -484,7 +481,7 @@ zimg::graph::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned 
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter.reset(zimg::depth::create_depth(dither, width, height, src_format, dst_format, cpu));
+			filter = conv.set_pixel_in(src_format).set_pixel_out(dst_format).create();
 			graph->attach_filter_uv(filter.get());
 			filter.release();
 		}

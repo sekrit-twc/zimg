@@ -3,6 +3,10 @@
 #ifndef ZIMG_COLORSPACE_COLORSPACE_H_
 #define ZIMG_COLORSPACE_COLORSPACE_H_
 
+#include <memory>
+#include <utility>
+#include "common/builder.h"
+
 namespace zimg {;
 
 enum class CPUClass;
@@ -69,7 +73,21 @@ struct ColorspaceDefinition {
 bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
 bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
 
-graph::ImageFilter *create_colorspace(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out, CPUClass cpu);
+
+struct ColorspaceConversion {
+	unsigned width;
+	unsigned height;
+
+#include "common/builder.h"
+	BUILDER_MEMBER(ColorspaceDefinition, csp_in);
+	BUILDER_MEMBER(ColorspaceDefinition, csp_out);
+	BUILDER_MEMBER(CPUClass, cpu);
+#undef BUILDER_MEMBER
+
+	ColorspaceConversion(unsigned width, unsigned height);
+
+	std::unique_ptr<graph::ImageFilter> create() const;
+};
 
 } // namespace colorspace
 } // namespace zimg
