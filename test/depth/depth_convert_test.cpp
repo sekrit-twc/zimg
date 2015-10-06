@@ -30,9 +30,7 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			zimg::PixelFormat fmt_out = zimg::default_pixel_format(pxout);
 			fmt_out.chroma = chroma;
 
-			std::unique_ptr<zimg::graph::ImageFilter> convert{
-				zimg::depth::DepthConversion{ w, h }.set_pixel_in(fmt_in).set_pixel_out(fmt_out).create()
-			};
+			auto convert = zimg::depth::DepthConversion{ w, h }.set_pixel_in(fmt_in).set_pixel_out(fmt_out).create();
 			validate_filter(convert.get(), w, h, fmt_in, expected_sha1[sha1_idx++]);
 		}
 	}
@@ -150,9 +148,7 @@ TEST(DepthConvertTest, test_non_full_integer)
 		zimg::PixelFormat dst_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
 		dst_format.chroma = format.chroma;
 
-		std::unique_ptr<zimg::graph::ImageFilter> convert{
-			zimg::depth::DepthConversion{ w, h, }.set_pixel_in(format).set_pixel_out(dst_format).create()
-		};
+		auto convert = zimg::depth::DepthConversion{ w, h, }.set_pixel_in(format).set_pixel_out(dst_format).create();
 		validate_filter(convert.get(), w, h, format, expected_sha1[idx++]);
 	}
 }

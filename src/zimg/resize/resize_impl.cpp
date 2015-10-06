@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "filter.h"
@@ -257,13 +258,13 @@ unsigned ResizeImplV::get_max_buffering() const
 }
 
 
-graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-                                       double shift, double subwidth, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+                                                       double shift, double subwidth, CPUClass cpu)
 {
 	if (src_width != dst_width && src_height != dst_height)
 		throw error::InternalError{ "cannot resize both width and height" };
 
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	unsigned src_dim = horizontal ? src_width : src_height;
 	unsigned dst_dim = horizontal ? dst_width : dst_height;
@@ -274,10 +275,10 @@ graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool hor
 	      create_resize_impl_h_x86(filter_ctx, dst_height, type, depth, cpu) :
 	      create_resize_impl_v_x86(filter_ctx, dst_width, type, depth, cpu);
 #endif
-	if (!ret)
-		ret = horizontal ?
-		      static_cast<graph::ImageFilter *>(new ResizeImplH_C{ filter_ctx, dst_height, type, depth }) :
-		      new ResizeImplV_C{ filter_ctx, dst_width, type, depth };
+	if (!ret && horizontal)
+		ret = ztd::make_unique<ResizeImplH_C>(filter_ctx, dst_height, type, depth);
+	if (!ret && !horizontal)
+		ret = ztd::make_unique<ResizeImplV_C>(filter_ctx, dst_width, type, depth);
 
 	return ret;
 }

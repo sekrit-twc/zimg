@@ -36,7 +36,7 @@ private:
 
 	unsigned get_num_planes() const;
 public:
-	PairFilter(zimg::graph::ImageFilter *first, zimg::graph::ImageFilter *second);
+	PairFilter(std::unique_ptr<zimg::graph::ImageFilter> &&first, std::unique_ptr<zimg::graph::ImageFilter> &&second);
 
 	filter_flags get_flags() const override;
 

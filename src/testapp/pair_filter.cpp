@@ -15,7 +15,7 @@ struct PairFilter::cache_context {
 	unsigned col_right;
 };
 
-PairFilter::PairFilter(ImageFilter *first, ImageFilter *second) :
+PairFilter::PairFilter(std::unique_ptr<zimg::graph::ImageFilter> &&first, std::unique_ptr<zimg::graph::ImageFilter> &&second) :
 	m_first_flags{},
 	m_second_flags{},
 	m_first_attr{},
@@ -45,8 +45,8 @@ PairFilter::PairFilter(ImageFilter *first, ImageFilter *second) :
 	m_in_place = m_first_flags.in_place && m_second_flags.in_place && m_first_attr.type == m_second_attr.type;
 	m_color = !!m_first_flags.color;
 
-	m_first.reset(first);
-	m_second.reset(second);
+	m_first = std::move(first);
+	m_second = std::move(second);
 }
 
 ptrdiff_t PairFilter::get_cache_stride() const

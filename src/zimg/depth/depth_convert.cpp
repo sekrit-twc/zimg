@@ -4,6 +4,7 @@
 #include "common/align.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "depth_convert.h"
@@ -250,18 +251,18 @@ public:
 } // namespace
 
 
-graph::ImageFilter *create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	left_shift_func func = nullptr;
 
 	if (!func)
 		func = select_left_shift_func(pixel_in.type, pixel_out.type);
 
-	return new IntegerLeftShift{ func, width, height, pixel_in, pixel_out };
+	return ztd::make_unique<IntegerLeftShift>(func, width, height, pixel_in, pixel_out);
 }
 
 
-graph::ImageFilter *create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;
@@ -284,7 +285,7 @@ graph::ImageFilter *create_convert_to_float(unsigned width, unsigned height, con
 			f16c = float_to_half_n;
 	}
 
-	return new ConvertToFloat{ func, f16c, width, height, pixel_in, pixel_out };
+	return ztd::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth

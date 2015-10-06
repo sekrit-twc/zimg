@@ -4,6 +4,7 @@
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/copy_filter.h"
@@ -121,14 +122,10 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 
 std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const
 {
-	if (csp_in == csp_out) {
-		std::unique_ptr<graph::ImageFilter> filter{ new graph::CopyFilter{ width, height, PixelType::FLOAT } };
-		std::unique_ptr<graph::ImageFilter> mux{ new graph::MuxFilter{ filter.get(), nullptr } };
-		filter.release();
-		return mux;
-	} else {
-		return std::unique_ptr<graph::ImageFilter>{ new ColorspaceConversionImpl{ width, height, csp_in, csp_out, cpu } };
-	}
+	if (csp_in == csp_out)
+		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
+	else
+		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, cpu);
 }
 
 } // namespace colorspace

@@ -4,6 +4,7 @@
 #define ZIMG_COLORSPACE_GRAPH_H_
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace zimg {;
@@ -15,7 +16,7 @@ namespace colorspace {;
 struct ColorspaceDefinition;
 class Operation;
 
-typedef std::function<Operation *(CPUClass)> OperationFactory;
+typedef std::function<std::unique_ptr<Operation> (CPUClass)> OperationFactory;
 
 /**
  * Find the shortest path between two colorspaces.

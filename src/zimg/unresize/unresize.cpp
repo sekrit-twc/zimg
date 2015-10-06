@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <memory>
 #include "common/cpuinfo.h"
+#include "common/make_unique.h"
 #include "graph/copy_filter.h"
 #include "unresize.h"
 #include "unresize_impl.h"
@@ -39,12 +40,12 @@ auto UnresizeConversion::create() const -> filter_pair
 	bool skip_v = (up_height == orig_height && shift_h == 0);
 
 	if (skip_h && skip_v) {
-		return{ std::unique_ptr<graph::ImageFilter>{ new graph::CopyFilter{ up_width, up_height, type } }, nullptr };
+		return{ ztd::make_unique<graph::CopyFilter>(up_width, up_height, type), nullptr };
 	} else if (skip_h) {
-		return{ std::unique_ptr<graph::ImageFilter>{ create_unresize_impl(type, false, up_width, up_height, orig_width, orig_height, shift_w, cpu) },
+		return{ create_unresize_impl(type, false, up_width, up_height, orig_width, orig_height, shift_w, cpu),
 		        nullptr };
 	} else if (skip_v) {
-		return{ std::unique_ptr<graph::ImageFilter>{ create_unresize_impl(type, true, up_width, up_height, orig_width, orig_height, shift_h, cpu) },
+		return{ create_unresize_impl(type, true, up_width, up_height, orig_width, orig_height, shift_h, cpu),
 		        nullptr };
 	} else {
 		bool h_first = unresize_h_first((double)orig_width / up_width, (double)orig_height / up_height);
@@ -52,11 +53,11 @@ auto UnresizeConversion::create() const -> filter_pair
 		std::unique_ptr<graph::ImageFilter> stage2;
 
 		if (h_first) {
-			stage1.reset(create_unresize_impl(type, true, up_width, up_height, orig_width, up_height, shift_w, cpu));
-			stage2.reset(create_unresize_impl(type, false, orig_width, up_height, orig_width, orig_height, shift_h, cpu));
+			stage1 = create_unresize_impl(type, true, up_width, up_height, orig_width, up_height, shift_w, cpu);
+			stage2 = create_unresize_impl(type, false, orig_width, up_height, orig_width, orig_height, shift_h, cpu);
 		} else {
-			stage1.reset(create_unresize_impl(type, false, up_width, up_height, up_width, orig_height, shift_h, cpu));
-			stage2.reset(create_unresize_impl(type, true, up_width, orig_height, orig_width, orig_height, shift_w, cpu));
+			stage1 = create_unresize_impl(type, false, up_width, up_height, up_width, orig_height, shift_h, cpu);
+			stage2 = create_unresize_impl(type, true, up_width, orig_height, orig_width, orig_height, shift_w, cpu);
 		}
 
 		return{ std::move(stage1), std::move(stage2) };

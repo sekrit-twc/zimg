@@ -6,6 +6,7 @@
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
@@ -647,22 +648,22 @@ public:
 } // namespace
 
 
-graph::ImageFilter *create_resize_impl2_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graph::ImageFilter> create_resize_impl2_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == zimg::PixelType::WORD)
-		ret = new ResizeImplH_U16_SSE2{ context, height, depth };
+		ret = ztd::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
 
 	return ret;
 }
 
-graph::ImageFilter *create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == zimg::PixelType::WORD)
-		ret = new ResizeImplV_U16_SSE2{ context, width, depth };
+		ret = ztd::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);
 
 	return ret;
 }

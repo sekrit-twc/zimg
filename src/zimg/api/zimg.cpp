@@ -8,6 +8,7 @@
 #include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
@@ -258,25 +259,25 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 	return search_enum_map(map, dither, "urecognized dither type");
 }
 
-zimg::resize::Filter *translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
+std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
 {
 	try {
 		switch (filter_type) {
 		case ZIMG_RESIZE_POINT:
-			return new zimg::resize::PointFilter{};
+			return ztd::make_unique<zimg::resize::PointFilter>();
 		case ZIMG_RESIZE_BILINEAR:
-			return new zimg::resize::BilinearFilter{};
+			return ztd::make_unique<zimg::resize::BilinearFilter>();
 		case ZIMG_RESIZE_BICUBIC:
 			param_a = std::isnan(param_a) ? 1.0 / 3.0 : param_a;
 			param_b = std::isnan(param_b) ? 1.0 / 3.0 : param_b;
-			return new zimg::resize::BicubicFilter{ param_a, param_b };
+			return ztd::make_unique<zimg::resize::BicubicFilter>(param_a, param_b);
 		case ZIMG_RESIZE_SPLINE16:
-			return new zimg::resize::Spline16Filter{};
+			return ztd::make_unique<zimg::resize::Spline16Filter>();
 		case ZIMG_RESIZE_SPLINE36:
-			return new zimg::resize::Spline36Filter{};
+			return ztd::make_unique<zimg::resize::Spline36Filter>();
 		case ZIMG_RESIZE_LANCZOS:
 			param_a = std::isnan(param_a) ? 3.0 : std::floor(param_a);
-			return new zimg::resize::LanczosFilter{ (int)param_a };
+			return ztd::make_unique<zimg::resize::LanczosFilter>((int)param_a);
 		default:
 			throw zimg::error::EnumOutOfRange{ "unrecognized resampling filter" };
 		}
@@ -381,11 +382,9 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 	zimg::graph::GraphBuilder::params params{};
 
 	if (src.version >= 2) {
-		params.filter.reset(translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b));
-		params.filter_uv.reset(translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv));
-
+		params.filter = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
+		params.filter_uv = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
 		params.dither_type = translate_dither(src.dither_type);
-
 		params.cpu = translate_cpu(src.cpu_type);
 	}
 
@@ -582,7 +581,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		return zimg::graph::GraphBuilder{}.set_factory(&factory).
 		                                   set_source(src_state).
 		                                   connect_graph(dst_state, params ? &graph_params : nullptr).
-		                                   complete_graph();
+		                                   complete_graph().release();
 	} catch (const zimg::error::Exception &) {
 		handle_exception(std::current_exception());
 		return nullptr;

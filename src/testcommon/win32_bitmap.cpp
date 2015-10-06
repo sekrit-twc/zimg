@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 #include "mmap.h"
 #include "win32_bitmap.h"
 
@@ -133,7 +134,7 @@ class WindowsBitmap::impl {
 		return row_size;
 	}
 public:
-	impl(MemoryMappedFile *mmap, bool writable) :
+	impl(std::unique_ptr<MemoryMappedFile> &&mmap, bool writable) :
 		m_mmap{},
 		m_bitmap{},
 		m_writable{ writable }
@@ -143,7 +144,7 @@ public:
 
 		m_bitmap = BitmapFileData{ mmap->size(), const_cast<void *>(mmap->read_ptr()), false };
 		m_bitmap.validate(mmap->size());
-		m_mmap.reset(mmap);
+		m_mmap = std::move(mmap);
 	}
 
 	impl(const char *path, int width, int height, int bit_count) :
@@ -213,19 +214,17 @@ public:
 WindowsBitmap::WindowsBitmap(const char *path, read_tag)
 {
 	std::unique_ptr<MemoryMappedFile> mmap{ new MemoryMappedFile{ path, MemoryMappedFile::READ_TAG} };
-	std::unique_ptr<impl> impl_{ new impl{ mmap.get(), false } };
+	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
 
-	mmap.release();
-	m_impl.swap(impl_);
+	m_impl = std::move(impl_);
 }
 
 WindowsBitmap::WindowsBitmap(const char *path, write_tag)
 {
 	std::unique_ptr<MemoryMappedFile> mmap{ new MemoryMappedFile{ path, MemoryMappedFile::WRITE_TAG } };
-	std::unique_ptr<impl> impl_{ new impl{ mmap.get(), false } };
+	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
 
-	mmap.release();
-	m_impl.swap(impl_);
+	m_impl = std::move(impl_);
 }
 
 WindowsBitmap::WindowsBitmap(const char *path, int width, int height, int bit_count) :

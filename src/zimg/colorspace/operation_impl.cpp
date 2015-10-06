@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "common/cpuinfo.h"
 #include "common/except.h"
+#include "common/make_unique.h"
 #include "colorspace_param.h"
 #include "matrix3.h"
 #include "operation.h"
@@ -164,29 +165,29 @@ MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 }
 
 
-Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
+std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
-	return new MatrixOperationC{ m };
+	return ztd::make_unique<MatrixOperationC>(m);
 }
 
-Operation *create_rec709_gamma_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu)
 {
-	return new Rec709GammaOperationC{};
+	return ztd::make_unique<Rec709GammaOperationC>();
 }
 
-Operation *create_rec709_inverse_gamma_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
-	return new Rec709InverseGammaOperationC{};
+	return ztd::make_unique<Rec709InverseGammaOperationC>();
 }
 
-Operation *create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)
 {
-	return new Rec2020CLToRGBOperationC{};
+	return ztd::make_unique<Rec2020CLToRGBOperationC>();
 }
 
-Operation *create_2020_cl_rgb_to_yuv_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(CPUClass cpu)
 {
-	return new Rec2020CLToYUVOperationC{};
+	return ztd::make_unique<Rec2020CLToYUVOperationC>();
 }
 
 } // namespace colorspace

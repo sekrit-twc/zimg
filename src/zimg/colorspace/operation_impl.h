@@ -61,7 +61,7 @@ protected:
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
  */
-Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu);
+std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass cpu);
 
 /**
  * Create operation consisting of applying Rec.709 transfer function.
@@ -69,14 +69,14 @@ Operation *create_matrix_operation(const Matrix3x3 &m, CPUClass cpu);
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
  */
-Operation *create_rec709_gamma_operation(CPUClass cpu);
+std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu);
 
 /**
  * Create operation consisting of inverting Rec.709 transfer function.
  *
  * @see create_rec709_gamma_operation
  */
-Operation *create_rec709_inverse_gamma_operation(CPUClass cpu);
+std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu);
 
 } // namespace colorspace
 } // namespace zimg

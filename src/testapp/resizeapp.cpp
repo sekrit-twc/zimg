@@ -5,6 +5,7 @@
 #include <regex>
 #include <string>
 #include "common/cpuinfo.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize/filter.h"
 #include "resize/resize.h"
@@ -22,23 +23,22 @@ bool is_set_pixel_format(const zimg::PixelFormat &format)
 	return format != zimg::PixelFormat{};
 }
 
-zimg::resize::Filter *create_filter(const char *filter, double param_a, double param_b)
+std::unique_ptr<zimg::resize::Filter> create_filter(const char *filter, double param_a, double param_b)
 {
 	if (!strcmp(filter, "point"))
-		return new zimg::resize::PointFilter{};
+		return ztd::make_unique<zimg::resize::PointFilter>();
 	else if (!strcmp(filter, "bilinear"))
-		return new zimg::resize::BilinearFilter{};
+		return ztd::make_unique<zimg::resize::BilinearFilter>();
 	else if (!strcmp(filter, "bicubic"))
-		return new zimg::resize::BicubicFilter{
+		return ztd::make_unique<zimg::resize::BicubicFilter>(
 			std::isnan(param_a) ? 1.0 / 3.0 : param_a,
-			std::isnan(param_a) ? 1.0 / 3.0 : param_b
-	};
+			std::isnan(param_a) ? 1.0 / 3.0 : param_b);
 	else if (!strcmp(filter, "spline16"))
-		return new zimg::resize::Spline16Filter{};
+		return ztd::make_unique<zimg::resize::Spline16Filter>();
 	else if (!strcmp(filter, "spline36"))
-		return new zimg::resize::Spline36Filter{};
+		return ztd::make_unique<zimg::resize::Spline36Filter>();
 	else if (!strcmp(filter, "lanczos"))
-		return new zimg::resize::LanczosFilter{ std::isnan(param_a) ? 4 : (int)param_a };
+		return ztd::make_unique<zimg::resize::LanczosFilter>(std::isnan(param_a) ? 4 : (int)param_a);
 	else
 		return nullptr;
 }
@@ -67,7 +67,7 @@ int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 		if (match.size() >= 3 && match[3].length())
 			param_b = std::stod(match[3]);
 
-		filter->reset(create_filter(filter_str.c_str(), param_a, param_b));
+		*filter = create_filter(filter_str.c_str(), param_a, param_b);
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
@@ -161,7 +161,7 @@ int resize_main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
-	args.filter.reset(create_filter("bicubic", NAN, NAN));
+	args.filter = create_filter("bicubic", NAN, NAN);
 	args.param_a = NAN;
 	args.param_b = NAN;
 	args.shift_w = NAN;
@@ -204,12 +204,8 @@ int resize_main(int argc, char **argv)
 		set_cpu(args.cpu).
 		create();
 
-	if (filter_pair.second) {
-		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_pair.first.get(), filter_pair.second.get() } };
-		filter_pair.first.release();
-		filter_pair.second.release();
-		filter_pair.first = std::move(pair);
-	}
+	if (filter_pair.second)
+		filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
 
 	execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 

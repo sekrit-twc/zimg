@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "common/align.h"
 #include "common/alloc.h"
 #include "common/except.h"
@@ -7,7 +8,7 @@
 namespace zimg{;
 namespace graph {;
 
-MuxFilter::MuxFilter(ImageFilter *filter, ImageFilter *filter_uv) :
+MuxFilter::MuxFilter(std::unique_ptr<ImageFilter> &&filter, std::unique_ptr<ImageFilter> &&filter_uv) :
 	m_flags{}
 {
 	ImageFilter::filter_flags filter_flags = filter->get_flags();
@@ -49,8 +50,8 @@ MuxFilter::MuxFilter(ImageFilter *filter, ImageFilter *filter_uv) :
 	m_flags.entire_plane = filter_flags.entire_plane || filter_flags_uv.entire_plane;
 	m_flags.color = true;
 
-	m_filter.reset(filter);
-	m_filter_uv.reset(filter_uv);
+	m_filter = std::move(filter);
+	m_filter_uv = std::move(filter_uv);
 }
 
 ImageFilter::filter_flags MuxFilter::get_flags() const

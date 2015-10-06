@@ -25,8 +25,8 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 		return;
 	}
 
-	std::unique_ptr<zimg::graph::ImageFilter> filter_c{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE) };
-	std::unique_ptr<zimg::graph::ImageFilter> filter_sse2{ zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2) };
+	auto filter_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE);
+	auto filter_sse2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2);
 
 	validate_filter(filter_sse2.get(), w, h, pixel_in, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);

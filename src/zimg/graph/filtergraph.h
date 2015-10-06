@@ -48,9 +48,9 @@ public:
 
 	~FilterGraph();
 
-	void attach_filter(ImageFilter *filter);
+	void attach_filter(std::unique_ptr<ImageFilter> &&filter);
 
-	void attach_filter_uv(ImageFilter *filter);
+	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter);
 
 	void color_to_grey();
 

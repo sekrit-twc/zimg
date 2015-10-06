@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <memory>
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/mux_filter.h"
 #include "graph/image_filter.h"
@@ -29,14 +30,13 @@ TEST(MuxFilterTest, test_one_filter)
 			flags.has_state = !!state;
 			flags.entire_row = !!entire_row;
 
-			std::unique_ptr<SplatFilter<uint8_t>> filter{ new SplatFilter<uint8_t>{ w, h, type, flags } };
+			auto filter = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
 			filter->set_horizontal_support(hsupport);
 			filter->set_vertical_support(vsupport);
 			filter->set_output_val(test_byte);
 			filter->enable_input_checking(false);
 
-			zimg::graph::MuxFilter mux{ filter.get(), nullptr };
-			filter.release();
+			zimg::graph::MuxFilter mux{ std::move(filter) };
 
 			auto mux_flags = mux.get_flags();
 			auto mux_attr = mux.get_image_attributes();
@@ -90,8 +90,8 @@ TEST(MuxFilterTest, test_two_filter)
 			flags2.has_state = !!state;
 			flags2.entire_row = !!entire_row;
 
-			std::unique_ptr<SplatFilter<uint8_t>> filter1{ new SplatFilter<uint8_t>{ w, h, type, flags1 } };
-			std::unique_ptr<SplatFilter<uint8_t>> filter2{ new SplatFilter<uint8_t>{ w, h, type, flags2 } };
+			auto filter1 = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags1);
+			auto filter2 = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags2);
 
 			filter1->set_horizontal_support(hsupport);
 			filter1->set_vertical_support(vsupport);
@@ -103,9 +103,7 @@ TEST(MuxFilterTest, test_two_filter)
 			filter2->set_output_val(test_byte2);
 			filter2->enable_input_checking(false);
 
-			zimg::graph::MuxFilter mux{ filter1.get(), filter2.get() };
-			filter1.release();
-			filter2.release();
+			zimg::graph::MuxFilter mux{ std::move(filter1), std::move(filter2) };
 
 			auto mux_flags = mux.get_flags();
 			auto mux_attr = mux.get_image_attributes();

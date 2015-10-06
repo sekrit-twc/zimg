@@ -2,6 +2,7 @@
 #include <memory>
 #include "common/align.h"
 #include "common/cpuinfo.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "unresize/unresize.h"
 #include "apps.h"
@@ -110,12 +111,8 @@ int unresize_main(int argc, char **argv)
 		set_cpu(args.cpu).
 		create();
 
-	if (filter_pair.second) {
-		std::unique_ptr<zimg::graph::ImageFilter> pair{ new PairFilter{ filter_pair.first.get(), filter_pair.second.get() } };
-		filter_pair.first.release();
-		filter_pair.second.release();
-		filter_pair.first = std::move(pair);
-	}
+	if (filter_pair.second)
+		filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
 
 	execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 

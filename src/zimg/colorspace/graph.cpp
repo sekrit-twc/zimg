@@ -45,8 +45,7 @@ bool is_valid_csp(const ColorspaceDefinition &csp)
 }
 
 class ColorspaceGraph {
-	typedef std::function<Operation *(CPUClass)> operation_type;
-	typedef std::pair<size_t, operation_type> edge_type;
+	typedef std::pair<size_t, OperationFactory> edge_type;
 
 	std::vector<ColorspaceDefinition> m_vertices;
 	std::vector<std::vector<edge_type>> m_edge;
@@ -65,14 +64,14 @@ class ColorspaceGraph {
 		return it - m_vertices.begin();
 	}
 
-	void link(const ColorspaceDefinition &a, const ColorspaceDefinition &b, operation_type op)
+	void link(const ColorspaceDefinition &a, const ColorspaceDefinition &b, OperationFactory op)
 	{
 		m_edge[index_of(a)].emplace_back(index_of(b), op);
 	}
 
-	std::vector<operation_type> bfs(size_t in, size_t out) const
+	std::vector<OperationFactory> bfs(size_t in, size_t out) const
 	{
-		std::vector<operation_type> path;
+		std::vector<OperationFactory> path;
 		std::vector<size_t> queue;
 		std::vector<size_t> visited;
 		std::vector<size_t> parents(m_vertices.size());
@@ -163,7 +162,7 @@ class ColorspaceGraph {
 public:
 	static const ColorspaceGraph g_instance;
 
-	std::vector<operation_type> shortest_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out) const
+	std::vector<OperationFactory> shortest_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out) const
 	{
 		return bfs(index_of(in), index_of(out));
 	}

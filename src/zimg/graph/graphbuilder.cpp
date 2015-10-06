@@ -1,6 +1,7 @@
 #include <iterator>
 #include "common/cpuinfo.h"
 #include "common/except.h"
+#include "common/make_unique.h"
 #include "resize/filter.h"
 #include "filtergraph.h"
 #include "mux_filter.h"
@@ -201,8 +202,7 @@ void GraphBuilder::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 	if (!filter)
 		return;
 
-	m_graph->attach_filter(filter.get());
-	filter.release();
+	m_graph->attach_filter(std::move(filter));
 }
 
 void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
@@ -210,8 +210,7 @@ void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 	if (!filter)
 		return;
 
-	m_graph->attach_filter_uv(filter.get());
-	filter.release();
+	m_graph->attach_filter_uv(std::move(filter));
 }
 
 void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
@@ -309,9 +308,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		filter_list_uv = m_factory->create_depth(conv);
 	} else if (is_rgb(m_state)) {
 		for (auto &&filter : filter_list) {
-			std::unique_ptr<ImageFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
-			filter.release();
-			filter = std::move(mux);
+			filter = ztd::make_unique<MuxFilter>(std::move(filter));
 		}
 	}
 
@@ -396,9 +393,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 
 		if (is_rgb(m_state)) {
 			for (auto &&filter : filter_list) {
-				std::unique_ptr<ImageFilter> mux{ new MuxFilter{ filter.get(), nullptr } };
-				filter.release();
-				filter = std::move(mux);
+				filter = ztd::make_unique<MuxFilter>(std::move(filter));
 			}
 		}
 	}
@@ -455,7 +450,7 @@ GraphBuilder &GraphBuilder::set_source(const state &source)
 		throw error::InternalError{ "source already set" };
 
 	validate_state(source);
-	m_graph.reset(new zimg::graph::FilterGraph{ source.width, source.height, source.type, source.subsample_w, source.subsample_h, !is_greyscale(source) });
+	m_graph = ztd::make_unique<FilterGraph>(source.width, source.height, source.type, source.subsample_w, source.subsample_h, !is_greyscale(source));
 	m_state = source;
 
 	return *this;
@@ -521,10 +516,10 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	return *this;
 }
 
-FilterGraph *GraphBuilder::complete_graph()
+std::unique_ptr<FilterGraph> GraphBuilder::complete_graph()
 {
 	m_graph->complete();
-	return m_graph.release();
+	return std::move(m_graph);
 }
 
 } // namespace graph

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "unresize_impl.h"
 
@@ -200,22 +201,22 @@ unsigned UnresizeImplV::get_max_buffering() const
 }
 
 
-graph::ImageFilter *create_unresize_impl(PixelType type, bool horizontal, unsigned src_width, unsigned src_height,
-                                         unsigned dst_width, unsigned dst_height, double shift, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_unresize_impl(PixelType type, bool horizontal, unsigned src_width, unsigned src_height,
+                                                         unsigned dst_width, unsigned dst_height, double shift, CPUClass cpu)
 {
 	if (src_width != dst_width && src_height != dst_height)
 		throw error::InternalError{ "cannot unresize both width and height" };
 
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	unsigned src_dim = horizontal ? src_width : src_height;
 	unsigned dst_dim = horizontal ? dst_width : dst_height;
 	BilinearContext context = create_bilinear_context(dst_dim, src_dim, shift);
 
-	if (!ret)
-		ret = horizontal ?
-		      static_cast<graph::ImageFilter *>(new UnresizeImplH_C{ context, dst_height, type} ) :
-		      new UnresizeImplV_C{ context, dst_width, type };
+	if (!ret && horizontal)
+		ret = ztd::make_unique<UnresizeImplH_C>(context, dst_height, type);
+	if (!ret && !horizontal)
+		ret = ztd::make_unique<UnresizeImplV_C>(context, dst_width, type);
 
 	return ret;
 }

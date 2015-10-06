@@ -3,6 +3,7 @@
 #ifndef ZIMG_RESIZE_RESIZE_IMPL_H_
 #define ZIMG_RESIZE_RESIZE_IMPL_H_
 
+#include <memory>
 #include "graph/image_filter.h"
 #include "filter.h"
 
@@ -49,8 +50,8 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-graph::ImageFilter *create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-                                       double shift, double subwidth, CPUClass cpu);
+std::unique_ptr<graph::ImageFilter> create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
+                                                       double shift, double subwidth, CPUClass cpu);
 
 } // namespace resize
 } // namespace zimg

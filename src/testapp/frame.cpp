@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include "common/align.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
@@ -248,13 +249,13 @@ public:
 			size += static_cast<size_t>(m_linewidth[p]) * m_height[p];
 		}
 
-		if (write) {
-			m_handle.reset(new MemoryMappedFile{ spec.path.c_str(), size, MemoryMappedFile::CREATE_TAG });
-		} else {
-			m_handle.reset(new MemoryMappedFile{ spec.path.c_str(), MemoryMappedFile::READ_TAG });
-			if (m_handle->size() != size)
-				throw std::runtime_error{ "bad file size" };
-		}
+		if (write)
+			m_handle = ztd::make_unique<MemoryMappedFile>(spec.path.c_str(), size, MemoryMappedFile::CREATE_TAG);
+		else
+			m_handle = ztd::make_unique<MemoryMappedFile>(spec.path.c_str(), MemoryMappedFile::READ_TAG);
+
+		if (m_handle->size() != size)
+			throw std::runtime_error{ "bad file size" };
 
 		ptr = reinterpret_cast<char *>(const_cast<void *>(m_handle->read_ptr()));
 ;		for (unsigned p = 0; p < 3; ++p) {
@@ -284,13 +285,11 @@ public:
 	}
 };
 
-zimg::graph::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{
-		new zimg::graph::FilterGraph{ width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color }
-	};
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
 
 	if (type != spec.type) {
 		zimg::PixelFormat src_format = zimg::default_pixel_format(spec.type);
@@ -302,28 +301,23 @@ zimg::graph::FilterGraph *setup_read_graph(const PathSpecifier &spec, unsigned w
 			set_pixel_in(src_format).
 			set_pixel_out(dst_format);
 
-		std::unique_ptr<zimg::graph::ImageFilter> filter{ conv.create() };
-
-		graph->attach_filter(filter.get());
-		filter.release();
+		graph->attach_filter(conv.create());
 
 		if (color) {
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter = conv.set_pixel_in(src_format).set_pixel_out(dst_format).create();
-			graph->attach_filter_uv(filter.get());
-			filter.release();
+			graph->attach_filter_uv(conv.set_pixel_in(src_format).set_pixel_out(dst_format).create());
 		}
 	}
 
 	graph->complete();
-	return graph.release();
+	return graph;
 }
 
 ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_read_graph(spec, width, height, type, fullrange) };
+	auto graph = setup_read_graph(spec, width, height, type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, width, height, false };
@@ -338,7 +332,7 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	WindowsBitmap bmp_image{ spec.path.c_str(), WindowsBitmap::READ_TAG };
 	ImageFrame out_image{ (unsigned)bmp_image.width(), (unsigned)bmp_image.height(), type, 3 };
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange) };
+	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::graph::ImageBuffer line_buffer{};
@@ -389,7 +383,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	if (mmap_image.size() != static_cast<size_t>(mmap_linesize) * height)
 		throw std::runtime_error{ "bad image size" };
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_read_graph(spec, width, height, type, fullrange) };
+	auto graph = setup_read_graph(spec, width, height, type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::graph::ImageBuffer line_buffer{};
@@ -453,13 +447,12 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-zimg::graph::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, unsigned depth_in, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
+                                                            unsigned depth_in, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{
-		new zimg::graph::FilterGraph{ width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color }
-	};
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
 
 	if (type != spec.type || depth_in != (unsigned)zimg::default_pixel_format(type).depth) {
 		zimg::PixelFormat src_format = zimg::default_pixel_format(type);
@@ -472,28 +465,23 @@ zimg::graph::FilterGraph *setup_write_graph(const PathSpecifier &spec, unsigned 
 			set_pixel_in(src_format).
 			set_pixel_out(dst_format);
 
-		std::unique_ptr<zimg::graph::ImageFilter> filter{ conv.create() };
-
-		graph->attach_filter(filter.get());
-		filter.release();
+		graph->attach_filter(conv.create());
 
 		if (color) {
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			filter = conv.set_pixel_in(src_format).set_pixel_out(dst_format).create();
-			graph->attach_filter_uv(filter.get());
-			filter.release();
+			graph->attach_filter_uv(conv.set_pixel_in(src_format).set_pixel_out(dst_format).create());
 		}
 	}
 
 	graph->complete();
-	return graph.release();
+	return graph;
 }
 
 void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
+	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, frame.width(), frame.height(), true };
@@ -504,7 +492,7 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 {
 	WindowsBitmap bmp_image{ spec.path.c_str(), (int)frame.width(), (int)frame.height(), (int)frame.planes() * 8 };
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
+	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::graph::ImageBuffer line_buffer{};
@@ -550,7 +538,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 
 	MemoryMappedFile mmap_image{ spec.path.c_str(), static_cast<size_t>(mmap_linesize) * frame.height(), MemoryMappedFile::CREATE_TAG };
 
-	std::unique_ptr<zimg::graph::FilterGraph> graph{ setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange) };
+	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	zimg::graph::ImageBuffer line_buffer{};

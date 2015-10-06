@@ -31,7 +31,7 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			fmt_out.fullrange = fullrange;
 			fmt_out.chroma = chroma;
 
-			std::unique_ptr<zimg::graph::ImageFilter> dither{ zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE) };
+			auto dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE);
 			validate_filter(dither.get(), w, h, pxin, expected_sha1[sha1_idx++]);
 		}
 	}

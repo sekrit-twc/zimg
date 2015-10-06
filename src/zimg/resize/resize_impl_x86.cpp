@@ -1,15 +1,16 @@
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
+#include "graph/image_filter.h"
 #include "resize_impl_x86.h"
 
 namespace zimg {;
 namespace resize {;
 
-graph::ImageFilter *create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (cpu == CPUClass::CPU_AUTO) {
 		if (!ret && caps.sse)
@@ -22,10 +23,10 @@ graph::ImageFilter *create_resize_impl_h_x86(const FilterContext &context, unsig
 	return ret;
 }
 
-graph::ImageFilter *create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (cpu == CPUClass::CPU_AUTO) {
 		if (!ret && caps.sse2)

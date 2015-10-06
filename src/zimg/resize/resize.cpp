@@ -4,6 +4,7 @@
 #include "common/alloc.h"
 #include "common/cpuinfo.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/copy_filter.h"
 #include "graph/image_filter.h"
@@ -48,12 +49,12 @@ auto ResizeConversion::create() const -> filter_pair
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
 	if (skip_h && skip_v) {
-		return{ std::unique_ptr<graph::ImageFilter>{ new graph::CopyFilter{ src_width, src_height, type } }, nullptr };
+		return{ ztd::make_unique<graph::CopyFilter>(src_width, src_height, type), nullptr };
 	} else if (skip_h) {
-		return{ std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, false, depth, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu) },
+		return{ create_resize_impl(*filter, type, false, depth, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu),
 			    nullptr };
 	} else if (skip_v) {
-		return{ std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu) },
+		return{ create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu),
 		        nullptr };
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
@@ -61,11 +62,11 @@ auto ResizeConversion::create() const -> filter_pair
 		std::unique_ptr<graph::ImageFilter> stage2;
 
 		if (h_first) {
-			stage1 = std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu) };
-			stage2 = std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, false, depth, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu) };
+			stage1 = create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu);
+			stage2 = create_resize_impl(*filter, type, false, depth, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu);
 		} else {
-			stage1 = std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, false, depth, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu) };
-			stage2 = std::unique_ptr<graph::ImageFilter>{ create_resize_impl(*filter, type, true, depth, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu) };
+			stage1 = create_resize_impl(*filter, type, false, depth, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu);
+			stage2 = create_resize_impl(*filter, type, true, depth, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu);
 		}
 
 		return{ std::move(stage1), std::move(stage2) };

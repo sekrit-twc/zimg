@@ -3,6 +3,7 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
+#include <memory>
 #include "graph/image_filter.h"
 #include "bilinear.h"
 
@@ -51,8 +52,8 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-graph::ImageFilter *create_unresize_impl(PixelType type, bool horizontal, unsigned src_width, unsigned src_height,
-                                         unsigned dst_width, unsigned dst_height, double shift, CPUClass cpu);
+std::unique_ptr<graph::ImageFilter> create_unresize_impl(PixelType type, bool horizontal, unsigned src_width, unsigned src_height,
+                                                         unsigned dst_width, unsigned dst_height, double shift, CPUClass cpu);
 
 } // namespace unresize
 } // namespace zimg

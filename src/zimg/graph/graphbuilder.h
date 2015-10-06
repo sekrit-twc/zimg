@@ -138,7 +138,7 @@ public:
 
 	GraphBuilder &connect_graph(const state &target, const params *params);
 
-	FilterGraph *complete_graph();
+	std::unique_ptr<FilterGraph> complete_graph();
 };
 
 } // namespace graph

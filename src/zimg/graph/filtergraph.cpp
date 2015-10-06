@@ -5,6 +5,7 @@
 #include "common/alloc.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "copy_filter.h"
@@ -528,7 +529,7 @@ public:
 		m_data.source_info.color = color;
 	}
 
-	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, ImageFilter *filter) :
+	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, std::unique_ptr<ImageFilter> &&filter) :
 		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
@@ -541,10 +542,10 @@ public:
 		m_data.node_info.step = filter->get_simultaneous_lines();
 		m_data.node_info.is_uv = false;
 
-		m_filter.reset(filter);
+		m_filter = std::move(filter);
 	}
 
-	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, ImageFilter *filter) :
+	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, std::unique_ptr<ImageFilter> &&filter) :
 		m_data{ tag },
 		m_cache_lines{},
 		m_ref_count{},
@@ -557,7 +558,7 @@ public:
 		m_data.node_info.step = filter->get_simultaneous_lines();
 		m_data.node_info.is_uv = true;
 
-		m_filter.reset(filter);
+		m_filter = std::move(filter);
 	}
 
 	unsigned add_ref()
@@ -767,7 +768,8 @@ public:
 		if (subsample_w > 2 || subsample_h > 2)
 			throw error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
 
-		m_node_set.emplace_back(new GraphNode{ GraphNode::SOURCE, m_id_counter++, width, height, type, subsample_w, subsample_h, color });
+		m_node_set.emplace_back(
+			ztd::make_unique<GraphNode>(GraphNode::SOURCE, m_id_counter++, width, height, type, subsample_w, subsample_h, color));
 		m_head = m_node_set.back().get();
 		m_node = m_head;
 
@@ -775,7 +777,7 @@ public:
 			m_node_uv = m_head;
 	}
 
-	void attach_filter(ImageFilter *filter)
+	void attach_filter(std::unique_ptr<ImageFilter> &&filter)
 	{
 		check_incomplete();
 
@@ -795,7 +797,9 @@ public:
 			parent_uv = m_node_uv;
 		}
 
-		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, parent_uv, filter });
+		m_node_set.reserve(m_node_set.size() + 1);
+		m_node_set.emplace_back(
+			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, parent_uv, std::move(filter)));
 		m_node = m_node_set.back().get();
 
 		parent->add_ref();
@@ -806,17 +810,18 @@ public:
 			m_node_uv = m_node;
 	}
 
-	void attach_filter_uv(ImageFilter *filter)
+	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 	{
 		check_incomplete();
 
-		ImageFilter::filter_flags flags = filter->get_flags();
-		GraphNode *parent = m_node_uv;
-
-		if (flags.color)
+		if (filter->get_flags().color)
 			throw error::InternalError{ "cannot use color filter as UV filter" };
 
-		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER_UV, m_id_counter++, parent, filter });
+		GraphNode *parent = m_node_uv;
+
+		m_node_set.reserve(m_node_set.size() + 1);
+		m_node_set.emplace_back(
+			ztd::make_unique<GraphNode>(GraphNode::FILTER_UV, m_id_counter++, parent, std::move(filter)));
 		m_node_uv = m_node_set.back().get();
 		parent->add_ref();
 	}
@@ -828,14 +833,15 @@ public:
 		if (!m_node_uv)
 			throw error::InternalError{ "cannot remove chroma from greyscale image" };
 
-		auto attr = m_node->get_image_attributes();
-		std::unique_ptr<ImageFilter> filter{ new CopyFilter{ attr.width, attr.height, attr.type } };
+		ImageFilter::image_attributes attr = m_node->get_image_attributes();
 		GraphNode *parent = m_node;
 
-		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, nullptr, filter.get() });
+		m_node_set.reserve(m_node_set.size() + 1);
+		m_node_set.emplace_back(
+			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, nullptr,
+		                                ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type)));
 		m_node = m_node_set.back().get();
 		m_node_uv = nullptr;
-		filter.release();
 
 		parent->add_ref();
 	}
@@ -847,21 +853,19 @@ public:
 		if (m_node_uv)
 			throw error::InternalError{ "cannot add chroma to color image" };
 
-		std::unique_ptr<ImageFilter> filter{ new ColorExtendFilter{ m_node->get_image_attributes(), !yuv } };
+		ImageFilter::image_attributes attr = m_node->get_image_attributes();
 		GraphNode *parent = m_node;
 
-		m_node_set.emplace_back(new GraphNode{ GraphNode::FILTER, m_id_counter++, parent, nullptr, filter.get() });
+		m_node_set.emplace_back(
+			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, nullptr,
+										ztd::make_unique<ColorExtendFilter>(attr, !yuv)));
 		m_node = m_node_set.back().get();
 		m_node_uv = m_node;
-		filter.release();
 
 		parent->add_ref();
 
-		if (yuv) {
-			filter.reset(new ChromaInitializeFilter{ m_node->get_image_attributes(), subsample_w, subsample_h, depth });
-			attach_filter_uv(filter.get());
-			filter.release();
-		}
+		if (yuv)
+			attach_filter_uv(ztd::make_unique<ChromaInitializeFilter>(attr, subsample_w, subsample_h, depth));
 	}
 
 	void complete()
@@ -888,9 +892,9 @@ public:
 			throw error::InternalError{ "UV pixel type can not differ" };
 
 		if (m_node == m_head || m_node->get_ref())
-			attach_filter(new CopyFilter{ node_attr.width, node_attr.height, node_attr.type });
+			attach_filter(ztd::make_unique<CopyFilter>(node_attr.width, node_attr.height, node_attr.type));
 		if (m_node_uv && (m_node_uv == m_head || m_node_uv->get_ref()))
-			attach_filter_uv(new CopyFilter{ node_attr_uv.width, node_attr_uv.height, node_attr_uv.type });
+			attach_filter_uv(ztd::make_unique<CopyFilter>(node_attr_uv.width, node_attr_uv.height, node_attr_uv.type));
 
 		SimulationState sim{ m_id_counter };
 
@@ -1027,7 +1031,7 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 
 
 FilterGraph::FilterGraph(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
-	m_impl{ new impl{ width, height, type, subsample_w, subsample_h, color } }
+	m_impl{ ztd::make_unique<impl>(width, height, type, subsample_w, subsample_h, color) }
 {
 }
 
@@ -1035,14 +1039,14 @@ FilterGraph::~FilterGraph()
 {
 }
 
-void FilterGraph::attach_filter(ImageFilter *filter)
+void FilterGraph::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter(filter);
+	m_impl->attach_filter(std::move(filter));
 }
 
-void FilterGraph::attach_filter_uv(ImageFilter *filter)
+void FilterGraph::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter_uv(filter);
+	m_impl->attach_filter_uv(std::move(filter));
 }
 
 void FilterGraph::color_to_grey()

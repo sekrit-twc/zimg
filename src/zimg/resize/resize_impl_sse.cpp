@@ -4,6 +4,7 @@
 #include <xmmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/linebuffer.h"
 #include "graph/image_filter.h"
@@ -396,22 +397,22 @@ public:
 } // namespace
 
 
-graph::ImageFilter *create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == zimg::PixelType::FLOAT)
-		ret = new ResizeImplH_F32_SSE{ context, height };
+		ret = ztd::make_unique<ResizeImplH_F32_SSE>(context, height);
 
 	return ret;
 }
 
-graph::ImageFilter *create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
-	graph::ImageFilter *ret = nullptr;
+	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == zimg::PixelType::FLOAT)
-		ret = new ResizeImplV_F32_SSE{ context, width };
+		ret = ztd::make_unique<ResizeImplV_F32_SSE>(context, width);
 
 	return ret;
 }

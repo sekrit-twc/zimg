@@ -2,11 +2,13 @@
 #include <limits>
 #include <memory>
 #include <random>
+#include <tuple>
 #include <utility>
 #include "common/align.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "depth.h"
@@ -269,9 +271,8 @@ class OrderedDither : public graph::ImageFilterBase {
 	unsigned m_width;
 	unsigned m_height;
 public:
-	OrderedDither(OrderedDitherTable *table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
+	OrderedDither(std::unique_ptr<OrderedDitherTable> &&table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
 	              const PixelFormat &format_in, const PixelFormat &format_out) :
-		m_dither_table{ table },
 		m_func{ func },
 		m_f16c{ f16c },
 		m_pixel_in{ format_in.type },
@@ -286,6 +287,7 @@ public:
 			throw error::InternalError{ "cannot dither to non-integer format" };
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		m_dither_table = std::move(table);
 	}
 
 	filter_flags get_flags() const override
@@ -435,21 +437,21 @@ public:
 };
 
 
-OrderedDitherTable *create_dither_table(DitherType type, unsigned width, unsigned height)
+std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigned width, unsigned height)
 {
 	switch (type) {
 	case DitherType::DITHER_NONE:
-		return new NoneDitherTable{};
+		return ztd::make_unique<NoneDitherTable>();
 	case DitherType::DITHER_ORDERED:
-		return new BayerDitherTable{};
+		return ztd::make_unique<BayerDitherTable>();
 	case DitherType::DITHER_RANDOM:
-		return new RandomDitherTable{ width, height };
+		return ztd::make_unique<RandomDitherTable>(width, height);
 	default:
 		throw error::IllegalArgument{ "unrecognized dither type" };
 	}
 }
 
-graph::ImageFilter *create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	ErrorDiffusion::ed_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
@@ -460,20 +462,18 @@ graph::ImageFilter *create_error_diffusion(unsigned width, unsigned height, cons
 	if (needs_f16c && !f16c)
 		f16c = half_to_float_n;
 
-	return new ErrorDiffusion{ func, f16c, width, height, pixel_in, pixel_out };
+	return ztd::make_unique<ErrorDiffusion>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace
 
 
-graph::ImageFilter *create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (type == DitherType::DITHER_ERROR_DIFFUSION)
 		return create_error_diffusion(width, height, pixel_in, pixel_out, cpu);
 
-	std::unique_ptr<OrderedDitherTable> table{ create_dither_table(type, width, height) };
-	graph::ImageFilter *ret = nullptr;
-
+	auto table = create_dither_table(type, width, height);
 	dither_convert_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);
@@ -491,10 +491,7 @@ graph::ImageFilter *create_dither(DitherType type, unsigned width, unsigned heig
 	if (needs_f16c && !f16c)
 		f16c = half_to_float_n;
 
-	ret = new OrderedDither{ table.get(), func, f16c, width, height, pixel_in, pixel_out };
-	table.release();
-
-	return ret;
+	return ztd::make_unique<OrderedDither>(std::move(table), func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth

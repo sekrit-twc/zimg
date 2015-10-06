@@ -5,6 +5,7 @@
 #include "common/align.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
+#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/filtergraph.h"
 #include "graph/image_filter.h"
@@ -118,8 +119,8 @@ TEST(FilterGraphTest, test_basic)
 		flags2.entire_plane = false;
 		flags2.color = !!x;
 
-		std::unique_ptr<SplatFilter<uint16_t>> filter1_uptr{ new SplatFilter<uint16_t>{ w, h, type, flags1 } };
-		std::unique_ptr<SplatFilter<uint16_t>> filter2_uptr{ new SplatFilter<uint16_t>{ w, h, type, flags2 } };
+		auto filter1_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type, flags1);
+		auto filter2_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type, flags2);
 		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
 		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
 
@@ -131,10 +132,8 @@ TEST(FilterGraphTest, test_basic)
 
 		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, !!x };
 
-		graph.attach_filter(filter1);
-		filter1_uptr.release();
-		graph.attach_filter(filter2);
-		filter2_uptr.release();
+		graph.attach_filter(std::move(filter1_uptr));
+		graph.attach_filter(std::move(filter2_uptr));
 		graph.complete();
 
 		AuditImage<uint16_t> src_image{ w, h, type, 0, 0, !!x };
@@ -179,8 +178,8 @@ TEST(FilterGraphTest, test_skip_plane)
 		flags2.entire_row = true;
 		flags2.color = false;
 
-		std::unique_ptr<SplatFilter<float>> filter1_uptr{ new SplatFilter<float>{ w, h, type, flags1} };
-		std::unique_ptr<SplatFilter<float>> filter2_uptr{ new SplatFilter<float>{ w, h, type, flags2} };
+		auto filter1_uptr = ztd::make_unique<SplatFilter<float>>(w, h, type, flags1);
+		auto filter2_uptr = ztd::make_unique<SplatFilter<float>>(w, h, type, flags2);
 		SplatFilter<float> *filter1 = filter1_uptr.get();
 		SplatFilter<float> *filter2 = filter2_uptr.get();
 
@@ -192,14 +191,12 @@ TEST(FilterGraphTest, test_skip_plane)
 
 		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
 
-		graph.attach_filter(filter1);
-		filter1_uptr.release();
+		graph.attach_filter(std::move(filter1_uptr));
 
 		if (x)
-			graph.attach_filter(filter2);
+			graph.attach_filter(std::move(filter2_uptr));
 		else
-			graph.attach_filter_uv(filter2);
-		filter2_uptr.release();
+			graph.attach_filter_uv(std::move(filter2_uptr));
 
 		graph.complete();
 
@@ -246,7 +243,7 @@ TEST(FilterGraphTest, test_color_to_grey)
 	flags.entire_row = true;
 	flags.color = true;
 
-	std::unique_ptr<SplatFilter<uint8_t>> filter_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags} };
+	auto filter_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
 	SplatFilter<uint8_t> *filter = filter_uptr.get();
 
 	filter->set_input_val(test_byte1);
@@ -254,9 +251,7 @@ TEST(FilterGraphTest, test_color_to_grey)
 
 	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
 
-	graph.attach_filter(filter);
-	filter_uptr.release();
-
+	graph.attach_filter(std::move(filter_uptr));
 	graph.color_to_grey();
 	graph.complete();
 
@@ -299,8 +294,8 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 	flags2.entire_row = true;
 	flags2.color = true;
 
-	std::unique_ptr<SplatFilter<uint8_t>> filter1_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags1 } };
-	std::unique_ptr<SplatFilter<uint8_t>> filter2_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags2 } };
+	auto filter1_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags1);
+	auto filter2_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags2);
 	SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
 	SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
 
@@ -312,14 +307,9 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 
 	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
 
-	graph.attach_filter(filter1);
-	filter1_uptr.release();
-
+	graph.attach_filter(std::move(filter1_uptr));
 	graph.grey_to_color(false, 0, 0, 8);
-
-	graph.attach_filter(filter2);
-	filter2_uptr.release();
-
+	graph.attach_filter(std::move(filter2_uptr));
 	graph.complete();
 
 	AuditImage<uint8_t> src_image{ w, h, type, 0, 0, false };
@@ -357,7 +347,7 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 	flags.entire_row = true;
 	flags.color = false;
 
-	std::unique_ptr<SplatFilter<uint8_t>> filter_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags } };
+	auto filter_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
 	SplatFilter<uint8_t> *filter = filter_uptr.get();
 
 	filter->set_input_val(test_byte1);
@@ -365,9 +355,7 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 
 	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
 
-	graph.attach_filter(filter);
-	filter_uptr.release();
-
+	graph.attach_filter(std::move(filter_uptr));
 	graph.grey_to_color(true, 1, 1, 8);
 	graph.complete();
 
@@ -405,8 +393,8 @@ TEST(FilterGraphTest, test_support)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		std::unique_ptr<SplatFilter<uint16_t>> filter1_uptr{ new SplatFilter<uint16_t>{ w, h, type} };
-		std::unique_ptr<SplatFilter<uint16_t>> filter2_uptr{ new SplatFilter<uint16_t>{ w, h, type} };
+		auto filter1_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type);
+		auto filter2_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type);
 		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
 		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
 
@@ -432,10 +420,8 @@ TEST(FilterGraphTest, test_support)
 
 		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
 
-		graph.attach_filter(filter1);
-		filter1_uptr.release();
-		graph.attach_filter(filter2);
-		filter2_uptr.release();
+		graph.attach_filter(std::move(filter1_uptr));
+		graph.attach_filter(std::move(filter2_uptr));
 		graph.complete();
 
 		AuditImage<uint16_t> src_image{ w, h, type, 0, 0, false };
@@ -527,8 +513,8 @@ TEST(FilterGraphTest, test_callback)
 				flags.entire_row = !!x;
 				flags.color = false;
 
-				std::unique_ptr<SplatFilter<uint8_t>> filter1_uptr{ new SplatFilter<uint8_t>{ w, h, type, flags } };
-				std::unique_ptr<SplatFilter<uint8_t>> filter2_uptr{ new SplatFilter<uint8_t>{ w >> sw, h >> sh, type, flags } };
+				auto filter1_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
+				auto filter2_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w >> sw, h >> sh, type, flags);
 				SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
 				SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
 
@@ -539,10 +525,9 @@ TEST(FilterGraphTest, test_callback)
 				filter2->set_output_val(test_byte2);
 
 				zimg::graph::FilterGraph graph{ w, h, type, sw, sh, true };
-				graph.attach_filter(filter1);
-				filter1_uptr.release();
-				graph.attach_filter_uv(filter2);
-				filter2_uptr.release();
+
+				graph.attach_filter(std::move(filter1_uptr));
+				graph.attach_filter_uv(std::move(filter2_uptr));
 				graph.complete();
 
 				AuditImage<uint8_t> src_image{ w, h, type, sw, sh, true };
