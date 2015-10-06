@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdint>
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/linebuffer.h"
 #include "common/make_unique.h"
@@ -258,27 +259,36 @@ unsigned ResizeImplV::get_max_buffering() const
 }
 
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-                                                       double shift, double subwidth, CPUClass cpu)
+ResizeImplBuilder::ResizeImplBuilder(unsigned src_width, unsigned src_height, PixelType type) :
+	src_width{ src_width },
+	src_height{ src_height },
+	type{ type },
+	horizontal{},
+	dst_dim{},
+	depth{},
+	filter{},
+	shift{},
+	subwidth{},
+	cpu{ CPUClass::CPU_NONE }
 {
-	if (src_width != dst_width && src_height != dst_height)
-		throw error::InternalError{ "cannot resize both width and height" };
+}
 
+std::unique_ptr<graph::ImageFilter> ResizeImplBuilder::create() const
+{
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	unsigned src_dim = horizontal ? src_width : src_height;
-	unsigned dst_dim = horizontal ? dst_width : dst_height;
-	FilterContext filter_ctx = compute_filter(f, src_dim, dst_dim, shift, subwidth);
+	FilterContext filter_ctx = compute_filter(*filter, src_dim, dst_dim, shift, subwidth);
 
 #ifdef ZIMG_X86
 	ret = horizontal ?
-	      create_resize_impl_h_x86(filter_ctx, dst_height, type, depth, cpu) :
-	      create_resize_impl_v_x86(filter_ctx, dst_width, type, depth, cpu);
+		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu);
 #endif
 	if (!ret && horizontal)
-		ret = ztd::make_unique<ResizeImplH_C>(filter_ctx, dst_height, type, depth);
+		ret = ztd::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
 	if (!ret && !horizontal)
-		ret = ztd::make_unique<ResizeImplV_C>(filter_ctx, dst_width, type, depth);
+		ret = ztd::make_unique<ResizeImplV_C>(filter_ctx, src_width, type, depth);
 
 	return ret;
 }

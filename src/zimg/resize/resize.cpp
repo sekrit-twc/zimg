@@ -48,29 +48,60 @@ auto ResizeConversion::create() const -> filter_pair
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
-	if (skip_h && skip_v) {
+	if (skip_h && skip_v)
 		return{ ztd::make_unique<graph::CopyFilter>(src_width, src_height, type), nullptr };
-	} else if (skip_h) {
-		return{ create_resize_impl(*filter, type, false, depth, src_width, src_height, dst_width, dst_height, shift_h, subheight, cpu),
-			    nullptr };
+
+	auto builder = ResizeImplBuilder{ src_width, src_height, type }.
+		set_depth(depth).
+		set_filter(filter).
+		set_cpu(cpu);
+	filter_pair ret{};
+
+	if (skip_h) {
+		ret.first = builder.set_horizontal(false).
+		                    set_dst_dim(dst_height).
+		                    set_shift(shift_h).
+		                    set_subwidth(subheight).
+		                    create();
 	} else if (skip_v) {
-		return{ create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, dst_height, shift_w, subwidth, cpu),
-		        nullptr };
+		ret.second = builder.set_horizontal(true).
+		                     set_dst_dim(dst_width).
+		                     set_shift(shift_w).
+		                     set_subwidth(subwidth).
+		                     create();
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
-		std::unique_ptr<graph::ImageFilter> stage1;
-		std::unique_ptr<graph::ImageFilter> stage2;
 
 		if (h_first) {
-			stage1 = create_resize_impl(*filter, type, true, depth, src_width, src_height, dst_width, src_height, shift_w, subwidth, cpu);
-			stage2 = create_resize_impl(*filter, type, false, depth, dst_width, src_height, dst_width, dst_height, shift_h, subheight, cpu);
-		} else {
-			stage1 = create_resize_impl(*filter, type, false, depth, src_width, src_height, src_width, dst_height, shift_h, subheight, cpu);
-			stage2 = create_resize_impl(*filter, type, true, depth, src_width, dst_height, dst_width, dst_height, shift_w, subwidth, cpu);
-		}
+			ret.first = builder.set_horizontal(true).
+			                    set_dst_dim(dst_width).
+			                    set_shift(shift_w).
+			                    set_subwidth(subwidth).
+			                    create();
 
-		return{ std::move(stage1), std::move(stage2) };
+			builder.src_width = dst_width;
+			ret.second = builder.set_horizontal(false).
+			                     set_dst_dim(dst_height).
+			                     set_shift(shift_h).
+			                     set_subwidth(subheight).
+			                     create();
+		} else {
+			ret.first = builder.set_horizontal(false).
+			                    set_dst_dim(dst_height).
+			                    set_shift(shift_h).
+			                    set_subwidth(subheight).
+			                    create();
+
+			builder.src_height = dst_height;
+			ret.second = builder.set_horizontal(true).
+			                     set_dst_dim(dst_width).
+			                     set_shift(shift_w).
+			                     set_subwidth(subwidth).
+			                     create();
+		}
 	}
+
+	return ret;
 }
 
 } // namespace resize

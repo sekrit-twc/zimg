@@ -24,12 +24,15 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(filter.support());
 	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
 
-	std::unique_ptr<zimg::graph::ImageFilter> filter_c{
-		zimg::resize::create_resize_impl(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_NONE)
-	};
-	std::unique_ptr<zimg::graph::ImageFilter> filter_sse{
-		zimg::resize::create_resize_impl(filter, type, horizontal, 0, src_w, src_h, dst_w, dst_h, 0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE)
-	};
+	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, type }.
+		set_horizontal(horizontal).
+		set_dst_dim(horizontal ? dst_w : dst_h).
+		set_filter(&filter).
+		set_shift(0.0).
+		set_subwidth(horizontal ? src_w : src_h);
+
+	auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
+	auto filter_sse = builder.set_cpu(zimg::CPUClass::CPU_X86_SSE).create();
 
 	ASSERT_NE(typeid(*filter_c), typeid(*filter_sse)) << typeid(*filter_c).name() << " " << typeid(*filter_sse).name();
 

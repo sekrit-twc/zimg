@@ -50,8 +50,25 @@ public:
 	unsigned get_max_buffering() const override;
 };
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl(const Filter &f, PixelType type, bool horizontal, unsigned depth, unsigned src_width, unsigned src_height, unsigned dst_width, unsigned dst_height,
-                                                       double shift, double subwidth, CPUClass cpu);
+struct ResizeImplBuilder {
+	unsigned src_width;
+	unsigned src_height;
+	PixelType type;
+
+#include "common/builder.h"
+	BUILDER_MEMBER(bool, horizontal);
+	BUILDER_MEMBER(unsigned, dst_dim);
+	BUILDER_MEMBER(unsigned, depth);
+	BUILDER_MEMBER(const Filter *, filter);
+	BUILDER_MEMBER(double, shift);
+	BUILDER_MEMBER(double, subwidth);
+	BUILDER_MEMBER(CPUClass, cpu);
+#undef BUILDER_MEMBER
+
+	ResizeImplBuilder(unsigned src_width, unsigned src_height, PixelType type);
+
+	std::unique_ptr<graph::ImageFilter> create() const;
+};
 
 } // namespace resize
 } // namespace zimg

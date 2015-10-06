@@ -21,14 +21,16 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(filter.support());
 	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
 
-	std::unique_ptr<zimg::graph::ImageFilter> filter_c{
-		zimg::resize::create_resize_impl(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
-	                                      0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_NONE)
-	};
-	std::unique_ptr<zimg::graph::ImageFilter> filter_sse2{
-		zimg::resize::create_resize_impl(filter, format.type, horizontal, format.depth, src_w, src_h, dst_w, dst_h,
-		                                  0.0, horizontal ? src_w : src_h, zimg::CPUClass::CPU_X86_SSE2)
-	};
+	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }.
+		set_horizontal(horizontal).
+		set_dst_dim(horizontal ? dst_w : dst_h).
+		set_depth(format.depth).
+		set_filter(&filter).
+		set_shift(0.0).
+		set_subwidth(horizontal ? src_w : src_h);
+
+	auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
+	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::CPU_X86_SSE2).create();
 
 	validate_filter(filter_sse2.get(), src_w, src_h, format, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), src_w, src_h, format, expected_snr);
