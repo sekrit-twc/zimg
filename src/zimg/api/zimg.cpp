@@ -14,7 +14,7 @@
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
 #include "graph/image_filter.h"
-#include "colorspace/colorspace_param.h"
+#include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
 #include "zimg.h"

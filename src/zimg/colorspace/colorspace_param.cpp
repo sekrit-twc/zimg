@@ -84,41 +84,6 @@ Matrix3x3 get_primaries_xyz(ColorPrimaries primaries)
 } // namespace
 
 
-ColorspaceDefinition ColorspaceDefinition::to(MatrixCoefficients matrix_) const
-{
-	return{ matrix_, transfer, primaries };
-}
-
-ColorspaceDefinition ColorspaceDefinition::to(TransferCharacteristics transfer_) const
-{
-	return{ matrix, transfer_, primaries };
-}
-
-ColorspaceDefinition ColorspaceDefinition::to(ColorPrimaries primaries_) const
-{
-	return{ matrix, transfer, primaries_ };
-}
-
-ColorspaceDefinition ColorspaceDefinition::toRGB() const
-{
-	return to(MatrixCoefficients::MATRIX_RGB);
-}
-
-ColorspaceDefinition ColorspaceDefinition::toLinear() const
-{
-	return to(TransferCharacteristics::TRANSFER_LINEAR);
-}
-
-bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
-{
-	return a.matrix == b.matrix && a.primaries == b.primaries && a.transfer == b.transfer;
-}
-
-bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
-{
-	return !operator==(a, b);
-}
-
 Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix)
 {
 	return inverse(ncl_rgb_to_yuv_matrix(matrix));

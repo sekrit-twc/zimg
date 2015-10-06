@@ -3,6 +3,7 @@
 #ifndef ZIMG_COLORSPACE_COLORSPACE_PARAM_H_
 #define ZIMG_COLORSPACE_COLORSPACE_PARAM_H_
 
+#include "colorspace.h"
 #include "matrix3.h"
 
 namespace zimg {;
@@ -23,59 +24,6 @@ const double REC_2020_PRIMARIES[3][2] = { { 0.708, 0.292 }, { 0.170, 0.797 }, { 
 
 // D65 white point in XY.
 const double ILLUMINANT_D65[2] = { 0.3127f, 0.3290f };
-
-/**
- * Enum for matrix coefficients.
- */
-enum class MatrixCoefficients {
-	MATRIX_UNSPECIFIED,
-	MATRIX_RGB,
-	MATRIX_601,
-	MATRIX_709,
-	MATRIX_YCGCO,
-	MATRIX_2020_NCL,
-	MATRIX_2020_CL
-};
-
-/**
- * Enum for transfer characteristics.
- */
-enum class TransferCharacteristics {
-	TRANSFER_UNSPECIFIED,
-	TRANSFER_LINEAR,
-	TRANSFER_709
-};
-
-/**
- * Enum for primaries.
- */
-enum class ColorPrimaries {
-	PRIMARIES_UNSPECIFIED,
-	PRIMARIES_SMPTE_C,
-	PRIMARIES_709,
-	PRIMARIES_2020
-};
-
-/**
- * Definition of a working colorspace.
- */
-struct ColorspaceDefinition {
-	MatrixCoefficients matrix;
-	TransferCharacteristics transfer;
-	ColorPrimaries primaries;
-
-	// Helper functions to create modified colorspaces.
-	ColorspaceDefinition to(MatrixCoefficients matrix) const;
-	ColorspaceDefinition to(TransferCharacteristics transfer) const;
-	ColorspaceDefinition to(ColorPrimaries primaries) const;
-
-	ColorspaceDefinition toRGB() const;
-	ColorspaceDefinition toLinear() const;
-};
-
-// Compare colorspaces by comparing each component.
-bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
-bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
 
 /**
  * Obtain 3x3 matrix for converting from YUV to RGB.

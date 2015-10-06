@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 #include "common/pixel.h"
-#include "colorspace/colorspace_param.h"
+#include "colorspace/colorspace.h"
 
 namespace zimg {;
 
