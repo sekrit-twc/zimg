@@ -58,6 +58,8 @@ inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned
 inline FORCE_INLINE void mm_store_left_epi8(uint8_t *dst, __m128i x, unsigned count)
 {
 	switch (count - 1) {
+	case 15:
+		dst[0] = (uint8_t)(_mm_extract_epi16(x, 0));
 	case 14:
 		dst[1] = (uint8_t)(_mm_extract_epi16(x, 0) >> 8);
 	case 13:
@@ -94,36 +96,38 @@ inline FORCE_INLINE void mm_store_left_epi8(uint8_t *dst, __m128i x, unsigned co
 inline FORCE_INLINE void mm_store_right_epi8(uint8_t *dst, __m128i x, unsigned count)
 {
 	switch (count - 1) {
+	case 15:
+		dst[15] = (uint8_t)(_mm_extract_epi16(x, 7) >> 8);
 	case 14:
-		dst[0] = (uint8_t)(_mm_extract_epi16(x, 0));
+		dst[14] = (uint8_t)(_mm_extract_epi16(x, 7));
 	case 13:
-		dst[1] = (uint8_t)(_mm_extract_epi16(x, 0) >> 8);
+		dst[13] = (uint8_t)(_mm_extract_epi16(x, 6) >> 8);
 	case 12:
-		dst[2] = (uint8_t)(_mm_extract_epi16(x, 1));
+		dst[12] = (uint8_t)(_mm_extract_epi16(x, 6));
 	case 11:
-		dst[3] = (uint8_t)(_mm_extract_epi16(x, 1) >> 8);
+		dst[11] = (uint8_t)(_mm_extract_epi16(x, 5) >> 8);
 	case 10:
-		dst[4] = (uint8_t)(_mm_extract_epi16(x, 2));
+		dst[10] = (uint8_t)(_mm_extract_epi16(x, 5));
 	case 9:
-		dst[5] = (uint8_t)(_mm_extract_epi16(x, 2) >> 8);
+		dst[9] = (uint8_t)(_mm_extract_epi16(x, 4) >> 8);
 	case 8:
-		dst[6] = (uint8_t)(_mm_extract_epi16(x, 3));
+		dst[8] = (uint8_t)(_mm_extract_epi16(x, 4));
 	case 7:
 		dst[7] = (uint8_t)(_mm_extract_epi16(x, 3) >> 8);
 	case 6:
-		dst[8] = (uint8_t)(_mm_extract_epi16(x, 4));
+		dst[6] = (uint8_t)(_mm_extract_epi16(x, 3));
 	case 5:
-		dst[9] = (uint8_t)(_mm_extract_epi16(x, 4) >> 8);
+		dst[5] = (uint8_t)(_mm_extract_epi16(x, 2) >> 8);
 	case 4:
-		dst[10] = (uint8_t)(_mm_extract_epi16(x, 5));
+		dst[4] = (uint8_t)(_mm_extract_epi16(x, 2));
 	case 3:
-		dst[11] = (uint8_t)(_mm_extract_epi16(x, 5) >> 8);
+		dst[3] = (uint8_t)(_mm_extract_epi16(x, 1) >> 8);
 	case 2:
-		dst[12] = (uint8_t)(_mm_extract_epi16(x, 6));
+		dst[2] = (uint8_t)(_mm_extract_epi16(x, 1));
 	case 1:
-		dst[13] = (uint8_t)(_mm_extract_epi16(x, 6) >> 8);
+		dst[1] = (uint8_t)(_mm_extract_epi16(x, 0) >> 8);
 	case 0:
-		dst[14] = (uint8_t)(_mm_extract_epi16(x, 7));
+		dst[0] = (uint8_t)(_mm_extract_epi16(x, 0));
 	}
 }
 
