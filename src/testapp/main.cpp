@@ -69,7 +69,7 @@ int arg_decode_cpu(const struct ArgparseOption *, void *out, int argc, char **ar
 	if (argc < 1)
 		return -1;
 
-	zimg::CPUClass *cpu = reinterpret_cast<zimg::CPUClass *>(out);
+	zimg::CPUClass *cpu = static_cast<zimg::CPUClass *>(out);
 
 	try {
 		*cpu = parse_cpu(*argv);
@@ -86,7 +86,7 @@ int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char *
 	if (argc < 1)
 		return -1;
 
-	zimg::PixelFormat *format = reinterpret_cast<zimg::PixelFormat *>(out);
+	zimg::PixelFormat *format = static_cast<zimg::PixelFormat *>(out);
 
 	try {
 		std::regex format_regex{ R"(^(byte|word|half|float)(?::(f|l)(c|l)?(?::(\d+))?)?$)" };

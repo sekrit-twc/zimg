@@ -100,7 +100,7 @@ void MockFilter::init_context(void *ctx) const
 
 void MockFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> *src, const zimg::graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
-	context *audit_ctx = reinterpret_cast<context *>(ctx);
+	context *audit_ctx = static_cast<context *>(ctx);
 	auto flags = get_flags();
 
 	ASSERT_LT(i, m_attr.height);

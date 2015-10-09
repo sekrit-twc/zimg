@@ -63,7 +63,7 @@ struct BitmapFileData {
 
 	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
-		unsigned char *ptr = reinterpret_cast<unsigned char *>(file_base);
+		unsigned char *ptr = static_cast<unsigned char *>(file_base);
 
 		if (file_size < sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER))
 			throw BitmapDataError{ "file too short" };
@@ -170,7 +170,7 @@ public:
 
 	const unsigned char *read_ptr() const
 	{
-		const unsigned char *image_data = reinterpret_cast<const unsigned char *>(m_bitmap.image_data);
+		const unsigned char *image_data = static_cast<const unsigned char *>(m_bitmap.image_data);
 		return image_data + row_size() * (height() - 1);
 	}
 

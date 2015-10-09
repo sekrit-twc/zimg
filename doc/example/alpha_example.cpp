@@ -109,7 +109,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
-	ptr = reinterpret_cast<unsigned char *>(handle.get());
+	ptr = static_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
 		buffer.data(p) = ptr;
@@ -126,11 +126,11 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 
 void unpack_bgra_straight(const void *bgra, void * const planar[4], unsigned left, unsigned right)
 {
-	const uint8_t *packed_bgra = reinterpret_cast<const uint8_t *>(bgra);
-	uint16_t *planar_r = reinterpret_cast<uint16_t *>(planar[0]);
-	uint16_t *planar_g = reinterpret_cast<uint16_t *>(planar[1]);
-	uint16_t *planar_b = reinterpret_cast<uint16_t *>(planar[2]);
-	uint8_t *planar_a = reinterpret_cast<uint8_t *>(planar[3]);
+	const uint8_t *packed_bgra = static_cast<const uint8_t *>(bgra);
+	uint16_t *planar_r = static_cast<uint16_t *>(planar[0]);
+	uint16_t *planar_g = static_cast<uint16_t *>(planar[1]);
+	uint16_t *planar_b = static_cast<uint16_t *>(planar[2]);
+	uint8_t *planar_a = static_cast<uint8_t *>(planar[3]);
 
 	for (unsigned j = left; j < right; ++j) {
 		uint16_t r, g, b;
@@ -154,11 +154,11 @@ void unpack_bgra_straight(const void *bgra, void * const planar[4], unsigned lef
 
 void unpack_bgra_premul(const void *bgra, void * const planar[4], unsigned left, unsigned right)
 {
-	const uint8_t *packed_bgra = reinterpret_cast<const uint8_t *>(bgra);
-	uint8_t *planar_r = reinterpret_cast<uint8_t *>(planar[0]);
-	uint8_t *planar_g = reinterpret_cast<uint8_t *>(planar[1]);
-	uint8_t *planar_b = reinterpret_cast<uint8_t *>(planar[2]);
-	uint8_t *planar_a = reinterpret_cast<uint8_t *>(planar[3]);
+	const uint8_t *packed_bgra = static_cast<const uint8_t *>(bgra);
+	uint8_t *planar_r = static_cast<uint8_t *>(planar[0]);
+	uint8_t *planar_g = static_cast<uint8_t *>(planar[1]);
+	uint8_t *planar_b = static_cast<uint8_t *>(planar[2]);
+	uint8_t *planar_a = static_cast<uint8_t *>(planar[3]);
 
 	for (unsigned j = left; j < right; ++j) {
 		uint8_t r, g, b, a;
@@ -177,11 +177,11 @@ void unpack_bgra_premul(const void *bgra, void * const planar[4], unsigned left,
 
 void pack_bgra_straight(const void * const planar[4], void *bgra, unsigned left, unsigned right)
 {
-	const uint16_t *planar_r = reinterpret_cast<const uint16_t *>(planar[0]);
-	const uint16_t *planar_g = reinterpret_cast<const uint16_t *>(planar[1]);
-	const uint16_t *planar_b = reinterpret_cast<const uint16_t *>(planar[2]);
-	const uint8_t *planar_a = reinterpret_cast<const uint8_t *>(planar[3]);
-	uint8_t *packed_bgra = reinterpret_cast<uint8_t *>(bgra);
+	const uint16_t *planar_r = static_cast<const uint16_t *>(planar[0]);
+	const uint16_t *planar_g = static_cast<const uint16_t *>(planar[1]);
+	const uint16_t *planar_b = static_cast<const uint16_t *>(planar[2]);
+	const uint8_t *planar_a = static_cast<const uint8_t *>(planar[3]);
+	uint8_t *packed_bgra = static_cast<uint8_t *>(bgra);
 
 	for (unsigned j = left; j < right; ++j) {
 		uint16_t r, g, b;
@@ -207,11 +207,11 @@ void pack_bgra_straight(const void * const planar[4], void *bgra, unsigned left,
 
 void pack_bgra_premul(const void * const planar[4], void *bgra, unsigned left, unsigned right)
 {
-	const uint8_t *planar_r = reinterpret_cast<const uint8_t *>(planar[0]);
-	const uint8_t *planar_g = reinterpret_cast<const uint8_t *>(planar[1]);
-	const uint8_t *planar_b = reinterpret_cast<const uint8_t *>(planar[2]);
-	const uint8_t *planar_a = reinterpret_cast<const uint8_t *>(planar[3]);
-	uint8_t *packed_bgra = reinterpret_cast<uint8_t *>(bgra);
+	const uint8_t *planar_r = static_cast<const uint8_t *>(planar[0]);
+	const uint8_t *planar_g = static_cast<const uint8_t *>(planar[1]);
+	const uint8_t *planar_b = static_cast<const uint8_t *>(planar[2]);
+	const uint8_t *planar_a = static_cast<const uint8_t *>(planar[3]);
+	uint8_t *packed_bgra = static_cast<uint8_t *>(bgra);
 
 	for (unsigned j = left; j < right; ++j) {
 		uint8_t r, g, b, a;
@@ -230,7 +230,7 @@ void pack_bgra_premul(const void * const planar[4], void *bgra, unsigned left, u
 
 int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback *cb = reinterpret_cast<Callback *>(user);
+	const Callback *cb = static_cast<Callback *>(user);
 	const zimgxx::zimage_buffer &rgb_buf = *cb->rgb_buf;
 	const zimgxx::zimage_buffer &alpha_buf = *cb->alpha_buf;
 	const void *packed_data = cb->bmp->read_ptr() + i * cb->bmp->stride();
@@ -251,7 +251,7 @@ int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 
 int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback * cb = reinterpret_cast<Callback *>(user);
+	const Callback * cb = static_cast<Callback *>(user);
 	const zimgxx::zimage_buffer &rgb_buf = *cb->rgb_buf;
 	const zimgxx::zimage_buffer &alpha_buf = *cb->alpha_buf;
 	void *packed_data = cb->bmp->write_ptr() + i * cb->bmp->stride();

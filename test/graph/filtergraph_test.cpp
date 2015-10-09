@@ -476,7 +476,7 @@ TEST(FilterGraphTest, test_callback)
 
 	auto cb = [](void *ptr, unsigned i, unsigned left, unsigned right) -> int
 	{
-		callback_data *xptr = reinterpret_cast<callback_data *>(ptr);
+		callback_data *xptr = static_cast<callback_data *>(ptr);
 
 		EXPECT_LT(i, h);
 		EXPECT_EQ(0U, i % (1 << xptr->subsample_h));

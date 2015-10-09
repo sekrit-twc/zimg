@@ -67,7 +67,7 @@ int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 	if (argc < 1)
 		return -1;
 
-	zimg::colorspace::ColorspaceDefinition *csp = reinterpret_cast<zimg::colorspace::ColorspaceDefinition *>(out);
+	zimg::colorspace::ColorspaceDefinition *csp = static_cast<zimg::colorspace::ColorspaceDefinition *>(out);
 
 	try {
 		std::regex csp_regex{ R"(^(\w+):(\w+):(\w+)$)" };

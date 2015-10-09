@@ -18,7 +18,7 @@ int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **arg
 
 	std::string str = *argv;
 	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-	int *out_p = reinterpret_cast<int *>(out);
+	int *out_p = static_cast<int *>(out);
 	int value = 0;
 
 	if (str == "true" || str == "1")
@@ -34,14 +34,14 @@ int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **arg
 
 int handle_argument_true(const ArgparseOption *, void *out, int, char **)
 {
-	int *out_p = reinterpret_cast<int *>(out);
+	int *out_p = static_cast<int *>(out);
 	*out_p = 1;
 	return 0;
 }
 
 int handle_argument_false(const ArgparseOption *, void *out, int, char **)
 {
-	int *out_p = reinterpret_cast<int *>(out);
+	int *out_p = static_cast<int *>(out);
 	*out_p = 0;
 	return 0;
 }
@@ -52,7 +52,7 @@ int handle_argument_integer(const ArgparseOption *, void *out, int argc, char **
 		return -1;
 
 	try {
-		int *out_p = reinterpret_cast<int *>(out);
+		int *out_p = static_cast<int *>(out);
 		*out_p = std::stoi(*argv);
 		return 1;
 	} catch (const std::logic_error &) {
@@ -66,7 +66,7 @@ int handle_argument_uinteger(const ArgparseOption *, void *out, int argc, char *
 		return -1;
 
 	try {
-		unsigned *out_p = reinterpret_cast<unsigned *>(out);
+		unsigned *out_p = static_cast<unsigned *>(out);
 		unsigned long x = std::stoul(*argv);
 
 		if (x > UINT_MAX)
@@ -85,7 +85,7 @@ int handle_argument_float(const ArgparseOption *, void *out, int argc, char **ar
 		return -1;
 
 	try {
-		double *out_p = reinterpret_cast<double *>(out);
+		double *out_p = static_cast<double *>(out);
 		*out_p = std::stod(*argv);
 		return 1;
 	} catch (const std::logic_error &) {
@@ -98,7 +98,7 @@ int handle_argument_string(const ArgparseOption *, void *out, int argc, char **a
 	if (argc < 1)
 		return -1;
 
-	const char **out_p = reinterpret_cast<const char **>(out);
+	const char **out_p = static_cast<const char **>(out);
 	*out_p = *argv;
 	return 1;
 }

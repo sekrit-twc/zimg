@@ -252,7 +252,7 @@ public:
 		if (m_handle->size() != size)
 			throw std::runtime_error{ "bad file size" };
 
-		ptr = reinterpret_cast<char *>(const_cast<void *>(m_handle->read_ptr()));
+		ptr = static_cast<char *>(const_cast<void *>(m_handle->read_ptr()));
 ;		for (unsigned p = 0; p < 3; ++p) {
 			size_t size_p = static_cast<size_t>(m_linewidth[p]) * m_height[p];
 
@@ -342,7 +342,7 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
-		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
+		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
 		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 		const WindowsBitmap *bmp = cb_ctx->bmp;
 
@@ -397,7 +397,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
-		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
+		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
 		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;
@@ -503,7 +503,7 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
-		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
+		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
 		WindowsBitmap *bmp = cb_ctx->bmp;
 		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
@@ -548,7 +548,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
-		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
+		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
 		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;

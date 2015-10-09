@@ -569,7 +569,7 @@ public:
 
 		const uint16_t *src_ptr[8] = { 0 };
 		uint16_t *dst_ptr[8] = { 0 };
-		uint16_t *transpose_buf = reinterpret_cast<uint16_t *>(tmp);
+		uint16_t *transpose_buf = static_cast<uint16_t *>(tmp);
 		unsigned height = get_image_attributes().height;
 
 		for (unsigned n = 0; n < 8; ++n) {
@@ -617,7 +617,7 @@ public:
 
 		const uint16_t *src_lines[8] = { 0 };
 		uint16_t *dst_line = dst_buf[i];
-		uint32_t *accum_buf = reinterpret_cast<uint32_t *>(tmp);
+		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
 
 		unsigned k_end = align(filter_width, 8) - 8;
 		unsigned top = m_filter.left[i];

@@ -336,7 +336,7 @@ public:
 
 		const float *src_ptr[4] = { 0 };
 		float *dst_ptr[4] = { 0 };
-		float *transpose_buf = reinterpret_cast<float *>(tmp);
+		float *transpose_buf = static_cast<float *>(tmp);
 		unsigned height = get_image_attributes().height;
 
 		src_ptr[0] = src_buf[std::min(i + 0, height - 1)];

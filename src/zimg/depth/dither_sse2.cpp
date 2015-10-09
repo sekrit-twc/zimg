@@ -412,8 +412,8 @@ inline FORCE_INLINE __m128i ordered_dither_f2w_sse2_xiter(unsigned j, const floa
 void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const uint8_t *src_p = reinterpret_cast<const uint8_t *>(src);
-	uint8_t *dst_p = reinterpret_cast<uint8_t *>(dst);
+	const uint8_t *src_p = static_cast<const uint8_t *>(src);
+	uint8_t *dst_p = static_cast<uint8_t *>(dst);
 
 	unsigned vec_left = align(left, 16);
 	unsigned vec_right = mod(right, 16);
@@ -445,8 +445,8 @@ void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const uint8_t *src_p = reinterpret_cast<const uint8_t *>(src);
-	uint16_t *dst_p = reinterpret_cast<uint16_t *>(dst);
+	const uint8_t *src_p = static_cast<const uint8_t *>(src);
+	uint16_t *dst_p = static_cast<uint16_t *>(dst);
 
 	unsigned vec_left = align(left, 16);
 	unsigned vec_right = mod(right, 16);
@@ -494,8 +494,8 @@ void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_w2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const uint16_t *src_p = reinterpret_cast<const uint16_t *>(src);
-	uint8_t *dst_p = reinterpret_cast<uint8_t *>(dst);
+	const uint16_t *src_p = static_cast<const uint16_t *>(src);
+	uint8_t *dst_p = static_cast<uint8_t *>(dst);
 
 	unsigned vec_left = align(left, 16);
 	unsigned vec_right = mod(right, 16);
@@ -527,8 +527,8 @@ void ordered_dither_w2b_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_w2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const uint16_t *src_p = reinterpret_cast<const uint16_t *>(src);
-	uint16_t *dst_p = reinterpret_cast<uint16_t *>(dst);
+	const uint16_t *src_p = static_cast<const uint16_t *>(src);
+	uint16_t *dst_p = static_cast<uint16_t *>(dst);
 
 	unsigned vec_left = align(left, 8);
 	unsigned vec_right = mod(right, 8);
@@ -560,8 +560,8 @@ void ordered_dither_w2w_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const float *src_p = reinterpret_cast<const float *>(src);
-	uint8_t *dst_p = reinterpret_cast<uint8_t *>(dst);
+	const float *src_p = static_cast<const float *>(src);
+	uint8_t *dst_p = static_cast<uint8_t *>(dst);
 
 	unsigned vec_left = align(left, 16);
 	unsigned vec_right = mod(right, 16);
@@ -593,8 +593,8 @@ void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const float *src_p = reinterpret_cast<const float *>(src);
-	uint16_t *dst_p = reinterpret_cast<uint16_t *>(dst);
+	const float *src_p = static_cast<const float *>(src);
+	uint16_t *dst_p = static_cast<uint16_t *>(dst);
 
 	unsigned vec_left = align(left, 8);
 	unsigned vec_right = mod(right, 8);

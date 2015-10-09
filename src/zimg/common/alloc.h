@@ -31,7 +31,7 @@ public:
 	 *
 	 * @param ptr pointer to buffer
 	 */
-	LinearAllocator(void *ptr) : m_ptr{ reinterpret_cast<char *>(ptr) }, m_count{}
+	LinearAllocator(void *ptr) : m_ptr{ static_cast<char *>(ptr) }, m_count{}
 	{}
 
 	/**

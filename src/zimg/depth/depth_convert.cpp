@@ -18,8 +18,8 @@ namespace {;
 template <class T, class U>
 void integer_to_integer(const void *src, void *dst, unsigned shift, unsigned left, unsigned right)
 {
-	const T *src_p = reinterpret_cast<const T *>(src);
-	U *dst_p = reinterpret_cast<U *>(dst);
+	const T *src_p = static_cast<const T *>(src);
+	U *dst_p = static_cast<U *>(dst);
 
 	std::transform(src_p + left, src_p + right, dst_p + left, [=](T x) { return static_cast<U>(static_cast<unsigned>(x) << shift); });
 }
@@ -27,24 +27,24 @@ void integer_to_integer(const void *src, void *dst, unsigned shift, unsigned lef
 template <class T>
 void integer_to_float(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
-	const T *src_p = reinterpret_cast<const T *>(src);
-	float *dst_p = reinterpret_cast<float *>(dst);
+	const T *src_p = static_cast<const T *>(src);
+	float *dst_p = static_cast<float *>(dst);
 
 	std::transform(src_p + left, src_p + right, dst_p + left, [=](T x){ return static_cast<float>(x) * scale + offset; });
 }
 
 void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 {
-	const uint16_t *src_p = reinterpret_cast<const uint16_t *>(src);
-	float *dst_p = reinterpret_cast<float *>(dst);
+	const uint16_t *src_p = static_cast<const uint16_t *>(src);
+	float *dst_p = static_cast<float *>(dst);
 
 	std::transform(src_p + left, src_p + right, dst_p + left, half_to_float);
 }
 
 void float_to_half_n(const void *src, void *dst, unsigned left, unsigned right)
 {
-	const float *src_p = reinterpret_cast<const float *>(src);
-	uint16_t *dst_p = reinterpret_cast<uint16_t *>(dst);
+	const float *src_p = static_cast<const float *>(src);
+	uint16_t *dst_p = static_cast<uint16_t *>(dst);
 
 	std::transform(src_p + left, src_p + right, dst_p + left, float_to_half);
 }

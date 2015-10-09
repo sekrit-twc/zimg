@@ -18,7 +18,7 @@ class ImageBuffer {
 
 	T *at_line(unsigned i) const
 	{
-		auto *byte_ptr = reinterpret_cast<typename propagate_const<T, char>::type *>(m_data);
+		auto *byte_ptr = static_cast<typename propagate_const<T, char>::type *>(m_data);
 		return reinterpret_cast<T *>(byte_ptr + static_cast<ptrdiff_t>(i & m_mask) * m_stride);
 	}
 public:

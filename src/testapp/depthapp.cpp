@@ -34,7 +34,7 @@ int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
 	if (argc < 1)
 		return -1;
 
-	zimg::depth::DitherType *dither = reinterpret_cast<zimg::depth::DitherType *>(out);
+	zimg::depth::DitherType *dither = static_cast<zimg::depth::DitherType *>(out);
 
 	try {
 		*dither = lookup_dither(*argv);
@@ -48,7 +48,7 @@ int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
 
 int decode_force_rgb_yuv(const ArgparseOption *opt, void *out, int, char **)
 {
-	int *family = reinterpret_cast<int *>(out);
+	int *family = static_cast<int *>(out);
 
 	if (!strcmp(opt->long_name, "yuv"))
 		*family = 1;

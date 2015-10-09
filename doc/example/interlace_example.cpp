@@ -68,14 +68,14 @@ YV12Image open_yv12_file(const char *path, unsigned w, unsigned h, bool write)
 
 	if (write) {
 		mmap = std::make_shared<MemoryMappedFile>(path, size, MemoryMappedFile::CREATE_TAG);
-		file_base = reinterpret_cast<uint8_t *>(mmap->write_ptr());
+		file_base = static_cast<uint8_t *>(mmap->write_ptr());
 	} else {
 		mmap = std::make_shared<MemoryMappedFile>(path, MemoryMappedFile::READ_TAG);
 
 		if (mmap->size() != size)
 			throw std::runtime_error{ "bad YV12 file size" };
 
-		file_base = reinterpret_cast<uint8_t *>(const_cast<void *>(mmap->read_ptr()));
+		file_base = static_cast<uint8_t *>(const_cast<void *>(mmap->read_ptr()));
 	}
 
 	file.handle = std::move(mmap);
@@ -138,7 +138,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
-	ptr = reinterpret_cast<unsigned char *>(handle.get());
+	ptr = static_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
 		buffer.data(p) = ptr;
@@ -155,7 +155,7 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 
 int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback *cb = reinterpret_cast<Callback *>(user);
+	const Callback *cb = static_cast<Callback *>(user);
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	unsigned file_phase = cb->top_field ? 0 : 1;
 

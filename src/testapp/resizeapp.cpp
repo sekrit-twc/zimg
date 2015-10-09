@@ -48,7 +48,7 @@ int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 	if (argc < 1)
 		return -1;
 
-	auto *filter = reinterpret_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
+	auto *filter = static_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
 
 	try {
 		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };

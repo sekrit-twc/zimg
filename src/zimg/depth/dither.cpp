@@ -48,8 +48,8 @@ template <class T, class U>
 void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither_mask,
                     const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
-	const T *src_p = reinterpret_cast<const T *>(src);
-	U *dst_p = reinterpret_cast<U *>(dst);
+	const T *src_p = static_cast<const T *>(src);
+	U *dst_p = static_cast<U *>(dst);
 
 	for (unsigned j = left; j < right; ++j) {
 		float x = static_cast<float>(src_p[j]) * scale + offset;
@@ -65,11 +65,11 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 template <class T, class U>
 void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
-	const float *error_top_p = reinterpret_cast<const float *>(error_top) + AlignmentOf<float>::value;
-	float *error_cur_p = reinterpret_cast<float *>(error_cur) + AlignmentOf<float>::value;
+	const float *error_top_p = static_cast<const float *>(error_top) + AlignmentOf<float>::value;
+	float *error_cur_p = static_cast<float *>(error_cur) + AlignmentOf<float>::value;
 
-	const T *src_p = reinterpret_cast<const T *>(src);
-	U *dst_p = reinterpret_cast<U *>(dst);
+	const T *src_p = static_cast<const T *>(src);
+	U *dst_p = static_cast<U *>(dst);
 
 	for (unsigned j = 0; j < width; ++j) {
 		float x = static_cast<float>(src_p[j]) * scale + offset;
@@ -92,8 +92,8 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 
 void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 {
-	const uint16_t *src_p = reinterpret_cast<const uint16_t *>(src);
-	float *dst_p = reinterpret_cast<float *>(dst);
+	const uint16_t *src_p = static_cast<const uint16_t *>(src);
+	float *dst_p = static_cast<float *>(dst);
 
 	std::transform(src_p + left, src_p + right, dst_p + left, half_to_float);
 }
@@ -342,7 +342,7 @@ public:
 
 		if (m_f16c) {
 			m_f16c(src_line, tmp, left, right);
-			src_line = reinterpret_cast<char *>(tmp);
+			src_line = static_cast<char *>(tmp);
 		}
 
 		m_func(dither_table, dither_offset, dither_mask, src_line, dst_line, m_scale, m_offset, m_depth, left, right);
@@ -412,7 +412,7 @@ public:
 
 	void init_context(void *ctx) const
 	{
-		std::fill_n(reinterpret_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
+		std::fill_n(static_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
 	}
 
 	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const
@@ -421,7 +421,7 @@ public:
 		void *dst_p = (*dst)[i];
 
 		void *error_a = ctx;
-		void *error_b = reinterpret_cast<float *>(ctx) + get_context_size() / (2 * sizeof(float));
+		void *error_b = static_cast<float *>(ctx) + get_context_size() / (2 * sizeof(float));
 
 		void *error_top = i % 2 ? error_a : error_b;
 		void *error_cur = i % 2 ? error_b : error_a;

@@ -178,7 +178,7 @@ public:
 
 	void *get_tmp() const
 	{
-		return reinterpret_cast<char *>(m_base) + m_alloc.count();
+		return static_cast<char *>(m_base) + m_alloc.count();
 	}
 
 	FilterGraph::callback get_unpack_cb() const
@@ -357,7 +357,7 @@ private:
 
 	void set_tile_region_source(ExecutionState *state, unsigned left, unsigned right, bool uv) const
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		if (uv) {
@@ -371,7 +371,7 @@ private:
 
 	void set_tile_region_node_uv(ExecutionState *state, unsigned left, unsigned right) const
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		auto range = m_filter->get_required_col_range(left, right);
@@ -384,7 +384,7 @@ private:
 
 	void set_tile_region_node(ExecutionState *state, unsigned left, unsigned right) const
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		auto range = m_filter->get_required_col_range(left, right);
@@ -399,7 +399,7 @@ private:
 
 	const ImageBuffer<const void> *generate_line_source(ExecutionState *state, unsigned i, bool uv)
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		unsigned step = 1 << m_data.source_info.subsample_h;
@@ -423,7 +423,7 @@ private:
 
 	const ImageBuffer<const void> *generate_line_node_uv(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
@@ -447,7 +447,7 @@ private:
 
 	const ImageBuffer<const void> *generate_line_node(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
 	{
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
 		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
@@ -636,7 +636,7 @@ public:
 	{
 		auto attr = get_image_attributes();
 
-		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 		context->cache_pos = 0;
 		context->source_left = attr.width;

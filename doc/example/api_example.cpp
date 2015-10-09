@@ -196,7 +196,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
-	ptr = reinterpret_cast<unsigned char *>(handle.get());
+	ptr = static_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
 		buffer.data(p) = ptr;
@@ -213,10 +213,10 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 
 void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, unsigned left, unsigned right)
 {
-	const uint8_t *packed_bgr = reinterpret_cast<const uint8_t *>(bgr);
-	uint8_t *planar_r = reinterpret_cast<uint8_t *>(planar[0]);
-	uint8_t *planar_g = reinterpret_cast<uint8_t *>(planar[1]);
-	uint8_t *planar_b = reinterpret_cast<uint8_t *>(planar[2]);
+	const uint8_t *packed_bgr = static_cast<const uint8_t *>(bgr);
+	uint8_t *planar_r = static_cast<uint8_t *>(planar[0]);
+	uint8_t *planar_g = static_cast<uint8_t *>(planar[1]);
+	uint8_t *planar_b = static_cast<uint8_t *>(planar[2]);
 	unsigned step = bit_depth / 8;
 
 	for (unsigned j = left; j < right; ++j) {
@@ -234,10 +234,10 @@ void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, uns
 
 void unpack_yuy2(const void *yuy2, void * const planar[3], unsigned left, unsigned right)
 {
-	const uint8_t *packed_yuy2 = reinterpret_cast<const uint8_t *>(yuy2);
-	uint8_t *planar_y = reinterpret_cast<uint8_t *>(planar[0]);
-	uint8_t *planar_u = reinterpret_cast<uint8_t *>(planar[1]);
-	uint8_t *planar_v = reinterpret_cast<uint8_t *>(planar[2]);
+	const uint8_t *packed_yuy2 = static_cast<const uint8_t *>(yuy2);
+	uint8_t *planar_y = static_cast<uint8_t *>(planar[0]);
+	uint8_t *planar_u = static_cast<uint8_t *>(planar[1]);
+	uint8_t *planar_v = static_cast<uint8_t *>(planar[2]);
 
 	left = left % 2 ? left - 1 : left;
 	right = right % 2 ? right + 1 : right;
@@ -259,10 +259,10 @@ void unpack_yuy2(const void *yuy2, void * const planar[3], unsigned left, unsign
 
 void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsigned left, unsigned right)
 {
-	const uint8_t *planar_r = reinterpret_cast<const uint8_t *>(planar[0]);
-	const uint8_t *planar_g = reinterpret_cast<const uint8_t *>(planar[1]);
-	const uint8_t *planar_b = reinterpret_cast<const uint8_t *>(planar[2]);
-	uint8_t *packed_bgr = reinterpret_cast<uint8_t *>(bgr);
+	const uint8_t *planar_r = static_cast<const uint8_t *>(planar[0]);
+	const uint8_t *planar_g = static_cast<const uint8_t *>(planar[1]);
+	const uint8_t *planar_b = static_cast<const uint8_t *>(planar[2]);
+	uint8_t *packed_bgr = static_cast<uint8_t *>(bgr);
 	unsigned step = bit_depth / 8;
 
 	for (unsigned j = left; j < right; ++j) {
@@ -280,10 +280,10 @@ void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsig
 
 void pack_yuy2(const void * const planar[3], void *yuy2, unsigned left, unsigned right)
 {
-	const uint8_t *planar_y = reinterpret_cast<const uint8_t *>(planar[0]);
-	const uint8_t *planar_u = reinterpret_cast<const uint8_t *>(planar[1]);
-	const uint8_t *planar_v = reinterpret_cast<const uint8_t *>(planar[2]);
-	uint8_t *packed_yuy2 = reinterpret_cast<uint8_t *>(yuy2);
+	const uint8_t *planar_y = static_cast<const uint8_t *>(planar[0]);
+	const uint8_t *planar_u = static_cast<const uint8_t *>(planar[1]);
+	const uint8_t *planar_v = static_cast<const uint8_t *>(planar[2]);
+	uint8_t *packed_yuy2 = static_cast<uint8_t *>(yuy2);
 
 	left = left % 2 ? left - 1 : left;
 	right = right % 2 ? right + 1 : right;
@@ -305,8 +305,8 @@ void pack_yuy2(const void * const planar[3], void *yuy2, unsigned left, unsigned
 
 int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback *cb = reinterpret_cast<Callback *>(user);
-	const void *img = reinterpret_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
+	const Callback *cb = static_cast<Callback *>(user);
+	const void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	void *buf_data[3];
@@ -328,8 +328,8 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 
 int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
-	const Callback *cb = reinterpret_cast<Callback *>(user);
-	void *img = reinterpret_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
+	const Callback *cb = static_cast<Callback *>(user);
+	void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	const void *buf_data[3];
