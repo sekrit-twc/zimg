@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -33,13 +32,13 @@ void decode_sha1(const char *str, unsigned char digest[20])
 template <class T>
 void hash_buffer(const AuditBuffer<T> &buf, unsigned p, unsigned width, unsigned height, unsigned char digest[20])
 {
-	const zimg::graph::ImageBufferConst &image_buffer = buf.as_image_buffer();
+	auto image_buffer = buf.as_read_buffer();
 	SHA1_CTX sha_ctx;
 
 	SHA1Init(&sha_ctx);
 
 	for (unsigned i = 0; i < height; ++i) {
-		const unsigned char *ptr = (const unsigned char *)image_buffer.data[p] + (ptrdiff_t)i * image_buffer.stride[p];
+		const unsigned char *ptr = zimg::graph::static_buffer_cast<const unsigned char>(image_buffer[p])[i];
 		SHA1Update(&sha_ctx, ptr, width * sizeof(T));
 	}
 
@@ -106,8 +105,8 @@ std::pair<double, double> snr_line<uint16_t>(const uint16_t *ref, const uint16_t
 template <class T>
 double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigned width, unsigned height, zimg::PixelType type, bool color)
 {
-	auto ref_buf = ref.as_image_buffer();
-	auto test_buf = test.as_image_buffer();
+	auto ref_buf = ref.as_read_buffer();
+	auto test_buf = test.as_read_buffer();
 	double snr = 0.0;
 
 	for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
@@ -115,8 +114,8 @@ double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigne
 		double noise_plane = 0.0;
 
 		for (unsigned i = 0; i < height; ++i) {
-			const T *ref_ptr = (const T *)((const char *)ref_buf.data[p] + (ptrdiff_t)i * ref_buf.stride[p]);
-			const T *test_ptr = (const T *)((const char *)test_buf.data[p] + (ptrdiff_t)i * test_buf.stride[p]);
+			const T *ref_ptr = zimg::graph::static_buffer_cast<const T>(ref_buf[p])[i];
+			const T *test_ptr = zimg::graph::static_buffer_cast<const T>(test_buf[p])[i];
 
 			auto snr_pair = snr_line(ref_ptr, test_ptr, width, type);
 			signal_plane += snr_pair.first;
@@ -172,7 +171,7 @@ void validate_filter_plane(const zimg::graph::ImageFilter *filter, AuditBuffer<T
 	filter->init_context(ctx.data());
 
 	for (unsigned i = 0; i < attr.height; i += step) {
-		filter->process(ctx.data(), src_buffer->as_image_buffer(), dst_buffer->as_image_buffer(), tmp.data(), i, 0, attr.width);
+		filter->process(ctx.data(), src_buffer->as_read_buffer(), dst_buffer->as_write_buffer(), tmp.data(), i, 0, attr.width);
 
 		for (unsigned ii = i; ii < std::min(i + step, attr.height); ++ii) {
 			ASSERT_TRUE(dst_buffer->detect_write(ii, 0, attr.width)) <<
@@ -218,7 +217,7 @@ void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned s
 		src_buf.random_fill(row_range.first, row_range.second, col_range.first, col_range.second);
 		dst_buf.default_fill();
 
-		filter->process(ctx.data(), src_buf.as_image_buffer(), dst_buf.as_image_buffer(), tmp.data(), i, left, right);
+		filter->process(ctx.data(), src_buf.as_read_buffer(), dst_buf.as_write_buffer(), tmp.data(), i, left, right);
 
 		src_buf.assert_guard_bytes();
 		dst_buf.assert_guard_bytes();

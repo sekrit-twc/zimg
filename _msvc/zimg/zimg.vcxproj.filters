@@ -96,9 +96,6 @@
     <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\linebuffer.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\matrix.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>

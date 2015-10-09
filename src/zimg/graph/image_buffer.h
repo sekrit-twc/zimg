@@ -4,24 +4,126 @@
 #define ZIMG_GRAPH_IMAGE_BUFFER_H_
 
 #include <cstddef>
+#include <type_traits>
+#include "common/propagate_const.h"
 
 namespace zimg {;
 namespace graph {;
 
 template <class T>
-struct ImageBufferTemplate {
-	T *data[3];
-	ptrdiff_t stride[3];
-	unsigned mask[3];
+class ImageBuffer {
+	typename propagate_const<T, void>::type *m_data;
+	ptrdiff_t m_stride;
+	unsigned m_mask;
 
-	operator const ImageBufferTemplate<const T> &() const
+	T *at_line(unsigned i) const
 	{
-		return reinterpret_cast<const ImageBufferTemplate<const T> &>(*this);
+		auto *byte_ptr = reinterpret_cast<typename propagate_const<T, char>::type *>(m_data);
+		return reinterpret_cast<T *>(byte_ptr + static_cast<ptrdiff_t>(i & m_mask) * m_stride);
+	}
+public:
+	ImageBuffer() = default;
+
+	ImageBuffer(T *data, ptrdiff_t stride, unsigned mask) :
+		m_data{ data },
+		m_stride{ stride },
+		m_mask{ mask }
+	{
+		static_assert(std::is_standard_layout<ImageBuffer>::value, "layout error");
+	}
+
+	template <class U>
+	ImageBuffer(const ImageBuffer<U> &other, typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) :
+		m_data{ other.data() },
+		m_stride{ other.stride() },
+		m_mask{ other.mask() }
+	{
+	}
+
+	T *data() const
+	{
+		return at_line(0);
+	}
+
+	ptrdiff_t stride() const
+	{
+		return m_stride;
+	}
+
+	unsigned mask() const
+	{
+		return m_mask;
+	}
+
+	T *operator[](unsigned i) const
+	{
+		return at_line(i);
+	}
+
+	template <class U>
+	const ImageBuffer<U> &static_buffer_cast() const
+	{
+		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(m_data)))>::value,
+		              "type not convertible by static_cast");
+
+		return *reinterpret_cast<const ImageBuffer<U> *>(this);
 	}
 };
 
-typedef ImageBufferTemplate<const void> ImageBufferConst;
-typedef ImageBufferTemplate<void> ImageBuffer;
+template <class T>
+class ColorImageBuffer {
+	ImageBuffer<T> m_buffer[3];
+public:
+	ColorImageBuffer() = default;
+
+	ColorImageBuffer(const ImageBuffer<T> &buf1, const ImageBuffer<T> &buf2, const ImageBuffer<T> &buf3) :
+		m_buffer{ buf1, buf2, buf3 }
+	{
+	}
+
+	template <class U>
+	ColorImageBuffer(const ColorImageBuffer<U> &other, typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) :
+		m_buffer{ other[0], other[1], other[2] }
+	{
+	}
+
+	operator const ImageBuffer<T> *() const
+	{
+		return m_buffer;
+	}
+
+	operator ImageBuffer<T> *()
+	{
+		return m_buffer;
+	}
+
+	template <class U>
+	const ColorImageBuffer<U> &static_buffer_cast() const
+	{
+		static_assert(std::is_standard_layout<decltype(m_buffer->static_buffer_cast<U>())>::value,
+		              "type not convertible by static_cast");
+
+		return *reinterpret_cast<const ColorImageBuffer<U> *>(this);
+	}
+};
+
+template <class U, class T>
+const ImageBuffer<U> &static_buffer_cast(const ImageBuffer<T> &buf)
+{
+	return buf.template static_buffer_cast<U>();
+}
+
+template <class U, class T>
+const ImageBuffer<U> *static_buffer_cast(const ImageBuffer<T> *buf)
+{
+	return &static_buffer_cast<U>(*buf);
+}
+
+template <class U, class T>
+const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf)
+{
+	return buf.template static_buffer_cast<U>();
+}
 
 } // namespace graph
 } // namespace zimg

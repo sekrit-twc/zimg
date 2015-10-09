@@ -54,7 +54,7 @@ public:
 
 	virtual void init_context(void *ctx) const = 0;
 
-	virtual void process(void *ctx, const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
+	virtual void process(void *ctx, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, unsigned i, unsigned left, unsigned right) const = 0;
 };
 
 class ImageFilterBase : public ImageFilter {

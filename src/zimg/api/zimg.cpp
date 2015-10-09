@@ -286,33 +286,29 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 	}
 }
 
-zimg::graph::ImageBuffer import_image_buffer(const zimg_image_buffer &src)
+zimg::graph::ColorImageBuffer<void> import_image_buffer(const zimg_image_buffer &src)
 {
-	zimg::graph::ImageBuffer dst{};
+	zimg::graph::ColorImageBuffer<void> dst{};
 
 	API_VERSION_ASSERT(src.version);
 
 	if (src.version >= 2) {
 		for (unsigned p = 0; p < 3; ++p) {
-			dst.data[p] = src.plane[p].data;
-			dst.stride[p] = src.plane[p].stride;
-			dst.mask[p] = src.plane[p].mask;
+			dst[p] = zimg::graph::ImageBuffer<void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
 	}
 	return dst;
 }
 
-zimg::graph::ImageBufferConst import_image_buffer(const zimg_image_buffer_const &src)
+zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_buffer_const &src)
 {
-	zimg::graph::ImageBufferConst dst{};
+	zimg::graph::ColorImageBuffer<const void> dst{};
 
 	API_VERSION_ASSERT(src.version);
 
 	if (src.version >= 2) {
 		for (unsigned p = 0; p < 3; ++p) {
-			dst.data[p] = src.plane[p].data;
-			dst.stride[p] = src.plane[p].stride;
-			dst.mask[p] = src.plane[p].mask;
+			dst[p] = zimg::graph::ImageBuffer<const void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
 	}
 	return dst;
@@ -503,8 +499,8 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 
 	EX_BEGIN
 	const zimg::graph::FilterGraph *graph = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr);
-	zimg::graph::ImageBufferConst src_buf = import_image_buffer(*src);
-	zimg::graph::ImageBuffer dst_buf = import_image_buffer(*dst);
+	auto src_buf = import_image_buffer(*src);
+	auto dst_buf = import_image_buffer(*dst);
 
 	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
 	EX_END

@@ -3,7 +3,6 @@
 #include <vector>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
@@ -53,14 +52,14 @@ public:
 		return{ m_width, m_height, PixelType::FLOAT };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> src[], const graph::ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		const float *src_ptr[3];
 		float *dst_ptr[3];
 
 		for (unsigned p = 0; p < 3; ++p) {
-			src_ptr[p] = LineBuffer<const float>{ src, p }[i];
-			dst_ptr[p] = LineBuffer<float>{ dst, p }[i];
+			src_ptr[p] = graph::static_buffer_cast<const float>(src[p])[i];
+			dst_ptr[p] = graph::static_buffer_cast<float>(dst[p])[i];
 		}
 
 		m_operations[0]->process(src_ptr, dst_ptr, left, right);

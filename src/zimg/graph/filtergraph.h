@@ -64,7 +64,7 @@ public:
 
 	unsigned get_output_buffering() const;
 
-	void process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const;
+	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const;
 };
 
 } // namespace graph

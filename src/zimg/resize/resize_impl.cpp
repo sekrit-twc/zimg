@@ -2,7 +2,6 @@
 #include <cstdint>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
@@ -65,7 +64,7 @@ void resize_line_h_f32_c(const FilterContext &filter, const float *src, float *d
 	}
 }
 
-void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uint16_t> &src, const LineBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
+void resize_line_v_u16_c(const FilterContext &filter, const graph::ImageBuffer<const uint16_t> &src, const graph::ImageBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
 {
 	const int16_t *filter_coeffs = &filter.data_i16[i * filter.stride_i16];
 	unsigned top = filter.left[i];
@@ -84,7 +83,7 @@ void resize_line_v_u16_c(const FilterContext &filter, const LineBuffer<const uin
 	}
 }
 
-void resize_line_v_f32_c(const FilterContext &filter, const LineBuffer<const float> &src, const LineBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
+void resize_line_v_f32_c(const FilterContext &filter, const graph::ImageBuffer<const float> &src, const graph::ImageBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
 {
 	const float *filter_coeffs = &filter.data[i * filter.stride];
 	unsigned top = filter.left[i];
@@ -117,19 +116,12 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		if (m_type == PixelType::WORD) {
-			LineBuffer<const uint16_t> src_buf{ src };
-			LineBuffer<uint16_t> dst_buf{ dst };
-
-			resize_line_h_u16_c(m_filter, src_buf[i], dst_buf[i], left, right, m_pixel_max);
-		} else {
-			LineBuffer<const float> src_buf{ src };
-			LineBuffer<float> dst_buf{ dst };
-
-			resize_line_h_f32_c(m_filter, src_buf[i], dst_buf[i], left, right);
-		}
+		if (m_type == PixelType::WORD)
+			resize_line_h_u16_c(m_filter, graph::static_buffer_cast<const uint16_t>(*src)[i], graph::static_buffer_cast<uint16_t>(*dst)[i], left, right, m_pixel_max);
+		else
+			resize_line_h_f32_c(m_filter, graph::static_buffer_cast<const float>(*src)[i], graph::static_buffer_cast<float>(*dst)[i], left, right);
 	}
 };
 
@@ -146,19 +138,12 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		if (m_type == PixelType::WORD) {
-			LineBuffer<const uint16_t> src_buf{ src };
-			LineBuffer<uint16_t> dst_buf{ dst };
-
-			resize_line_v_u16_c(m_filter, src_buf, dst_buf, i, left, right, m_pixel_max);
-		} else {
-			LineBuffer<const float> src_buf{ src };
-			LineBuffer<float> dst_buf{ dst };
-
-			resize_line_v_f32_c(m_filter, src_buf, dst_buf, i, left, right);
-		}
+		if (m_type == PixelType::WORD)
+			resize_line_v_u16_c(m_filter, graph::static_buffer_cast<const uint16_t>(*src), graph::static_buffer_cast<uint16_t>(*dst), i, left, right, m_pixel_max);
+		else
+			resize_line_v_f32_c(m_filter, graph::static_buffer_cast<const float>(*src), graph::static_buffer_cast<float>(*dst), i, left, right);
 	}
 };
 

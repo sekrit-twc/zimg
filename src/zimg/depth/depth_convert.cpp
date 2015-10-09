@@ -3,7 +3,6 @@
 #include <utility>
 #include "common/align.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
@@ -134,10 +133,10 @@ public:
 		return{ m_width, m_height, m_pixel_out };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> src[], const graph::ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = LineBuffer<const char>(src)[i];
-		char *dst_line = LineBuffer<char>(dst)[i];
+		const char *src_line = graph::static_buffer_cast<const char>(*src)[i];
+		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
 		unsigned line_base = mod(left, pixel_align);
@@ -223,10 +222,10 @@ public:
 		return size;
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = LineBuffer<const char>{ src }[i];
-		char *dst_line = LineBuffer<char>{ dst }[i];
+		const char *src_line = graph::static_buffer_cast<const char>(*src)[i];
+		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
 		unsigned line_base = mod(left, pixel_align);

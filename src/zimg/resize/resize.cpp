@@ -3,7 +3,6 @@
 #include "common/align.h"
 #include "common/alloc.h"
 #include "common/cpuinfo.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/copy_filter.h"

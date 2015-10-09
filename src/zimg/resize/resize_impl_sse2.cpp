@@ -5,7 +5,6 @@
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize_impl.h"
@@ -562,10 +561,10 @@ public:
 		return 8 * ((range.second - mod(range.first, 8) + 8) * sizeof(uint16_t));
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		LineBuffer<const uint16_t> src_buf{ src };
-		LineBuffer<uint16_t> dst_buf{ dst };
+		auto src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		auto dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
 		auto range = get_required_col_range(left, right);
 
 		const uint16_t *src_ptr[8] = { 0 };
@@ -607,10 +606,10 @@ public:
 			return 0;
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		LineBuffer<const uint16_t> src_buf{ src };
-		LineBuffer<uint16_t> dst_buf{ dst };
+		auto src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		auto dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
 
 		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
 		unsigned filter_width = m_filter.filter_width;

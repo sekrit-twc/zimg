@@ -186,40 +186,35 @@ bool ImageFrame::is_yuv() const
 	return m_yuv;
 }
 
-zimg::graph::ImageBufferConst ImageFrame::as_read_buffer(unsigned plane) const
+zimg::graph::ImageBuffer<const void> ImageFrame::as_read_buffer(unsigned plane) const
 {
 	return const_cast<ImageFrame *>(this)->as_write_buffer(plane);
 }
 
-zimg::graph::ImageBufferConst ImageFrame::as_read_buffer() const
+zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 {
-	return const_cast<ImageFrame *>(this)->as_write_buffer();
-}
-
-zimg::graph::ImageBuffer ImageFrame::as_write_buffer(unsigned plane)
-{
-	_zassert(plane < m_planes, "plane index out of bounds");
-
-	zimg::graph::ImageBuffer buffer{};
-
-	buffer.data[0] = m_vector[plane].data();
-	buffer.stride[0] = width_to_stride(width(plane), m_pixel);
-	buffer.mask[0] = -1;
-
-	return buffer;
-}
-
-zimg::graph::ImageBuffer ImageFrame::as_write_buffer()
-{
-	zimg::graph::ImageBuffer buffer{};
+	zimg::graph::ColorImageBuffer<const void> ret;
 
 	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
-		buffer.data[p] = m_vector[p].data();
-		buffer.stride[p] = width_to_stride(width(p), m_pixel);
-		buffer.mask[p] = -1;
+		ret[p] = as_read_buffer(p);
 	}
+	return ret;
+}
 
-	return buffer;
+zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
+{
+	_zassert(plane < m_planes, "plane index out of bounds");
+	return{ m_vector[plane].data(), width_to_stride(width(plane), m_pixel), (unsigned)-1 };
+}
+
+zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
+{
+	zimg::graph::ColorImageBuffer<void> ret;
+
+	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
+		ret[p] = as_write_buffer(p);
+	}
+	return ret;
 }
 
 
@@ -266,22 +261,18 @@ public:
 		}
 	}
 
-	zimg::graph::ImageBufferConst as_read_buffer() const
+	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const
 	{
 		return const_cast<MappedImageFile *>(this)->as_write_buffer();
 	}
 
-	zimg::graph::ImageBuffer as_write_buffer()
+	zimg::graph::ColorImageBuffer<void> as_write_buffer()
 	{
-		zimg::graph::ImageBuffer buffer{};
-
-		for (unsigned p = 0; p < 3; ++p) {
-			buffer.data[p] = m_ptr[m_plane_order[p]];
-			buffer.stride[p] = m_linewidth[p];
-			buffer.mask[p] = -1;
-		}
-
-		return buffer;
+		return{
+			{ m_ptr[m_plane_order[0]], (ptrdiff_t)m_linewidth[0], (unsigned)-1 },
+			{ m_ptr[m_plane_order[1]], (ptrdiff_t)m_linewidth[1], (unsigned)-1 },
+			{ m_ptr[m_plane_order[2]], (ptrdiff_t)m_linewidth[2], (unsigned)-1 },
+		};
 	}
 };
 
@@ -322,7 +313,8 @@ ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned 
 
 	MappedImageFile mapped_image{ spec, width, height, false };
 	ImageFrame out_image{ width, height, type, spec.planes, spec.is_yuv, spec.subsample_w, spec.subsample_h };
-	graph->process(mapped_image.as_read_buffer(), out_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+
+	graph->process(mapped_image.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 	return out_image;
 }
@@ -335,30 +327,29 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer line_buffer{};
+	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
-		line_buffer.data[p] = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
-		line_buffer.stride[p] = bmp_image.width();
-		line_buffer.mask[p] = 0;
+		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
+		line_buffer[p] = zimg::graph::ImageBuffer<void>{ ptr, bmp_image.width(), 0 };
 	}
 
 	struct callback_context_type {
 		const WindowsBitmap *bmp;
-		const zimg::graph::ImageBuffer *buffer;
-	} callback_context = { &bmp_image, &line_buffer };
+		const zimg::graph::ImageBuffer<void> *buffer;
+	} callback_context = { &bmp_image, line_buffer };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBuffer *buffer = cb_ctx->buffer;
+		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 		const WindowsBitmap *bmp = cb_ctx->bmp;
 
 		const uint8_t *base = bmp->read_ptr() + static_cast<ptrdiff_t>(i) * bmp->stride();
 		unsigned step = bmp->bit_count() / 8;
 
-		uint8_t *dst_ptr[3] = { (uint8_t *)buffer->data[0], (uint8_t *)buffer->data[1], (uint8_t *)buffer->data[2] };
+		uint8_t *dst_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; ++j) {
 			dst_ptr[0][j] = base[j * step + 2];
@@ -369,7 +360,12 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 		return 0;
 	};
 
-	graph->process(line_buffer, out_image.as_write_buffer(), tmp.data(), { cb, &callback_context }, nullptr);
+	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
+	               out_image.as_write_buffer(),
+	               tmp.data(),
+	               { cb, &callback_context },
+	               nullptr);
+
 	return out_image;
 }
 
@@ -386,37 +382,29 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer line_buffer{};
+	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
-	line_buffer.data[0] = planar_tmp.data();
-	line_buffer.stride[0] = width;
-	line_buffer.mask[0] = 0;
-
-	line_buffer.data[1] = planar_tmp.data() + width;
-	line_buffer.stride[1] = width / 2;
-	line_buffer.mask[1] = 0;
-
-	line_buffer.data[2] = planar_tmp.data() + width + width / 2;
-	line_buffer.stride[2] = width / 2;
-	line_buffer.mask[2] = 0;
+	line_buffer[0] = zimg::graph::ImageBuffer<void>{ planar_tmp.data(), (ptrdiff_t)width, 0 };
+	line_buffer[1] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + width, (ptrdiff_t)width / 2, 0 };
+	line_buffer[2] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + width + width / 2, (ptrdiff_t)width / 2, 0 };
 
 	struct callback_context_type {
 		const void *src_base;
 		unsigned linesize;
-		const zimg::graph::ImageBuffer *buffer;
-	} callback_context = { mmap_image.read_ptr(), mmap_linesize, &line_buffer };
+		const zimg::graph::ImageBuffer<void> *buffer;
+	} callback_context = { mmap_image.read_ptr(), mmap_linesize, line_buffer };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBuffer *buffer = cb_ctx->buffer;
+		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
 		const uint8_t *base = (const uint8_t *)cb_ctx->src_base + (size_t)i * cb_ctx->linesize;
-		uint8_t *dst_ptr[3] = { (uint8_t *)buffer->data[0], (uint8_t *)buffer->data[1], (uint8_t *)buffer->data[2] };
+		uint8_t *dst_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; j += 2) {
 			dst_ptr[0][j + 0] = base[j * 2 + 0];
@@ -428,7 +416,12 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		return 0;
 	};
 
-	graph->process(line_buffer, out_image.as_write_buffer(), tmp.data(), { cb, &callback_context }, nullptr);
+	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
+	               out_image.as_write_buffer(),
+	               tmp.data(),
+	               { cb, &callback_context },
+	               nullptr);
+
 	return out_image;
 }
 
@@ -495,30 +488,29 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer line_buffer{};
+	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
-		line_buffer.data[p] = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
-		line_buffer.stride[p] = bmp_image.width();
-		line_buffer.mask[p] = 0;
+		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
+		line_buffer[p] = zimg::graph::ImageBuffer<void>{ ptr, bmp_image.width(), 0 };
 	}
 
 	struct callback_context_type {
 		WindowsBitmap *bmp;
-		const zimg::graph::ImageBufferConst *buffer;
-	} callback_context = { &bmp_image, &static_cast<const zimg::graph::ImageBufferConst &>(line_buffer) };
+		const zimg::graph::ImageBuffer<void> *buffer;
+	} callback_context = { &bmp_image, line_buffer };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
 		WindowsBitmap *bmp = cb_ctx->bmp;
-		const zimg::graph::ImageBufferConst *buffer = cb_ctx->buffer;
+		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
 		uint8_t *base = bmp->write_ptr() + static_cast<ptrdiff_t>(i) * bmp->stride();
 		unsigned step = bmp->bit_count() / 8;
 
-		const uint8_t *src_ptr[3] = { (const uint8_t *)buffer->data[0], (const uint8_t *)buffer->data[1], (const uint8_t *)buffer->data[2] };
+		const uint8_t *src_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; ++j) {
 			base[j * step + 0] = src_ptr[2][j];
@@ -541,37 +533,29 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer line_buffer{};
+	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
-	line_buffer.data[0] = planar_tmp.data();
-	line_buffer.stride[0] = frame.width();
-	line_buffer.mask[0] = 0;
-
-	line_buffer.data[1] = planar_tmp.data() + frame.width();
-	line_buffer.stride[1] = frame.width() / 2;
-	line_buffer.mask[1] = 0;
-
-	line_buffer.data[2] = planar_tmp.data() + frame.width() + frame.width() / 2;
-	line_buffer.stride[2] = frame.width() / 2;
-	line_buffer.mask[2] = 0;
+	line_buffer[0] = zimg::graph::ImageBuffer<void>{ planar_tmp.data(), (ptrdiff_t)frame.width(), 0 };
+	line_buffer[1] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + frame.width(), (ptrdiff_t)frame.width() / 2, 0 };
+	line_buffer[2] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + frame.width() + frame.width() / 2, (ptrdiff_t)frame.width() / 2, 0 };
 
 	struct callback_context_type {
 		void *dst_base;
 		unsigned linesize;
-		const zimg::graph::ImageBufferConst *buffer;
-	} callback_context = { mmap_image.write_ptr(), mmap_linesize, &static_cast<const zimg::graph::ImageBufferConst &>(line_buffer) };
+		const zimg::graph::ImageBuffer<void> *buffer;
+	} callback_context = { mmap_image.write_ptr(), mmap_linesize, line_buffer };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = reinterpret_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBufferConst *buffer = cb_ctx->buffer;
+		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
 		uint8_t *base = (uint8_t *)cb_ctx->dst_base + (size_t)i * cb_ctx->linesize;
-		const uint8_t *src_ptr[3] = { (const uint8_t *)buffer->data[0], (const uint8_t *)buffer->data[1], (const uint8_t *)buffer->data[2] };
+		const uint8_t *src_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; j += 2) {
 			base[j * 2 + 0] = src_ptr[0][j + 0];

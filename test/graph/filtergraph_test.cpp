@@ -4,7 +4,6 @@
 
 #include "common/align.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/filtergraph.h"
@@ -56,7 +55,7 @@ TEST(FilterGraphTest, test_noop)
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 		src_image.default_fill();
-		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+		graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 		SCOPED_TRACE("validating src");
 		src_image.validate();
@@ -84,7 +83,7 @@ TEST(FilterGraphTest, test_noop_subsampling)
 			zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
 			src_image.default_fill();
-			graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+			graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 			SCOPED_TRACE("validating src");
 			src_image.validate();
@@ -142,7 +141,7 @@ TEST(FilterGraphTest, test_basic)
 
 		src_image.set_fill_val(test_byte1);
 		src_image.default_fill();
-		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+		graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 		dst_image.set_fill_val(test_byte3);
 
 		ASSERT_EQ(1U, filter1->get_total_calls());
@@ -207,7 +206,7 @@ TEST(FilterGraphTest, test_skip_plane)
 		src_image.set_fill_val(test_byte1);
 		src_image.default_fill();
 
-		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+		graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 		if (x) {
 			dst_image.set_fill_val(test_byte3, 0);
@@ -262,7 +261,7 @@ TEST(FilterGraphTest, test_color_to_grey)
 	src_image.set_fill_val(test_byte1);
 	src_image.default_fill();
 
-	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+	graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 	dst_image.set_fill_val(test_byte2);
 
@@ -319,7 +318,7 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 	src_image.set_fill_val(test_byte1);
 	src_image.default_fill();
 
-	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+	graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 	dst_image.set_fill_val(test_byte3);
 
@@ -366,7 +365,7 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 	src_image.set_fill_val(test_byte1);
 	src_image.default_fill();
 
-	graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+	graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 	dst_image.set_fill_val(test_byte2, 0);
 	dst_image.set_fill_val(test_byte2_uv, 1);
@@ -439,7 +438,7 @@ TEST(FilterGraphTest, test_support)
 			EXPECT_EQ(8U, graph.get_output_buffering());
 		}
 
-		graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), nullptr, nullptr);
+		graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 		dst_image.set_fill_val(test_byte3);
 
 		SCOPED_TRACE("validating src");
@@ -468,7 +467,7 @@ TEST(FilterGraphTest, test_callback)
 	const uint8_t test_byte3 = 0xDC;
 
 	struct callback_data {
-		zimg::graph::ImageBuffer buffer;
+		zimg::graph::ColorImageBuffer<void> buffer;
 		unsigned subsample_w;
 		unsigned subsample_h;
 		unsigned call_count;
@@ -485,12 +484,12 @@ TEST(FilterGraphTest, test_callback)
 		EXPECT_LE(right, w);
 
 		for (unsigned ii = i; ii < i + (1 << xptr->subsample_h); ++ii) {
-			zimg::LineBuffer<uint8_t> buf{ xptr->buffer, 0 };
+			zimg::graph::ImageBuffer<uint8_t> buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[0]);
 
 			std::fill(buf[ii] + left, buf[ii] + right, xptr->byte_val);
 		}
 		for (unsigned p = 1; p < 3; ++p) {
-			zimg::LineBuffer<uint8_t> chroma_buf{ xptr->buffer, p };
+			zimg::graph::ImageBuffer<uint8_t> chroma_buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[p]);
 			unsigned i_chroma = i >> xptr->subsample_h;
 			unsigned left_chroma = (left % 2 ? left - 1 : left) >> xptr->subsample_w;
 			unsigned right_chroma = (right % 2 ? right + 1 : right) >> xptr->subsample_w;
@@ -535,14 +534,14 @@ TEST(FilterGraphTest, test_callback)
 				AuditImage<uint8_t> dst_image{ w, h, type, sw, sh, true };
 				zimg::AlignedVector<char> tmp(graph.get_tmp_size());
 
-				callback_data cb1_data = { src_image.as_image_buffer(), sw, sh, 0, test_byte1 };
-				callback_data cb2_data = { dst_image.as_image_buffer(), sw, sh, 0, test_byte3 };
+				callback_data cb1_data = { src_image.as_write_buffer(), sw, sh, 0, test_byte1 };
+				callback_data cb2_data = { dst_image.as_write_buffer(), sw, sh, 0, test_byte3 };
 
 				src_image.set_fill_val(test_byte1);
 				tmp_image.set_fill_val(test_byte2);
 				dst_image.set_fill_val(test_byte3);
 
-				graph.process(src_image.as_image_buffer(), tmp_image.as_image_buffer(), tmp.data(), { cb, &cb1_data }, { cb, &cb2_data });
+				graph.process(src_image.as_read_buffer(), tmp_image.as_write_buffer(), tmp.data(), { cb, &cb1_data }, { cb, &cb2_data });
 
 				SCOPED_TRACE("validating src");
 				src_image.validate();
@@ -582,7 +581,7 @@ TEST(FilterGraphTest, test_callback_failed)
 	src_image.default_fill();
 	dst_image.default_fill();
 
-	ASSERT_THROW(graph.process(src_image.as_image_buffer(), dst_image.as_image_buffer(), tmp.data(), { cb, nullptr }, nullptr), zimg::error::UserCallbackFailed);
+	ASSERT_THROW(graph.process(src_image.as_read_buffer(), dst_image.as_write_buffer(), tmp.data(), { cb, nullptr }, nullptr), zimg::error::UserCallbackFailed);
 
 	SCOPED_TRACE("validating dst");
 	dst_image.validate();

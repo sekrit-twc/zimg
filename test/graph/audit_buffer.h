@@ -3,6 +3,7 @@
 #ifndef ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
 #define ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
 
+#include <array>
 #include <cstdint>
 #include "common/align.h"
 #include "common/pixel.h"
@@ -11,7 +12,7 @@
 template <class T>
 class AuditBuffer {
 	zimg::AlignedVector<T> m_vector[3];
-	zimg::graph::ImageBuffer m_buffer;
+	zimg::graph::ImageBuffer<T> m_buffer[3];
 	zimg::PixelFormat m_format;
 	unsigned m_width[3];
 	unsigned m_buffer_height[3];
@@ -45,7 +46,9 @@ public:
 
 	void default_fill();
 
-	const zimg::graph::ImageBuffer &as_image_buffer() const;
+	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const;
+
+	zimg::graph::ColorImageBuffer<void> as_write_buffer() const;
 };
 
 extern template class AuditBuffer<uint8_t>;

@@ -7,7 +7,6 @@
 #include "common/align.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
@@ -321,10 +320,10 @@ public:
 		return size;
 	}
 
-	void process(void *ctx, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = LineBuffer<const char>{ src }[i];
-		char *dst_line = LineBuffer<char>{ dst }[i];
+		const char *src_line = graph::static_buffer_cast<const char>(*src)[i];
+		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
 		unsigned line_base = mod(left, pixel_align);
@@ -416,10 +415,10 @@ public:
 		std::fill_n(reinterpret_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
 	}
 
-	void process(void *ctx, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned, unsigned) const
+	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const
 	{
-		const void *src_p = LineBuffer<const void>(src)[i];
-		void *dst_p = LineBuffer<void>(dst)[i];
+		const void *src_p = (*src)[i];
+		void *dst_p = (*dst)[i];
 
 		void *error_a = ctx;
 		void *error_b = reinterpret_cast<float *>(ctx) + get_context_size() / (2 * sizeof(float));

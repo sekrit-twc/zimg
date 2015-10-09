@@ -1,5 +1,4 @@
 #include <algorithm>
-#include "common/linebuffer.h"
 
 #include "gtest/gtest.h"
 #include "mock_filter.h"
@@ -99,7 +98,7 @@ void MockFilter::init_context(void *ctx) const
 	new (ctx) context{};
 }
 
-void MockFilter::process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void MockFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> *src, const zimg::graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	context *audit_ctx = reinterpret_cast<context *>(ctx);
 	auto flags = get_flags();
@@ -121,11 +120,11 @@ void MockFilter::process(void *ctx, const zimg::graph::ImageBufferConst &src, co
 
 	for (unsigned p = 0; p < (flags.color ? 3U : 1U); ++p) {
 		if (!flags.in_place)
-			ASSERT_NE(src.data[p], dst.data[p]);
+			ASSERT_NE(src[p].data(), dst[p].data());
 
 		if (flags.entire_plane) {
-			ASSERT_EQ((unsigned)-1, src.mask[p]);
-			ASSERT_EQ((unsigned)-1, dst.mask[p]);
+			ASSERT_EQ((unsigned)-1, src[p].mask());
+			ASSERT_EQ((unsigned)-1, dst[p].mask());
 		}
 	}
 
@@ -175,7 +174,7 @@ void SplatFilter<T>::enable_input_checking(bool enabled)
 }
 
 template <class T>
-void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBuffer<const void> *src, const zimg::graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	MockFilter::process(ctx, src, dst, tmp, i, left, right);
 
@@ -183,13 +182,10 @@ void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBufferConst &src
 	pair_unsigned col_range = get_required_col_range(left, right);
 
 	for (unsigned p = 0; p < (get_flags().color ? 3U : 1U); ++p) {
-		zimg::LineBuffer<const T> src_linebuf{ src, p };
-		zimg::LineBuffer<T> dst_linebuf{ dst, p };
-
 		if (m_input_checking) {
 			for (unsigned ii = row_range.first; ii < row_range.second; ++ii) {
-				const T *src_first = src_linebuf[ii] + col_range.first;
-				const T *src_last = src_linebuf[ii] + col_range.second;
+				const T *src_first = zimg::graph::static_buffer_cast<const T>(src[p])[ii] + col_range.first;
+				const T *src_last = zimg::graph::static_buffer_cast<const T>(src[p])[ii] + col_range.second;
 
 				const T *find_pos = std::find_if(src_first, src_last, [=](T x) { return x != m_src_val; });
 				ASSERT_TRUE(find_pos == src_last) << "found invalid value at position: (" << ii << ", " << find_pos - src_first << ")";
@@ -197,7 +193,7 @@ void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBufferConst &src
 		}
 
 		for (unsigned ii = i; ii < std::min(i + get_simultaneous_lines(), m_attr.height); ++ii) {
-			std::fill(dst_linebuf[ii] + left, dst_linebuf[ii] + right, m_dst_val);
+			std::fill(zimg::graph::static_buffer_cast<T>(dst[p])[ii] + left, zimg::graph::static_buffer_cast<T>(dst[p])[ii] + right, m_dst_val);
 		}
 	}
 }

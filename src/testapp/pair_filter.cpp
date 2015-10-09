@@ -8,9 +8,8 @@
 struct PairFilter::cache_context {
 	void *first_ctx;
 	void *second_ctx;
-	void *cache_plane[3];
+	zimg::graph::ImageBuffer<void> cache_buf[3];
 	unsigned cache_line_pos;
-	unsigned cache_mask;
 	unsigned col_left;
 	unsigned col_right;
 };
@@ -169,6 +168,7 @@ void PairFilter::init_context(void *ctx) const
 	size_t first_context_size = m_first->get_context_size();
 	size_t second_context_size = m_second->get_context_size();
 	size_t cache_size_one_plane = get_cache_size_one_plane();
+	unsigned mask = zimg::graph::select_zimg_buffer_mask(get_cache_line_count());
 
 	cache_context *cache = new (alloc.allocate_n<cache_context>(1)) cache_context{};
 
@@ -179,22 +179,19 @@ void PairFilter::init_context(void *ctx) const
 	m_second->init_context(cache->second_ctx);
 
 	for (unsigned p = 0; p < get_num_planes(); ++p) {
-		cache->cache_plane[p] = alloc.allocate(cache_size_one_plane);
+		cache->cache_buf[p] = zimg::graph::ImageBuffer<void>{ alloc.allocate(cache_size_one_plane), get_cache_stride(), mask };
 	}
 
 	cache->cache_line_pos = 0;
-	cache->cache_mask = zimg::graph::select_zimg_buffer_mask(get_cache_line_count());
 	cache->col_left = 0;
 	cache->col_right = 0;
 }
 
-void PairFilter::process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const
+void PairFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> src[], const zimg::graph::ImageBuffer<void> dst[], void *tmp, unsigned i, unsigned left, unsigned right) const
 {
 	cache_context *cache = static_cast<cache_context *>(ctx);
 	auto row_range = m_second->get_required_row_range(i);
 	auto col_range = m_second->get_required_col_range(left, right);
-	ptrdiff_t cache_stride = get_cache_stride();
-	zimg::graph::ImageBuffer cache_buf{};
 
 	if (left != cache->col_left || right != cache->col_right) {
 		cache->col_left = left;
@@ -202,18 +199,10 @@ void PairFilter::process(void *ctx, const zimg::graph::ImageBufferConst &src, co
 		cache->cache_line_pos = m_first_flags.has_state ? 0 : zimg::mod(row_range.first, m_first_step);
 	}
 
-	if (m_in_place) {
-		cache_buf = dst;
-	} else {
-		for (unsigned p = 0; p < get_num_planes(); ++p) {
-			cache_buf.data[p] = cache->cache_plane[p];
-			cache_buf.stride[p] = cache_stride;
-			cache_buf.mask[p] = cache->cache_mask;
-		}
-	}
+	const zimg::graph::ImageBuffer<void> *cache_buf = m_in_place ? dst : cache->cache_buf;
 
 	for (; cache->cache_line_pos < row_range.second; cache->cache_line_pos += m_first_step) {
 		m_first->process(cache->first_ctx, src, cache_buf, tmp, cache->cache_line_pos, col_range.first, col_range.second);
 	}
-	m_second->process(cache->second_ctx, cache_buf, dst, tmp, i, left, right);
+	m_second->process(cache->second_ctx, &zimg::graph::static_buffer_cast<const void>(*cache_buf), dst, tmp, i, left, right);
 }

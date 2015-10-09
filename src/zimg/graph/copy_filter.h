@@ -3,7 +3,8 @@
 #ifndef ZIMG_GRAPH_COPY_FILTER_H_
 #define ZIMG_GRAPH_COPY_FILTER_H_
 
-#include "common/linebuffer.h"
+#include <algorithm>
+#include <cstdint>
 #include "common/pixel.h"
 #include "image_filter.h"
 
@@ -33,15 +34,15 @@ public:
 		return m_attr;
 	}
 
-	void process(void *, const ImageBufferConst &src, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		LineBuffer<const void> src_buf{ src };
-		LineBuffer<void> dst_buf{ dst };
+		const uint8_t *src_p = static_buffer_cast<const uint8_t>(*src)[i];
+		uint8_t *dst_p = static_buffer_cast<uint8_t>(*dst)[i];
 
-		unsigned byte_left = left * pixel_size(m_attr.type);
-		unsigned byte_right = right * pixel_size(m_attr.type);
+		left *= pixel_size(m_attr.type);
+		right *= pixel_size(m_attr.type);
 
-		copy_buffer_lines(src_buf, dst_buf, i, i + 1, byte_left, byte_right);
+		std::copy(src_p + left, src_p + right, dst_p + left);
 	}
 };
 

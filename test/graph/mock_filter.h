@@ -51,7 +51,7 @@ public:
 
 	void init_context(void *ctx) const override;
 
-	void process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ImageBuffer<const void> *src, const zimg::graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 template <class T>
@@ -70,7 +70,7 @@ public:
 
 	void enable_input_checking(bool enabled);
 
-	void process(void *ctx, const zimg::graph::ImageBufferConst &src, const zimg::graph::ImageBuffer &dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
+	void process(void *ctx, const zimg::graph::ImageBuffer<const void> *src, const zimg::graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
 extern template class SplatFilter<uint8_t>;

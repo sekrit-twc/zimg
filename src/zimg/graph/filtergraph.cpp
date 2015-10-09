@@ -4,7 +4,6 @@
 #include "common/align.h"
 #include "common/alloc.h"
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
@@ -35,20 +34,13 @@ public:
 		return flags;
 	}
 
-	void process(void *, const ImageBufferConst &src, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		CopyFilter::process(nullptr, src, dst, nullptr, i, left, right);
+		CopyFilter::process(nullptr, src, dst + 0, nullptr, i, left, right);
 
 		if (m_rgb) {
-			ImageBuffer dst_p;
-
-			for (unsigned p = 1; p < 3; ++p) {
-				dst_p.data[0] = dst.data[p];
-				dst_p.stride[0] = dst.stride[p];
-				dst_p.mask[0] = dst.mask[p];
-
-				CopyFilter::process(nullptr, src, dst_p, nullptr, i, left, right);
-			}
+			CopyFilter::process(nullptr, src, dst + 1, nullptr, i, left, right);
+			CopyFilter::process(nullptr, src, dst + 2, nullptr, i, left, right);
 		}
 	}
 };
@@ -111,16 +103,16 @@ public:
 		return{ left << m_subsample_w, right << m_subsample_w };
 	}
 
-	void process(void *, const ImageBufferConst &, const ImageBuffer &dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		void *dst_p = LineBuffer<void>(dst)[i];
+		void *dst_p = (*dst)[i];
 
 		if (m_attr.type == PixelType::BYTE)
-			fill(reinterpret_cast<uint8_t *>(dst_p), m_value.b, left, right);
+			fill(static_cast<uint8_t *>(dst_p), m_value.b, left, right);
 		else if (m_attr.type == PixelType::WORD || m_attr.type == PixelType::HALF)
-			fill(reinterpret_cast<uint16_t *>(dst_p), m_value.w, left, right);
+			fill(static_cast<uint16_t *>(dst_p), m_value.w, left, right);
 		else if (m_attr.type == PixelType::FLOAT)
-			fill(reinterpret_cast<float *>(dst_p), m_value.f, left, right);
+			fill(static_cast<float *>(dst_p), m_value.f, left, right);
 	}
 };
 
@@ -140,18 +132,18 @@ public:
 
 class ExecutionState {
 	LinearAllocator m_alloc;
-	const ImageBufferConst *m_src_buf;
-	const ImageBuffer *m_dst_buf;
+	const ImageBuffer<const void> *m_src_buf;
+	const ImageBuffer<void> *m_dst_buf;
 	FilterGraph::callback m_unpack_cb;
 	FilterGraph::callback m_pack_cb;
 	void **m_context_table;
 	void *m_base;
 public:
-	ExecutionState(unsigned id_counter, const ImageBufferConst &src_buf, const ImageBuffer &dst_buf, void *pool,
+	ExecutionState(unsigned id_counter, const ImageBuffer<const void> src_buf[], const ImageBuffer<void> dst_buf[], void *pool,
 	               FilterGraph::callback unpack_cb, FilterGraph::callback pack_cb) :
 		m_alloc{ pool },
-		m_src_buf{ &src_buf },
-		m_dst_buf{ &dst_buf },
+		m_src_buf{ src_buf },
+		m_dst_buf{ dst_buf },
 		m_unpack_cb{ unpack_cb },
 		m_pack_cb{ pack_cb },
 		m_context_table{},
@@ -174,14 +166,14 @@ public:
 		return m_context_table[id];
 	}
 
-	const ImageBufferConst &get_input_buffer() const
+	const ImageBuffer<const void> *get_input_buffer() const
 	{
-		return *m_src_buf;
+		return m_src_buf;
 	}
 
-	const ImageBuffer &get_output_buffer() const
+	const ImageBuffer<void> *get_output_buffer() const
 	{
-		return *m_dst_buf;
+		return m_dst_buf;
 	}
 
 	void *get_tmp() const
@@ -215,7 +207,7 @@ class GraphNode {
 		static const uint64_t GUARD_PATTERN = (((uint64_t)0xDEADBEEF) << 32) | 0xDEADBEEF;
 
 		const uint64_t guard_pattern = GUARD_PATTERN;
-		ImageBuffer cache_buf;
+		ImageBuffer<void> cache_buf[3];
 		unsigned cache_pos;
 		unsigned source_left;
 		unsigned source_right;
@@ -341,28 +333,25 @@ private:
 		size_t filter_context_size = m_filter->get_context_size();
 		ptrdiff_t stride = get_cache_stride();
 		unsigned cache_lines = get_real_cache_lines();
+		unsigned mask = select_zimg_buffer_mask(m_cache_lines);
 
 		context->filter_ctx = alloc.allocate(filter_context_size);
 		context->filter_ctx2 = alloc.allocate(filter_context_size);
 
-		for (unsigned p = 1; p < 3; ++p) {
-			context->cache_buf.data[p] = alloc.allocate((size_t)cache_lines * stride);
-			context->cache_buf.stride[p] = stride;
-			context->cache_buf.mask[p] = select_zimg_buffer_mask(m_cache_lines);
-		}
+		context->cache_buf[1] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+		context->cache_buf[2] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 	}
 
 	void init_context_node(LinearAllocator &alloc, node_context *context) const
 	{
 		ptrdiff_t stride = get_cache_stride();
 		unsigned cache_lines = get_real_cache_lines();
+		unsigned mask = select_zimg_buffer_mask(m_cache_lines);
 
 		context->filter_ctx = alloc.allocate(m_filter->get_context_size());
 
 		for (unsigned p = 0; p < get_num_planes(); ++p) {
-			context->cache_buf.data[p] = alloc.allocate((size_t)cache_lines * stride);
-			context->cache_buf.stride[p] = stride;
-			context->cache_buf.mask[p] = select_zimg_buffer_mask(m_cache_lines);
+			context->cache_buf[p] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 		}
 	}
 
@@ -408,7 +397,7 @@ private:
 		context->source_right = std::max(context->source_right, right);
 	}
 
-	const ImageBufferConst *generate_line_source(ExecutionState *state, unsigned i, bool uv)
+	const ImageBuffer<const void> *generate_line_source(ExecutionState *state, unsigned i, bool uv)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
@@ -429,58 +418,44 @@ private:
 			context->cache_pos = pos;
 		}
 
-		return &state->get_input_buffer();
+		return static_buffer_cast<const void>(state->get_input_buffer());
 	}
 
-	const ImageBufferConst *generate_line_node_uv(ExecutionState *state, const ImageBuffer *external, unsigned i)
+	const ImageBuffer<const void> *generate_line_node_uv(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
-		const ImageBuffer *output_buffer = external ? external : &context->cache_buf;
+		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
 		unsigned pos = context->cache_pos;
 
 		for (; pos <= i; pos += m_data.node_info.step) {
-			const ImageBufferConst *input_buffer = nullptr;
-			ImageBufferConst input_buffer_one;
-			ImageBuffer output_buffer_one;
-
+			const ImageBuffer<const void> *input_buffer = nullptr;
 			auto range = m_filter->get_required_row_range(pos);
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
 				input_buffer = m_data.node_info.parent->generate_line(state, nullptr, ii, true);
 			}
 
-			for (unsigned p = 1; p < 3; ++p) {
-				void *filter_ctx = p == 1 ? context->filter_ctx : context->filter_ctx2;
-
-				input_buffer_one.data[0] = input_buffer->data[p];
-				input_buffer_one.stride[0] = input_buffer->stride[p];
-				input_buffer_one.mask[0] = input_buffer->mask[p];
-
-				output_buffer_one.data[0] = output_buffer->data[p];
-				output_buffer_one.stride[0] = output_buffer->stride[p];
-				output_buffer_one.mask[0] = output_buffer->mask[p];
-
-				m_filter->process(filter_ctx, input_buffer_one, output_buffer_one, state->get_tmp(), pos, context->source_left, context->source_right);
-			}
+			m_filter->process(context->filter_ctx, input_buffer + 1, output_buffer + 1, state->get_tmp(), pos, context->source_left, context->source_right);
+			m_filter->process(context->filter_ctx2, input_buffer + 2, output_buffer + 2, state->get_tmp(), pos, context->source_left, context->source_right);
 		}
 		context->cache_pos = pos;
 
-		return &static_cast<const ImageBufferConst &>(*output_buffer);
+		return static_buffer_cast<const void>(output_buffer);
 	}
 
-	const ImageBufferConst *generate_line_node(ExecutionState *state, const ImageBuffer *external, unsigned i)
+	const ImageBuffer<const void> *generate_line_node(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
 	{
 		node_context *context = reinterpret_cast<node_context *>(state->get_context(m_id));
 		context->assert_guard_pattern();
 
-		const ImageBuffer *output_buffer = external ? external : &context->cache_buf;
+		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
 		unsigned pos = context->cache_pos;
 
 		for (; pos <= i; pos += m_data.node_info.step) {
-			const ImageBufferConst *input_buffer = nullptr;
-			const ImageBufferConst *input_buffer_uv = nullptr;
+			const ImageBuffer<const void> *input_buffer = nullptr;
+			const ImageBuffer<const void> *input_buffer_uv = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
 
@@ -492,26 +467,16 @@ private:
 			}
 
 			if (m_data.node_info.parent_uv) {
-				ImageBufferConst input_buffer_yuv;
+				ImageBuffer<const void> input_buffer_yuv[3] = { input_buffer[0], input_buffer_uv[1], input_buffer_uv[2] };
 
-				input_buffer_yuv.data[0] = input_buffer->data[0];
-				input_buffer_yuv.stride[0] = input_buffer->stride[0];
-				input_buffer_yuv.mask[0] = input_buffer->mask[0];
-
-				for (unsigned p = 1; p < 3; ++p) {
-					input_buffer_yuv.data[p] = input_buffer_uv->data[p];
-					input_buffer_yuv.stride[p] = input_buffer_uv->stride[p];
-					input_buffer_yuv.mask[p] = input_buffer_uv->mask[p];
-				}
-
-				m_filter->process(context->filter_ctx, input_buffer_yuv, *output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
+				m_filter->process(context->filter_ctx, input_buffer_yuv, output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
 			} else {
-				m_filter->process(context->filter_ctx, *input_buffer, *output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
+				m_filter->process(context->filter_ctx, input_buffer, output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
 			}
 		}
 		context->cache_pos = pos;
 
-		return &static_cast<const ImageBufferConst &>(*output_buffer);
+		return static_buffer_cast<const void>(output_buffer);
 	}
 public:
 	GraphNode(source_tag tag, unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
@@ -695,7 +660,7 @@ public:
 			set_tile_region_node(state, left, right);
 	}
 
-	const ImageBufferConst *generate_line(ExecutionState *state, const ImageBuffer *external, unsigned i, bool uv)
+	const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv)
 	{
 		if (m_is_source)
 			return generate_line_source(state, i, uv);
@@ -960,7 +925,7 @@ public:
 		return lines;
 	}
 
-	void process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
+	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
 		check_complete();
 
@@ -991,11 +956,11 @@ public:
 
 			for (unsigned i = 0; i < attr.height; i += v_step) {
 				for (unsigned ii = i; ii < i + v_step; ++ii) {
-					m_node->generate_line(&state, &dst, ii, false);
+					m_node->generate_line(&state, state.get_output_buffer(), ii, false);
 				}
 
 				if (m_node_uv)
-					m_node_uv->generate_line(&state, &state.get_output_buffer(), i / v_step, true);
+					m_node_uv->generate_line(&state, state.get_output_buffer(), i / v_step, true);
 
 				if (state.get_pack_cb())
 					state.get_pack_cb()(i, j, j_end);
@@ -1079,7 +1044,7 @@ unsigned FilterGraph::get_output_buffering() const
 	return m_impl->get_output_buffering();
 }
 
-void FilterGraph::process(const ImageBufferConst &src, const ImageBuffer &dst, void *tmp, callback unpack_cb, callback pack_cb) const
+void FilterGraph::process(const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *tmp, callback unpack_cb, callback pack_cb) const
 {
 	m_impl->process(src, dst, tmp, unpack_cb, pack_cb);
 }

@@ -13,8 +13,8 @@ struct FilterExecutor::data {
 
 void FilterExecutor::exec_grey(const zimg::graph::ImageFilter *filter, unsigned plane)
 {
-	zimg::graph::ImageBufferConst src_buffer = m_src_frame->as_read_buffer(plane);
-	zimg::graph::ImageBuffer dst_buffer = m_dst_frame->as_write_buffer(plane);
+	auto src_buffer = m_src_frame->as_read_buffer(plane);
+	auto dst_buffer = m_dst_frame->as_write_buffer(plane);
 
 	auto attr = filter->get_image_attributes();
 	unsigned step = filter->get_simultaneous_lines();
@@ -22,22 +22,19 @@ void FilterExecutor::exec_grey(const zimg::graph::ImageFilter *filter, unsigned 
 	filter->init_context(m_data->ctx.data());
 
 	for (unsigned i = 0; i < attr.height; i += step) {
-		filter->process(m_data->ctx.data(), src_buffer, dst_buffer, m_data->tmp.data(), i, 0, attr.width);
+		filter->process(m_data->ctx.data(), &src_buffer, &dst_buffer, m_data->tmp.data(), i, 0, attr.width);
 	}
 }
 
 void FilterExecutor::exec_color()
 {
-	zimg::graph::ImageBufferConst src_buffer = m_src_frame->as_read_buffer();
-	zimg::graph::ImageBuffer dst_buffer = m_dst_frame->as_write_buffer();
-
 	auto attr = m_filter->get_image_attributes();
 	unsigned step = m_filter->get_simultaneous_lines();
 
 	m_filter->init_context(m_data->ctx.data());
 
 	for (unsigned i = 0; i < attr.height; i += step) {
-		m_filter->process(m_data->ctx.data(), src_buffer, dst_buffer, m_data->tmp.data(), i, 0, attr.width);
+		m_filter->process(m_data->ctx.data(), m_src_frame->as_read_buffer(), m_dst_frame->as_write_buffer(), m_data->tmp.data(), i, 0, attr.width);
 	}
 }
 

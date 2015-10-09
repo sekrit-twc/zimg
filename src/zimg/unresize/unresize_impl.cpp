@@ -1,6 +1,5 @@
 #include <algorithm>
 #include "common/except.h"
-#include "common/linebuffer.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "unresize_impl.h"
@@ -40,7 +39,7 @@ void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *
 	}
 }
 
-void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const LineBuffer<const float> &src, const LineBuffer<float> &dst, unsigned i, unsigned width)
+void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const graph::ImageBuffer<const float> &src, const graph::ImageBuffer<float> &dst, unsigned i, unsigned width)
 {
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
@@ -64,7 +63,7 @@ void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const LineBuffer<
 	}
 }
 
-void unresize_line_back_v_f32_c(const BilinearContext &ctx, const LineBuffer<float> &dst, unsigned i, unsigned width)
+void unresize_line_back_v_f32_c(const BilinearContext &ctx, const graph::ImageBuffer<float> &dst, unsigned i, unsigned width)
 {
 	const float *u = ctx.lu_u.data();
 
@@ -86,9 +85,9 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned i, unsigned, unsigned) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned, unsigned) const override
 	{
-		unresize_line_h_f32_c(m_context, LineBuffer<const float>{ src }[i], LineBuffer<float>{ dst }[i]);
+		unresize_line_h_f32_c(m_context, graph::static_buffer_cast<const float>(*src)[i], graph::static_buffer_cast<float>(*dst)[i]);
 	}
 };
 
@@ -101,10 +100,10 @@ public:
 			throw error::InternalError{ "pixel type not supported" };
 	}
 
-	void process(void *, const graph::ImageBufferConst &src, const graph::ImageBuffer &dst, void *, unsigned, unsigned, unsigned) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned, unsigned, unsigned) const override
 	{
-		LineBuffer<const float> src_buf{ src };
-		LineBuffer<float> dst_buf{ dst };
+		auto src_buf = graph::static_buffer_cast<const float>(*src);
+		auto dst_buf = graph::static_buffer_cast<float>(*dst);
 
 		unsigned width = get_image_attributes().width;
 		unsigned height = get_image_attributes().height;
