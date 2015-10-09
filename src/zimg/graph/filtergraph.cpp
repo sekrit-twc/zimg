@@ -199,210 +199,204 @@ public:
 
 
 class GraphNode {
-	struct source_tag {};
-	struct filter_tag {};
-	struct filter_uv_tag {};
-
+protected:
 	struct node_context {
-		static const uint64_t GUARD_PATTERN = (((uint64_t)0xDEADBEEF) << 32) | 0xDEADBEEF;
-
+		static const uint64_t GUARD_PATTERN = 0xDEADBEEFDEADBEEFULL;
 		const uint64_t guard_pattern = GUARD_PATTERN;
-		ImageBuffer<void> cache_buf[3];
 		unsigned cache_pos;
 		unsigned source_left;
 		unsigned source_right;
-		void *filter_ctx;
-		void *filter_ctx2;
 
 		void assert_guard_pattern() const
 		{
 			_zassert(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
 		}
+
 	};
-
-	union data_union {
-		struct {
-			unsigned width;
-			unsigned height;
-			PixelType type;
-			unsigned subsample_w;
-			unsigned subsample_h;
-			bool color;
-		} source_info;
-
-		struct {
-			GraphNode *parent;
-			GraphNode *parent_uv;
-			ImageFilter::filter_flags flags;
-			unsigned step;
-			bool is_uv;
-		} node_info;
-
-		data_union(source_tag) : source_info{} {};
-		data_union(filter_tag) : node_info{} {};
-		data_union(filter_uv_tag) : node_info{} {};
-	} m_data;
-public:
-	static const source_tag SOURCE;
-	static const filter_tag FILTER;
-	static const filter_uv_tag FILTER_UV;
 private:
-	std::unique_ptr<ImageFilter> m_filter;
-	unsigned m_cache_lines;
-	unsigned m_ref_count;
 	unsigned m_id;
-	bool m_is_source;
-
-	unsigned get_num_planes() const
+	unsigned m_ref_count;
+	unsigned m_cache_lines;
+protected:
+	GraphNode(unsigned id) :
+		m_id{ id },
+		m_ref_count{},
+		m_cache_lines{}
 	{
-		if (m_is_source)
-			return m_data.source_info.color ? 3 : 1;
-		else if (m_data.node_info.is_uv)
-			return 2;
-		else
-			return m_data.node_info.flags.color ? 3 : 1;
+	}
+
+	unsigned get_id() const
+	{
+		return m_id;
 	}
 
 	unsigned get_real_cache_lines() const
 	{
-		return m_cache_lines == (unsigned)-1 ? get_image_attributes().height : m_cache_lines;
+		return get_cache_lines() == (unsigned)-1 ? get_image_attributes(false).height : get_cache_lines();
 	}
 
 	ptrdiff_t get_cache_stride() const
 	{
-		auto attr = get_image_attributes();
+		auto attr = get_image_attributes(false);
 		return align(attr.width * pixel_size(attr.type), ALIGNMENT);
 	}
 
 	void set_cache_lines(unsigned n)
 	{
 		if (n > m_cache_lines) {
-			unsigned height = m_is_source ? m_data.source_info.height : m_filter->get_image_attributes().height;
-			m_cache_lines = n >= height ? -1 : select_zimg_buffer_mask(n) + 1;
+			if (n >= get_image_attributes().height)
+				m_cache_lines = -1;
+			else
+				m_cache_lines = select_zimg_buffer_mask(n) + 1;
 		}
 	}
 
-	void simulate_source(SimulationState *sim, unsigned first, unsigned last, bool uv)
+	void init_context_base(node_context *ctx) const
 	{
-		unsigned step = 1 << m_data.source_info.subsample_h;
-		unsigned pos = sim->pos(m_id);
+		ctx->cache_pos = 0;
+		ctx->source_left = 0;
+		ctx->source_right = 0;
+	}
 
-		first <<= uv ? m_data.source_info.subsample_h : 0;
-		last <<= uv ? m_data.source_info.subsample_h : 0;
+	void reset_context_base(node_context *ctx) const
+	{
+		auto attr = get_image_attributes(false);
+
+		ctx->cache_pos = 0;
+		ctx->source_left = attr.width;
+		ctx->source_right = 0;
+	}
+public:
+	virtual ~GraphNode() = default;
+
+	unsigned add_ref()
+	{
+		return ++m_ref_count;
+	}
+
+	unsigned get_ref() const
+	{
+		return m_ref_count;
+	}
+
+	unsigned get_cache_lines() const
+	{
+		return m_cache_lines;
+	}
+
+	virtual ImageFilter::image_attributes get_image_attributes(bool uv = false) const = 0;
+
+	virtual bool entire_row() const = 0;
+
+	virtual void simulate(SimulationState *sim, unsigned first, unsigned last, bool uv = false) = 0;
+
+	virtual size_t get_context_size() const = 0;
+
+	virtual size_t get_tmp_size(unsigned left, unsigned right) const = 0;
+
+	virtual void init_context(ExecutionState *state) const = 0;
+
+	virtual void reset_context(ExecutionState *state) const = 0;
+
+	virtual void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const = 0;
+
+	virtual const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv) const = 0;
+};
+
+class SourceNode final : public GraphNode {
+	ImageFilter::image_attributes m_attr;
+	unsigned m_subsample_w;
+	unsigned m_subsample_h;
+	bool m_color;
+public:
+	SourceNode(unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
+		GraphNode(id),
+		m_attr{ width, height, type },
+		m_subsample_w{ subsample_w },
+		m_subsample_h{ subsample_h },
+		m_color{ color }
+	{
+	}
+
+	ImageFilter::image_attributes get_image_attributes(bool uv) const override
+	{
+		auto attr = m_attr;
+
+		if (uv) {
+			attr.width >>= m_subsample_w;
+			attr.height >>= m_subsample_h;
+		}
+		return attr;
+	}
+
+	bool entire_row() const override
+	{
+		return false;
+	}
+
+	void simulate(SimulationState *sim, unsigned first, unsigned last, bool uv) override
+	{
+		unsigned step = 1 << m_subsample_h;
+		unsigned pos = sim->pos(get_id());
+
+		first <<= uv ? m_subsample_h : 0;
+		last <<= uv ? m_subsample_h : 0;
 
 		if (pos < last)
 			pos = mod(last - 1, step) + step;
 
-		sim->pos(m_id) = pos;
+		sim->pos(get_id()) = pos;
 		set_cache_lines(pos - first);
 	}
 
-	void simulate_node_uv(SimulationState *sim, unsigned first, unsigned last)
+	size_t get_context_size() const override
 	{
-		unsigned pos = sim->pos(m_id);
-
-		for (; pos < last; pos += m_data.node_info.step) {
-			auto range = m_filter->get_required_row_range(pos);
-
-			m_data.node_info.parent->simulate(sim, range.first, range.second, true);
-		}
-
-		sim->pos(m_id) = pos;
-		set_cache_lines(pos - first);
+		return align(sizeof(node_context), zimg::ALIGNMENT);
 	}
 
-	void simulate_node(SimulationState *sim, unsigned first, unsigned last)
+	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		unsigned pos = sim->pos(m_id);
-
-		for (; pos < last; pos += m_data.node_info.step) {
-			auto range = m_filter->get_required_row_range(pos);
-
-			m_data.node_info.parent->simulate(sim, range.first, range.second, false);
-
-			if (m_data.node_info.parent_uv)
-				m_data.node_info.parent_uv->simulate(sim, range.first, range.second, true);
-		}
-
-		sim->pos(m_id) = pos;
-		set_cache_lines(pos - first);
+		return 0;
 	}
 
-	void init_context_node_uv(LinearAllocator &alloc, node_context *context) const
+	void init_context(ExecutionState *state) const override
 	{
-		size_t filter_context_size = m_filter->get_context_size();
-		ptrdiff_t stride = get_cache_stride();
-		unsigned cache_lines = get_real_cache_lines();
-		unsigned mask = select_zimg_buffer_mask(m_cache_lines);
+		size_t context_size = get_context_size();
+		LinearAllocator alloc{ state->alloc_context(get_id(), get_context_size()) };
 
-		context->filter_ctx = alloc.allocate(filter_context_size);
-		context->filter_ctx2 = alloc.allocate(filter_context_size);
+		node_context *context = new (alloc.allocate_n<node_context>(1)) node_context{};
+		init_context_base(context);
 
-		context->cache_buf[1] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
-		context->cache_buf[2] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+		_zassert(alloc.count() <= context_size, "buffer overflow detected");
+		_zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
-	void init_context_node(LinearAllocator &alloc, node_context *context) const
+	void reset_context(ExecutionState *state) const override
 	{
-		ptrdiff_t stride = get_cache_stride();
-		unsigned cache_lines = get_real_cache_lines();
-		unsigned mask = select_zimg_buffer_mask(m_cache_lines);
-
-		context->filter_ctx = alloc.allocate(m_filter->get_context_size());
-
-		for (unsigned p = 0; p < get_num_planes(); ++p) {
-			context->cache_buf[p] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
-		}
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
+		reset_context_base(context);
 	}
 
-	void set_tile_region_source(ExecutionState *state, unsigned left, unsigned right, bool uv) const
+	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
 	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
 		context->assert_guard_pattern();
 
 		if (uv) {
-			left <<= m_data.source_info.subsample_w;
-			right <<= m_data.source_info.subsample_w;
+			left <<= m_subsample_w;
+			right <<= m_subsample_w;
 		}
 
 		context->source_left = std::min(context->source_left, left);
 		context->source_right = std::max(context->source_right, right);
 	}
 
-	void set_tile_region_node_uv(ExecutionState *state, unsigned left, unsigned right) const
+	const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv) const override
 	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
 		context->assert_guard_pattern();
 
-		auto range = m_filter->get_required_col_range(left, right);
-
-		m_data.node_info.parent->set_tile_region(state, range.first, range.second, true);
-
-		context->source_left = std::min(context->source_left, left);
-		context->source_right = std::max(context->source_right, right);
-	}
-
-	void set_tile_region_node(ExecutionState *state, unsigned left, unsigned right) const
-	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
-		context->assert_guard_pattern();
-
-		auto range = m_filter->get_required_col_range(left, right);
-
-		m_data.node_info.parent->set_tile_region(state, range.first, range.second, false);
-		if (m_data.node_info.parent_uv)
-			m_data.node_info.parent_uv->set_tile_region(state, range.first, range.second, true);
-
-		context->source_left = std::min(context->source_left, left);
-		context->source_right = std::max(context->source_right, right);
-	}
-
-	const ImageBuffer<const void> *generate_line_source(ExecutionState *state, unsigned i, bool uv)
-	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
-		context->assert_guard_pattern();
-
-		unsigned step = 1 << m_data.source_info.subsample_h;
+		unsigned step = 1 << m_subsample_h;
 		unsigned line = uv ? i * step : i;
 		unsigned pos = context->cache_pos;
 
@@ -420,53 +414,161 @@ private:
 
 		return static_buffer_cast<const void>(state->get_input_buffer());
 	}
+};
 
-	const ImageBuffer<const void> *generate_line_node_uv(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
+class FilterNode final : public GraphNode {
+	struct node_context : public GraphNode::node_context {
+		void *filter_ctx;
+		ImageBuffer<void> cache_buf[3];
+	};
+
+	std::unique_ptr<ImageFilter> m_filter;
+	ImageFilter::filter_flags m_flags;
+	GraphNode *m_parent;
+	GraphNode *m_parent_uv;
+	unsigned m_step;
+
+	unsigned get_num_planes() const
 	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
-		context->assert_guard_pattern();
-
-		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
-		unsigned pos = context->cache_pos;
-
-		for (; pos <= i; pos += m_data.node_info.step) {
-			const ImageBuffer<const void> *input_buffer = nullptr;
-			auto range = m_filter->get_required_row_range(pos);
-
-			for (unsigned ii = range.first; ii < range.second; ++ii) {
-				input_buffer = m_data.node_info.parent->generate_line(state, nullptr, ii, true);
-			}
-
-			m_filter->process(context->filter_ctx, input_buffer + 1, output_buffer + 1, state->get_tmp(), pos, context->source_left, context->source_right);
-			m_filter->process(context->filter_ctx2, input_buffer + 2, output_buffer + 2, state->get_tmp(), pos, context->source_left, context->source_right);
-		}
-		context->cache_pos = pos;
-
-		return static_buffer_cast<const void>(output_buffer);
+		return m_flags.color ? 3U : 1U;
+	}
+public:
+	FilterNode(unsigned id, std::unique_ptr<ImageFilter> &&filter, GraphNode *parent, GraphNode *parent_uv) :
+		GraphNode(id),
+		m_flags(filter->get_flags()),
+		m_parent{ parent },
+		m_parent_uv{ parent_uv },
+		m_step{ filter->get_simultaneous_lines() }
+	{
+		m_filter = std::move(filter);
 	}
 
-	const ImageBuffer<const void> *generate_line_node(ExecutionState *state, const ImageBuffer<void> external[], unsigned i)
+	ImageFilter::image_attributes get_image_attributes(bool) const override
 	{
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
+		return m_filter->get_image_attributes();
+	}
+
+	bool entire_row() const override
+	{
+		return m_flags.entire_row || m_parent->entire_row() || (m_parent_uv && m_parent_uv->entire_row());
+	}
+
+	void simulate(SimulationState *sim, unsigned first, unsigned last, bool) override
+	{
+		unsigned pos = sim->pos(get_id());
+
+		for (; pos < last; pos += m_step) {
+			auto range = m_filter->get_required_row_range(pos);
+
+			m_parent->simulate(sim, range.first, range.second, false);
+
+			if (m_parent_uv)
+				m_parent_uv->simulate(sim, range.first, range.second, true);
+		}
+
+		sim->pos(get_id()) = pos;
+		set_cache_lines(pos - first);
+	}
+
+	size_t get_context_size() const override
+	{
+		FakeAllocator alloc;
+
+		alloc.allocate_n<node_context>(1);
+
+		unsigned num_planes = get_num_planes();
+		unsigned cache_lines = get_real_cache_lines();
+		ptrdiff_t stride = get_cache_stride();
+
+		alloc.allocate((size_t)num_planes * cache_lines * stride);
+		alloc.allocate(m_filter->get_context_size());
+
+		return alloc.count();
+	}
+
+	size_t get_tmp_size(unsigned left, unsigned right) const override
+	{
+
+		size_t tmp_size = 0;
+
+		auto range = m_filter->get_required_col_range(left, right);
+
+		tmp_size = std::max(tmp_size, m_filter->get_tmp_size(left, right));
+		tmp_size = std::max(tmp_size, m_parent->get_tmp_size(range.first, range.second));
+
+		if (m_parent_uv)
+			tmp_size = std::max(tmp_size, m_parent_uv->get_tmp_size(range.first, range.second));
+
+		return tmp_size;
+	}
+
+	void init_context(ExecutionState *state) const override
+	{
+		size_t context_size = get_context_size();
+		LinearAllocator alloc{ state->alloc_context(get_id(), context_size) };
+
+		node_context *context = new (alloc.allocate_n<node_context>(1)) node_context{};
+		init_context_base(context);
+
+		ptrdiff_t stride = get_cache_stride();
+		unsigned cache_lines = get_real_cache_lines();
+		unsigned mask = select_zimg_buffer_mask(get_cache_lines());
+
+		context->filter_ctx = alloc.allocate(m_filter->get_context_size());
+
+		for (unsigned p = 0; p < get_num_planes(); ++p) {
+			context->cache_buf[p] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+		}
+
+		_zassert(alloc.count() <= context_size, "buffer overflow detected");
+		_zassert_d(alloc.count() == context_size, "allocation mismatch");
+	}
+
+	void reset_context(ExecutionState *state) const override
+	{
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
+		reset_context_base(context);
+
+		m_filter->init_context(context->filter_ctx);
+	}
+
+	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	{
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
+		context->assert_guard_pattern();
+
+		auto range = m_filter->get_required_col_range(left, right);
+
+		m_parent->set_tile_region(state, range.first, range.second, false);
+		if (m_parent_uv)
+			m_parent_uv->set_tile_region(state, range.first, range.second, true);
+
+		context->source_left = std::min(context->source_left, left);
+		context->source_right = std::max(context->source_right, right);
+	}
+
+	const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv) const override
+	{
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
 		context->assert_guard_pattern();
 
 		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
 		unsigned pos = context->cache_pos;
 
-		for (; pos <= i; pos += m_data.node_info.step) {
+		for (; pos <= i; pos += m_step) {
 			const ImageBuffer<const void> *input_buffer = nullptr;
 			const ImageBuffer<const void> *input_buffer_uv = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
-				input_buffer = m_data.node_info.parent->generate_line(state, nullptr, ii, false);
+				input_buffer = m_parent->generate_line(state, nullptr, ii, false);
 
-				if (m_data.node_info.parent_uv)
-					input_buffer_uv = m_data.node_info.parent_uv->generate_line(state, nullptr, ii, true);
+				if (m_parent_uv)
+					input_buffer_uv = m_parent_uv->generate_line(state, nullptr, ii, true);
 			}
 
-			if (m_data.node_info.parent_uv) {
+			if (m_parent_uv) {
 				ImageBuffer<const void> input_buffer_yuv[3] = { input_buffer[0], input_buffer_uv[1], input_buffer_uv[2] };
 
 				m_filter->process(context->filter_ctx, input_buffer_yuv, output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
@@ -478,202 +580,157 @@ private:
 
 		return static_buffer_cast<const void>(output_buffer);
 	}
+};
+
+
+class FilterNodeUV final : public GraphNode {
+	struct node_context : public GraphNode::node_context {
+		void *filter_ctx_u;
+		void *filter_ctx_v;
+		ImageBuffer<void> cache_buf[3];
+	};
+
+	std::unique_ptr<ImageFilter> m_filter;
+	ImageFilter::filter_flags m_flags;
+	GraphNode *m_parent;
+	unsigned m_step;
+
+	unsigned get_num_planes() const
+	{
+		return 2;
+	}
 public:
-	GraphNode(source_tag tag, unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
-		m_data{ tag },
-		m_cache_lines{ 1U << subsample_h },
-		m_ref_count{},
-		m_id{ id },
-		m_is_source{ true }
+	FilterNodeUV(unsigned id, std::unique_ptr<ImageFilter> &&filter, GraphNode *parent) :
+		GraphNode(id),
+		m_flags(filter->get_flags()),
+		m_parent{ parent },
+		m_step{ filter->get_simultaneous_lines() }
 	{
-		m_data.source_info.width = width;
-		m_data.source_info.height = height;
-		m_data.source_info.type = type;
-		m_data.source_info.subsample_w = subsample_w;
-		m_data.source_info.subsample_h = subsample_h;
-		m_data.source_info.color = color;
-	}
-
-	GraphNode(filter_tag tag, unsigned id, GraphNode *parent, GraphNode *parent_uv, std::unique_ptr<ImageFilter> &&filter) :
-		m_data{ tag },
-		m_cache_lines{},
-		m_ref_count{},
-		m_id{ id },
-		m_is_source{ false }
-	{
-		m_data.node_info.parent = parent;
-		m_data.node_info.parent_uv = parent_uv;
-		m_data.node_info.flags = filter->get_flags();
-		m_data.node_info.step = filter->get_simultaneous_lines();
-		m_data.node_info.is_uv = false;
-
 		m_filter = std::move(filter);
 	}
 
-	GraphNode(filter_uv_tag tag, unsigned id, GraphNode *parent, std::unique_ptr<ImageFilter> &&filter) :
-		m_data{ tag },
-		m_cache_lines{},
-		m_ref_count{},
-		m_id{ id },
-		m_is_source{ false }
+	ImageFilter::image_attributes get_image_attributes(bool) const override
 	{
-		m_data.node_info.parent = parent;
-		m_data.node_info.parent_uv = nullptr;
-		m_data.node_info.flags = filter->get_flags();
-		m_data.node_info.step = filter->get_simultaneous_lines();
-		m_data.node_info.is_uv = true;
-
-		m_filter = std::move(filter);
+		return m_filter->get_image_attributes();
 	}
 
-	unsigned add_ref()
+	bool entire_row() const override
 	{
-		return ++m_ref_count;
+		return m_flags.entire_row || m_parent->entire_row();
 	}
 
-	unsigned get_ref() const
+	void simulate(SimulationState *sim, unsigned first, unsigned last, bool) override
 	{
-		return m_ref_count;
-	}
+		unsigned pos = sim->pos(get_id());
 
-	void simulate(SimulationState *sim, unsigned first, unsigned last, bool uv = false)
-	{
-		if (m_is_source)
-			simulate_source(sim, first, last, uv);
-		else if (m_data.node_info.is_uv)
-			simulate_node_uv(sim, first, last);
-		else
-			simulate_node(sim, first, last);
-	}
+		for (; pos < last; pos += m_step) {
+			auto range = m_filter->get_required_row_range(pos);
 
-	bool entire_row() const
-	{
-		bool entire_row = false;
-
-		if (!m_is_source) {
-			entire_row = entire_row || m_data.node_info.flags.entire_row;
-			entire_row = entire_row || m_data.node_info.parent->entire_row();
-
-			if (m_data.node_info.parent_uv)
-				entire_row = entire_row || m_data.node_info.parent_uv->entire_row();
+			m_parent->simulate(sim, range.first, range.second, true);
 		}
 
-		return entire_row;
+		sim->pos(get_id()) = pos;
+		set_cache_lines(pos - first);
 	}
 
-	ImageFilter::image_attributes get_image_attributes(bool uv = false) const
-	{
-		if (m_is_source) {
-			unsigned width = m_data.source_info.width >> (uv ? m_data.source_info.subsample_w : 0);
-			unsigned height = m_data.source_info.height >> (uv ? m_data.source_info.subsample_h : 0);
-			return{ width, height, m_data.source_info.type };
-		} else {
-			return m_filter->get_image_attributes();
-		}
-	}
-
-	size_t get_context_size() const
+	size_t get_context_size() const override
 	{
 		FakeAllocator alloc;
 
 		alloc.allocate_n<node_context>(1);
 
-		if (!m_is_source) {
-			unsigned num_planes = get_num_planes();
-			unsigned cache_lines = get_real_cache_lines();
-			ptrdiff_t stride = get_cache_stride();
+		unsigned num_planes = get_num_planes();
+		unsigned cache_lines = get_real_cache_lines();
+		ptrdiff_t stride = get_cache_stride();
 
-			alloc.allocate((size_t)num_planes * cache_lines * stride);
-			alloc.allocate(m_filter->get_context_size());
-
-			if (m_data.node_info.is_uv)
-				alloc.allocate(m_filter->get_context_size());
-		}
+		alloc.allocate((size_t)num_planes * cache_lines * stride);
+		alloc.allocate(m_filter->get_context_size());
+		alloc.allocate(m_filter->get_context_size());
 
 		return alloc.count();
 	}
 
-	size_t get_tmp_size(unsigned left, unsigned right) const
+	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
+
 		size_t tmp_size = 0;
 
-		if (!m_is_source) {
-			auto range = m_filter->get_required_col_range(left, right);
+		auto range = m_filter->get_required_col_range(left, right);
 
-			tmp_size = std::max(tmp_size, m_filter->get_tmp_size(left, right));
-			tmp_size = std::max(tmp_size, m_data.node_info.parent->get_tmp_size(range.first, range.second));
-
-			if (m_data.node_info.parent_uv)
-				tmp_size = std::max(tmp_size, m_data.node_info.parent_uv->get_tmp_size(range.first, range.second));
-		}
+		tmp_size = std::max(tmp_size, m_filter->get_tmp_size(left, right));
+		tmp_size = std::max(tmp_size, m_parent->get_tmp_size(range.first, range.second));
 
 		return tmp_size;
 	}
 
-	unsigned get_cache_lines() const
-	{
-		return m_cache_lines;
-	}
-
-	void init_context(ExecutionState *state)
+	void init_context(ExecutionState *state) const override
 	{
 		size_t context_size = get_context_size();
-		LinearAllocator alloc{ state->alloc_context(m_id, context_size) };
+		LinearAllocator alloc{ state->alloc_context(get_id(), context_size) };
 
 		node_context *context = new (alloc.allocate_n<node_context>(1)) node_context{};
-		context->cache_pos = 0;
+		init_context_base(context);
 
-		if (!m_is_source && m_data.node_info.is_uv)
-			init_context_node_uv(alloc, context);
-		else if (!m_is_source)
-			init_context_node(alloc, context);
+		ptrdiff_t stride = get_cache_stride();
+		unsigned cache_lines = get_real_cache_lines();
+		unsigned mask = select_zimg_buffer_mask(get_cache_lines());
+
+		context->filter_ctx_u = alloc.allocate(m_filter->get_context_size());
+		context->filter_ctx_v = alloc.allocate(m_filter->get_context_size());
+
+		context->cache_buf[1] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+		context->cache_buf[2] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 
 		_zassert(alloc.count() <= context_size, "buffer overflow detected");
 		_zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
-	void reset_context(ExecutionState *state)
+	void reset_context(ExecutionState *state) const override
 	{
-		auto attr = get_image_attributes();
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
+		reset_context_base(context);
 
-		node_context *context = static_cast<node_context *>(state->get_context(m_id));
+		m_filter->init_context(context->filter_ctx_u);
+		m_filter->init_context(context->filter_ctx_v);
+	}
+
+	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	{
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
 		context->assert_guard_pattern();
-		context->cache_pos = 0;
-		context->source_left = attr.width;
-		context->source_right = 0;
 
-		if (!m_is_source && m_data.node_info.is_uv) {
-			m_filter->init_context(context->filter_ctx);
-			m_filter->init_context(context->filter_ctx2);
-		} else if (!m_is_source) {
-			m_filter->init_context(context->filter_ctx);
+		auto range = m_filter->get_required_col_range(left, right);
+
+		m_parent->set_tile_region(state, range.first, range.second, true);
+
+		context->source_left = std::min(context->source_left, left);
+		context->source_right = std::max(context->source_right, right);
+	}
+
+	const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv) const override
+	{
+		node_context *context = static_cast<node_context *>(state->get_context(get_id()));
+		context->assert_guard_pattern();
+
+		const ImageBuffer<void> *output_buffer = external ? external : context->cache_buf;
+		unsigned pos = context->cache_pos;
+
+		for (; pos <= i; pos += m_step) {
+			const ImageBuffer<const void> *input_buffer = nullptr;
+			auto range = m_filter->get_required_row_range(pos);
+
+			for (unsigned ii = range.first; ii < range.second; ++ii) {
+				input_buffer = m_parent->generate_line(state, nullptr, ii, true);
+			}
+
+			m_filter->process(context->filter_ctx_u, input_buffer + 1, output_buffer + 1, state->get_tmp(), pos, context->source_left, context->source_right);
+			m_filter->process(context->filter_ctx_v, input_buffer + 2, output_buffer + 2, state->get_tmp(), pos, context->source_left, context->source_right);
 		}
-	}
+		context->cache_pos = pos;
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv)
-	{
-		if (m_is_source)
-			set_tile_region_source(state, left, right, uv);
-		else if (m_data.node_info.is_uv)
-			set_tile_region_node_uv(state, left, right);
-		else
-			set_tile_region_node(state, left, right);
-	}
-
-	const ImageBuffer<const void> *generate_line(ExecutionState *state, const ImageBuffer<void> *external, unsigned i, bool uv)
-	{
-		if (m_is_source)
-			return generate_line_source(state, i, uv);
-		else if (m_data.node_info.is_uv)
-			return generate_line_node_uv(state, external, i);
-		else
-			return generate_line_node(state, external, i);
+		return static_buffer_cast<const void>(output_buffer);
 	}
 };
-
-const GraphNode::source_tag GraphNode::SOURCE{};
-const GraphNode::filter_tag GraphNode::FILTER{};
-const GraphNode::filter_uv_tag GraphNode::FILTER_UV{};
 
 } // namespace
 
@@ -734,7 +791,7 @@ public:
 			throw error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
 
 		m_node_set.emplace_back(
-			ztd::make_unique<GraphNode>(GraphNode::SOURCE, m_id_counter++, width, height, type, subsample_w, subsample_h, color));
+			ztd::make_unique<SourceNode>(m_id_counter++, width, height, type, subsample_w, subsample_h, color));
 		m_head = m_node_set.back().get();
 		m_node = m_head;
 
@@ -764,7 +821,7 @@ public:
 
 		m_node_set.reserve(m_node_set.size() + 1);
 		m_node_set.emplace_back(
-			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, parent_uv, std::move(filter)));
+			ztd::make_unique<FilterNode>(m_id_counter++, std::move(filter), parent, parent_uv));
 		m_node = m_node_set.back().get();
 
 		parent->add_ref();
@@ -786,7 +843,7 @@ public:
 
 		m_node_set.reserve(m_node_set.size() + 1);
 		m_node_set.emplace_back(
-			ztd::make_unique<GraphNode>(GraphNode::FILTER_UV, m_id_counter++, parent, std::move(filter)));
+			ztd::make_unique<FilterNodeUV>(m_id_counter++, std::move(filter), parent));
 		m_node_uv = m_node_set.back().get();
 		parent->add_ref();
 	}
@@ -803,8 +860,7 @@ public:
 
 		m_node_set.reserve(m_node_set.size() + 1);
 		m_node_set.emplace_back(
-			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, nullptr,
-		                                ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type)));
+			ztd::make_unique<FilterNode>(m_id_counter++, ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type), parent, nullptr));
 		m_node = m_node_set.back().get();
 		m_node_uv = nullptr;
 
@@ -822,8 +878,7 @@ public:
 		GraphNode *parent = m_node;
 
 		m_node_set.emplace_back(
-			ztd::make_unique<GraphNode>(GraphNode::FILTER, m_id_counter++, parent, nullptr,
-										ztd::make_unique<ColorExtendFilter>(attr, !yuv)));
+			ztd::make_unique<FilterNode>(m_id_counter++, ztd::make_unique<ColorExtendFilter>(attr, !yuv), parent, nullptr));
 		m_node = m_node_set.back().get();
 		m_node_uv = m_node;
 
