@@ -16,8 +16,8 @@ depth_convert_func select_depth_convert_func_x86(const PixelFormat &format_in, c
 
 depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu);
 
-} // depth
-} // zimg
+} // namespace depth
+} // namespace zimg
 
 #endif // ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
 

@@ -32,8 +32,8 @@ dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, 
 
 dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu);
 
-} // depth
-} // zimg
+} // namespace depth
+} // namespace zimg
 
 #endif // ZIMG_DEPTH_DITHER_X86_H_
 

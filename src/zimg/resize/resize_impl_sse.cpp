@@ -158,8 +158,8 @@ void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT 
 {
 	unsigned src_base = mod(filter_left[left], 4);
 
-	unsigned vec_begin = align(left, 4);
-	unsigned vec_end = mod(right, 4);
+	unsigned vec_left = align(left, 4);
+	unsigned vec_right = mod(right, 4);
 
 	float * RESTRICT dst_p0 = dst_ptr[0];
 	float * RESTRICT dst_p1 = dst_ptr[1];
@@ -167,12 +167,12 @@ void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT 
 	float * RESTRICT dst_p3 = dst_ptr[3];
 #define XITER resize_line4_h_f32_sse_xiter<FWidth, Tail>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
-	for (unsigned j = left; j < vec_begin; ++j) {
+	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = XITER(j, XARGS);
 		scatter4_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
 	}
 
-	for (unsigned j = vec_begin; j < vec_end; j += 4) {
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
 		__m128 x0, x1, x2, x3;
 
 		x0 = XITER(j + 0, XARGS);
@@ -188,7 +188,7 @@ void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT 
 		_mm_store_ps(dst_p3 + j, x3);
 	}
 
-	for (unsigned j = vec_end; j < right; ++j) {
+	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = XITER(j, XARGS);
 		scatter4_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
 	}
@@ -259,8 +259,8 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 	const float * RESTRICT src_p3 = src_lines[3];
 	float * RESTRICT dst_p = dst;
 
-	unsigned vec_begin = align(left, 4);
-	unsigned vec_end = mod(right, 4);
+	unsigned vec_left = align(left, 4);
+	unsigned vec_right = mod(right, 4);
 
 	const __m128 c0 = _mm_set_ps1(filter_data[0]);
 	const __m128 c1 = _mm_set_ps1(filter_data[1]);
@@ -271,19 +271,19 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 
 #define XITER resize_line_v_f32_sse_xiter<N, UpdateAccum>
 #define XARGS src_p0, src_p1, src_p2, src_p3, dst_p, c0, c1, c2, c3
-	if (left != vec_begin) {
-		accum = XITER(vec_begin - 4, XARGS);
-		mm_store_left(dst_p + vec_begin - 4, accum, vec_begin - left);
+	if (left != vec_left) {
+		accum = XITER(vec_left - 4, XARGS);
+		mm_store_left(dst_p + vec_left - 4, accum, vec_left - left);
 	}
 
-	for (unsigned j = vec_begin; j < vec_end; j += 4) {
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
 		accum = XITER(j, XARGS);
 		_mm_store_ps(dst_p + j, accum);
 	}
 
-	if (right != vec_end) {
-		accum = XITER(vec_end, XARGS);
-		mm_store_right(dst_p + vec_end, accum, right - vec_end);
+	if (right != vec_right) {
+		accum = XITER(vec_right, XARGS);
+		mm_store_right(dst_p + vec_right, accum, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

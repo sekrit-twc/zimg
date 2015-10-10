@@ -304,8 +304,8 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 {
 	unsigned src_base = mod(filter_left[left], 8);
 
-	unsigned vec_begin = align(left, 8);
-	unsigned vec_end = mod(right, 8);
+	unsigned vec_left = align(left, 8);
+	unsigned vec_right = mod(right, 8);
 
 	uint16_t * RESTRICT dst_p0 = dst_ptr[0];
 	uint16_t * RESTRICT dst_p1 = dst_ptr[1];
@@ -318,12 +318,12 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 
 #define XITER resize_line8_h_u16_sse2_xiter<DoLoop, Tail>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
-	for (unsigned j = left; j < vec_begin; ++j) {
+	for (unsigned j = left; j < vec_left; ++j) {
 		__m128i x = XITER(j, XARGS);
 		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
 
-	for (unsigned j = vec_begin; j < vec_end; j += 8) {
+	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		__m128i x0, x1, x2, x3, x4, x5, x6, x7;
 
 		x0 = XITER(j + 0, XARGS);
@@ -347,7 +347,7 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 		_mm_store_si128((__m128i *)(dst_p7 + j), x7);
 	}
 
-	for (unsigned j = vec_end; j < right; ++j) {
+	for (unsigned j = vec_right; j < right; ++j) {
 		__m128i x = XITER(j, XARGS);
 		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
@@ -475,8 +475,8 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 	uint16_t * RESTRICT dst_p = dst;
 	uint32_t * RESTRICT accum_p = accum;
 
-	unsigned vec_begin = align(left, 8);
-	unsigned vec_end = mod(right, 8);
+	unsigned vec_left = align(left, 8);
+	unsigned vec_right = mod(right, 8);
 	unsigned accum_base = mod(left, 8);
 
 	const __m128i c01 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[0]), _mm_set1_epi16(filter_data[1]));
@@ -488,25 +488,25 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 
 #define XITER resize_line_v_u16_sse2_xiter<N, ReadAccum, WriteToAccum>
 #define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
-	if (left != vec_begin) {
-		out = XITER(vec_begin - 8, XARGS);
+	if (left != vec_left) {
+		out = XITER(vec_left - 8, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_left_epi16(dst_p + vec_begin - 8, out, vec_begin - left);
+			mm_store_left_epi16(dst_p + vec_left - 8, out, vec_left - left);
 	}
 
-	for (unsigned j = vec_begin; j < vec_end; j += 8) {
+	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		out = XITER(j, XARGS);
 
 		if (!WriteToAccum)
 			_mm_store_si128((__m128i *)(dst_p + j), out);
 	}
 
-	if (right != vec_end) {
-		out = XITER(vec_end, XARGS);
+	if (right != vec_right) {
+		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_right_epi16(dst_p + vec_end, out, right - vec_end);
+			mm_store_right_epi16(dst_p + vec_right, out, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

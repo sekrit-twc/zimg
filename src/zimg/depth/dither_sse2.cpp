@@ -623,7 +623,7 @@ void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsign
 #undef XARGS
 }
 
-} // depth
-} // zimg
+} // namespace depth
+} // namespace zimg
 
 #endif // ZIMG_X86
