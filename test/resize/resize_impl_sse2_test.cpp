@@ -32,6 +32,8 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
 	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::CPU_X86_SSE2).create();
 
+	ASSERT_NE(typeid(*filter_c), typeid(*filter_sse2)) << typeid(*filter_c).name() << " " << typeid(*filter_sse2).name();
+
 	validate_filter(filter_sse2.get(), src_w, src_h, format, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), src_w, src_h, format, expected_snr);
 }
