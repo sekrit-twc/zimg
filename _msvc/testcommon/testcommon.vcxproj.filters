@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\src\testcommon\win32_bitmap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\testcommon\json.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\testcommon\aligned_malloc.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\testcommon\win32_bitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\testcommon\json.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

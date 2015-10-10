@@ -123,12 +123,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\testcommon\argparse.cpp" />
+    <ClCompile Include="..\..\src\testcommon\json.cpp" />
     <ClCompile Include="..\..\src\testcommon\mmap.cpp" />
     <ClCompile Include="..\..\src\testcommon\win32_bitmap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\testcommon\aligned_malloc.h" />
     <ClInclude Include="..\..\src\testcommon\argparse.h" />
+    <ClInclude Include="..\..\src\testcommon\json.h" />
     <ClInclude Include="..\..\src\testcommon\mmap.h" />
     <ClInclude Include="..\..\src\testcommon\timer.h" />
     <ClInclude Include="..\..\src\testcommon\win32_bitmap.h" />

@@ -122,6 +122,8 @@ endif
 libtestcommon_la_SOURCES = src/testcommon/aligned_malloc.h \
 						   src/testcommon/argparse.cpp \
 						   src/testcommon/argparse.h \
+						   src/testcommon/json.cpp \
+						   src/testcommon/json.h \
 						   src/testcommon/mmap.cpp \
 						   src/testcommon/mmap.h \
 						   src/testcommon/timer.h \
