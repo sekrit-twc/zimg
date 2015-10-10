@@ -16,24 +16,6 @@
 
 namespace {;
 
-zimg::colorspace::MatrixCoefficients parse_matrix(const char *matrix)
-{
-	auto it = g_matrix_table.find(matrix);
-	return it == g_matrix_table.end() ? throw std::invalid_argument{ "bad matrix coefficients" } : it->second;
-}
-
-zimg::colorspace::TransferCharacteristics parse_transfer(const char *transfer)
-{
-	auto it = g_transfer_table.find(transfer);
-	return it == g_transfer_table.end() ? throw std::invalid_argument{ "bad transfer characteristics" } : it->second;
-}
-
-zimg::colorspace::ColorPrimaries parse_primaries(const char *primaries)
-{
-	auto it = g_primaries_table.find(primaries);
-	return it == g_primaries_table.end() ? throw std::invalid_argument{ "bad primaries" } : it->second;
-}
-
 int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
@@ -48,9 +30,9 @@ int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 		if (!std::regex_match(*argv, match, csp_regex))
 			throw std::runtime_error{ "bad colorspace string" };
 
-		csp->matrix = parse_matrix(match[1].str().c_str());
-		csp->transfer = parse_transfer(match[2].str().c_str());
-		csp->primaries = parse_primaries(match[3].str().c_str());
+		csp->matrix = g_matrix_table[match[1].str().c_str()];
+		csp->transfer = g_transfer_table[match[2].str().c_str()];
+		csp->primaries = g_primaries_table[match[3].str().c_str()];
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;

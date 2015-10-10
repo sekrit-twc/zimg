@@ -15,21 +15,15 @@
 
 namespace {;
 
-zimg::depth::DitherType lookup_dither(const char *dither)
-{
-	auto it = g_dither_table.find(dither);
-	return it == g_dither_table.end() ? throw std::invalid_argument{ "bad dither type" } : it->second;
-}
-
 int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
 
-	zimg::depth::DitherType *dither = static_cast<zimg::depth::DitherType *>(out);
-
 	try {
-		*dither = lookup_dither(*argv);
+		zimg::depth::DitherType *dither = static_cast<zimg::depth::DitherType *>(out);
+
+		*dither = g_dither_table[*argv];
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;

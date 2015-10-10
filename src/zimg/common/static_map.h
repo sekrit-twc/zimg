@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstring>
 #include <initializer_list>
+#include <stdexcept>
 #include "zassert.h"
 
 namespace zimg {;
@@ -82,6 +83,21 @@ public:
 	const_iterator end() const
 	{
 		return begin() + m_size;
+	}
+
+	const T &at(const Key &key) const
+	{
+		const auto it = find(key);
+
+		if (it == end())
+			throw std::out_of_range{ "key not found" };
+
+		return it->second;
+	}
+
+	const T &operator[](const Key &key) const
+	{
+		return at(key);
 	}
 
 	const_iterator find(const Key &key) const

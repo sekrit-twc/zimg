@@ -9,20 +9,6 @@
 
 namespace {;
 
-zimg::CPUClass parse_cpu(const char *cpu)
-{
-
-	auto it = g_cpu_table.find(cpu);
-	return it == g_cpu_table.end() ? throw std::invalid_argument{ "bad CPU type" } : it->second;
-}
-
-zimg::PixelType parse_pixel_type(const char *type)
-{
-	auto it = g_pixel_table.find(type);
-	return it == g_pixel_table.end() ? throw std::invalid_argument{ "bad pixel type" } : it->second;
-}
-
-
 typedef int (*main_func)(int, char **);
 
 void usage()
@@ -55,10 +41,10 @@ int arg_decode_cpu(const struct ArgparseOption *, void *out, int argc, char **ar
 	if (argc < 1)
 		return -1;
 
-	zimg::CPUClass *cpu = static_cast<zimg::CPUClass *>(out);
-
 	try {
-		*cpu = parse_cpu(*argv);
+		zimg::CPUClass *cpu = static_cast<zimg::CPUClass *>(out);
+
+		*cpu = g_cpu_table[*argv];
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
@@ -72,16 +58,15 @@ int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char *
 	if (argc < 1)
 		return -1;
 
-	zimg::PixelFormat *format = static_cast<zimg::PixelFormat *>(out);
-
 	try {
+		zimg::PixelFormat *format = static_cast<zimg::PixelFormat *>(out);
 		std::regex format_regex{ R"(^(byte|word|half|float)(?::(f|l)(c|l)?(?::(\d+))?)?$)" };
 		std::cmatch match;
 
 		if (!std::regex_match(*argv, match, format_regex))
 			throw std::runtime_error{ "bad format string" };
 
-		*format = zimg::default_pixel_format(parse_pixel_type(match[1].str().c_str()));
+		*format = zimg::default_pixel_format(g_pixel_table[match[1].str().c_str()]);
 
 		if (match.size() >= 2 && match[2].length())
 			format->fullrange = (match[2] == "f");

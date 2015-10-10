@@ -25,20 +25,13 @@ bool is_set_pixel_format(const zimg::PixelFormat &format)
 	return format != zimg::PixelFormat{};
 }
 
-std::unique_ptr<zimg::resize::Filter> create_filter(const char *filter, double param_a, double param_b)
-{
-	auto it = g_resize_table.find(filter);
-	return it == g_resize_table.end() ? nullptr : it->second(param_a, param_b);
-}
-
 int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 {
 	if (argc < 1)
 		return -1;
 
-	auto *filter = static_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
-
 	try {
+		std::unique_ptr<zimg::resize::Filter> *filter = static_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
 		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };
 		std::cmatch match;
 		std::string filter_str;
@@ -55,7 +48,7 @@ int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 		if (match.size() >= 3 && match[3].length())
 			param_b = std::stod(match[3]);
 
-		*filter = create_filter(filter_str.c_str(), param_a, param_b);
+		*filter = g_resize_table[filter_str.c_str()](param_a, param_b);
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
@@ -149,7 +142,7 @@ int resize_main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
-	args.filter = create_filter("bicubic", NAN, NAN);
+	args.filter = g_resize_table["bicubic"](NAN, NAN);
 	args.param_a = NAN;
 	args.param_b = NAN;
 	args.shift_w = NAN;
