@@ -85,11 +85,8 @@ vszimg_la_SOURCES = src/vszimg/vszimg.c \
 					src/vszimg/VSHelper.h
 
 vszimg_la_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS) -I$(srcdir)/src/zimg/api
-
 vszimg_la_LIBADD = $(PTHREAD_LIBS) libzimg.la
-
 vszimg_la_LDFLAGS = -no-undefined -avoid-version -module
-
 vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
@@ -169,6 +166,8 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/depthapp.cpp \
 					src/testapp/frame.cpp \
 					src/testapp/frame.h \
+					src/testapp/graphapp.cpp \
+					src/testapp/graphapp.h \
 					src/testapp/main.cpp \
 					src/testapp/pair_filter.cpp \
 					src/testapp/pair_filter.h \
@@ -179,7 +178,8 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/utils.cpp \
 					src/testapp/utils.h
 
-zimg_test_LDADD = libtestcommon.la libzimg.la
+zimg_test_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)					
+zimg_test_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg.la
 endif # TESTAPP
 
 

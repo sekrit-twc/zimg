@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\src\testapp\colorspaceapp.cpp" />
     <ClCompile Include="..\..\src\testapp\depthapp.cpp" />
     <ClCompile Include="..\..\src\testapp\frame.cpp" />
+    <ClCompile Include="..\..\src\testapp\graphapp.cpp" />
     <ClCompile Include="..\..\src\testapp\main.cpp" />
     <ClCompile Include="..\..\src\testapp\pair_filter.cpp" />
     <ClCompile Include="..\..\src\testapp\resizeapp.cpp" />

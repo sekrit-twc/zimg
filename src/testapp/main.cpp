@@ -16,15 +16,17 @@ void usage()
 	std::cout << "TestApp subapp [args]\n";
 	std::cout << "    colorspace - change colorspace\n";
 	std::cout << "    depth      - change depth\n";
+	std::cout << "    graph      - benchmark filter graph\n";
 	std::cout << "    resize     - resize images\n";
 	std::cout << "    unresize   - unresize images\n";
 }
 
 main_func lookup_app(const char *name)
 {
-	static const zimg::static_string_map<main_func, 4> map{
+	static const zimg::static_string_map<main_func, 5> map{
 		{ "colorspace", colorspace_main },
 		{ "depth",      depth_main },
+		{ "graph",      graph_main },
 		{ "resize",     resize_main },
 		{ "unresize",   unresize_main }
 	};
