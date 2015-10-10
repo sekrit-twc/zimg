@@ -2,14 +2,14 @@
 #include <iostream>
 #include <memory>
 #include <regex>
-#include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "common/static_map.h"
 #include "graph/image_filter.h"
 #include "depth/depth.h"
+
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
+#include "table.h"
 #include "timer.h"
 #include "utils.h"
 
@@ -17,16 +17,8 @@ namespace {;
 
 zimg::depth::DitherType lookup_dither(const char *dither)
 {
-	using zimg::depth::DitherType;
-
-	static const zimg::static_string_map<DitherType, 4> map{
-		{ "none",            DitherType::DITHER_NONE },
-		{ "ordered",         DitherType::DITHER_ORDERED },
-		{ "random",          DitherType::DITHER_RANDOM },
-		{ "error_diffusion", DitherType::DITHER_ERROR_DIFFUSION },
-	};
-	auto it = map.find(dither);
-	return it == map.end() ? throw std::invalid_argument{ "bad dither type" } : it->second;
+	auto it = g_dither_table.find(dither);
+	return it == g_dither_table.end() ? throw std::invalid_argument{ "bad dither type" } : it->second;
 }
 
 int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)

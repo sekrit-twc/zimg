@@ -1,39 +1,25 @@
 #include <iostream>
 #include <regex>
 #include <string>
-#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/pixel.h"
-#include "common/static_map.h"
 
 #include "apps.h"
+#include "table.h"
 
 namespace {;
 
 zimg::CPUClass parse_cpu(const char *cpu)
 {
-	static const zimg::static_string_map<zimg::CPUClass, 4> map{
-		{ "none", zimg::CPUClass::CPU_NONE },
-		{ "auto", zimg::CPUClass::CPU_AUTO },
-#ifdef ZIMG_X86
-		{ "sse",  zimg::CPUClass::CPU_X86_SSE },
-		{ "sse2", zimg::CPUClass::CPU_X86_SSE2 },
-#endif
-	};
-	auto it = map.find(cpu);
-	return it == map.end() ? throw std::invalid_argument{ "bad CPU type" } : it->second;
+
+	auto it = g_cpu_table.find(cpu);
+	return it == g_cpu_table.end() ? throw std::invalid_argument{ "bad CPU type" } : it->second;
 }
 
 zimg::PixelType parse_pixel_type(const char *type)
 {
-	static const zimg::static_string_map<zimg::PixelType, 4> map{
-		{ "byte", zimg::PixelType::BYTE },
-		{ "word", zimg::PixelType::WORD },
-		{ "half", zimg::PixelType::HALF },
-		{ "float", zimg::PixelType::FLOAT },
-	};
-	auto it = map.find(type);
-	return it == map.end() ? throw std::invalid_argument{ "bad pixel type" } : it->second;
+	auto it = g_pixel_table.find(type);
+	return it == g_pixel_table.end() ? throw std::invalid_argument{ "bad pixel type" } : it->second;
 }
 
 

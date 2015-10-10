@@ -1,10 +1,9 @@
 #include <iostream>
 #include <memory>
-#include "common/align.h"
-#include "common/cpuinfo.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "unresize/unresize.h"
+
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"

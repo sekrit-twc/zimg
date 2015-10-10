@@ -3,16 +3,14 @@
 #include <memory>
 #include <regex>
 #include <string>
-#include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "common/static_map.h"
 #include "graph/image_filter.h"
-#include "colorspace/colorspace_param.h"
 #include "colorspace/colorspace.h"
 
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
+#include "table.h"
 #include "timer.h"
 #include "utils.h"
 
@@ -20,46 +18,20 @@ namespace {;
 
 zimg::colorspace::MatrixCoefficients parse_matrix(const char *matrix)
 {
-	using zimg::colorspace::MatrixCoefficients;
-
-	static const zimg::static_string_map<MatrixCoefficients, 7> map{
-		{ "unspec",   MatrixCoefficients::MATRIX_UNSPECIFIED },
-		{ "rgb",      MatrixCoefficients::MATRIX_RGB },
-		{ "601",      MatrixCoefficients::MATRIX_601 },
-		{ "709",      MatrixCoefficients::MATRIX_709 },
-		{ "ycgco",    MatrixCoefficients::MATRIX_YCGCO },
-		{ "2020_ncl", MatrixCoefficients::MATRIX_2020_NCL },
-		{ "2020_cl",  MatrixCoefficients::MATRIX_2020_CL },
-	};
-	auto it = map.find(matrix);
-	return it == map.end() ? throw std::invalid_argument{ "bad matrix coefficients" } : it->second;
+	auto it = g_matrix_table.find(matrix);
+	return it == g_matrix_table.end() ? throw std::invalid_argument{ "bad matrix coefficients" } : it->second;
 }
 
 zimg::colorspace::TransferCharacteristics parse_transfer(const char *transfer)
 {
-	using zimg::colorspace::TransferCharacteristics;
-
-	static const zimg::static_string_map<TransferCharacteristics, 3> map{
-		{ "unspec", TransferCharacteristics::TRANSFER_UNSPECIFIED },
-		{ "linear", TransferCharacteristics::TRANSFER_LINEAR },
-		{ "709",    TransferCharacteristics::TRANSFER_709 },
-	};
-	auto it = map.find(transfer);
-	return it == map.end() ? throw std::invalid_argument{ "bad transfer characteristics" } : it->second;
+	auto it = g_transfer_table.find(transfer);
+	return it == g_transfer_table.end() ? throw std::invalid_argument{ "bad transfer characteristics" } : it->second;
 }
 
 zimg::colorspace::ColorPrimaries parse_primaries(const char *primaries)
 {
-	using zimg::colorspace::ColorPrimaries;
-
-	static const zimg::static_string_map<ColorPrimaries, 4> map{
-		{ "unspec",  ColorPrimaries::PRIMARIES_UNSPECIFIED },
-		{ "smpte_c", ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ "709",     ColorPrimaries::PRIMARIES_709 },
-		{ "2020",    ColorPrimaries::PRIMARIES_2020 },
-	};
-	auto it = map.find(primaries);
-	return it == map.end() ? throw std::invalid_argument{ "bad primaries" } : it->second;
+	auto it = g_primaries_table.find(primaries);
+	return it == g_primaries_table.end() ? throw std::invalid_argument{ "bad primaries" } : it->second;
 }
 
 int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)

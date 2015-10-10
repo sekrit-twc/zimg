@@ -9,10 +9,12 @@
 #include "common/pixel.h"
 #include "resize/filter.h"
 #include "resize/resize.h"
+
 #include "apps.h"
 #include "argparse.h"
 #include "frame.h"
 #include "pair_filter.h"
+#include "table.h"
 #include "timer.h"
 #include "utils.h"
 
@@ -25,22 +27,8 @@ bool is_set_pixel_format(const zimg::PixelFormat &format)
 
 std::unique_ptr<zimg::resize::Filter> create_filter(const char *filter, double param_a, double param_b)
 {
-	if (!strcmp(filter, "point"))
-		return ztd::make_unique<zimg::resize::PointFilter>();
-	else if (!strcmp(filter, "bilinear"))
-		return ztd::make_unique<zimg::resize::BilinearFilter>();
-	else if (!strcmp(filter, "bicubic"))
-		return ztd::make_unique<zimg::resize::BicubicFilter>(
-			std::isnan(param_a) ? 1.0 / 3.0 : param_a,
-			std::isnan(param_a) ? 1.0 / 3.0 : param_b);
-	else if (!strcmp(filter, "spline16"))
-		return ztd::make_unique<zimg::resize::Spline16Filter>();
-	else if (!strcmp(filter, "spline36"))
-		return ztd::make_unique<zimg::resize::Spline36Filter>();
-	else if (!strcmp(filter, "lanczos"))
-		return ztd::make_unique<zimg::resize::LanczosFilter>(std::isnan(param_a) ? 4 : (int)param_a);
-	else
-		return nullptr;
+	auto it = g_resize_table.find(filter);
+	return it == g_resize_table.end() ? nullptr : it->second(param_a, param_b);
 }
 
 int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)

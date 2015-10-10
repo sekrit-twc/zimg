@@ -173,6 +173,8 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/pair_filter.cpp \
 					src/testapp/pair_filter.h \
 					src/testapp/resizeapp.cpp \
+					src/testapp/table.cpp \
+					src/testapp/table.h \
 					src/testapp/unresizeapp.cpp \
 					src/testapp/utils.cpp \
 					src/testapp/utils.h
