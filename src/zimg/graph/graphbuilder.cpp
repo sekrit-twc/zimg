@@ -193,6 +193,12 @@ GraphBuilder::resize_spec::resize_spec(const state &state) :
 {
 }
 
+GraphBuilder::GraphBuilder() :
+	m_factory{},
+	m_state{}
+{
+}
+
 GraphBuilder::~GraphBuilder()
 {
 }

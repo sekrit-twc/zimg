@@ -128,7 +128,7 @@ private:
 
 	void convert_resize(const resize_spec &spec, const params *params);
 public:
-	GraphBuilder() = default;
+	GraphBuilder();
 
 	~GraphBuilder();
 

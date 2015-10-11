@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -203,7 +204,11 @@ unsigned UnresizeImplV::get_max_buffering() const
 UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type) :
 	up_width{ up_width },
 	up_height{ up_height },
-	type{ type }
+	type{ type },
+	horizontal{},
+	orig_dim{},
+	shift{},
+	cpu{ CPUClass::CPU_NONE }
 {
 }
 

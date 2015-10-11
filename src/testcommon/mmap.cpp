@@ -276,6 +276,10 @@ class MemoryMappedFile::impl {
 		m_size = (size_t)file_size.QuadPart;
 	}
 public:
+	impl() : m_size{}, m_writable{}
+	{
+	}
+
 	size_t size() const
 	{
 		return m_size;
@@ -351,6 +355,10 @@ class MemoryMappedFile::impl {
 		m_size = (size_t)file_size;
 	}
 public:
+	impl() : m_size{}, m_writable{}
+	{
+	}
+
 	size_t size() const
 	{
 		return m_size;

@@ -191,7 +191,7 @@ zimg::graph::ImageBuffer<const void> ImageFrame::as_read_buffer(unsigned plane) 
 
 zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 {
-	zimg::graph::ColorImageBuffer<const void> ret;
+	zimg::graph::ColorImageBuffer<const void> ret{};
 
 	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
 		ret[p] = as_read_buffer(p);
@@ -207,7 +207,7 @@ zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
 
 zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
 {
-	zimg::graph::ColorImageBuffer<void> ret;
+	zimg::graph::ColorImageBuffer<void> ret{};
 
 	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
 		ret[p] = as_write_buffer(p);
