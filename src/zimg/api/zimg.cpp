@@ -29,7 +29,7 @@ namespace {;
 THREAD_LOCAL zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 THREAD_LOCAL char g_last_error_msg[1024];
 
-const unsigned VERSION_INFO[] = { 1, 95, 0 };
+const unsigned VERSION_INFO[] = { 1, 96, 0 };
 
 
 template <class T, class U>

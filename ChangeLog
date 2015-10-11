@@ -2,11 +2,13 @@
 api: new simplified API for all-in-one conversions
 api: remove zimg_set_cpu
 api: add zimg_get_version_info and zimg_get_api_version
+colorspace: add YCgCo matrix
 depth: clamp integer output to bit depth limit (e.g. 10-bit => 0-1023)
 depth: fix incorrect strength of random dither
 resize: clamp integer output to bit depth limit
 resize: fix incorrect output for point filter
 vszimg: new resize.X compatible syntax
+vszimg: support for color to greyscale conversion
 
 1.1.1:
 fix border handling in SSE2 horizontal resize
