@@ -236,6 +236,8 @@ public:
 		size_t size = 0;
 		char *ptr;
 
+		_zassert_d(spec.planes < 3, "too many planes");
+
 		for (unsigned p = 0; p < spec.planes; ++p) {
 			m_linewidth[p] = (width * zimg::pixel_size(spec.type)) >> ((p == 1 || p == 2) ? spec.subsample_w : 0);
 			m_height[p] = height >> ((p == 1 || p == 2) ? spec.subsample_h : 0);

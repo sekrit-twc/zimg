@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "common/except.h"
+#include "common/zassert.h"
 #include "colorspace.h"
 #include "graph.h"
 #include "operation.h"
@@ -118,7 +119,11 @@ class ColorspaceGraph {
 
 				while (tail != in) {
 					prev = parents[tail];
-					path.insert(path.begin(), std::find_if(m_edge[prev].begin(), m_edge[prev].end(), [=](const edge_type &e){ return e.first == tail; })->second);
+
+					auto link = std::find_if(m_edge[prev].begin(), m_edge[prev].end(), [=](const edge_type &e) { return e.first == tail; });
+					_zassert_d(link != m_edge[prev].end(), "missing link in traversal path");
+					path.insert(path.begin(), link->second);
+
 					tail = prev;
 				}
 

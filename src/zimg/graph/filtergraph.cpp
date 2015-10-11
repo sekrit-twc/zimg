@@ -560,6 +560,7 @@ public:
 			const ImageBuffer<const void> *input_buffer_uv = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
+			_zassert_d(range.first < range.second, "bad row range");
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
 				input_buffer = m_parent->generate_line(state, nullptr, ii, false);
@@ -717,7 +718,9 @@ public:
 
 		for (; pos <= i; pos += m_step) {
 			const ImageBuffer<const void> *input_buffer = nullptr;
+
 			auto range = m_filter->get_required_row_range(pos);
+			_zassert_d(range.first < range.second, "bad row range");
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
 				input_buffer = m_parent->generate_line(state, nullptr, ii, true);
