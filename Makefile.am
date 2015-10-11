@@ -93,7 +93,9 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la
 
-libzimg_la_SOURCES += src/zimg/depth/depth_convert_x86.cpp \
+libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
+					  src/zimg/colorspace/operation_impl_x86.h \
+					  src/zimg/depth/depth_convert_x86.cpp \
 					  src/zimg/depth/depth_convert_x86.h \
 					  src/zimg/depth/dither_x86.cpp \
 					  src/zimg/depth/dither_x86.h \
@@ -101,7 +103,8 @@ libzimg_la_SOURCES += src/zimg/depth/depth_convert_x86.cpp \
 					  src/zimg/resize/resize_impl_x86.h
 
 
-libsse_la_SOURCES = src/zimg/resize/resize_impl_sse.cpp
+libsse_la_SOURCES = src/zimg/colorspace/operation_impl_sse.cpp \
+					src/zimg/resize/resize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg

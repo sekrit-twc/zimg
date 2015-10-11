@@ -7,6 +7,7 @@
 #include "matrix3.h"
 #include "operation.h"
 #include "operation_impl.h"
+#include "operation_impl_x86.h"
 
 namespace zimg {;
 namespace colorspace {;
@@ -15,8 +16,10 @@ namespace {;
 
 class MatrixOperationC : public MatrixOperationImpl {
 public:
-	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m)
-	{}
+	explicit MatrixOperationC(const Matrix3x3 &m) :
+		MatrixOperationImpl(m)
+	{
+	}
 
 	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
@@ -167,7 +170,15 @@ MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 
 std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass cpu)
 {
-	return ztd::make_unique<MatrixOperationC>(m);
+	std::unique_ptr<Operation> ret;
+
+#ifdef ZIMG_X86
+	ret = create_matrix_operation_x86(m, cpu);
+#endif
+	if (!ret)
+		ret = ztd::make_unique<MatrixOperationC>(m);
+
+	return ret;
 }
 
 std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu)

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
+    <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_test.cpp" />

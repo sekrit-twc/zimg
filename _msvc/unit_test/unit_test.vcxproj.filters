@@ -120,6 +120,9 @@
     <ClCompile Include="..\..\test\graph\mux_filter_test.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

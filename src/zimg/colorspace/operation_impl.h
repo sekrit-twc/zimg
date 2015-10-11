@@ -6,6 +6,7 @@
 #include <cmath>
 #include "common/cpuinfo.h"
 #include "common/libm_wrapper.h"
+#include "operation.h"
 #include "matrix3.h"
 
 namespace zimg {;

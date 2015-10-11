@@ -2,10 +2,10 @@
 #include "common/pixel.h"
 #include "colorspace/colorspace_param.h"
 #include "colorspace/colorspace.h"
+#include "graph/image_filter.h"
 
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
-#include "graph/image_filter.h"
 
 namespace {;
 

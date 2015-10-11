@@ -177,6 +177,9 @@
     <ClInclude Include="..\..\src\zimg\common\make_unique.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\operation_impl_x86.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -256,6 +259,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp">
+      <Filter>Source Files\colorspace</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
