@@ -328,7 +328,7 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 		out->colorspace.transfer = translate_transfer(src.transfer_characteristics);
 		out->colorspace.primaries = translate_primaries(src.color_primaries);
 
-		out->depth = src.depth ? src.depth : zimg::default_pixel_format(out->type).depth;
+		out->depth = src.depth ? src.depth : zimg::pixel_depth(out->type);
 		out->fullrange = translate_pixel_range(src.pixel_range);
 
 		out->parity = translate_field_parity(src.field_parity);

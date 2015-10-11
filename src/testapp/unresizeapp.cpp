@@ -93,7 +93,7 @@ int unresize_main(int argc, char **argv)
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
 	if (!is_set_pixel_format(args.working_format))
-		args.working_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
+		args.working_format = zimg::PixelType::FLOAT;
 
 	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
 

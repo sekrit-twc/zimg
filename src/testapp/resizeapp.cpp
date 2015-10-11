@@ -159,7 +159,7 @@ int resize_main(int argc, char **argv)
 	if (std::isnan(args.shift_h))
 		args.shift_h = 0.0;
 	if (!is_set_pixel_format(args.working_format))
-		args.working_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
+		args.working_format = zimg::PixelType::FLOAT;
 
 	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
 

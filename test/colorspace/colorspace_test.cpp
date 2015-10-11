@@ -14,7 +14,7 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
+	zimg::PixelFormat format = zimg::PixelType::FLOAT;
 	auto convert = zimg::colorspace::ColorspaceConversion{ w, h, }.
 		set_csp_in(csp_in).
 		set_csp_out(csp_out).

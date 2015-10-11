@@ -115,7 +115,7 @@ void validate_state(const GraphBuilder::state &state)
 	if (state.width % (1 << state.subsample_w) || state.height % (1 << state.subsample_h))
 		throw error::ImageNotDivislbe{ "image dimensions must be divisible by subsampling factor" };
 
-	if (state.depth > zimg::default_pixel_format(state.type).depth)
+	if (state.depth > pixel_depth(state.type))
 		throw error::BitDepthOverflow{ "bit depth exceeds limits of type" };
 	if (!state.fullrange && state.depth < 8)
 		throw error::BitDepthOverflow{ "bit depth must be at least 8 for limited range" };
@@ -280,9 +280,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	if (!m_factory)
 		throw error::InternalError{ "filter factory not set" };
 
-	PixelFormat src_format = default_pixel_format(m_state.type);
-	src_format.depth = m_state.depth;
-	src_format.fullrange = m_state.fullrange;
+	PixelFormat src_format{ m_state.type, m_state.depth, m_state.fullrange, false };
 
 	if (src_format == format)
 		return;
@@ -476,7 +474,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
 
 			if (m_state.type != PixelType::FLOAT)
-				convert_depth(default_pixel_format(PixelType::FLOAT), params);
+				convert_depth(PixelType::FLOAT, params);
 
 			convert_resize(spec, params);
 			convert_colorspace(target.colorspace, params);
@@ -487,9 +485,9 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
 			if (m_state.type == PixelType::BYTE)
-				convert_depth(default_pixel_format(PixelType::WORD), params);
+				convert_depth(PixelType::WORD, params);
 			if (m_state.type == PixelType::HALF)
-				convert_depth(default_pixel_format(PixelType::FLOAT), params);
+				convert_depth(PixelType::FLOAT, params);
 
 			resize_spec spec{ m_state };
 			spec.width = target.width;
@@ -501,10 +499,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 
 			convert_resize(spec, params);
 		} else if (needs_depth(m_state, target)) {
-			PixelFormat format = default_pixel_format(target.type);
-			format.depth = target.depth;
-			format.fullrange = target.fullrange;
-
+			PixelFormat format{ target.type, target.depth, target.fullrange, false };
 			convert_depth(format, params);
 		} else if (is_greyscale(m_state) && !is_greyscale(target)) {
 			grey_to_color(target.color, target.colorspace.matrix, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);

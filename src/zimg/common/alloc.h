@@ -47,7 +47,7 @@ public:
 	/**
 	 * Allocate a given number of bytes.
 	 *
-	 * @param T buffer type
+	 * @tparam T buffer type
 	 * @param bytes number of bytes
 	 * @return pointer to buffer
 	 */
@@ -60,7 +60,7 @@ public:
 	/**
 	 * Allocate a given number of objects.
 	 *
-	 * @param T buffer type
+	 * @tparam T buffer type
 	 * @param count number of objects
 	 * @return pointer to buffer
 	 */
@@ -127,7 +127,7 @@ public:
 /**
  * STL allocator class which returns aligned buffers.
  *
- * @param T type of object to allocate
+ * @tparam T type of object to allocate
  */
 template <class T>
 struct AlignedAllocator {

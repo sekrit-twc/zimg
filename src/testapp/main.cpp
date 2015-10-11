@@ -68,7 +68,7 @@ int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char *
 		if (!std::regex_match(*argv, match, format_regex))
 			throw std::runtime_error{ "bad format string" };
 
-		*format = zimg::default_pixel_format(g_pixel_table[match[1].str().c_str()]);
+		*format = g_pixel_table[match[1].str().c_str()];
 
 		if (match.size() >= 2 && match[2].length())
 			format->fullrange = (match[2] == "f");

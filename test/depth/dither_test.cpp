@@ -23,11 +23,11 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			SCOPED_TRACE(static_cast<int>(pxin));
 			SCOPED_TRACE(static_cast<int>(pxout));
 
-			zimg::PixelFormat fmt_in = zimg::default_pixel_format(pxin);
+			zimg::PixelFormat fmt_in = pxin;
 			fmt_in.fullrange = fullrange;
 			fmt_in.chroma = chroma;
 
-			zimg::PixelFormat fmt_out = zimg::default_pixel_format(pxout);
+			zimg::PixelFormat fmt_out = pxout;
 			fmt_out.fullrange = fullrange;
 			fmt_out.chroma = chroma;
 

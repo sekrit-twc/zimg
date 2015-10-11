@@ -21,7 +21,7 @@ class AuditImage : public AuditBuffer<T> {
 	unsigned m_height;
 public:
 	AuditImage(unsigned width, unsigned height, zimg::PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
-		AuditBuffer<T>(width, height, zimg::default_pixel_format(type), zimg::graph::BUFFER_MAX, subsample_w, subsample_h, color),
+		AuditBuffer<T>(width, height, type, zimg::graph::BUFFER_MAX, subsample_w, subsample_h, color),
 		m_width{ width },
 		m_height{ height }
 	{

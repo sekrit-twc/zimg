@@ -63,11 +63,8 @@ left_shift_func select_left_shift_func(PixelType pixel_in, PixelType pixel_out)
 		throw error::InternalError{ "no conversion between pixel types" };
 }
 
-depth_convert_func select_depth_convert_func(const PixelFormat &format_in, const zimg::PixelFormat &format_out)
+depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_out)
 {
-	PixelType type_in = format_in.type;
-	PixelType type_out = format_out.type;
-
 	if (type_in == PixelType::HALF)
 		type_in = PixelType::FLOAT;
 	if (type_out == PixelType::HALF)
@@ -102,8 +99,7 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
-		if ((pixel_in.type != zimg::PixelType::BYTE && pixel_in.type != zimg::PixelType::WORD) ||
-		    (pixel_out.type != zimg::PixelType::BYTE && pixel_out.type != zimg::PixelType::WORD))
+		if (!pixel_is_integer(pixel_in.type) || !pixel_is_integer(pixel_out.type))
 			throw error::InternalError{ "cannot left shift floating point types" };
 		if (pixel_in.fullrange || pixel_out.fullrange)
 			throw error::InternalError{ "cannot left shift full-range format" };
@@ -178,10 +174,10 @@ public:
 			throw error::InternalError{ "cannot perform no-op conversion" };
 		if (f16c && pixel_in.type != PixelType::HALF && pixel_out.type != PixelType::HALF)
 			throw error::InternalError{ "cannot provide f16c function for non-HALF types" };
-		if (pixel_out.type != PixelType::HALF && pixel_out.type != PixelType::FLOAT)
+		if (!pixel_is_float(pixel_out.type))
 			throw error::InternalError{ "DepthConvert only converts to floating point types" };
 
-		bool is_integer = (pixel_in.type == PixelType::BYTE || pixel_in.type == PixelType::WORD);
+		bool is_integer = pixel_is_integer(pixel_in.type);
 
 		int32_t range = is_integer ? integer_range(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 1;
 		int32_t offset = is_integer ? integer_offset(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 0;
@@ -274,7 +270,7 @@ std::unique_ptr<graph::ImageFilter> create_convert_to_float(unsigned width, unsi
 #endif
 
 	if (!func)
-		func = select_depth_convert_func(pixel_in, pixel_out);
+		func = select_depth_convert_func(pixel_in.type, pixel_out.type);
 
 	if (needs_f16c) {
 		if (!f16c && pixel_in.type == zimg::PixelType::HALF)

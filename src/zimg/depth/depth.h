@@ -41,16 +41,6 @@ struct DepthConversion {
 
 	DepthConversion(unsigned width, unsigned height);
 
-	DepthConversion &set_pixel_in(PixelType val)
-	{
-		return set_pixel_in(default_pixel_format(val));
-	}
-
-	DepthConversion &set_pixel_out(PixelType val)
-	{
-		return set_pixel_out(default_pixel_format(val));
-	}
-
 	std::unique_ptr<graph::ImageFilter> create() const;
 };
 

@@ -282,8 +282,8 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
 
 	if (type != spec.type) {
-		zimg::PixelFormat src_format = zimg::default_pixel_format(spec.type);
-		zimg::PixelFormat dst_format = zimg::default_pixel_format(type);
+		zimg::PixelFormat src_format{ spec.type };
+		zimg::PixelFormat dst_format{ type };
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
@@ -446,10 +446,9 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 
 	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
 
-	if (type != spec.type || depth_in != zimg::default_pixel_format(type).depth) {
-		zimg::PixelFormat src_format = zimg::default_pixel_format(type);
-		zimg::PixelFormat dst_format = zimg::default_pixel_format(spec.type);
-		src_format.depth = depth_in;
+	if (type != spec.type || depth_in != zimg::pixel_depth(type)) {
+		zimg::PixelFormat src_format{ type, depth_in };
+		zimg::PixelFormat dst_format{ spec.type };
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
@@ -585,7 +584,7 @@ ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigne
 
 void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange)
 {
-	write_to_pathspec(frame, pathspec, assumed, zimg::default_pixel_format(frame.pixel_type()).depth, fullrange);
+	write_to_pathspec(frame, pathspec, assumed, zimg::pixel_depth(frame.pixel_type()), fullrange);
 }
 
 void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange)

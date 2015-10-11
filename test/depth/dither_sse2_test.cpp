@@ -62,8 +62,8 @@ TEST(DitherSSE2Test, test_ordered_dither_b2w)
 
 TEST(DitherSSE2Test, test_ordered_dither_w2b)
 {
-	zimg::PixelFormat pixel_in = zimg::default_pixel_format(zimg::PixelType::WORD);
-	zimg::PixelFormat pixel_out = zimg::default_pixel_format(zimg::PixelType::BYTE);
+	zimg::PixelFormat pixel_in = zimg::PixelType::WORD;
+	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
 	const char *expected_sha1[3] = {
 		"ab2d2b92cd836f28080b28474b66faab21f2f372"
@@ -86,8 +86,8 @@ TEST(DitherSSE2Test, test_ordered_dither_w2w)
 
 TEST(DitherSSE2Test, test_ordered_dither_f2b)
 {
-	zimg::PixelFormat pixel_in = zimg::default_pixel_format(zimg::PixelType::FLOAT);
-	zimg::PixelFormat pixel_out = zimg::default_pixel_format(zimg::PixelType::BYTE);
+	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
+	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
 	const char *expected_sha1[3] = {
 		"23e5c6cb1fdd7f9c4dcbbe66178f5a47a5d4ed3e"
@@ -98,8 +98,8 @@ TEST(DitherSSE2Test, test_ordered_dither_f2b)
 
 TEST(DitherSSE2Test, test_ordered_dither_f2w)
 {
-	zimg::PixelFormat pixel_in = zimg::default_pixel_format(zimg::PixelType::FLOAT);
-	zimg::PixelFormat pixel_out = zimg::default_pixel_format(zimg::PixelType::WORD);
+	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
+	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
 
 	const char *expected_sha1[3] = {
 		"57ecf8fc00fc554ba932237ea830e303ed559b19"

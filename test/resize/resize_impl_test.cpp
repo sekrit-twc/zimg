@@ -58,13 +58,13 @@ TEST(ResizeImplTest, test_nop)
 	};
 
 	SCOPED_TRACE("word-h");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), true, 1.0, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, true, 1.0, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("word-v");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), false, 1.0, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, false, 1.0, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("float-h");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), true, 1.0, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, true, 1.0, 0.0, 1.0, expected_sha1_f32);
 	SCOPED_TRACE("float-v");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 1.0, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, false, 1.0, 0.0, 1.0, expected_sha1_f32);
 }
 
 TEST(ResizeImplTest, test_horizontal_up)
@@ -83,9 +83,9 @@ TEST(ResizeImplTest, test_horizontal_up)
 	};
 
 	SCOPED_TRACE("word");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), true, 2.1, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, true, 2.1, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("float");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), true, 2.1, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, true, 2.1, 0.0, 1.0, expected_sha1_f32);
 }
 
 TEST(ResizeImplTest, test_horizontal_down)
@@ -104,9 +104,9 @@ TEST(ResizeImplTest, test_horizontal_down)
 	};
 
 	SCOPED_TRACE("word");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), true, 1.0 / 2.1, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, true, 1.0 / 2.1, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("float");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), true, 1.0 / 2.1, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, true, 1.0 / 2.1, 0.0, 1.0, expected_sha1_f32);
 }
 
 TEST(ResizeImplTest, test_vertical_up)
@@ -125,9 +125,9 @@ TEST(ResizeImplTest, test_vertical_up)
 	};
 
 	SCOPED_TRACE("word");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), false, 2.1, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, false, 2.1, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("float");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 2.1, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, false, 2.1, 0.0, 1.0, expected_sha1_f32);
 }
 
 TEST(ResizeImplTest, test_vertical_down)
@@ -146,14 +146,14 @@ TEST(ResizeImplTest, test_vertical_down)
 	};
 
 	SCOPED_TRACE("word");
-	test_case(zimg::default_pixel_format(zimg::PixelType::WORD), false, 1.0 / 2.1, 0.0, 1.0, expected_sha1_u16);
+	test_case(zimg::PixelType::WORD, false, 1.0 / 2.1, 0.0, 1.0, expected_sha1_u16);
 	SCOPED_TRACE("float");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 1.0 / 2.1, 0.0, 1.0, expected_sha1_f32);
+	test_case(zimg::PixelType::FLOAT, false, 1.0 / 2.1, 0.0, 1.0, expected_sha1_f32);
 }
 
 TEST(ResizeImplTest, test_horizontal_nonfull)
 {
-	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::WORD);
+	zimg::PixelFormat format = zimg::PixelType::WORD;
 	format.depth = 7;
 
 	const char *expected_sha1_up[][3] = {
@@ -177,7 +177,7 @@ TEST(ResizeImplTest, test_horizontal_nonfull)
 
 TEST(ResizeImplTest, test_vertical_nonfull)
 {
-	zimg::PixelFormat format = zimg::default_pixel_format(zimg::PixelType::WORD);
+	zimg::PixelFormat format = zimg::PixelType::WORD;
 	format.depth = 7;
 
 	const char *expected_sha1_up[][3] = {
@@ -218,9 +218,9 @@ TEST(ResizeImplTest, test_horizontal_shift)
 	};
 
 	SCOPED_TRACE("up");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 2.1, shift, subwidth_factor, expected_sha1_up);
+	test_case(zimg::PixelType::FLOAT, false, 2.1, shift, subwidth_factor, expected_sha1_up);
 	SCOPED_TRACE("down");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 1.0 / 2.1, shift, subwidth_factor, expected_sha1_down);
+	test_case(zimg::PixelType::FLOAT, false, 1.0 / 2.1, shift, subwidth_factor, expected_sha1_down);
 }
 
 TEST(ResizeImplTest, test_vertical_shift)
@@ -242,7 +242,7 @@ TEST(ResizeImplTest, test_vertical_shift)
 	};
 
 	SCOPED_TRACE("up");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 2.1, shift, subwidth_factor, expected_sha1_up);
+	test_case(zimg::PixelType::FLOAT, false, 2.1, shift, subwidth_factor, expected_sha1_up);
 	SCOPED_TRACE("down");
-	test_case(zimg::default_pixel_format(zimg::PixelType::FLOAT), false, 1.0 / 2.1, shift, subwidth_factor, expected_sha1_down);
+	test_case(zimg::PixelType::FLOAT, false, 1.0 / 2.1, shift, subwidth_factor, expected_sha1_down);
 }

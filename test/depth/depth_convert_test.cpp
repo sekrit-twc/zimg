@@ -23,11 +23,11 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			SCOPED_TRACE(static_cast<int>(pxin));
 			SCOPED_TRACE(static_cast<int>(pxout));
 
-			zimg::PixelFormat fmt_in = zimg::default_pixel_format(pxin);
+			zimg::PixelFormat fmt_in = pxin;
 			fmt_in.fullrange = fullrange;
 			fmt_in.chroma = chroma;
 
-			zimg::PixelFormat fmt_out = zimg::default_pixel_format(pxout);
+			zimg::PixelFormat fmt_out = pxout;
 			fmt_out.chroma = chroma;
 
 			auto convert = zimg::depth::DepthConversion{ w, h }.set_pixel_in(fmt_in).set_pixel_out(fmt_out).create();
@@ -145,7 +145,7 @@ TEST(DepthConvertTest, test_non_full_integer)
 		SCOPED_TRACE(format.fullrange);
 		SCOPED_TRACE(format.chroma);
 
-		zimg::PixelFormat dst_format = zimg::default_pixel_format(zimg::PixelType::FLOAT);
+		zimg::PixelFormat dst_format = zimg::PixelType::FLOAT;
 		dst_format.chroma = format.chroma;
 
 		auto convert = zimg::depth::DepthConversion{ w, h, }.set_pixel_in(format).set_pixel_out(dst_format).create();

@@ -101,8 +101,8 @@ void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 
 std::pair<float, float> get_scale_offset(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {
-	bool integer_in = (pixel_in.type == PixelType::BYTE || pixel_in.type == PixelType::WORD);
-	bool integer_out = (pixel_out.type == PixelType::BYTE || pixel_out.type == PixelType::WORD);
+	bool integer_in = pixel_is_integer(pixel_in.type);
+	bool integer_out = pixel_is_integer(pixel_out.type);
 
 	uint32_t range_in = integer_in ? integer_range(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 1;
 	uint32_t offset_in = integer_in ? integer_offset(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 0;
@@ -282,7 +282,7 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
-		if (format_out.type != zimg::PixelType::BYTE && format_out.type != zimg::PixelType::WORD)
+		if (!pixel_is_integer(format_out.type))
 			throw error::InternalError{ "cannot dither to non-integer format" };
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
@@ -377,7 +377,7 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
-		if (format_out.type != zimg::PixelType::BYTE && format_out.type != zimg::PixelType::WORD)
+		if (!pixel_is_integer(format_out.type))
 			throw error::InternalError{ "cannot dither to non-integer format" };
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);

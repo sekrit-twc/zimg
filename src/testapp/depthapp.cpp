@@ -141,7 +141,7 @@ int depth_main(int argc, char **argv)
 		std::cerr << "warning: input file is of a different pixel type than declared format\n";
 
 	if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
-		throw std::logic_error{ "pixel sizes not compatible" };
+		throw std::runtime_error{ "pixel sizes not compatible" };
 
 	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(), is_yuv, src_frame.subsample_w(), src_frame.subsample_h() };
 

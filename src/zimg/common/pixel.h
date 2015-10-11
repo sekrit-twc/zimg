@@ -4,7 +4,9 @@
 #define ZIMG_PIXEL_H_
 
 #include <cstdint>
+#include <limits>
 #include "align.h"
+#include "zassert.h"
 
 namespace zimg {;
 
@@ -24,6 +26,94 @@ enum class PixelType {
 };
 
 /**
+ * Struct defining the memory characteristics of pixel types.
+ */
+struct PixelTraits {
+	unsigned size;
+	unsigned depth;
+	unsigned alignment;
+	bool is_integer;
+};
+
+/**
+ * Query traits for a given pixel type.
+ *
+ * @param type pixel type
+ * @return static reference to traits structure
+ */
+inline const PixelTraits &pixel_get_traits(PixelType type)
+{
+	static_assert(std::numeric_limits<float>::is_iec559, "IEEE-754 not detected");
+
+	static const PixelTraits traits[] = {
+		{ sizeof(uint8_t),   8, AlignmentOf<uint8_t>::value,  true },
+		{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, true },
+		{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, false },
+		{ sizeof(float),    32, AlignmentOf<float>::value,    false },
+	};
+	static_assert(sizeof(traits) / sizeof(traits[0]) == static_cast<int>(PixelType::FLOAT) + 1,
+	              "table size incorrect");
+
+	_zassert_d(type >= PixelType::BYTE && type <= PixelType::FLOAT, "pixel type out of range");
+	return traits[static_cast<int>(type)];
+}
+
+/**
+ * Query the size in bytes of a pixel.
+ *
+ * @param type pixel type
+ * @return size
+ */
+inline unsigned pixel_size(PixelType type)
+{
+	return pixel_get_traits(type).size;
+}
+
+/**
+ * Query the maximum bit depth that can be stored in a pixel type.
+ *
+ * @param type pixel type
+ * @return bit depth
+ */
+inline unsigned pixel_depth(PixelType type)
+{
+	return pixel_get_traits(type).depth;
+}
+
+/**
+ * Query the alignment of a pixel type in units of pixels.
+ *
+ * @param type pixel type
+ * @return alignment
+ */
+inline unsigned pixel_alignment(PixelType type)
+{
+	return pixel_get_traits(type).alignment;
+}
+
+/**
+ * Query if the pixel type is integral.
+ *
+ * @param type pixel type
+ * @return true if integral, else false
+ */
+inline bool pixel_is_integer(PixelType type)
+{
+	return pixel_get_traits(type).is_integer;
+}
+
+/**
+ * Query if the pixel type is floating point.
+ *
+ * @param type pixel type
+ * @return true if float, else false
+ */
+inline bool pixel_is_float(PixelType type)
+{
+	return !pixel_is_integer(type);
+}
+
+/**
  * Struct defining the set of parameters required to convert between pixel types.
  */
 struct PixelFormat {
@@ -31,56 +121,53 @@ struct PixelFormat {
 	unsigned depth;
 	bool fullrange;
 	bool chroma;
+
+	/**
+	 * Default construct PixelFormat, initializing it with an invalid format.
+	 */
+	PixelFormat() :
+		type{},
+		depth{},
+		fullrange{},
+		chroma{}
+	{
+	}
+
+	/**
+	 * Construct PixelFormat with default parameters for a given pixel type,
+	 * creating a limited-range, luma format with the maximum depth of the type.
+	 *
+	 * @param type pixel type
+	 */
+	PixelFormat(PixelType type) :
+		type{ type },
+		depth{ pixel_depth(type) },
+		fullrange{},
+		chroma{}
+	{
+	}
+
+	/**
+	 * Initialize PixelFormat with given parameters.
+	 *
+	 * @param type pixel type
+	 * @param depth bit depth
+	 * @param fullrange true if full range, else false
+	 * @param chroma true if chroma, else false
+	 */
+	PixelFormat(PixelType type, unsigned depth, bool fullrange = false, bool chroma = false) :
+		type{ type },
+		depth{ depth },
+		fullrange{ fullrange },
+		chroma{ chroma }
+	{
+	}
 };
 
 /**
- * Get the size in bytes of a pixel.
- *
- * @param type type of pixel
- * @return size of pixel
- */
-inline unsigned pixel_size(PixelType type)
-{
-	switch (type) {
-	case PixelType::BYTE:
-		return 1;
-	case PixelType::WORD:
-	case PixelType::HALF:
-		return sizeof(uint16_t);
-	case PixelType::FLOAT:
-		return sizeof(float);
-	default:
-		return 0;
-	}
-}
-
-/**
- * Get the system alignment in units of pixels.
- *
- * @param type type of pixel
- * @return alignment in pixels
- */
-inline unsigned pixel_alignment(PixelType type)
-{
-	return ALIGNMENT / pixel_size(type);
-}
-
-/**
- * Get a default pixel format for a given pixel type.
- * The default format is TV-range, non-chroma, and uses all available bits.
- *
- * @param type type of pixel
- * @return default format
- */
-inline PixelFormat default_pixel_format(PixelType type)
-{
-	return{ type, pixel_size(type) * 8, false, false };
-}
-
-/**
  * Compare PixelFormat structures for equality.
- * Integer formats are considered equal if all fields match,
- * whereas floating-point formats are defined only by their PixelType.
+ * Integer formats are considered equal if all fields match, whereas
+ * floating-point formats are defined only by their type and chroma.
  *
  * @param a lhs structure
  * @param b rhs structure
@@ -88,8 +175,8 @@ inline PixelFormat default_pixel_format(PixelType type)
  */
 inline bool operator==(const PixelFormat &a, const PixelFormat &b)
 {
-	if (a.type >= PixelType::HALF)
-		return a.type == b.type;
+	if (pixel_is_float(a.type))
+		return a.type == b.type && a.chroma == b.chroma;
 	else
 		return a.type == b.type && a.depth == b.depth && a.fullrange == b.fullrange && a.chroma == b.chroma;
 }

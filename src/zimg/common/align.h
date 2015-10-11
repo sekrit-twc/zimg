@@ -27,7 +27,7 @@ inline T floor_n(T x, U n) { return x - (x % n); }
 /**
  * Helper struct that computes alignment in units of object count.
  *
- * @param T type of object
+ * @tparam T type of object
  */
 template <class T>
 struct AlignmentOf {
