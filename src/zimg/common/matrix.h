@@ -10,7 +10,11 @@ namespace zimg {;
 
 /**
  * Row compressed sparse matrix. Stored as an array of arrays.
- * The first array holds pointers to each row's data, which stores a single range of non-zero entries.
+ *
+ * The first array holds pointers to each row's data, which stores a single
+ * range of non-zero entries.
+ *
+ * @tparam T stored numeric type, must be floating point
  */
 template <class T>
 class RowMatrix {
