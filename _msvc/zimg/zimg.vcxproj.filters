@@ -272,5 +272,8 @@
     <ClCompile Include="..\..\src\zimg\common\x86util.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

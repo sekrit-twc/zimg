@@ -36,6 +36,7 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/common/alloc.h \
 					 src/zimg/common/builder.h \
 					 src/zimg/common/ccdep.h \
+					 src/zimg/common/cpuinfo.cpp \
 					 src/zimg/common/cpuinfo.h \
 					 src/zimg/common/except.h \
 					 src/zimg/common/libm_wrapper.h \
