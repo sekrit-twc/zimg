@@ -26,8 +26,8 @@
 
 namespace {;
 
-THREAD_LOCAL zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
-THREAD_LOCAL char g_last_error_msg[1024];
+thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
+thread_local char g_last_error_msg[1024];
 
 const unsigned VERSION_INFO[] = { 1, 96, 0 };
 

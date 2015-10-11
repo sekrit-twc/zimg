@@ -10,8 +10,8 @@
 
 namespace zimg {;
 
-extern const ALIGNED(uint8_t, xmm_mask_table_l, 16)[17][16];
-extern const ALIGNED(uint8_t, xmm_mask_table_r, 16)[17][16];
+extern const uint8_t xmm_mask_table_l alignas(16)[17][16];
+extern const uint8_t xmm_mask_table_r alignas(16)[17][16];
 
 #ifdef HAVE_CPU_SSE
 

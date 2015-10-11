@@ -21,7 +21,7 @@ namespace zimg {;
 #define REPEAT_15(x) REPEAT_8(x), REPEAT_7(x)
 #define REPEAT_16(x) REPEAT_8(x), REPEAT_8(x)
 
-const ALIGNED(uint8_t, xmm_mask_table_l, 16)[17][16] = {
+const uint8_t xmm_mask_table_l alignas(16)[17][16] = {
 	{ REPEAT_16(0x00) },
 	{ REPEAT_15(0x00), REPEAT_1(0xFF) },
 	{ REPEAT_14(0x00), REPEAT_2(0xFF) },
@@ -41,7 +41,7 @@ const ALIGNED(uint8_t, xmm_mask_table_l, 16)[17][16] = {
 	{ REPEAT_16(0xFF) }
 };
 
-const ALIGNED(uint8_t, xmm_mask_table_r, 16)[17][16] = {
+const uint8_t xmm_mask_table_r alignas(16)[17][16] = {
 	{ REPEAT_16(0x00) },
 	{ REPEAT_1(0xFF),  REPEAT_15(0x00) },
 	{ REPEAT_2(0xFF),  REPEAT_14(0x00) },
