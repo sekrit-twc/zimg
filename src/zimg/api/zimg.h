@@ -194,6 +194,8 @@ typedef enum zimg_color_family_e {
  * It is possible to process interlaced images with the library by separating
  * them into their individual fields. Each field can then be resized by
  * specifying the appropriate field parity to maintain correct alignment.
+ *
+ * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_field_parity_e {
 	ZIMG_FIELD_PROGRESSIVE = 0, /**< Progressive scan image. */
@@ -277,7 +279,7 @@ typedef enum zimg_color_primaries_e {
  */
 typedef enum zimg_dither_type_e {
 	ZIMG_DITHER_NONE            = 0, /**< Round to nearest. */
-	ZIMG_DITHER_ORDERED         = 1, /**< Bayer patterend dither. */
+	ZIMG_DITHER_ORDERED         = 1, /**< Bayer patterned dither. */
 	ZIMG_DITHER_RANDOM          = 2, /**< Pseudo-random noise of magnitude 0.5. */
 	ZIMG_DITHER_ERROR_DIFFUSION = 3, /**< Floyd-Steinberg error diffusion. */
 } zimg_dither_type_e;
@@ -311,7 +313,7 @@ typedef enum zimg_resample_filter_e {
   * not read or write beyond image bounds, and no padding is necessary.
   *
   * Generally, the image stride must be a multiple of the alignment
-  * imposed by the target CPU architecture, which is up to 64 bytes on
+  * imposed by the host CPU architecture, which is up to 64 bytes on
   * x86 and AMD64. The stride may be negative.
   */
 typedef struct zimg_image_buffer_const {
@@ -349,7 +351,7 @@ unsigned zimg_select_buffer_mask(unsigned count);
 
 
 /**
- * Handle to an image processing contxt.
+ * Handle to an image processing context.
  *
  * The filter graph constitutes a series of indivdual image manipulations
  * that are executed in sequence to convert an image between formats.
@@ -373,7 +375,7 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * case those pixels must be re-read unless the buffer mask is UINT_MAX.
  *
  * If the image is subsampled, a number of scanlines in units of the chroma
- * subsampling (e.g. 2 lines for 4:2:0) must be processed.
+ * subsampling (e.g. 2 lines for 4:2:0) must be read.
  *
  * If the callback fails, processing will be aborted and a non-zero value will
  * be returned to the caller of {@link zimg_filter_graph_process}, but the
@@ -399,7 +401,7 @@ void zimg_filter_graph_free(zimg_filter_graph *ptr);
  *
  * The filter graph does not allocate memory during processing and generally
  * will not fail unless a user-provided callback fails. To facilitate this,
- * memory allocation is delgated to the caller.
+ * memory allocation is delegated to the caller.
  *
  * @pre out != 0
  * @param ptr graph handle
@@ -429,7 +431,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
  * @param ptr graph handle
  * @param[out] out set to the number of scanlines
  * @return error code
- * @see zimg2_filter_grpah_get_input_buffering
+ * @see zimg2_filter_graph_get_input_buffering
  */
 zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
@@ -455,7 +457,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
  * Image format descriptor.
  */
 typedef struct zimg_image_format {
-	unsigned version;                                         /**< @see ZIMG_API_VERSION */
+	unsigned version; /**< @see ZIMG_API_VERSION */
 
 	unsigned width;                                           /**< Image width (required). */
 	unsigned height;                                          /**< Image height (required). */
@@ -477,10 +479,10 @@ typedef struct zimg_image_format {
 } zimg_image_format;
 
 /**
- * Graph filter parameters.
+ * Graph construction parameters.
  */
 typedef struct zimg_graph_builder_params {
-	unsigned version;                          /**< @see ZIMG_API_VERSION */
+	unsigned version; /**< @see ZIMG_API_VERSION */
 
 	zimg_resample_filter_e resample_filter;    /**< Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
 
@@ -506,7 +508,7 @@ typedef struct zimg_graph_builder_params {
 
 	zimg_dither_type_e dither_type;            /**< Dithering method (default ZIMG_DITHER_NONE). */
 
-	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default (ZIMG_CPU_AUTO). */
+	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default ZIMG_CPU_AUTO). */
 } zimg_graph_builder_params;
 
 /**
