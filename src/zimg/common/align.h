@@ -27,14 +27,14 @@ const int ALIGNMENT = 32;
  * x must be non-negative and n must be positive.
  */
 template <class T, class U>
-inline T align(T x, U n) { return x % n ? x + n - (x % n) : x; }
+inline T ceil_n(T x, U n) { return x % n ? x + n - (x % n) : x; }
 
 /**
  * Round down the argument x to the nearest multiple of n.
  * x must be non-negative and n must be positive.
  */
 template <class T, class U>
-inline T mod(T x, U n) { return x - (x % n); }
+inline T floor_n(T x, U n) { return x - (x % n); }
 
 /**
  * Helper struct that computes alignment in units of object count.

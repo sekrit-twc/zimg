@@ -76,7 +76,7 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 	__m128 accum1 = _mm_setzero_ps();
 	__m128 x, c, coeffs;
 
-	unsigned k_end = FWidth ? FWidth - Tail : mod(filter_width, 4);
+	unsigned k_end = FWidth ? FWidth - Tail : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = _mm_load_ps(filter_coeffs + k);
@@ -139,10 +139,10 @@ template <unsigned FWidth, unsigned Tail>
 void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                             const float * RESTRICT src_ptr, float * const *dst_ptr, unsigned left, unsigned right)
 {
-	unsigned src_base = mod(filter_left[left], 4);
+	unsigned src_base = floor_n(filter_left[left], 4);
 
-	unsigned vec_left = align(left, 4);
-	unsigned vec_right = mod(right, 4);
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
 
 	float * RESTRICT dst_p0 = dst_ptr[0];
 	float * RESTRICT dst_p1 = dst_ptr[1];
@@ -242,8 +242,8 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 	const float * RESTRICT src_p3 = src_lines[3];
 	float * RESTRICT dst_p = dst;
 
-	unsigned vec_left = align(left, 4);
-	unsigned vec_right = mod(right, 4);
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
 
 	const __m128 c0 = _mm_set_ps1(filter_data[0]);
 	const __m128 c1 = _mm_set_ps1(filter_data[1]);
@@ -308,7 +308,7 @@ public:
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
 		auto range = get_required_col_range(left, right);
-		return 4 * ((range.second - mod(range.first, 4) + 4) * sizeof(float));
+		return 4 * ((range.second - floor_n(range.first, 4) + 4) * sizeof(float));
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
@@ -327,7 +327,7 @@ public:
 		src_ptr[2] = src_buf[std::min(i + 2, height - 1)];
 		src_ptr[3] = src_buf[std::min(i + 3, height - 1)];
 
-		transpose_line_4x4_ps(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], mod(range.first, 4), align(range.second, 4));
+		transpose_line_4x4_ps(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], floor_n(range.first, 4), ceil_n(range.second, 4));
 
 		dst_ptr[0] = dst_buf[std::min(i + 0, height - 1)];
 		dst_ptr[1] = dst_buf[std::min(i + 1, height - 1)];

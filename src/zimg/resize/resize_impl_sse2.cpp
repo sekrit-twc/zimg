@@ -139,7 +139,7 @@ __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 	__m128i accum_hi = _mm_setzero_si128();
 	__m128i x0, x1, xl, xh, c, coeffs;
 
-	unsigned k_end = DoLoop ? mod(filter_width, 8) : 0;
+	unsigned k_end = DoLoop ? floor_n(filter_width, 8) : 0;
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k));
@@ -277,10 +277,10 @@ template <bool DoLoop, unsigned Tail>
 void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                              const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned left, unsigned right, uint16_t limit)
 {
-	unsigned src_base = mod(filter_left[left], 8);
+	unsigned src_base = floor_n(filter_left[left], 8);
 
-	unsigned vec_left = align(left, 8);
-	unsigned vec_right = mod(right, 8);
+	unsigned vec_left = ceil_n(left, 8);
+	unsigned vec_right = floor_n(right, 8);
 
 	uint16_t * RESTRICT dst_p0 = dst_ptr[0];
 	uint16_t * RESTRICT dst_p1 = dst_ptr[1];
@@ -455,9 +455,9 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 	uint16_t * RESTRICT dst_p = dst;
 	uint32_t * RESTRICT accum_p = accum;
 
-	unsigned vec_left = align(left, 8);
-	unsigned vec_right = mod(right, 8);
-	unsigned accum_base = mod(left, 8);
+	unsigned vec_left = ceil_n(left, 8);
+	unsigned vec_right = floor_n(right, 8);
+	unsigned accum_base = floor_n(left, 8);
 
 	const __m128i c01 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[0]), _mm_set1_epi16(filter_data[1]));
 	const __m128i c23 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[2]), _mm_set1_epi16(filter_data[3]));
@@ -538,7 +538,7 @@ public:
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
 		auto range = get_required_col_range(left, right);
-		return 8 * ((range.second - mod(range.first, 8) + 8) * sizeof(uint16_t));
+		return 8 * ((range.second - floor_n(range.first, 8) + 8) * sizeof(uint16_t));
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
@@ -557,7 +557,7 @@ public:
 		}
 
 		transpose_line_8x8_epi16(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], src_ptr[4], src_ptr[5], src_ptr[6], src_ptr[7],
-		                         mod(range.first, 8), align(range.second, 8));
+		                         floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		for (unsigned n = 0; n < 8; ++n) {
 			dst_ptr[n] = dst_buf[std::min(i + n, height - 1)];
@@ -581,7 +581,7 @@ public:
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
 		if (m_filter.filter_width > 4)
-			return (align(right, 8) - mod(left, 8)) * sizeof(uint32_t);
+			return (ceil_n(right, 8) - floor_n(left, 8)) * sizeof(uint32_t);
 		else
 			return 0;
 	}
@@ -599,7 +599,7 @@ public:
 		uint16_t *dst_line = dst_buf[i];
 		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
 
-		unsigned k_end = align(filter_width, 8) - 8;
+		unsigned k_end = ceil_n(filter_width, 8) - 8;
 		unsigned top = m_filter.left[i];
 
 		for (unsigned k = 0; k < k_end; k += 8) {

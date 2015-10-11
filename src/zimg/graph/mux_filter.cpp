@@ -89,7 +89,7 @@ size_t MuxFilter::get_context_size() const
 	size_t context_size = m_filter->get_context_size();
 	size_t context_size_uv = m_filter_uv ? m_filter_uv->get_context_size() : context_size;
 
-	return align(context_size, ALIGNMENT) + 2 * align(context_size_uv, ALIGNMENT);
+	return ceil_n(context_size, ALIGNMENT) + 2 * ceil_n(context_size_uv, ALIGNMENT);
 }
 
 size_t MuxFilter::get_tmp_size(unsigned left, unsigned right) const

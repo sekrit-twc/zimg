@@ -126,7 +126,7 @@ PathSpecifier parse_path_specifier(const char *spec, const char *assumed)
 
 ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel)
 {
-	return zimg::align(width * zimg::pixel_size(pixel), zimg::ALIGNMENT);
+	return zimg::ceil_n(width * zimg::pixel_size(pixel), zimg::ALIGNMENT);
 }
 
 } // namespace

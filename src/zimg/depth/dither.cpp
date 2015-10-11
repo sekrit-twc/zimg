@@ -242,7 +242,7 @@ public:
 
 		for (unsigned i = 0; i < height; ++i) {
 			std::mt19937 mt{ i };
-			m_row_offset[i] = mod(mt(), 8);
+			m_row_offset[i] = floor_n(mt(), 8);
 		}
 	}
 
@@ -311,8 +311,8 @@ public:
 		if (m_f16c) {
 			unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
 
-			left = mod(left, pixel_align);
-			right = align(right, pixel_align);
+			left = floor_n(left, pixel_align);
+			right = ceil_n(right, pixel_align);
 
 			size = (right - left) * sizeof(float);
 		}
@@ -326,7 +326,7 @@ public:
 		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
-		unsigned line_base = mod(left, pixel_align);
+		unsigned line_base = floor_n(left, pixel_align);
 
 		const float *dither_table;
 		unsigned dither_offset;
@@ -402,12 +402,12 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return 2 * (align(static_cast<size_t>(m_width), AlignmentOf<float>::value) + 2 * AlignmentOf<float>::value) * sizeof(float);
+		return 2 * (ceil_n(static_cast<size_t>(m_width), AlignmentOf<float>::value) + 2 * AlignmentOf<float>::value) * sizeof(float);
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override
 	{
-		return m_f16c ? align(m_width, AlignmentOf<float>::value) * sizeof(float) : 0;
+		return m_f16c ? ceil_n(m_width, AlignmentOf<float>::value) * sizeof(float) : 0;
 	}
 
 	void init_context(void *ctx) const

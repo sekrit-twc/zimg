@@ -72,8 +72,8 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	const __m128 c22 = _mm_set_ps1(matrix[8]);
 	__m128 out0, out1, out2;
 
-	unsigned vec_left = align(left, 4);
-	unsigned vec_right = mod(right, 4);
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
 
 #define XITER matrix_filter_line_sse_xiter
 #define XARGS src, out0, out1, out2, c00, c01, c02, c10, c11, c12, c20, c21, c22

@@ -44,7 +44,7 @@ public:
 	template <class T = void>
 	T *allocate(size_t bytes)
 	{
-		return increment_and_return<T>(align(bytes, ALIGNMENT));
+		return increment_and_return<T>(ceil_n(bytes, ALIGNMENT));
 	}
 
 	/**
@@ -90,7 +90,7 @@ public:
 	template <class T = void>
 	T *allocate(size_t bytes)
 	{
-		m_count += align(bytes, ALIGNMENT);
+		m_count += ceil_n(bytes, ALIGNMENT);
 		return nullptr;
 	}
 

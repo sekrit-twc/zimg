@@ -193,7 +193,7 @@ public:
 
 	static size_t context_table_size(unsigned id_counter)
 	{
-		return align(sizeof(void *) * id_counter, ALIGNMENT);
+		return ceil_n(sizeof(void *) * id_counter, ALIGNMENT);
 	}
 };
 
@@ -238,7 +238,7 @@ protected:
 	ptrdiff_t get_cache_stride() const
 	{
 		auto attr = get_image_attributes(false);
-		return align(attr.width * pixel_size(attr.type), ALIGNMENT);
+		return ceil_n(attr.width * pixel_size(attr.type), ALIGNMENT);
 	}
 
 	void set_cache_lines(unsigned n)
@@ -343,7 +343,7 @@ public:
 		last <<= uv ? m_subsample_h : 0;
 
 		if (pos < last)
-			pos = mod(last - 1, step) + step;
+			pos = floor_n(last - 1, step) + step;
 
 		sim->pos(get_id()) = pos;
 		set_cache_lines(pos - first);
@@ -351,7 +351,7 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return align(sizeof(node_context), zimg::ALIGNMENT);
+		return ceil_n(sizeof(node_context), zimg::ALIGNMENT);
 	}
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
@@ -406,7 +406,7 @@ public:
 					state->get_unpack_cb()(pos, context->source_left, context->source_right);
 				}
 			} else {
-				pos = mod(line, step) + step;
+				pos = floor_n(line, step) + step;
 			}
 
 			context->cache_pos = pos;
@@ -757,7 +757,7 @@ class FilterGraph::impl {
 
 		if (!entire_row) {
 			double scale = std::max((double)tail_attr.width / head_attr.width, 1.0);
-			unsigned step = mod((unsigned)std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT);
+			unsigned step = floor_n((unsigned)std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT);
 			return std::min(step, tail_attr.width);
 		} else {
 			return tail_attr.width;

@@ -139,7 +139,7 @@ public:
 		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
-		unsigned line_base = mod(left, pixel_align);
+		unsigned line_base = floor_n(left, pixel_align);
 
 		src_line += pixel_size(m_pixel_in) * line_base;
 		dst_line += pixel_size(m_pixel_out) * line_base;
@@ -213,8 +213,8 @@ public:
 		if (m_func && m_f16c) {
 			unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
 
-			left = mod(left, pixel_align);
-			right = align(right, pixel_align);
+			left = floor_n(left, pixel_align);
+			right = ceil_n(right, pixel_align);
 
 			size = (right - left) * sizeof(float);
 		}
@@ -228,7 +228,7 @@ public:
 		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
 
 		unsigned pixel_align = ALIGNMENT / std::min(pixel_size(m_pixel_in), pixel_size(m_pixel_out));
-		unsigned line_base = mod(left, pixel_align);
+		unsigned line_base = floor_n(left, pixel_align);
 
 		src_line += pixel_size(m_pixel_in) * line_base;
 		dst_line += pixel_size(m_pixel_out) * line_base;

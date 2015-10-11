@@ -50,7 +50,7 @@ PairFilter::PairFilter(std::unique_ptr<zimg::graph::ImageFilter> &&first, std::u
 
 ptrdiff_t PairFilter::get_cache_stride() const
 {
-	return zimg::align(m_first_attr.width * pixel_size(m_first_attr.type), zimg::ALIGNMENT);
+	return zimg::ceil_n(m_first_attr.width * pixel_size(m_first_attr.type), zimg::ALIGNMENT);
 }
 
 unsigned PairFilter::get_cache_line_count() const
@@ -97,8 +97,8 @@ zimg::graph::ImageFilter::image_attributes PairFilter::get_image_attributes() co
 zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
 {
 	auto second_range = m_second->get_required_row_range(i);
-	auto top_range = m_first->get_required_row_range(zimg::mod(second_range.first, m_first_step));
-	auto bot_range = m_first->get_required_row_range(zimg::mod(second_range.second - 1, m_first_step));
+	auto top_range = m_first->get_required_row_range(zimg::floor_n(second_range.first, m_first_step));
+	auto bot_range = m_first->get_required_row_range(zimg::floor_n(second_range.second - 1, m_first_step));
 
 	return{ top_range.first, bot_range.second };
 }
@@ -196,7 +196,7 @@ void PairFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> s
 	if (left != cache->col_left || right != cache->col_right) {
 		cache->col_left = left;
 		cache->col_right = right;
-		cache->cache_line_pos = m_first_flags.has_state ? 0 : zimg::mod(row_range.first, m_first_step);
+		cache->cache_line_pos = m_first_flags.has_state ? 0 : zimg::floor_n(row_range.first, m_first_step);
 	}
 
 	const zimg::graph::ImageBuffer<void> *cache_buf = m_in_place ? dst : cache->cache_buf;

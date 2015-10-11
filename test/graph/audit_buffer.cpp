@@ -123,7 +123,7 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat f
 		unsigned mask_plane = p ? (mask == (unsigned)-1 ? mask : mask >> subsample_h) : mask;
 		unsigned buffer_height = (mask_plane == (unsigned)-1) ? height_plane : mask_plane + 1;
 
-		size_t guarded_linesize = (zimg::align(width_plane, zimg::AlignmentOf<T>::value) + 2 * zimg::AlignmentOf<T>::value) * sizeof(T);
+		size_t guarded_linesize = (zimg::ceil_n(width_plane, zimg::AlignmentOf<T>::value) + 2 * zimg::AlignmentOf<T>::value) * sizeof(T);
 		size_t guarded_linecount = buffer_height + 2;
 
 		m_vector[p].resize(guarded_linesize * guarded_linecount / sizeof(T));
