@@ -3,6 +3,11 @@
 #include <xmmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+
+#define HAVE_CPU_SSE
+  #include "common/x86util.h"
+#undef HAVE_CPU_SSE
+
 #include "common/make_unique.h"
 #include "operation_impl.h"
 #include "operation_impl_x86.h"
@@ -14,34 +19,12 @@ namespace {;
 
 inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
 {
-	switch (count - 1) {
-	case 2:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-		_mm_store_ss(dst + 1, x);
-	case 1:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-		_mm_store_ss(dst + 2, x);
-	case 0:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3));
-		_mm_store_ss(dst + 3, x);
-	}
+	mm_store_left_ps(dst, x, count * 4);
 }
 
 inline FORCE_INLINE void mm_store_right(float *dst, __m128 x, unsigned count)
 {
-	__m128 y;
-
-	switch (count - 1) {
-	case 2:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-		_mm_store_ss(dst + 2, y);
-	case 1:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-		_mm_store_ss(dst + 1, y);
-	case 0:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 0));
-		_mm_store_ss(dst + 0, y);
-	}
+	mm_store_right_ps(dst, x, count * 4);
 }
 
 inline FORCE_INLINE void matrix_filter_line_sse_xiter(unsigned j, const float * RESTRICT const * RESTRICT src, __m128 &out0, __m128 &out1, __m128 &out2,

@@ -5,6 +5,11 @@
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+
+#define HAVE_CPU_SSE2
+  #include "common/x86util.h"
+#undef HAVE_CPU_SSE2
+
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize_impl.h"
@@ -17,42 +22,12 @@ namespace {;
 
 inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
 {
-	switch (count - 1) {
-	case 6:
-		dst[1] = _mm_extract_epi16(x, 1);
-	case 5:
-		dst[2] = _mm_extract_epi16(x, 2);
-	case 4:
-		dst[3] = _mm_extract_epi16(x, 3);
-	case 3:
-		dst[4] = _mm_extract_epi16(x, 4);
-	case 2:
-		dst[5] = _mm_extract_epi16(x, 5);
-	case 1:
-		dst[6] = _mm_extract_epi16(x, 6);
-	case 0:
-		dst[7] = _mm_extract_epi16(x, 7);
-	}
+	mm_store_left_si128((__m128i *)dst, x, count * 2);
 }
 
 inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
 {
-	switch (count - 1) {
-	case 6:
-		dst[6] = _mm_extract_epi16(x, 6);
-	case 5:
-		dst[5] = _mm_extract_epi16(x, 5);
-	case 4:
-		dst[4] = _mm_extract_epi16(x, 4);
-	case 3:
-		dst[3] = _mm_extract_epi16(x, 3);
-	case 2:
-		dst[2] = _mm_extract_epi16(x, 2);
-	case 1:
-		dst[1] = _mm_extract_epi16(x, 1);
-	case 0:
-		dst[0] = _mm_extract_epi16(x, 0);
-	}
+	mm_store_right_si128((__m128i *)dst, x, count * 2);
 }
 
 inline FORCE_INLINE void scatter8_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
@@ -136,8 +111,6 @@ void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint1
 inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi, uint16_t limit)
 {
 	const __m128i round = _mm_set1_epi32(1 << 13);
-	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
-	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
 	lo = _mm_add_epi32(lo, round);
 	hi = _mm_add_epi32(hi, round);
@@ -146,8 +119,7 @@ inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi, uint16_t limi
 	hi = _mm_srai_epi32(hi, 14);
 
 	lo = _mm_packs_epi32(lo, hi);
-	lo = _mm_min_epi16(lo, lim);
-	lo = _mm_sub_epi16(lo, i16_min);
+
 	return lo;
 }
 
@@ -158,6 +130,7 @@ __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
                                       const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
+	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
 	const int16_t *filter_coeffs = filter_data + j * filter_stride;
 	const uint16_t *src_p = src_ptr + (filter_left[j] - src_base) * 8;
@@ -295,6 +268,8 @@ __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 	}
 
 	accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+	accum_lo = _mm_min_epi16(accum_lo, lim);
+	accum_lo = _mm_sub_epi16(accum_lo, i16_min);
 	return accum_lo;
 }
 
@@ -385,6 +360,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
                                                          const uint32_t *accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
+	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
 	__m128i accum_lo = _mm_setzero_si128();
 	__m128i accum_hi = _mm_setzero_si128();
@@ -457,7 +433,11 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 4), accum_hi);
 		return _mm_setzero_si128();
 	} else {
-		return export_i30_u16(accum_lo, accum_hi, limit);
+		accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+		accum_lo = _mm_min_epi16(accum_lo, lim);
+		accum_lo = _mm_sub_epi16(accum_lo, i16_min);
+
+		return accum_lo;
 	}
 }
 

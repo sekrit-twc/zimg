@@ -180,6 +180,9 @@
     <ClInclude Include="..\..\src\zimg\colorspace\operation_impl_x86.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86util.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -265,6 +268,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp">
       <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\x86util.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

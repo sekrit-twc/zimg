@@ -4,6 +4,11 @@
 #include <xmmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+
+#define HAVE_CPU_SSE
+  #include "common/x86util.h"
+#undef HAVE_CPU_SSE
+
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
@@ -29,34 +34,12 @@ inline FORCE_INLINE void scatter4_ps(float *dst0, float *dst1, float *dst2, floa
 
 inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
 {
-	switch (count - 1) {
-	case 2:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-		_mm_store_ss(dst + 1, x);
-	case 1:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-		_mm_store_ss(dst + 2, x);
-	case 0:
-		x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3));
-		_mm_store_ss(dst + 3, x);
-	}
+	mm_store_left_ps(dst, x, count * 4);
 }
 
 inline FORCE_INLINE void mm_store_right(float *dst, __m128 x, unsigned count)
 {
-	__m128 y;
-
-	switch (count - 1) {
-	case 2:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-		_mm_store_ss(dst + 2, y);
-	case 1:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-		_mm_store_ss(dst + 1, y);
-	case 0:
-		y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 0));
-		_mm_store_ss(dst + 0, y);
-	}
+	mm_store_right_ps(dst, x, count * 4);
 }
 
 void transpose_line_4x4_ps(float *dst, const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, unsigned left, unsigned right)

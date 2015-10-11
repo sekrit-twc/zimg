@@ -4,6 +4,11 @@
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+
+#define HAVE_CPU_SSE2
+  #include "common/x86util.h"
+#undef HAVE_SSE2
+
 #include "dither_x86.h"
 
 namespace zimg {;
@@ -11,126 +16,25 @@ namespace depth {;
 
 namespace {;
 
-inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	switch (count - 1) {
-	case 7:
-		dst[0] = _mm_extract_epi16(x, 0);
-	case 6:
-		dst[1] = _mm_extract_epi16(x, 1);
-	case 5:
-		dst[2] = _mm_extract_epi16(x, 2);
-	case 4:
-		dst[3] = _mm_extract_epi16(x, 3);
-	case 3:
-		dst[4] = _mm_extract_epi16(x, 4);
-	case 2:
-		dst[5] = _mm_extract_epi16(x, 5);
-	case 1:
-		dst[6] = _mm_extract_epi16(x, 6);
-	case 0:
-		dst[7] = _mm_extract_epi16(x, 7);
-	}
-}
-
-inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	switch (count - 1) {
-	case 7:
-		dst[7] = _mm_extract_epi16(x, 7);
-	case 6:
-		dst[6] = _mm_extract_epi16(x, 6);
-	case 5:
-		dst[5] = _mm_extract_epi16(x, 5);
-	case 4:
-		dst[4] = _mm_extract_epi16(x, 4);
-	case 3:
-		dst[3] = _mm_extract_epi16(x, 3);
-	case 2:
-		dst[2] = _mm_extract_epi16(x, 2);
-	case 1:
-		dst[1] = _mm_extract_epi16(x, 1);
-	case 0:
-		dst[0] = _mm_extract_epi16(x, 0);
-	}
-}
-
 inline FORCE_INLINE void mm_store_left_epi8(uint8_t *dst, __m128i x, unsigned count)
 {
-	switch (count - 1) {
-	case 15:
-		dst[0] = (uint8_t)(_mm_extract_epi16(x, 0));
-	case 14:
-		dst[1] = (uint8_t)(_mm_extract_epi16(x, 0) >> 8);
-	case 13:
-		dst[2] = (uint8_t)(_mm_extract_epi16(x, 1));
-	case 12:
-		dst[3] = (uint8_t)(_mm_extract_epi16(x, 1) >> 8);
-	case 11:
-		dst[4] = (uint8_t)(_mm_extract_epi16(x, 2));
-	case 10:
-		dst[5] = (uint8_t)(_mm_extract_epi16(x, 2) >> 8);
-	case 9:
-		dst[6] = (uint8_t)(_mm_extract_epi16(x, 3));
-	case 8:
-		dst[7] = (uint8_t)(_mm_extract_epi16(x, 3) >> 8);
-	case 7:
-		dst[8] = (uint8_t)(_mm_extract_epi16(x, 4));
-	case 6:
-		dst[9] = (uint8_t)(_mm_extract_epi16(x, 4) >> 8);
-	case 5:
-		dst[10] = (uint8_t)(_mm_extract_epi16(x, 5));
-	case 4:
-		dst[11] = (uint8_t)(_mm_extract_epi16(x, 5) >> 8);
-	case 3:
-		dst[12] = (uint8_t)(_mm_extract_epi16(x, 6));
-	case 2:
-		dst[13] = (uint8_t)(_mm_extract_epi16(x, 6) >> 8);
-	case 1:
-		dst[14] = (uint8_t)(_mm_extract_epi16(x, 7));
-	case 0:
-		dst[15] = (uint8_t)(_mm_extract_epi16(x, 7) >> 8);
-	}
+	mm_store_left_si128((__m128i *)dst, x, count);
 }
 
 inline FORCE_INLINE void mm_store_right_epi8(uint8_t *dst, __m128i x, unsigned count)
 {
-	switch (count - 1) {
-	case 15:
-		dst[15] = (uint8_t)(_mm_extract_epi16(x, 7) >> 8);
-	case 14:
-		dst[14] = (uint8_t)(_mm_extract_epi16(x, 7));
-	case 13:
-		dst[13] = (uint8_t)(_mm_extract_epi16(x, 6) >> 8);
-	case 12:
-		dst[12] = (uint8_t)(_mm_extract_epi16(x, 6));
-	case 11:
-		dst[11] = (uint8_t)(_mm_extract_epi16(x, 5) >> 8);
-	case 10:
-		dst[10] = (uint8_t)(_mm_extract_epi16(x, 5));
-	case 9:
-		dst[9] = (uint8_t)(_mm_extract_epi16(x, 4) >> 8);
-	case 8:
-		dst[8] = (uint8_t)(_mm_extract_epi16(x, 4));
-	case 7:
-		dst[7] = (uint8_t)(_mm_extract_epi16(x, 3) >> 8);
-	case 6:
-		dst[6] = (uint8_t)(_mm_extract_epi16(x, 3));
-	case 5:
-		dst[5] = (uint8_t)(_mm_extract_epi16(x, 2) >> 8);
-	case 4:
-		dst[4] = (uint8_t)(_mm_extract_epi16(x, 2));
-	case 3:
-		dst[3] = (uint8_t)(_mm_extract_epi16(x, 1) >> 8);
-	case 2:
-		dst[2] = (uint8_t)(_mm_extract_epi16(x, 1));
-	case 1:
-		dst[1] = (uint8_t)(_mm_extract_epi16(x, 0) >> 8);
-	case 0:
-		dst[0] = (uint8_t)(_mm_extract_epi16(x, 0));
-	}
+	mm_store_right_si128((__m128i *)dst, x, count);
 }
 
+inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
+{
+	mm_store_left_si128((__m128i *)dst, x, count * 2);
+}
+
+inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
+{
+	mm_store_right_si128((__m128i *)dst, x, count * 2);
+}
 
 // Convert unsigned 16-bit to single precision.
 inline FORCE_INLINE void mm_cvtepu16_ps(__m128i x, __m128 &lo, __m128 &hi)

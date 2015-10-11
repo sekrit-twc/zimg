@@ -12,9 +12,9 @@
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
-  #define ALIGNED(x) __declspec(align(x))
+  #define ALIGNED(type, name, alignment) __declspec(align(alignment)) type name
 #else
-  #define ALIGNED(x) alignas(x)
+  #define ALIGNED(type, name, alignment) type name alignas(alignment)
 #endif
 
 #if defined(_MSC_VER) || defined(__GNUC__)

@@ -95,6 +95,8 @@ noinst_LTLIBRARIES += libsse.la libsse2.la
 
 libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
 					  src/zimg/colorspace/operation_impl_x86.h \
+					  src/zimg/common/x86util.cpp \
+					  src/zimg/common/x86util.h \
 					  src/zimg/depth/depth_convert_x86.cpp \
 					  src/zimg/depth/depth_convert_x86.h \
 					  src/zimg/depth/dither_x86.cpp \
