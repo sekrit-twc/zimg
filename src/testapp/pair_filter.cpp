@@ -50,7 +50,7 @@ PairFilter::PairFilter(std::unique_ptr<zimg::graph::ImageFilter> &&first, std::u
 
 ptrdiff_t PairFilter::get_cache_stride() const
 {
-	return zimg::ceil_n(m_first_attr.width * pixel_size(m_first_attr.type), zimg::ALIGNMENT);
+	return zimg::ceil_n(m_first_attr.width, zimg::pixel_alignment(m_first_attr.type));
 }
 
 unsigned PairFilter::get_cache_line_count() const

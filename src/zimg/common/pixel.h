@@ -4,6 +4,7 @@
 #define ZIMG_PIXEL_H_
 
 #include <cstdint>
+#include "align.h"
 
 namespace zimg {;
 
@@ -51,6 +52,17 @@ inline int pixel_size(PixelType type)
 	default:
 		return 0;
 	}
+}
+
+/**
+ * Get the system alignment in units of pixels.
+ *
+ * @param type type of pixel
+ * @return alignment in pixels
+ */
+inline int pixel_alignment(PixelType type)
+{
+	return ALIGNMENT / pixel_size(type);
 }
 
 /**
