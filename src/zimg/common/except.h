@@ -10,25 +10,18 @@ namespace error {;
 
 class Exception : private std::runtime_error {
 public:
-	Exception() : std::runtime_error{ "" } {}
+	Exception() : std::runtime_error{ "" }
+	{
+	}
 
-	explicit Exception(const char *msg) : std::runtime_error{ msg } {}
+	using std::runtime_error::runtime_error;
 
-	explicit Exception(const std::string &msg) : std::runtime_error{ msg } {}
-
-	virtual ~Exception() {}
+	virtual ~Exception() = default;
 
 	using std::runtime_error::what;
 };
 
-
-#define DECLARE_EXCEPTION(x, base) \
-class x : public base { \
-public: \
-  x() : base{ "" } {} \
-  explicit x(const char *msg) : base{ msg } {} \
-  explicit x(const std::string &msg) : base{ msg } {} \
-};
+#define DECLARE_EXCEPTION(x, base) class x : public base { public: using base::base; };
 
 DECLARE_EXCEPTION(UnknownError, Exception)
 DECLARE_EXCEPTION(InternalError, Exception)
