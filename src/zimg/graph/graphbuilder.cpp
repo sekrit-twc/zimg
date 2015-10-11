@@ -160,14 +160,14 @@ FilterFactory::~FilterFactory()
 
 auto DefaultFilterFactory::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
 {
-	auto filter = conv.create();
-	return{ std::make_move_iterator(&filter), std::make_move_iterator(&filter + 1) };
+	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
+	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
 }
 
 auto DefaultFilterFactory::create_depth(const depth::DepthConversion &conv) -> filter_list
 {
-	auto filter = conv.create();
-	return{ std::make_move_iterator(&filter), std::make_move_iterator(&filter + 1) };
+	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
+	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
 }
 
 auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -> filter_list
