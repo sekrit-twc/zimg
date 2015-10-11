@@ -109,7 +109,7 @@ class ColorspaceGraph {
 
 		throw error::NoColorspaceConversion{ "no path between colorspaces" };
 	}
-
+public:
 	ColorspaceGraph()
 	{
 		// Insert all colorspaces.
@@ -159,8 +159,6 @@ class ColorspaceGraph {
 			}
 		}
 	}
-public:
-	static const ColorspaceGraph g_instance;
 
 	std::vector<OperationFactory> shortest_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out) const
 	{
@@ -168,14 +166,13 @@ public:
 	}
 };
 
-const ColorspaceGraph ColorspaceGraph::g_instance;
-
 } // namespace
 
 
 std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out)
 {
-	return ColorspaceGraph::g_instance.shortest_path(in, out);
+	static const ColorspaceGraph graph{};
+	return graph.shortest_path(in, out);
 }
 
 } // namespace colorspace
