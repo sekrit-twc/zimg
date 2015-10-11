@@ -297,6 +297,8 @@ typedef enum zimg_resample_filter_e {
 } zimg_resample_filter_e;
 
 
+#define ZIMG_BUFFER_MAX ((unsigned)-1)
+
  /**
   * Read-only buffer structure.
   *
@@ -308,9 +310,10 @@ typedef enum zimg_resample_filter_e {
   * where the beginning of the i-th row of the p-th plane is stored at
   * (plane[p].data + (ptrdiff_t)(i & plane[p].mask) * plane[p].stride).
   *
-  * The row index mask can be set to the special value of UINT_MAX (-1)
-  * to indicate a fully allocated image plane. Filter instances will
-  * not read or write beyond image bounds, and no padding is necessary.
+  * The row index mask can be set to the special value of
+  * {@link ZIMG_BUFFER_MAX} to indicate a fully allocated image plane. Filter
+  * instances will not read or write beyond image bounds, and no padding is
+  * necessary.
   *
   * Generally, the image stride must be a multiple of the alignment
   * imposed by the host CPU architecture, which is up to 64 bytes on
@@ -344,8 +347,8 @@ typedef struct zimg_image_buffer {
 /**
  * Convert a number of lines to a {@link zimg_image_buffer} mask.
  *
- * @param count number of lines, can be UINT_MAX
- * @return buffer mask, can be UINT_MAX
+ * @param count number of lines, can be {@link ZIMG_BUFFER_MAX}
+ * @return buffer mask, can be {@link ZIMG_BUFFER_MAX}
  */
 unsigned zimg_select_buffer_mask(unsigned count);
 
@@ -366,13 +369,15 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * User callback for custom input/output.
  *
  * The filter graph can be used either to process an in-memory planar image,
- * as defined by a {@link zimg_image_buffer} with a mask of UINT_MAX, or to
- * process images stored in arbitrary packed formats or other address spaces.
+ * as defined by a {@link zimg_image_buffer} with a mask of
+ * {@link ZIMG_BUFFER_MAX}, or to process images stored in arbitrary packed
+ * formats or other address spaces.
  *
  * If provided to {@link zimg_filter_graph_process}, the callback will be
  * called before image data is read from the input and output buffers.
  * The callback may be invoked on the same pixels multiple times, in which
- * case those pixels must be re-read unless the buffer mask is UINT_MAX.
+ * case those pixels must be re-read unless the buffer mask is
+ * {@link ZIMG_BUFFER_MAX}.
  *
  * If the image is subsampled, a number of scanlines in units of the chroma
  * subsampling (e.g. 2 lines for 4:2:0) must be read.

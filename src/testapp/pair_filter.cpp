@@ -120,7 +120,7 @@ unsigned PairFilter::get_max_buffering() const
 	unsigned buffering = 0;
 
 	if (m_first_flags.entire_plane || m_second_flags.entire_plane)
-		return -1;
+		return zimg::graph::BUFFER_MAX;
 
 	for (unsigned i = 0; i < m_second_attr.height; i += m_second_step) {
 		auto range = get_required_row_range(i);

@@ -200,11 +200,11 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 	for (p = 0; p < 3; ++p) {
 		src_buf.plane[p].data = src_p[p];
 		src_buf.plane[p].stride = src_stride[p];
-		src_buf.plane[p].mask = -1;
+		src_buf.plane[p].mask = ZIMG_BUFFER_MAX;
 
 		dst_buf.plane[p].data = dst_p[p];
 		dst_buf.plane[p].stride = dst_stride[p];
-		dst_buf.plane[p].mask = -1;
+		dst_buf.plane[p].mask = ZIMG_BUFFER_MAX;
 	}
 
 	if ((ret = zimg_filter_graph_process(graph, &src_buf, &dst_buf, tmp, 0, 0, 0, 0))) {

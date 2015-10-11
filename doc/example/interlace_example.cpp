@@ -117,7 +117,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	size_t channel_size[3] = { 0 };
 	size_t pixel_size;
 
-	count = (mask == (unsigned)-1) ? format.height : mask + 1;
+	count = (mask == ZIMG_BUFFER_MAX) ? format.height : mask + 1;
 
 	if (format.pixel_type == ZIMG_PIXEL_FLOAT)
 		pixel_size = sizeof(float);
@@ -128,7 +128,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
 		unsigned count_plane = p ? count : count >> format.subsample_h;
-		unsigned mask_plane = (mask == (unsigned)-1) ? mask : mask >> format.subsample_h;
+		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % 64 ? row_size - row_size % 64 + 64 : row_size;
 

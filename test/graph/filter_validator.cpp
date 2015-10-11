@@ -138,9 +138,9 @@ void validate_flags(const zimg::graph::ImageFilter *filter)
 	if (flags.in_place && !flags.same_row)
 		FAIL() << "filter must set same_row if in_place is set";
 
-	if (flags.entire_plane && filter->get_max_buffering() != (unsigned)-1)
+	if (flags.entire_plane && filter->get_max_buffering() != zimg::graph::BUFFER_MAX)
 		FAIL() << "filter must buffer entire image if entire_plane is set";
-	if (flags.entire_plane && filter->get_simultaneous_lines() != (unsigned)-1)
+	if (flags.entire_plane && filter->get_simultaneous_lines() != zimg::graph::BUFFER_MAX)
 		FAIL() << "filter must output entire image if entire_plane is set";
 }
 
@@ -239,8 +239,8 @@ void validate_filter_T(const zimg::graph::ImageFilter *filter, unsigned src_widt
 	if (flags.same_row)
 		validate_same_row(filter);
 
-	AuditBuffer<T> src_buf{ src_width, src_height, src_format, (unsigned)-1, 0, 0, !!flags.color };
-	AuditBuffer<U> dst_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), (unsigned)-1, 0, 0, !!flags.color };
+	AuditBuffer<T> src_buf{ src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
+	AuditBuffer<U> dst_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
 
 	src_buf.random_fill(0, src_height, 0, src_width);
 	dst_buf.default_fill();
@@ -273,9 +273,9 @@ void validate_filter_reference_T(const zimg::graph::ImageFilter *ref_filter, con
 	zimg::graph::ImageFilter::filter_flags flags = ref_filter->get_flags();
 	auto attr = ref_filter->get_image_attributes();
 
-	AuditBuffer<T> src_buf{ src_width, src_height, src_format, (unsigned)-1, 0, 0, !!flags.color };
-	AuditBuffer<U> ref_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), (unsigned)-1, 0, 0, !!flags.color };
-	AuditBuffer<U> test_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), (unsigned)-1, 0, 0, !!flags.color };
+	AuditBuffer<T> src_buf{ src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
+	AuditBuffer<U> ref_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
+	AuditBuffer<U> test_buf{ attr.width, attr.height, zimg::default_pixel_format(attr.type), zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
 
 	src_buf.random_fill(0, src_height, 0, src_width);
 	ref_buf.default_fill();

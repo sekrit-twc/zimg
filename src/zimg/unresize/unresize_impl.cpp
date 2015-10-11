@@ -191,12 +191,12 @@ auto UnresizeImplV::get_required_col_range(unsigned, unsigned) const -> pair_uns
 
 unsigned UnresizeImplV::get_simultaneous_lines() const
 {
-	return -1;
+	return graph::BUFFER_MAX;
 }
 
 unsigned UnresizeImplV::get_max_buffering() const
 {
-	return -1;
+	return graph::BUFFER_MAX;
 }
 
 

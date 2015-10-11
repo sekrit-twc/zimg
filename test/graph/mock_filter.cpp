@@ -7,7 +7,7 @@ MockFilter::MockFilter(unsigned width, unsigned height, zimg::PixelType type, co
 	m_attr{ width, height, type },
 	m_flags(flags),
 	m_total_calls{},
-	m_simultaneous_lines{ flags.entire_plane ? (unsigned)-1 : 1 },
+	m_simultaneous_lines{ flags.entire_plane ? zimg::graph::BUFFER_MAX : 1 },
 	m_horizontal_support{},
 	m_vertical_support{}
 {
@@ -79,7 +79,7 @@ unsigned MockFilter::get_simultaneous_lines() const
 
 unsigned MockFilter::get_max_buffering() const
 {
-	return get_flags().entire_plane ? (unsigned)-1 : get_simultaneous_lines() + 2 * m_vertical_support;
+	return get_flags().entire_plane ? zimg::graph::BUFFER_MAX : get_simultaneous_lines() + 2 * m_vertical_support;
 }
 
 
@@ -123,8 +123,8 @@ void MockFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> *
 			ASSERT_NE(src[p].data(), dst[p].data());
 
 		if (flags.entire_plane) {
-			ASSERT_EQ((unsigned)-1, src[p].mask());
-			ASSERT_EQ((unsigned)-1, dst[p].mask());
+			ASSERT_EQ(zimg::graph::BUFFER_MAX, src[p].mask());
+			ASSERT_EQ(zimg::graph::BUFFER_MAX, dst[p].mask());
 		}
 	}
 

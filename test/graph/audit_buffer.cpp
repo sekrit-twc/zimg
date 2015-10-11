@@ -120,8 +120,8 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat f
 		unsigned width_plane = p ? width >> subsample_w : width;
 		unsigned height_plane = p ? height >> subsample_h : height;
 
-		unsigned mask_plane = p ? (mask == (unsigned)-1 ? mask : mask >> subsample_h) : mask;
-		unsigned buffer_height = (mask_plane == (unsigned)-1) ? height_plane : mask_plane + 1;
+		unsigned mask_plane = p ? (mask == zimg::graph::BUFFER_MAX ? mask : mask >> subsample_h) : mask;
+		unsigned buffer_height = (mask_plane == zimg::graph::BUFFER_MAX) ? height_plane : mask_plane + 1;
 
 		size_t guarded_linesize = (zimg::ceil_n(width_plane, zimg::AlignmentOf<T>::value) + 2 * zimg::AlignmentOf<T>::value) * sizeof(T);
 		size_t guarded_linecount = buffer_height + 2;

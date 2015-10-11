@@ -203,7 +203,7 @@ zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
 {
 	_zassert(plane < m_planes, "plane index out of bounds");
-	return{ m_vector[plane].data(), width_to_stride(width(plane), m_pixel), (unsigned)-1 };
+	return{ m_vector[plane].data(), width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
 }
 
 zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
@@ -268,9 +268,9 @@ public:
 	zimg::graph::ColorImageBuffer<void> as_write_buffer()
 	{
 		return{
-			{ m_ptr[m_plane_order[0]], (ptrdiff_t)m_linewidth[0], (unsigned)-1 },
-			{ m_ptr[m_plane_order[1]], (ptrdiff_t)m_linewidth[1], (unsigned)-1 },
-			{ m_ptr[m_plane_order[2]], (ptrdiff_t)m_linewidth[2], (unsigned)-1 },
+			{ m_ptr[m_plane_order[0]], (ptrdiff_t)m_linewidth[0], zimg::graph::BUFFER_MAX },
+			{ m_ptr[m_plane_order[1]], (ptrdiff_t)m_linewidth[1], zimg::graph::BUFFER_MAX },
+			{ m_ptr[m_plane_order[2]], (ptrdiff_t)m_linewidth[2], zimg::graph::BUFFER_MAX },
 		};
 	}
 };

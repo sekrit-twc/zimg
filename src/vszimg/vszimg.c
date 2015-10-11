@@ -621,7 +621,7 @@ static int callback_init_common(struct callback_data *data, const zimg_filter_gr
 		return 1;
 	}
 	mask = zimg_select_buffer_mask(count);
-	count = (mask == (unsigned)-1) ? format->height : mask + 1;
+	count = (mask == ZIMG_BUFFER_MAX) ? format->height : mask + 1;
 
 	data->frame_tmp = vsapi->newVideoFrame(
 		vsapi->registerFormat(cmYUV, stInteger, 8, vsformat->subSamplingW, vsformat->subSamplingH, core),
@@ -640,7 +640,7 @@ static int callback_init_unpack(struct callback_data *data, const zimg_filter_gr
 	if (callback_init_common(data, graph, VSZIMG_FALSE, format, vsformat, core, vsapi, err_msg, err_msg_size))
 		goto fail;
 
-	import_frame_as_read_buffer(frame, &data->plane_buf.c, -1, vsapi);
+	import_frame_as_read_buffer(frame, &data->plane_buf.c, ZIMG_BUFFER_MAX, vsapi);
 
 	if (vsformat->colorFamily != cmCompat) {
 		data->line_buf = data->plane_buf;
@@ -660,7 +660,7 @@ static int callback_init_pack(struct callback_data *data, const zimg_filter_grap
 	if (callback_init_common(data, graph, VSZIMG_TRUE, format, vsformat, core, vsapi, err_msg, err_msg_size))
 		goto fail;
 
-	import_frame_as_write_buffer(frame, &data->plane_buf.m, -1, vsapi);
+	import_frame_as_write_buffer(frame, &data->plane_buf.m, ZIMG_BUFFER_MAX, vsapi);
 
 	if (vsformat->colorFamily != cmCompat) {
 		data->line_buf = data->plane_buf;

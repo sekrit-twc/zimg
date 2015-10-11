@@ -232,7 +232,7 @@ protected:
 
 	unsigned get_real_cache_lines() const
 	{
-		return get_cache_lines() == (unsigned)-1 ? get_image_attributes(false).height : get_cache_lines();
+		return get_cache_lines() == BUFFER_MAX ? get_image_attributes(false).height : get_cache_lines();
 	}
 
 	ptrdiff_t get_cache_stride() const
@@ -245,7 +245,7 @@ protected:
 	{
 		if (n > m_cache_lines) {
 			if (n >= get_image_attributes().height)
-				m_cache_lines = -1;
+				m_cache_lines = BUFFER_MAX;
 			else
 				m_cache_lines = select_zimg_buffer_mask(n) + 1;
 		}
@@ -973,7 +973,7 @@ public:
 
 		if (m_node_uv) {
 			unsigned lines_uv = m_node_uv->get_cache_lines();
-			lines_uv = lines_uv == (unsigned)-1 ? lines_uv : lines_uv << m_subsample_h;
+			lines_uv = (lines_uv == BUFFER_MAX) ? lines_uv : lines_uv << m_subsample_h;
 			lines = std::max(lines, lines_uv);
 		}
 

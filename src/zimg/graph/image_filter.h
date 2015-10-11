@@ -118,7 +118,7 @@ inline unsigned select_zimg_buffer_mask(unsigned count)
 	const unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
 
 	if (count != 0 && ((count - 1) & (1 << (UINT_BITS - 1))))
-		return -1;
+		return BUFFER_MAX;
 
 	for (unsigned i = UINT_BITS - 1; i != 0; --i) {
 		if ((count - 1) & (1 << (i - 1)))

@@ -10,6 +10,8 @@
 namespace zimg {;
 namespace graph {;
 
+const unsigned BUFFER_MAX = (unsigned)-1;
+
 template <class T>
 class ImageBuffer {
 	typename propagate_const<T, void>::type *m_data;
