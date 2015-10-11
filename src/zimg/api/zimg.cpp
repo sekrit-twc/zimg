@@ -120,7 +120,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 {
 	using zimg::CPUClass;
 
-	static const zimg::static_enum_map<zimg_cpu_type_e, CPUClass, 12> map{
+	static const zimg::static_map<zimg_cpu_type_e, CPUClass, 12> map{
 		{ ZIMG_CPU_NONE,      CPUClass::CPU_NONE },
 		{ ZIMG_CPU_AUTO,      CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
@@ -143,7 +143,7 @@ zimg::PixelType translate_pixel_type(zimg_pixel_type_e pixel_type)
 {
 	using zimg::PixelType;
 
-	static const zimg::static_enum_map<zimg_pixel_type_e, zimg::PixelType, 4> map{
+	static const zimg::static_map<zimg_pixel_type_e, zimg::PixelType, 4> map{
 		{ ZIMG_PIXEL_BYTE,  PixelType::BYTE },
 		{ ZIMG_PIXEL_WORD,  PixelType::WORD },
 		{ ZIMG_PIXEL_HALF,  PixelType::HALF },
@@ -154,7 +154,7 @@ zimg::PixelType translate_pixel_type(zimg_pixel_type_e pixel_type)
 
 bool translate_pixel_range(zimg_pixel_range_e range)
 {
-	static const zimg::static_enum_map<zimg_pixel_range_e, bool, 2> map{
+	static const zimg::static_map<zimg_pixel_range_e, bool, 2> map{
 		{ ZIMG_RANGE_LIMITED, false },
 		{ ZIMG_RANGE_FULL,    true },
 	};
@@ -165,7 +165,7 @@ zimg::graph::GraphBuilder::ColorFamily translate_color_family(zimg_color_family_
 {
 	using zimg::graph::GraphBuilder;
 
-	static const zimg::static_enum_map<zimg_color_family_e,GraphBuilder::ColorFamily, 3> map{
+	static const zimg::static_map<zimg_color_family_e,GraphBuilder::ColorFamily, 3> map{
 		{ ZIMG_COLOR_GREY, GraphBuilder::ColorFamily::COLOR_GREY },
 		{ ZIMG_COLOR_RGB,  GraphBuilder::ColorFamily::COLOR_RGB },
 		{ ZIMG_COLOR_YUV,  GraphBuilder::ColorFamily::COLOR_YUV},
@@ -177,7 +177,7 @@ zimg::graph::GraphBuilder::FieldParity translate_field_parity(zimg_field_parity_
 {
 	using zimg::graph::GraphBuilder;
 
-	static const zimg::static_enum_map<zimg_field_parity_e, GraphBuilder::FieldParity, 3> map{
+	static const zimg::static_map<zimg_field_parity_e, GraphBuilder::FieldParity, 3> map{
 		{ ZIMG_FIELD_PROGRESSIVE, GraphBuilder::FieldParity::FIELD_PROGRESSIVE },
 		{ ZIMG_FIELD_TOP,         GraphBuilder::FieldParity::FIELD_TOP },
 		{ ZIMG_FIELD_BOTTOM,      GraphBuilder::FieldParity::FIELD_BOTTOM },
@@ -187,15 +187,16 @@ zimg::graph::GraphBuilder::FieldParity translate_field_parity(zimg_field_parity_
 
 std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder::ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
 {
-	using zimg::graph::GraphBuilder;
+	typedef zimg::graph::GraphBuilder::ChromaLocationW ChromaLocationW;
+	typedef zimg::graph::GraphBuilder::ChromaLocationH ChromaLocationH;
 
-	static const zimg::static_enum_map<zimg_chroma_location_e, std::pair<GraphBuilder::ChromaLocationW, GraphBuilder::ChromaLocationH>, 6> map{
-		{ ZIMG_CHROMA_LEFT,        { GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   GraphBuilder::ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_CENTER,      { GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, GraphBuilder::ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_TOP_LEFT,    { GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   GraphBuilder::ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_TOP,         { GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, GraphBuilder::ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_BOTTOM_LEFT, { GraphBuilder::ChromaLocationW::CHROMA_W_LEFT,   GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM } },
-		{ ZIMG_CHROMA_BOTTOM,      { GraphBuilder::ChromaLocationW::CHROMA_W_CENTER, GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM } },
+	static const zimg::static_map<zimg_chroma_location_e, std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
+		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_CENTER } },
+		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_CENTER } },
+		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_TOP } },
+		{ ZIMG_CHROMA_TOP,         { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_TOP } },
+		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_BOTTOM } },
+		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_BOTTOM } },
 	};
 	return search_enum_map(map, chromaloc, "unregonized chroma location");
 }
@@ -204,7 +205,7 @@ zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e
 {
 	using zimg::colorspace::MatrixCoefficients;
 
-	static const zimg::static_enum_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 8> map{
+	static const zimg::static_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 8> map{
 		{ ZIMG_MATRIX_RGB,         MatrixCoefficients::MATRIX_RGB },
 		{ ZIMG_MATRIX_709,         MatrixCoefficients::MATRIX_709 },
 		{ ZIMG_MATRIX_UNSPECIFIED, MatrixCoefficients::MATRIX_UNSPECIFIED },
@@ -221,7 +222,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static const zimg::static_enum_map<zimg_transfer_characteristics_e, TransferCharacteristics, 6> map{
+	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 6> map{
 		{ ZIMG_TRANSFER_709,         TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_UNSPECIFIED },
 		{ ZIMG_TRANSFER_601,         TransferCharacteristics::TRANSFER_709 },
@@ -236,7 +237,7 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 {
 	using zimg::colorspace::ColorPrimaries;
 
-	static const zimg::static_enum_map<zimg_color_primaries_e, ColorPrimaries, 5> map{
+	static const zimg::static_map<zimg_color_primaries_e, ColorPrimaries, 5> map{
 		{ ZIMG_PRIMARIES_709,         ColorPrimaries::PRIMARIES_709 },
 		{ ZIMG_PRIMARIES_UNSPECIFIED, ColorPrimaries::PRIMARIES_UNSPECIFIED },
 		{ ZIMG_PRIMARIES_170M,        ColorPrimaries::PRIMARIES_SMPTE_C },
@@ -250,7 +251,7 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 {
 	using zimg::depth::DitherType;
 
-	static const zimg::static_enum_map<zimg_dither_type_e, DitherType, 4> map{
+	static const zimg::static_map<zimg_dither_type_e, DitherType, 4> map{
 		{ ZIMG_DITHER_NONE,            DitherType::DITHER_NONE },
 		{ ZIMG_DITHER_ORDERED,         DitherType::DITHER_ORDERED },
 		{ ZIMG_DITHER_RANDOM,          DitherType::DITHER_RANDOM },
