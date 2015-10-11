@@ -115,7 +115,7 @@ void validate_state(const GraphBuilder::state &state)
 	if (state.width % (1 << state.subsample_w) || state.height % (1 << state.subsample_h))
 		throw error::ImageNotDivislbe{ "image dimensions must be divisible by subsampling factor" };
 
-	if (state.depth > (unsigned)zimg::default_pixel_format(state.type).depth)
+	if (state.depth > zimg::default_pixel_format(state.type).depth)
 		throw error::BitDepthOverflow{ "bit depth exceeds limits of type" };
 	if (!state.fullrange && state.depth < 8)
 		throw error::BitDepthOverflow{ "bit depth must be at least 8 for limited range" };

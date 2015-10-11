@@ -31,7 +31,7 @@ inline T floor_n(T x, U n) { return x - (x % n); }
  */
 template <class T>
 struct AlignmentOf {
-	static const int value = ALIGNMENT / sizeof(T);
+	static const unsigned value = ALIGNMENT / sizeof(T);
 };
 
 } // namespace zimg

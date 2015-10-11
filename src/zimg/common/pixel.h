@@ -28,7 +28,7 @@ enum class PixelType {
  */
 struct PixelFormat {
 	PixelType type;
-	int depth;
+	unsigned depth;
 	bool fullrange;
 	bool chroma;
 };
@@ -39,7 +39,7 @@ struct PixelFormat {
  * @param type type of pixel
  * @return size of pixel
  */
-inline int pixel_size(PixelType type)
+inline unsigned pixel_size(PixelType type)
 {
 	switch (type) {
 	case PixelType::BYTE:
@@ -60,7 +60,7 @@ inline int pixel_size(PixelType type)
  * @param type type of pixel
  * @return alignment in pixels
  */
-inline int pixel_alignment(PixelType type)
+inline unsigned pixel_alignment(PixelType type)
 {
 	return ALIGNMENT / pixel_size(type);
 }

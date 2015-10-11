@@ -278,7 +278,7 @@ public:
 		m_pixel_out{ format_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ (unsigned)format_out.depth },
+		m_depth{ format_out.depth },
 		m_width{ width },
 		m_height{ height }
 	{
@@ -373,7 +373,7 @@ public:
 		m_pixel_out{ format_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ (unsigned)format_out.depth },
+		m_depth{ format_out.depth },
 		m_width{ width },
 		m_height{ height }
 	{

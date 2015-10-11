@@ -28,7 +28,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	src_width{ src_width },
 	src_height{ src_height },
 	type{ type },
-	depth{ (unsigned)default_pixel_format(type).depth },
+	depth{ default_pixel_format(type).depth },
 	filter{},
 	dst_width{ src_width },
 	dst_height{ src_height },

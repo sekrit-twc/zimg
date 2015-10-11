@@ -446,7 +446,7 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 
 	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
 
-	if (type != spec.type || depth_in != (unsigned)zimg::default_pixel_format(type).depth) {
+	if (type != spec.type || depth_in != zimg::default_pixel_format(type).depth) {
 		zimg::PixelFormat src_format = zimg::default_pixel_format(type);
 		zimg::PixelFormat dst_format = zimg::default_pixel_format(spec.type);
 		src_format.depth = depth_in;
