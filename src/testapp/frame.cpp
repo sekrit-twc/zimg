@@ -572,23 +572,23 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 } // namespace
 
 
-ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height)
+ImageFrame read(const char *pathspec, const char *assumed, unsigned width, unsigned height)
 {
 	PathSpecifier spec = parse_path_specifier(pathspec, assumed);
 	return read_from_pathspec(spec, width, height, spec.type, false);
 }
 
-ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+ImageFrame read(const char *pathspec, const char *assumed, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	return read_from_pathspec(parse_path_specifier(pathspec, assumed), width, height, type, fullrange);
 }
 
-void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange)
+void write(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange)
 {
-	write_to_pathspec(frame, pathspec, assumed, zimg::pixel_depth(frame.pixel_type()), fullrange);
+	write(frame, pathspec, assumed, zimg::pixel_depth(frame.pixel_type()), fullrange);
 }
 
-void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange)
+void write(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange)
 {
 	PathSpecifier spec = parse_path_specifier(pathspec, assumed);
 

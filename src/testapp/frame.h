@@ -59,13 +59,13 @@ public:
 
 namespace imageframe {;
 
-ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height);
+ImageFrame read(const char *pathspec, const char *assumed, unsigned width, unsigned height);
 
-ImageFrame read_from_pathspec(const char *pathspec, const char *assumed, unsigned width, unsigned height, zimg::PixelType type, bool fullrange);
+ImageFrame read(const char *pathspec, const char *assumed, unsigned width, unsigned height, zimg::PixelType type, bool fullrange);
 
-void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange = false);
+void write(const ImageFrame &frame, const char *pathspec, const char *assumed, bool fullrange = false);
 
-void write_to_pathspec(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange);
+void write(const ImageFrame &frame, const char *pathspec, const char *assumed, unsigned depth_in, bool fullrange);
 
 } // namespace imageframe
 

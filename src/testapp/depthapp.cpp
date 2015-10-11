@@ -127,7 +127,7 @@ int depth_main(int argc, char **argv)
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
 	try {
-		ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444", args.width, args.height);
+		ImageFrame src_frame = imageframe::read(args.inpath, "i444", args.width, args.height);
 
 		bool is_yuv;
 		if (args.force_color_family == 1)
@@ -174,9 +174,9 @@ int depth_main(int argc, char **argv)
 		execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)
-			imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
+			imageframe::write(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
 
-		imageframe::write_to_pathspec(dst_frame, args.outpath, "i444", args.format_out.fullrange);
+		imageframe::write(dst_frame, args.outpath, "i444", args.format_out.fullrange);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;

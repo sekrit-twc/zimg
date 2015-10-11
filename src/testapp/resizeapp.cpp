@@ -162,8 +162,7 @@ int resize_main(int argc, char **argv)
 		args.working_format = zimg::PixelType::FLOAT;
 
 	try {
-		ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width_in, args.height_in,
-		                                                      args.working_format.type, false);
+		ImageFrame src_frame = imageframe::read(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
 
 		if (!args.filter)
 			args.filter = g_resize_table["bicubic"](NAN, NAN);
@@ -195,9 +194,9 @@ int resize_main(int argc, char **argv)
 		execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)
-			imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
+			imageframe::write(dst_frame, args.visualise_path, "bmp", true);
 
-		imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", false);
+		imageframe::write(dst_frame, args.outpath, "i444s", false);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;
