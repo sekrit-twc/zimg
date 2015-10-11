@@ -676,6 +676,9 @@ fail:
 
 static void callback_destroy(struct callback_data *data, const VSAPI *vsapi)
 {
+	if (!data)
+		return;
+
 	vsapi->freeFrame(data->frame_tmp);
 }
 
@@ -732,6 +735,9 @@ static void _vszimg_default_init(struct vszimg_data *data)
 
 static void _vszimg_destroy(struct vszimg_data *data, const VSAPI *vsapi)
 {
+	if (!data)
+		return;
+
 	if (data->graph_data)
 		zimg_filter_graph_free(data->graph_data->graph);
 	if (data->graph_mutex_initialized)
