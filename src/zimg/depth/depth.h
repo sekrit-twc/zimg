@@ -33,10 +33,10 @@ struct DepthConversion {
 	unsigned height;
 
 #include "common/builder.h"
-	BUILDER_MEMBER(PixelFormat, pixel_in);
-	BUILDER_MEMBER(PixelFormat, pixel_out);
-	BUILDER_MEMBER(DitherType, dither_type);
-	BUILDER_MEMBER(CPUClass, cpu);
+	BUILDER_MEMBER(PixelFormat, pixel_in)
+	BUILDER_MEMBER(PixelFormat, pixel_out)
+	BUILDER_MEMBER(DitherType, dither_type)
+	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
 	DepthConversion(unsigned width, unsigned height);

@@ -79,9 +79,9 @@ struct ColorspaceConversion {
 	unsigned height;
 
 #include "common/builder.h"
-	BUILDER_MEMBER(ColorspaceDefinition, csp_in);
-	BUILDER_MEMBER(ColorspaceDefinition, csp_out);
-	BUILDER_MEMBER(CPUClass, cpu);
+	BUILDER_MEMBER(ColorspaceDefinition, csp_in)
+	BUILDER_MEMBER(ColorspaceDefinition, csp_out)
+	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
 	ColorspaceConversion(unsigned width, unsigned height);

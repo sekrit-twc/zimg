@@ -56,13 +56,13 @@ struct ResizeImplBuilder {
 	PixelType type;
 
 #include "common/builder.h"
-	BUILDER_MEMBER(bool, horizontal);
-	BUILDER_MEMBER(unsigned, dst_dim);
-	BUILDER_MEMBER(unsigned, depth);
-	BUILDER_MEMBER(const Filter *, filter);
-	BUILDER_MEMBER(double, shift);
-	BUILDER_MEMBER(double, subwidth);
-	BUILDER_MEMBER(CPUClass, cpu);
+	BUILDER_MEMBER(bool, horizontal)
+	BUILDER_MEMBER(unsigned, dst_dim)
+	BUILDER_MEMBER(unsigned, depth)
+	BUILDER_MEMBER(const Filter *, filter)
+	BUILDER_MEMBER(double, shift)
+	BUILDER_MEMBER(double, subwidth)
+	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
 	ResizeImplBuilder(unsigned src_width, unsigned src_height, PixelType type);

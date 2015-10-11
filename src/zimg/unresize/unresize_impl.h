@@ -58,10 +58,10 @@ struct UnresizeImplBuilder {
 	PixelType type;
 
 #include "common/builder.h"
-	BUILDER_MEMBER(bool, horizontal);
-	BUILDER_MEMBER(unsigned, orig_dim);
-	BUILDER_MEMBER(double, shift);
-	BUILDER_MEMBER(CPUClass, cpu);
+	BUILDER_MEMBER(bool, horizontal)
+	BUILDER_MEMBER(unsigned, orig_dim)
+	BUILDER_MEMBER(double, shift)
+	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
 	UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type);

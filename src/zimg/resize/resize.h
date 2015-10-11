@@ -31,15 +31,15 @@ struct ResizeConversion {
 	PixelType type;
 
 #include "common/builder.h"
-	BUILDER_MEMBER(unsigned, depth);
-	BUILDER_MEMBER(const Filter *, filter);
-	BUILDER_MEMBER(unsigned, dst_width);
-	BUILDER_MEMBER(unsigned, dst_height);
-	BUILDER_MEMBER(double, shift_w);
-	BUILDER_MEMBER(double, shift_h);
-	BUILDER_MEMBER(double, subwidth);
-	BUILDER_MEMBER(double, subheight);
-	BUILDER_MEMBER(CPUClass, cpu);
+	BUILDER_MEMBER(unsigned, depth)
+	BUILDER_MEMBER(const Filter *, filter)
+	BUILDER_MEMBER(unsigned, dst_width)
+	BUILDER_MEMBER(unsigned, dst_height)
+	BUILDER_MEMBER(double, shift_w)
+	BUILDER_MEMBER(double, shift_h)
+	BUILDER_MEMBER(double, subwidth)
+	BUILDER_MEMBER(double, subheight)
+	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
 	ResizeConversion(unsigned src_width, unsigned src_height, PixelType type);
