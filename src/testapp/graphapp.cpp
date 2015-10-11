@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 #include <type_traits>
-#include "common/align.h"
+#include "common/alloc.h"
 #include "common/static_map.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"

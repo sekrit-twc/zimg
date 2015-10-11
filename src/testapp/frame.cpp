@@ -5,7 +5,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include "common/align.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/static_map.h"

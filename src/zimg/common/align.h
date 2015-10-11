@@ -3,18 +3,6 @@
 #ifndef ZIMG_ALIGN_H_
 #define ZIMG_ALIGN_H_
 
-#include <vector>
-
-#ifdef _WIN32
-  #include <malloc.h>
-  inline void *_zimg_aligned_malloc(size_t size, size_t alignment) { return _aligned_malloc(size, alignment); }
-  inline void _zimg_aligned_free(void *ptr) { _aligned_free(ptr); }
-#else
-  #include <stdlib.h>
-  inline void *_zimg_aligned_malloc(size_t size, int alignment) { void *p; if (posix_memalign(&p, alignment, size)) return nullptr; else return p; }
-  inline void _zimg_aligned_free(void *ptr) { free(ptr); }
-#endif
-
 namespace zimg {;
 
 /**
@@ -45,45 +33,6 @@ template <class T>
 struct AlignmentOf {
 	static const int value = ALIGNMENT / sizeof(T);
 };
-
-/**
- * STL allocator class which returns aligned buffers.
- *
- * @param T type of object to allocate
- */
-template <class T>
-struct AlignedAllocator {
-	typedef T value_type;
-
-	AlignedAllocator() = default;
-
-	template <class U>
-	AlignedAllocator(const AlignedAllocator<U> &)
-	{
-	}
-
-	T *allocate(size_t n) const
-	{
-		T *ptr = (T *)_zimg_aligned_malloc(n * sizeof(T), ALIGNMENT);
-
-		if (!ptr)
-			throw std::bad_alloc{};
-
-		return ptr;
-	}
-
-	void deallocate(void *ptr, size_t) const { _zimg_aligned_free(ptr); }
-
-	bool operator==(const AlignedAllocator &) const { return true; }
-
-	bool operator!=(const AlignedAllocator &) const { return false; }
-};
-
-/**
- * std::vector specialization using AlignedAllocator.
- */
-template <class T>
-using AlignedVector = std::vector<T, AlignedAllocator<T>>;
 
 } // namespace zimg
 

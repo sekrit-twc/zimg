@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "common/align.h"
+#include "common/alloc.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "depth/quantize.h"

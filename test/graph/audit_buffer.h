@@ -5,7 +5,7 @@
 
 #include <array>
 #include <cstdint>
-#include "common/align.h"
+#include "common/alloc.h"
 #include "common/pixel.h"
 #include "graph/image_buffer.h"
 

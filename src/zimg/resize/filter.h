@@ -5,7 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include "common/align.h"
+#include "common/alloc.h"
 
 namespace zimg {;
 namespace resize {;

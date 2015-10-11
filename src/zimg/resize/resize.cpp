@@ -1,7 +1,5 @@
 #include <algorithm>
 #include <memory>
-#include "common/align.h"
-#include "common/alloc.h"
 #include "common/cpuinfo.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"

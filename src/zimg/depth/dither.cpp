@@ -4,7 +4,7 @@
 #include <random>
 #include <tuple>
 #include <utility>
-#include "common/align.h"
+#include "common/alloc.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"

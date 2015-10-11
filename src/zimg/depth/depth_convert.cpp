@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <utility>
-#include "common/align.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"

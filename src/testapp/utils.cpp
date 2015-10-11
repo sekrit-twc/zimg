@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <memory>
-#include "common/align.h"
+#include "common/alloc.h"
 #include "graph/image_filter.h"
 
 #include "frame.h"

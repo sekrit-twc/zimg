@@ -3,7 +3,7 @@
 #ifndef ZIMG_UNRESIZE_BILINEAR_H_
 #define ZIMG_UNRESIZE_BILINEAR_H_
 
-#include "common/align.h"
+#include "common/alloc.h"
 
 namespace zimg {;
 namespace unresize {;

@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <limits>
 #include <utility>
-#include "common/align.h"
 #include "image_buffer.h"
 
 namespace zimg {;

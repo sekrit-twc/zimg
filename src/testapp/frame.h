@@ -3,7 +3,7 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
-#include "common/align.h"
+#include "common/alloc.h"
 #include "graph/image_buffer.h"
 
 #define PATH_SPECIFIER_HELP_STR \

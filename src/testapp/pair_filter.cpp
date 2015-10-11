@@ -1,5 +1,4 @@
 #include <algorithm>
-#include "common/align.h"
 #include "common/alloc.h"
 #include "common/except.h"
 #include "common/pixel.h"
