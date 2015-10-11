@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include "common/alloc.h"
+#include "common/except.h"
 #include "common/static_map.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
@@ -309,8 +310,16 @@ int graph_main(int argc, char **argv)
 	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
-	JsonObject spec = read_graph_spec(args.specpath);
-	execute(spec, args.times, args.threads);
+	try {
+		JsonObject spec = read_graph_spec(args.specpath);
+		execute(spec, args.times, args.threads);
+	} catch (const zimg::error::Exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	}
 
 	return 0;
 }

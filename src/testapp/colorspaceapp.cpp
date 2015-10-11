@@ -3,6 +3,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include "common/except.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "colorspace/colorspace.h"
@@ -127,23 +128,33 @@ int colorspace_main(int argc, char **argv)
 	bool yuv_in = args.csp_in.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
 	bool yuv_out = args.csp_out.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
 
-	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width, args.height, zimg::PixelType::FLOAT, !!args.fullrange_in);
-	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), zimg::PixelType::FLOAT, 3, yuv_out };
+	try {
+		ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width, args.height,
+		                                                      zimg::PixelType::FLOAT, !!args.fullrange_in);
+		ImageFrame dst_frame{ src_frame.width(), src_frame.height(), zimg::PixelType::FLOAT, 3, yuv_out };
 
-	if (src_frame.is_yuv() != yuv_in)
-		std::cerr << "warning: input file is of different color family than declared format\n";
+		if (src_frame.is_yuv() != yuv_in)
+			std::cerr << "warning: input file is of different color family than declared format\n";
 
-	auto convert = zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height() }.
-		set_csp_in(args.csp_in).
-		set_csp_out(args.csp_out).
-		set_cpu(args.cpu).
-		create();
+		auto convert = zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height() }.
+			set_csp_in(args.csp_in).
+			set_csp_out(args.csp_out).
+			set_cpu(args.cpu).
+			create();
 
-	execute(convert.get(), &src_frame, &dst_frame, args.times);
+		execute(convert.get(), &src_frame, &dst_frame, args.times);
 
-	if (args.visualise_path)
-		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
+		if (args.visualise_path)
+			imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
 
-	imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", !!args.fullrange_out);
+		imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", !!args.fullrange_out);
+	} catch (const zimg::error::Exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	}
+
 	return 0;
 }

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <regex>
+#include "common/except.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "depth/depth.h"
@@ -125,52 +126,64 @@ int depth_main(int argc, char **argv)
 	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
-	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444", args.width, args.height);
+	try {
+		ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444", args.width, args.height);
 
-	bool is_yuv;
-	if (args.force_color_family == 1)
-		is_yuv = true;
-	else if (args.force_color_family == 2)
-		is_yuv = false;
-	else
-		is_yuv = src_frame.is_yuv();
+		bool is_yuv;
+		if (args.force_color_family == 1)
+			is_yuv = true;
+		else if (args.force_color_family == 2)
+			is_yuv = false;
+		else
+			is_yuv = src_frame.is_yuv();
 
-	if (src_frame.is_yuv() != is_yuv)
-		std::cerr << "warning: input file is of different color family than declared format\n";
-	if (src_frame.pixel_type() != args.format_in.type)
-		std::cerr << "warning: input file is of a different pixel type than declared format\n";
+		if (src_frame.is_yuv() != is_yuv)
+			std::cerr << "warning: input file is of different color family than declared format\n";
+		if (src_frame.pixel_type() != args.format_in.type)
+			std::cerr << "warning: input file is of a different pixel type than declared format\n";
 
-	if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
-		throw std::runtime_error{ "pixel sizes not compatible" };
+		if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
+			throw std::runtime_error{ "pixel sizes not compatible" };
 
-	ImageFrame dst_frame{ src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(), is_yuv, src_frame.subsample_w(), src_frame.subsample_h() };
+		ImageFrame dst_frame{
+			src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(),
+			is_yuv, src_frame.subsample_w(), src_frame.subsample_h()
+		};
 
-	std::unique_ptr<zimg::graph::ImageFilter> filter;
-	std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
+		std::unique_ptr<zimg::graph::ImageFilter> filter;
+		std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
 
-	auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }.
-		set_pixel_in(args.format_in).
-		set_pixel_out(args.format_out).
-		set_dither_type(args.dither).
-		set_cpu(args.cpu);
+		auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }.
+			set_pixel_in(args.format_in).
+			set_pixel_out(args.format_out).
+			set_dither_type(args.dither).
+			set_cpu(args.cpu);
 
-	filter = conv.create();
+		filter = conv.create();
 
-	if (src_frame.planes() >= 3 && is_yuv) {
-		zimg::PixelFormat format_in_uv = args.format_in;
-		zimg::PixelFormat format_out_uv = args.format_out;
+		if (src_frame.planes() >= 3 && is_yuv) {
+			zimg::PixelFormat format_in_uv = args.format_in;
+			zimg::PixelFormat format_out_uv = args.format_out;
 
-		format_in_uv.chroma = true;
-		format_out_uv.chroma = true;
+			format_in_uv.chroma = true;
+			format_out_uv.chroma = true;
 
-		filter_uv = conv.set_pixel_in(format_in_uv).set_pixel_out(format_out_uv).create();
+			filter_uv = conv.set_pixel_in(format_in_uv).set_pixel_out(format_out_uv).create();
+		}
+
+		execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
+
+		if (args.visualise_path)
+			imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
+
+		imageframe::write_to_pathspec(dst_frame, args.outpath, "i444", args.format_out.fullrange);
+	} catch (const zimg::error::Exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
 	}
 
-	execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
-
-	if (args.visualise_path)
-		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
-
-	imageframe::write_to_pathspec(dst_frame, args.outpath, "i444", args.format_out.fullrange);
 	return 0;
 }

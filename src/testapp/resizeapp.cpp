@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include "common/cpuinfo.h"
+#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize/filter.h"
@@ -142,7 +143,6 @@ int resize_main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
-	args.filter = g_resize_table["bicubic"](NAN, NAN);
 	args.param_a = NAN;
 	args.param_b = NAN;
 	args.shift_w = NAN;
@@ -161,38 +161,50 @@ int resize_main(int argc, char **argv)
 	if (!is_set_pixel_format(args.working_format))
 		args.working_format = zimg::PixelType::FLOAT;
 
-	ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
+	try {
+		ImageFrame src_frame = imageframe::read_from_pathspec(args.inpath, "i444s", args.width_in, args.height_in,
+		                                                      args.working_format.type, false);
 
-	if (std::isnan(args.subwidth))
-		args.subwidth = src_frame.width();
-	if (std::isnan(args.subheight))
-		args.subheight = src_frame.height();
+		if (!args.filter)
+			args.filter = g_resize_table["bicubic"](NAN, NAN);
+		if (std::isnan(args.subwidth))
+			args.subwidth = src_frame.width();
+		if (std::isnan(args.subheight))
+			args.subheight = src_frame.height();
 
-	if (src_frame.subsample_w() || src_frame.subsample_h())
-		throw std::logic_error{ "can only resize greyscale/4:4:4 images" };
+		if (src_frame.subsample_w() || src_frame.subsample_h())
+			throw std::logic_error{ "can only resize greyscale/4:4:4 images" };
 
-	ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
+		ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 
-	auto filter_pair = zimg::resize::ResizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }.
-		set_depth(args.working_format.depth).
-		set_filter(args.filter.get()).
-		set_dst_width(dst_frame.width()).
-		set_dst_height(dst_frame.height()).
-		set_shift_w(args.shift_w).
-		set_shift_h(args.shift_h).
-		set_subwidth(args.subwidth).
-		set_subheight(args.subheight).
-		set_cpu(args.cpu).
-		create();
+		auto filter_pair = zimg::resize::ResizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }.
+			set_depth(args.working_format.depth).
+			set_filter(args.filter.get()).
+			set_dst_width(dst_frame.width()).
+			set_dst_height(dst_frame.height()).
+			set_shift_w(args.shift_w).
+			set_shift_h(args.shift_h).
+			set_subwidth(args.subwidth).
+			set_subheight(args.subheight).
+			set_cpu(args.cpu).
+			create();
 
-	if (filter_pair.second)
-		filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
+		if (filter_pair.second)
+			filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
 
-	execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
+		execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 
-	if (args.visualise_path)
-		imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
+		if (args.visualise_path)
+			imageframe::write_to_pathspec(dst_frame, args.visualise_path, "bmp", true);
 
-	imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", false);
+		imageframe::write_to_pathspec(dst_frame, args.outpath, "i444s", false);
+	} catch (const zimg::error::Exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << '\n';
+		return 2;
+	}
+
 	return 0;
 }

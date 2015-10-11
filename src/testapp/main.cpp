@@ -92,20 +92,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	try {
-		main_func func = lookup_app(argv[1]);
+	main_func func = lookup_app(argv[1]);
 
-		if (!func) {
-			usage();
-			return 1;
-		}
-
-		return func(argc - 1, argv + 1);
-	} catch (const zimg::error::Exception &e) {
-		std::cerr << e.what() << '\n';
-		return 2;
-	} catch (const std::exception &e) {
-		std::cerr << e.what() << '\n';
-		return 2;
+	if (!func) {
+		usage();
+		return 1;
 	}
+
+	return func(argc - 1, argv + 1);
 }
