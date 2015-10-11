@@ -3,7 +3,24 @@
 
 #include "zimg.h"
 
-namespace zimgxx {;
+#ifndef ZIMGXX_NAMESPACE
+  #define ZIMGXX_NAMESPACE zimgxx
+#endif
+
+/**
+ * C++ bindings for zlib API.
+ *
+ * None of the structures and functions described in this header should be
+ * considered part of the API or ABI. Users must not pass objects defined in
+ * this header across application or library boundaries.
+ *
+ * To avoid symbol conflicts on certain platforms, applications in which
+ * multiple zlib users may be resident should define {@p ZIMGXX_NAMESPACE} as
+ * an application-specific value.
+ *
+ * {@p ZIMGXX_NAMESPACE} must not be defined as "zimg".
+ */
+namespace ZIMGXX_NAMESPACE {;
 
 struct zerror {
 	int code;
