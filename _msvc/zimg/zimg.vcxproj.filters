@@ -150,12 +150,6 @@
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\mux_filter.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\propagate_const.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -182,6 +176,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86util.h">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
+      <Filter>Header Files\graph</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -257,9 +254,6 @@
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\mux_filter.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
@@ -277,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\matrix.cpp">
       <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
+      <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

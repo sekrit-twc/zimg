@@ -80,11 +80,10 @@
     </ClCompile>
     <ClCompile Include="..\..\test\extra\sha1\sha1.c" />
     <ClCompile Include="..\..\test\graph\audit_buffer.cpp" />
-    <ClCompile Include="..\..\test\graph\copy_filter_test.cpp" />
+    <ClCompile Include="..\..\test\graph\basic_filter_test.cpp" />
     <ClCompile Include="..\..\test\graph\filtergraph_test.cpp" />
     <ClCompile Include="..\..\test\graph\filter_validator.cpp" />
     <ClCompile Include="..\..\test\graph\mock_filter.cpp" />
-    <ClCompile Include="..\..\test\graph\mux_filter_test.cpp" />
     <ClCompile Include="..\..\test\main.cpp" />
     <ClCompile Include="..\..\test\resize\resize_impl_sse2_test.cpp" />
     <ClCompile Include="..\..\test\resize\resize_impl_sse_test.cpp" />

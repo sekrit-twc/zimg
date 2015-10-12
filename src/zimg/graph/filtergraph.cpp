@@ -7,7 +7,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "copy_filter.h"
+#include "basic_filter.h"
 #include "filtergraph.h"
 #include "image_filter.h"
 

@@ -4,7 +4,7 @@
 #include "common/make_unique.h"
 #include "resize/filter.h"
 #include "filtergraph.h"
-#include "mux_filter.h"
+#include "basic_filter.h"
 #include "graphbuilder.h"
 #include "image_filter.h"
 

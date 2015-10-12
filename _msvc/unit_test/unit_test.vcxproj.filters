@@ -105,9 +105,6 @@
     <ClCompile Include="..\..\test\graph\audit_buffer.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\copy_filter_test.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\graph\filter_validator.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
@@ -117,11 +114,11 @@
     <ClCompile Include="..\..\test\graph\mock_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\mux_filter_test.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp">
       <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\graph\basic_filter_test.cpp">
+      <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

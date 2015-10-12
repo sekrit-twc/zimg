@@ -1,15 +1,30 @@
 #pragma once
 
-#ifndef ZIMG_GRAPH_MUX_FILTER_H_
-#define ZIMG_GRAPH_MUX_FILTER_H_
+#ifndef ZIMG_GRAPH_BASIC_FILTER_H_
+#define ZIMG_GRAPH_BASIC_FILTER_H_
 
 #include <memory>
 #include "image_filter.h"
 
 namespace zimg {;
+
+enum class PixelType;
+
 namespace graph {;
 
-class MuxFilter final : public ImageFilter {
+class CopyFilter : public ImageFilterBase {
+	image_attributes m_attr;
+public:
+	CopyFilter(unsigned width, unsigned height, PixelType type);
+
+	filter_flags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
+
+	void process(void *ctx, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, unsigned i, unsigned left, unsigned right) const override;
+};
+
+class MuxFilter : public ImageFilter {
 	std::unique_ptr<ImageFilter> m_filter;
 public:
 	MuxFilter(std::unique_ptr<ImageFilter> &&filter);
@@ -38,4 +53,4 @@ public:
 } // namespace graph
 } // namespace zimg
 
-#endif // ZIMG_GRAPH_MUX_FILTER_H_
+#endif // ZIMG_GRAPH_BASIC_FILTER_H_

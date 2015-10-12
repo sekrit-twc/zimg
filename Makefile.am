@@ -53,15 +53,14 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/depth/dither.cpp \
 					 src/zimg/depth/dither.h \
 					 src/zimg/depth/quantize.h \
-					 src/zimg/graph/copy_filter.h \
+					 src/zimg/graph/basic_filter.cpp \
+					 src/zimg/graph/basic_filter.h \
 					 src/zimg/graph/filtergraph.h \
 					 src/zimg/graph/filtergraph.cpp \
 					 src/zimg/graph/graphbuilder.h \
 					 src/zimg/graph/graphbuilder.cpp \
 					 src/zimg/graph/image_buffer.h \
 					 src/zimg/graph/image_filter.h \
-					 src/zimg/graph/mux_filter.cpp \
-					 src/zimg/graph/mux_filter.h \
 					 src/zimg/resize/filter.cpp \
 					 src/zimg/resize/filter.h \
 					 src/zimg/resize/resize.cpp \
@@ -224,13 +223,12 @@ test_unit_test_SOURCES = test/main.cpp \
 						 test/extra/sha1/sha1.h \
 						 test/graph/audit_buffer.cpp \
 						 test/graph/audit_buffer.h \
-						 test/graph/copy_filter_test.cpp \
+						 test/graph/basic_filter_test.cpp \
 						 test/graph/filter_validator.cpp \
 						 test/graph/filter_validator.h \
 						 test/graph/filtergraph_test.cpp \
 						 test/graph/mock_filter.cpp \
 						 test/graph/mock_filter.h \
-						 test/graph/mux_filter_test.cpp \
 						 test/resize/resize_impl_test.cpp
 
 if X86SIMD
