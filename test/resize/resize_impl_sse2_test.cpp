@@ -1,6 +1,5 @@
 #ifdef ZIMG_X86
 
-#include <memory>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"

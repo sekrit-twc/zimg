@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <memory>
 #include "common/cpuinfo.h"
 #include "common/make_unique.h"
 #include "graph/basic_filter.h"

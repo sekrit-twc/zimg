@@ -4,7 +4,6 @@
 #define ZIMG_GRAPH_MOCK_FILTER_H_
 
 #include <cstdint>
-
 #include "graph/image_filter.h"
 
 class MockFilter : public zimg::graph::ImageFilter {

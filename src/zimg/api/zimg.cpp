@@ -1,11 +1,8 @@
-#include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -14,7 +11,7 @@
 #include "common/zassert.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
-#include "graph/image_filter.h"
+#include "graph/image_buffer.h"
 #include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/filter.h"

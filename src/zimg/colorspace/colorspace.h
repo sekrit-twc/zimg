@@ -4,8 +4,6 @@
 #define ZIMG_COLORSPACE_COLORSPACE_H_
 
 #include <memory>
-#include <utility>
-#include "common/builder.h"
 
 namespace zimg {;
 

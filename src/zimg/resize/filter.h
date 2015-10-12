@@ -4,7 +4,6 @@
 #define ZIMG_RESIZE_FILTER_H_
 
 #include <cstddef>
-#include <cstdint>
 #include "common/alloc.h"
 
 namespace zimg {;
@@ -159,7 +158,7 @@ struct FilterContext {
  * @return the computed filter
  * @throws UnsupportedOperation on unsupported parameter combinations
  */
-FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width);
+FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim, double shift, double width);
 
 } // namespace resize
 } // namespace zimg

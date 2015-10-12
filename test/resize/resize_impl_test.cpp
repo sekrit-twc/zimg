@@ -1,5 +1,4 @@
 #include <cmath>
-#include <memory>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"

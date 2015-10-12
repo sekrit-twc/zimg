@@ -231,7 +231,7 @@ double LanczosFilter::operator()(double x) const
 	return x < taps ? sinc(x) * sinc(x / taps) : 0.0;
 }
 
-FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double shift, double width)
+FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim, double shift, double width)
 {
 	double scale = (double)dst_dim / width;
 	double step = std::min(scale, 1.0);
@@ -244,7 +244,7 @@ FilterContext compute_filter(const Filter &f, int src_dim, int dst_dim, double s
 		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
 	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
-	for (int i = 0; i < dst_dim; ++i) {
+	for (unsigned i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
 		double pos = (i + 0.5) / scale + shift;
 		double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;

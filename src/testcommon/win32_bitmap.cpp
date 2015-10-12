@@ -84,7 +84,7 @@ struct BitmapFileData {
 	void init(size_t file_size, int width, int height, int bit_count)
 	{
 		if (bitmap_data_size(width, height, bit_count) + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) > file_size)
-			throw std::out_of_range{ "file too short" };
+			throw BitmapDataError{ "file too short" };
 
 		*bfHeader = BITMAPFILEHEADER{};
 

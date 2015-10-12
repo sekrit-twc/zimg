@@ -3,7 +3,6 @@
 #ifndef ZIMG_COLORSPACE_OPERATION_H_
 #define ZIMG_COLORSPACE_OPERATION_H_
 
-#include <cstdint>
 #include <memory>
 
 namespace zimg {;

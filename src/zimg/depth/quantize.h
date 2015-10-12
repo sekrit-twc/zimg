@@ -3,10 +3,8 @@
 #ifndef ZIMG_DEPTH_QUANTIZE_H_
 #define ZIMG_DEPTH_QUANTIZE_H_
 
-#include <cmath>
+#include <algorithm>
 #include <cstdint>
-#include <cstring>
-#include <limits>
 #include "common/pixel.h"
 
 namespace zimg {;
@@ -24,8 +22,7 @@ T bit_cast(const U &x)
 	static_assert(sizeof(T) == sizeof(U), "object sizes must match");
 
 	T ret;
-
-	std::memcpy(&ret, &x, sizeof(ret));
+	std::copy_n(reinterpret_cast<const char *>(&x), sizeof(x), reinterpret_cast<char *>(&ret));
 	return ret;
 }
 

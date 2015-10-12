@@ -4,7 +4,6 @@
 #define ZIMG_GRAPH_FILTERGRAPH_H_
 
 #include <memory>
-#include "image_buffer.h"
 
 struct zimg_filter_graph {
 	virtual inline ~zimg_filter_graph() = 0;
@@ -22,6 +21,9 @@ enum class PixelType;
 namespace graph {;
 
 class ImageFilter;
+
+template <class T>
+class ImageBuffer;
 
 
 class FilterGraph : public zimg_filter_graph {

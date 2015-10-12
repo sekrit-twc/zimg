@@ -1,5 +1,6 @@
 #include <cstring>
 #include "common/except.h"
+#include "colorspace.h"
 #include "colorspace_param.h"
 
 namespace zimg {;

@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdint>
-#include <utility>
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"

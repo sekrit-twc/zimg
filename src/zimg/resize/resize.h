@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <utility>
-#include "common/builder.h"
 
 namespace zimg {;
 

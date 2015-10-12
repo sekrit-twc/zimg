@@ -1,7 +1,4 @@
 #include <algorithm>
-#include <cstdint>
-#include "common/cpuinfo.h"
-#include "common/except.h"
 #include "common/make_unique.h"
 #include "colorspace_param.h"
 #include "matrix3.h"

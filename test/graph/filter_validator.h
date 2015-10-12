@@ -5,7 +5,6 @@
 
 namespace zimg {;
 
-enum class PixelType;
 struct PixelFormat;
 
 namespace graph {;

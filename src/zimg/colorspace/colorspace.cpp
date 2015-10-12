@@ -1,15 +1,12 @@
-#include <algorithm>
 #include <memory>
 #include <vector>
 #include "common/cpuinfo.h"
-#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/basic_filter.h"
 #include "graph/image_filter.h"
 #include "colorspace.h"
-#include "colorspace_param.h"
 #include "graph.h"
 #include "operation.h"
 

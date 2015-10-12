@@ -8,8 +8,7 @@
 #include <stdexcept>
 
 struct BitmapDataError : public std::runtime_error {
-	BitmapDataError(const char *msg) : std::runtime_error{ msg } {}
-	BitmapDataError(const std::string &msg) : std::runtime_error{ msg } {}
+	using std::runtime_error::runtime_error;
 };
 
 class WindowsBitmap {

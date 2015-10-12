@@ -104,7 +104,8 @@ ptrdiff_t AuditBuffer<T>::stride_T(unsigned p) const
 }
 
 template <class T>
-AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat format, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color) :
+AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, const zimg::PixelFormat &format, unsigned lines,
+                            unsigned subsample_w, unsigned subsample_h, bool color) :
 	m_format(format),
 	m_width{},
 	m_buffer_height{},

@@ -1,5 +1,4 @@
 #include "common/cpuinfo.h"
-#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/basic_filter.h"

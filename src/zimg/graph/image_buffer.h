@@ -4,6 +4,7 @@
 #define ZIMG_GRAPH_IMAGE_BUFFER_H_
 
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 #include "common/propagate_const.h"
 
@@ -125,6 +126,21 @@ template <class U, class T>
 const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf)
 {
 	return buf.template static_buffer_cast<U>();
+}
+
+inline unsigned select_zimg_buffer_mask(unsigned count)
+{
+	const unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
+
+	if (count != 0 && ((count - 1) & (1 << (UINT_BITS - 1))))
+		return BUFFER_MAX;
+
+	for (unsigned i = UINT_BITS - 1; i != 0; --i) {
+		if ((count - 1) & (1 << (i - 1)))
+			return (1 << i) - 1;
+	}
+
+	return 0;
 }
 
 } // namespace graph

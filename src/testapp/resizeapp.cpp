@@ -1,8 +1,8 @@
 #include <cmath>
-#include <cstring>
 #include <iostream>
 #include <memory>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include "common/cpuinfo.h"
 #include "common/make_unique.h"

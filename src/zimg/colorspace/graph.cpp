@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "common/except.h"
-#include "colorspace_param.h"
+#include "colorspace.h"
 #include "graph.h"
 #include "operation.h"
 
@@ -13,12 +13,26 @@ template <class T>
 class EnumRange {
 	class iterator {
 		T x;
-	public:
-		iterator(T x) : x{ x } {}
 
-		iterator &operator++() { x = static_cast<T>(static_cast<int>(x) + 1); return *this; }
-		bool operator!=(const iterator &other) const { return x != other.x; }
-		T operator*() const { return x; }
+		iterator(T x) : x{ x } {}
+	public:
+		iterator &operator++()
+		{
+			x = static_cast<T>(static_cast<int>(x) + 1);
+			return *this;
+		}
+
+		bool operator!=(const iterator &other) const
+		{
+			return x != other.x;
+		}
+
+		T operator*() const
+		{
+			return x;
+		}
+
+		friend class EnumRange;
 	};
 
 	T m_first;
@@ -31,11 +45,25 @@ public:
 };
 
 template <class T>
-EnumRange<T> make_range(T first, T last) { return{ first, last }; }
+EnumRange<T> make_range(T first, T last)
+{
+	return{ first, last };
+}
 
-EnumRange<MatrixCoefficients> all_matrix() { return make_range(MatrixCoefficients::MATRIX_UNSPECIFIED, MatrixCoefficients::MATRIX_2020_CL); }
-EnumRange<TransferCharacteristics> all_transfer() { return make_range(TransferCharacteristics::TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_709); }
-EnumRange<ColorPrimaries> all_primaries() { return make_range(ColorPrimaries::PRIMARIES_UNSPECIFIED, ColorPrimaries::PRIMARIES_2020); }
+EnumRange<MatrixCoefficients> all_matrix()
+{
+	return make_range(MatrixCoefficients::MATRIX_UNSPECIFIED, MatrixCoefficients::MATRIX_2020_CL);
+}
+
+EnumRange<TransferCharacteristics> all_transfer()
+{
+	return make_range(TransferCharacteristics::TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_709);
+}
+
+EnumRange<ColorPrimaries> all_primaries()
+{
+	return make_range(ColorPrimaries::PRIMARIES_UNSPECIFIED, ColorPrimaries::PRIMARIES_2020);
+}
 
 bool is_valid_csp(const ColorspaceDefinition &csp)
 {
@@ -43,6 +71,7 @@ bool is_valid_csp(const ColorspaceDefinition &csp)
 	       !(csp.matrix == MatrixCoefficients::MATRIX_UNSPECIFIED && csp.transfer != TransferCharacteristics::TRANSFER_UNSPECIFIED) ||
 	       !(csp.transfer == TransferCharacteristics::TRANSFER_UNSPECIFIED && csp.primaries != ColorPrimaries::PRIMARIES_UNSPECIFIED);
 }
+
 
 class ColorspaceGraph {
 	typedef std::pair<size_t, OperationFactory> edge_type;

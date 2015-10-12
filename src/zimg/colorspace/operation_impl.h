@@ -4,14 +4,16 @@
 #define ZIMG_COLORSPACE_OPERATION_IMPL_H_
 
 #include <cmath>
-#include "common/cpuinfo.h"
 #include "common/libm_wrapper.h"
 #include "operation.h"
-#include "matrix3.h"
 
 namespace zimg {;
+
+enum class CPUClass;
+
 namespace colorspace {;
 
+struct Matrix3x3;
 class Operation;
 
 const float TRANSFER_ALPHA = 1.09929682680944f;

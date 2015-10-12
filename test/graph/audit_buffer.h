@@ -3,7 +3,6 @@
 #ifndef ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
 #define ZIMG_UNIT_TEST_GRAPH_AUDIT_BUFFER_H_
 
-#include <array>
 #include <cstdint>
 #include "common/alloc.h"
 #include "common/pixel.h"
@@ -28,7 +27,8 @@ class AuditBuffer {
 
 	ptrdiff_t stride_T(unsigned p) const;
 public:
-	AuditBuffer(unsigned width, unsigned height, zimg::PixelFormat format, unsigned lines, unsigned subsample_w, unsigned subsample_h, bool color);
+	AuditBuffer(unsigned width, unsigned height, const zimg::PixelFormat &format, unsigned lines,
+	            unsigned subsample_w, unsigned subsample_h, bool color);
 
 	void set_format(const zimg::PixelFormat &format);
 

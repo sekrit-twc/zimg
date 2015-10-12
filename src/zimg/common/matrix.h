@@ -4,7 +4,6 @@
 #define ZIMG_MATRIX_H_
 
 #include <vector>
-#include "zassert.h"
 
 namespace zimg {;
 

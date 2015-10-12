@@ -1,8 +1,6 @@
-#include <memory>
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "depth/depth.h"
-#include "depth/depth_convert.h"
 
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"

@@ -1,7 +1,6 @@
 #ifndef ZIMG_H_
 #define ZIMG_H_
 
-#include <limits.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

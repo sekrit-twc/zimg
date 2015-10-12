@@ -1,16 +1,12 @@
-#include "common/cpuinfo.h"
 #include "common/except.h"
+#include "colorspace.h"
 #include "colorspace_param.h"
 #include "operation.h"
 #include "operation_impl.h"
 
 namespace zimg {;
 namespace colorspace {;
-#if 0
-PixelAdapter::~PixelAdapter()
-{
-}
-#endif
+
 Operation::~Operation()
 {
 }

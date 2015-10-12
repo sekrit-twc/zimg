@@ -1,3 +1,6 @@
+#ifndef ARGPARSE_H_
+#define ARGPARSE_H_
+
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -43,3 +46,5 @@ int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, char **a
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
+
+#endif /* ARGPARSE_H_ */

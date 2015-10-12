@@ -4,13 +4,11 @@
 #define ZIMG_DEPTH_DEPTH_H_
 
 #include <memory>
-#include "common/builder.h"
 #include "common/pixel.h"
 
 namespace zimg {;
 
 enum class CPUClass;
-struct PixelFormat;
 
 namespace graph {;
 

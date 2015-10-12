@@ -1,6 +1,4 @@
-#include <memory>
 #include "common/pixel.h"
-#include "colorspace/colorspace_param.h"
 #include "colorspace/colorspace.h"
 #include "graph/image_filter.h"
 

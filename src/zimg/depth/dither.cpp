@@ -1,11 +1,9 @@
 #include <algorithm>
-#include <limits>
 #include <memory>
 #include <random>
 #include <tuple>
 #include <utility>
 #include "common/alloc.h"
-#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -16,6 +14,7 @@
 #include "quantize.h"
 
 #ifdef _MSC_VER
+  #include <clocale>
   #include <cstdlib>
 #endif
 

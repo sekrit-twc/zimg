@@ -3,11 +3,13 @@
 #ifndef ZIMG_COLORSPACE_COLORSPACE_PARAM_H_
 #define ZIMG_COLORSPACE_COLORSPACE_PARAM_H_
 
-#include "colorspace.h"
 #include "matrix3.h"
 
 namespace zimg {;
 namespace colorspace {;
+
+enum class MatrixCoefficients;
+enum class ColorPrimaries;
 
 // Kr and Kb YUV<-->RGB constants.
 const double REC_601_KR = 0.299;
