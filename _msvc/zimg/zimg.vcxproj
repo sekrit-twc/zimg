@@ -199,6 +199,7 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp" />
     <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp" />
+    <ClCompile Include="..\..\src\zimg\common\matrix.cpp" />
     <ClCompile Include="..\..\src\zimg\common\x86util.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />

@@ -18,215 +18,160 @@ namespace zimg {;
  */
 template <class T>
 class RowMatrix {
-	std::vector<std::vector<T>> m_storage;
-	std::vector<size_t> m_offsets;
-	size_t m_rows;
-	size_t m_cols;
-
-	class ElementProxy {
-		RowMatrix *matrix;
-		size_t i;
-		size_t j;
-	public:
-		ElementProxy(RowMatrix *matrix, size_t i, size_t j) : matrix{ matrix }, i{ i }, j{ j }
-		{}
-
-		T operator=(const ElementProxy &val)
-		{
-			return operator=(static_cast<T>(val));
-		}
-
-		T operator=(T val)
-		{
-			if (val != matrix->element_val(i, j))
-				matrix->element_ref(i, j) = val;
-
-			return val;
-		}
-
-		T operator+=(T val)
-		{
-			return operator=(operator T() + val);
-		}
-
-		operator T() const
-		{
-			return matrix->element_val(i, j);
-		}
-	};
-
-	class RowConstProxy {
-		const RowMatrix *matrix;
-		size_t i;
-	public:
-		RowConstProxy(const RowMatrix *matrix, size_t i) : matrix{ matrix }, i{ i }
-		{}
-
-		T operator[](size_t j) const
-		{
-			return matrix->element_val(i, j);
-		}
-	};
-
-	class RowProxy {
-		RowMatrix *matrix;
-		size_t i;
-	public:
-		RowProxy(RowMatrix *matrix, size_t i) : matrix{ matrix }, i{ i }
-		{}
-
-		ElementProxy operator[](size_t j)
-		{
-			return{ matrix, i, j };
-		}
-	};
-
-	void check_bounds(size_t i, size_t j) const
-	{
-		_zassert(i < m_rows, "row index out of bounds");
-		_zassert(j < m_cols, "column index out of bounds");
-	}
-
-	T &element_ref(size_t i, size_t j)
-	{
-		check_bounds(i, j);
-
-		auto &row_data = m_storage[i];
-		size_t left = row_left(i);
-		size_t right = row_right(i);
-
-		// Resize row if needed.
-		if (row_data.empty()) {
-			row_data.resize(1);
-			left = j;
-		} else if (j < left) {
-			// Zero-extend the row on the left.
-			row_data.insert(row_data.begin(), left - j, static_cast<T>(0));
-			left = j;
-		} else if (j >= right) {
-			// Zero-extend the row on the right.
-			row_data.insert(row_data.end(), j - right + 1, static_cast<T>(0));
-		}
-
-		// Update offset array.
-		m_offsets[i] = left;
-
-		return row_data[j - left];
-	}
-
-	T element_val(size_t i, size_t j) const
-	{
-		check_bounds(i, j);
-
-		size_t left = row_left(i);
-		size_t right = row_right(i);
-
-		if (j < left || j >= right)
-			return static_cast<T>(0);
-		else
-			return m_storage[i][j - left];
-	}
 public:
-	RowMatrix() = default;
+	typedef size_t size_type;
+private:
+	struct non_copyable {
+		non_copyable() = default;
 
-	RowMatrix(size_t m, size_t n) : m_storage(m), m_offsets(m), m_rows{ m }, m_cols{ n }
-	{}
+		non_copyable(const non_copyable &) = delete;
 
-	size_t rows() const
-	{
-		return m_rows;
-	}
+		non_copyable &operator=(const non_copyable &) = delete;
+	};
 
-	size_t cols() const
-	{
-		return m_cols;
-	}
+	class proxy : private non_copyable {
+		RowMatrix *matrix;
+		size_type i;
+		size_type j;
 
-	RowProxy operator[](size_t i)
-	{
-		return{ this, i };
-	}
+		proxy(RowMatrix *matrix, size_type i, size_type j);
+	public:
+		const proxy &operator=(const T &val) const;
 
-	RowConstProxy operator[](size_t i) const
-	{
-		return{ this, i };
-	}
+		const proxy &operator+=(const T &val) const;
 
-	size_t row_left(size_t i) const
-	{
-		check_bounds(i, 0);
-		return m_offsets[i];
-	}
+		const proxy &operator-=(const T &val) const;
 
-	size_t row_right(size_t i) const
-	{
-		check_bounds(i, 0);
-		return m_offsets[i] + m_storage[i].size();
-	}
+		const proxy &operator*=(const T &val) const;
 
-	void compress()
-	{
-		for (size_t i = 0; i < m_rows; ++i) {
-			auto &row_data = m_storage[i];
-			size_t left;
-			size_t right;
+		const proxy &operator/=(const T &val) const;
 
-			for (left = 0; left < row_data.size(); ++left) {
-				if (row_data[left] != static_cast<T>(0))
-					break;
-			}
-			for (right = row_data.size(); right > left + 1; --right) {
-				if (row_data[right - 1] != static_cast<T>(0))
-					break;
-			}
+		operator T() const;
 
-			// Shrink row if non-empty, else free row.
-			if (right - left) {
-				row_data.erase(row_data.begin() + right, row_data.end());
-				row_data.erase(row_data.begin(), row_data.begin() + left);
-				m_offsets[i] += left;
-			} else {
-				row_data.clear();
-				m_offsets[i] = 0;
-			}
-		}
-	}
+		friend class RowMatrix::row_proxy;
+	};
+
+	class row_proxy : private non_copyable {
+		RowMatrix *matrix;
+		size_type i;
+
+		row_proxy(RowMatrix *matrix, size_type i);
+	public:
+		proxy operator[](size_type j) const;
+
+		friend class RowMatrix;
+	};
+
+	class row_const_proxy : private non_copyable {
+		const RowMatrix *matrix;
+		size_type i;
+
+		row_const_proxy(const RowMatrix *matrix, size_type i);
+	public:
+		T operator[](size_type j) const;
+
+		friend class RowMatrix;
+	};
+
+	std::vector<std::vector<T>> m_storage;
+	std::vector<size_type> m_offsets;
+	size_type m_rows;
+	size_type m_cols;
+
+	void check_bounds(size_type i, size_type j) const;
+
+	T val(size_type i, size_type j) const;
+
+	T &ref(size_type i, size_type j);
+public:
+	/**
+	 * Default construct RowMatrix, creating a zero dimension matrix.
+	 */
+	RowMatrix();
+
+	/**
+	 * Construct a RowMatrix of a given size, creating an empty matrix.
+	 *
+	 * @param m number of rows
+	 * @param n number of columns
+	 */
+	RowMatrix(size_type m, size_type n);
+
+	/**
+	 * Get the number of rows.
+	 *
+	 * @return rows
+	 */
+	size_type rows() const;
+
+	/**
+	 * Get the number of columns.
+	 *
+	 * @return columns
+	 */
+	size_type cols() const;
+
+	/**
+	 * Get the left-most non-sparse column in a given row.
+	 *
+	 * @param i row index
+	 * @return column index
+	 */
+	size_type row_left(size_type i) const;
+
+	/**
+	 * Get the right-most non-sparse column in a given row, plus one.
+	 *
+	 * @param i row index
+	 * @return column index
+	 */
+	size_type row_right(size_type i) const;
+
+	/**
+	 * Access a row of the matrix.
+	 *
+	 * Yields an object supporting the indexing operator, such that
+	 *   m[i][j]
+	 * creates an lvalue pointing at the i-th row and j-th column of m.
+	 *
+	 * @param i row index
+	 * @return proxy to matrix row
+	 */
+	row_proxy operator[](size_type i);
+
+	/**
+	 * Read-only access to a matrix row. Creates an rvalue.
+	 *
+	 * @see operator[](size_type)
+	 */
+	row_const_proxy operator[](size_type i) const;
+
+	/**
+	 * Remove sparse entries from the internal storage.
+	 *
+	 * After compression, the results of {@link row_left} and {@link row_right}
+	 * point to non-zero entries in each row.
+	 */
+	void compress();
 };
 
 template <class T>
-inline RowMatrix<T> operator*(const RowMatrix<T> &lhs, const RowMatrix<T> &rhs)
-{
-	RowMatrix<T> m{ lhs.rows(), rhs.cols() };
-
-	for (size_t i = 0; i < lhs.rows(); ++i) {
-		for (size_t j = 0; j < rhs.cols(); ++j) {
-			T accum = 0;
-
-			for (size_t k = lhs.row_left(i); k < lhs.row_right(i); ++k) {
-				accum += lhs[i][k] * rhs[k][j];
-			}
-			m[i][j] = accum;
-		}
-	}
-
-	m.compress();
-	return m;
-}
+RowMatrix<T> operator~(const RowMatrix<T> &r);
 
 template <class T>
-inline RowMatrix<T> transpose(const RowMatrix<T> &r)
-{
-	RowMatrix<T> m{ r.cols(), r.rows() };
+RowMatrix<T> operator*(const RowMatrix<T> &lhs, const RowMatrix<T> &rhs);
 
-	for (size_t i = 0; i < r.rows(); ++i) {
-		for (size_t j = 0; j < r.cols(); ++j) {
-			m[j][i] = r[i][j];
-		}
-	}
+extern template class RowMatrix<float>;
+extern template class RowMatrix<double>;
+extern template class RowMatrix<long double>;
 
-	m.compress();
-	return m;
-}
+extern template RowMatrix<float> operator~(const RowMatrix<float> &r);
+extern template RowMatrix<double> operator~(const RowMatrix<double> &r);
+extern template RowMatrix<long double> operator~(const RowMatrix<long double> &r);
+
+extern template RowMatrix<float> operator*(const RowMatrix<float> &lhs, const RowMatrix<float> &rhs);
+extern template RowMatrix<double> operator*(const RowMatrix<double> &lhs, const RowMatrix<double> &rhs);
+extern template RowMatrix<long double> operator*(const RowMatrix<long double> &lhs, const RowMatrix<long double> &rhs);
 
 } // namespace zimg
 

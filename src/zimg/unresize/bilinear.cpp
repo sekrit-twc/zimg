@@ -22,7 +22,7 @@ struct TridiagonalLU {
 	std::vector<T> u;
 	std::vector<T> c;
 
-	TridiagonalLU(size_t n) : l(n), u(n), c(n)
+	explicit TridiagonalLU(size_t n) : l(n), u(n), c(n)
 	{}
 };
 
@@ -108,7 +108,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 
 	// Map output shift to input shift.
 	RowMatrix<double> m = bilinear_weights(in, out, -shift * (double)in / (double)out);
-	RowMatrix<double> transpose_m = transpose(m);
+	RowMatrix<double> transpose_m = ~m;
 	RowMatrix<double> pinv_m = transpose_m * m;
 	TridiagonalLU<double> lu = tridiagonal_decompose(pinv_m);
 
@@ -121,7 +121,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 	for (size_t i = 0; i < rows; ++i) {
 		rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
 	}
-	size_t rowstride = (unsigned)ceil_n(rowsize, 8);
+	size_t rowstride = (unsigned)ceil_n(rowsize, AlignmentOf<float>::value);
 
 	ctx.matrix_coefficients.resize(rowstride * rows);
 	ctx.matrix_row_offsets.resize(rows);

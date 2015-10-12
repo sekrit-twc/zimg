@@ -275,5 +275,8 @@
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\matrix.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
