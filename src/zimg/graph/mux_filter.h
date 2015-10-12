@@ -11,10 +11,8 @@ namespace graph {;
 
 class MuxFilter final : public ImageFilter {
 	std::unique_ptr<ImageFilter> m_filter;
-	std::unique_ptr<ImageFilter> m_filter_uv;
-	filter_flags m_flags;
 public:
-	MuxFilter(std::unique_ptr<ImageFilter> &&filter, std::unique_ptr<ImageFilter> &&filter_uv = nullptr);
+	MuxFilter(std::unique_ptr<ImageFilter> &&filter);
 
 	filter_flags get_flags() const override;
 
