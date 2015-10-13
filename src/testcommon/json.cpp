@@ -267,7 +267,7 @@ std::pair<JsonValue, token_iterator> parse_array(token_iterator pos, token_itera
 	};
 	pos = expect_token(Token::SQUARE_BRACE_RIGHT, pos, last);
 
-	return{ array, pos };
+	return{ JsonValue{ std::move(array) }, pos };
 }
 
 std::pair<JsonValue, token_iterator> parse_object(token_iterator pos, token_iterator last)
@@ -293,7 +293,7 @@ std::pair<JsonValue, token_iterator> parse_object(token_iterator pos, token_iter
 	};
 	pos = expect_token(Token::CURLY_BRACE_RIGHT, pos, last);
 
-	return{ std::move(obj), pos };
+	return{ JsonValue{ std::move(obj) }, pos };
 }
 
 std::pair<JsonValue, token_iterator> parse_value(token_iterator pos, token_iterator last)
@@ -435,16 +435,16 @@ const JsonValue &JsonObject::operator[](const std::string &key) const
 
 namespace json {;
 
-JsonObject parse_document(const std::string &str)
+JsonValue parse_document(const std::string &str)
 {
 	std::vector<Token> tokens = tokenize(str);
 
-	auto val = parse_object(tokens.begin(), tokens.end());
+	auto val = parse_value(tokens.begin(), tokens.end());
 
 	if (val.second != tokens.end())
 		throw std::runtime_error{ "unparsed document content" };
 
-	return std::move(val.first.object());
+	return std::move(val.first);
 }
 
 } // namespace json

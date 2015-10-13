@@ -116,12 +116,12 @@ public:
 		construct(std::move(str));
 	}
 
-	JsonValue(array_type array) : m_tag{ ARRAY }
+	explicit JsonValue(array_type array) : m_tag{ ARRAY }
 	{
 		construct(std::move(array));
 	}
 
-	JsonValue(object_type object) : m_tag{ OBJECT }
+	explicit JsonValue(object_type object) : m_tag{ OBJECT }
 	{
 		construct(std::move(object));
 	}
@@ -220,7 +220,7 @@ public:
 
 namespace json {;
 
-JsonObject parse_document(const std::string &str);
+JsonValue parse_document(const std::string &str);
 
 } // namespace json
 

@@ -79,7 +79,7 @@ JsonObject read_graph_spec(const char *path)
 	f.open(path);
 
 	std::string spec_json{ std::istreambuf_iterator<char>{ f }, std::istreambuf_iterator<char>{} };
-	return json::parse_document(spec_json);
+	return std::move(json::parse_document(spec_json).object());
 }
 
 void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject &obj)
