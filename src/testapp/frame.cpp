@@ -236,7 +236,7 @@ public:
 		size_t size = 0;
 		char *ptr;
 
-		_zassert_d(spec.planes < 3, "too many planes");
+		_zassert_d(spec.planes <= 3, "too many planes");
 
 		for (unsigned p = 0; p < spec.planes; ++p) {
 			m_linewidth[p] = (width * zimg::pixel_size(spec.type)) >> ((p == 1 || p == 2) ? spec.subsample_w : 0);
@@ -314,7 +314,7 @@ ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned 
 	MappedImageFile mapped_image{ spec, width, height, false };
 	ImageFrame out_image{ width, height, type, spec.planes, spec.is_yuv, spec.subsample_w, spec.subsample_h };
 
-	graph->process(mapped_image.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+	graph->process(mapped_image.as_read_buffer(), out_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
 
 	return out_image;
 }
