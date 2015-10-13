@@ -120,6 +120,9 @@
     <ClCompile Include="..\..\test\graph\basic_filter_test.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\depth\depth_convert_sse2_test.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

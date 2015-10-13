@@ -275,5 +275,8 @@
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

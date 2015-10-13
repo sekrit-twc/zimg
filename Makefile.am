@@ -112,7 +112,8 @@ libsse_la_SOURCES = src/zimg/colorspace/operation_impl_sse.cpp \
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libsse2_la_SOURCES = src/zimg/depth/dither_sse2.cpp \
+libsse2_la_SOURCES = src/zimg/depth/depth_convert_sse2.cpp \
+					 src/zimg/depth/dither_sse2.cpp \
 					 src/zimg/resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
@@ -136,9 +137,9 @@ libtestcommon_la_SOURCES = src/testcommon/aligned_malloc.h \
 
 if EXAMPLES
 noinst_PROGRAMS += example/alpha_example \
-					example/api_example \
-					example/api_example_c \
-					example/interlace_example
+				   example/api_example \
+				   example/api_example_c \
+				   example/interlace_example
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
@@ -234,6 +235,7 @@ test_unit_test_SOURCES = test/main.cpp \
 if X86SIMD
 
 test_unit_test_SOURCES += test/colorspace/colorspace_sse_test.cpp \
+						  test/depth/depth_convert_sse2_test.cpp \
 						  test/depth/dither_sse2_test.cpp \
 						  test/resize/resize_impl_sse_test.cpp \
 						  test/resize/resize_impl_sse2_test.cpp

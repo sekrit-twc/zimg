@@ -202,6 +202,10 @@
     <ClCompile Include="..\..\src\zimg\common\x86util.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
