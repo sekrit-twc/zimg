@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cstdio>
 #include <fstream>
 #include <exception>
@@ -213,7 +214,7 @@ ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)
 void thread_target(const zimg::graph::FilterGraph *graph,
                    const zimg::graph::GraphBuilder::state *src_state,
                    const zimg::graph::GraphBuilder::state *dst_state,
-                   unsigned times,
+                   std::atomic_int *counter,
                    std::exception_ptr *eptr,
                    std::mutex *mutex)
 {
@@ -222,7 +223,10 @@ void thread_target(const zimg::graph::FilterGraph *graph,
 		ImageFrame dst_frame = allocate_frame(*dst_state);
 		zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-		for (unsigned n = 0; n < times; ++n) {
+		while (true) {
+			if ((*counter)-- <= 0)
+				break;
+
 			graph->process(src_frame.as_read_buffer(), dst_frame.as_write_buffer(), tmp.data(), nullptr, nullptr);
 		}
 	} catch (...) {
@@ -245,6 +249,7 @@ void execute(const JsonObject &spec, unsigned times, unsigned threads)
 
 	for (unsigned n = thread_min; n <= thread_max; ++n) {
 		std::vector<std::thread> thread_pool;
+		std::atomic_int counter{ static_cast<int>(times * n) };
 		std::exception_ptr eptr{};
 		std::mutex mutex;
 		Timer timer;
@@ -253,7 +258,7 @@ void execute(const JsonObject &spec, unsigned times, unsigned threads)
 
 		timer.start();
 		for (unsigned nn = 0; nn < n; ++nn) {
-			thread_pool.emplace_back(thread_target, graph.get(), &src_state, &dst_state, times, &eptr, &mutex);
+			thread_pool.emplace_back(thread_target, graph.get(), &src_state, &dst_state, &counter, &eptr, &mutex);
 		}
 
 		for (auto &th : thread_pool) {
