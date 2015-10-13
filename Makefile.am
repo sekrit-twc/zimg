@@ -233,7 +233,8 @@ test_unit_test_SOURCES = test/main.cpp \
 
 if X86SIMD
 
-test_unit_test_SOURCES += test/depth/dither_sse2_test.cpp \
+test_unit_test_SOURCES += test/colorspace/colorspace_sse_test.cpp \
+						  test/depth/dither_sse2_test.cpp \
 						  test/resize/resize_impl_sse_test.cpp \
 						  test/resize/resize_impl_sse2_test.cpp
 
