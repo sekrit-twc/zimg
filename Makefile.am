@@ -102,6 +102,8 @@ libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
 					  src/zimg/depth/depth_convert_x86.h \
 					  src/zimg/depth/dither_x86.cpp \
 					  src/zimg/depth/dither_x86.h \
+					  src/zimg/depth/f16c_x86.h \
+					  src/zimg/depth/f16c_sse2.h \
 					  src/zimg/resize/resize_impl_x86.cpp \
 					  src/zimg/resize/resize_impl_x86.h
 
@@ -114,6 +116,7 @@ libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 libsse2_la_SOURCES = src/zimg/depth/depth_convert_sse2.cpp \
 					 src/zimg/depth/dither_sse2.cpp \
+					 src/zimg/depth/f16c_sse2.cpp \
 					 src/zimg/resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
@@ -237,6 +240,7 @@ if X86SIMD
 test_unit_test_SOURCES += test/colorspace/colorspace_sse_test.cpp \
 						  test/depth/depth_convert_sse2_test.cpp \
 						  test/depth/dither_sse2_test.cpp \
+						  test/depth/f16c_sse2_test.cpp \
 						  test/resize/resize_impl_sse_test.cpp \
 						  test/resize/resize_impl_sse2_test.cpp
 

@@ -3,6 +3,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "depth_convert_x86.h"
+#include "f16c_x86.h"
 
 namespace zimg {;
 namespace depth {;
@@ -73,7 +74,18 @@ depth_convert_func select_depth_convert_func_x86(const PixelFormat &format_in, c
 
 depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu)
 {
-	return nullptr;
+	X86Capabilities caps = query_x86_capabilities();
+	depth_f16c_func func = nullptr;
+
+	if (cpu == CPUClass::CPU_AUTO) {
+		if (!func && caps.sse2)
+			func = to_half ? f16c_float_to_half_sse2 : f16c_half_to_float_sse2;
+	} else {
+		if (!func && cpu >= CPUClass::CPU_X86_SSE2)
+			func = to_half ? f16c_float_to_half_sse2 : f16c_half_to_float_sse2;
+	}
+
+	return func;
 }
 
 } // namespace depth

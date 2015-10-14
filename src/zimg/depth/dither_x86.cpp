@@ -3,6 +3,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "dither_x86.h"
+#include "f16c_x86.h"
 
 namespace zimg {;
 namespace depth {;
@@ -51,7 +52,18 @@ dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, 
 
 dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu)
 {
-	return nullptr;
+	X86Capabilities caps = query_x86_capabilities();
+	dither_f16c_func func = nullptr;
+
+	if (cpu == CPUClass::CPU_AUTO) {
+		if (!func && caps.sse2)
+			func = f16c_half_to_float_sse2;
+	} else {
+		if (!func && cpu >= CPUClass::CPU_X86_SSE2)
+			func = f16c_half_to_float_sse2;
+	}
+
+	return func;
 }
 
 } // namespace depth
