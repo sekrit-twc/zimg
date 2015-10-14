@@ -28,6 +28,28 @@ void test_case_left_shift(const zimg::PixelFormat &pixel_in, const zimg::PixelFo
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);
 }
 
+void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const char * const expected_sha1[3], double expected_snr)
+{
+	const unsigned w = 640;
+	const unsigned h = 480;
+
+	if (!zimg::query_x86_capabilities().sse2) {
+		SUCCEED() << "sse2 not available, skipping";
+		return;
+	}
+
+	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT, 32, pixel_in.fullrange, pixel_in.chroma };
+
+	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE);
+	auto filter_sse2 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2);
+
+	validate_filter(filter_sse2.get(), w, h, pixel_in, expected_sha1);
+	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);
+}
+
+} // namespace
+
+
 TEST(DepthConvertSSE2Test, test_left_shift_b2b)
 {
 	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 4 };
@@ -76,6 +98,26 @@ TEST(DepthConvertSSE2Test, test_left_shift_w2w)
 	test_case_left_shift(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-} // namespace
+TEST(DepthConvertSSE2Test, test_depth_convert_b2f)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true };
+
+	const char *expected_sha1[3] = {
+		"20c77820ff7d4443a0de7991218e2f8eee551e8d"
+	};
+
+	test_case_depth_convert(pixel_in, expected_sha1, INFINITY);
+}
+
+TEST(DepthConvertSSE2Test, test_depth_convert_w2f)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, true };
+
+	const char *expected_sha1[3] = {
+		"7ad2bc4ba1be92699ec22f489ae93a8b0dc89821"
+	};
+
+	test_case_depth_convert(pixel_in, expected_sha1, INFINITY);
+}
 
 #endif // ZIMG_X86
