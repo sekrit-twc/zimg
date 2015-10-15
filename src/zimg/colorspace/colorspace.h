@@ -18,9 +18,6 @@ class ImageFilter;
 
 namespace colorspace {;
 
-/**
- * Enum for matrix coefficients.
- */
 enum class MatrixCoefficients {
 	MATRIX_UNSPECIFIED,
 	MATRIX_RGB,
@@ -31,18 +28,12 @@ enum class MatrixCoefficients {
 	MATRIX_2020_CL
 };
 
-/**
- * Enum for transfer characteristics.
- */
 enum class TransferCharacteristics {
 	TRANSFER_UNSPECIFIED,
 	TRANSFER_LINEAR,
 	TRANSFER_709
 };
 
-/**
- * Enum for primaries.
- */
 enum class ColorPrimaries {
 	PRIMARIES_UNSPECIFIED,
 	PRIMARIES_SMPTE_C,
