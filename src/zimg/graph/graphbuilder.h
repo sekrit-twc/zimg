@@ -19,19 +19,44 @@ namespace graph {;
 class FilterGraph;
 class ImageFilter;
 
+/**
+ * Factory interface for filter instantiation.
+ */
 class FilterFactory {
 public:
 	typedef std::vector<std::unique_ptr<ImageFilter>> filter_list;
 
+	/**
+	 * Destroy factory.
+	 */
 	virtual ~FilterFactory() = 0;
 
+	/**
+	 * Create filters implementing colorspace conversion.
+	 *
+	 * @param conv conversion specifier
+	 * @return list of filters
+	 */
 	virtual filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) = 0;
 
+	/**
+	 * Create filters implementing depth conversion.
+	 *
+	 * @see create_colorspace
+	 */
 	virtual filter_list create_depth(const depth::DepthConversion &conv) = 0;
 
+	/**
+	 * Create filters implementing resizing.
+	 *
+	 * @see create_colorspace
+	 */
 	virtual filter_list create_resize(const resize::ResizeConversion &conv) = 0;
 };
 
+/**
+ * Default implementation of factory interface.
+ */
 class DefaultFilterFactory : public FilterFactory {
 public:
 	filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) override;
@@ -42,6 +67,9 @@ public:
 };
 
 
+/**
+ * Manages initialization of filter graphs.
+ */
 class GraphBuilder {
 public:
 	enum class ColorFamily {
@@ -67,6 +95,9 @@ public:
 		CHROMA_H_BOTTOM
 	};
 
+	/**
+	 * Filter instantiation parameters.
+	 */
 	struct params {
 		std::unique_ptr<const resize::Filter> filter;
 		std::unique_ptr<const resize::Filter> filter_uv;
@@ -74,6 +105,9 @@ public:
 		CPUClass cpu;
 	};
 
+	/**
+	 * Image format specifier.
+	 */
 	struct state {
 		unsigned width;
 		unsigned height;
@@ -128,16 +162,46 @@ private:
 
 	void convert_resize(const resize_spec &spec, const params *params);
 public:
+	/**
+	 * Default construct GraphBuilder, creating a builder that manages no graph.
+	 */
 	GraphBuilder();
 
+	/**
+	 * Destroy builder.
+	 */
 	~GraphBuilder();
 
+	/**
+	 * Set filter factory used by builder.
+	 *
+	 * @param factory filter factory
+	 * @return reference to self
+	 */
 	GraphBuilder &set_factory(FilterFactory *factory);
 
+	/**
+	 * Set image format of graph input. Creates a new graph.
+	 *
+	 * @param source image format
+	 * @return reference to self
+	 */
 	GraphBuilder &set_source(const state &source);
 
+	/**
+	 * Connect graph to target image format.
+	 *
+	 * @param target image format
+	 * @param params filter creation parameters
+	 * @return reference to self
+	 */
 	GraphBuilder &connect_graph(const state &target, const params *params);
 
+	/**
+	 * Finalize and return managed graph.
+	 *
+	 * @return graph
+	 */
 	std::unique_ptr<FilterGraph> complete_graph();
 };
 

@@ -12,6 +12,7 @@ enum class PixelType;
 
 namespace graph {;
 
+// Copies a greyscale image.
 class CopyFilter : public ImageFilterBase {
 	image_attributes m_attr;
 public:
@@ -24,6 +25,7 @@ public:
 	void process(void *ctx, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };
 
+// Applies a greyscale filter to a color image.
 class MuxFilter : public ImageFilter {
 	std::unique_ptr<ImageFilter> m_filter;
 public:
