@@ -445,7 +445,7 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 	case DitherType::DITHER_RANDOM:
 		return ztd::make_unique<RandomDitherTable>(width, height);
 	default:
-		throw error::IllegalArgument{ "unrecognized dither type" };
+		throw error::InternalError{ "unrecognized dither type" };
 	}
 }
 

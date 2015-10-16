@@ -27,7 +27,7 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacterist
 	case TransferCharacteristics::TRANSFER_709:
 		return create_rec709_inverse_gamma_operation(cpu);
 	default:
-		throw error::IllegalArgument{ "unsupported transfer function" };
+		throw error::InternalError{ "unsupported transfer function" };
 	}
 }
 
@@ -37,7 +37,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacterist
 	case TransferCharacteristics::TRANSFER_709:
 		return create_rec709_gamma_operation(cpu);
 	default:
-		throw error::IllegalArgument{ "unsupported transfer function" };
+		throw error::InternalError{ "unsupported transfer function" };
 	}
 }
 
