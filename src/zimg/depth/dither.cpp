@@ -100,13 +100,10 @@ void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 
 std::pair<float, float> get_scale_offset(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {
-	bool integer_in = pixel_is_integer(pixel_in.type);
-	bool integer_out = pixel_is_integer(pixel_out.type);
-
-	uint32_t range_in = integer_in ? integer_range(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 1;
-	uint32_t offset_in = integer_in ? integer_offset(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 0;
-	uint32_t range_out = integer_out ? integer_range(pixel_out.depth, pixel_out.fullrange, pixel_out.chroma) : 1;
-	uint32_t offset_out = integer_out ? integer_offset(pixel_out.depth, pixel_out.fullrange, pixel_out.chroma) : 0;
+	uint32_t range_in = integer_range(pixel_in);
+	uint32_t offset_in = integer_offset(pixel_in);
+	uint32_t range_out = integer_range(pixel_out);
+	uint32_t offset_out = integer_offset(pixel_out);
 
 	float scale = (float)((double)range_out / range_in);
 	float offset = (float)(-(double)offset_in * range_out / range_in + (double)offset_out);

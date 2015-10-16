@@ -176,10 +176,8 @@ public:
 		if (!pixel_is_float(pixel_out.type))
 			throw error::InternalError{ "DepthConvert only converts to floating point types" };
 
-		bool is_integer = pixel_is_integer(pixel_in.type);
-
-		int32_t range = is_integer ? integer_range(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 1;
-		int32_t offset = is_integer ? integer_offset(pixel_in.depth, pixel_in.fullrange, pixel_in.chroma) : 0;
+		int32_t range = integer_range(pixel_in);
+		int32_t offset = integer_offset(pixel_in);
 
 		m_scale = static_cast<float>(1.0 / range);
 		m_offset = static_cast<float>(-offset * (1.0 / range));

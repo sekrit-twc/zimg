@@ -121,6 +121,7 @@ struct PixelFormat {
 	unsigned depth;
 	bool fullrange;
 	bool chroma;
+	bool ycgco;
 
 	/**
 	 * Default construct PixelFormat, initializing it with an invalid format.
@@ -129,7 +130,8 @@ struct PixelFormat {
 		type{},
 		depth{},
 		fullrange{},
-		chroma{}
+		chroma{},
+		ycgco{}
 	{
 	}
 
@@ -143,7 +145,8 @@ struct PixelFormat {
 		type{ type },
 		depth{ pixel_depth(type) },
 		fullrange{},
-		chroma{}
+		chroma{},
+		ycgco{}
 	{
 	}
 
@@ -155,11 +158,12 @@ struct PixelFormat {
 	 * @param fullrange true if full range, else false
 	 * @param chroma true if chroma, else false
 	 */
-	PixelFormat(PixelType type, unsigned depth, bool fullrange = false, bool chroma = false) :
+	PixelFormat(PixelType type, unsigned depth, bool fullrange = false, bool chroma = false, bool ycgco = false) :
 		type{ type },
 		depth{ depth },
 		fullrange{ fullrange },
-		chroma{ chroma }
+		chroma{ chroma },
+		ycgco{ ycgco }
 	{
 	}
 };

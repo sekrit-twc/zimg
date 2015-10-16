@@ -26,35 +26,33 @@ T bit_cast(const U &x)
 	return ret;
 }
 
-template <class T>
-T clamp(T x, T low, T high)
-{
-	return std::min(std::max(x, low), high);
-}
-
 inline int32_t numeric_max(int bits)
 {
 	return (1L << bits) - 1;
 }
 
-inline int32_t integer_offset(int bits, bool fullrange, bool chroma)
+inline int32_t integer_offset(const PixelFormat &format)
 {
-	if (chroma)
-		return 1L << (bits - 1);
-	else if (!fullrange)
-		return 16L << (bits - 8);
+	if (pixel_is_float(format.type))
+		return 0;
+	else if (format.chroma)
+		return 1L << (format.depth - 1);
+	else if (!format.fullrange)
+		return 16L << (format.depth - 8);
 	else
 		return 0;
 }
 
-inline int32_t integer_range(int bits, bool fullrange, bool chroma)
+inline int32_t integer_range(const PixelFormat &format)
 {
-	if (!fullrange && chroma)
-		return 224L << (bits - 8);
-	else if (!fullrange)
-		return 219L << (bits - 8);
+	if (pixel_is_float(format.type))
+		return 1;
+	else if (format.fullrange)
+		return numeric_max(format.depth);
+	else if (format.chroma && !format.ycgco)
+		return 224L << (format.depth - 8);
 	else
-		return numeric_max(bits);
+		return 219L << (format.depth - 8);
 }
 
 #define FLOAT_HALF_MANT_SHIFT (23 - 10)

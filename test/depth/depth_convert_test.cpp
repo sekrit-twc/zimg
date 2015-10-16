@@ -7,7 +7,7 @@
 
 namespace {;
 
-void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
+void test_case(bool fullrange, bool chroma, bool ycgco, const char *(*expected_sha1)[3])
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -24,9 +24,11 @@ void test_case(bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 			zimg::PixelFormat fmt_in = pxin;
 			fmt_in.fullrange = fullrange;
 			fmt_in.chroma = chroma;
+			fmt_in.ycgco = ycgco;
 
 			zimg::PixelFormat fmt_out = pxout;
 			fmt_out.chroma = chroma;
+			fmt_out.ycgco = ycgco;
 
 			auto convert = zimg::depth::DepthConversion{ w, h }.set_pixel_in(fmt_in).set_pixel_out(fmt_out).create();
 			validate_filter(convert.get(), w, h, fmt_in, expected_sha1[sha1_idx++]);
@@ -53,7 +55,8 @@ TEST(DepthConvertTest, test_limited_luma)
 		{ "483b6bdf608afbf1fba6bbca9657a8ca3822eef1" },
 	};
 
-	test_case(false, false, expected_sha1);
+	test_case(false, false, false, expected_sha1);
+	test_case(false, false, true, expected_sha1);
 }
 
 TEST(DepthConvertTest, test_limited_chroma)
@@ -72,7 +75,26 @@ TEST(DepthConvertTest, test_limited_chroma)
 		{ "39ba7172306b4c4a16089265e1839d80010ec14f" },
 	};
 
-	test_case(false, true, expected_sha1);
+	test_case(false, true, false, expected_sha1);
+}
+
+TEST(DepthConvertTest, test_limited_chroma_ycgco)
+{
+	const char *expected_sha1[][3] = {
+		{ "3eafedbfa0fcd9d99ad374db94d38f632015123e" },
+		{ "7f7f511df52314e078bc9b059fb7c6ae83926b7f" },
+
+		{ "76b68d711e84b6c9a207c9534b8dd8fb93dbbe52" },
+		{ "2d517680820b26ac60d0bb4d2021cd8999dfbce5" },
+
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
+		{ "ef824bbfe3dc3f9cc4094d50d48091fa5f5fec7e" },
+
+		{ "4da423338093bef435e64b494bf13f40ec6c0ae6" },
+		{ "39ba7172306b4c4a16089265e1839d80010ec14f" },
+	};
+
+	test_case(false, true, true, expected_sha1);
 }
 
 TEST(DepthConvertTest, test_full_luma)
@@ -91,7 +113,8 @@ TEST(DepthConvertTest, test_full_luma)
 		{ "483b6bdf608afbf1fba6bbca9657a8ca3822eef1" },
 	};
 
-	test_case(true, false, expected_sha1);
+	test_case(true, false, false, expected_sha1);
+	test_case(true, false, true, expected_sha1);
 }
 
 TEST(DepthConvertTest, test_full_chroma)
@@ -110,7 +133,8 @@ TEST(DepthConvertTest, test_full_chroma)
 		{ "39ba7172306b4c4a16089265e1839d80010ec14f" },
 	};
 
-	test_case(true, true, expected_sha1);
+	test_case(true, true, false, expected_sha1);
+	test_case(true, true, true, expected_sha1);
 }
 
 TEST(DepthConvertTest, test_non_full_integer)
