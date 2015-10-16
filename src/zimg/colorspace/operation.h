@@ -42,7 +42,6 @@ public:
  * @param matrix matrix coefficients
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
- * @throws IllegalArgument on unsupported matrix
  */
 std::unique_ptr<Operation> create_ncl_yuv_to_rgb_operation(MatrixCoefficients matrix, CPUClass cpu);
 
@@ -59,7 +58,6 @@ std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(MatrixCoefficients ma
  * @param transfer transfer characteristics
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
- * @throws IllegalArgument on unsupported transfer
  */
 std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacteristics transfer, CPUClass cpu);
 
@@ -90,7 +88,6 @@ std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(CPUClass cpu);
  * @param primaries_in input primaries
  * @param primaries_out output primaries
  * @param cpu create operation optimized for given cpu
- * @throws IllegalArgument on unsupported primaries
  */
 std::unique_ptr<Operation> create_gamut_operation(ColorPrimaries primaries_in, ColorPrimaries primaries_out, CPUClass cpu);
 

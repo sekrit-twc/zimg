@@ -148,7 +148,7 @@ public:
 	}
 
 	/**
-	 * @see static_map::at(const Key &)
+	 * @see at
 	 */
 	const T &operator[](const Key &key) const
 	{

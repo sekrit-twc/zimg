@@ -32,7 +32,6 @@ const double ILLUMINANT_D65[2] = { 0.3127f, 0.3290f };
  *
  * @param matrix matrix coefficients
  * @return conversion function as matrix
- * @throws IllegalArgument on invalid matrix
  */
 Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix);
 
@@ -48,7 +47,6 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix);
  *
  * @param primaries primaries
  * @param conversion function as matrix
- * @throws IllegalArgument on invalid primaries
  */
 Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries);
 
