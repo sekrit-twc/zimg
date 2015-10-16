@@ -100,7 +100,7 @@ int unresize_main(int argc, char **argv)
 		ImageFrame src_frame = imageframe::read(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
 
 		if (src_frame.subsample_w() || src_frame.subsample_h())
-			throw std::logic_error{ "can only unresize greyscale/4:4:4 images" };
+			throw std::runtime_error{ "can only unresize greyscale/4:4:4 images" };
 
 		ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 

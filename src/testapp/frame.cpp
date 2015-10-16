@@ -94,8 +94,7 @@ PathSpecifier translate_pathspec_format(const char *format)
 #undef ORDER_YVU
 #undef ORDER_GBR
 #undef Z
-	auto it = map.find(format);
-	return it == map.end() ? throw std::runtime_error{ "invalid pathspec format" } : it->second;
+	return map[format];
 }
 
 PathSpecifier parse_path_specifier(const char *spec, const char *assumed)
@@ -435,7 +434,8 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 	case PackingFormat::PACK_YUY2:
 		return read_from_yuy2(spec, width, height, type, fullrange);
 	default:
-		throw std::logic_error{ "bad pathspec" };
+		_zassert(false, "bad packing type");
+		throw std::runtime_error{ "" };
 	}
 }
 
