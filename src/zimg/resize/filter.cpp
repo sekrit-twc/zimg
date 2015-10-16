@@ -76,8 +76,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 		int16_t i16_greatest = 0;
 		size_t i16_greatest_idx = 0;
 
-		/**
-		 * Dither filter coefficients when rounding them to their storage format.
+		/* Dither filter coefficients when rounding them to their storage format.
 		 * This minimizes accumulation of error and ensures that the filter
 		 * continues to sum as close to 1.0 as possible after rounding.
 		 */
