@@ -247,7 +247,8 @@ struct ValidateFilter {
 		src_buf.random_fill(0, src_height, 0, src_width);
 		dst_buf.default_fill();
 
-		validate_filter_plane(filter, &src_buf, &dst_buf);
+		validate_filter_plane<T>(filter, &src_buf, &dst_buf);
+		validate_filter_buffered<T>(filter, src_width, src_height, src_format, dst_buf);
 
 		if (!sha1_str)
 			return;
