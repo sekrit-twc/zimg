@@ -1,4 +1,5 @@
 #include "common/cpuinfo.h"
+#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/basic_filter.h"
@@ -35,7 +36,7 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 {
 }
 
-std::unique_ptr<graph::ImageFilter> DepthConversion::create() const
+std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 {
 	if (pixel_in == pixel_out)
 		return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
@@ -45,6 +46,8 @@ std::unique_ptr<graph::ImageFilter> DepthConversion::create() const
 		return create_convert_to_float(width, height, pixel_in, pixel_out, cpu);
 	else
 		return create_dither(dither_type, width, height, pixel_in, pixel_out, cpu);
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace depth

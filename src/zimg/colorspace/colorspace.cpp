@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include "common/cpuinfo.h"
+#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
@@ -114,13 +115,14 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 {
 }
 
-
-std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const
+std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 {
 	if (csp_in == csp_out)
 		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
 	else
 		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, cpu);
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace colorspace

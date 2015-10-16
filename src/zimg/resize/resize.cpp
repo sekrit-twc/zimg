@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "common/cpuinfo.h"
+#include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/basic_filter.h"
@@ -39,7 +40,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 {
 }
 
-auto ResizeConversion::create() const -> filter_pair
+auto ResizeConversion::create() const -> filter_pair try
 {
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
@@ -98,6 +99,8 @@ auto ResizeConversion::create() const -> filter_pair
 	}
 
 	return ret;
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace resize

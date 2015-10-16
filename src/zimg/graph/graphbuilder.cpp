@@ -448,7 +448,7 @@ GraphBuilder &GraphBuilder::set_factory(FilterFactory *factory)
 	return *this;
 }
 
-GraphBuilder &GraphBuilder::set_source(const state &source)
+GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	if (m_graph)
 		throw error::InternalError{ "source already set" };
@@ -458,9 +458,11 @@ GraphBuilder &GraphBuilder::set_source(const state &source)
 	m_state = source;
 
 	return *this;
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
-GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params)
+GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params) try
 {
 	if (!m_graph)
 		throw error::InternalError{ "no active graph" };
@@ -515,12 +517,16 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	}
 
 	return *this;
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
-std::unique_ptr<FilterGraph> GraphBuilder::complete_graph()
+std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
 {
 	m_graph->complete();
 	return std::move(m_graph);
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace graph
