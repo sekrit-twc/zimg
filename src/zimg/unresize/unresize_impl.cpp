@@ -19,7 +19,7 @@ void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *
 	float z = 0.0f;
 	float w = 0.0f;
 
-	for (unsigned j = 0; j < ctx.dst_width; ++j) {
+	for (unsigned j = 0; j < ctx.output_width; ++j) {
 		float accum = 0.0f;
 		unsigned left = ctx.matrix_row_offsets[j];
 
@@ -34,7 +34,7 @@ void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *
 		dst[j] = z;
 	}
 
-	for (unsigned j = ctx.dst_width; j != 0; --j) {
+	for (unsigned j = ctx.output_width; j != 0; --j) {
 		w = dst[j - 1] - u[j - 1] * w;
 		dst[j - 1] = w;
 	}
@@ -69,7 +69,7 @@ void unresize_line_back_v_f32_c(const BilinearContext &ctx, const graph::ImageBu
 	const float *u = ctx.lu_u.data();
 
 	for (unsigned j = 0; j < width; ++j) {
-		float w = i < ctx.dst_width ? dst[i][j] : 0.0f;
+		float w = i < ctx.output_width ? dst[i][j] : 0.0f;
 
 		w = dst[i - 1][j] - u[i - 1] * w;
 		dst[i - 1][j] = w;
@@ -80,7 +80,7 @@ void unresize_line_back_v_f32_c(const BilinearContext &ctx, const graph::ImageBu
 class UnresizeImplH_C final : public UnresizeImplH {
 public:
 	UnresizeImplH_C(const BilinearContext &context, unsigned height, PixelType type) :
-		UnresizeImplH(context, image_attributes{ context.dst_width, height, type })
+		UnresizeImplH(context, image_attributes{ context.output_width, height, type })
 	{
 		if (type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };
@@ -95,7 +95,7 @@ public:
 class UnresizeImplV_C final : public UnresizeImplV {
 public:
 	UnresizeImplV_C(const BilinearContext &context, unsigned width, PixelType type) :
-		UnresizeImplV(context, image_attributes{ width, context.dst_width, type })
+		UnresizeImplV(context, image_attributes{ width, context.output_width, type })
 	{
 		if (type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };
@@ -182,7 +182,7 @@ auto UnresizeImplV::get_image_attributes() const -> image_attributes
 
 auto UnresizeImplV::get_required_row_range(unsigned) const -> pair_unsigned
 {
-	return{ 0, get_image_attributes().height };
+	return{ 0, m_context.input_width };
 }
 
 auto UnresizeImplV::get_required_col_range(unsigned, unsigned) const -> pair_unsigned

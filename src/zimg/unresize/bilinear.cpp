@@ -115,7 +115,8 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 	size_t rows = transpose_m.rows();
 	size_t cols = transpose_m.cols();
 
-	ctx.dst_width = in;
+	ctx.input_width = out;
+	ctx.output_width = in;
 
 	size_t rowsize = 0;
 	for (size_t i = 0; i < rows; ++i) {

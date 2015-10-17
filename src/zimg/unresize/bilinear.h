@@ -18,9 +18,14 @@ namespace unresize {;
  */
 struct BilinearContext {
 	/**
+	 * Dimension of upsampled image (M).
+	 */
+	unsigned input_width;
+
+	/**
 	 * Dimension of unresized image (N).
 	 */
-	unsigned dst_width;
+	unsigned output_width;
 
 	/**
 	 * Packed storage of (A') as row + offset.
