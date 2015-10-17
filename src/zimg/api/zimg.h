@@ -23,7 +23,10 @@ extern "C" {;
  * to the API version corresponding to its layout to ensure that the library
  * does not access memory beyond the end of the structure.
  */
-#define ZIMG_API_VERSION 2
+#define ZIMG_MAKE_API_VERSION(x, y) (((x) << 8) | (y))
+#define ZIMG_API_VERSION_MAJOR 2
+#define ZIMG_API_VERSION_MINOR 0
+#define ZIMG_API_VERSION ZIMG_MAKE_API_VERSION(ZIMG_API_VERSION_MAJOR, ZIMG_API_VERSION_MINOR)
 
 /**
  * Get the version number of the library.
@@ -46,16 +49,18 @@ void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
  *
  * @see zimg_get_version_info
  *
- * @return API version number
+ * @param[out] major set to the major version, may be NULL
+ * @param[out] minor set to the minor version, may be NULL
+ * @return composite API version number
  */
-unsigned zimg_get_api_version(void);
+unsigned zimg_get_api_version(unsigned *major, unsigned *minor);
 
 /**
  * Library error codes.
  *
  * The error code is a 15-bit quantity with a 5-bit category indicator in the
  * upper bits and a 10-bit error code in the lower bits. The library may also
- * return negative error codes which do not belong to any category, as well as
+ * return negative error codes which do not beto any category, as well as
  * error codes with a category of 0.
  *
  * API functions may return error codes not listed in this header.

@@ -17,11 +17,13 @@
 #include "resize/filter.h"
 #include "zimg.h"
 
-#define API_VERSION_ASSERT(x) _zassert_d((x) >= 2 && (x) <= ZIMG_API_VERSION, "API version invalid")
+namespace {;
+
+const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
+
+#define API_VERSION_ASSERT(x) _zassert_d((x) >= API_VERSION_2_0, "API version invalid")
 #define POINTER_ALIGNMENT_ASSERT(x) _zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
 #define STRIDE_ALIGNMENT_ASSERT(x) _zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
-
-namespace {;
 
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local char g_last_error_msg[1024];
@@ -33,7 +35,6 @@ template <class T, class U>
 T *assert_dynamic_cast(U *ptr)
 {
 	static_assert(std::is_base_of<U, T>::value, "type does not derive from base");
-
 	T *pptr = dynamic_cast<T *>(ptr);
 	_zassert_d(pptr, "bad dynamic type");
 	return pptr;
@@ -290,7 +291,7 @@ zimg::graph::ColorImageBuffer<void> import_image_buffer(const zimg_image_buffer 
 
 	API_VERSION_ASSERT(src.version);
 
-	if (src.version >= 2) {
+	if (src.version >= API_VERSION_2_0) {
 		for (unsigned p = 0; p < 3; ++p) {
 			dst[p] = zimg::graph::ImageBuffer<void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
@@ -304,7 +305,7 @@ zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_b
 
 	API_VERSION_ASSERT(src.version);
 
-	if (src.version >= 2) {
+	if (src.version >= API_VERSION_2_0) {
 		for (unsigned p = 0; p < 3; ++p) {
 			dst[p] = zimg::graph::ImageBuffer<const void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
@@ -314,7 +315,7 @@ zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_b
 
 void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphBuilder::state *out)
 {
-	if (src.version >= 2) {
+	if (src.version >= API_VERSION_2_0) {
 		out->width = src.width;
 		out->height = src.height;
 		out->type = translate_pixel_type(src.pixel_type);
@@ -346,7 +347,7 @@ std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> im
 	import_graph_state_common(src, &src_state);
 	import_graph_state_common(dst, &dst_state);
 
-	if (src.version >= 2) {
+	if (src.version >= API_VERSION_2_0) {
 		// Accept unenumerated colorspaces if they form the basic no-op case.
 		if (src.color_family == dst.color_family &&
 		    src.matrix_coefficients == dst.matrix_coefficients &&
@@ -375,7 +376,7 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 
 	zimg::graph::GraphBuilder::params params{};
 
-	if (src.version >= 2) {
+	if (src.version >= API_VERSION_2_0) {
 		params.filter = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
 		params.filter_uv = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
 		params.dither_type = translate_dither(src.dither_type);
@@ -399,8 +400,13 @@ void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 	*micro = VERSION_INFO[2];
 }
 
-unsigned zimg_get_api_version(void)
+unsigned zimg_get_api_version(unsigned *major, unsigned *minor)
 {
+	if (major)
+		*major = static_cast<unsigned>((ZIMG_API_VERSION >> 8) & 0xFF);
+	if (minor)
+		*minor = static_cast<unsigned>(ZIMG_API_VERSION & 0xFF);
+
 	return ZIMG_API_VERSION;
 }
 
@@ -514,7 +520,7 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 
 	ptr->version = version;
 
-	if (version >= 2) {
+	if (version >= API_VERSION_2_0) {
 		ptr->width = 0;
 		ptr->height = 0;
 		ptr->pixel_type = (zimg_pixel_type_e)-1;
@@ -542,7 +548,7 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
 
 	ptr->version = version;
 
-	if (version >= 2) {
+	if (version >= API_VERSION_2_0) {
 		ptr->resample_filter = ZIMG_RESIZE_BICUBIC;
 		ptr->filter_param_a = NAN;
 		ptr->filter_param_b = NAN;

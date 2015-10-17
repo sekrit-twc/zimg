@@ -24,7 +24,7 @@
 
 #include <zimg.h>
 
-#if ZIMG_API_VERSION < 2
+#if ZIMG_API_VERSION < ZIMG_MAKE_API_VERSION(2, 0)
   #error zAPI v2 or greater required
 #endif
 
@@ -36,7 +36,7 @@ typedef unsigned char vszimg_bool;
 #define VSZIMG_FALSE 0
 
 static unsigned g_version_info[3];
-static unsigned g_api_version;
+static unsigned g_api_version[2];
 
 
 typedef union zimg_image_buffer_u {
@@ -421,9 +421,10 @@ static void export_frame_props(const VSAPI *vsapi, const zimg_image_format *form
 	char version_str[64];
 
 	sprintf(version_str, "%u.%u.%u", g_version_info[0], g_version_info[1], g_version_info[2]);
-
-	vsapi->propSetInt(props, "ZimgApiVersion", g_api_version, paReplace);
 	vsapi->propSetData(props, "ZimgVersion", version_str, (int)strlen(version_str) + 1, paReplace);
+
+	sprintf(version_str, "%u.%u", g_api_version[0], g_api_version[1]);
+	vsapi->propSetData(props, "ZimgApiVersion", version_str, (int)strlen(version_str) + 1, paReplace);
 
 	COPY_INT_POSITIVE("_ChromaLocation", format->chroma_location);
 
@@ -1150,7 +1151,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 #undef ENUM_OPT
 
 	zimg_get_version_info(&g_version_info[0], &g_version_info[1], &g_version_info[2]);
-	g_api_version = zimg_get_api_version();
+	zimg_get_api_version(&g_api_version[0], &g_api_version[1]);
 
 	configFunc("the.weather.channel", "z", "batman", VAPOURSYNTH_API_VERSION, 1, plugin);
 
