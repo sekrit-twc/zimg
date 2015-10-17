@@ -180,12 +180,12 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 
 	__m128 f32_val;
 	__m128i f16_val;
-	uint64_t f16qw;
+	alignas(16) uint64_t f16qw;
 
 	if (left != vec_left) {
 		f32_val = _mm_load_ps(src_p + vec_left - 4);
 		f16_val = mm_cvtps_ph(f32_val);
-		f16qw = _mm_cvtsi128_si64(f16_val);
+		_mm_storel_epi64((__m128i *)&f16qw, f16_val);
 
 		for (unsigned j = 0; j < vec_left - left; ++j) {
 			dst_p[vec_left - j - 1] = (uint16_t)(f16qw >> (48 - 16 * j));
@@ -201,7 +201,7 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 	if (right != vec_right) {
 		f32_val = _mm_load_ps(src_p + vec_right);
 		f16_val = mm_cvtps_ph(f32_val);
-		f16qw = _mm_cvtsi128_si64(f16_val);
+		_mm_storel_epi64((__m128i *)&f16qw, f16_val);
 
 		for (unsigned j = 0; j < right - vec_right; ++j) {
 			dst_p[vec_right + j] = (uint16_t)(f16qw >> (16 * j));
