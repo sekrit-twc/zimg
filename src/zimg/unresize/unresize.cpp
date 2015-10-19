@@ -50,10 +50,10 @@ auto UnresizeConversion::create() const -> filter_pair
 		                    set_shift(shift_h).
 		                    create();
 	} else if (skip_v) {
-		ret.second = builder.set_horizontal(true).
-		                     set_orig_dim(orig_width).
-		                     set_shift(shift_w).
-		                     create();
+		ret.first = builder.set_horizontal(true).
+		                    set_orig_dim(orig_width).
+		                    set_shift(shift_w).
+		                    create();
 	} else {
 		bool h_first = unresize_h_first((double)orig_width / up_width, (double)orig_height / up_height);
 
