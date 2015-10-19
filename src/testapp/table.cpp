@@ -7,6 +7,8 @@
 
 #include "table.h"
 
+using zimg::CPUClass;
+using zimg::PixelType;
 using zimg::colorspace::MatrixCoefficients;
 using zimg::colorspace::TransferCharacteristics;
 using zimg::colorspace::ColorPrimaries;
@@ -39,20 +41,20 @@ filter_uptr make_lanczos_filter(double taps, double)
 } // namespace
 
 
-const zimg::static_string_map<zimg::CPUClass, 4> g_cpu_table{
-	{ "none", zimg::CPUClass::CPU_NONE },
-	{ "auto", zimg::CPUClass::CPU_AUTO },
+const zimg::static_string_map<CPUClass, 4> g_cpu_table{
+	{ "none", CPUClass::CPU_NONE },
+	{ "auto", CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
-	{ "sse",  zimg::CPUClass::CPU_X86_SSE },
-	{ "sse2", zimg::CPUClass::CPU_X86_SSE2 },
+	{ "sse",  CPUClass::CPU_X86_SSE },
+	{ "sse2", CPUClass::CPU_X86_SSE2 },
 #endif
 };
 
-const zimg::static_string_map<zimg::PixelType, 4> g_pixel_table{
-	{ "byte", zimg::PixelType::BYTE },
-	{ "word", zimg::PixelType::WORD },
-	{ "half", zimg::PixelType::HALF },
-	{ "float", zimg::PixelType::FLOAT },
+const zimg::static_string_map<PixelType, 4> g_pixel_table{
+	{ "byte",  PixelType::BYTE },
+	{ "word",  PixelType::WORD },
+	{ "half",  PixelType::HALF },
+	{ "float", PixelType::FLOAT },
 };
 
 const zimg::static_string_map<MatrixCoefficients, 7> g_matrix_table{
