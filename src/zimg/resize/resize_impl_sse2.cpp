@@ -520,7 +520,7 @@ class ResizeImplH_U16_SSE2 final : public ResizeImplH {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, zimg::PixelType::WORD }),
+		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::WORD }),
 		m_func{},
 		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
 	{
@@ -573,7 +573,7 @@ class ResizeImplV_U16_SSE2 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, zimg::PixelType::WORD }),
+		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
 		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
 	{
 	}
@@ -631,7 +631,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse2(const FilterContex
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (type == zimg::PixelType::WORD)
+	if (type == PixelType::WORD)
 		ret = ztd::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
 
 	return ret;
@@ -641,7 +641,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContex
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (type == zimg::PixelType::WORD)
+	if (type == PixelType::WORD)
 		ret = ztd::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);
 
 	return ret;

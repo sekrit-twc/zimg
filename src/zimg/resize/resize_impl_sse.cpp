@@ -291,7 +291,7 @@ class ResizeImplH_F32_SSE final : public ResizeImplH {
 	decltype(&resize_line4_h_f32_sse<0, 0>) m_func;
 public:
 	ResizeImplH_F32_SSE(const FilterContext &filter, unsigned height) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, zimg::PixelType::FLOAT }),
+		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),
 		m_func{}
 	{
 		if (filter.filter_width <= 8)
@@ -343,7 +343,7 @@ public:
 class ResizeImplV_F32_SSE final : public ResizeImplV {
 public:
 	ResizeImplV_F32_SSE(const FilterContext &filter, unsigned width) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, zimg::PixelType::FLOAT })
+		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::FLOAT })
 	{
 	}
 
@@ -383,7 +383,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse(const FilterContext
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (type == zimg::PixelType::FLOAT)
+	if (type == PixelType::FLOAT)
 		ret = ztd::make_unique<ResizeImplH_F32_SSE>(context, height);
 
 	return ret;
@@ -393,7 +393,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse(const FilterContext
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (type == zimg::PixelType::FLOAT)
+	if (type == PixelType::FLOAT)
 		ret = ztd::make_unique<ResizeImplV_F32_SSE>(context, width);
 
 	return ret;
