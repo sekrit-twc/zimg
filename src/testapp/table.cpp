@@ -41,12 +41,15 @@ filter_uptr make_lanczos_filter(double taps, double)
 } // namespace
 
 
-const zimg::static_string_map<CPUClass, 4> g_cpu_table{
+const zimg::static_string_map<CPUClass, 7> g_cpu_table{
 	{ "none", CPUClass::CPU_NONE },
 	{ "auto", CPUClass::CPU_AUTO },
 #ifdef ZIMG_X86
 	{ "sse",  CPUClass::CPU_X86_SSE },
 	{ "sse2", CPUClass::CPU_X86_SSE2 },
+	{ "avx",  CPUClass::CPU_X86_AVX },
+	{ "f16c", CPUClass::CPU_X86_F16C },
+	{ "avx2", CPUClass::CPU_X86_AVX2 },
 #endif
 };
 
