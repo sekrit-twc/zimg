@@ -61,11 +61,11 @@ auto ResizeConversion::create() const -> filter_pair try
 		                    set_subwidth(subheight).
 		                    create();
 	} else if (skip_v) {
-		ret.second = builder.set_horizontal(true).
-		                     set_dst_dim(dst_width).
-		                     set_shift(shift_w).
-		                     set_subwidth(subwidth).
-		                     create();
+		ret.first = builder.set_horizontal(true).
+		                    set_dst_dim(dst_width).
+		                    set_shift(shift_w).
+		                    set_subwidth(subwidth).
+		                    create();
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 
