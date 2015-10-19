@@ -31,6 +31,8 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse(const FilterContext
 
 std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
+std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
+
 std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
 
 std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);

@@ -93,7 +93,7 @@ vszimg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 if X86SIMD
-noinst_LTLIBRARIES += libsse.la libsse2.la
+noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la
 
 libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
 					  src/zimg/colorspace/operation_impl_x86.h \
@@ -122,7 +122,12 @@ libsse2_la_SOURCES = src/zimg/depth/depth_convert_sse2.cpp \
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 libsse2_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libzimg_la_LIBADD = libsse.la libsse2.la
+libavx_la_SOURCES = src/zimg/resize/resize_impl_avx.cpp
+
+libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx
+libavx_la_CPPFLAGS = -I$(srcdir)/src/zimg
+
+libzimg_la_LIBADD = libsse.la libsse2.la libavx.la
 endif
 
 
@@ -241,6 +246,7 @@ test_unit_test_SOURCES += test/colorspace/colorspace_sse_test.cpp \
 						  test/depth/depth_convert_sse2_test.cpp \
 						  test/depth/dither_sse2_test.cpp \
 						  test/depth/f16c_sse2_test.cpp \
+						  test/resize/resize_impl_avx_test.cpp \
 						  test/resize/resize_impl_sse_test.cpp \
 						  test/resize/resize_impl_sse2_test.cpp
 

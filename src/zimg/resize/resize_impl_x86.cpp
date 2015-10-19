@@ -33,11 +33,15 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (cpu == CPUClass::CPU_AUTO) {
+		if (!ret && caps.avx)
+			ret = create_resize_impl_v_avx(context, width, type, depth);
 		if (!ret && caps.sse2)
 			ret = create_resize_impl_v_sse2(context, width, type, depth);
 		if (!ret && caps.sse)
 			ret = create_resize_impl_v_sse(context, width, type, depth);
 	} else {
+		if (!ret && cpu >= CPUClass::CPU_X86_AVX)
+			ret = create_resize_impl_v_avx(context, width, type, depth);
 		if (!ret && cpu >= CPUClass::CPU_X86_SSE2)
 			ret = create_resize_impl_v_sse2(context, width, type, depth);
 		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
