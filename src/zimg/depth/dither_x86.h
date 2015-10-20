@@ -28,9 +28,35 @@ void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsign
 void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
 
+void ordered_dither_b2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_b2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_w2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_w2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_h2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_h2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_f2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
+void ordered_dither_f2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+
 dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu);
+
+bool needs_dither_f16c_func_x86(CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

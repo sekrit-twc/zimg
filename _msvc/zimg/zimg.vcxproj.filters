@@ -290,5 +290,8 @@
     <ClCompile Include="..\..\src\zimg\depth\f16c_ivb.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

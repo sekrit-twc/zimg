@@ -106,6 +106,36 @@ inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsigned cou
 
 #endif // HAVE_CPU_AVX
 
+#ifdef HAVE_CPU_AVX2
+
+// Store the right-most [count] bytes from [x] into [dst].
+inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, unsigned count)
+{
+	__m256i orig = _mm256_load_si256(dst);
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table_l[count]));
+
+	orig = _mm256_andnot_si256(mask, orig);
+	x = _mm256_and_si256(mask, x);
+	x = _mm256_or_si256(x, orig);
+
+	_mm256_store_si256(dst, x);
+}
+
+// Store the left-most [count] bytes from [x] into [dst].
+inline FORCE_INLINE void mm256_store_right_si256(__m256i *dst, __m256i x, unsigned count)
+{
+	__m256i orig = _mm256_load_si256(dst);
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table_r[count]));
+
+	orig = _mm256_andnot_si256(mask, orig);
+	x = _mm256_and_si256(mask, x);
+	x = _mm256_or_si256(x, orig);
+
+	_mm256_store_si256(dst, x);
+}
+
+#endif // HAVE_CPU_AVX2
+
 } // namespace zimg
 
 #endif // ZIMG_X86UTIL_H_
