@@ -138,6 +138,8 @@ inline FORCE_INLINE __m128i ordered_dither_b2b_sse2_xiter(unsigned j, const floa
 	hihi = _mm_add_ps(hihi, dith);
 
 	x = mm_cvtps_epu8(lolo, lohi, hilo, hihi);
+	x = _mm_min_epu8(x, out_max);
+
 	return x;
 }
 
