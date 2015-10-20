@@ -10,6 +10,9 @@ namespace depth {;
 void f16c_half_to_float_sse2(const void *src, void *dst, unsigned left, unsigned right);
 void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned right);
 
+void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned right);
+void f16c_float_to_half_ivb(const void *src, void *dst, unsigned left, unsigned right);
+
 } // namespace depth
 } // namespace zimg
 

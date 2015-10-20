@@ -78,9 +78,13 @@ depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu)
 	depth_f16c_func func = nullptr;
 
 	if (cpu == CPUClass::CPU_AUTO) {
+		if (!func && caps.avx && caps.f16c)
+			func = to_half ? f16c_float_to_half_ivb : f16c_half_to_float_ivb;
 		if (!func && caps.sse2)
 			func = to_half ? f16c_float_to_half_sse2 : f16c_half_to_float_sse2;
 	} else {
+		if (!func && cpu >= CPUClass::CPU_X86_F16C)
+			func = to_half ? f16c_float_to_half_ivb : f16c_half_to_float_ivb;
 		if (!func && cpu >= CPUClass::CPU_X86_SSE2)
 			func = to_half ? f16c_float_to_half_sse2 : f16c_half_to_float_sse2;
 	}

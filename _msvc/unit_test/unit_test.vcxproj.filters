@@ -129,6 +129,9 @@
     <ClCompile Include="..\..\test\resize\resize_impl_avx_test.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\depth\f16c_ivb_test.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
