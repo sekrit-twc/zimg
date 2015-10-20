@@ -241,6 +241,11 @@ void execute(const JsonObject &spec, unsigned times, unsigned threads)
 	zimg::graph::GraphBuilder::state dst_state;
 	std::unique_ptr<zimg::graph::FilterGraph> graph = create_graph(spec, &src_state, &dst_state);
 
+	std::cout << '\n';
+	std::cout << "input buffering:  " << graph->get_input_buffering() << '\n';
+	std::cout << "output buffering: " << graph->get_output_buffering() << '\n';
+	std::cout << "heap size:        " << graph->get_tmp_size() << '\n';
+
 	if (!threads && !std::thread::hardware_concurrency())
 		throw std::runtime_error{ "could not auto-detect CPU count" };
 
