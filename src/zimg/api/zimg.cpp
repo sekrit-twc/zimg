@@ -28,7 +28,7 @@ const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local char g_last_error_msg[1024];
 
-const unsigned VERSION_INFO[] = { 1, 99, 0 };
+const unsigned VERSION_INFO[] = { 2, 0, 0 };
 
 
 template <class T, class U>
