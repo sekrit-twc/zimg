@@ -3,7 +3,6 @@
 #ifndef ZIMG_COLORSPACE_OPERATION_IMPL_H_
 #define ZIMG_COLORSPACE_OPERATION_IMPL_H_
 
-#include <cmath>
 #include "common/libm_wrapper.h"
 #include "operation.h"
 
@@ -19,25 +18,9 @@ class Operation;
 const float TRANSFER_ALPHA = 1.09929682680944f;
 const float TRANSFER_BETA = 0.018053968510807f;
 
-inline float rec_709_gamma(float x)
-{
-	if (x < TRANSFER_BETA)
-		x = x * 4.5f;
-	else
-		x = TRANSFER_ALPHA * _zimg_powf(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
+float rec_709_gamma(float x);
 
-	return x;
-}
-
-inline float rec_709_inverse_gamma(float x)
-{
-	if (x < 4.5f * TRANSFER_BETA)
-		x = x / 4.5f;
-	else
-		x = _zimg_powf((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
-
-	return x;
-}
+float rec_709_inverse_gamma(float x);
 
 /**
  * Base class for matrix operation implementations.
