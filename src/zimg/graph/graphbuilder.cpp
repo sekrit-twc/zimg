@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iterator>
 #include "common/cpuinfo.h"
 #include "common/except.h"
@@ -241,7 +242,7 @@ void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
 void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
                                  ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
 {
-	if (color == ColorFamily::COLOR_GREY)
+	if (m_state.color == ColorFamily::COLOR_GREY || color == ColorFamily::COLOR_GREY)
 		return;
 	if (color == ColorFamily::COLOR_RGB && matrix != colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED && matrix != colorspace::MatrixCoefficients::MATRIX_RGB)
 		throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
@@ -483,17 +484,24 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			spec.subsample_w = 0;
 			spec.subsample_h = 0;
 
-			if (is_greyscale(m_state))
-				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
+			if ((m_state.subsample_w || m_state.subsample_h) &&
+			    (!target.subsample_w && !target.subsample_h)) {
+				spec.width = target.width;
+				spec.height = target.height;
+			} else {
+				spec.width = std::min(m_state.width, target.width);
+				spec.height = std::min(m_state.height, target.height);
+			}
 
 			if (m_state.type != PixelType::FLOAT)
 				convert_depth(PixelType::FLOAT, params);
 
 			convert_resize(spec, params);
-			convert_colorspace(target.colorspace, params);
 
-			if (is_greyscale(target))
-				color_to_grey(target.colorspace.matrix);
+			if (is_greyscale(m_state))
+				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
+
+			convert_colorspace(target.colorspace, params);
 		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
 			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
