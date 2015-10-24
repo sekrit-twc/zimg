@@ -190,6 +190,12 @@
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\graph.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">

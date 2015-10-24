@@ -122,7 +122,8 @@ libsse2_la_SOURCES = src/zimg/depth/depth_convert_sse2.cpp \
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 libsse2_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libavx_la_SOURCES = src/zimg/resize/resize_impl_avx.cpp
+libavx_la_SOURCES = src/zimg/colorspace/operation_impl_avx.cpp \
+					src/zimg/resize/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx
 libavx_la_CPPFLAGS = -I$(srcdir)/src/zimg
@@ -252,7 +253,8 @@ test_unit_test_SOURCES = test/main.cpp \
 
 if X86SIMD
 
-test_unit_test_SOURCES += test/colorspace/colorspace_sse_test.cpp \
+test_unit_test_SOURCES += test/colorspace/colorspace_avx_test.cpp \
+						  test/colorspace/colorspace_sse_test.cpp \
 						  test/depth/depth_convert_sse2_test.cpp \
 						  test/depth/dither_avx2_test.cpp \
 						  test/depth/dither_sse2_test.cpp \

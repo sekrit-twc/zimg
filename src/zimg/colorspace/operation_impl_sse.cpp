@@ -120,6 +120,7 @@ public:
 
 } // namespace
 
+
 std::unique_ptr<Operation> create_matrix_operation_sse(const Matrix3x3 &m)
 {
 	return ztd::make_unique<MatrixOperationSSE>(m);
