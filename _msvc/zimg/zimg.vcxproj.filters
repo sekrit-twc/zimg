@@ -296,5 +296,8 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

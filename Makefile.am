@@ -133,7 +133,8 @@ libf16c_la_SOURCES = src/zimg/depth/f16c_ivb.cpp
 libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
 libf16c_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libavx2_la_SOURCES = src/zimg/depth/dither_avx2.cpp
+libavx2_la_SOURCES = src/zimg/depth/depth_convert_avx2.cpp \
+					 src/zimg/depth/dither_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
 libavx2_la_CPPFLAGS = -I$(srcdir)/src/zimg
@@ -255,6 +256,7 @@ if X86SIMD
 
 test_unit_test_SOURCES += test/colorspace/colorspace_avx_test.cpp \
 						  test/colorspace/colorspace_sse_test.cpp \
+						  test/depth/depth_convert_avx2_test.cpp \
 						  test/depth/depth_convert_sse2_test.cpp \
 						  test/depth/dither_avx2_test.cpp \
 						  test/depth/dither_sse2_test.cpp \

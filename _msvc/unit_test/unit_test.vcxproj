@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\test\colorspace\colorspace_avx_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp" />
+    <ClCompile Include="..\..\test\depth\depth_convert_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_avx2_test.cpp" />

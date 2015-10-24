@@ -138,6 +138,9 @@
     <ClCompile Include="..\..\test\colorspace\colorspace_avx_test.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\depth\depth_convert_avx2_test.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
