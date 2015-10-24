@@ -43,7 +43,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacterist
 
 std::unique_ptr<Operation> create_gamut_operation(ColorPrimaries primaries_in, ColorPrimaries primaries_out, CPUClass cpu)
 {
-	return create_matrix_operation(gamut_rgb_to_xyz_matrix(primaries_in) * gamut_xyz_to_rgb_matrix(primaries_out), cpu);
+	return create_matrix_operation(gamut_xyz_to_rgb_matrix(primaries_out) * gamut_rgb_to_xyz_matrix(primaries_in), cpu);
 }
 
 } // namespace colorspace
