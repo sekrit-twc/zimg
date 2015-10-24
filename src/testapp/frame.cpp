@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -131,6 +132,7 @@ ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel)
 
 ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
                        bool yuv, unsigned subsample_w, unsigned subsample_h) :
+	m_offset{},
 	m_width{ width },
 	m_height{ height },
 	m_pixel{ pixel },
@@ -143,8 +145,10 @@ ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, u
 		unsigned width_p = this->width(p);
 		unsigned height_p = this->height(p);
 		size_t rowsize_p = width_to_stride(width_p, pixel);
+		ptrdiff_t offset_p = zimg::floor_n(rand(), 64) % 4096;
 
-		m_vector[p].resize(rowsize_p * height_p);
+		m_vector[p].resize(rowsize_p * height_p + offset_p);
+		m_offset[p] = offset_p;
 	}
 }
 
@@ -201,7 +205,7 @@ zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
 {
 	_zassert(plane < m_planes, "plane index out of bounds");
-	return{ m_vector[plane].data(), width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
+	return{ m_vector[plane].data() + m_offset[plane], width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
 }
 
 zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
