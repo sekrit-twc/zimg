@@ -104,7 +104,6 @@ libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
 					  src/zimg/depth/dither_x86.cpp \
 					  src/zimg/depth/dither_x86.h \
 					  src/zimg/depth/f16c_x86.h \
-					  src/zimg/depth/f16c_sse2.h \
 					  src/zimg/resize/resize_impl_x86.cpp \
 					  src/zimg/resize/resize_impl_x86.h
 
