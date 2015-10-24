@@ -93,14 +93,14 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 
 	const char *expected_sha1[][3] = {
 		{
-			"801cd3a68eec5bdac4b14e40de6f76724a0a48af",
-			"f40cf973dc5245610a6cf4cbd7640d0369a1ff97",
-			"b8deaf80e09777de4c3260850b0347a47f611040"
+			"4cd9db8fd2ded345aafffda2358cd6de9c763e00",
+			"2dd41a82f55933f35988ca5f2d57c09f8157d43a",
+			"2262468fb4840160c880dcaace12a44568e44246"
 		},
 		{
-			"ffc1ff3c7be80355c40cf2b7b105ffce9d0a23a6",
-			"7cb906b65f88d997c354bedfd80b37c1959d883d",
-			"2a1330b248efa25fc1acfc25c1fba733910ebff9"
+			"1e14ec2d359417837a6501c948ec110597535bb4",
+			"c564d33ae070a54e5f10baa262f6da6c8450ed80",
+			"e511d90a33b8e27ee96adfda987038cd4d540f8e"
 		}
 	};
 
