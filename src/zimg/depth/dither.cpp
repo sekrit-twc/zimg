@@ -475,6 +475,7 @@ std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned widt
 
 #ifdef ZIMG_X86
 	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
+	needs_f16c = needs_f16c && needs_dither_f16c_func_x86(cpu);
 
 	if (needs_f16c)
 		f16c = select_dither_f16c_func_x86(cpu);
