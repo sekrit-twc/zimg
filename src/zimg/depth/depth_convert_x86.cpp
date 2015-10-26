@@ -115,7 +115,7 @@ bool needs_depth_f16c_func_x86(const PixelFormat &format_in, const PixelFormat &
 	X86Capabilities caps = query_x86_capabilities();
 	bool value = format_in.type == PixelType::HALF || format_out.type == PixelType::HALF;
 
-	if (cpu == CPUClass::CPU_AUTO && caps.avx2 || cpu >= CPUClass::CPU_X86_AVX2)
+	if ((cpu == CPUClass::CPU_AUTO && caps.avx2) || cpu >= CPUClass::CPU_X86_AVX2)
 		value = value && pixel_is_float(format_in.type) && pixel_is_float(format_out.type);
 
 	return value;
