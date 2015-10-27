@@ -952,6 +952,11 @@ public:
 		for (unsigned j = 0; j < attr.width; j += step) {
 			unsigned j_end = std::min(j + step, attr.width);
 
+			if (attr.width - j_end < TILE_MIN) {
+				j_end = attr.width;
+				step = attr.width - j;
+			}
+
 			tmp_size = std::max(tmp_size, m_node->get_tmp_size(j, j_end));
 
 			if (m_node_uv)
