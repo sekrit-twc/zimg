@@ -28,6 +28,8 @@ private:
 		non_copyable &operator=(const non_copyable &) = delete;
 	};
 
+	class row_proxy;
+
 	class proxy : private non_copyable {
 		RowMatrix *matrix;
 		size_type i;
