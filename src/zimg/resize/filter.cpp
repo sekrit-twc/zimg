@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <cfloat>
-#include <cstddef>
-#include <cstdint>
 #include <cmath>
+#include <cstddef>
+#include <cstdlib>
 #include <vector>
 #include "common/except.h"
 #include "common/libm_wrapper.h"
