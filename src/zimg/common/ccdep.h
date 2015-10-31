@@ -17,4 +17,8 @@
   #define RESTRICT
 #endif
 
+#if defined(__APPLE__)
+  #define thread_local __thread
+#endif
+
 #endif /* ZIMG_CCDEP_H_ */
