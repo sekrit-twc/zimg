@@ -242,7 +242,7 @@ void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
 void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
                                  ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
 {
-	if (m_state.color == ColorFamily::COLOR_GREY || color == ColorFamily::COLOR_GREY)
+	if (m_state.color == color || color == ColorFamily::COLOR_GREY)
 		return;
 	if (color == ColorFamily::COLOR_RGB && matrix != colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED && matrix != colorspace::MatrixCoefficients::MATRIX_RGB)
 		throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
