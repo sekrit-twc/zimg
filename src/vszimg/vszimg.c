@@ -826,8 +826,8 @@ static struct vszimg_graph_data *_vszimg_get_graph_data(struct vszimg_data *data
 	mutex_locked = VSZIMG_TRUE;
 
 	allocate_new = !data->graph_data ||
-	               (!image_format_eq(&data->graph_data->src_format, src_format) ||
-	                !image_format_eq(&data->graph_data->dst_format, dst_format));
+	               !image_format_eq(&data->graph_data->src_format, src_format) ||
+	               !image_format_eq(&data->graph_data->dst_format, dst_format);
 
 	if (allocate_new) {
 		if (!(graph_data = malloc(sizeof(*graph_data)))) {
