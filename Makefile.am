@@ -17,7 +17,6 @@ EXTRA_DIST = zimg.pc.in
 noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
 noinst_LTLIBRARIES =
-pkglib_LTLIBRARIES = vszimg.la
 
 libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/colorspace/colorspace.cpp \
