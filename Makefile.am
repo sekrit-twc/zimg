@@ -81,17 +81,6 @@ libzimg_la_CPPFLAGS = -I$(srcdir)/src/zimg
 libzimg_la_LDFLAGS = -no-undefined -version-info 2
 
 
-vszimg_la_SOURCES = src/vszimg/vszimg.c \
-					src/vszimg/VapourSynth.h \
-					src/vszimg/VSHelper.h
-
-vszimg_la_CPPFLAGS = -I$(srcdir)/src/zimg/api
-vszimg_la_CFLAGS = $(AM_CFLAGS) $(PTHREAD_CFLAGS)
-vszimg_la_LIBADD = $(PTHREAD_LIBS) libzimg.la
-vszimg_la_LDFLAGS = -no-undefined -avoid-version -module
-vszimg_la_LIBTOOLFLAGS = --tag=disable-static
-
-
 if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 
