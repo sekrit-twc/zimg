@@ -2,7 +2,11 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <immintrin.h>
+#if defined(__GNUC__)
+  #include <x86intrin.h>
+#else
+  #include <intrin.h>
+#endif
 #include "common/align.h"
 #include "common/ccdep.h"
 

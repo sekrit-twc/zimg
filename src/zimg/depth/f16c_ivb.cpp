@@ -1,6 +1,10 @@
 #ifdef ZIMG_X86
 
-#include <immintrin.h>
+#if defined(__GNUC__)
+  #include <x86intrin.h>
+#else
+  #include <intrin.h>
+#endif
 #include "common/align.h"
 
 #define HAVE_CPU_SSE2
