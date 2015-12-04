@@ -22,6 +22,10 @@
 
 using std::nullptr_t;
 
+#if __APPLE__
+  #define off64_t off_t
+#endif
+
 namespace {;
 
 #ifdef _WIN32
