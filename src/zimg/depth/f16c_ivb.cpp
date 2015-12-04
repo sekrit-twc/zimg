@@ -1,6 +1,9 @@
 #ifdef ZIMG_X86
 
 #include <immintrin.h>
+#ifdef __clang__
+  #include <x86intrin.h>
+#endif
 #include "common/align.h"
 
 #define HAVE_CPU_SSE2
