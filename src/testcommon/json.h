@@ -55,7 +55,7 @@ private:
 	typedef std::aligned_storage<64>::type union_type;
 #else
 	typedef std::aligned_union<0,
-		nullptr_t,
+		std::nullptr_t,
 		number_type,
 		string_type,
 		array_type,
@@ -96,7 +96,7 @@ private:
 		return *reinterpret_cast<T *>(&m_data);
 	}
 public:
-	JsonValue(nullptr_t = nullptr) : m_tag{ NULL_ }
+	JsonValue(std::nullptr_t = nullptr) : m_tag{ NULL_ }
 	{
 		construct(nullptr);
 	}
