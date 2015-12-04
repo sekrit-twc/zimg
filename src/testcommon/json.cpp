@@ -6,6 +6,8 @@
 #include <vector>
 #include "json.h"
 
+using std::nullptr_t;
+
 namespace {;
 
 struct Token;

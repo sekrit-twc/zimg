@@ -20,6 +20,8 @@
 
 #include "mmap.h"
 
+using std::nullptr_t;
+
 namespace {;
 
 #ifdef _WIN32
