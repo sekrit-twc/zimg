@@ -1,3 +1,6 @@
+2.0.2:
+graph: fix crash when resizing in only one direction
+
 2.0.1:
 colorspace: fix incorrect gamut processing
 graph: fix possible buffer overflow on certain widths
