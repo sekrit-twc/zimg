@@ -200,10 +200,10 @@ void trap_error(const char *msg = "")
 	throw std::system_error{ code, msg };
 }
 
-off64_t get_file_size(int fd)
+off_t get_file_size(int fd)
 {
-	off64_t pos = -1;
-	off64_t ret;
+	off_t pos = -1;
+	off_t ret;
 
 	if ((pos = ::lseek(fd, 0, SEEK_CUR)) < 0)
 		posix::trap_error("error getting file position");
@@ -338,7 +338,7 @@ class MemoryMappedFile::impl {
 	{
 		std::unique_ptr<void, posix::close_fd> fd_uptr;
 		int fd;
-		off64_t file_size;
+		off_t file_size;
 		void *ptr;
 
 		if ((fd = ::open(path, open_flags)) < 0)
