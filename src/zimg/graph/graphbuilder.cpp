@@ -178,9 +178,14 @@ auto DefaultFilterFactory::create_depth(const depth::DepthConversion &conv) -> f
 auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -> filter_list
 {
 	auto filter_pair = conv.create();
+	filter_list list;
 
-	std::unique_ptr<ImageFilter> filters[2] = { std::move(filter_pair.first), std::move(filter_pair.second) };
-	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 2) };
+	if (filter_pair.first)
+		list.emplace_back(std::move(filter_pair.first));
+	if (filter_pair.second)
+		list.emplace_back(std::move(filter_pair.second));
+
+	return list;
 }
 
 
