@@ -60,7 +60,7 @@ unsigned zimg_get_api_version(unsigned *major, unsigned *minor);
  *
  * The error code is a 15-bit quantity with a 5-bit category indicator in the
  * upper bits and a 10-bit error code in the lower bits. The library may also
- * return negative error codes which do not beto any category, as well as
+ * return negative error codes which do not belong to any category, as well as
  * error codes with a category of 0.
  *
  * API functions may return error codes not listed in this header.
@@ -198,8 +198,6 @@ typedef enum zimg_color_family_e {
  * It is possible to process interlaced images with the library by separating
  * them into their individual fields. Each field can then be resized by
  * specifying the appropriate field parity to maintain correct alignment.
- *
- * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_field_parity_e {
 	ZIMG_FIELD_PROGRESSIVE = 0, /**< Progressive scan image. */
@@ -339,7 +337,7 @@ typedef struct zimg_image_buffer_const {
  * @see zimg_image_buffer_const
  */
 typedef struct zimg_image_buffer {
-	unsigned version;
+	unsigned version; /**< @see ZIMG_API_VERSION */
 
 	struct {
 		void *data;       /**< plane data buffer */
@@ -378,10 +376,10 @@ typedef struct zimg_filter_graph zimg_filter_graph;
  * formats or other address spaces.
  *
  * If provided to {@link zimg_filter_graph_process}, the callback will be
- * called before image data is read from the input and output buffers.
- * The callback may be invoked on the same pixels multiple times, in which
- * case those pixels must be re-read unless the buffer mask is
- * {@link ZIMG_BUFFER_MAX}.
+ * called before image data is read from the input buffer and after data is
+ * written to the output buffer. The callback may be invoked on the same pixels
+ * multiple times, in which case those pixels must be re-read unless the buffer
+ * mask is {@link ZIMG_BUFFER_MAX}.
  *
  * If the image is subsampled, a number of scanlines in units of the chroma
  * subsampling (e.g. 2 lines for 4:2:0) must be read.
