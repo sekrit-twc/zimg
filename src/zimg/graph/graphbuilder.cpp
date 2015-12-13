@@ -458,85 +458,91 @@ GraphBuilder &GraphBuilder::set_factory(FilterFactory *factory)
 	return *this;
 }
 
-GraphBuilder &GraphBuilder::set_source(const state &source) try
+GraphBuilder &GraphBuilder::set_source(const state &source)
 {
-	if (m_graph)
-		throw error::InternalError{ "source already set" };
+	try {
+		if (m_graph)
+			throw error::InternalError{ "source already set" };
 
-	validate_state(source);
-	m_graph = ztd::make_unique<FilterGraph>(source.width, source.height, source.type, source.subsample_w, source.subsample_h, !is_greyscale(source));
-	m_state = source;
+		validate_state(source);
+		m_graph = ztd::make_unique<FilterGraph>(source.width, source.height, source.type, source.subsample_w, source.subsample_h, !is_greyscale(source));
+		m_state = source;
 
-	return *this;
-} catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
-}
-
-GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params) try
-{
-	if (!m_graph)
-		throw error::InternalError{ "no active graph" };
-
-	validate_state(target);
-
-	if (m_state.parity != target.parity)
-		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
-
-	while (true) {
-		if (needs_colorspace(m_state, target)) {
-			resize_spec spec{ m_state };
-			spec.subsample_w = 0;
-			spec.subsample_h = 0;
-
-			if (is_greyscale(m_state))
-				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
-
-			if (m_state.type != PixelType::FLOAT)
-				convert_depth(PixelType::FLOAT, params);
-
-			convert_resize(spec, params);
-			convert_colorspace(target.colorspace, params);
-
-			if (is_greyscale(target))
-				color_to_grey(target.colorspace.matrix);
-		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
-			color_to_grey(target.colorspace.matrix);
-		} else if (needs_resize(m_state, target)) {
-			if (m_state.type == PixelType::BYTE)
-				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params);
-			if (m_state.type == PixelType::HALF)
-				convert_depth(PixelType::FLOAT, params);
-
-			resize_spec spec{ m_state };
-			spec.width = target.width;
-			spec.height = target.height;
-			spec.subsample_w = target.subsample_w;
-			spec.subsample_h = target.subsample_h;
-			spec.chroma_location_w = target.chroma_location_w;
-			spec.chroma_location_h = target.chroma_location_h;
-
-			convert_resize(spec, params);
-		} else if (needs_depth(m_state, target)) {
-			PixelFormat format{ target.type, target.depth, target.fullrange, false, is_ycgco(target) };
-			convert_depth(format, params);
-		} else if (is_greyscale(m_state) && !is_greyscale(target)) {
-			grey_to_color(target.color, target.colorspace.matrix, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
-		} else {
-			break;
-		}
+		return *this;
+	} catch (const std::bad_alloc &) {
+		throw error::OutOfMemory{};
 	}
-
-	return *this;
-} catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
 }
 
-std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
+GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params)
 {
-	m_graph->complete();
-	return std::move(m_graph);
-} catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	try {
+		if (!m_graph)
+			throw error::InternalError{ "no active graph" };
+
+		validate_state(target);
+
+		if (m_state.parity != target.parity)
+			throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
+
+		while (true) {
+			if (needs_colorspace(m_state, target)) {
+				resize_spec spec{ m_state };
+				spec.subsample_w = 0;
+				spec.subsample_h = 0;
+
+				if (is_greyscale(m_state))
+					grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
+
+				if (m_state.type != PixelType::FLOAT)
+					convert_depth(PixelType::FLOAT, params);
+
+				convert_resize(spec, params);
+				convert_colorspace(target.colorspace, params);
+
+				if (is_greyscale(target))
+					color_to_grey(target.colorspace.matrix);
+			} else if (!is_greyscale(m_state) && is_greyscale(target)) {
+				color_to_grey(target.colorspace.matrix);
+			} else if (needs_resize(m_state, target)) {
+				if (m_state.type == PixelType::BYTE)
+					convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params);
+				if (m_state.type == PixelType::HALF)
+					convert_depth(PixelType::FLOAT, params);
+
+				resize_spec spec{ m_state };
+				spec.width = target.width;
+				spec.height = target.height;
+				spec.subsample_w = target.subsample_w;
+				spec.subsample_h = target.subsample_h;
+				spec.chroma_location_w = target.chroma_location_w;
+				spec.chroma_location_h = target.chroma_location_h;
+
+				convert_resize(spec, params);
+			} else if (needs_depth(m_state, target)) {
+				PixelFormat format{ target.type, target.depth, target.fullrange, false, is_ycgco(target) };
+				convert_depth(format, params);
+			} else if (is_greyscale(m_state) && !is_greyscale(target)) {
+				grey_to_color(target.color, target.colorspace.matrix, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
+			} else {
+				break;
+			}
+		}
+
+		return *this;
+	} catch (const std::bad_alloc &) {
+		throw error::OutOfMemory{};
+	}
+}
+
+std::unique_ptr<FilterGraph> GraphBuilder::complete_graph()
+{
+	try {
+		m_graph->complete();
+		return std::move(m_graph);
+	} catch (const std::bad_alloc &) {
+		throw error::OutOfMemory{};
+	}
 }
 
 } // namespace graph

@@ -115,14 +115,16 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 {
 }
 
-std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
+std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const
 {
-	if (csp_in == csp_out)
-		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
-	else
-		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, cpu);
-} catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	try {
+		if (csp_in == csp_out)
+			return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
+		else
+			return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, cpu);
+	} catch (const std::bad_alloc &) {
+		throw error::OutOfMemory{};
+	}
 }
 
 } // namespace colorspace
