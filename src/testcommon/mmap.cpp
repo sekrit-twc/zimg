@@ -112,8 +112,6 @@ void create_new_file(const char *path, size_t size)
 		win32::trap_error("error setting end of file");
 	if (::CloseHandle(file_handle) == 0)
 		win32::trap_error("error closing file handle");
-
-	file_handle_uptr.release();
 }
 
 } // namespace win32
@@ -222,12 +220,13 @@ void create_new_file(const char *path, size_t size)
 
 	if ((fd = ::creat(path, 00666)) < 0)
 		posix::trap_error("error creating file");
+
+	fd_uptr.reset(fd);
+
 	if (ftruncate(fd, size) < 0)
 		posix::trap_error("error truncating file");
 	if (close(fd) < 0)
 		posix::trap_error("error closing file");
-
-	fd_uptr.release();
 }
 
 } // namespace posix
@@ -328,7 +327,6 @@ public:
 };
 #else
 class MemoryMappedFile::impl {
-	std::unique_ptr<void, posix::close_fd> m_fd;
 	std::unique_ptr<void, posix::munmap_file> m_ptr;
 
 	size_t m_size;
@@ -352,7 +350,6 @@ class MemoryMappedFile::impl {
 		if ((ptr = ::mmap(nullptr, file_size, prot, mmap_flags, fd, 0)) == MAP_FAILED)
 			posix::trap_error("error mapping file");
 
-		m_fd.swap(fd_uptr);
 		m_ptr.reset(ptr);
 		m_size = (size_t)file_size;
 	}
@@ -396,7 +393,7 @@ public:
 
 	void flush()
 	{
-		if (::fsync(m_fd.get()))
+		if (::msync(m_ptr.get(), m_size, MS_SYNC))
 			posix::trap_error("error flushing file");
 	}
 
