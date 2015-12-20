@@ -17,7 +17,7 @@ typedef std::vector<Token>::const_iterator token_iterator;
 
 struct Token {
 	enum tag_type {
-		NULL_,
+		EMPTY,
 		CURLY_BRACE_LEFT,
 		CURLY_BRACE_RIGHT,
 		SQUARE_BRACE_LEFT,
@@ -27,22 +27,18 @@ struct Token {
 		STRING_LITERAL,
 		NUMBER_LITERAL,
 		TRUE_,
-		FALSE_
+		FALSE_,
+		NULL_,
 	} tag;
 
 	std::string str;
 
-	Token(nullptr_t = nullptr) : tag{ NULL_ }
+	Token() : tag{ EMPTY }
 	{
 	}
 
 	Token(tag_type t, std::string s = {}) : tag{ t }, str{ s }
 	{
-	}
-
-	explicit operator bool() const
-	{
-		return tag != NULL_;
 	}
 };
 
@@ -133,7 +129,7 @@ std::pair<Token, string_iterator> match_token_keyword(string_iterator pos, strin
 std::pair<Token, string_iterator> match_token(string_iterator pos, string_iterator last)
 {
 	if (isspace(*pos))
-		return{ nullptr, skip_if(pos, last, isspace) };
+		return{ Token{}, skip_if(pos, last, isspace) };
 	else if (*pos == '{')
 		return{ Token::CURLY_BRACE_LEFT, pos + 1 };
 	else if (*pos == '}')
@@ -164,7 +160,7 @@ std::vector<Token> tokenize(const std::string &str)
 	while (pos != last) {
 		auto tok = match_token(pos, last);
 
-		if (tok.first)
+		if (tok.first.tag != Token::EMPTY)
 			tokens.emplace_back(std::move(tok.first));
 
 		pos = tok.second;
