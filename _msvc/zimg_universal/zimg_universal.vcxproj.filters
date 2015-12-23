@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{a6bdb375-f3bb-446c-88f4-1655ab605d6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\api">
+      <UniqueIdentifier>{bac91f2a-ffeb-423f-a5a6-c28e09d12e18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\colorspace">
+      <UniqueIdentifier>{6c26a023-47cc-4330-8c0d-94ad6fab81c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{6723fa83-fe82-4957-b157-88e1c1308a50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\depth">
+      <UniqueIdentifier>{347148cd-81e2-49d3-a115-1580ff85ee09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\resize">
+      <UniqueIdentifier>{fef5c5e3-99dd-4d9e-b30e-bf6d391a8cc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\unresize">
+      <UniqueIdentifier>{899cf3ae-1123-4ac2-bf79-f621a9a79e4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graph">
+      <UniqueIdentifier>{1b03e6ba-1dbd-4060-bdbe-8d79c6bc0304}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{510828ef-96ce-469a-986e-4257c43ec7c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\api">
+      <UniqueIdentifier>{71320370-fb1c-4c66-9ba1-5bc8cac211f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\colorspace">
+      <UniqueIdentifier>{66a91da3-c27e-49fe-a4e4-2b57f213a22d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{b62f9253-188e-42f0-82fe-31a03354a16d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\depth">
+      <UniqueIdentifier>{a969b499-88f8-41fa-9798-f8d3c93d17f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\resize">
+      <UniqueIdentifier>{906cdc59-b8f6-421d-b4f4-924b32119b99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\unresize">
+      <UniqueIdentifier>{92b97c8a-dfd9-4a89-9c1b-be0bd379c1ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graph">
+      <UniqueIdentifier>{8cc92e03-b1aa-40cf-8cf1-c1bfb82f73c7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\colorspace.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\graph.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\matrix.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\x86util.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\f16c_sse2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\f16c_ivb.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\filter.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse2.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_x86.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp">
+      <Filter>Source Files\unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\unresize.cpp">
+      <Filter>Source Files\unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp">
+      <Filter>Source Files\unresize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\api\zimg.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\colorspace.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\colorspace_param.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\graph.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\matrix3.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\operation.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\operation_impl.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\operation_impl_x86.h">
+      <Filter>Header Files\colorspace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\align.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\alloc.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\builder.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\cpuinfo.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\except.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\make_unique.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\matrix.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\ccdep.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\pixel.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\propagate_const.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\static_map.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86util.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\zassert.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\depth.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\depth_convert.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\depth_convert_x86.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\dither.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\dither_x86.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\f16c_x86.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\quantize.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\resize\filter.h">
+      <Filter>Header Files\resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\resize\resize.h">
+      <Filter>Header Files\resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\resize\resize_impl.h">
+      <Filter>Header Files\resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\resize\resize_impl_x86.h">
+      <Filter>Header Files\resize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\unresize\bilinear.h">
+      <Filter>Header Files\unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\unresize\unresize.h">
+      <Filter>Header Files\unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h">
+      <Filter>Header Files\unresize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\image_filter.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\image_buffer.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
