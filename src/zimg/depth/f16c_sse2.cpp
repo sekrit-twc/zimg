@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
@@ -212,3 +214,5 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 
 } // namespace depth
 } // namespace zimg
+
+#endif // ZIMG_X86
