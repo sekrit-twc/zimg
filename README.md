@@ -45,7 +45,7 @@ Formats: BYTE, WORD, HALF, FLOAT
 
 The depth module provides for conversion between any pixel (number) format,
 including one and two-byte integer formats as well as IEEE-754 binary16
-(OpenEXR) and binary32 formats. Limited (16-235) and full swing (0-255) range
+(OpenEXR) and binary32 formats. Limited range (16-235) and full swing (0-255)
 integer formats are supported, including conversion between such formats.
 Multiple dithering methods are available when converting to integer formats,
 from basic rounding to high quality error diffusion.
