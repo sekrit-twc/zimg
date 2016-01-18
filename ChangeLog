@@ -1,3 +1,6 @@
+2.0.3:
+api: fix handling of unrecognized colorspaces
+
 2.0.2:
 graph: fix crash when resizing in only one direction
 
