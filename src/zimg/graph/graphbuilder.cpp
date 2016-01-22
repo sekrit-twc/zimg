@@ -140,7 +140,10 @@ bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::sta
 
 bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
-	return source.type != target.type || source.depth != target.depth || source.fullrange != target.fullrange;
+	if (pixel_is_float(target.type))
+		return source.type != target.type;
+	else
+		return source.type != target.type || source.depth != target.depth || source.fullrange != target.fullrange;
 }
 
 bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &target)
