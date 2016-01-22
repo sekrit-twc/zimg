@@ -1,3 +1,6 @@
+2.0.4:
+graph: fix possible infinite loop when converting integer to float
+
 2.0.3:
 api: fix handling of unrecognized colorspaces
 
