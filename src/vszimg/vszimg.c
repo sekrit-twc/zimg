@@ -5,7 +5,7 @@
 #include <string.h>
 
 #ifdef _WIN32
-  #include <Windows.h>
+  #include <windows.h>
   typedef CRITICAL_SECTION vszimg_mutex_t;
 
   static int vszimg_mutex_init(vszimg_mutex_t *mutex) { InitializeCriticalSection(mutex); return 0;  }

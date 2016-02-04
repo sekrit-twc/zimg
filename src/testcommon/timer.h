@@ -29,7 +29,7 @@ public:
 
 #else
 
-#include <Windows.h>
+#include <windows.h>
 
 class Timer {
 	LARGE_INTEGER m_start;
