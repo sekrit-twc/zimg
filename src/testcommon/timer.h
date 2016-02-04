@@ -6,28 +6,7 @@
 #include <cmath>
 #include <utility>
 
-#ifndef _WIN32
-
-#include <chrono>
-
-class Timer {
-	typedef std::chrono::high_resolution_clock hrclock;
-
-	hrclock::time_point m_start;
-	hrclock::time_point m_stop;
-public:
-	void start() { m_start = hrclock::now(); }
-
-	void stop() { m_stop = hrclock::now(); }
-
-	double elapsed()
-	{
-		std::chrono::duration<double> secs = m_stop - m_start;
-		return secs.count();
-	}
-};
-
-#else
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
 
 #include <Windows.h>
 
@@ -45,6 +24,27 @@ public:
 	double elapsed()
 	{
 		return (double)(m_stop.QuadPart - m_start.QuadPart) / (double)m_frequency.QuadPart;
+	}
+};
+
+#else
+
+#include <chrono>
+
+class Timer {
+	typedef std::chrono::high_resolution_clock hrclock;
+
+	hrclock::time_point m_start;
+	hrclock::time_point m_stop;
+public:
+	void start() { m_start = hrclock::now(); }
+
+	void stop() { m_stop = hrclock::now(); }
+
+	double elapsed()
+	{
+		std::chrono::duration<double> secs = m_stop - m_start;
+		return secs.count();
 	}
 };
 
