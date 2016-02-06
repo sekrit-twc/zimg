@@ -163,9 +163,7 @@ bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &
 } // namespace
 
 
-FilterFactory::~FilterFactory()
-{
-}
+FilterFactory::~FilterFactory() = default;
 
 auto DefaultFilterFactory::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
 {
@@ -213,9 +211,7 @@ GraphBuilder::GraphBuilder() :
 {
 }
 
-GraphBuilder::~GraphBuilder()
-{
-}
+GraphBuilder::~GraphBuilder() = default;
 
 void GraphBuilder::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {

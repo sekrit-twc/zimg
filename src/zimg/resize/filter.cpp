@@ -122,9 +122,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 } // namespace
 
 
-Filter::~Filter()
-{
-}
+Filter::~Filter() = default;
 
 int PointFilter::support() const
 {
@@ -215,7 +213,7 @@ double Spline36Filter::operator()(double x) const
 	}
 }
 
-LanczosFilter::LanczosFilter(int taps) : taps(taps)
+LanczosFilter::LanczosFilter(int taps) : taps{ taps }
 {
 }
 

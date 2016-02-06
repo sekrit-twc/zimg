@@ -196,13 +196,9 @@ public:
 	}
 };
 
-ImageFilter::~ImageFilter()
-{
-}
+ImageFilter::~ImageFilter() = default;
 
-ImageFilterBase::~ImageFilterBase()
-{
-}
+ImageFilterBase::~ImageFilterBase() = default;
 
 /**
  * Compare two {@link ImageFilter::image_attributes} structures.

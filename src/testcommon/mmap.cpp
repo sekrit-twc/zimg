@@ -409,9 +409,7 @@ const MemoryMappedFile::read_tag MemoryMappedFile::READ_TAG{};
 const MemoryMappedFile::write_tag MemoryMappedFile::WRITE_TAG{};
 const MemoryMappedFile::create_tag MemoryMappedFile::CREATE_TAG{};
 
-MemoryMappedFile::MemoryMappedFile()
-{
-}
+MemoryMappedFile::MemoryMappedFile() = default;
 
 MemoryMappedFile::MemoryMappedFile(const char *path, read_tag) : m_impl{ new impl{} }
 {
@@ -428,9 +426,7 @@ MemoryMappedFile::MemoryMappedFile(const char *path, size_t size, create_tag) : 
 	m_impl->map_create(path, size);
 }
 
-MemoryMappedFile::~MemoryMappedFile()
-{
-}
+MemoryMappedFile::~MemoryMappedFile() = default;
 
 size_t MemoryMappedFile::size() const
 {

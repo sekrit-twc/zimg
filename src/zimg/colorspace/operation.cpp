@@ -7,9 +7,7 @@
 namespace zimg {;
 namespace colorspace {;
 
-Operation::~Operation()
-{
-}
+Operation::~Operation() = default;
 
 std::unique_ptr<Operation> create_ncl_yuv_to_rgb_operation(MatrixCoefficients matrix, CPUClass cpu)
 {

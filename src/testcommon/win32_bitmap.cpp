@@ -232,9 +232,7 @@ WindowsBitmap::WindowsBitmap(const char *path, int width, int height, int bit_co
 {
 }
 
-WindowsBitmap::~WindowsBitmap()
-{
-}
+WindowsBitmap::~WindowsBitmap() = default;
 
 ptrdiff_t WindowsBitmap::stride() const
 {

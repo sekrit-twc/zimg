@@ -10,9 +10,7 @@ struct zimg_filter_graph {
 	virtual inline ~zimg_filter_graph() = 0;
 };
 
-zimg_filter_graph::~zimg_filter_graph()
-{
-}
+zimg_filter_graph::~zimg_filter_graph() = default;
 
 
 namespace zimg {;
