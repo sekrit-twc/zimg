@@ -1064,7 +1064,11 @@ FilterGraph::FilterGraph(unsigned width, unsigned height, PixelType type, unsign
 {
 }
 
+FilterGraph::FilterGraph(FilterGraph &&other) = default;
+
 FilterGraph::~FilterGraph() = default;
+
+FilterGraph &FilterGraph::operator=(FilterGraph &&other) = default;
 
 void FilterGraph::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {

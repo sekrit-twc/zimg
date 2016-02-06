@@ -22,6 +22,8 @@ public:
 private:
 	std::unique_ptr<impl> m_impl;
 public:
+	WindowsBitmap(WindowsBitmap &&other);
+
 	WindowsBitmap(const char *path, read_tag);
 
 	WindowsBitmap(const char *path, write_tag);
@@ -29,6 +31,8 @@ public:
 	WindowsBitmap(const char *path, int width, int height, int bit_count);
 
 	~WindowsBitmap();
+
+	WindowsBitmap &operator=(WindowsBitmap &&other);
 
 	ptrdiff_t stride() const;
 

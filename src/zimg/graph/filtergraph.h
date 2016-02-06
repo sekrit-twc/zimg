@@ -85,9 +85,24 @@ public:
 	FilterGraph(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color);
 
 	/**
+	 * Move construct a FilterGraph.
+	 *
+	 * @param other rvalue
+	 */
+	FilterGraph(FilterGraph &&other);
+
+	/**
 	 * Destroy graph.
 	 */
 	~FilterGraph();
+
+	/**
+	 * Move assignment.
+	 *
+	 * @param other rvalue
+	 * @return this
+	 */
+	FilterGraph &operator=(FilterGraph &&other);
 
 	/**
 	 * Attach a filter to the graph, transferring ownership.

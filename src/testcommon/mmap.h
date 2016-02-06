@@ -21,6 +21,8 @@ private:
 public:
 	MemoryMappedFile();
 
+	MemoryMappedFile(MemoryMappedFile &&other);
+
 	MemoryMappedFile(const char *path, read_tag);
 
 	MemoryMappedFile(const char *path, write_tag);
@@ -28,6 +30,8 @@ public:
 	MemoryMappedFile(const char *path, size_t size, create_tag);
 
 	~MemoryMappedFile();
+
+	MemoryMappedFile &operator=(MemoryMappedFile &&other);
 
 	size_t size() const;
 

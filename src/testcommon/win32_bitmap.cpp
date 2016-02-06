@@ -59,7 +59,9 @@ struct BitmapFileData {
 	BITMAPINFOHEADER *biHeader;
 	void *image_data;
 
-	BitmapFileData() = default;
+	BitmapFileData() : bfHeader{}, biHeader{}, image_data{}
+	{
+	}
 
 	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
@@ -123,7 +125,7 @@ const WindowsBitmap::read_tag WindowsBitmap::READ_TAG{};
 const WindowsBitmap::write_tag WindowsBitmap::WRITE_TAG{};
 
 class WindowsBitmap::impl {
-	std::unique_ptr<MemoryMappedFile> m_mmap;
+	MemoryMappedFile m_mmap;
 	BitmapFileData m_bitmap;
 	bool m_writable;
 
@@ -134,22 +136,17 @@ class WindowsBitmap::impl {
 		return row_size;
 	}
 public:
-	impl(std::unique_ptr<MemoryMappedFile> &&mmap, bool writable) :
-		m_mmap{},
-		m_bitmap{},
-		m_writable{ writable }
+	impl(MemoryMappedFile &&mmap, bool writable) : m_writable{ writable }
 	{
-		if (writable && !mmap->write_ptr())
+		if (writable && !mmap.write_ptr())
 			throw std::logic_error{ "mapped file not writable" };
 
-		m_bitmap = BitmapFileData{ mmap->size(), const_cast<void *>(mmap->read_ptr()), false };
-		m_bitmap.validate(mmap->size());
+		m_bitmap = BitmapFileData{ mmap.size(), const_cast<void *>(mmap.read_ptr()), false };
+		m_bitmap.validate(mmap.size());
 		m_mmap = std::move(mmap);
 	}
 
-	impl(const char *path, int width, int height, int bit_count) :
-		m_bitmap{},
-		m_writable{ true }
+	impl(const char *path, int width, int height, int bit_count) : m_writable{ true }
 	{
 		size_t file_size = 0;
 
@@ -162,10 +159,10 @@ public:
 		file_size += sizeof(BITMAPINFOHEADER);
 		file_size += height * bitmap_row_size(width, bit_count);
 
-		m_mmap.reset(new MemoryMappedFile{ path, file_size, MemoryMappedFile::CREATE_TAG });
+		m_mmap = MemoryMappedFile{ path, file_size, MemoryMappedFile::CREATE_TAG };
 
-		m_bitmap = BitmapFileData{ m_mmap->size(), m_mmap->write_ptr(), true };
-		m_bitmap.init(m_mmap->size(), width, height, bit_count);
+		m_bitmap = BitmapFileData{ m_mmap.size(), m_mmap.write_ptr(), true };
+		m_bitmap.init(m_mmap.size(), width, height, bit_count);
 	}
 
 	const unsigned char *read_ptr() const
@@ -181,7 +178,7 @@ public:
 
 	ptrdiff_t stride() const
 	{
-		return -(ptrdiff_t)row_size();
+		return -static_cast<ptrdiff_t>(row_size());
 	}
 
 	int width() const
@@ -201,19 +198,21 @@ public:
 
 	void flush()
 	{
-		m_mmap->flush();
+		m_mmap.flush();
 	}
 
 	void close()
 	{
-		m_mmap->close();
+		m_mmap.close();
 	}
 };
 
 
+WindowsBitmap::WindowsBitmap(WindowsBitmap &&other) = default;
+
 WindowsBitmap::WindowsBitmap(const char *path, read_tag)
 {
-	std::unique_ptr<MemoryMappedFile> mmap{ new MemoryMappedFile{ path, MemoryMappedFile::READ_TAG} };
+	MemoryMappedFile mmap{ path, MemoryMappedFile::READ_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
 
 	m_impl = std::move(impl_);
@@ -221,7 +220,7 @@ WindowsBitmap::WindowsBitmap(const char *path, read_tag)
 
 WindowsBitmap::WindowsBitmap(const char *path, write_tag)
 {
-	std::unique_ptr<MemoryMappedFile> mmap{ new MemoryMappedFile{ path, MemoryMappedFile::WRITE_TAG } };
+	MemoryMappedFile mmap{ path, MemoryMappedFile::WRITE_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
 
 	m_impl = std::move(impl_);
@@ -233,6 +232,8 @@ WindowsBitmap::WindowsBitmap(const char *path, int width, int height, int bit_co
 }
 
 WindowsBitmap::~WindowsBitmap() = default;
+
+WindowsBitmap &WindowsBitmap::operator=(WindowsBitmap &&other) = default;
 
 ptrdiff_t WindowsBitmap::stride() const
 {
