@@ -60,8 +60,7 @@ public:
 
 	void operator()(handle h)
 	{
-		if (h)
-			::CloseHandle(h);
+		::CloseHandle(h);
 	}
 };
 
@@ -82,12 +81,7 @@ void trap_error(const char *msg = "")
 
 void utf8_to_wchar(wchar_t unicode_path[MAX_PATH], const char *path)
 {
-	size_t path_len = strlen(path);
-
-	if (path_len > MAX_PATH)
-		throw std::logic_error{ "path too long" };
-
-	if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, (int)path_len, unicode_path, MAX_PATH * sizeof(wchar_t)) == 0)
+	if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, unicode_path, MAX_PATH * sizeof(wchar_t)) == 0)
 		win32::trap_error("error converting path to UTF-16");
 }
 
