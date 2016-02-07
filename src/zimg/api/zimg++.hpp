@@ -20,7 +20,7 @@
  *
  * {@p ZIMGXX_NAMESPACE} must not be defined as "zimg".
  */
-namespace ZIMGXX_NAMESPACE {;
+namespace ZIMGXX_NAMESPACE {
 
 struct zerror {
 	int code;

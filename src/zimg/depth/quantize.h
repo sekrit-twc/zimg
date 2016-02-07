@@ -7,8 +7,8 @@
 #include <cstdint>
 #include "common/pixel.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
 template <class T>
 T identity(T x)

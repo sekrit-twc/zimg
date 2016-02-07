@@ -8,7 +8,7 @@
 
 using std::nullptr_t;
 
-namespace {;
+namespace {
 
 struct Token;
 
@@ -431,7 +431,7 @@ const JsonValue &JsonObject::operator[](const std::string &key) const
 }
 
 
-namespace json {;
+namespace json {
 
 JsonValue parse_document(const std::string &str)
 {

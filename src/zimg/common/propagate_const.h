@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-namespace zimg {;
+namespace zimg {
 
 template <class T, class U, bool Value = std::is_const<T>::value>
 struct propagate_const;

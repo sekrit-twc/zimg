@@ -13,7 +13,7 @@
 "HALF:  greyh, i420h, i422h, i444h, rgbph\n" \
 "FLOAT: greys, i420s, i422s, i444s, rgbps\n"
 
-namespace zimg {;
+namespace zimg {
 
 enum class PixelType;
 
@@ -58,7 +58,7 @@ public:
 };
 
 
-namespace imageframe {;
+namespace imageframe {
 
 ImageFrame read(const char *pathspec, const char *assumed, unsigned width, unsigned height);
 

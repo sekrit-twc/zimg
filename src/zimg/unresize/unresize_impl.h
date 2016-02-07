@@ -7,12 +7,12 @@
 #include "graph/image_filter.h"
 #include "bilinear.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
 
-namespace unresize {;
+namespace unresize {
 
 class UnresizeImplH : public graph::ImageFilterBase {
 protected:

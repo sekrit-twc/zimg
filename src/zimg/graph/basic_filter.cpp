@@ -4,8 +4,8 @@
 #include "common/pixel.h"
 #include "basic_filter.h"
 
-namespace zimg {;
-namespace graph {;
+namespace zimg {
+namespace graph {
 
 CopyFilter::CopyFilter(unsigned width, unsigned height, PixelType type) :
 	m_attr{ width, height, type }

@@ -14,7 +14,7 @@ using zimg::colorspace::TransferCharacteristics;
 using zimg::colorspace::ColorPrimaries;
 using zimg::depth::DitherType;
 
-namespace {;
+namespace {
 
 typedef std::unique_ptr<zimg::resize::Filter> filter_uptr;
 

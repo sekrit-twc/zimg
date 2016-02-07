@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace zimg {;
+namespace zimg {
 
 /**
  * Row compressed sparse matrix. Stored as an array of arrays.

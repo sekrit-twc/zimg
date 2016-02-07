@@ -5,10 +5,10 @@
 #include "unresize.h"
 #include "unresize_impl.h"
 
-namespace zimg {;
-namespace unresize {;
+namespace zimg {
+namespace unresize {
 
-namespace {;
+namespace {
 
 bool unresize_h_first(double xscale, double yscale)
 {

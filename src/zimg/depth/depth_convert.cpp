@@ -8,10 +8,10 @@
 #include "depth_convert_x86.h"
 #include "quantize.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 template <class T, class U>
 void integer_to_integer(const void *src, void *dst, unsigned shift, unsigned left, unsigned right)

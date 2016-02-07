@@ -5,8 +5,8 @@
 
 #include <stdexcept>
 
-namespace zimg {;
-namespace error {;
+namespace zimg {
+namespace error {
 
 class Exception : private std::runtime_error {
 public:

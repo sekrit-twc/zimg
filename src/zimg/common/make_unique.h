@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace ztd {;
+namespace ztd {
 
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {

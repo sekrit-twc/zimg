@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
 
-namespace {;
+namespace {
 
 void test_case(bool fullrange, bool chroma, bool ycgco, const char *(*expected_sha1)[3])
 {

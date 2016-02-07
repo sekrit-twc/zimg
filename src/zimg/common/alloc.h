@@ -17,7 +17,7 @@
   inline void _zimg_aligned_free(void *ptr) { free(ptr); }
 #endif
 
-namespace zimg {;
+namespace zimg {
 
 /**
  * Simple allocator that increments a base pointer.

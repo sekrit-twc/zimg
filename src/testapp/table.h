@@ -6,12 +6,12 @@
 #include <memory>
 #include "common/static_map.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
 
-namespace colorspace {;
+namespace colorspace {
 
 enum class MatrixCoefficients;
 enum class TransferCharacteristics;
@@ -19,13 +19,13 @@ enum class ColorPrimaries;
 
 } // namespace colorspace
 
-namespace depth {;
+namespace depth {
 
 enum class DitherType;
 
 } // namespace depth
 
-namespace resize {;
+namespace resize {
 
 class Filter;
 

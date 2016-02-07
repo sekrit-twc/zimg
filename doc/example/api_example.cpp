@@ -14,7 +14,7 @@
 #include "mmap.h"
 #include "win32_bitmap.h"
 
-namespace {;
+namespace {
 
 struct Arguments {
 	const char *inpath;

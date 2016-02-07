@@ -10,11 +10,11 @@
 #include "depth/depth.h"
 #include "resize/resize.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace graph {;
+namespace graph {
 
 class FilterGraph;
 class ImageFilter;

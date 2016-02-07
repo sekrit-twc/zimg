@@ -3,10 +3,10 @@
 #include "colorspace.h"
 #include "colorspace_param.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 void get_yuv_constants(double *kr, double *kb, MatrixCoefficients matrix)
 {

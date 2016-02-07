@@ -17,7 +17,7 @@
 #include "mmap.h"
 #include "win32_bitmap.h"
 
-namespace {;
+namespace {
 
 #ifdef _WIN32
 bool is_null_device(const std::string &s)
@@ -219,9 +219,9 @@ zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
 }
 
 
-namespace imageframe {;
+namespace imageframe {
 
-namespace {;
+namespace {
 
 struct MappedImageFile {
 	std::unique_ptr<MemoryMappedFile> m_handle;

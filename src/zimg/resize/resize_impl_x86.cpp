@@ -4,8 +4,8 @@
 #include "graph/image_filter.h"
 #include "resize_impl_x86.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
 std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {

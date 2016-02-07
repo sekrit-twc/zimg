@@ -8,8 +8,8 @@
   #include <cpuid.h>
 #endif
 
-namespace zimg {;
-namespace {;
+namespace zimg {
+namespace {
 
 /**
  * Execute the CPUID instruction.

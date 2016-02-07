@@ -4,8 +4,8 @@
 #include "operation.h"
 #include "operation_impl.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
 Operation::~Operation() = default;
 

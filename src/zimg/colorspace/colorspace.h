@@ -5,18 +5,18 @@
 
 #include <memory>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace colorspace {;
+namespace colorspace {
 
 enum class MatrixCoefficients {
 	MATRIX_UNSPECIFIED,

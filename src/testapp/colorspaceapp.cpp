@@ -15,7 +15,7 @@
 #include "timer.h"
 #include "utils.h"
 
-namespace {;
+namespace {
 
 int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 {

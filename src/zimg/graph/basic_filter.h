@@ -6,11 +6,11 @@
 #include <memory>
 #include "image_filter.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class PixelType;
 
-namespace graph {;
+namespace graph {
 
 // Copies a greyscale image.
 class CopyFilter : public ImageFilterBase {

@@ -16,10 +16,10 @@
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
-namespace {;
+namespace {
 
 inline FORCE_INLINE void scatter4_ps(float *dst0, float *dst1, float *dst2, float *dst3, __m128 x)
 {

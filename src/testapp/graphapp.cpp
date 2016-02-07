@@ -22,7 +22,7 @@
 #include "table.h"
 #include "timer.h"
 
-namespace {;
+namespace {
 
 class TracingFilterFactory : public zimg::graph::DefaultFilterFactory {
 public:

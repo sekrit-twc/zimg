@@ -19,10 +19,10 @@
 
 #include "depth_convert_x86.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 struct PackF16 {
 	typedef __m128i type;

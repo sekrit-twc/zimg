@@ -19,7 +19,7 @@
 #include "timer.h"
 #include "utils.h"
 
-namespace {;
+namespace {
 
 bool is_set_pixel_format(const zimg::PixelFormat &format)
 {

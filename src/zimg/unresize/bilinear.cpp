@@ -5,10 +5,10 @@
 #include "common/matrix.h"
 #include "bilinear.h"
 
-namespace zimg {;
-namespace unresize {;
+namespace zimg {
+namespace unresize {
 
-namespace {;
+namespace {
 
 template <class T>
 T epsilon()

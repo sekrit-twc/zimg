@@ -6,11 +6,11 @@
 #include "common/libm_wrapper.h"
 #include "operation.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace colorspace {;
+namespace colorspace {
 
 struct Matrix3x3;
 class Operation;

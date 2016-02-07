@@ -5,11 +5,11 @@
 
 #include <memory>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace colorspace {;
+namespace colorspace {
 
 enum class MatrixCoefficients;
 enum class TransferCharacteristics;

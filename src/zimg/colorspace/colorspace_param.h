@@ -5,8 +5,8 @@
 
 #include "matrix3.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
 enum class MatrixCoefficients;
 enum class ColorPrimaries;

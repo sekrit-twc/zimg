@@ -5,10 +5,10 @@
 #include "graph.h"
 #include "operation.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 template <class T>
 class EnumRange {

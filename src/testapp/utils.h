@@ -5,8 +5,8 @@
 
 #include <memory>
 
-namespace zimg {;
-namespace graph {;
+namespace zimg {
+namespace graph {
 
 class ImageFilter;
 

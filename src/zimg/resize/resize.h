@@ -6,19 +6,19 @@
 #include <memory>
 #include <utility>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace resize {;
+namespace resize {
 
 class Filter;
 

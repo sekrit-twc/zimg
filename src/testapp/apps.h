@@ -11,7 +11,7 @@
 struct ArgparseOption;
 
 #ifdef __cplusplus
-extern "C" {;
+extern "C" {
 #endif
 
 int arg_decode_cpu(const struct ArgparseOption *opt, void *out, int argc, char **argv);

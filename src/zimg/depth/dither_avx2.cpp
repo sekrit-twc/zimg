@@ -14,10 +14,10 @@
 #undef HAVE_CPU_SSE2
 #undef HAVE_CPU_AVX2
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 struct LoadF16 {
 	typedef uint16_t type;

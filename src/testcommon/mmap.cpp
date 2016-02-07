@@ -22,10 +22,10 @@
 
 using std::nullptr_t;
 
-namespace {;
+namespace {
 
 #ifdef _WIN32
-namespace win32 {;
+namespace win32 {
 
 class close_handle {
 	struct handle {
@@ -116,7 +116,7 @@ void create_new_file(const char *path, size_t size)
 
 } // namespace win32
 #else
-namespace posix {;
+namespace posix {
 
 struct close_fd {
 	struct descriptor {

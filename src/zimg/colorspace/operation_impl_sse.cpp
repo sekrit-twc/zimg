@@ -12,10 +12,10 @@
 #include "operation_impl.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
 {

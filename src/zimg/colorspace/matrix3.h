@@ -5,8 +5,8 @@
 
 #include <array>
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
 /**
  * Fixed size vector of 3 numbers.

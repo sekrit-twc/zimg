@@ -14,10 +14,10 @@
 
 #include "f16c_x86.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
 {

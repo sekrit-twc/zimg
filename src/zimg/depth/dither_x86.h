@@ -7,8 +7,8 @@
 
 #include "dither.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
 void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);

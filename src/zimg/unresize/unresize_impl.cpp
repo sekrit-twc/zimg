@@ -5,10 +5,10 @@
 #include "common/pixel.h"
 #include "unresize_impl.h"
 
-namespace zimg {;
-namespace unresize {;
+namespace zimg {
+namespace unresize {
 
-namespace {;
+namespace {
 
 void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *dst)
 {

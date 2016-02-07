@@ -15,10 +15,10 @@
 #include "resize_impl.h"
 #include "resize_impl_x86.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
-namespace {;
+namespace {
 
 inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
 {

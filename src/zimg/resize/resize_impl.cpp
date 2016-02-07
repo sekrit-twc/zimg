@@ -12,10 +12,10 @@
   #include "resize_impl_x86.h"
 #endif
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
-namespace {;
+namespace {
 
 int32_t unpack_pixel_u16(uint16_t x)
 {

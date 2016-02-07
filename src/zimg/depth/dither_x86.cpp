@@ -5,10 +5,10 @@
 #include "dither_x86.h"
 #include "f16c_x86.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 dither_convert_func select_ordered_dither_func_sse2(PixelType pixel_in, PixelType pixel_out)
 {

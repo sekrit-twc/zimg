@@ -7,8 +7,8 @@
 
 #include "depth_convert.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
 void left_shift_b2b_sse2(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
 

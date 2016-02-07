@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include "argparse.h"
 
-namespace {;
+namespace {
 
 int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **argv)
 {

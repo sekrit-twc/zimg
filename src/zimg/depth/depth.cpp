@@ -8,10 +8,10 @@
 #include "depth_convert.h"
 #include "dither.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 bool is_lossless_conversion(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {

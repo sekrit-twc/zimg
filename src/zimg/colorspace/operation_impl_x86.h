@@ -7,11 +7,11 @@
 
 #include <memory>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace colorspace {;
+namespace colorspace {
 
 class Operation;
 struct Matrix3x3;

@@ -13,11 +13,11 @@ struct zimg_filter_graph {
 zimg_filter_graph::~zimg_filter_graph() = default;
 
 
-namespace zimg {;
+namespace zimg {
 
 enum class PixelType;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 

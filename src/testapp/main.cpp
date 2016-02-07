@@ -7,7 +7,7 @@
 #include "apps.h"
 #include "table.h"
 
-namespace {;
+namespace {
 
 typedef int (*main_func)(int, char **);
 

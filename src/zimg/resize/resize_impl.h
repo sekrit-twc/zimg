@@ -7,12 +7,12 @@
 #include "graph/image_filter.h"
 #include "filter.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
 
-namespace resize {;
+namespace resize {
 
 class ResizeImplH : public graph::ImageFilterBase {
 protected:

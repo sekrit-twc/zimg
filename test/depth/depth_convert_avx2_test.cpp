@@ -9,7 +9,7 @@
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
 
-namespace {;
+namespace {
 
 void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel_out, const char * const expected_sha1[3], double expected_snr)
 {

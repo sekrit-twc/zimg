@@ -4,8 +4,8 @@
 #include "operation.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
 std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu)
 {

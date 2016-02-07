@@ -2,9 +2,9 @@
 #include "matrix.h"
 #include "zassert.h"
 
-namespace zimg {;
+namespace zimg {
 
-namespace {;
+namespace {
 
 template <class T>
 struct Equals {

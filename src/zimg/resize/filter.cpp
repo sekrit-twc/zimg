@@ -10,10 +10,10 @@
 #include "common/zassert.h"
 #include "filter.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
-namespace {;
+namespace {
 
 const double PI = 3.14159265358979323846;
 

@@ -11,9 +11,9 @@
 #include <stdexcept>
 #include "zassert.h"
 
-namespace zimg {;
+namespace zimg {
 
-namespace _static_map {;
+namespace _static_map {
 
 struct strcmp_less {
 	bool operator()(const char *a, const char *b) const

@@ -8,7 +8,7 @@
 #include <cstdint>
 #include "ccdep.h"
 
-namespace zimg {;
+namespace zimg {
 
 extern const uint8_t xmm_mask_table_l alignas(16)[17][16];
 extern const uint8_t xmm_mask_table_r alignas(16)[17][16];

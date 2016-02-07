@@ -5,21 +5,21 @@
 
 #include <memory>
 
-namespace zimg {;
+namespace zimg {
 
 struct PixelFormat;
 
 enum class PixelType;
 enum class CPUClass;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace depth {;
+namespace depth {
 
 typedef void (*left_shift_func)(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
 typedef void (*depth_convert_func)(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);

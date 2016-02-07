@@ -5,20 +5,20 @@
 
 #include <memory>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
 struct PixelFormat;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace depth {;
+namespace depth {
 
 enum class DitherType;
 

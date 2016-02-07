@@ -8,8 +8,8 @@
 #include <type_traits>
 #include "common/propagate_const.h"
 
-namespace zimg {;
-namespace graph {;
+namespace zimg {
+namespace graph {
 
 // Special mask value with all bits set.
 const unsigned BUFFER_MAX = (unsigned)-1;

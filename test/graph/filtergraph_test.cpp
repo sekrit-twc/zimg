@@ -12,7 +12,7 @@
 #include "audit_buffer.h"
 #include "mock_filter.h"
 
-namespace {;
+namespace {
 
 template <class T>
 class AuditImage : public AuditBuffer<T> {

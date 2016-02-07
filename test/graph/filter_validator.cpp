@@ -19,7 +19,7 @@ extern "C" {
 #include "audit_buffer.h"
 #include "filter_validator.h"
 
-namespace {;
+namespace {
 
 void decode_sha1(const char *str, unsigned char digest[20])
 {

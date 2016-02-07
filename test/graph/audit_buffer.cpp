@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include "audit_buffer.h"
 
-namespace {;
+namespace {
 
 template <class InputIt, class T>
 bool contains_only(InputIt first, InputIt last, const T &value)

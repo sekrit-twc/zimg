@@ -10,10 +10,10 @@
 #include "operation_impl.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 class MatrixOperationC : public MatrixOperationImpl {
 public:

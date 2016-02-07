@@ -9,10 +9,10 @@
 #include "graphbuilder.h"
 #include "image_filter.h"
 
-namespace zimg {;
-namespace graph {;
+namespace zimg {
+namespace graph {
 
-namespace {;
+namespace {
 
 double chroma_shift_raw(GraphBuilder::ChromaLocationW loc, GraphBuilder::FieldParity)
 {

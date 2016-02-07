@@ -37,7 +37,7 @@ typedef struct tagBITMAPINFOHEADER {
 #pragma pack(pop)
 
 
-namespace {;
+namespace {
 
 static size_t bitmap_row_size(int width, int bit_count)
 {

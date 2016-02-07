@@ -12,9 +12,9 @@
 #include "filtergraph.h"
 #include "image_filter.h"
 
-namespace zimg {;
-namespace graph {;
-namespace {;
+namespace zimg {
+namespace graph {
+namespace {
 
 class ColorExtendFilter : public CopyFilter {
 	bool m_rgb;

@@ -25,10 +25,10 @@
   #define mylrintf lrintf
 #endif
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 #ifdef _MSC_VER
   float HF_(const char *str)

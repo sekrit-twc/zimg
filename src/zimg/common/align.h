@@ -3,7 +3,7 @@
 #ifndef ZIMG_ALIGN_H_
 #define ZIMG_ALIGN_H_
 
-namespace zimg {;
+namespace zimg {
 
 /**
  * 32-byte alignment allows the use of instructions up to AVX.

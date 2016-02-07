@@ -1,9 +1,9 @@
 #include "matrix3.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 double det2(double a00, double a01, double a10, double a11)
 {

@@ -83,19 +83,19 @@
 #include <memory>
 #include <utility>
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace unresize {;
+namespace unresize {
 
 struct UnresizeConversion {
 	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;

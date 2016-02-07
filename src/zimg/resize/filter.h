@@ -6,8 +6,8 @@
 #include <cstddef>
 #include "common/alloc.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
 /**
  * Functor to compute filter taps.

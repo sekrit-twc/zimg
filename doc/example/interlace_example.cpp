@@ -13,7 +13,7 @@
 #include "argparse.h"
 #include "mmap.h"
 
-namespace {;
+namespace {
 
 struct Arguments {
 	const char *inpath;

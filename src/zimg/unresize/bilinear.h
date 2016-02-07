@@ -5,8 +5,8 @@
 
 #include "common/alloc.h"
 
-namespace zimg {;
-namespace unresize {;
+namespace zimg {
+namespace unresize {
 
 /**
  * Execution context for unresize algorithm.

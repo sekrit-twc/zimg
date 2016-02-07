@@ -8,10 +8,10 @@
 #include "resize.h"
 #include "resize_impl.h"
 
-namespace zimg {;
-namespace resize {;
+namespace zimg {
+namespace resize {
 
-namespace {;
+namespace {
 
 bool resize_h_first(double xscale, double yscale)
 {

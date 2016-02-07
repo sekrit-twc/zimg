@@ -8,7 +8,7 @@
 #include "align.h"
 #include "zassert.h"
 
-namespace zimg {;
+namespace zimg {
 
 /**
  * Enum for supported input and output formats.

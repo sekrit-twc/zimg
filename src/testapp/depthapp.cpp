@@ -14,7 +14,7 @@
 #include "timer.h"
 #include "utils.h"
 
-namespace {;
+namespace {
 
 int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
 {

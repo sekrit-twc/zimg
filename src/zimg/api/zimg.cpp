@@ -18,7 +18,7 @@
 #include "resize/filter.h"
 #include "zimg.h"
 
-namespace {;
+namespace {
 
 const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
 

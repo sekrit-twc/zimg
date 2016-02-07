@@ -6,18 +6,18 @@
 #include <memory>
 #include "common/pixel.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class CPUClass;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 
 } // namespace graph
 
 
-namespace depth {;
+namespace depth {
 
 enum class DitherType {
 	DITHER_NONE,

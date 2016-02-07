@@ -9,7 +9,7 @@
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
 
-namespace {;
+namespace {
 
 void test_case(zimg::PixelType pixel_in, zimg::PixelType pixel_out, const char * const expected_sha1[3], double expected_snr)
 {

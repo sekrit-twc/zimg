@@ -12,10 +12,10 @@
 
 #include "depth/f16c_x86.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
 {

@@ -2,7 +2,7 @@
 
 #include "x86util.h"
 
-namespace zimg {;
+namespace zimg {
 
 #define REPEAT_1(x) x
 #define REPEAT_2(x) REPEAT_1(x), REPEAT_1(x)

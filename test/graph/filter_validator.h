@@ -3,11 +3,11 @@
 #ifndef ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_
 #define ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_
 
-namespace zimg {;
+namespace zimg {
 
 struct PixelFormat;
 
-namespace graph {;
+namespace graph {
 
 class ImageFilter;
 

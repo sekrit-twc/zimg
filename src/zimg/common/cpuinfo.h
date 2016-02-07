@@ -3,7 +3,7 @@
 #ifndef ZIMG_CPUINFO_H_
 #define ZIMG_CPUINFO_H_
 
-namespace zimg {;
+namespace zimg {
 
 /**
  * Enum for CPU type.

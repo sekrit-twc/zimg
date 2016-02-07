@@ -11,10 +11,10 @@
 #include "graph.h"
 #include "operation.h"
 
-namespace zimg {;
-namespace colorspace {;
+namespace zimg {
+namespace colorspace {
 
-namespace {;
+namespace {
 
 class ColorspaceConversionImpl final : public graph::ImageFilterBase {
 	std::vector<std::unique_ptr<Operation>> m_operations;

@@ -218,7 +218,7 @@ public:
 };
 
 
-namespace json {;
+namespace json {
 
 JsonValue parse_document(const std::string &str);
 

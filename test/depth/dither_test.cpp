@@ -7,7 +7,7 @@
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
 
-namespace {;
+namespace {
 
 void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const char *(*expected_sha1)[3])
 {

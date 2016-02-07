@@ -8,11 +8,11 @@
 #include <utility>
 #include "image_buffer.h"
 
-namespace zimg {;
+namespace zimg {
 
 enum class PixelType;
 
-namespace graph {;
+namespace graph {
 
 /**
  * Interface for image filters.

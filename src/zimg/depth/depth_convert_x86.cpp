@@ -5,10 +5,10 @@
 #include "depth_convert_x86.h"
 #include "f16c_x86.h"
 
-namespace zimg {;
-namespace depth {;
+namespace zimg {
+namespace depth {
 
-namespace {;
+namespace {
 
 left_shift_func select_left_shift_func_sse2(PixelType pixel_in, PixelType pixel_out)
 {

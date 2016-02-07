@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include "graph/filter_validator.h"
 
-namespace {;
+namespace {
 
 void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_factor, double shift, double subwidth_factor, const char *(*expected_sha1)[3])
 {
