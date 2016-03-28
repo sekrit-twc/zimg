@@ -71,6 +71,34 @@ public:
 	}
 };
 
+class Smpte2084GammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = smpte_2084_transfer(x);
+			}
+		}
+	}
+};
+
+class Smpte2084InverseGammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = smpte_2084_inverse_transfer(x);
+			}
+		}
+	}
+};
+
 class Rec2020CLToRGBOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
@@ -195,6 +223,32 @@ float rec_709_inverse_gamma(float x)
 	return x;
 }
 
+float smpte_2084_transfer(float x)
+{
+#if defined(_MSC_VER) && defined(_M_IX86)
+	unsigned w = _control87(0, 0);
+	_control87(_PC_24, _MCW_PC);
+#endif
+	x = _zimg_powf(((SMPTE_2084_C1 + SMPTE_2084_C2 * _zimg_powf(x, SMPTE_2084_N)) / (1.0f + SMPTE_2084_C3 * _zimg_powf(x, SMPTE_2084_N))), SMPTE_2084_M);
+#if defined(_MSC_VER) && defined(_M_IX86)
+	_control87(w, _MCW_PC);
+#endif
+	return x;
+}
+
+float smpte_2084_inverse_transfer(float x)
+{
+#if defined(_MSC_VER) && defined(_M_IX86)
+	unsigned w = _control87(0, 0);
+	_control87(_PC_24, _MCW_PC);
+#endif
+	x = _zimg_powf((std::max((_zimg_powf(x, 1.0f / SMPTE_2084_M) - SMPTE_2084_C1 ), 0.0f))/(SMPTE_2084_C2 - SMPTE_2084_C3 * _zimg_powf(x, 1.0f / SMPTE_2084_M)), 1.0f / SMPTE_2084_N);
+#if defined(_MSC_VER) && defined(_M_IX86)
+	_control87(w, _MCW_PC);
+#endif
+	return x;
+}
+
 
 MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 {
@@ -227,6 +281,16 @@ std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu)
 std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
 	return ztd::make_unique<Rec709InverseGammaOperationC>();
+}
+
+std::unique_ptr<Operation> create_smpte2084_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<Smpte2084GammaOperationC>();
+}
+
+std::unique_ptr<Operation> create_smpte2084_inverse_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<Smpte2084InverseGammaOperationC>();
 }
 
 std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)
