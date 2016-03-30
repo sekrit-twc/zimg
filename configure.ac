@@ -44,22 +44,29 @@ AS_IF(
 )
 
 
-AC_ARG_ENABLE([x86simd], AS_HELP_STRING([--enable-x86simd], [Enable optimisations for x86 CPUs.]))
-
-AS_IF([test "x$enable_x86simd" = "xyes"], [AC_DEFINE([ZIMG_X86])])
-
-AM_CONDITIONAL([X86SIMD], [test "x$enable_x86simd" = "xyes"])
+AC_ARG_ENABLE([simd], AS_HELP_STRING([--disable-simd], [Disable SIMD code. (default=no)]))
 
 
 AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. vszimg may fail.]))
 AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
 
+X86="no"
+
 AS_CASE(
   [$host_cpu],
-  [i?86],   [BITS="32"],
-  [x86_64], [BITS="64"],
-  [AS_IF([test "x$enable_x86simd" = "xyes"], [AC_MSG_ERROR([--enable-x86simd was passed but host CPU type is not x86.])])]
+  [i?86],   [BITS="32" X86="yes"],
+  [x86_64], [BITS="64" X86="yes"],
 )
+
+AS_IF(
+      [test "x$X86" = "xyes"],
+      [
+       AS_IF([test "x$enable_simd" != "xno"], [AC_DEFINE([ZIMG_X86])])
+
+       AM_CONDITIONAL([X86SIMD], [test "x$enable_simd" != "xno"])
+      ]
+)
+
 
 AS_CASE(
    [$host_os],
