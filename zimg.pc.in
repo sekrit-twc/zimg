@@ -8,4 +8,5 @@ Description: Resizing, colorspace, and bit depth conversion library
 Version: @VERSION@
 
 Libs: -L${libdir} -lzimg
+Libs.private: -lstdc++
 Cflags: -I${includedir}
