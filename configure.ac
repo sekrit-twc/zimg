@@ -50,6 +50,9 @@ AC_ARG_ENABLE([simd], AS_HELP_STRING([--disable-simd], [Disable SIMD code. (defa
 AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. vszimg may fail.]))
 AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
 
+AS_IF([test "x$STL_LIBS" == "x"], [STL_LIBS="-lstdc++"])
+AC_SUBST([STL_LIBS], [$STL_LIBS])
+
 X86="no"
 
 AS_CASE(

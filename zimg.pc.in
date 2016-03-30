@@ -7,5 +7,8 @@ Name: zimg
 Description: Resizing, colorspace, and bit depth conversion library
 Version: @VERSION@
 
+# If building a static library against a C++ runtime other than libstdc++,
+# define STL_LIBS when running configure.
 Libs: -L${libdir} -lzimg
+Libs.private: @STL_LIBS@
 Cflags: -I${includedir}
