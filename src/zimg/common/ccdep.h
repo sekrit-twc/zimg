@@ -17,7 +17,7 @@
   #define RESTRICT
 #endif
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
   #define thread_local __thread
 #endif
 
