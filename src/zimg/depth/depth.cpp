@@ -36,20 +36,18 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 {
 }
 
-std::unique_ptr<graph::ImageFilter> DepthConversion::create() const
+std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 {
-	try {
-		if (pixel_in == pixel_out)
-			return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
-		else if (is_lossless_conversion(pixel_in, pixel_out))
-			return create_left_shift(width, height, pixel_in, pixel_out, cpu);
-		else if (pixel_is_float(pixel_out.type))
-			return create_convert_to_float(width, height, pixel_in, pixel_out, cpu);
-		else
-			return create_dither(dither_type, width, height, pixel_in, pixel_out, cpu);
-	} catch (const std::bad_alloc &) {
-		throw error::OutOfMemory{};
-	}
+	if (pixel_in == pixel_out)
+		return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
+	else if (is_lossless_conversion(pixel_in, pixel_out))
+		return create_left_shift(width, height, pixel_in, pixel_out, cpu);
+	else if (pixel_is_float(pixel_out.type))
+		return create_convert_to_float(width, height, pixel_in, pixel_out, cpu);
+	else
+		return create_dither(dither_type, width, height, pixel_in, pixel_out, cpu);
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace depth
