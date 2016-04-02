@@ -119,7 +119,7 @@ void validate_state(const GraphBuilder::state &state)
 		throw error::UnsupportedSubsampling{ "subsampling greater than 4x is not supported" };
 
 	if (state.width % (1 << state.subsample_w) || state.height % (1 << state.subsample_h))
-		throw error::ImageNotDivislbe{ "image dimensions must be divisible by subsampling factor" };
+		throw error::ImageNotDivisible{ "image dimensions must be divisible by subsampling factor" };
 
 	if (state.depth > pixel_depth(state.type))
 		throw error::BitDepthOverflow{ "bit depth exceeds limits of type" };

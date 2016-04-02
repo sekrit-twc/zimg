@@ -32,7 +32,7 @@ DECLARE_EXCEPTION(UserCallbackFailed, Exception)
 DECLARE_EXCEPTION(LogicError, Exception)
 DECLARE_EXCEPTION(GreyscaleSubsampling, LogicError)
 DECLARE_EXCEPTION(ColorFamilyMismatch, LogicError)
-DECLARE_EXCEPTION(ImageNotDivislbe, LogicError)
+DECLARE_EXCEPTION(ImageNotDivisible, LogicError)
 DECLARE_EXCEPTION(BitDepthOverflow, LogicError)
 
 DECLARE_EXCEPTION(IllegalArgument, Exception)

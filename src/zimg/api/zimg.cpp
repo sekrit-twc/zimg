@@ -66,7 +66,7 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 
 	CATCH(GreyscaleSubsampling,    ZIMG_ERROR_GREYSCALE_SUBSAMPLING)
 	CATCH(ColorFamilyMismatch,     ZIMG_ERROR_COLOR_FAMILY_MISMATCH)
-	CATCH(ImageNotDivislbe,        ZIMG_ERROR_IMAGE_NOT_DIVISIBLE)
+	CATCH(ImageNotDivisible,       ZIMG_ERROR_IMAGE_NOT_DIVISIBLE)
 	CATCH(BitDepthOverflow,        ZIMG_ERROR_BIT_DEPTH_OVERFLOW)
 	CATCH(LogicError,              ZIMG_ERROR_LOGIC)
 
