@@ -23,17 +23,21 @@ namespace resize {
 
 struct FilterContext;
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
+#define DECLARE_IMPL_H(cpu) \
+std::unique_ptr<graph::ImageFilter> create_resize_impl_h_##cpu(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+#define DECLARE_IMPL_V(cpu) \
+std::unique_ptr<graph::ImageFilter> create_resize_impl_v_##cpu(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
+DECLARE_IMPL_H(sse);
+DECLARE_IMPL_H(sse2);
+DECLARE_IMPL_H(avx);
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx(const FilterContext &context, unsigned height, PixelType type, unsigned depth);
+DECLARE_IMPL_V(sse);
+DECLARE_IMPL_V(sse2);
+DECLARE_IMPL_V(avx);
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
-
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
-
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
+#undef DECLARE_IMPL_H
+#undef DECLARE_IMPL_V
 
 std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
 

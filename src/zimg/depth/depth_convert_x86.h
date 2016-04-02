@@ -10,25 +10,25 @@
 namespace zimg {
 namespace depth {
 
-void left_shift_b2b_sse2(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
+#define DECLARE_LEFT_SHIFT(x, cpu) \
+void left_shift_##x##_##cpu(const void *src, void *dst, unsigned shift, unsigned left, unsigned right)
+#define DECLARE_DEPTH_CONVERT(x, cpu) \
+void depth_convert_##x##_##cpu(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 
-void left_shift_b2w_sse2(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
+DECLARE_LEFT_SHIFT(b2b, sse2);
+DECLARE_LEFT_SHIFT(b2w, sse2);
+DECLARE_LEFT_SHIFT(w2b, sse2);
+DECLARE_LEFT_SHIFT(w2w, sse2);
 
-void left_shift_w2b_sse2(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
+DECLARE_DEPTH_CONVERT(b2f, sse2);
+DECLARE_DEPTH_CONVERT(w2f, sse2);
+DECLARE_DEPTH_CONVERT(b2h, avx2);
+DECLARE_DEPTH_CONVERT(b2f, avx2);
+DECLARE_DEPTH_CONVERT(w2h, avx2);
+DECLARE_DEPTH_CONVERT(w2f, avx2);
 
-void left_shift_w2w_sse2(const void *src, void *dst, unsigned shift, unsigned left, unsigned right);
-
-void depth_convert_b2f_sse2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
-
-void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
-
-void depth_convert_b2h_avx2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
-
-void depth_convert_b2f_avx2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
-
-void depth_convert_w2h_avx2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
-
-void depth_convert_w2f_avx2(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right);
+#undef DECLARE_LEFT_SHIFT
+#undef DECLARE_DEPTH_CONVERT
 
 left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_out, CPUClass cpu);
 

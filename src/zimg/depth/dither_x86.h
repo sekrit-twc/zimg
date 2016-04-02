@@ -10,47 +10,27 @@
 namespace zimg {
 namespace depth {
 
-void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+#define DECLARE_ORDERED_DITHER(x, cpu) \
+void ordered_dither_##x##_##cpu(const float *dither, unsigned dither_offset, unsigned dither_mask, \
+                                const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 
-void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+DECLARE_ORDERED_DITHER(b2b, sse2);
+DECLARE_ORDERED_DITHER(b2w, sse2);
+DECLARE_ORDERED_DITHER(w2b, sse2);
+DECLARE_ORDERED_DITHER(w2w, sse2);
+DECLARE_ORDERED_DITHER(f2b, sse2);
+DECLARE_ORDERED_DITHER(f2w, sse2);
 
-void ordered_dither_w2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+DECLARE_ORDERED_DITHER(b2b, avx2);
+DECLARE_ORDERED_DITHER(b2w, avx2);
+DECLARE_ORDERED_DITHER(w2b, avx2);
+DECLARE_ORDERED_DITHER(w2w, avx2);
+DECLARE_ORDERED_DITHER(h2b, avx2);
+DECLARE_ORDERED_DITHER(h2w, avx2);
+DECLARE_ORDERED_DITHER(f2b, avx2);
+DECLARE_ORDERED_DITHER(f2w, avx2);
 
-void ordered_dither_w2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_b2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_b2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_w2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_w2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_h2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_h2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_f2b_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
-
-void ordered_dither_f2w_avx2(const float *dither, unsigned dither_offset, unsigned dither_mask,
-                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right);
+#undef DECLARE_ORDERED_DITHER
 
 dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
