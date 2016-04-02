@@ -21,4 +21,12 @@
   #define thread_local __thread
 #endif
 
+#ifdef ZIMG_X86
+  #ifdef __clang__
+    #define F16CINTRIN_H <x86intrin.h>
+  #else
+    #define F16CINTRIN_H <immintrin.h>
+  #endif
+#endif
+
 #endif /* ZIMG_CCDEP_H_ */

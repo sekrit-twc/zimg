@@ -1,18 +1,19 @@
 #ifdef ZIMG_X86
 
+#include "common/ccdep.h"
+
 #include <cstdint>
 #include <immintrin.h>
-#ifdef __clang__
-  #include <x86intrin.h>
-#endif
+#include F16CINTRIN_H
 #include "common/align.h"
-#include "common/ccdep.h"
 
 #define HAVE_CPU_SSE2
 #define HAVE_CPU_AVX2
   #include "common/x86util.h"
 #undef HAVE_CPU_SSE2
 #undef HAVE_CPU_AVX2
+
+#include "dither_x86.h"
 
 namespace zimg {
 namespace depth {
