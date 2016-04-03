@@ -21,32 +21,6 @@ namespace resize {
 
 namespace {
 
-inline FORCE_INLINE void scatter8_ps(float *dst0, float *dst1, float *dst2, float *dst3,
-                                     float *dst4, float *dst5, float *dst6, float *dst7, __m256 y)
-{
-	__m128 x;
-
-	x = _mm256_castps256_ps128(y);
-
-	_mm_store_ss(dst0, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-	_mm_store_ss(dst1, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-	_mm_store_ss(dst2, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3));
-	_mm_store_ss(dst3, x);
-
-	x = _mm256_castps256_ps128(_mm256_permute2f128_ps(y, y, 0x01));
-
-	_mm_store_ss(dst4, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-	_mm_store_ss(dst5, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-	_mm_store_ss(dst6, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3));
-	_mm_store_ss(dst7, x);
-}
-
 inline FORCE_INLINE void mm256_store_left(float *dst, __m256 x, unsigned count)
 {
 	mm256_store_left_ps(dst, x, count * 4);
@@ -55,36 +29,6 @@ inline FORCE_INLINE void mm256_store_left(float *dst, __m256 x, unsigned count)
 inline FORCE_INLINE void mm256_store_right(float *dst, __m256 x, unsigned count)
 {
 	mm256_store_right_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void MM_TRANSPOSE8_PS(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
-{
-	__m256 t0, t1, t2, t3, t4, t5, t6, t7;
-	__m256 tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
-	t0 = _mm256_unpacklo_ps(row0, row1);
-	t1 = _mm256_unpackhi_ps(row0, row1);
-	t2 = _mm256_unpacklo_ps(row2, row3);
-	t3 = _mm256_unpackhi_ps(row2, row3);
-	t4 = _mm256_unpacklo_ps(row4, row5);
-	t5 = _mm256_unpackhi_ps(row4, row5);
-	t6 = _mm256_unpacklo_ps(row6, row7);
-	t7 = _mm256_unpackhi_ps(row6, row7);
-	tt0 = _mm256_shuffle_ps(t0, t2, _MM_SHUFFLE(1, 0, 1, 0));
-	tt1 = _mm256_shuffle_ps(t0, t2, _MM_SHUFFLE(3, 2, 3, 2));
-	tt2 = _mm256_shuffle_ps(t1, t3, _MM_SHUFFLE(1, 0, 1, 0));
-	tt3 = _mm256_shuffle_ps(t1, t3, _MM_SHUFFLE(3, 2, 3, 2));
-	tt4 = _mm256_shuffle_ps(t4, t6, _MM_SHUFFLE(1, 0, 1, 0));
-	tt5 = _mm256_shuffle_ps(t4, t6, _MM_SHUFFLE(3, 2, 3, 2));
-	tt6 = _mm256_shuffle_ps(t5, t7, _MM_SHUFFLE(1, 0, 1, 0));
-	tt7 = _mm256_shuffle_ps(t5, t7, _MM_SHUFFLE(3, 2, 3, 2));
-	row0 = _mm256_permute2f128_ps(tt0, tt4, 0x20);
-	row1 = _mm256_permute2f128_ps(tt1, tt5, 0x20);
-	row2 = _mm256_permute2f128_ps(tt2, tt6, 0x20);
-	row3 = _mm256_permute2f128_ps(tt3, tt7, 0x20);
-	row4 = _mm256_permute2f128_ps(tt0, tt4, 0x31);
-	row5 = _mm256_permute2f128_ps(tt1, tt5, 0x31);
-	row6 = _mm256_permute2f128_ps(tt2, tt6, 0x31);
-	row7 = _mm256_permute2f128_ps(tt3, tt7, 0x31);
 }
 
 void transpose_line_8x8_ps(float *dst,
@@ -104,7 +48,7 @@ void transpose_line_8x8_ps(float *dst,
 		x6 = _mm256_load_ps(src_p6 + j);
 		x7 = _mm256_load_ps(src_p7 + j);
 
-		MM_TRANSPOSE8_PS(x0, x1, x2, x3, x4, x5, x6, x7);
+		mm256_transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
 		_mm256_store_ps(dst + 0, x0);
 		_mm256_store_ps(dst + 8, x1);
@@ -212,7 +156,7 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256 x = XITER(j, XARGS);
-		scatter8_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm256_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -227,7 +171,7 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 		x6 = XITER(j + 6, XARGS);
 		x7 = XITER(j + 7, XARGS);
 
-		MM_TRANSPOSE8_PS(x0, x1, x2, x3, x4, x5, x6, x7);
+		mm256_transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
 		_mm256_store_ps(dst_p0 + j, x0);
 		_mm256_store_ps(dst_p1 + j, x1);
@@ -241,7 +185,7 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m256 x = XITER(j, XARGS);
-		scatter8_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm256_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
 #undef XITER
 #undef XARGS

@@ -30,53 +30,6 @@ inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned
 	mm_store_right_si128((__m128i *)dst, x, count * 2);
 }
 
-inline FORCE_INLINE void scatter8_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
-                                        uint16_t *dst4, uint16_t *dst5, uint16_t *dst6, uint16_t *dst7,
-                                        __m128i x)
-{
-	*dst0 = _mm_extract_epi16(x, 0);
-	*dst1 = _mm_extract_epi16(x, 1);
-	*dst2 = _mm_extract_epi16(x, 2);
-	*dst3 = _mm_extract_epi16(x, 3);
-	*dst4 = _mm_extract_epi16(x, 4);
-	*dst5 = _mm_extract_epi16(x, 5);
-	*dst6 = _mm_extract_epi16(x, 6);
-	*dst7 = _mm_extract_epi16(x, 7);
-}
-
-inline FORCE_INLINE void transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3, __m128i &x4, __m128i &x5, __m128i &x6, __m128i &x7)
-{
-	__m128i t0, t1, t2, t3, t4, t5, t6, t7;
-	__m128i tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
-
-	t0 = _mm_unpacklo_epi16(x0, x1);
-	t1 = _mm_unpacklo_epi16(x2, x3);
-	t2 = _mm_unpacklo_epi16(x4, x5);
-	t3 = _mm_unpacklo_epi16(x6, x7);
-	t4 = _mm_unpackhi_epi16(x0, x1);
-	t5 = _mm_unpackhi_epi16(x2, x3);
-	t6 = _mm_unpackhi_epi16(x4, x5);
-	t7 = _mm_unpackhi_epi16(x6, x7);
-
-	tt0 = _mm_unpacklo_epi32(t0, t1);
-	tt1 = _mm_unpackhi_epi32(t0, t1);
-	tt2 = _mm_unpacklo_epi32(t2, t3);
-	tt3 = _mm_unpackhi_epi32(t2, t3);
-	tt4 = _mm_unpacklo_epi32(t4, t5);
-	tt5 = _mm_unpackhi_epi32(t4, t5);
-	tt6 = _mm_unpacklo_epi32(t6, t7);
-	tt7 = _mm_unpackhi_epi32(t6, t7);
-
-	x0 = _mm_unpacklo_epi64(tt0, tt2);
-	x1 = _mm_unpackhi_epi64(tt0, tt2);
-	x2 = _mm_unpacklo_epi64(tt1, tt3);
-	x3 = _mm_unpackhi_epi64(tt1, tt3);
-	x4 = _mm_unpacklo_epi64(tt4, tt6);
-	x5 = _mm_unpackhi_epi64(tt4, tt6);
-	x6 = _mm_unpacklo_epi64(tt5, tt7);
-	x7 = _mm_unpackhi_epi64(tt5, tt7);
-}
-
 void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
                               const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                               unsigned left, unsigned right)
@@ -93,7 +46,7 @@ void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint1
 		x6 = _mm_load_si128((const __m128i *)(src_p6 + j));
 		x7 = _mm_load_si128((const __m128i *)(src_p7 + j));
 
-		transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
+		mm_transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
 
 		_mm_store_si128((__m128i *)(dst + 0), x0);
 		_mm_store_si128((__m128i *)(dst + 8), x1);
@@ -295,7 +248,7 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128i x = XITER(j, XARGS);
-		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -310,7 +263,7 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 		x6 = XITER(j + 6, XARGS);
 		x7 = XITER(j + 7, XARGS);
 
-		transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
+		mm_transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
 
 		_mm_store_si128((__m128i *)(dst_p0 + j), x0);
 		_mm_store_si128((__m128i *)(dst_p1 + j), x1);
@@ -324,7 +277,7 @@ void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRI
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128i x = XITER(j, XARGS);
-		scatter8_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
 	}
 #undef XITER
 #undef XARGS
