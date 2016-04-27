@@ -18,4 +18,4 @@
   #define _zassert_d(x, msg) _zassert(x, msg)
 #endif
 
-#endif /* ZIMG_ZASSERT_H */
+#endif /* ZIMG_ZASSERT_H_ */
