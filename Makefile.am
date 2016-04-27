@@ -122,7 +122,8 @@ libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
 libf16c_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = src/zimg/depth/depth_convert_avx2.cpp \
-					 src/zimg/depth/dither_avx2.cpp
+					 src/zimg/depth/dither_avx2.cpp \
+					 src/zimg/resize/resize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
 libavx2_la_CPPFLAGS = -I$(srcdir)/src/zimg
@@ -251,6 +252,7 @@ test_unit_test_SOURCES += test/colorspace/colorspace_avx_test.cpp \
 						  test/depth/f16c_ivb_test.cpp \
 						  test/depth/f16c_sse2_test.cpp \
 						  test/resize/resize_impl_avx_test.cpp \
+						  test/resize/resize_impl_avx2_test.cpp \
 						  test/resize/resize_impl_sse_test.cpp \
 						  test/resize/resize_impl_sse2_test.cpp
 

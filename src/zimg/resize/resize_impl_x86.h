@@ -31,10 +31,12 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_##cpu(const FilterConte
 DECLARE_IMPL_H(sse);
 DECLARE_IMPL_H(sse2);
 DECLARE_IMPL_H(avx);
+DECLARE_IMPL_H(avx2);
 
 DECLARE_IMPL_V(sse);
 DECLARE_IMPL_V(sse2);
 DECLARE_IMPL_V(avx);
+DECLARE_IMPL_V(avx2);
 
 #undef DECLARE_IMPL_H
 #undef DECLARE_IMPL_V

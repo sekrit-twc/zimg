@@ -43,6 +43,7 @@
     <ClCompile Include="..\..\src\zimg\resize\resize.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx.cpp" />
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx2.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse2.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_x86.cpp" />

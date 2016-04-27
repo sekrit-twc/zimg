@@ -141,6 +141,9 @@
     <ClCompile Include="..\..\test\depth\depth_convert_avx2_test.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\resize\resize_impl_avx2_test.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
