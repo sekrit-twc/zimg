@@ -56,7 +56,6 @@ TEST(ResizeImplAVX2Test, test_resize_h_f16)
 		{ "a1d899272a411f3fb954b3b82f9d16a8f975a5f8" },
 		{ "4b9f47f282a606b2086354767db6ccd96d0b4e1e" }
 	};
-	const double expected_snr = 120.0;
 
 	test_case(zimg::resize::BilinearFilter{}, true, src_w, h, dst_w, h, format, expected_sha1[0], NAN);
 	test_case(zimg::resize::Spline16Filter{}, true, src_w, h, dst_w, h, format, expected_sha1[1], NAN);
@@ -78,7 +77,6 @@ TEST(ResizeImplAVX2Test, test_resize_v_f16)
 		{ "0831975c4802cd243d3978f0874c05eba590ab08" },
 		{ "b4bb1a5a6654c9b9a45928c852575f79de6bf710" }
 	};
-	const double expected_snr = 120.0;
 
 	test_case(zimg::resize::BilinearFilter{}, false, w, src_h, w, dst_h, type, expected_sha1[0], NAN);
 	test_case(zimg::resize::Spline16Filter{}, false, w, src_h, w, dst_h, type, expected_sha1[1], NAN);
