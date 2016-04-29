@@ -482,6 +482,8 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	if (m_state.parity != target.parity)
 		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
 
+	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::CPU_NONE);
+
 	while (true) {
 		if (needs_colorspace(m_state, target)) {
 			resize_spec spec{ m_state };
@@ -509,9 +511,19 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
 			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
+			// Convert to the target pixel format to reduce the required number of conversions.
+			if (target.type == PixelType::WORD)
+				convert_depth(PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params);
+			if (target.type == PixelType::HALF && fast_f16)
+				convert_depth(PixelType::HALF, params);
+			if (target.type == PixelType::FLOAT)
+				convert_depth(PixelType::FLOAT, params);
+
+			// If neither the source nor target pixel format is directly supported, select a different format.
 			if (m_state.type == PixelType::BYTE)
 				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params);
-			if (m_state.type == PixelType::HALF && !cpu_has_fast_f16(params->cpu))
+			// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
+			if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
 				convert_depth(PixelType::FLOAT, params);
 
 			resize_spec spec{ m_state };
