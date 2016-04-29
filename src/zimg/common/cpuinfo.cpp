@@ -18,7 +18,7 @@ namespace {
  * @param eax argument to instruction
  * @param ecx argument to instruction
  */
-inline void do_cpuid(int regs[4], int eax, int ecx)
+void do_cpuid(int regs[4], int eax, int ecx)
 {
 #if defined(_MSC_VER)
 	__cpuidex(regs, eax, ecx);
