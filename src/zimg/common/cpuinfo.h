@@ -20,6 +20,8 @@ enum class CPUClass {
 #endif // ZIMG_X86
 };
 
+bool cpu_has_fast_f16(CPUClass cpu);
+
 
 #ifdef ZIMG_X86
 

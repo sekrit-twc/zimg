@@ -511,7 +511,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 		} else if (needs_resize(m_state, target)) {
 			if (m_state.type == PixelType::BYTE)
 				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params);
-			if (m_state.type == PixelType::HALF)
+			if (m_state.type == PixelType::HALF && !cpu_has_fast_f16(params->cpu))
 				convert_depth(PixelType::FLOAT, params);
 
 			resize_spec spec{ m_state };
