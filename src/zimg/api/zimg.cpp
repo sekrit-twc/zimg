@@ -323,7 +323,7 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 		out->subsample_w = src.subsample_w;
 		out->subsample_h = src.subsample_h;
 
-		// Handle colorspace constats separately.
+		// Handle colorspace constants separately.
 		out->color = translate_color_family(src.color_family);
 
 		out->depth = src.depth ? src.depth : zimg::pixel_depth(out->type);
