@@ -88,16 +88,6 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 	return code;
 }
 
-zimg_error_code_e handle_exception(const std::bad_alloc &e)
-{
-	zimg_error_code_e code = ZIMG_ERROR_OUT_OF_MEMORY;
-
-	record_exception_message(e);
-	g_last_error = code;
-
-	return code;
-}
-
 template <class Map, class Key>
 typename Map::mapped_type search_enum_map(const Map &map, const Key &key, const char *msg)
 {
@@ -583,9 +573,6 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		                                   complete_graph().release();
 	} catch (const zimg::error::Exception &) {
 		handle_exception(std::current_exception());
-		return nullptr;
-	} catch (const std::bad_alloc &e) {
-		handle_exception(e);
 		return nullptr;
 	}
 }
