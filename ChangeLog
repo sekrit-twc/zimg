@@ -1,3 +1,10 @@
+2.1:
+graph: optimize resizing to 4:4:4/RGB target
+graph: optimize resizing with different output pixel type
+x86: AVX and AVX2 code paths
+x86: fast half-precision support
+vszimg: deprecated and removed
+
 2.0.4:
 graph: fix possible infinite loop when converting integer to float
 
