@@ -187,7 +187,7 @@ std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder:
 		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_BOTTOM } },
 		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_BOTTOM } },
 	};
-	return search_enum_map(map, chromaloc, "unregonized chroma location");
+	return search_enum_map(map, chromaloc, "unrecognized chroma location");
 }
 
 zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e matrix)
@@ -246,7 +246,7 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 		{ ZIMG_DITHER_RANDOM,          DitherType::DITHER_RANDOM },
 		{ ZIMG_DITHER_ERROR_DIFFUSION, DitherType::DITHER_ERROR_DIFFUSION },
 	};
-	return search_enum_map(map, dither, "urecognized dither type");
+	return search_enum_map(map, dither, "unrecognized dither type");
 }
 
 std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
