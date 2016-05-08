@@ -20,7 +20,7 @@ AC_ARG_ENABLE([unit-test], AS_HELP_STRING([--enable-unit-test], [Compile unit te
 AC_ARG_ENABLE([debug],     AS_HELP_STRING([--enable-debug],     [Enable compilation options required for debugging. (default=no)]))
 AC_ARG_ENABLE([simd],      AS_HELP_STRING([--disable-simd],     [Disable SIMD code. (default=no)]))
 
-AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. vszimg may fail.]))
+AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. Testapp will be single-threaded.]))
 AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
 
 AS_IF([test "x$enable_unit_test" = "xyes"],
@@ -53,7 +53,7 @@ AS_IF([test "x$X86" = "xyes" && test "x$enable_simd" != "xno"],
         enable_x86_simd=yes
       ])
 
-  
+
 AM_CONDITIONAL([TESTAPP],   [test "x$enable_testapp" = "xyes"])
 AM_CONDITIONAL([EXAMPLES],  [test "x$enable_example" = "xyes"])
 AM_CONDITIONAL([UNIT_TEST], [test "x$enable_unit_test" = "xyes"])
