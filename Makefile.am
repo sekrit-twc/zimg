@@ -4,7 +4,7 @@ SUBDIRS = $(CONFIG_SUBDIRS)
 
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
-AM_CXXFLAGS = -std=c++11 $(commonflags)
+AM_CXXFLAGS = -std=gnu++11 $(commonflags)
 AM_CFLAGS = $(commonflags)
 
 
