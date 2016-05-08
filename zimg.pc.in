@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: zimg
-Description: Resizing, colorspace, and bit depth conversion library
+Description: Scaling, colorspace conversion, and dithering library
 Version: @VERSION@
 
 # If building a static library against a C++ runtime other than libstdc++,
