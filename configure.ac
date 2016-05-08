@@ -35,7 +35,8 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
 
 
 AS_IF([test "x$enable_debug" = "xyes"],
-      [AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])])
+      [AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])],
+      [AC_SUBST([DEBUGCFLAGS], ["-DNDEBUG"])])
 
 AS_IF([test "x$STL_LIBS" == "x"], [STL_LIBS="-lstdc++"])
 AC_SUBST([STL_LIBS], [$STL_LIBS])
