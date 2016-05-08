@@ -45,6 +45,8 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/common/matrix.h \
 					 src/zimg/common/pixel.h \
 					 src/zimg/common/propagate_const.h \
+					 src/zimg/common/static_map.h \
+					 src/zimg/common/zassert.h \
 					 src/zimg/depth/depth_convert.cpp \
 					 src/zimg/depth/depth_convert.h \
 					 src/zimg/depth/depth.cpp \
@@ -183,7 +185,6 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/frame.cpp \
 					src/testapp/frame.h \
 					src/testapp/graphapp.cpp \
-					src/testapp/graphapp.h \
 					src/testapp/main.cpp \
 					src/testapp/pair_filter.cpp \
 					src/testapp/pair_filter.h \
@@ -194,7 +195,7 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/utils.cpp \
 					src/testapp/utils.h
 
-zimg_test_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)					
+zimg_test_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
 zimg_test_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg.la
 endif # TESTAPP
 
