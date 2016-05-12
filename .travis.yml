@@ -1,33 +1,65 @@
 sudo: false
 language: cpp
-compiler:
-  - gcc
+
+matrix:
+  include:
+    # GCC 4.9 for Coverity Scan.
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-4.9
+            - g++-4.9
+        coverity_scan:
+          project:
+            name: "sekrit-twc/zimg"
+            description: "Build submitted via Travis CI"
+          notification_email: noreply@example.com
+          build_command_prepend: "./autogen.sh && ./configure --enable-simd --enable-testapp --enable-examples; make clean"
+          build_command: "make"
+          branch_pattern: coverity_scan
+      env: 
+        - MY_CC: gcc-4.9
+        - MY_CXX: g++-4.9
+        # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+        #   via the "travis encrypt" command using the project repo's public key
+        - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
+    # GCC 5
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+      env:
+        - MY_CC: gcc-5
+        - MY_CXX: g++-5
+    # Clang/LLVM 3.8
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+      env:
+        - MY_CC: clang-3.8
+        - MY_CXX: clang++-3.8
+    # Apple Clang
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+      env:
+        - MY_CC: clang
+        - MY_CXX: clang++
+
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-env:
-  global:
-  # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-  #   via the "travis encrypt" command using the project repo's public key
-  - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - g++-5
-  coverity_scan:
-    project:
-      name: "sekrit-twc/zimg"
-      description: "Build submitted via Travis CI"
-    notification_email: noreply@example.com
-    build_command_prepend: "autoreconf -i && ./configure --enable-simd --enable-testapp --enable-examples; make clean"
-    build_command: "make"
-    branch_pattern: coverity_scan
+  - export CC=$MY_CC
+  - export CXX=$MY_CXX
 script:
-  - ./autogen.sh
-  - ./configure --enable-simd --enable-testapp --enable-example --enable-unit-test
-  - make clean
-  - make
-  - make test/unit_test
-  - ./test/unit_test
+  - ./.travis-script.sh
