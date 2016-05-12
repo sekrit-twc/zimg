@@ -1,6 +1,6 @@
 #ifdef ZIMG_X86
 
-#include <typeinfo>
+#include <cmath>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "resize/filter.h"
