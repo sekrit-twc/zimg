@@ -1,6 +1,5 @@
 #ifdef ZIMG_X86
 
-#include <typeinfo>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "resize/filter.h"
@@ -32,7 +31,7 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
 	auto filter_avx = builder.set_cpu(zimg::CPUClass::CPU_X86_AVX).create();
 
-	ASSERT_NE(typeid(*filter_c), typeid(*filter_avx)) << typeid(*filter_c).name() << " " << typeid(*filter_avx).name();
+	ASSERT_FALSE(assert_different_dynamic_type(filter_c.get(), filter_avx.get()));
 
 	validate_filter(filter_avx.get(), src_w, src_h, type, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_avx.get(), src_w, src_h, type, expected_snr);

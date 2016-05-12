@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <typeinfo>
 #include <utility>
 
 #include "common/alloc.h"
@@ -320,6 +321,18 @@ void dispatch(zimg::PixelType src_type, zimg::PixelType dst_type, Args&&... args
 
 } // namespace
 
+
+bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, const zimg::graph::ImageFilter *filter_b)
+{
+	const auto &tid_a = typeid(*filter_a);
+	const auto &tid_b = typeid(*filter_b);
+
+	if (tid_a == tid_b) {
+		ADD_FAILURE() << "expected different types: " << tid_a.name() << " vs " << tid_b.name();
+		return true;
+	}
+	return false;
+}
 
 void validate_filter(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
 {

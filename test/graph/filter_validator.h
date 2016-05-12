@@ -15,6 +15,8 @@ class ImageFilter;
 } // namespace zimg
 
 
+bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, const zimg::graph::ImageFilter *filter_b);
+
 void validate_filter(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height,
                      const zimg::PixelFormat &src_format, const char * const sha1_str[3] = nullptr);
 
