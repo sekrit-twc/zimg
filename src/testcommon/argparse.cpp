@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <stddef.h>
 #include "argparse.h"
 
 namespace {
@@ -191,10 +191,10 @@ void print_usage(const ArgparseCommandLine *cmd)
 }
 
 template <class MapType, class K = typename MapType::key_type, class T = typename MapType::mapped_type>
-T map_find_default(const MapType &map, const K &key, const T &default_value = T{})
+T map_find_default(const MapType &map, const K &key)
 {
 	auto it = map.find(key);
-	return it == map.end() ? default_value : it->second;
+	return it == map.end() ? T{} : it->second;
 }
 
 } // namespace
