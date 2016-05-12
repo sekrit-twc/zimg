@@ -406,12 +406,12 @@ public:
 		return m_f16c ? ceil_n(m_width, AlignmentOf<float>::value) * sizeof(float) : 0;
 	}
 
-	void init_context(void *ctx) const
+	void init_context(void *ctx) const override
 	{
 		std::fill_n(static_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
 	}
 
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const
+	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const override
 	{
 		const void *src_p = (*src)[i];
 		void *dst_p = (*dst)[i];

@@ -94,12 +94,12 @@ public:
 		return m_attr;
 	}
 
-	pair_unsigned get_required_row_range(unsigned i) const
+	pair_unsigned get_required_row_range(unsigned i) const override
 	{
 		return{ i << m_subsample_h, (i + 1) << m_subsample_h };
 	}
 
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const
+	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
 	{
 		return{ left << m_subsample_w, right << m_subsample_w };
 	}
@@ -308,14 +308,12 @@ class SourceNode final : public GraphNode {
 	ImageFilter::image_attributes m_attr;
 	unsigned m_subsample_w;
 	unsigned m_subsample_h;
-	bool m_color;
 public:
-	SourceNode(unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
+	SourceNode(unsigned id, unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h) :
 		GraphNode(id),
 		m_attr{ width, height, type },
 		m_subsample_w{ subsample_w },
-		m_subsample_h{ subsample_h },
-		m_color{ color }
+		m_subsample_h{ subsample_h }
 	{
 	}
 
@@ -795,7 +793,7 @@ public:
 			throw error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
 
 		m_node_set.emplace_back(
-			ztd::make_unique<SourceNode>(m_id_counter++, width, height, type, subsample_w, subsample_h, color));
+			ztd::make_unique<SourceNode>(m_id_counter++, width, height, type, subsample_w, subsample_h));
 		m_head = m_node_set.back().get();
 		m_node = m_head;
 
