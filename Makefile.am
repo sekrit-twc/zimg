@@ -16,9 +16,14 @@ EXTRA_DIST = zimg.pc.in
 
 noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
-noinst_LTLIBRARIES =
+noinst_LTLIBRARIES = libzimg_internal.la
 
-libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
+include_HEADERS = src/zimg/api/zimg.h \
+				  src/zimg/api/zimg++.hpp
+
+libzimg_internal_la_SOURCES = src/zimg/api/zimg.cpp \
+					 src/zimg/api/zimg.h \
+					 src/zimg/api/zimg++.hpp \
 					 src/zimg/colorspace/colorspace.cpp \
 					 src/zimg/colorspace/colorspace.h \
 					 src/zimg/colorspace/colorspace_param.cpp \
@@ -75,17 +80,13 @@ libzimg_la_SOURCES = src/zimg/api/zimg.cpp \
 					 src/zimg/unresize/unresize_impl.cpp \
 					 src/zimg/unresize/unresize_impl.h
 
-include_HEADERS = src/zimg/api/zimg.h \
-				  src/zimg/api/zimg++.hpp
-
-libzimg_la_CPPFLAGS = -I$(srcdir)/src/zimg
-libzimg_la_LDFLAGS = -no-undefined -version-info 2
+libzimg_internal_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 
 if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 
-libzimg_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
+libzimg_internal_la_SOURCES += src/zimg/colorspace/operation_impl_x86.cpp \
 					  src/zimg/colorspace/operation_impl_x86.h \
 					  src/zimg/common/x86util.cpp \
 					  src/zimg/common/x86util.h \
@@ -130,8 +131,12 @@ libavx2_la_SOURCES = src/zimg/depth/depth_convert_avx2.cpp \
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
 libavx2_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
-libzimg_la_LIBADD = libsse.la libsse2.la libavx.la libf16c.la libavx2.la
+libzimg_internal_la_LIBADD = libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 endif
+
+libzimg_la_SOURCES = .dummy.cpp
+libzimg_la_LIBADD = libzimg_internal.la
+libzimg_la_LDFLAGS = -no-undefined -version-info 2 -export-symbols-regex '^zimg_'
 
 
 libtestcommon_la_SOURCES = src/testcommon/aligned_malloc.h \
@@ -147,30 +152,30 @@ libtestcommon_la_SOURCES = src/testcommon/aligned_malloc.h \
 
 
 if EXAMPLES
-noinst_PROGRAMS += example/alpha_example \
-				   example/api_example \
-				   example/api_example_c \
-				   example/interlace_example
+noinst_PROGRAMS += doc/example/alpha_example \
+				   doc/example/api_example \
+				   doc/example/api_example_c \
+				   doc/example/interlace_example
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
 EXAMPLE_LDADD = libtestcommon.la libzimg.la
 
-example_alpha_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-example_alpha_example_SOURCES = doc/example/alpha_example.cpp
-example_alpha_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_alpha_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_alpha_example_SOURCES = doc/example/alpha_example.cpp
+doc_example_alpha_example_LDADD = $(EXAMPLE_LDADD)
 
-example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-example_api_example_SOURCES = doc/example/api_example.cpp
-example_api_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_api_example_SOURCES = doc/example/api_example.cpp
+doc_example_api_example_LDADD = $(EXAMPLE_LDADD)
 
-example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
-example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+doc_example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
+doc_example_api_example_c_LDADD = $(EXAMPLE_LDADD)
 
-example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-example_interlace_example_SOURCES = doc/example/interlace_example.cpp
-example_interlace_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_interlace_example_SOURCES = doc/example/interlace_example.cpp
+doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 
@@ -196,7 +201,7 @@ zimg_test_SOURCES = src/testapp/apps.h \
 					src/testapp/utils.h
 
 zimg_test_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
-zimg_test_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg.la
+zimg_test_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg_internal.la
 endif # TESTAPP
 
 
@@ -261,5 +266,5 @@ endif #X86SIMD
 
 test_unit_test_LDADD = test/extra/googletest/googletest/lib/libgtest.la \
 						test/libmusl_m.la \
-						libzimg.la
+						libzimg_internal.la
 endif # UNIT_TEST
