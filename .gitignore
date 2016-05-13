@@ -7,9 +7,6 @@
 *.user
 Debug
 Release
-UnitTest/unit_test
-UnitTest/unit_test.log
-UnitTest/unit_test.trs
 
 *.o
 *.la
@@ -17,11 +14,17 @@ UnitTest/unit_test.trs
 *.pc
 *.so
 *.dll
+*.log
+*.trs
 .libs
 .deps/
 .dirstamp
+doc/example/alpha_example
+doc/example/api_example
+doc/example/api_example_c
+doc/example/interlace_example
 m4/*
-!m4/ax_pthread.m4
+test/unit_test
 Makefile
 Makefile.in
 aclocal.m4
@@ -40,3 +43,6 @@ missing
 test-driver
 test-suite.log
 zimg-test
+
+!doc/example/Makefile
+!m4/ax_pthread.m4
