@@ -14,6 +14,29 @@ pkgconfig_DATA = zimg.pc
 EXTRA_DIST = zimg.pc.in
 
 
+exampledir = $(docdir)/example
+examplemiscdir = $(exampledir)/misc
+
+
+dist_doc_DATA = ChangeLog COPYING README.md
+
+dist_example_DATA = \
+	doc/example/alpha_example.cpp \
+	doc/example/api_example.cpp \
+	doc/example/api_example_c.c \
+	doc/example/interlace_example.cpp \
+	doc/example/Makefile
+
+dist_examplemisc_DATA = \
+	src/testcommon/aligned_malloc.h \
+	src/testcommon/argparse.cpp \
+	src/testcommon/argparse.h \
+	src/testcommon/mmap.cpp \
+	src/testcommon/mmap.h \
+	src/testcommon/win32_bitmap.cpp \
+	src/testcommon/win32_bitmap.o
+
+
 noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
 noinst_LTLIBRARIES = libzimg_internal.la
