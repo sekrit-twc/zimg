@@ -165,7 +165,7 @@ example_api_example_SOURCES = doc/example/api_example.cpp
 example_api_example_LDADD = $(EXAMPLE_LDADD)
 
 example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-example_api_example_c_SOURCES = doc/example/api_example_c.c doc/example/.dummy.cpp
+example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
 example_api_example_c_LDADD = $(EXAMPLE_LDADD)
 
 example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
