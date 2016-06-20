@@ -301,7 +301,11 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			graph->attach_filter_uv(conv.set_pixel_in(src_format).set_pixel_out(dst_format).create());
+			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }.
+				set_pixel_in(src_format).
+				set_pixel_out(dst_format);
+
+			graph->attach_filter_uv(conv.create());
 		}
 	}
 
@@ -467,7 +471,11 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			graph->attach_filter_uv(conv.set_pixel_in(src_format).set_pixel_out(dst_format).create());
+			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }.
+				set_pixel_in(src_format).
+				set_pixel_out(dst_format);
+
+			graph->attach_filter_uv(conv.create());
 		}
 	}
 
