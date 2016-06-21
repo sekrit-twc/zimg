@@ -24,6 +24,8 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacterist
 	switch (transfer) {
 	case TransferCharacteristics::TRANSFER_709:
 		return create_rec709_inverse_gamma_operation(cpu);
+	case TransferCharacteristics::TRANSFER_2084:
+		return create_smpte2084_inverse_gamma_operation(cpu);
 	default:
 		throw error::InternalError{ "unsupported transfer function" };
 	}
@@ -34,6 +36,8 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacterist
 	switch (transfer) {
 	case TransferCharacteristics::TRANSFER_709:
 		return create_rec709_gamma_operation(cpu);
+	case TransferCharacteristics::TRANSFER_2084:
+		return create_smpte2084_gamma_operation(cpu);
 	default:
 		throw error::InternalError{ "unsupported transfer function" };
 	}

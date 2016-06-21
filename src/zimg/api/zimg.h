@@ -265,6 +265,7 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_LINEAR      = 8,
 	ZIMG_TRANSFER_2020_10     = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_2020_12     = 15, /* Equivalent to 1. */
+	ZIMG_TRANSFER_2084        = 16,
 } zimg_transfer_characteristics_e;
 
 typedef enum zimg_color_primaries_e {

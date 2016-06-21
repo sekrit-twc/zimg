@@ -31,7 +31,8 @@ enum class MatrixCoefficients {
 enum class TransferCharacteristics {
 	TRANSFER_UNSPECIFIED,
 	TRANSFER_LINEAR,
-	TRANSFER_709
+	TRANSFER_709,
+	TRANSFER_2084
 };
 
 enum class ColorPrimaries {

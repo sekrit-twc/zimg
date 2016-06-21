@@ -211,13 +211,14 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 6> map{
+	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 7> map{
 		{ ZIMG_TRANSFER_709,         TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_UNSPECIFIED },
 		{ ZIMG_TRANSFER_601,         TransferCharacteristics::TRANSFER_709 },
+		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::TRANSFER_LINEAR },
 		{ ZIMG_TRANSFER_2020_10,     TransferCharacteristics::TRANSFER_709 },
 		{ ZIMG_TRANSFER_2020_12,     TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::TRANSFER_LINEAR },
+		{ ZIMG_TRANSFER_2084,        TransferCharacteristics::TRANSFER_2084 },
 	};
 	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
 }
