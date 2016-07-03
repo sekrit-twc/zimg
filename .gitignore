@@ -1,6 +1,11 @@
+# Output files from testapp.
 *.bin
 *.bmp
 *.yuv
+
+# MSVC files.
+*.db
+*.opendb
 *.opensdf
 *.sdf
 *.suo
@@ -8,6 +13,7 @@
 Debug
 Release
 
+# autotools files.
 *.o
 *.la
 *.lo
