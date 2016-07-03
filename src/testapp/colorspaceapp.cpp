@@ -125,8 +125,8 @@ int colorspace_main(int argc, char **argv)
 	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
-	bool yuv_in = args.csp_in.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
-	bool yuv_out = args.csp_out.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB;
+	bool yuv_in = args.csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB;
+	bool yuv_out = args.csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB;
 
 	try {
 		ImageFrame src_frame = imageframe::read(args.inpath, "i444s", args.width, args.height, zimg::PixelType::FLOAT, !!args.fullrange_in);

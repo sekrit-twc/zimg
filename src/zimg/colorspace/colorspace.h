@@ -19,26 +19,26 @@ class ImageFilter;
 namespace colorspace {
 
 enum class MatrixCoefficients {
-	MATRIX_UNSPECIFIED,
-	MATRIX_RGB,
-	MATRIX_601,
-	MATRIX_709,
-	MATRIX_YCGCO,
-	MATRIX_2020_NCL,
-	MATRIX_2020_CL
+	UNSPECIFIED,
+	RGB,
+	REC_601,
+	REC_709,
+	YCGCO,
+	REC_2020_NCL,
+	REC_2020_CL,
 };
 
 enum class TransferCharacteristics {
-	TRANSFER_UNSPECIFIED,
-	TRANSFER_LINEAR,
-	TRANSFER_709
+	UNSPECIFIED,
+	LINEAR,
+	REC_709,
 };
 
 enum class ColorPrimaries {
-	PRIMARIES_UNSPECIFIED,
-	PRIMARIES_SMPTE_C,
-	PRIMARIES_709,
-	PRIMARIES_2020
+	UNSPECIFIED,
+	SMPTE_C,
+	REC_709,
+	REC_2020,
 };
 
 /**

@@ -29,12 +29,12 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 		set_shift(0.0).
 		set_subwidth(horizontal ? src_w : src_h);
 
-	auto filter_avx2 = builder.set_cpu(zimg::CPUClass::CPU_X86_AVX2).create();
+	auto filter_avx2 = builder.set_cpu(zimg::CPUClass::X86_AVX2).create();
 	validate_filter(filter_avx2.get(), src_w, src_h, type, expected_sha1);
 
 	// No half-precision implementation is available in C. Make sure to visually check results if they differ from hash.
 	if (type != zimg::PixelType::HALF) {
-		auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
+		auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 		ASSERT_FALSE(assert_different_dynamic_type(filter_c.get(), filter_avx2.get()));
 		validate_filter_reference(filter_c.get(), filter_avx2.get(), src_w, src_h, type, expected_snr);
 	}

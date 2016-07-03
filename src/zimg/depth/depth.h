@@ -20,10 +20,10 @@ class ImageFilter;
 namespace depth {
 
 enum class DitherType {
-	DITHER_NONE,
-	DITHER_ORDERED,
-	DITHER_RANDOM,
-	DITHER_ERROR_DIFFUSION
+	NONE,
+	ORDERED,
+	RANDOM,
+	ERROR_DIFFUSION,
 };
 
 struct DepthConversion {

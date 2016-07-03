@@ -85,23 +85,23 @@ JsonObject read_graph_spec(const char *path)
 void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject &obj)
 {
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::ColorFamily, 3> color_map{
-		{ "grey", zimg::graph::GraphBuilder::ColorFamily::COLOR_GREY },
-		{ "rgb",  zimg::graph::GraphBuilder::ColorFamily::COLOR_RGB },
-		{ "yuv",  zimg::graph::GraphBuilder::ColorFamily::COLOR_YUV },
+		{ "grey", zimg::graph::GraphBuilder::ColorFamily::GREY },
+		{ "rgb",  zimg::graph::GraphBuilder::ColorFamily::RGB },
+		{ "yuv",  zimg::graph::GraphBuilder::ColorFamily::YUV },
 	};
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::FieldParity, 3> parity_map{
-		{ "progressive", zimg::graph::GraphBuilder::FieldParity::FIELD_PROGRESSIVE },
-		{ "top",         zimg::graph::GraphBuilder::FieldParity::FIELD_TOP },
-		{ "bottom",      zimg::graph::GraphBuilder::FieldParity::FIELD_BOTTOM },
+		{ "progressive", zimg::graph::GraphBuilder::FieldParity::PROGRESSIVE },
+		{ "top",         zimg::graph::GraphBuilder::FieldParity::TOP },
+		{ "bottom",      zimg::graph::GraphBuilder::FieldParity::BOTTOM },
 	};
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::ChromaLocationW, 2> chromaloc_w_map{
-		{ "left",   zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_LEFT },
-		{ "center", zimg::graph::GraphBuilder::ChromaLocationW::CHROMA_W_CENTER },
+		{ "left",   zimg::graph::GraphBuilder::ChromaLocationW::LEFT },
+		{ "center", zimg::graph::GraphBuilder::ChromaLocationW::CENTER },
 	};
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::ChromaLocationH, 3> chromaloc_h_map{
-		{ "center", zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_CENTER },
-		{ "top",    zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_TOP },
-		{ "bottom", zimg::graph::GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM },
+		{ "center", zimg::graph::GraphBuilder::ChromaLocationH::CENTER },
+		{ "top",    zimg::graph::GraphBuilder::ChromaLocationH::TOP },
+		{ "bottom", zimg::graph::GraphBuilder::ChromaLocationH::BOTTOM },
 	};
 
 	if (const auto &val = obj["width"])
@@ -204,8 +204,8 @@ ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)
 		state.width,
 		state.height,
 		state.type,
-		state.color != zimg::graph::GraphBuilder::ColorFamily::COLOR_GREY ? 3U : 1U,
-		state.color != zimg::graph::GraphBuilder::ColorFamily::COLOR_RGB,
+		state.color != zimg::graph::GraphBuilder::ColorFamily::GREY ? 3U : 1U,
+		state.color != zimg::graph::GraphBuilder::ColorFamily::RGB,
 		state.subsample_w,
 		state.subsample_h
 	};

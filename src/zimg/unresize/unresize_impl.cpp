@@ -208,7 +208,7 @@ UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, 
 	horizontal{},
 	orig_dim{},
 	shift{},
-	cpu{ CPUClass::CPU_NONE }
+	cpu{ CPUClass::NONE }
 {
 }
 

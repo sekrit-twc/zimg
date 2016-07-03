@@ -11,20 +11,20 @@ namespace {
 void get_yuv_constants(double *kr, double *kb, MatrixCoefficients matrix)
 {
 	switch (matrix) {
-	case MatrixCoefficients::MATRIX_RGB:
+	case MatrixCoefficients::RGB:
 		*kr = 0;
 		*kb = 0;
 		break;
-	case MatrixCoefficients::MATRIX_601:
+	case MatrixCoefficients::REC_601:
 		*kr = REC_601_KR;
 		*kb = REC_601_KB;
 		break;
-	case MatrixCoefficients::MATRIX_709:
+	case MatrixCoefficients::REC_709:
 		*kr = REC_709_KR;
 		*kb = REC_709_KB;
 		break;
-	case MatrixCoefficients::MATRIX_2020_NCL:
-	case MatrixCoefficients::MATRIX_2020_CL:
+	case MatrixCoefficients::REC_2020_NCL:
+	case MatrixCoefficients::REC_2020_CL:
 		*kr = REC_2020_KR;
 		*kb = REC_2020_KB;
 		break;
@@ -52,13 +52,13 @@ Vector3 get_d65_xyz()
 void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 {
 	switch (primaries) {
-	case ColorPrimaries::PRIMARIES_SMPTE_C:
+	case ColorPrimaries::SMPTE_C:
 		memcpy(out, SMPTE_C_PRIMARIES, sizeof(SMPTE_C_PRIMARIES));
 		break;
-	case ColorPrimaries::PRIMARIES_709:
+	case ColorPrimaries::REC_709:
 		memcpy(out, REC_709_PRIMARIES, sizeof(REC_709_PRIMARIES));
 		break;
-	case ColorPrimaries::PRIMARIES_2020:
+	case ColorPrimaries::REC_2020:
 		memcpy(out, REC_2020_PRIMARIES, sizeof(REC_2020_PRIMARIES));
 		break;
 	default:
@@ -94,7 +94,7 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 {
 	Matrix3x3 ret;
 
-	if (matrix != MatrixCoefficients::MATRIX_YCGCO) {
+	if (matrix != MatrixCoefficients::YCGCO) {
 		double kr, kg, kb;
 		double uscale;
 		double vscale;

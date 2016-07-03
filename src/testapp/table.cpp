@@ -42,14 +42,14 @@ filter_uptr make_lanczos_filter(double taps, double)
 
 
 const zimg::static_string_map<CPUClass, 7> g_cpu_table{
-	{ "none", CPUClass::CPU_NONE },
-	{ "auto", CPUClass::CPU_AUTO },
+	{ "none", CPUClass::NONE },
+	{ "auto", CPUClass::AUTO },
 #ifdef ZIMG_X86
-	{ "sse",  CPUClass::CPU_X86_SSE },
-	{ "sse2", CPUClass::CPU_X86_SSE2 },
-	{ "avx",  CPUClass::CPU_X86_AVX },
-	{ "f16c", CPUClass::CPU_X86_F16C },
-	{ "avx2", CPUClass::CPU_X86_AVX2 },
+	{ "sse",  CPUClass::X86_SSE },
+	{ "sse2", CPUClass::X86_SSE2 },
+	{ "avx",  CPUClass::X86_AVX },
+	{ "f16c", CPUClass::X86_F16C },
+	{ "avx2", CPUClass::X86_AVX2 },
 #endif
 };
 
@@ -61,33 +61,33 @@ const zimg::static_string_map<PixelType, 4> g_pixel_table{
 };
 
 const zimg::static_string_map<MatrixCoefficients, 7> g_matrix_table{
-	{ "unspec",   MatrixCoefficients::MATRIX_UNSPECIFIED },
-	{ "rgb",      MatrixCoefficients::MATRIX_RGB },
-	{ "601",      MatrixCoefficients::MATRIX_601 },
-	{ "709",      MatrixCoefficients::MATRIX_709 },
-	{ "ycgco",    MatrixCoefficients::MATRIX_YCGCO },
-	{ "2020_ncl", MatrixCoefficients::MATRIX_2020_NCL },
-	{ "2020_cl",  MatrixCoefficients::MATRIX_2020_CL },
+	{ "unspec",   MatrixCoefficients::UNSPECIFIED },
+	{ "rgb",      MatrixCoefficients::RGB },
+	{ "601",      MatrixCoefficients::REC_601 },
+	{ "709",      MatrixCoefficients::REC_709 },
+	{ "ycgco",    MatrixCoefficients::YCGCO },
+	{ "2020_ncl", MatrixCoefficients::REC_2020_NCL },
+	{ "2020_cl",  MatrixCoefficients::REC_2020_CL },
 };
 
 const zimg::static_string_map<TransferCharacteristics, 3> g_transfer_table{
-	{ "unspec", TransferCharacteristics::TRANSFER_UNSPECIFIED },
-	{ "linear", TransferCharacteristics::TRANSFER_LINEAR },
-	{ "709",    TransferCharacteristics::TRANSFER_709 },
+	{ "unspec", TransferCharacteristics::UNSPECIFIED },
+	{ "linear", TransferCharacteristics::LINEAR },
+	{ "709",    TransferCharacteristics::REC_709 },
 };
 
 const zimg::static_string_map<ColorPrimaries, 4> g_primaries_table{
-	{ "unspec",  ColorPrimaries::PRIMARIES_UNSPECIFIED },
-	{ "smpte_c", ColorPrimaries::PRIMARIES_SMPTE_C },
-	{ "709",     ColorPrimaries::PRIMARIES_709 },
-	{ "2020",    ColorPrimaries::PRIMARIES_2020 },
+	{ "unspec",  ColorPrimaries::UNSPECIFIED },
+	{ "smpte_c", ColorPrimaries::SMPTE_C },
+	{ "709",     ColorPrimaries::REC_709 },
+	{ "2020",    ColorPrimaries::REC_2020 },
 };
 
 const zimg::static_string_map<DitherType, 4> g_dither_table{
-	{ "none",            DitherType::DITHER_NONE },
-	{ "ordered",         DitherType::DITHER_ORDERED },
-	{ "random",          DitherType::DITHER_RANDOM },
-	{ "error_diffusion", DitherType::DITHER_ERROR_DIFFUSION },
+	{ "none",            DitherType::NONE },
+	{ "ordered",         DitherType::ORDERED },
+	{ "random",          DitherType::RANDOM },
+	{ "error_diffusion", DitherType::ERROR_DIFFUSION },
 };
 
 const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 6> g_resize_table{

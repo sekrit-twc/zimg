@@ -31,8 +31,8 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 	height{ height },
 	pixel_in{},
 	pixel_out{},
-	dither_type{ DitherType::DITHER_NONE },
-	cpu{ CPUClass::CPU_NONE }
+	dither_type{ DitherType::NONE },
+	cpu{ CPUClass::NONE }
 {
 }
 

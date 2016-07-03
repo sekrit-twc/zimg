@@ -12,15 +12,15 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		if (!ret && caps.avx)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && caps.sse)
 			ret = create_matrix_operation_sse(m);
 	} else {
-		if (!ret && cpu >= CPUClass::CPU_X86_AVX)
+		if (!ret && cpu >= CPUClass::X86_AVX)
 			ret = create_matrix_operation_avx(m);
-		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+		if (!ret && cpu >= CPUClass::X86_SSE)
 			ret = create_matrix_operation_sse(m);
 	}
 

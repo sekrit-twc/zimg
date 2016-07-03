@@ -87,12 +87,12 @@ ColorspaceDefinition ColorspaceDefinition::to(ColorPrimaries primaries_) const
 
 ColorspaceDefinition ColorspaceDefinition::to_rgb() const
 {
-	return to(MatrixCoefficients::MATRIX_RGB);
+	return to(MatrixCoefficients::RGB);
 }
 
 ColorspaceDefinition ColorspaceDefinition::to_linear() const
 {
-	return to(TransferCharacteristics::TRANSFER_LINEAR);
+	return to(TransferCharacteristics::LINEAR);
 }
 
 bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
@@ -111,7 +111,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	height{ height },
 	csp_in{},
 	csp_out{},
-	cpu{ CPUClass::CPU_NONE }
+	cpu{ CPUClass::NONE }
 {
 }
 

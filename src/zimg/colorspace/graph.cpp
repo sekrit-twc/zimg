@@ -53,24 +53,24 @@ EnumRange<T> make_range(T first, T last)
 
 EnumRange<MatrixCoefficients> all_matrix()
 {
-	return make_range(MatrixCoefficients::MATRIX_UNSPECIFIED, MatrixCoefficients::MATRIX_2020_CL);
+	return make_range(MatrixCoefficients::UNSPECIFIED, MatrixCoefficients::REC_2020_CL);
 }
 
 EnumRange<TransferCharacteristics> all_transfer()
 {
-	return make_range(TransferCharacteristics::TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_709);
+	return make_range(TransferCharacteristics::UNSPECIFIED, TransferCharacteristics::REC_709);
 }
 
 EnumRange<ColorPrimaries> all_primaries()
 {
-	return make_range(ColorPrimaries::PRIMARIES_UNSPECIFIED, ColorPrimaries::PRIMARIES_2020);
+	return make_range(ColorPrimaries::UNSPECIFIED, ColorPrimaries::REC_2020);
 }
 
 bool is_valid_csp(const ColorspaceDefinition &csp)
 {
-	return !(csp.matrix == MatrixCoefficients::MATRIX_2020_CL && csp.transfer != TransferCharacteristics::TRANSFER_709) ||
-	       !(csp.matrix == MatrixCoefficients::MATRIX_UNSPECIFIED && csp.transfer != TransferCharacteristics::TRANSFER_UNSPECIFIED) ||
-	       !(csp.transfer == TransferCharacteristics::TRANSFER_UNSPECIFIED && csp.primaries != ColorPrimaries::PRIMARIES_UNSPECIFIED);
+	return !(csp.matrix == MatrixCoefficients::REC_2020_CL && csp.transfer != TransferCharacteristics::REC_709) ||
+	       !(csp.matrix == MatrixCoefficients::UNSPECIFIED && csp.transfer != TransferCharacteristics::UNSPECIFIED) ||
+	       !(csp.transfer == TransferCharacteristics::UNSPECIFIED && csp.primaries != ColorPrimaries::UNSPECIFIED);
 }
 
 
@@ -159,20 +159,20 @@ public:
 
 		// Find all possible conversions.
 		for (auto &csp : m_vertices) {
-			if (csp.matrix == MatrixCoefficients::MATRIX_RGB) {
+			if (csp.matrix == MatrixCoefficients::RGB) {
 				// RGB can be converted to YUV.
 				for (auto coeffs : all_matrix()) {
 					// Only linear RGB can be converted to CL.
-					if (coeffs == MatrixCoefficients::MATRIX_2020_CL && csp.transfer == TransferCharacteristics::TRANSFER_LINEAR)
-						link(csp, csp.to(coeffs).to(TransferCharacteristics::TRANSFER_709), create_2020_cl_rgb_to_yuv_operation);
-					else if (coeffs != MatrixCoefficients::MATRIX_RGB && coeffs != MatrixCoefficients::MATRIX_2020_CL && coeffs != MatrixCoefficients::MATRIX_UNSPECIFIED)
+					if (coeffs == MatrixCoefficients::REC_2020_CL && csp.transfer == TransferCharacteristics::LINEAR)
+						link(csp, csp.to(coeffs).to(TransferCharacteristics::REC_709), create_2020_cl_rgb_to_yuv_operation);
+					else if (coeffs != MatrixCoefficients::RGB && coeffs != MatrixCoefficients::REC_2020_CL && coeffs != MatrixCoefficients::UNSPECIFIED)
 						link(csp, csp.to(coeffs), std::bind(create_ncl_rgb_to_yuv_operation, coeffs, std::placeholders::_1));
 				}
 
 				// Linear RGB can be converted to gamma to other primaries.
-				if (csp.transfer == TransferCharacteristics::TRANSFER_LINEAR) {
+				if (csp.transfer == TransferCharacteristics::LINEAR) {
 					for (auto transfer : all_transfer()) {
-						if (transfer != csp.transfer && transfer != TransferCharacteristics::TRANSFER_UNSPECIFIED)
+						if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED)
 							link(csp, csp.to(transfer), std::bind(create_linear_to_gamma_operation, transfer, std::placeholders::_1));
 					}
 					for (auto primaries : all_primaries()) {
@@ -182,13 +182,13 @@ public:
 				}
 
 				// Gamma RGB can be converted to linear.
-				if (csp.transfer != TransferCharacteristics::TRANSFER_LINEAR && csp.transfer != TransferCharacteristics::TRANSFER_UNSPECIFIED)
+				if (csp.transfer != TransferCharacteristics::LINEAR && csp.transfer != TransferCharacteristics::UNSPECIFIED)
 					link(csp, csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, std::placeholders::_1));
 			} else {
 				// YUV can only be converted to RGB.
-				if (csp.matrix == MatrixCoefficients::MATRIX_2020_CL)
+				if (csp.matrix == MatrixCoefficients::REC_2020_CL)
 					link(csp, csp.to_rgb().to_linear(), create_2020_cl_yuv_to_rgb_operation);
-				else if (csp.matrix != MatrixCoefficients::MATRIX_UNSPECIFIED)
+				else if (csp.matrix != MatrixCoefficients::UNSPECIFIED)
 					link(csp, csp.to_rgb(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, std::placeholders::_1));
 			}
 		}

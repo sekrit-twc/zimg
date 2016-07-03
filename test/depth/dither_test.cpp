@@ -31,7 +31,7 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			fmt_out.fullrange = fullrange;
 			fmt_out.chroma = chroma;
 
-			auto dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::CPU_NONE);
+			auto dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::NONE);
 			validate_filter(dither.get(), w, h, pxin, expected_sha1[sha1_idx++]);
 		}
 	}
@@ -56,7 +56,7 @@ TEST(DitherTest, test_limited_luma)
 		{ "1170f2c7b4ad7c7d76ae79490d97ae0ce5b4a929" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_NONE, false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::NONE, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_limited_chroma)
@@ -75,7 +75,7 @@ TEST(DitherTest, test_limited_chroma)
 		{ "02a87cf37521da2e674c3d89491a932614a0e3aa" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_NONE, false, true, expected_sha1);
+	test_case(zimg::depth::DitherType::NONE, false, true, expected_sha1);
 }
 
 TEST(DitherTest, test_full_luma)
@@ -94,7 +94,7 @@ TEST(DitherTest, test_full_luma)
 		{ "b48655a46858eff58b51b266d842fa5d5600e032" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_NONE, true, false, expected_sha1);
+	test_case(zimg::depth::DitherType::NONE, true, false, expected_sha1);
 }
 
 TEST(DitherTest, test_full_chroma)
@@ -113,7 +113,7 @@ TEST(DitherTest, test_full_chroma)
 		{ "2b449e40db3a8d4d5a4ca4c2cd74ef38e237ac57" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_NONE, true, true, expected_sha1);
+	test_case(zimg::depth::DitherType::NONE, true, true, expected_sha1);
 }
 
 TEST(DitherTest, test_bayer_dither)
@@ -132,7 +132,7 @@ TEST(DitherTest, test_bayer_dither)
 		{ "31da13a60b8c73c58f808d406a0f2e6066ab8b8b" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_ORDERED, false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::ORDERED, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_random_dither)
@@ -151,7 +151,7 @@ TEST(DitherTest, test_random_dither)
 		{ "57ecf8fc00fc554ba932237ea830e303ed559b19" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_RANDOM, false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::RANDOM, false, false, expected_sha1);
 }
 
 TEST(DitherTest, test_error_diffusion)
@@ -170,5 +170,5 @@ TEST(DitherTest, test_error_diffusion)
 		{ "834f918f24da72a31bb6deb7b1e398446cf052a2" },
 	};
 
-	test_case(zimg::depth::DitherType::DITHER_ERROR_DIFFUSION, false, false, expected_sha1);
+	test_case(zimg::depth::DitherType::ERROR_DIFFUSION, false, false, expected_sha1);
 }

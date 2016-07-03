@@ -9,14 +9,14 @@ namespace zimg {
  * Enum for CPU type.
  */
 enum class CPUClass {
-	CPU_NONE,
-	CPU_AUTO,
+	NONE,
+	AUTO,
 #ifdef ZIMG_X86
-	CPU_X86_SSE,
-	CPU_X86_SSE2,
-	CPU_X86_AVX,
-	CPU_X86_F16C,
-	CPU_X86_AVX2,
+	X86_SSE,
+	X86_SSE2,
+	X86_AVX,
+	X86_F16C,
+	X86_AVX2,
 #endif // ZIMG_X86
 };
 

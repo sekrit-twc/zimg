@@ -60,11 +60,11 @@ X86Capabilities query_x86_capabilities()
 bool cpu_has_fast_f16(CPUClass cpu)
 {
 	// Although F16C is supported on Ivy Bridge, the latency penalty is too great before Haswell.
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		X86Capabilities caps = query_x86_capabilities();
 		return caps.fma && caps.f16c && caps.avx2;
 	} else {
-		return cpu >= CPUClass::CPU_X86_AVX2;
+		return cpu >= CPUClass::X86_AVX2;
 	}
 }
 

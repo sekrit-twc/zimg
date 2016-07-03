@@ -110,19 +110,19 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 	using zimg::CPUClass;
 
 	static const zimg::static_map<zimg_cpu_type_e, CPUClass, 12> map{
-		{ ZIMG_CPU_NONE,      CPUClass::CPU_NONE },
-		{ ZIMG_CPU_AUTO,      CPUClass::CPU_AUTO },
+		{ ZIMG_CPU_NONE,      CPUClass::NONE },
+		{ ZIMG_CPU_AUTO,      CPUClass::AUTO },
 #ifdef ZIMG_X86
-		{ ZIMG_CPU_X86_MMX,   CPUClass::CPU_NONE },
-		{ ZIMG_CPU_X86_SSE,   CPUClass::CPU_X86_SSE },
-		{ ZIMG_CPU_X86_SSE2,  CPUClass::CPU_X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE3,  CPUClass::CPU_X86_SSE2 },
-		{ ZIMG_CPU_X86_SSSE3, CPUClass::CPU_X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE41, CPUClass::CPU_X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE42, CPUClass::CPU_X86_SSE2 },
-		{ ZIMG_CPU_X86_AVX,   CPUClass::CPU_X86_AVX },
-		{ ZIMG_CPU_X86_F16C,  CPUClass::CPU_X86_F16C },
-		{ ZIMG_CPU_X86_AVX2,  CPUClass::CPU_X86_AVX2 },
+		{ ZIMG_CPU_X86_MMX,   CPUClass::NONE },
+		{ ZIMG_CPU_X86_SSE,   CPUClass::X86_SSE },
+		{ ZIMG_CPU_X86_SSE2,  CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE3,  CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSSE3, CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE41, CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE42, CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_AVX,   CPUClass::X86_AVX },
+		{ ZIMG_CPU_X86_F16C,  CPUClass::X86_F16C },
+		{ ZIMG_CPU_X86_AVX2,  CPUClass::X86_AVX2 },
 #endif
 	};
 	return search_enum_map(map, cpu, "unrecognized cpu type");
@@ -155,9 +155,9 @@ zimg::graph::GraphBuilder::ColorFamily translate_color_family(zimg_color_family_
 	using zimg::graph::GraphBuilder;
 
 	static const zimg::static_map<zimg_color_family_e,GraphBuilder::ColorFamily, 3> map{
-		{ ZIMG_COLOR_GREY, GraphBuilder::ColorFamily::COLOR_GREY },
-		{ ZIMG_COLOR_RGB,  GraphBuilder::ColorFamily::COLOR_RGB },
-		{ ZIMG_COLOR_YUV,  GraphBuilder::ColorFamily::COLOR_YUV},
+		{ ZIMG_COLOR_GREY, GraphBuilder::ColorFamily::GREY },
+		{ ZIMG_COLOR_RGB,  GraphBuilder::ColorFamily::RGB },
+		{ ZIMG_COLOR_YUV,  GraphBuilder::ColorFamily::YUV},
 	};
 	return search_enum_map(map, family, "unrecognized color family");
 }
@@ -167,9 +167,9 @@ zimg::graph::GraphBuilder::FieldParity translate_field_parity(zimg_field_parity_
 	using zimg::graph::GraphBuilder;
 
 	static const zimg::static_map<zimg_field_parity_e, GraphBuilder::FieldParity, 3> map{
-		{ ZIMG_FIELD_PROGRESSIVE, GraphBuilder::FieldParity::FIELD_PROGRESSIVE },
-		{ ZIMG_FIELD_TOP,         GraphBuilder::FieldParity::FIELD_TOP },
-		{ ZIMG_FIELD_BOTTOM,      GraphBuilder::FieldParity::FIELD_BOTTOM },
+		{ ZIMG_FIELD_PROGRESSIVE, GraphBuilder::FieldParity::PROGRESSIVE },
+		{ ZIMG_FIELD_TOP,         GraphBuilder::FieldParity::TOP },
+		{ ZIMG_FIELD_BOTTOM,      GraphBuilder::FieldParity::BOTTOM },
 	};
 	return search_enum_map(map, field, "unrecognized field parity");
 }
@@ -180,12 +180,12 @@ std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder:
 	typedef zimg::graph::GraphBuilder::ChromaLocationH ChromaLocationH;
 
 	static const zimg::static_map<zimg_chroma_location_e, std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
-		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_CENTER } },
-		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_TOP,         { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_TOP } },
-		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::CHROMA_W_LEFT,   ChromaLocationH::CHROMA_H_BOTTOM } },
-		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CHROMA_W_CENTER, ChromaLocationH::CHROMA_H_BOTTOM } },
+		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::LEFT,   ChromaLocationH::CENTER } },
+		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CENTER, ChromaLocationH::CENTER } },
+		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::LEFT,   ChromaLocationH::TOP } },
+		{ ZIMG_CHROMA_TOP,         { ChromaLocationW::CENTER, ChromaLocationH::TOP } },
+		{ ZIMG_CHROMA_BOTTOM_LEFT, { ChromaLocationW::LEFT,   ChromaLocationH::BOTTOM } },
+		{ ZIMG_CHROMA_BOTTOM,      { ChromaLocationW::CENTER, ChromaLocationH::BOTTOM } },
 	};
 	return search_enum_map(map, chromaloc, "unrecognized chroma location");
 }
@@ -195,14 +195,14 @@ zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e
 	using zimg::colorspace::MatrixCoefficients;
 
 	static const zimg::static_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 8> map{
-		{ ZIMG_MATRIX_RGB,         MatrixCoefficients::MATRIX_RGB },
-		{ ZIMG_MATRIX_709,         MatrixCoefficients::MATRIX_709 },
-		{ ZIMG_MATRIX_UNSPECIFIED, MatrixCoefficients::MATRIX_UNSPECIFIED },
-		{ ZIMG_MATRIX_470BG,       MatrixCoefficients::MATRIX_601 },
-		{ ZIMG_MATRIX_170M,        MatrixCoefficients::MATRIX_601 },
-		{ ZIMG_MATRIX_YCGCO,       MatrixCoefficients::MATRIX_YCGCO },
-		{ ZIMG_MATRIX_2020_NCL,    MatrixCoefficients::MATRIX_2020_NCL },
-		{ ZIMG_MATRIX_2020_CL,     MatrixCoefficients::MATRIX_2020_CL },
+		{ ZIMG_MATRIX_RGB,         MatrixCoefficients::RGB },
+		{ ZIMG_MATRIX_709,         MatrixCoefficients::REC_709 },
+		{ ZIMG_MATRIX_UNSPECIFIED, MatrixCoefficients::UNSPECIFIED },
+		{ ZIMG_MATRIX_470BG,       MatrixCoefficients::REC_601 },
+		{ ZIMG_MATRIX_170M,        MatrixCoefficients::REC_601 },
+		{ ZIMG_MATRIX_YCGCO,       MatrixCoefficients::YCGCO },
+		{ ZIMG_MATRIX_2020_NCL,    MatrixCoefficients::REC_2020_NCL },
+		{ ZIMG_MATRIX_2020_CL,     MatrixCoefficients::REC_2020_CL },
 	};
 	return search_itu_enum_map(map, matrix, "unrecognized matrix coefficients");
 }
@@ -212,12 +212,12 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 	using zimg::colorspace::TransferCharacteristics;
 
 	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 6> map{
-		{ ZIMG_TRANSFER_709,         TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::TRANSFER_UNSPECIFIED },
-		{ ZIMG_TRANSFER_601,         TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_2020_10,     TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_2020_12,     TransferCharacteristics::TRANSFER_709 },
-		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::TRANSFER_LINEAR },
+		{ ZIMG_TRANSFER_709,         TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::UNSPECIFIED },
+		{ ZIMG_TRANSFER_601,         TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_2020_10,     TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_2020_12,     TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::LINEAR },
 	};
 	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
 }
@@ -227,11 +227,11 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 	using zimg::colorspace::ColorPrimaries;
 
 	static const zimg::static_map<zimg_color_primaries_e, ColorPrimaries, 5> map{
-		{ ZIMG_PRIMARIES_709,         ColorPrimaries::PRIMARIES_709 },
-		{ ZIMG_PRIMARIES_UNSPECIFIED, ColorPrimaries::PRIMARIES_UNSPECIFIED },
-		{ ZIMG_PRIMARIES_170M,        ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ ZIMG_PRIMARIES_240M,        ColorPrimaries::PRIMARIES_SMPTE_C },
-		{ ZIMG_PRIMARIES_2020,        ColorPrimaries::PRIMARIES_2020 },
+		{ ZIMG_PRIMARIES_709,         ColorPrimaries::REC_709 },
+		{ ZIMG_PRIMARIES_UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
+		{ ZIMG_PRIMARIES_170M,        ColorPrimaries::SMPTE_C },
+		{ ZIMG_PRIMARIES_240M,        ColorPrimaries::SMPTE_C },
+		{ ZIMG_PRIMARIES_2020,        ColorPrimaries::REC_2020 },
 	};
 	return search_itu_enum_map(map, primaries, "unrecognized color primaries");
 }
@@ -241,10 +241,10 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 	using zimg::depth::DitherType;
 
 	static const zimg::static_map<zimg_dither_type_e, DitherType, 4> map{
-		{ ZIMG_DITHER_NONE,            DitherType::DITHER_NONE },
-		{ ZIMG_DITHER_ORDERED,         DitherType::DITHER_ORDERED },
-		{ ZIMG_DITHER_RANDOM,          DitherType::DITHER_RANDOM },
-		{ ZIMG_DITHER_ERROR_DIFFUSION, DitherType::DITHER_ERROR_DIFFUSION },
+		{ ZIMG_DITHER_NONE,            DitherType::NONE },
+		{ ZIMG_DITHER_ORDERED,         DitherType::ORDERED },
+		{ ZIMG_DITHER_RANDOM,          DitherType::RANDOM },
+		{ ZIMG_DITHER_ERROR_DIFFUSION, DitherType::ERROR_DIFFUSION },
 	};
 	return search_enum_map(map, dither, "unrecognized dither type");
 }

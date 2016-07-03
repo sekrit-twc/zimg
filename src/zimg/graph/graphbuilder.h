@@ -73,26 +73,26 @@ public:
 class GraphBuilder {
 public:
 	enum class ColorFamily {
-		COLOR_GREY,
-		COLOR_RGB,
-		COLOR_YUV
+		GREY,
+		RGB,
+		YUV,
 	};
 
 	enum class FieldParity {
-		FIELD_PROGRESSIVE,
-		FIELD_TOP,
-		FIELD_BOTTOM
+		PROGRESSIVE,
+		TOP,
+		BOTTOM,
 	};
 
 	enum class ChromaLocationW {
-		CHROMA_W_LEFT,
-		CHROMA_W_CENTER
+		LEFT,
+		CENTER,
 	};
 
 	enum class ChromaLocationH {
-		CHROMA_H_CENTER,
-		CHROMA_H_TOP,
-		CHROMA_H_BOTTOM
+		CENTER,
+		TOP,
+		BOTTOM,
 	};
 
 	/**

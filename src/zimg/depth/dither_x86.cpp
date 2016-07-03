@@ -61,15 +61,15 @@ dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, 
 	X86Capabilities caps = query_x86_capabilities();
 	dither_convert_func func = nullptr;
 
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		if (!func && caps.avx2 && caps.fma)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
 		if (!func && caps.sse2)
 			func = select_ordered_dither_func_sse2(pixel_in.type, pixel_out.type);
 	} else {
-		if (!func && cpu >= CPUClass::CPU_X86_AVX2)
+		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
-		if (!func && cpu >= CPUClass::CPU_X86_SSE2)
+		if (!func && cpu >= CPUClass::X86_SSE2)
 			func = select_ordered_dither_func_sse2(pixel_in.type, pixel_out.type);
 	}
 
@@ -81,15 +81,15 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	dither_f16c_func func = nullptr;
 
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		if (!func && caps.avx && caps.f16c)
 			func = f16c_half_to_float_ivb;
 		if (!func && caps.sse2)
 			func = f16c_half_to_float_sse2;
 	} else {
-		if (!func && cpu >= CPUClass::CPU_X86_F16C)
+		if (!func && cpu >= CPUClass::X86_F16C)
 			func = f16c_half_to_float_ivb;
-		if (!func && cpu >= CPUClass::CPU_X86_SSE2)
+		if (!func && cpu >= CPUClass::X86_SSE2)
 			func = f16c_half_to_float_sse2;
 	}
 
@@ -100,7 +100,7 @@ bool needs_dither_f16c_func_x86(CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
 
-	return (cpu == CPUClass::CPU_AUTO && !caps.avx2) || cpu < CPUClass::CPU_X86_AVX2;
+	return (cpu == CPUClass::AUTO && !caps.avx2) || cpu < CPUClass::X86_AVX2;
 }
 
 } // namespace depth

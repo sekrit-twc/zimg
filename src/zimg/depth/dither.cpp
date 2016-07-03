@@ -435,11 +435,11 @@ public:
 std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigned width, unsigned height)
 {
 	switch (type) {
-	case DitherType::DITHER_NONE:
+	case DitherType::NONE:
 		return ztd::make_unique<NoneDitherTable>();
-	case DitherType::DITHER_ORDERED:
+	case DitherType::ORDERED:
 		return ztd::make_unique<BayerDitherTable>();
-	case DitherType::DITHER_RANDOM:
+	case DitherType::RANDOM:
 		return ztd::make_unique<RandomDitherTable>(width, height);
 	default:
 		throw error::InternalError{ "unrecognized dither type" };
@@ -465,7 +465,7 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsig
 
 std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
-	if (type == DitherType::DITHER_ERROR_DIFFUSION)
+	if (type == DitherType::ERROR_DIFFUSION)
 		return create_error_diffusion(width, height, pixel_in, pixel_out, cpu);
 
 	auto table = create_dither_table(type, width, height);

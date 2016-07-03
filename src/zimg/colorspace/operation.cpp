@@ -22,7 +22,7 @@ std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(MatrixCoefficients ma
 std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacteristics transfer, CPUClass cpu)
 {
 	switch (transfer) {
-	case TransferCharacteristics::TRANSFER_709:
+	case TransferCharacteristics::REC_709:
 		return create_rec709_inverse_gamma_operation(cpu);
 	default:
 		throw error::InternalError{ "unsupported transfer function" };
@@ -32,7 +32,7 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacterist
 std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacteristics transfer, CPUClass cpu)
 {
 	switch (transfer) {
-	case TransferCharacteristics::TRANSFER_709:
+	case TransferCharacteristics::REC_709:
 		return create_rec709_gamma_operation(cpu);
 	default:
 		throw error::InternalError{ "unsupported transfer function" };

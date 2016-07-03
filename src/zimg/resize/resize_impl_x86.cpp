@@ -12,7 +12,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		if (!ret && caps.avx2)
 			ret = create_resize_impl_h_avx2(context, height, type, depth);
 		if (!ret && caps.avx)
@@ -22,13 +22,13 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext
 		if (!ret && caps.sse)
 			ret = create_resize_impl_h_sse(context, height, type, depth);
 	} else {
-		if (!ret && cpu >= CPUClass::CPU_X86_AVX2)
+		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_resize_impl_h_avx2(context, height, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_AVX)
+		if (!ret && cpu >= CPUClass::X86_AVX)
 			ret = create_resize_impl_h_avx(context, height, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_SSE2)
+		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_resize_impl_h_sse2(context, height, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+		if (!ret && cpu >= CPUClass::X86_SSE)
 			ret = create_resize_impl_h_sse(context, height, type, depth);
 	}
 
@@ -40,7 +40,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (cpu == CPUClass::CPU_AUTO) {
+	if (cpu == CPUClass::AUTO) {
 		if (!ret && caps.avx2)
 			ret = create_resize_impl_v_avx2(context, width, type, depth);
 		if (!ret && caps.avx)
@@ -50,13 +50,13 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 		if (!ret && caps.sse)
 			ret = create_resize_impl_v_sse(context, width, type, depth);
 	} else {
-		if (!ret && cpu >= CPUClass::CPU_X86_AVX2)
+		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_resize_impl_v_avx2(context, width, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_AVX)
+		if (!ret && cpu >= CPUClass::X86_AVX)
 			ret = create_resize_impl_v_avx(context, width, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_SSE2)
+		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_resize_impl_v_sse2(context, width, type, depth);
-		if (!ret && cpu >= CPUClass::CPU_X86_SSE)
+		if (!ret && cpu >= CPUClass::X86_SSE)
 			ret = create_resize_impl_v_sse(context, width, type, depth);
 	}
 

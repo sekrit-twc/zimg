@@ -29,7 +29,7 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 	orig_height{ up_height },
 	shift_w{},
 	shift_h{},
-	cpu{ CPUClass::CPU_NONE }
+	cpu{ CPUClass::NONE }
 {
 }
 

@@ -16,15 +16,15 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
-	const zimg::depth::DitherType dither = zimg::depth::DitherType::DITHER_RANDOM;
+	const zimg::depth::DitherType dither = zimg::depth::DitherType::RANDOM;
 
 	if (!zimg::query_x86_capabilities().avx2) {
 		SUCCEED() << "avx2 not available, skipping";
 		return;
 	}
 
-	auto filter_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE);
-	auto filter_avx2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_AVX2);
+	auto filter_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_avx2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX2);
 
 	validate_filter(filter_avx2.get(), w, h, pixel_in, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_avx2.get(), w, h, pixel_in, expected_snr);

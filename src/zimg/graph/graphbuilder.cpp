@@ -16,7 +16,7 @@ namespace {
 
 double chroma_shift_raw(GraphBuilder::ChromaLocationW loc, GraphBuilder::FieldParity)
 {
-	if (loc == GraphBuilder::ChromaLocationW::CHROMA_W_LEFT)
+	if (loc == GraphBuilder::ChromaLocationW::LEFT)
 		return -0.5;
 	else
 		return 0.0;
@@ -26,16 +26,16 @@ double chroma_shift_raw(GraphBuilder::ChromaLocationH loc, GraphBuilder::FieldPa
 {
 	double shift;
 
-	if (loc == GraphBuilder::ChromaLocationH::CHROMA_H_TOP)
+	if (loc == GraphBuilder::ChromaLocationH::TOP)
 		shift = -0.5;
-	else if (loc == GraphBuilder::ChromaLocationH::CHROMA_H_BOTTOM)
+	else if (loc == GraphBuilder::ChromaLocationH::BOTTOM)
 		shift = 0.5;
 	else
 		shift = 0;
 
-	if (parity == GraphBuilder::FieldParity::FIELD_TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		shift = (shift - 0.5) / 2.0;
-	else if (parity == GraphBuilder::FieldParity::FIELD_BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		shift = (shift + 0.5) / 2.0;
 
 	return shift;
@@ -59,9 +59,9 @@ double luma_shift_factor(GraphBuilder::FieldParity parity, unsigned src_height, 
 {
 	double shift = 0.0;
 
-	if (parity == GraphBuilder::FieldParity::FIELD_TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		shift = -0.25;
-	else if (parity == GraphBuilder::FieldParity::FIELD_BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		shift = 0.25;
 
 	return shift * (double)src_height / dst_height - shift;
@@ -70,22 +70,22 @@ double luma_shift_factor(GraphBuilder::FieldParity parity, unsigned src_height, 
 
 bool is_greyscale(const GraphBuilder::state &state)
 {
-	return state.color == GraphBuilder::ColorFamily::COLOR_GREY;
+	return state.color == GraphBuilder::ColorFamily::GREY;
 }
 
 bool is_rgb(const GraphBuilder::state &state)
 {
-	return state.color == GraphBuilder::ColorFamily::COLOR_RGB;
+	return state.color == GraphBuilder::ColorFamily::RGB;
 }
 
 bool is_yuv(const GraphBuilder::state &state)
 {
-	return state.color == GraphBuilder::ColorFamily::COLOR_YUV;
+	return state.color == GraphBuilder::ColorFamily::YUV;
 }
 
 bool is_ycgco(const GraphBuilder::state &state)
 {
-	return state.colorspace.matrix == colorspace::MatrixCoefficients::MATRIX_YCGCO;
+	return state.colorspace.matrix == colorspace::MatrixCoefficients::YCGCO;
 }
 
 void validate_state(const GraphBuilder::state &state)
@@ -96,24 +96,24 @@ void validate_state(const GraphBuilder::state &state)
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)
 			throw error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
-		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
+		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::RGB)
 			throw error::ColorFamilyMismatch{ "GREY color family cannot be RGB" };
 	}
 
 	if (is_rgb(state)) {
 		if (state.subsample_w || state.subsample_h)
 			throw zimg::error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
-		if (state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED &&
-			state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
+		if (state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::UNSPECIFIED &&
+			state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::RGB)
 			throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
 	}
 
 	if (is_yuv(state)) {
-		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::MATRIX_RGB)
+		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::RGB)
 			throw error::ColorFamilyMismatch{ "YUV color family cannot be RGB" };
 	}
 
-	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::FIELD_PROGRESSIVE)
+	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::PROGRESSIVE)
 		throw error::UnsupportedSubsampling{ "vertical subsampling greater than 2x is not supported" };
 	if (state.subsample_w > 2 || state.subsample_h > 2)
 		throw error::UnsupportedSubsampling{ "subsampling greater than 4x is not supported" };
@@ -231,32 +231,32 @@ void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 
 void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
 {
-	if (m_state.color == ColorFamily::COLOR_GREY)
+	if (m_state.color == ColorFamily::GREY)
 		return;
-	if (m_state.color == ColorFamily::COLOR_RGB)
+	if (m_state.color == ColorFamily::RGB)
 		throw error::InternalError{ "cannot discard chroma planes from RGB" };
-	if (matrix == colorspace::MatrixCoefficients::MATRIX_RGB)
+	if (matrix == colorspace::MatrixCoefficients::RGB)
 		throw error::InternalError{ "GREY color family cannot be RGB" };
 
 	m_graph->color_to_grey();
-	m_state.color = ColorFamily::COLOR_GREY;
+	m_state.color = ColorFamily::GREY;
 	m_state.colorspace.matrix = matrix;
 }
 
 void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
                                  ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
 {
-	if (m_state.color == color || color == ColorFamily::COLOR_GREY)
+	if (m_state.color == color || color == ColorFamily::GREY)
 		return;
-	if (color == ColorFamily::COLOR_RGB && matrix != colorspace::MatrixCoefficients::MATRIX_UNSPECIFIED && matrix != colorspace::MatrixCoefficients::MATRIX_RGB)
+	if (color == ColorFamily::RGB && matrix != colorspace::MatrixCoefficients::UNSPECIFIED && matrix != colorspace::MatrixCoefficients::RGB)
 		throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
 
 	if (!subsample_w)
-		chroma_location_w = ChromaLocationW::CHROMA_W_CENTER;
+		chroma_location_w = ChromaLocationW::CENTER;
 	if (!subsample_h)
-		chroma_location_h = ChromaLocationH::CHROMA_H_CENTER;
+		chroma_location_h = ChromaLocationH::CENTER;
 
-	m_graph->grey_to_color(color == ColorFamily::COLOR_YUV, subsample_w, subsample_h, m_state.depth);
+	m_graph->grey_to_color(color == ColorFamily::YUV, subsample_w, subsample_h, m_state.depth);
 
 	m_state.subsample_w = subsample_w;
 	m_state.subsample_h = subsample_h;
@@ -276,7 +276,7 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 	if (m_state.colorspace == colorspace)
 		return;
 
-	CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
+	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
 
 	auto conv = colorspace::ColorspaceConversion{ m_state.width, m_state.height }.
 		set_csp_in(m_state.colorspace).
@@ -287,7 +287,7 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 		attach_filter(std::move(filter));
 	}
 
-	m_state.color = (colorspace.matrix == colorspace::MatrixCoefficients::MATRIX_RGB) ? ColorFamily::COLOR_RGB : ColorFamily::COLOR_YUV;
+	m_state.color = (colorspace.matrix == colorspace::MatrixCoefficients::RGB) ? ColorFamily::RGB : ColorFamily::YUV;
 	m_state.colorspace = colorspace;
 }
 
@@ -301,8 +301,8 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	if (src_format == format)
 		return;
 
-	CPUClass cpu = params ? params->cpu : zimg::CPUClass::CPU_AUTO;
-	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::DITHER_NONE;
+	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
+	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::NONE;
 
 	auto conv = depth::DepthConversion{ m_state.width, m_state.height }.
 		set_pixel_in(src_format).
@@ -362,9 +362,9 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 	}
 
 	if (!subsample_w)
-		chroma_location_w = ChromaLocationW::CHROMA_W_CENTER;
+		chroma_location_w = ChromaLocationW::CENTER;
 	if (!subsample_h)
-		chroma_location_h = ChromaLocationH::CHROMA_H_CENTER;
+		chroma_location_h = ChromaLocationH::CENTER;
 
 	if (m_state.width == spec.width &&
 	    m_state.height == spec.height &&
@@ -377,7 +377,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 
 	const resize::Filter *resample_filter = params ? params->filter.get() : &bicubic_filter;
 	const resize::Filter *resample_filter_uv = params ? params->filter_uv.get() : &bilinear_filter;
-	CPUClass cpu = params ? params->cpu : CPUClass::CPU_AUTO;
+	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
 
 	bool do_resize_luma = m_state.width != spec.width || m_state.height != spec.height || image_shifted;
 	bool do_resize_chroma = (m_state.width >> m_state.subsample_w != spec.width >> subsample_w) ||
@@ -482,7 +482,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	if (m_state.parity != target.parity)
 		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
 
-	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::CPU_NONE);
+	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
 
 	while (true) {
 		if (needs_colorspace(m_state, target)) {

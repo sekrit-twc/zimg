@@ -21,8 +21,8 @@ void test_case(zimg::PixelType pixel_in, zimg::PixelType pixel_out, const char *
 		return;
 	}
 
-	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_NONE);
-	auto filter_sse2 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::CPU_X86_SSE2);
+	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_sse2 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_SSE2);
 
 	validate_filter(filter_sse2.get(), w, h, pixel_in, expected_sha1);
 	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);

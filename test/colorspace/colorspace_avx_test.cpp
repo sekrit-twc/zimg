@@ -27,8 +27,8 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		set_csp_in(csp_in).
 		set_csp_out(csp_out);
 
-	auto filter_c = builder.set_cpu(zimg::CPUClass::CPU_NONE).create();
-	auto filter_avx = builder.set_cpu(zimg::CPUClass::CPU_X86_AVX).create();
+	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
+	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create();
 
 	validate_filter(filter_avx.get(), w, h, format, expected_sha1);
 	validate_filter_reference(filter_avx.get(), filter_avx.get(), w, h, format, expected_snr);
@@ -48,8 +48,8 @@ TEST(ColorspaceConversionAVXTest, test_matrix)
 	};
 	const double expected_snr = INFINITY;
 
-	test_case({ MatrixCoefficients::MATRIX_RGB, TransferCharacteristics::TRANSFER_UNSPECIFIED, ColorPrimaries::PRIMARIES_UNSPECIFIED },
-	          { MatrixCoefficients::MATRIX_709, TransferCharacteristics::TRANSFER_UNSPECIFIED, ColorPrimaries::PRIMARIES_UNSPECIFIED },
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1, expected_snr);
 }
 

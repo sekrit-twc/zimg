@@ -254,7 +254,7 @@ ResizeImplBuilder::ResizeImplBuilder(unsigned src_width, unsigned src_height, Pi
 	filter{},
 	shift{},
 	subwidth{},
-	cpu{ CPUClass::CPU_NONE }
+	cpu{ CPUClass::NONE }
 {
 }
 

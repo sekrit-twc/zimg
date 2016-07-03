@@ -36,7 +36,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	shift_h{},
 	subwidth{ (double)src_width },
 	subheight{ (double)src_height },
-	cpu{ CPUClass::CPU_NONE }
+	cpu{ CPUClass::NONE }
 {
 }
 
