@@ -145,10 +145,10 @@ TEST(ColorspaceConversionTest, test_rec2020_cl)
 	};
 
 	SCOPED_TRACE("2020cl->rgb");
-	test_case(csp_2020cl, csp_2020cl.toRGB(), expected_sha1[0]);
+	test_case(csp_2020cl, csp_2020cl.to_rgb(), expected_sha1[0]);
 
 	SCOPED_TRACE("rgb->2020cl");
-	test_case(csp_2020cl.toRGB(), csp_2020cl, expected_sha1[1]);
+	test_case(csp_2020cl.to_rgb(), csp_2020cl, expected_sha1[1]);
 
 	SCOPED_TRACE("2020cl->2020ncl");
 	test_case(csp_2020cl, csp_2020cl.to(MatrixCoefficients::MATRIX_2020_NCL), expected_sha1[2]);

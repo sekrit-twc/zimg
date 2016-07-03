@@ -85,12 +85,12 @@ ColorspaceDefinition ColorspaceDefinition::to(ColorPrimaries primaries_) const
 	return{ matrix, transfer, primaries_ };
 }
 
-ColorspaceDefinition ColorspaceDefinition::toRGB() const
+ColorspaceDefinition ColorspaceDefinition::to_rgb() const
 {
 	return to(MatrixCoefficients::MATRIX_RGB);
 }
 
-ColorspaceDefinition ColorspaceDefinition::toLinear() const
+ColorspaceDefinition ColorspaceDefinition::to_linear() const
 {
 	return to(TransferCharacteristics::TRANSFER_LINEAR);
 }

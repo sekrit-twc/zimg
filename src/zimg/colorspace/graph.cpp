@@ -183,13 +183,13 @@ public:
 
 				// Gamma RGB can be converted to linear.
 				if (csp.transfer != TransferCharacteristics::TRANSFER_LINEAR && csp.transfer != TransferCharacteristics::TRANSFER_UNSPECIFIED)
-					link(csp, csp.toLinear(), std::bind(create_gamma_to_linear_operation, csp.transfer, std::placeholders::_1));
+					link(csp, csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, std::placeholders::_1));
 			} else {
 				// YUV can only be converted to RGB.
 				if (csp.matrix == MatrixCoefficients::MATRIX_2020_CL)
-					link(csp, csp.toRGB().toLinear(), create_2020_cl_yuv_to_rgb_operation);
+					link(csp, csp.to_rgb().to_linear(), create_2020_cl_yuv_to_rgb_operation);
 				else if (csp.matrix != MatrixCoefficients::MATRIX_UNSPECIFIED)
-					link(csp, csp.toRGB(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, std::placeholders::_1));
+					link(csp, csp.to_rgb(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, std::placeholders::_1));
 			}
 		}
 	}

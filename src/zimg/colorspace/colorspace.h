@@ -54,8 +54,8 @@ struct ColorspaceDefinition {
 	ColorspaceDefinition to(TransferCharacteristics transfer) const;
 	ColorspaceDefinition to(ColorPrimaries primaries) const;
 
-	ColorspaceDefinition toRGB() const;
-	ColorspaceDefinition toLinear() const;
+	ColorspaceDefinition to_rgb() const;
+	ColorspaceDefinition to_linear() const;
 };
 
 // Compare colorspaces by comparing each component.
