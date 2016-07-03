@@ -418,7 +418,7 @@ void zimg_filter_graph_free(zimg_filter_graph *ptr);
 zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out);
 
 /**
- * Query the maximum number of lines required in the input buffer.
+ * Query the minimum number of lines required in the input buffer.
  *
  * When reading an image through a user-defined callback function, the loaded
  * image data is stored in a buffer of sufficient size for the granularity of
@@ -432,7 +432,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
 /**
- * Query the maximum number of lines required in the output buffer.
+ * Query the minimum number of lines required in the output buffer.
  *
  * @pre out != 0
  * @param ptr graph handle
