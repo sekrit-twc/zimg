@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <type_traits>
 #include "common/except.h"
 #include "common/zassert.h"
 #include "colorspace.h"
@@ -12,58 +13,53 @@ namespace {
 
 template <class T>
 class EnumRange {
+	static_assert(std::is_enum<T>::value, "not an enum");
+	typedef typename std::underlying_type<T>::type integer_type;
+
 	class iterator {
 		T x;
 
-		iterator(T x) : x{ x } {}
+		explicit iterator(T x) : x{ x } {}
 	public:
 		iterator &operator++()
 		{
-			x = static_cast<T>(static_cast<int>(x) + 1);
+			x = static_cast<T>(static_cast<integer_type>(x) + 1);
 			return *this;
 		}
 
-		bool operator!=(const iterator &other) const
-		{
-			return x != other.x;
-		}
+		bool operator!=(const iterator &other) const { return x != other.x; }
 
-		T operator*() const
-		{
-			return x;
-		}
+		T operator*() const { return x; }
 
 		friend class EnumRange;
 	};
 
-	T m_first;
-	T m_last;
+	iterator m_first;
+	iterator m_last;
 public:
-	EnumRange(T first, T last) : m_first{ first }, m_last{ last } {}
+	EnumRange(T first, T last) :
+		m_first{ first },
+		m_last{ static_cast<T>(static_cast<integer_type>(last) + 1) }
+	{
+	}
 
-	iterator begin() const { return{ m_first }; }
-	iterator end() const { return{ static_cast<T>(static_cast<int>(m_last) + 1) }; }
+	iterator begin() const { return m_first; }
+	iterator end() const { return m_last; }
 };
-
-template <class T>
-EnumRange<T> make_range(T first, T last)
-{
-	return{ first, last };
-}
 
 EnumRange<MatrixCoefficients> all_matrix()
 {
-	return make_range(MatrixCoefficients::UNSPECIFIED, MatrixCoefficients::REC_2020_CL);
+	return{ MatrixCoefficients::UNSPECIFIED, MatrixCoefficients::REC_2020_CL };
 }
 
 EnumRange<TransferCharacteristics> all_transfer()
 {
-	return make_range(TransferCharacteristics::UNSPECIFIED, TransferCharacteristics::REC_709);
+	return{ TransferCharacteristics::UNSPECIFIED, TransferCharacteristics::REC_709 };
 }
 
 EnumRange<ColorPrimaries> all_primaries()
 {
-	return make_range(ColorPrimaries::UNSPECIFIED, ColorPrimaries::REC_2020);
+	return{ ColorPrimaries::UNSPECIFIED, ColorPrimaries::REC_2020 };
 }
 
 bool is_valid_csp(const ColorspaceDefinition &csp)
