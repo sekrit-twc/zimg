@@ -64,8 +64,8 @@ EnumRange<ColorPrimaries> all_primaries()
 
 bool is_valid_csp(const ColorspaceDefinition &csp)
 {
-	return !(csp.matrix == MatrixCoefficients::REC_2020_CL && csp.transfer != TransferCharacteristics::REC_709) ||
-	       !(csp.matrix == MatrixCoefficients::UNSPECIFIED && csp.transfer != TransferCharacteristics::UNSPECIFIED) ||
+	return !(csp.matrix == MatrixCoefficients::REC_2020_CL && csp.transfer != TransferCharacteristics::REC_709) &&
+	       !(csp.matrix == MatrixCoefficients::UNSPECIFIED && csp.transfer != TransferCharacteristics::UNSPECIFIED) &&
 	       !(csp.transfer == TransferCharacteristics::UNSPECIFIED && csp.primaries != ColorPrimaries::UNSPECIFIED);
 }
 
@@ -142,6 +142,10 @@ class ColorspaceGraph {
 public:
 	ColorspaceGraph()
 	{
+		_zassert_d(!is_valid_csp({ MatrixCoefficients::REC_2020_CL, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 }), "accepted bad colorspace");
+		_zassert_d(!is_valid_csp({ MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::REC_709 }), "accepted bad colorspace");
+		_zassert_d(!is_valid_csp({ MatrixCoefficients::UNSPECIFIED, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 }), "accepted bad colorspace");
+
 		// Insert all colorspaces.
 		for (auto coeffs : all_matrix()) {
 			for (auto transfer : all_transfer()) {
