@@ -3,33 +3,9 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+#include <chrono>
 #include <cmath>
 #include <utility>
-
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-
-#include <Windows.h>
-
-class Timer {
-	LARGE_INTEGER m_start;
-	LARGE_INTEGER m_stop;
-	LARGE_INTEGER m_frequency;
-public:
-	Timer() : m_start{}, m_stop{}, m_frequency{} { QueryPerformanceFrequency(&m_frequency); }
-
-	void start() { QueryPerformanceCounter(&m_start); }
-
-	void stop() { QueryPerformanceCounter(&m_stop); }
-
-	double elapsed()
-	{
-		return (double)(m_stop.QuadPart - m_start.QuadPart) / (double)m_frequency.QuadPart;
-	}
-};
-
-#else
-
-#include <chrono>
 
 class Timer {
 	typedef std::chrono::high_resolution_clock hrclock;
@@ -47,8 +23,6 @@ public:
 		return secs.count();
 	}
 };
-
-#endif // _WIN32
 
 
 template <class T, class U>
