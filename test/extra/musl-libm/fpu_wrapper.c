@@ -11,7 +11,7 @@ extern float _mypowf(float x, float y);
   #define fpu_save() _control87(0, 0)
   #define fpu_set_single() _control87(_PC_24, _MCW_PC)
   #define fpu_set_double() _control87(_PC_53, _MCW_PC)
-  #define fpu_restore(x) _control87((x), _MCW_PC);
+  #define fpu_restore(x) _control87((x), _MCW_PC)
 #else
   #define fpu_save() 0
   #define fpu_set_single() (void)0

@@ -1,7 +1,17 @@
 #include <algorithm>
+
+// MSVC 32-bit compiler generates x87 instructions when operating on floats
+// returned from external functions. Force single precision to avoid errors.
 #if defined(_MSC_VER) && defined(_M_IX86)
   #include <cfloat>
-#endif
+  #define fpu_save() _control87(0, 0)
+  #define fpu_set_single() _control87(_PC_24, _MCW_PC)
+  #define fpu_restore(x) _control87((x), _MCW_PC)
+#else
+  #define fpu_save() 0
+  #define fpu_set_single() (void)0
+  #define fpu_restore(x) (void)0
+#endif /* _MSC_VER */
 
 #include "common/make_unique.h"
 #include "colorspace_param.h"
@@ -161,37 +171,29 @@ public:
 
 float rec_709_gamma(float x)
 {
-	// MSVC 32-bit compiler generates x87 instructions when operating on floats
-	// returned from external functions. Force single precision to avoid errors.
-#if defined(_MSC_VER) && defined(_M_IX86)
-	unsigned w = _control87(0, 0);
-	_control87(_PC_24, _MCW_PC);
-#endif
+	unsigned w = fpu_save();
+	fpu_set_single();
+
 	if (x < TRANSFER_BETA)
 		x = x * 4.5f;
 	else
 		x = TRANSFER_ALPHA * _zimg_powf(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
-#if defined(_MSC_VER) && defined(_M_IX86)
-	_control87(w, _MCW_PC);
-#endif
+
+	fpu_restore(w);
 	return x;
 }
 
 float rec_709_inverse_gamma(float x)
 {
-	// MSVC 32-bit compiler generates x87 instructions when operating on floats
-	// returned from external functions. Force single precision to avoid errors.
-#if defined(_MSC_VER) && defined(_M_IX86)
-	unsigned w = _control87(0, 0);
-	_control87(_PC_24, _MCW_PC);
-#endif
+	unsigned w = fpu_save();
+	fpu_set_single();
+
 	if (x < 4.5f * TRANSFER_BETA)
 		x = x / 4.5f;
 	else
 		x = _zimg_powf((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
-#if defined(_MSC_VER) && defined(_M_IX86)
-	_control87(w, _MCW_PC);
-#endif
+
+	fpu_restore(w);
 	return x;
 }
 
