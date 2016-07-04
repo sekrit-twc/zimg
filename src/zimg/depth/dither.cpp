@@ -14,13 +14,6 @@
 #include "hexfloat.h"
 #include "quantize.h"
 
-#if defined(_MSC_VER) && ZIMG_X86
-  #include <xmmintrin.h>
-  #define mylrintf(x) _mm_cvt_ss2si(_mm_set_ss((x)))
-#else
-  #define mylrintf lrintf
-#endif
-
 namespace zimg {
 namespace depth {
 
@@ -40,7 +33,7 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 		x += d;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
 
-		dst_p[j] = static_cast<U>(mylrintf(x));
+		dst_p[j] = static_cast<U>(lrintf(x));
 	}
 }
 
@@ -65,7 +58,7 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		x += err;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
 
-		U q = static_cast<U>(mylrintf(x));
+		U q = static_cast<U>(lrintf(x));
 
 		dst_p[j] = q;
 		error_cur_p[j] = x - static_cast<float>(q);
