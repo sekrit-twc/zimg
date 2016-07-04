@@ -300,5 +300,8 @@
     <ClInclude Include="..\..\src\zimg\graph\image_buffer.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\hexfloat.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

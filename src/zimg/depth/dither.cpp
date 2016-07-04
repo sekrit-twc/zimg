@@ -11,12 +11,8 @@
 #include "depth.h"
 #include "dither.h"
 #include "dither_x86.h"
+#include "hexfloat.h"
 #include "quantize.h"
-
-#ifdef _MSC_VER
-  #include <clocale>
-  #include <cstdlib>
-#endif
 
 #if defined(_MSC_VER) && ZIMG_X86
   #include <xmmintrin.h>
@@ -29,19 +25,6 @@ namespace zimg {
 namespace depth {
 
 namespace {
-
-#ifdef _MSC_VER
-  float HF_(const char *str)
-  {
-    _locale_t l = _create_locale(LC_ALL, "C");
-    float ret = _strtof_l(str, nullptr, l);
-    _free_locale(l);
-    return ret;
-  }
-  #define HF(x) HF_(#x)
-#else
-  #define HF(x) x
-#endif
 
 template <class T, class U>
 void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither_mask,
@@ -219,8 +202,8 @@ public:
 	RandomDitherTable(unsigned, unsigned height)
 	{
 		// The greatest value such that rint(65535.0f + x) yields 65535.0f unchanged.
-		float safe_min = HF(-0x1.fdfffep-2);
-		float safe_max = HF(0x1.fdfffep-2);
+		float safe_min = HEX_LF_C(-0x1.fdfffep-2);
+		float safe_max = HEX_LF_C(0x1.fdfffep-2);
 
 		std::mt19937 mt;
 		auto mt_min = std::mt19937::min();

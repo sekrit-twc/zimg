@@ -87,6 +87,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/depth/depth.h \
 	src/zimg/depth/dither.cpp \
 	src/zimg/depth/dither.h \
+	src/zimg/depth/hexfloat.h \
 	src/zimg/depth/quantize.h \
 	src/zimg/graph/basic_filter.cpp \
 	src/zimg/graph/basic_filter.h \

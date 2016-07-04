@@ -170,6 +170,7 @@
     <ClInclude Include="..\..\src\zimg\depth\dither.h" />
     <ClInclude Include="..\..\src\zimg\depth\dither_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\f16c_x86.h" />
+    <ClInclude Include="..\..\src\zimg\depth\hexfloat.h" />
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
     <ClInclude Include="..\..\src\zimg\graph\basic_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
