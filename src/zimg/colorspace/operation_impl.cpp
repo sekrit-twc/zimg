@@ -10,7 +10,7 @@
 #else
   #define fpu_save() 0
   #define fpu_set_single() (void)0
-  #define fpu_restore(x) (void)0
+  #define fpu_restore(x) (void)x
 #endif /* _MSC_VER */
 
 #include "common/make_unique.h"

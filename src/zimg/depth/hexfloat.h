@@ -3,9 +3,11 @@
 namespace zimg {
 namespace depth {
 
-#pragma warning(push)
-#pragma warning(disable : 4146)
-#pragma warning(disable : 4244)
+#ifdef _MSC_VER
+  #pragma warning(push)
+  #pragma warning(disable : 4146)
+  #pragma warning(disable : 4244)
+#endif
 
 // Credits to: Ruslan
 // http://stackoverflow.com/questions/32829512/c-hexfloat-compile-time-parsing/35968294#35968294
@@ -144,7 +146,9 @@ public:
                         HEX_LF_C::string_in_ull(#num,16,24,16),  \
                         HEX_LF_C::string_in_ull(#num,24,32,24)>::value
 
-#pragma warning(pop)
+#ifdef _MSC_VER
+  #pragma warning(pop)
+#endif
 
 } // namespace depth
 } // namespace zimg
