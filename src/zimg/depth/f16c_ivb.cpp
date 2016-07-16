@@ -3,7 +3,6 @@
 #include "common/ccdep.h"
 
 #include <immintrin.h>
-#include F16CINTRIN_H
 #include "common/align.h"
 
 #define HAVE_CPU_SSE2

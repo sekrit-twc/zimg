@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <type_traits>
 #include <immintrin.h>
-#include F16CINTRIN_H
 
 #include "common/align.h"
 
