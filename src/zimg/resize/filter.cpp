@@ -20,7 +20,7 @@ const double PI = 3.14159265358979323846;
 double sinc(double x)
 {
 	// Guaranteed to not yield division by zero on IEEE machine with accurate sin(x).
-	return x == 0.0 ? 1.0 : _zimg_sin(x * PI) / (x * PI);
+	return x == 0.0 ? 1.0 : zimg_x_sin(x * PI) / (x * PI);
 }
 
 double sq(double x)
@@ -108,8 +108,8 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 		 * floating point data, since the error is dependent on summation order,
 		 * but for integer data, the error can be added to the greatest coefficient.
 		 */
-		_zassert_d(1.0 - f32_sum <= FLT_EPSILON, "error too great");
-		_zassert_d(std::abs((1 << 14) - i16_sum) <= 1, "error too great");
+		zassert_d(1.0 - f32_sum <= FLT_EPSILON, "error too great");
+		zassert_d(std::abs((1 << 14) - i16_sum) <= 1, "error too great");
 
 		e.data_i16[i * e.stride_i16 + i16_greatest_idx] += (1 << 14) - i16_sum;
 

@@ -93,7 +93,7 @@ public:
 		m_head{ comp },
 		m_size{ init.size() }
 	{
-		_zassert(init.size() <= Sz, "list size incorrect");
+		zassert(init.size() <= Sz, "list size incorrect");
 
 		std::copy(init.begin(), init.end(), m_head.array.begin());
 		std::sort(m_head.array.begin(), m_head.array.begin() + init.size(), m_head.get_value_comp());

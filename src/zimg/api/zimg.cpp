@@ -22,9 +22,9 @@ namespace {
 
 const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
 
-#define API_VERSION_ASSERT(x) _zassert_d((x) >= API_VERSION_2_0, "API version invalid")
-#define POINTER_ALIGNMENT_ASSERT(x) _zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
-#define STRIDE_ALIGNMENT_ASSERT(x) _zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
+#define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
+#define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
+#define STRIDE_ALIGNMENT_ASSERT(x) zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
 
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local char g_last_error_msg[1024];
@@ -37,7 +37,7 @@ T *assert_dynamic_cast(U *ptr)
 {
 	static_assert(std::is_base_of<U, T>::value, "type does not derive from base");
 	T *pptr = dynamic_cast<T *>(ptr);
-	_zassert_d(pptr, "bad dynamic type");
+	zassert_d(pptr, "bad dynamic type");
 	return pptr;
 }
 
@@ -55,7 +55,7 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 	zimg_error_code_e code = ZIMG_ERROR_UNKNOWN;
 
 #define CATCH(type, error_code) catch (const type &e) { record_exception_message(e); code = (error_code); }
-#define FATAL(type, error_code, msg) catch (const type &e) { _zassert_d(false, msg); record_exception_message(e); code = (error_code); }
+#define FATAL(type, error_code, msg) catch (const type &e) { zassert_d(false, msg); record_exception_message(e); code = (error_code); }
 	try {
 		std::rethrow_exception(eptr);
 	}
@@ -328,7 +328,7 @@ std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> im
 {
 	API_VERSION_ASSERT(src.version);
 	API_VERSION_ASSERT(dst.version);
-	_zassert_d(src.version == dst.version, "image format versions do not match");
+	zassert_d(src.version == dst.version, "image format versions do not match");
 
 	zimg::graph::GraphBuilder::state src_state{};
 	zimg::graph::GraphBuilder::state dst_state{};
@@ -380,9 +380,9 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 
 void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 {
-	_zassert_d(major, "null pointer");
-	_zassert_d(minor, "null pointer");
-	_zassert_d(micro, "null pointer");
+	zassert_d(major, "null pointer");
+	zassert_d(minor, "null pointer");
+	zassert_d(micro, "null pointer");
 
 	*major = VERSION_INFO[0];
 	*minor = VERSION_INFO[1];
@@ -436,8 +436,8 @@ void zimg_filter_graph_free(zimg_filter_graph *ptr)
 
 zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out)
 {
-	_zassert_d(ptr, "null pointer");
-	_zassert_d(out, "null pointer");
+	zassert_d(ptr, "null pointer");
+	zassert_d(out, "null pointer");
 
 	EX_BEGIN
 	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_tmp_size();
@@ -446,8 +446,8 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 
 zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
-	_zassert_d(ptr, "null pointer");
-	_zassert_d(out, "null pointer");
+	zassert_d(ptr, "null pointer");
+	zassert_d(out, "null pointer");
 
 	EX_BEGIN
 	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_input_buffering();
@@ -456,8 +456,8 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
 
 zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out)
 {
-	_zassert_d(ptr, "null pointer");
-	_zassert_d(out, "null pointer");
+	zassert_d(ptr, "null pointer");
+	zassert_d(out, "null pointer");
 
 	EX_BEGIN
 	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_output_buffering();
@@ -468,9 +468,9 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
                                              zimg_filter_graph_callback unpack_cb, void *unpack_user,
                                              zimg_filter_graph_callback pack_cb, void *pack_user)
 {
-	_zassert_d(ptr, "null pointer");
-	_zassert_d(src, "null pointer");
-	_zassert_d(dst, "null pointer");
+	zassert_d(ptr, "null pointer");
+	zassert_d(src, "null pointer");
+	zassert_d(dst, "null pointer");
 
 	POINTER_ALIGNMENT_ASSERT(src->plane[0].data);
 	POINTER_ALIGNMENT_ASSERT(src->plane[1].data);
@@ -504,7 +504,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 
 void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 {
-	_zassert_d(ptr, "null pointer");
+	zassert_d(ptr, "null pointer");
 	API_VERSION_ASSERT(version);
 
 	ptr->version = version;
@@ -532,7 +532,7 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 
 void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned version)
 {
-	_zassert_d(ptr, "null pointer");
+	zassert_d(ptr, "null pointer");
 	API_VERSION_ASSERT(version);
 
 	ptr->version = version;
@@ -554,8 +554,8 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
 
 zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params)
 {
-	_zassert_d(src_format, "null pointer");
-	_zassert_d(dst_format, "null pointer");
+	zassert_d(src_format, "null pointer");
+	zassert_d(dst_format, "null pointer");
 
 	try {
 		zimg::graph::GraphBuilder::state src_state;

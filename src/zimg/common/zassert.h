@@ -1,5 +1,5 @@
-#undef _zassert
-#undef _zassert_d
+#undef zassert
+#undef zassert_d
 
 #ifdef NDEBUG
   #define Z_NDEBUG
@@ -8,13 +8,13 @@
 
 #include <assert.h>
 
-#define _zassert(x, msg) assert((x) && (msg))
+#define zassert(x, msg) assert((x) && (msg))
 
 #ifdef Z_NDEBUG
   #include "ccdep.h"
-  #define _zassert_d(x, msg) ASSUME_CONDITION(x)
+  #define zassert_d(x, msg) ASSUME_CONDITION(x)
   #undef Z_NDEBUG
   #define NDEBUG
 #else
-  #define _zassert_d(x, msg) _zassert(x, msg)
+  #define zassert_d(x, msg) zassert(x, msg)
 #endif

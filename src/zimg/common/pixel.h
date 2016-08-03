@@ -54,7 +54,7 @@ inline const PixelTraits &pixel_get_traits(PixelType type)
 	static_assert(sizeof(traits) / sizeof(traits[0]) == static_cast<int>(PixelType::FLOAT) + 1,
 	              "table size incorrect");
 
-	_zassert_d(type >= PixelType::BYTE && type <= PixelType::FLOAT, "pixel type out of range");
+	zassert_d(type >= PixelType::BYTE && type <= PixelType::FLOAT, "pixel type out of range");
 	return traits[static_cast<int>(type)];
 }
 

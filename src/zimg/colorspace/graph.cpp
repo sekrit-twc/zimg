@@ -117,7 +117,7 @@ class ColorspaceGraph {
 					prev = parents[tail];
 
 					auto link = std::find_if(m_edge[prev].begin(), m_edge[prev].end(), [=](const edge_type &e) { return e.first == tail; });
-					_zassert_d(link != m_edge[prev].end(), "missing link in traversal path");
+					zassert_d(link != m_edge[prev].end(), "missing link in traversal path");
 					path.insert(path.begin(), link->second);
 
 					tail = prev;
@@ -142,9 +142,9 @@ class ColorspaceGraph {
 public:
 	ColorspaceGraph()
 	{
-		_zassert_d(!is_valid_csp({ MatrixCoefficients::REC_2020_CL, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 }), "accepted bad colorspace");
-		_zassert_d(!is_valid_csp({ MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::REC_709 }), "accepted bad colorspace");
-		_zassert_d(!is_valid_csp({ MatrixCoefficients::UNSPECIFIED, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 }), "accepted bad colorspace");
+		zassert_d(!is_valid_csp({ MatrixCoefficients::REC_2020_CL, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 }), "accepted bad colorspace");
+		zassert_d(!is_valid_csp({ MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::REC_709 }), "accepted bad colorspace");
+		zassert_d(!is_valid_csp({ MatrixCoefficients::UNSPECIFIED, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 }), "accepted bad colorspace");
 
 		// Insert all colorspaces.
 		for (auto coeffs : all_matrix()) {

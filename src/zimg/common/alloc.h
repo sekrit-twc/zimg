@@ -9,12 +9,12 @@
 
 #ifdef _WIN32
   #include <malloc.h>
-  inline void *_zimg_aligned_malloc(size_t size, size_t alignment) { return _aligned_malloc(size, alignment); }
-  inline void _zimg_aligned_free(void *ptr) { _aligned_free(ptr); }
+  inline void *zimg_x_aligned_malloc(size_t size, size_t alignment) { return _aligned_malloc(size, alignment); }
+  inline void zimg_x_aligned_free(void *ptr) { _aligned_free(ptr); }
 #else
   #include <stdlib.h>
-  inline void *_zimg_aligned_malloc(size_t size, size_t alignment) { void *p; if (posix_memalign(&p, alignment, size)) return nullptr; else return p; }
-  inline void _zimg_aligned_free(void *ptr) { free(ptr); }
+  inline void *zimg_x_aligned_malloc(size_t size, size_t alignment) { void *p; if (posix_memalign(&p, alignment, size)) return nullptr; else return p; }
+  inline void zimg_x_aligned_free(void *ptr) { free(ptr); }
 #endif
 
 namespace zimg {
@@ -142,7 +142,7 @@ struct AlignedAllocator {
 
 	T *allocate(size_t n) const
 	{
-		T *ptr = (T *)_zimg_aligned_malloc(n * sizeof(T), ALIGNMENT);
+		T *ptr = (T *)zimg_x_aligned_malloc(n * sizeof(T), ALIGNMENT);
 
 		if (!ptr)
 			throw std::bad_alloc{};
@@ -152,7 +152,7 @@ struct AlignedAllocator {
 
 	void deallocate(void *ptr, size_t) const
 	{
-		_zimg_aligned_free(ptr);
+		zimg_x_aligned_free(ptr);
 	}
 
 	bool operator==(const AlignedAllocator &) const

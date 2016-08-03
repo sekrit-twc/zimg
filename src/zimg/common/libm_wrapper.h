@@ -15,10 +15,10 @@
 extern "C" {
 #endif
 
-extern double (*_zimg_sin)(double x);
-extern double (*_zimg_cos)(double x);
-extern double (*_zimg_pow)(double x, double y);
-extern float (*_zimg_powf)(float x, float y);
+extern double (*zimg_x_sin)(double x);
+extern double (*zimg_x_cos)(double x);
+extern double (*zimg_x_pow)(double x, double y);
+extern float (*zimg_x_powf)(float x, float y);
 
 #ifdef __cplusplus
 } /* extern "C" */

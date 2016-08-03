@@ -204,7 +204,7 @@ zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 
 zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
 {
-	_zassert(plane < m_planes, "plane index out of bounds");
+	zassert(plane < m_planes, "plane index out of bounds");
 	return{ m_vector[plane].data() + m_offset[plane], width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
 }
 
@@ -239,7 +239,7 @@ public:
 		size_t size = 0;
 		char *ptr;
 
-		_zassert_d(spec.planes <= 3, "too many planes");
+		zassert_d(spec.planes <= 3, "too many planes");
 
 		for (unsigned p = 0; p < spec.planes; ++p) {
 			m_linewidth[p] = (width * zimg::pixel_size(spec.type)) >> ((p == 1 || p == 2) ? spec.subsample_w : 0);
@@ -442,7 +442,7 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 	case PackingFormat::PACK_YUY2:
 		return read_from_yuy2(spec, width, height, type, fullrange);
 	default:
-		_zassert(false, "bad packing type");
+		zassert(false, "bad packing type");
 		throw std::runtime_error{ "" };
 	}
 }

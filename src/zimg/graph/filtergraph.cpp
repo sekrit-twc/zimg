@@ -156,7 +156,7 @@ public:
 
 	void *alloc_context(unsigned id, size_t size)
 	{
-		_zassert(!m_context_table[id], "context already allocated");
+		zassert(!m_context_table[id], "context already allocated");
 
 		m_context_table[id] = m_alloc.allocate(size);
 		return m_context_table[id];
@@ -210,7 +210,7 @@ protected:
 
 		void assert_guard_pattern() const
 		{
-			_zassert(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
+			zassert(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
 		}
 
 	};
@@ -366,8 +366,8 @@ public:
 		node_context *context = new (alloc.allocate_n<node_context>(1)) node_context{};
 		init_context_base(context);
 
-		_zassert(alloc.count() <= context_size, "buffer overflow detected");
-		_zassert_d(alloc.count() == context_size, "allocation mismatch");
+		zassert(alloc.count() <= context_size, "buffer overflow detected");
+		zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
 	void reset_context(ExecutionState *state) const override
@@ -519,8 +519,8 @@ public:
 			context->cache_buf[p] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 		}
 
-		_zassert(alloc.count() <= context_size, "buffer overflow detected");
-		_zassert_d(alloc.count() == context_size, "allocation mismatch");
+		zassert(alloc.count() <= context_size, "buffer overflow detected");
+		zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
 	void reset_context(ExecutionState *state) const override
@@ -559,7 +559,7 @@ public:
 			const ImageBuffer<const void> *input_buffer_uv = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
-			_zassert_d(range.first < range.second, "bad row range");
+			zassert_d(range.first < range.second, "bad row range");
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
 				input_buffer = m_parent->generate_line(state, nullptr, ii, false);
@@ -681,8 +681,8 @@ public:
 		context->cache_buf[1] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 		context->cache_buf[2] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
 
-		_zassert(alloc.count() <= context_size, "buffer overflow detected");
-		_zassert_d(alloc.count() == context_size, "allocation mismatch");
+		zassert(alloc.count() <= context_size, "buffer overflow detected");
+		zassert_d(alloc.count() == context_size, "allocation mismatch");
 	}
 
 	void reset_context(ExecutionState *state) const override
@@ -719,7 +719,7 @@ public:
 			const ImageBuffer<const void> *input_buffer = nullptr;
 
 			auto range = m_filter->get_required_row_range(pos);
-			_zassert_d(range.first < range.second, "bad row range");
+			zassert_d(range.first < range.second, "bad row range");
 
 			for (unsigned ii = range.first; ii < range.second; ++ii) {
 				input_buffer = m_parent->generate_line(state, nullptr, ii, true);

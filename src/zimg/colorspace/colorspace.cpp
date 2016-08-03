@@ -26,7 +26,7 @@ public:
 		m_height{ height }
 	{
 		auto path = get_operation_path(in, out);
-		_zassert(!path.empty(), "empty path");
+		zassert(!path.empty(), "empty path");
 
 		for (const auto &func : path) {
 			m_operations.emplace_back(func(cpu));

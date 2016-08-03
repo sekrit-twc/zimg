@@ -19,7 +19,7 @@ bool contains_only(InputIt first, InputIt last, const T &value)
 template <class T>
 T float_as(float x)
 {
-	_zassert(false, "fail");
+	zassert(false, "fail");
 	return{};
 }
 

@@ -9,10 +9,10 @@ namespace {
 
 void wrap_libm()
 {
-	_zimg_sin = mysin;
-	_zimg_cos = mycos;
-	_zimg_pow = mypow;
-	_zimg_powf = mypowf;
+	zimg_x_sin = mysin;
+	zimg_x_cos = mycos;
+	zimg_x_pow = mypow;
+	zimg_x_powf = mypowf;
 }
 
 } // namespace

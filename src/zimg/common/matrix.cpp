@@ -112,8 +112,8 @@ RowMatrix<T>::RowMatrix(size_type m, size_type n) :
 template <class T>
 void RowMatrix<T>::check_bounds(size_type i, size_type j) const
 {
-	_zassert_d(i < m_rows, "row index out of bounds");
-	_zassert_d(j < m_cols, "column index out of bounds");
+	zassert_d(i < m_rows, "row index out of bounds");
+	zassert_d(j < m_cols, "column index out of bounds");
 }
 
 template <class T>
