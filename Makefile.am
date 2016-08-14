@@ -213,11 +213,11 @@ endif # EXAMPLES
 
 
 if TESTAPP
-noinst_PROGRAMS += zimg-test
+noinst_PROGRAMS += testapp
 noinst_LTLIBRARIES += libtestcommon.la
-zimg_test_CPPFLAGS = -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon
+testapp_CPPFLAGS = -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon
 
-zimg_test_SOURCES = \
+testapp_SOURCES = \
 	src/testapp/apps.h \
 	src/testapp/colorspaceapp.cpp \
 	src/testapp/depthapp.cpp \
@@ -234,8 +234,8 @@ zimg_test_SOURCES = \
 	src/testapp/utils.cpp \
 	src/testapp/utils.h
 
-zimg_test_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
-zimg_test_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg_internal.la
+testapp_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
+testapp_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg_internal.la
 endif # TESTAPP
 
 
