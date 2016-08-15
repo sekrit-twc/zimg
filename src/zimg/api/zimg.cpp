@@ -59,7 +59,6 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 	try {
 		std::rethrow_exception(eptr);
 	}
-
 	CATCH(UnknownError,            ZIMG_ERROR_UNKNOWN)
 	CATCH(OutOfMemory,             ZIMG_ERROR_OUT_OF_MEMORY)
 	CATCH(UserCallbackFailed,      ZIMG_ERROR_USER_CALLBACK_FAILED)
@@ -82,6 +81,10 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 
 	FATAL(InternalError,           ZIMG_ERROR_UNKNOWN, "internal error generated")
 	FATAL(Exception,               ZIMG_ERROR_UNKNOWN, "unregistered error generated")
+	catch (...) {
+		zassert_d(false, "bad exception type");
+		g_last_error_msg[0] = '\0';
+	}
 #undef CATCH
 #undef FATAL
 	g_last_error = code;
