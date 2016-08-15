@@ -144,7 +144,6 @@ private:
 	};
 
 	std::unique_ptr<FilterGraph> m_graph;
-	FilterFactory *m_factory;
 	state m_state;
 
 	void attach_filter(std::unique_ptr<ImageFilter> &&filter);
@@ -156,11 +155,11 @@ private:
 	void grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
 	                   ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h);
 
-	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params);
+	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory);
 
-	void convert_depth(const PixelFormat &format, const params *params);
+	void convert_depth(const PixelFormat &format, const params *params, FilterFactory *factory);
 
-	void convert_resize(const resize_spec &spec, const params *params);
+	void convert_resize(const resize_spec &spec, const params *params, FilterFactory *factory);
 public:
 	/**
 	 * Default construct GraphBuilder, creating a builder that manages no graph.
@@ -171,14 +170,6 @@ public:
 	 * Destroy builder.
 	 */
 	~GraphBuilder();
-
-	/**
-	 * Set filter factory used by builder.
-	 *
-	 * @param factory filter factory
-	 * @return reference to self
-	 */
-	GraphBuilder &set_factory(FilterFactory *factory);
 
 	/**
 	 * Set image format of graph input. Creates a new graph.
@@ -195,7 +186,7 @@ public:
 	 * @param params filter creation parameters
 	 * @return reference to self
 	 */
-	GraphBuilder &connect_graph(const state &target, const params *params);
+	GraphBuilder &connect_graph(const state &target, const params *params, FilterFactory *factory = nullptr);
 
 	/**
 	 * Finalize and return managed graph.

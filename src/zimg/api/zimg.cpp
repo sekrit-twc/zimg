@@ -564,14 +564,12 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		zimg::graph::GraphBuilder::state src_state;
 		zimg::graph::GraphBuilder::state dst_state;
 		zimg::graph::GraphBuilder::params graph_params;
-		zimg::graph::DefaultFilterFactory factory;
 
 		std::tie(src_state, dst_state) = import_graph_state(*src_format, *dst_format);
 		if (params)
 			graph_params = import_graph_params(*params);
 
-		return zimg::graph::GraphBuilder{}.set_factory(&factory).
-		                                   set_source(src_state).
+		return zimg::graph::GraphBuilder{}.set_source(src_state).
 		                                   connect_graph(dst_state, params ? &graph_params : nullptr).
 		                                   complete_graph().release();
 	} catch (const zimg::error::Exception &) {

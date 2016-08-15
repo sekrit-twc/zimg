@@ -205,9 +205,7 @@ GraphBuilder::resize_spec::resize_spec(const state &state) :
 {
 }
 
-GraphBuilder::GraphBuilder() :
-	m_factory{},
-	m_state{}
+GraphBuilder::GraphBuilder() : m_state{}
 {
 }
 
@@ -267,10 +265,8 @@ void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficien
 	m_state.chroma_location_h = chroma_location_h;
 }
 
-void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params)
+void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory)
 {
-	if (!m_factory)
-		throw error::InternalError{ "filter factory not set" };
 	if (is_greyscale(m_state))
 		throw error::NoColorspaceConversion{ "cannot apply colorspace conversion to greyscale image" };
 	if (m_state.colorspace == colorspace)
@@ -283,7 +279,7 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 		set_csp_out(colorspace).
 		set_cpu(cpu);
 
-	for (auto &&filter : m_factory->create_colorspace(conv)) {
+	for (auto &&filter : factory->create_colorspace(conv)) {
 		attach_filter(std::move(filter));
 	}
 
@@ -291,11 +287,8 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 	m_state.colorspace = colorspace;
 }
 
-void GraphBuilder::convert_depth(const PixelFormat &format, const params *params)
+void GraphBuilder::convert_depth(const PixelFormat &format, const params *params, FilterFactory *factory)
 {
-	if (!m_factory)
-		throw error::InternalError{ "filter factory not set" };
-
 	PixelFormat src_format{ m_state.type, m_state.depth, m_state.fullrange, false, is_ycgco(m_state) };
 
 	if (src_format == format)
@@ -310,7 +303,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		set_dither_type(dither_type).
 		set_cpu(cpu);
 
-	FilterFactory::filter_list filter_list = m_factory->create_depth(conv);
+	FilterFactory::filter_list filter_list = factory->create_depth(conv);
 	FilterFactory::filter_list filter_list_uv;
 
 	if (is_yuv(m_state)) {
@@ -319,7 +312,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		conv.pixel_in.chroma = true;
 		conv.pixel_out.chroma = true;
 
-		filter_list_uv = m_factory->create_depth(conv);
+		filter_list_uv = factory->create_depth(conv);
 	} else if (is_rgb(m_state)) {
 		for (auto &&filter : filter_list) {
 			filter = ztd::make_unique<MuxFilter>(std::move(filter));
@@ -338,11 +331,8 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	m_state.fullrange = format.fullrange;
 }
 
-void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
+void GraphBuilder::convert_resize(const resize_spec &spec, const params *params, FilterFactory *factory)
 {
-	if (!m_factory)
-		throw error::InternalError{ "filter factory not set" };
-
 	resize::BicubicFilter bicubic_filter{ 1.0 / 3.0, 1.0 / 3.0 };
 	resize::BilinearFilter bilinear_filter;
 
@@ -403,7 +393,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 			set_subheight(spec.subheight).
 			set_cpu(cpu);
 
-		filter_list = m_factory->create_resize(conv);
+		filter_list = factory->create_resize(conv);
 
 		if (is_rgb(m_state)) {
 			for (auto &&filter : filter_list) {
@@ -434,7 +424,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 			set_subheight(spec.subheight / (1 << m_state.subsample_h)).
 			set_cpu(cpu);
 
-		filter_list_uv = m_factory->create_resize(conv);
+		filter_list_uv = factory->create_resize(conv);
 	}
 
 	for (auto &&filter : filter_list) {
@@ -452,12 +442,6 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params)
 	m_state.chroma_location_h = chroma_location_h;
 }
 
-GraphBuilder &GraphBuilder::set_factory(FilterFactory *factory)
-{
-	m_factory = factory;
-	return *this;
-}
-
 GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	if (m_graph)
@@ -472,10 +456,14 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 	throw error::OutOfMemory{};
 }
 
-GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params) try
+GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) try
 {
+	DefaultFilterFactory default_factory;
+
 	if (!m_graph)
 		throw error::InternalError{ "no active graph" };
+	if (!factory)
+		factory = &default_factory;
 
 	validate_state(target);
 
@@ -500,31 +488,31 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			}
 
 			if (m_state.type != PixelType::FLOAT)
-				convert_depth(PixelType::FLOAT, params);
+				convert_depth(PixelType::FLOAT, params, factory);
 
-			convert_resize(spec, params);
+			convert_resize(spec, params, factory);
 
 			if (is_greyscale(m_state))
 				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
 
-			convert_colorspace(target.colorspace, params);
+			convert_colorspace(target.colorspace, params, factory);
 		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
 			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
 			// Convert to the target pixel format to reduce the required number of conversions.
 			if (target.type == PixelType::WORD)
-				convert_depth(PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params);
+				convert_depth(PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params, factory);
 			if (target.type == PixelType::HALF && fast_f16)
-				convert_depth(PixelType::HALF, params);
+				convert_depth(PixelType::HALF, params, factory);
 			if (target.type == PixelType::FLOAT)
-				convert_depth(PixelType::FLOAT, params);
+				convert_depth(PixelType::FLOAT, params, factory);
 
 			// If neither the source nor target pixel format is directly supported, select a different format.
 			if (m_state.type == PixelType::BYTE)
-				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params);
+				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params, factory);
 			// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
 			if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
-				convert_depth(PixelType::FLOAT, params);
+				convert_depth(PixelType::FLOAT, params, factory);
 
 			resize_spec spec{ m_state };
 			spec.width = target.width;
@@ -534,10 +522,10 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			spec.chroma_location_w = target.chroma_location_w;
 			spec.chroma_location_h = target.chroma_location_h;
 
-			convert_resize(spec, params);
+			convert_resize(spec, params, factory);
 		} else if (needs_depth(m_state, target)) {
 			PixelFormat format{ target.type, target.depth, target.fullrange, false, is_ycgco(target) };
-			convert_depth(format, params);
+			convert_depth(format, params, factory);
 		} else if (is_greyscale(m_state) && !is_greyscale(target)) {
 			grey_to_color(target.color, target.colorspace.matrix, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
 		} else {
