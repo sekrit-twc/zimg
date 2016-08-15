@@ -25,7 +25,7 @@ extern "C" {
  */
 #define ZIMG_MAKE_API_VERSION(x, y) (((x) << 8) | (y))
 #define ZIMG_API_VERSION_MAJOR 2
-#define ZIMG_API_VERSION_MINOR 0
+#define ZIMG_API_VERSION_MINOR 1
 #define ZIMG_API_VERSION ZIMG_MAKE_API_VERSION(ZIMG_API_VERSION_MAJOR, ZIMG_API_VERSION_MINOR)
 
 /**
@@ -483,6 +483,14 @@ typedef struct zimg_image_format {
 
 	zimg_field_parity_e field_parity;                         /**< Field parity (default ZIMG_FIELD_PROGRESSIVE). */
 	zimg_chroma_location_e chroma_location;                   /**< Chroma location (default ZIMG_CHROMA_LEFT). */
+
+	/** Active image subrectangle. Since API 2.1 */
+	struct {
+		double left;   /**< Subpixel index of left image boundary (default NAN, treated as 0). */
+		double top;    /**< Subpixel index of top image boundary (default NAN, treated as 0). */
+		double width;  /**< Subpixel width, counting from {@link left} (default NAN, same as image width). */
+		double height; /**< Subpixel height, counting from {@link top} (default NAN, same as image height). */
+	} active_region;
 } zimg_image_format;
 
 /**

@@ -21,6 +21,7 @@
 namespace {
 
 const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
+const unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
 
 #define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
 #define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
@@ -324,7 +325,13 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 
 		out->parity = translate_field_parity(src.field_parity);
 		std::tie(out->chroma_location_w, out->chroma_location_h) = translate_chroma_location(src.chroma_location);
-
+	}
+	if (src.version >= API_VERSION_2_1) {
+		out->active_left = std::isnan(src.active_region.left) ? 0 : src.active_region.left;
+		out->active_top = std::isnan(src.active_region.top) ? 0 : src.active_region.top;
+		out->active_width = std::isnan(src.active_region.width) ? 0 : src.width;
+		out->active_height = std::isnan(src.active_region.height) ? 0 : src.height;
+	} else {
 		out->active_left = 0.0;
 		out->active_top = 0.0;
 		out->active_width = src.width;
@@ -535,6 +542,12 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 
 		ptr->field_parity = ZIMG_FIELD_PROGRESSIVE;
 		ptr->chroma_location = ZIMG_CHROMA_LEFT;
+	}
+	if (version >= API_VERSION_2_1) {
+		ptr->active_region.left = NAN;
+		ptr->active_region.top = NAN;
+		ptr->active_region.width = NAN;
+		ptr->active_region.height = NAN;
 	}
 }
 
