@@ -102,7 +102,7 @@ public:
 	 *
 	 * @param taps number of taps
 	 */
-	LanczosFilter(int taps);
+	explicit LanczosFilter(int taps);
 
 	int support() const override;
 

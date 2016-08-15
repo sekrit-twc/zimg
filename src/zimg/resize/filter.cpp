@@ -215,6 +215,8 @@ double Spline36Filter::operator()(double x) const
 
 LanczosFilter::LanczosFilter(int taps) : taps{ taps }
 {
+	if (taps <= 0)
+		throw error::IllegalArgument{ "lanczos tap count must be positive" };
 }
 
 int LanczosFilter::support() const
