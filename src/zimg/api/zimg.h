@@ -91,9 +91,9 @@ typedef enum zimg_error_code_e {
 	 * While all API errors result from illegal parameters, this category
 	 * indicates a locally determinable error, such as an out of range enum.
 	 */
-	ZIMG_ERROR_ILLEGAL_ARGUMENT  = (2 << 10),
-	ZIMG_ERROR_ENUM_OUT_OF_RANGE = ZIMG_ERROR_ILLEGAL_ARGUMENT + 1, /**< Value not in enumeration. */
-	ZIMG_ERROR_ZERO_IMAGE_SIZE   = ZIMG_ERROR_ILLEGAL_ARGUMENT + 2, /**< Image width or height is zero. */
+	ZIMG_ERROR_ILLEGAL_ARGUMENT   = (2 << 10),
+	ZIMG_ERROR_ENUM_OUT_OF_RANGE  = ZIMG_ERROR_ILLEGAL_ARGUMENT + 1, /**< Value not in enumeration. */
+	ZIMG_ERROR_INVALID_IMAGE_SIZE = ZIMG_ERROR_ILLEGAL_ARGUMENT + 2, /**< Image size or region is not well-formed. */
 
 	/**
 	 * A requested conversion was not supported by the library.

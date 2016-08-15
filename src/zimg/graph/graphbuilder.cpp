@@ -92,7 +92,7 @@ bool is_ycgco(const GraphBuilder::state &state)
 void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
-		throw error::ZeroImageSize{ "image dimensions must be non-zero" };
+		throw error::InvalidImageSize{ "image dimensions must be non-zero" };
 
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)
@@ -128,9 +128,9 @@ void validate_state(const GraphBuilder::state &state)
 		throw error::BitDepthOverflow{ "bit depth must be at least 8 for limited range" };
 
 	if (!std::isfinite(state.active_left) || !std::isfinite(state.active_top) || !std::isfinite(state.active_width) || !std::isfinite(state.active_height))
-		throw error::InvalidImageRegion{ "active window must be finite" };
+		throw error::InvalidImageSize{ "active window must be finite" };
 	if (state.active_width <= 0 || state.active_height <= 0)
-		throw error::InvalidImageRegion{ "active window must be positive" };
+		throw error::InvalidImageSize{ "active window must be positive" };
 }
 
 bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)

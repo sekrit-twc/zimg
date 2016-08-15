@@ -71,7 +71,7 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr)
 	CATCH(LogicError,              ZIMG_ERROR_LOGIC)
 
 	CATCH(EnumOutOfRange,          ZIMG_ERROR_ENUM_OUT_OF_RANGE)
-	CATCH(ZeroImageSize,           ZIMG_ERROR_ZERO_IMAGE_SIZE)
+	CATCH(InvalidImageSize,        ZIMG_ERROR_INVALID_IMAGE_SIZE)
 	CATCH(IllegalArgument,         ZIMG_ERROR_ILLEGAL_ARGUMENT)
 
 	CATCH(UnsupportedSubsampling,  ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING)
