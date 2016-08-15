@@ -46,9 +46,9 @@ install-sh
 libtool
 ltmain.sh
 missing
+testapp
 test-driver
 test-suite.log
-zimg-test
 
 !doc/example/Makefile
 !m4/ax_pthread.m4
