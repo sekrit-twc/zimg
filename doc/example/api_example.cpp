@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -23,18 +24,26 @@ struct Arguments {
 	unsigned out_h;
 	unsigned in_w;
 	unsigned in_h;
+	double shift_w = NAN;
+	double shift_h = NAN;
+	double subwidth = NAN;
+	double subheight = NAN;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, nullptr, "in-width",  offsetof(Arguments, in_w), nullptr, "input width" },
-	{ OPTION_UINTEGER, nullptr, "in-height", offsetof(Arguments, in_h), nullptr, "input height" }
+	{ OPTION_UINTEGER, nullptr, "in-width",   offsetof(Arguments, in_w),      nullptr, "input width" },
+	{ OPTION_UINTEGER, nullptr, "in-height",  offsetof(Arguments, in_h),      nullptr, "input height" },
+	{ OPTION_FLOAT,    nullptr, "shift-w",    offsetof(Arguments, shift_w),   nullptr, "shift image to the left by x subpixels" },
+	{ OPTION_FLOAT,    nullptr, "shift-h",    offsetof(Arguments, shift_h),   nullptr, "shift image to the top by x subpixels" },
+	{ OPTION_FLOAT,    nullptr, "sub-width",  offsetof(Arguments, subwidth),  nullptr, "treat image width differently from actual width" },
+	{ OPTION_FLOAT,    nullptr, "sub-height", offsetof(Arguments, subheight), nullptr, "treat image height differently from actual height" },
 };
 
 const ArgparseOption program_positional[] = {
 	{ OPTION_STRING,   nullptr, "inpath",  offsetof(Arguments, inpath),  nullptr, "input path specifier" },
 	{ OPTION_STRING,   nullptr, "outpath", offsetof(Arguments, outpath), nullptr, "output path specifier" },
 	{ OPTION_UINTEGER, "w",     "width",   offsetof(Arguments, out_w),   nullptr, "output width" },
-	{ OPTION_UINTEGER, "h",     "height",  offsetof(Arguments, out_h),   nullptr, "output height" }
+	{ OPTION_UINTEGER, "h",     "height",  offsetof(Arguments, out_h),   nullptr, "output height" },
 };
 
 const ArgparseCommandLine program_def = {
@@ -349,10 +358,25 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 	}
 }
 
-void process(const ImageFile &in_data, const ImageFile &out_data)
+void process(const Arguments &args, const ImageFile &in_data, const ImageFile &out_data)
 {
 	zimgxx::zimage_format in_format = get_image_format(in_data);
 	zimgxx::zimage_format out_format = get_image_format(out_data);
+
+	// Additional fields in API structures do not break binary compatibility.
+	// If relying on the specific semantics of field not present in earlier versions,
+	// the application should also check the API version at runtime.
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 1)
+	if (!std::isnan(args.shift_w) || !std::isnan(args.shift_h) || !std::isnan(args.subheight) || !std::isnan(args.subheight)) {
+		if (zimg_get_api_version(nullptr, nullptr) < ZIMG_MAKE_API_VERSION(2, 1))
+			std::cerr << "warning: subpixel operation requires API 2.1\n";
+
+		in_format.active_region.left = args.shift_w;
+		in_format.active_region.top = args.shift_h;
+		in_format.active_region.width = args.subwidth;
+		in_format.active_region.height = args.subheight;
+	}
+#endif
 
 	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format) };
 	unsigned input_buffering = graph.get_input_buffering();
@@ -382,7 +406,7 @@ void execute(const Arguments &args)
 	ImageFile in_image = open_file(in_spec.first, in_spec.second, args.in_w, args.in_h, false);
 	ImageFile out_image = open_file(out_spec.first, out_spec.second, args.out_w, args.out_h, true);
 
-	process(in_image, out_image);
+	process(args, in_image, out_image);
 }
 
 } // namespace
