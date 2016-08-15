@@ -210,7 +210,7 @@ protected:
 
 		void assert_guard_pattern() const
 		{
-			zassert(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
+			zassert_d(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
 		}
 
 	};
