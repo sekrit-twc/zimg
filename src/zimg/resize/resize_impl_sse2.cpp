@@ -78,9 +78,9 @@ inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi, uint16_t limi
 
 
 template <bool DoLoop, unsigned Tail>
-__m128i resize_line8_h_u16_sse2_xiter(unsigned j,
-                                      const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                      const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
+inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
+                                                          const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                          const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
 	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
