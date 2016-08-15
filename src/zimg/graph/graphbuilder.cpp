@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include "common/cpuinfo.h"
 #include "common/except.h"
@@ -125,6 +126,11 @@ void validate_state(const GraphBuilder::state &state)
 		throw error::BitDepthOverflow{ "bit depth exceeds limits of type" };
 	if (!state.fullrange && state.depth < 8)
 		throw error::BitDepthOverflow{ "bit depth must be at least 8 for limited range" };
+
+	if (!std::isfinite(state.active_left) || !std::isfinite(state.active_top) || !std::isfinite(state.active_width) || !std::isfinite(state.active_height))
+		throw error::InvalidImageRegion{ "active window must be finite" };
+	if (state.active_width <= 0 || state.active_height <= 0)
+		throw error::InvalidImageRegion{ "active window must be positive" };
 }
 
 bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)
@@ -150,14 +156,22 @@ bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &
 {
 	if (is_greyscale(source) || is_greyscale(target))
 		return source.width != target.width ||
-		       source.height != target.height;
+		       source.height != target.height ||
+		       source.active_left != target.active_left ||
+		       source.active_top != target.active_top ||
+		       source.active_width != target.active_width ||
+		       source.active_height != target.active_height;
 	else
 		return source.width != target.width ||
 	           source.height != target.height ||
 	           source.subsample_w != target.subsample_w ||
 	           source.subsample_h != target.subsample_h ||
 	           (source.subsample_w && source.chroma_location_w != target.chroma_location_w) ||
-	           (source.subsample_h && source.chroma_location_h != target.chroma_location_h);
+	           (source.subsample_h && source.chroma_location_h != target.chroma_location_h) ||
+		       source.active_left != target.active_left ||
+		       source.active_top != target.active_top ||
+		       source.active_width != target.active_width ||
+		       source.active_height != target.active_height;
 }
 
 } // namespace
@@ -196,10 +210,10 @@ GraphBuilder::resize_spec::resize_spec(const state &state) :
 	height{ state.height },
 	subsample_w{ state.subsample_w },
 	subsample_h{ state.subsample_h },
-	shift_w{},
-	shift_h{},
-	subwidth{ (double)state.width },
-	subheight{ (double)state.height },
+	shift_w{ state.active_left },
+	shift_h{ state.active_top },
+	subwidth{ state.active_width },
+	subheight{ state.active_height },
 	chroma_location_w{ state.chroma_location_w },
 	chroma_location_h{ state.chroma_location_h }
 {
@@ -440,6 +454,10 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	m_state.subsample_h = subsample_h;
 	m_state.chroma_location_w = chroma_location_w;
 	m_state.chroma_location_h = chroma_location_h;
+	m_state.active_left = 0.0;
+	m_state.active_top = 0.0;
+	m_state.active_width = spec.width;
+	m_state.active_height = spec.height;
 }
 
 GraphBuilder &GraphBuilder::set_source(const state &source) try
@@ -467,6 +485,8 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 
 	validate_state(target);
 
+	if (target.active_left != 0 || target.active_top != 0 || target.active_width != target.width || target.active_height != target.height)
+		throw error::ResamplingNotAvailable{ "active subregions not supported on target image" };
 	if (m_state.parity != target.parity)
 		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
 

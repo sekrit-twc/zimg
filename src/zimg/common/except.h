@@ -38,6 +38,7 @@ DECLARE_EXCEPTION(BitDepthOverflow, LogicError)
 DECLARE_EXCEPTION(IllegalArgument, Exception)
 DECLARE_EXCEPTION(EnumOutOfRange, IllegalArgument)
 DECLARE_EXCEPTION(ZeroImageSize, IllegalArgument)
+DECLARE_EXCEPTION(InvalidImageRegion, IllegalArgument)
 
 DECLARE_EXCEPTION(UnsupportedOperation, Exception)
 DECLARE_EXCEPTION(UnsupportedSubsampling, UnsupportedOperation)

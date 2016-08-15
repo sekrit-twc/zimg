@@ -137,6 +137,18 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject 
 		state->chroma_location_w = chromaloc_w_map[val.string().c_str()];
 	if (const auto &val = obj["chroma_location_h"])
 		state->chroma_location_h = chromaloc_h_map[val.string().c_str()];
+
+	if (const auto &val = obj["active_region"]) {
+		state->active_left = val.object()["left"].number();
+		state->active_top = val.object()["top"].number();
+		state->active_width = val.object()["width"].number();
+		state->active_height = val.object()["height"].number();
+	} else {
+		state->active_left = 0.0;
+		state->active_top = 0.0;
+		state->active_width = state->width;
+		state->active_height = state->height;
+	}
 }
 
 void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObject &obj)

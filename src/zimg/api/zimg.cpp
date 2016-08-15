@@ -324,6 +324,11 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 
 		out->parity = translate_field_parity(src.field_parity);
 		std::tie(out->chroma_location_w, out->chroma_location_h) = translate_chroma_location(src.chroma_location);
+
+		out->active_left = 0.0;
+		out->active_top = 0.0;
+		out->active_width = src.width;
+		out->active_height = src.height;
 	}
 }
 

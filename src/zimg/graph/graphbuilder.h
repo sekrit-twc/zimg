@@ -124,6 +124,11 @@ public:
 		FieldParity parity;
 		ChromaLocationW chroma_location_w;
 		ChromaLocationH chroma_location_h;
+
+		double active_left;
+		double active_top;
+		double active_width;
+		double active_height;
 	};
 private:
 	struct resize_spec {
