@@ -268,6 +268,7 @@ test_unit_test_CPPFLAGS = \
 
 test_unit_test_SOURCES = \
 	test/main.cpp \
+	test/api/api_test.cpp \
 	test/colorspace/colorspace_test.cpp \
 	test/depth/depth_convert_test.cpp \
 	test/depth/dither_test.cpp \

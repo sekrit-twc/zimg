@@ -46,6 +46,9 @@
     <Filter Include="Header Files\graph">
       <UniqueIdentifier>{edf1e449-a6d2-4daf-9330-e320b77fb94d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\api">
+      <UniqueIdentifier>{73ad656b-c64d-4557-a19c-c1cdcc46a900}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
@@ -143,6 +146,9 @@
     </ClCompile>
     <ClCompile Include="..\..\test\resize\resize_impl_avx2_test.cpp">
       <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\api_test.cpp">
+      <Filter>Source Files\api</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
