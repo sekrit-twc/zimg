@@ -28,7 +28,7 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 
 		auto filter = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }
 			.set_horizontal(horizontal)
-			.set_dst_dim((unsigned)std::lrint(scale_factor * (horizontal ? src_w : src_h)))
+			.set_dst_dim(static_cast<unsigned>(std::lrint(scale_factor * (horizontal ? src_w : src_h))))
 			.set_depth(format.depth)
 			.set_filter(resample_filter)
 			.set_shift(shift)

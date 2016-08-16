@@ -479,7 +479,7 @@ public:
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
 
-		alloc.allocate((size_t)num_planes * cache_lines * stride);
+		alloc.allocate(static_cast<size_t>(num_planes) * cache_lines * stride);
 		alloc.allocate(m_filter->get_context_size());
 
 		return alloc.count();
@@ -516,7 +516,7 @@ public:
 		context->filter_ctx = alloc.allocate(m_filter->get_context_size());
 
 		for (unsigned p = 0; p < get_num_planes(); ++p) {
-			context->cache_buf[p] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+			context->cache_buf[p] = { alloc.allocate(static_cast<size_t>(cache_lines) * stride), stride, mask };
 		}
 
 		zassert(alloc.count() <= context_size, "buffer overflow detected");
@@ -643,7 +643,7 @@ public:
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
 
-		alloc.allocate((size_t)num_planes * cache_lines * stride);
+		alloc.allocate(static_cast<size_t>(num_planes) * cache_lines * stride);
 		alloc.allocate(m_filter->get_context_size());
 		alloc.allocate(m_filter->get_context_size());
 
@@ -678,8 +678,8 @@ public:
 		context->filter_ctx_u = alloc.allocate(m_filter->get_context_size());
 		context->filter_ctx_v = alloc.allocate(m_filter->get_context_size());
 
-		context->cache_buf[1] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
-		context->cache_buf[2] = ImageBuffer<void>{ alloc.allocate((size_t)cache_lines * stride), stride, mask };
+		context->cache_buf[1] = { alloc.allocate(static_cast<size_t>(cache_lines) * stride), stride, mask };
+		context->cache_buf[2] = { alloc.allocate(static_cast<size_t>(cache_lines) * stride), stride, mask };
 
 		zassert(alloc.count() <= context_size, "buffer overflow detected");
 		zassert_d(alloc.count() == context_size, "allocation mismatch");
@@ -758,8 +758,8 @@ class FilterGraph::impl {
 		bool entire_row = m_node->entire_row() || (m_node_uv && m_node_uv->entire_row());
 
 		if (!entire_row) {
-			double scale = std::max((double)tail_attr.width / head_attr.width, 1.0);
-			unsigned step = floor_n((unsigned)std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT);
+			double scale = std::max(static_cast<double>(tail_attr.width) / head_attr.width, 1.0);
+			unsigned step = static_cast<unsigned>(floor_n(std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT));
 			return std::min(step, tail_attr.width);
 		} else {
 			return tail_attr.width;

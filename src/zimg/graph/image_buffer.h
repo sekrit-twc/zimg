@@ -12,7 +12,7 @@ namespace zimg {
 namespace graph {
 
 // Special mask value with all bits set.
-const unsigned BUFFER_MAX = (unsigned)-1;
+const unsigned BUFFER_MAX = -1;
 
 /**
  * Circular image buffer.

@@ -118,7 +118,7 @@ ImageFile open_file(FileFormat fmt, const char *path, unsigned w, unsigned h, bo
 		file.handle = std::move(bmp);
 	} else if (fmt == FileFormat::FILE_YUY2) {
 		std::shared_ptr<MemoryMappedFile> mmap;
-		size_t size = (size_t)w * h * 2;
+		size_t size = static_cast<size_t>(w) * h * 2;
 
 		if (write) {
 			mmap = std::make_shared<MemoryMappedFile>(path, size, MemoryMappedFile::CREATE_TAG);
@@ -201,7 +201,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
-		channel_size[p] = (size_t)stride * count_plane;
+		channel_size[p] = static_cast<size_t>(stride) * count_plane;
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
@@ -321,7 +321,7 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 	void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (char *)buf.line_at(i, p);
+		buf_data[p] = static_cast<char *>(buf.line_at(i, p));
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {
@@ -344,7 +344,7 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 	const void *buf_data[3];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		buf_data[p] = (const char *)buf.line_at(i, p);
+		buf_data[p] = static_cast<const char *>(buf.line_at(i, p));
 	}
 
 	if (fmt == FileFormat::FILE_BMP) {

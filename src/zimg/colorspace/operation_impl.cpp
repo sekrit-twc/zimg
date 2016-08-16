@@ -85,8 +85,8 @@ class Rec2020CLToRGBOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
-		float kr = (float)REC_2020_KR;
-		float kb = (float)REC_2020_KB;
+		float kr = static_cast<float>(REC_2020_KR);
+		float kb = static_cast<float>(REC_2020_KB);
 		float kg = 1.0f - kr - kb;
 
 		float pb = 0.7909854f;
@@ -129,8 +129,8 @@ class Rec2020CLToYUVOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
 	{
-		float kr = (float)REC_2020_KR;
-		float kb = (float)REC_2020_KB;
+		float kr = static_cast<float>(REC_2020_KR);
+		float kb = static_cast<float>(REC_2020_KB);
 		float kg = 1.0f - kr - kb;
 
 		float pb = 0.7909854f;
@@ -202,7 +202,7 @@ MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 {
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
-			m_matrix[i][j] = (float)m[i][j];
+			m_matrix[i][j] = static_cast<float>(m[i][j]);
 		}
 	}
 }

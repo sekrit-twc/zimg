@@ -254,7 +254,7 @@ void ordered_dither_b2b_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m128i out_max = _mm_set1_epi8((uint8_t)((1 << bits) - 1));
+	const __m128i out_max = _mm_set1_epi8(static_cast<uint8_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_b2b_avx2_xiter
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -287,7 +287,7 @@ void ordered_dither_b2w_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m256i out_max = _mm256_set1_epi16((uint16_t)((1 << bits) - 1));
+	const __m256i out_max = _mm256_set1_epi16(static_cast<uint16_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_b2w_avx2_xiter
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -320,7 +320,7 @@ void ordered_dither_w2b_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m128i out_max = _mm_set1_epi8((uint8_t)((1 << bits) - 1));
+	const __m128i out_max = _mm_set1_epi8(static_cast<uint8_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_w2b_avx2_xiter
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -353,7 +353,7 @@ void ordered_dither_w2w_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m256i out_max = _mm256_set1_epi16((uint16_t)((1 << bits) - 1));
+	const __m256i out_max = _mm256_set1_epi16(static_cast<uint16_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_w2w_avx2_xiter
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -386,7 +386,7 @@ void ordered_dither_h2b_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m128i out_max = _mm_set1_epi8((uint8_t)((1 << bits) - 1));
+	const __m128i out_max = _mm_set1_epi8(static_cast<uint8_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_f2b_avx2_xiter<LoadF16>
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -419,7 +419,7 @@ void ordered_dither_h2w_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m256i out_max = _mm256_set1_epi16((uint16_t)((1 << bits) - 1));
+	const __m256i out_max = _mm256_set1_epi16(static_cast<uint16_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_f2w_avx2_xiter<LoadF16>
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -452,7 +452,7 @@ void ordered_dither_f2b_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m128i out_max = _mm_set1_epi8((uint8_t)((1 << bits) - 1));
+	const __m128i out_max = _mm_set1_epi8(static_cast<uint8_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_f2b_avx2_xiter<LoadF32>
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
@@ -485,7 +485,7 @@ void ordered_dither_f2w_avx2(const float *dither, unsigned dither_offset, unsign
 
 	const __m256 scale_ps = _mm256_set1_ps(scale);
 	const __m256 offset_ps = _mm256_set1_ps(offset);
-	const __m256i out_max = _mm256_set1_epi16((uint16_t)((1 << bits) - 1));
+	const __m256i out_max = _mm256_set1_epi16(static_cast<uint16_t>((1 << bits) - 1));
 
 #define XITER ordered_dither_f2w_avx2_xiter<LoadF32>
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max

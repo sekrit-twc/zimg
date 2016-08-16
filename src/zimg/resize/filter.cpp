@@ -57,17 +57,17 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 	FilterContext e{};
 
-	e.filter_width = (unsigned)width;
-	e.filter_rows = (unsigned)m.rows();
-	e.input_width = (unsigned)m.cols();
-	e.stride = (unsigned)ceil_n(width, AlignmentOf<float>::value);
-	e.stride_i16 = (unsigned)ceil_n(width, AlignmentOf<uint16_t>::value);
-	e.data.resize((size_t)e.stride * e.filter_rows);
-	e.data_i16.resize((size_t)e.stride_i16 * e.filter_rows);
+	e.filter_width = static_cast<unsigned>(width);
+	e.filter_rows = static_cast<unsigned>(m.rows());
+	e.input_width = static_cast<unsigned>(m.cols());
+	e.stride = static_cast<unsigned>(ceil_n(width, AlignmentOf<float>::value));
+	e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>::value));
+	e.data.resize(static_cast<size_t>(e.stride) * e.filter_rows);
+	e.data_i16.resize(static_cast<size_t>(e.stride_i16) * e.filter_rows);
 	e.left.resize(e.filter_rows);
 
 	for (size_t i = 0; i < m.rows(); ++i) {
-		unsigned left = (unsigned)std::min(m.row_left(i), m.cols() - width);
+		unsigned left = static_cast<unsigned>(std::min(m.row_left(i), m.cols() - width));
 		double f32_err = 0.0f;
 		double i16_err = 0;
 
@@ -84,13 +84,13 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 			double coeff = m[i][left + j];
 
 			double coeff_expected_f32 = coeff - f32_err;
-			double coeff_expected_i16 = coeff * (double)(1 << 14) - i16_err;
+			double coeff_expected_i16 = coeff * (1 << 14) - i16_err;
 
-			float coeff_f32 = (float)coeff_expected_f32;
-			int16_t coeff_i16 = (int16_t)std::lrint(coeff_expected_i16);
+			float coeff_f32 = static_cast<float>(coeff_expected_f32);
+			int16_t coeff_i16 = static_cast<int16_t>(std::lrint(coeff_expected_i16));
 
-			f32_err = (double)coeff_f32 - coeff_expected_f32;
-			i16_err = (double)coeff_i16 - coeff_expected_i16;
+			f32_err = static_cast<double>(coeff_f32) - coeff_expected_f32;
+			i16_err = static_cast<double>(coeff_i16) - coeff_expected_i16;
 
 			if (std::abs(coeff_i16) > i16_greatest) {
 				i16_greatest = coeff_i16;
@@ -232,17 +232,17 @@ double LanczosFilter::operator()(double x) const
 
 FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim, double shift, double width)
 {
-	double scale = (double)dst_dim / width;
+	double scale = static_cast<double>(dst_dim) / width;
 	double step = std::min(scale, 1.0);
-	double support = (double)f.support() / step;
-	int filter_size = std::max((int)std::ceil(support) * 2, 1);
+	double support = static_cast<double>(f.support()) / step;
+	int filter_size = std::max(static_cast<int>(std::ceil(support)) * 2, 1);
 
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
 	if (src_dim <= support || width <= support)
 		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
-	RowMatrix<double> m{ (size_t)dst_dim, (size_t)src_dim };
+	RowMatrix<double> m{ dst_dim, src_dim };
 	for (unsigned i = 0; i < dst_dim; ++i) {
 		// Position of output sample on input grid.
 		double pos = (i + 0.5) / scale + shift;
@@ -266,7 +266,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 			else
 				real_pos = xpos;
 
-			m[i][(size_t)std::floor(real_pos)] += f((xpos - pos) * step) / total;
+			m[i][static_cast<size_t>(std::floor(real_pos))] += f((xpos - pos) * step) / total;
 		}
 	}
 

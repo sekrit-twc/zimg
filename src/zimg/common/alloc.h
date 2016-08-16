@@ -142,7 +142,7 @@ struct AlignedAllocator {
 
 	T *allocate(size_t n) const
 	{
-		T *ptr = (T *)zimg_x_aligned_malloc(n * sizeof(T), ALIGNMENT);
+		T *ptr = static_cast<T *>(zimg_x_aligned_malloc(n * sizeof(T), ALIGNMENT));
 
 		if (!ptr)
 			throw std::bad_alloc{};

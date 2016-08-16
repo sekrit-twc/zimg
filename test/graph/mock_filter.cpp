@@ -141,7 +141,7 @@ T SplatFilter<T>::splat_byte(unsigned char b)
 	T val;
 
 	for (size_t i = 0; i < sizeof(val); ++i) {
-		((unsigned char *)&val)[i] = b;
+		reinterpret_cast<unsigned char *>(&val)[i] = b;
 	}
 	return val;
 }

@@ -105,7 +105,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
-		channel_size[p] = (size_t)stride * count_plane;
+		channel_size[p] = static_cast<size_t>(stride) * count_plane;
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
@@ -141,9 +141,9 @@ void unpack_bgra_straight(const void *bgra, void * const planar[4], unsigned lef
 		b = packed_bgra[j * 4 + 0];
 		a = packed_bgra[j * 4 + 3];
 
-		r = (uint16_t)((uint32_t)r * a * 65535 / (255 * 255));
-		g = (uint16_t)((uint32_t)g * a * 65535 / (255 * 255));
-		b = (uint16_t)((uint32_t)b * a * 65535 / (255 * 255));
+		r = static_cast<uint16_t>(static_cast<uint32_t>(r) * a * 65535 / (255 * 255));
+		g = static_cast<uint16_t>(static_cast<uint32_t>(g) * a * 65535 / (255 * 255));
+		b = static_cast<uint16_t>(static_cast<uint32_t>(b) * a * 65535 / (255 * 255));
 
 		planar_r[j] = r;
 		planar_g[j] = g;
@@ -192,15 +192,15 @@ void pack_bgra_straight(const void * const planar[4], void *bgra, unsigned left,
 		b = planar_b[j];
 		a = planar_a[j];
 
-		a_eff = std::max(a, (uint8_t)1);
+		a_eff = std::max(a, static_cast<uint8_t>(1));
 
-		r = (uint16_t)((uint32_t)r * 255 * 255 / ((uint32_t)65535 * a_eff));
-		g = (uint16_t)((uint32_t)g * 255 * 255 / ((uint32_t)65535 * a_eff));
-		b = (uint16_t)((uint32_t)b * 255 * 255 / ((uint32_t)65535 * a_eff));
+		r = static_cast<uint16_t>(static_cast<uint32_t>(r) * 255 * 255 / (static_cast<uint32_t>(65535) * a_eff));
+		g = static_cast<uint16_t>(static_cast<uint32_t>(g) * 255 * 255 / (static_cast<uint32_t>(65535) * a_eff));
+		b = static_cast<uint16_t>(static_cast<uint32_t>(b) * 255 * 255 / (static_cast<uint32_t>(65535) * a_eff));
 
-		packed_bgra[j * 4 + 0] = (uint8_t)b;
-		packed_bgra[j * 4 + 1] = (uint8_t)g;
-		packed_bgra[j * 4 + 2] = (uint8_t)r;
+		packed_bgra[j * 4 + 0] = static_cast<uint8_t>(b);
+		packed_bgra[j * 4 + 1] = static_cast<uint8_t>(g);
+		packed_bgra[j * 4 + 2] = static_cast<uint8_t>(r);
 		packed_bgra[j * 4 + 3] = a;
 	}
 }
@@ -237,9 +237,9 @@ int unpack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 	void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (char *)rgb_buf.line_at(i, p);
+		planar_data[p] = static_cast<char *>(rgb_buf.line_at(i, p));
 	}
-	planar_data[3] = (char *)alpha_buf.line_at(i);
+	planar_data[3] = static_cast<char *>(alpha_buf.line_at(i));
 
 	if (cb->premultiply)
 		unpack_bgra_premul(packed_data, planar_data, left, right);
@@ -258,9 +258,9 @@ int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 	const void *planar_data[4];
 
 	for (unsigned p = 0; p < 3; ++p) {
-		planar_data[p] = (const char *)rgb_buf.line_at(i, p);
+		planar_data[p] = static_cast<const char *>(rgb_buf.line_at(i, p));
 	}
-	planar_data[3] = (const char *)alpha_buf.line_at(i);
+	planar_data[3] = static_cast<const char *>(alpha_buf.line_at(i));
 
 	if (cb->premultiply)
 		pack_bgra_premul(planar_data, packed_data, left, right);

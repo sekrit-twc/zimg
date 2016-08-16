@@ -51,7 +51,7 @@ double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned 
 	if (subsample_in)
 		shift -= sub_scale * chroma_shift_raw(loc_in, parity);
 	if (subsample_out)
-		shift += sub_scale * chroma_shift_raw(loc_out, parity) * (double)src_dim / dst_dim;
+		shift += sub_scale * chroma_shift_raw(loc_out, parity) * src_dim / dst_dim;
 
 	return shift;
 }
@@ -65,7 +65,7 @@ double luma_shift_factor(GraphBuilder::FieldParity parity, unsigned src_height, 
 	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		shift = 0.25;
 
-	return shift * (double)src_height / dst_height - shift;
+	return shift * src_height / dst_height - shift;
 }
 
 

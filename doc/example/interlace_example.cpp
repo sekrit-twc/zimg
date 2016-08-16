@@ -63,7 +63,7 @@ YV12Image open_yv12_file(const char *path, unsigned w, unsigned h, bool write)
 	YV12Image file;
 
 	std::shared_ptr<MemoryMappedFile> mmap;
-	size_t size = (size_t)w * h + (size_t)(w / 2) * (h / 2) * 2;
+	size_t size = static_cast<size_t>(w) * h + static_cast<size_t>(w / 2) * (h / 2) * 2;
 	uint8_t *file_base;
 
 	if (write) {
@@ -81,8 +81,8 @@ YV12Image open_yv12_file(const char *path, unsigned w, unsigned h, bool write)
 	file.handle = std::move(mmap);
 
 	file.image_base[0] = file_base;
-	file.image_base[1] = file_base + (ptrdiff_t)w * h;
-	file.image_base[2] = file_base + (ptrdiff_t)w * h + (ptrdiff_t)(w / 2) * (h / 2);
+	file.image_base[1] = file_base + static_cast<ptrdiff_t>(w) * h;
+	file.image_base[2] = file_base + static_cast<ptrdiff_t>(w) * h + static_cast<ptrdiff_t>(w / 2) * (h / 2);
 
 	file.width = w;
 	file.height = h;
@@ -134,7 +134,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
-		channel_size[p] = (size_t)stride * count_plane;
+		channel_size[p] = static_cast<size_t>(stride) * count_plane;
 	}
 
 	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 64), &aligned_free);
@@ -175,16 +175,16 @@ int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 	left = left % 2 ? left - 1 : left;
 	right = right % 2 ? right + 1 : right;
 
-	buf_pp[0] = (uint8_t *)buf.line_at(i + 0, 0);
-	buf_pp[1] = (uint8_t *)buf.line_at(i + 1, 0);
-	buf_pp[2] = (uint8_t *)buf.line_at(i / 2, 1);
-	buf_pp[3] = (uint8_t *)buf.line_at(i / 2, 2);
+	buf_pp[0] = static_cast<uint8_t *>(buf.line_at(i + 0, 0));
+	buf_pp[1] = static_cast<uint8_t *>(buf.line_at(i + 1, 0));
+	buf_pp[2] = static_cast<uint8_t *>(buf.line_at(i / 2, 1));
+	buf_pp[3] = static_cast<uint8_t *>(buf.line_at(i / 2, 2));
 
 	// Since the fields are being processed individually, double the line numbers.
-	img_pp[0] = (uint8_t *)cb->file->image_base[0] + ((i + 0) * 2 + file_phase) * cb->file->width + left;
-	img_pp[1] = (uint8_t *)cb->file->image_base[0] + ((i + 1) * 2 + file_phase) * cb->file->width + left;
-	img_pp[2] = (uint8_t *)cb->file->image_base[1] + (i + file_phase) * (cb->file->width / 2) + left / 2;
-	img_pp[3] = (uint8_t *)cb->file->image_base[2] + (i + file_phase) * (cb->file->width / 2) + left / 2;
+	img_pp[0] = static_cast<uint8_t *>(cb->file->image_base[0]) + ((i + 0) * 2 + file_phase) * cb->file->width + left;
+	img_pp[1] = static_cast<uint8_t *>(cb->file->image_base[0]) + ((i + 1) * 2 + file_phase) * cb->file->width + left;
+	img_pp[2] = static_cast<uint8_t *>(cb->file->image_base[1]) + (i + file_phase) * (cb->file->width / 2) + left / 2;
+	img_pp[3] = static_cast<uint8_t *>(cb->file->image_base[2]) + (i + file_phase) * (cb->file->width / 2) + left / 2;
 
 	memcpy(dst_p[0], src_p[0], right - left);
 	memcpy(dst_p[1], src_p[1], right - left);

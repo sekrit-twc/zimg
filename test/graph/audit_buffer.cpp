@@ -43,8 +43,8 @@ class Mt19937Generator {
 	bool m_chroma;
 public:
 	Mt19937Generator(unsigned p, unsigned i, unsigned left, const zimg::PixelFormat &format) :
-		m_gen{ ((uint_fast32_t)p << 30) | i },
-		m_depth{ (unsigned)format.depth },
+		m_gen{ (static_cast<uint_fast32_t>(p) << 30) | i },
+		m_depth{ static_cast<uint32_t>(format.depth) },
 		m_float{ format.type == zimg::PixelType::HALF || format.type == zimg::PixelType::FLOAT },
 		m_chroma{ p > 0 || format.chroma }
 	{
@@ -72,7 +72,7 @@ T AuditBuffer<T>::splat_byte(unsigned char b)
 	T val;
 
 	for (size_t i = 0; i < sizeof(val); ++i) {
-		((unsigned char *)&val)[i] = b;
+		reinterpret_cast<unsigned char *>(&val)[i] = b;
 	}
 	return val;
 }
@@ -81,7 +81,7 @@ template <class T>
 void AuditBuffer<T>::add_guard_bytes()
 {
 	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
-		std::fill(m_vector[p].begin(), m_vector[p].begin() + m_buffer[p].stride() / (ptrdiff_t)sizeof(T), m_guard_val);
+		std::fill(m_vector[p].begin(), m_vector[p].begin() + m_buffer[p].stride() / static_cast<ptrdiff_t>(sizeof(T)), m_guard_val);
 
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
 			T *line_base = m_buffer[p][i];
@@ -100,7 +100,7 @@ void AuditBuffer<T>::add_guard_bytes()
 template <class T>
 ptrdiff_t AuditBuffer<T>::stride_T(unsigned p) const
 {
-	return m_buffer[p].stride() / (ptrdiff_t)sizeof(T);
+	return m_buffer[p].stride() / static_cast<ptrdiff_t>(sizeof(T));
 }
 
 template <class T>
@@ -130,7 +130,7 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, const zimg::PixelFo
 		m_vector[p].resize(guarded_linesize * guarded_linecount / sizeof(T));
 		m_buffer[p] = zimg::graph::ImageBuffer<T>{
 			m_vector[p].data() + guarded_linesize / sizeof(T) + zimg::AlignmentOf<T>::value,
-			(ptrdiff_t)guarded_linesize,
+			static_cast<ptrdiff_t>(guarded_linesize),
 			mask_plane
 		};
 
@@ -196,7 +196,7 @@ void AuditBuffer<T>::assert_guard_bytes() const
 			"header guard bytes corrupted";
 
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
-			const T *line_base = m_buffer[p].data() + (ptrdiff_t)i * stride_T(p);
+			const T *line_base = m_buffer[p].data() + static_cast<ptrdiff_t>(i) * stride_T(p);
 			const T *line_guard_left = line_base - zimg::AlignmentOf<T>::value;
 			const T *line_guard_right = line_guard_left + stride_T(p);
 

@@ -107,10 +107,10 @@ inline float half_to_float(uint16_t f16w)
 			exp_f32 = exp + FLOAT_HALF_EXP_ADJUST;
 		}
 
-		mant_f32 = (uint32_t)mant_adjust << FLOAT_HALF_MANT_SHIFT;
+		mant_f32 = static_cast<uint32_t>(mant_adjust) << FLOAT_HALF_MANT_SHIFT;
 	}
 
-	f32dw = ((uint32_t)sign << 31) | (exp_f32 << 23) | (mant_f32);
+	f32dw = (static_cast<uint32_t>(sign) << 31) | (exp_f32 << 23) | mant_f32;
 	return bit_cast<float>(f32dw);
 }
 
@@ -175,7 +175,7 @@ inline uint16_t float_to_half(float f32)
 		}
 	}
 
-	return ((uint16_t)sign << 15) | ((uint16_t)exp_f16 << 10) | ((uint16_t)mant_f16);
+	return (static_cast<uint16_t>(sign) << 15) | (static_cast<uint16_t>(exp_f16) << 10) | static_cast<uint16_t>(mant_f16);
 }
 #undef FLOAT_HALF_MANT_SHIFT
 #undef FLOAT_HALF_EXP_ADJUST

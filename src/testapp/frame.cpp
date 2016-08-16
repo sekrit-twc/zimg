@@ -272,9 +272,9 @@ public:
 	zimg::graph::ColorImageBuffer<void> as_write_buffer()
 	{
 		return{
-			{ m_ptr[m_plane_order[0]], (ptrdiff_t)m_linewidth[0], zimg::graph::BUFFER_MAX },
-			{ m_ptr[m_plane_order[1]], (ptrdiff_t)m_linewidth[1], zimg::graph::BUFFER_MAX },
-			{ m_ptr[m_plane_order[2]], (ptrdiff_t)m_linewidth[2], zimg::graph::BUFFER_MAX },
+			{ m_ptr[m_plane_order[0]], static_cast<ptrdiff_t>(m_linewidth[0]), zimg::graph::BUFFER_MAX },
+			{ m_ptr[m_plane_order[1]], static_cast<ptrdiff_t>(m_linewidth[1]), zimg::graph::BUFFER_MAX },
+			{ m_ptr[m_plane_order[2]], static_cast<ptrdiff_t>(m_linewidth[2]), zimg::graph::BUFFER_MAX },
 		};
 	}
 };
@@ -329,7 +329,7 @@ ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned 
 ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool fullrange)
 {
 	WindowsBitmap bmp_image{ spec.path.c_str(), WindowsBitmap::READ_TAG };
-	ImageFrame out_image{ (unsigned)bmp_image.width(), (unsigned)bmp_image.height(), type, 3 };
+	ImageFrame out_image{ static_cast<unsigned>(bmp_image.width()), static_cast<unsigned>(bmp_image.height()), type, 3 };
 
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
@@ -392,9 +392,9 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
-	line_buffer[0] = zimg::graph::ImageBuffer<void>{ planar_tmp.data(), (ptrdiff_t)width, 0 };
-	line_buffer[1] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + width, (ptrdiff_t)width / 2, 0 };
-	line_buffer[2] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + width + width / 2, (ptrdiff_t)width / 2, 0 };
+	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(width), 0 };
+	line_buffer[1] = { planar_tmp.data() + width, static_cast<ptrdiff_t>(width) / 2, 0 };
+	line_buffer[2] = { planar_tmp.data() + width + width / 2, static_cast<ptrdiff_t>(width) / 2, 0 };
 
 	struct callback_context_type {
 		const void *src_base;
@@ -410,7 +410,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
-		const uint8_t *base = (const uint8_t *)cb_ctx->src_base + (size_t)i * cb_ctx->linesize;
+		const uint8_t *base = static_cast<const uint8_t *>(cb_ctx->src_base) + static_cast<size_t>(i) * cb_ctx->linesize;
 		uint8_t *dst_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; j += 2) {
@@ -496,7 +496,7 @@ void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigne
 
 void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
-	WindowsBitmap bmp_image{ spec.path.c_str(), (int)frame.width(), (int)frame.height(), (int)frame.planes() * 8 };
+	WindowsBitmap bmp_image{ spec.path.c_str(), static_cast<int>(frame.width()), static_cast<int>(frame.height()), static_cast<int>(frame.planes()) * 8 };
 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
@@ -549,9 +549,9 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	zimg::graph::ImageBuffer<void> line_buffer[3];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
-	line_buffer[0] = zimg::graph::ImageBuffer<void>{ planar_tmp.data(), (ptrdiff_t)frame.width(), 0 };
-	line_buffer[1] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + frame.width(), (ptrdiff_t)frame.width() / 2, 0 };
-	line_buffer[2] = zimg::graph::ImageBuffer<void>{ planar_tmp.data() + frame.width() + frame.width() / 2, (ptrdiff_t)frame.width() / 2, 0 };
+	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(frame.width()), 0 };
+	line_buffer[1] = { planar_tmp.data() + frame.width(), static_cast<ptrdiff_t>(frame.width()) / 2, 0 };
+	line_buffer[2] = { planar_tmp.data() + frame.width() + frame.width() / 2, static_cast<ptrdiff_t>(frame.width()) / 2, 0 };
 
 	struct callback_context_type {
 		void *dst_base;
@@ -567,7 +567,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
-		uint8_t *base = (uint8_t *)cb_ctx->dst_base + (size_t)i * cb_ctx->linesize;
+		uint8_t *base = static_cast<uint8_t *>(cb_ctx->dst_base) + static_cast<size_t>(i) * cb_ctx->linesize;
 		const uint8_t *src_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
 
 		for (unsigned j = left; j < right; j += 2) {

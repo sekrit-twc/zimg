@@ -105,7 +105,7 @@ int handle_argument_string(const ArgparseOption *, void *out, int argc, char **a
 
 int handle_argument(const ArgparseOption *opt, void *out, int argc, char **argv)
 {
-	void *out_p = (char *)out + opt->offset;
+	void *out_p = static_cast<char *>(out) + opt->offset;
 
 	switch (opt->type) {
 	case OPTION_BOOL:

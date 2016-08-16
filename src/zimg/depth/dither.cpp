@@ -31,9 +31,9 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 		float d = dither[(dither_offset + j) & dither_mask];
 
 		x += d;
-		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
+		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
 
-		dst_p[j] = static_cast<U>(lrintf(x));
+		dst_p[j] = static_cast<U>(std::lrintf(x));
 	}
 }
 
@@ -46,19 +46,19 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 	const T *src_p = static_cast<const T *>(src);
 	U *dst_p = static_cast<U *>(dst);
 
-	for (unsigned j = 0; j < width; ++j) {
+	for (int j = 0; j < static_cast<int>(width); ++j) {
 		float x = static_cast<float>(src_p[j]) * scale + offset;
 		float err = 0;
 
-		err += error_cur_p[(int)j - 1] * (7.0f / 16.0f);
-		err += error_top_p[(int)j + 1] * (3.0f / 16.0f);
-		err += error_top_p[(int)j + 0] * (5.0f / 16.0f);
-		err += error_top_p[(int)j - 1] * (1.0f / 16.0f);
+		err += error_cur_p[j - 1] * (7.0f / 16.0f);
+		err += error_top_p[j + 1] * (3.0f / 16.0f);
+		err += error_top_p[j + 0] * (5.0f / 16.0f);
+		err += error_top_p[j - 1] * (1.0f / 16.0f);
 
 		x += err;
-		x = std::min(std::max(x, 0.0f), static_cast<float>(((uint32_t)1 << bits) - 1));
+		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
 
-		U q = static_cast<U>(lrintf(x));
+		U q = static_cast<U>(std::lrintf(x));
 
 		dst_p[j] = q;
 		error_cur_p[j] = x - static_cast<float>(q);
@@ -76,13 +76,13 @@ void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 
 std::pair<float, float> get_scale_offset(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {
-	uint32_t range_in = integer_range(pixel_in);
-	uint32_t offset_in = integer_offset(pixel_in);
-	uint32_t range_out = integer_range(pixel_out);
-	uint32_t offset_out = integer_offset(pixel_out);
+	double range_in = integer_range(pixel_in);
+	double offset_in = integer_offset(pixel_in);
+	double range_out = integer_range(pixel_out);
+	double offset_out = integer_offset(pixel_out);
 
-	float scale = (float)((double)range_out / range_in);
-	float offset = (float)(-(double)offset_in * range_out / range_in + (double)offset_out);
+	float scale = static_cast<float>(range_out / range_in);
+	float offset = static_cast<float>(-offset_in * range_out / range_in + offset_out);
 
 	return{ scale, offset };
 }
@@ -199,14 +199,15 @@ public:
 		float safe_max = HEX_LF_C(0x1.fdfffep-2);
 
 		std::mt19937 mt;
-		auto mt_min = std::mt19937::min();
-		auto mt_max = std::mt19937::max();
+		double mt_min = std::mt19937::min();
+		double mt_max = std::mt19937::max();
 
 		m_table.resize(RAND_NUM);
 
 		std::generate(m_table.begin(), m_table.end(), [&]()
 		{
-			float f = (float)((double)(mt() - mt_min) / (double)(mt_max - mt_min) - 0.5);
+			double x = mt();
+			float f = static_cast<float>((x - mt_min) / (mt_max - mt_min) - 0.5);
 			return std::min(std::max(f, safe_min), safe_max);
 		});
 

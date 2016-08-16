@@ -19,15 +19,15 @@ namespace {
 
 int32_t unpack_pixel_u16(uint16_t x)
 {
-	return (int32_t)x + INT16_MIN;
+	return static_cast<int32_t>(x) + INT16_MIN;
 }
 
 uint16_t pack_pixel_u16(int32_t x, int32_t pixel_max)
 {
 	x = ((x + (1 << 13)) >> 14) - INT16_MIN;
-	x = std::max(std::min(x, pixel_max), (int32_t)0);
+	x = std::max(std::min(x, pixel_max), static_cast<int32_t>(0));
 
-	return (uint16_t)x;
+	return static_cast<uint16_t>(x);
 }
 
 void resize_line_h_u16_c(const FilterContext &filter, const uint16_t *src, uint16_t *dst, unsigned left, unsigned right, unsigned pixel_max)
@@ -110,7 +110,7 @@ public:
 	ResizeImplH_C(const FilterContext &filter, unsigned height, PixelType type, unsigned depth) :
 		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, type }),
 		m_type{ type },
-		m_pixel_max{ (int32_t)((uint32_t)1 << depth) - 1 }
+		m_pixel_max{ static_cast<int32_t>(1UL << depth) - 1 }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };
@@ -132,7 +132,7 @@ public:
 	ResizeImplV_C(const FilterContext &filter, unsigned width, PixelType type, unsigned depth) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, type}),
 		m_type{ type },
-		m_pixel_max{ (int32_t)((uint32_t)1 << depth) - 1 }
+		m_pixel_max{ static_cast<int32_t>(1UL << depth) - 1 }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };

@@ -34,8 +34,8 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	dst_height{ src_height },
 	shift_w{},
 	shift_h{},
-	subwidth{ (double)src_width },
-	subheight{ (double)src_height },
+	subwidth{ static_cast<double>(src_width) },
+	subheight{ static_cast<double>(src_height) },
 	cpu{ CPUClass::NONE }
 {
 }
@@ -67,7 +67,7 @@ auto ResizeConversion::create() const -> filter_pair try
 		                   .set_subwidth(subwidth)
 		                   .create();
 	} else {
-		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
+		bool h_first = resize_h_first(static_cast<double>(dst_width) / src_width, static_cast<double>(dst_height) / src_height);
 
 		if (h_first) {
 			ret.first = builder.set_horizontal(true)

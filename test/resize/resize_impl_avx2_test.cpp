@@ -20,7 +20,7 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	}
 
 	SCOPED_TRACE(filter.support());
-	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
+	SCOPED_TRACE(horizontal ? static_cast<double>(dst_w) / src_w : static_cast<double>(dst_h) / src_h);
 
 	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, type }
 		.set_horizontal(horizontal)

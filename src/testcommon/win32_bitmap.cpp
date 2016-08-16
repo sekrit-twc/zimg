@@ -43,7 +43,7 @@ static size_t bitmap_row_size(int width, int bit_count)
 {
 	size_t row_size;
 
-	row_size = (size_t)width * (bit_count / 8);
+	row_size = static_cast<size_t>(width) * (bit_count / 8);
 	row_size = row_size % 4 ? row_size + 4 - row_size % 4 : row_size;
 
 	return row_size;
@@ -91,8 +91,8 @@ struct BitmapFileData {
 		*bfHeader = BITMAPFILEHEADER{};
 
 		bfHeader->bfType = BMP_MAGIC;
-		bfHeader->bfSize = (DWORD)file_size;
-		bfHeader->bfOffBits = (DWORD)(sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER));
+		bfHeader->bfSize = static_cast<DWORD>(file_size);
+		bfHeader->bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 
 		*biHeader = BITMAPINFOHEADER{};
 
@@ -131,7 +131,7 @@ class WindowsBitmap::impl {
 
 	size_t row_size() const
 	{
-		size_t row_size = (size_t)width() * (bit_count() / 8);
+		size_t row_size = static_cast<size_t>(width()) * (bit_count() / 8);
 		row_size = (row_size % 4) ? row_size + 4 - row_size % 4 : row_size;
 		return row_size;
 	}

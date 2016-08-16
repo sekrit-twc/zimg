@@ -475,7 +475,7 @@ public:
 	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) :
 		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::WORD }),
 		m_func{},
-		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
+		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
 		if (filter.filter_width > 8)
 			m_func = resize_line8_h_u16_sse2_jt_large[filter.filter_width % 8];
@@ -527,7 +527,7 @@ class ResizeImplV_U16_SSE2 final : public ResizeImplV {
 public:
 	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
-		m_pixel_max{ (uint16_t)((1UL << depth) - 1) }
+		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
 	}
 

@@ -40,7 +40,7 @@ struct zimage_buffer_const : zimg_image_buffer_const {
 
 	const void *line_at(unsigned i, unsigned p = 0) const
 	{
-		return (const char *)data(p) + (ptrdiff_t)(i & mask(p)) * stride(p);
+		return static_cast<const char *>(data(p)) + static_cast<ptrdiff_t>(i & mask(p)) * stride(p);
 	}
 
 	const void *data(unsigned p = 0) const
@@ -92,7 +92,7 @@ struct zimage_buffer : zimg_image_buffer {
 
 	void *line_at(unsigned i, unsigned p = 0) const
 	{
-		return (char *)data(p) + (ptrdiff_t)(i & mask(p)) * stride(p);
+		return static_cast<char *>(data(p)) + static_cast<ptrdiff_t>(i & mask(p)) * stride(p);
 	}
 
 	void *data(unsigned p = 0) const

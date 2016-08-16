@@ -55,7 +55,7 @@ auto UnresizeConversion::create() const -> filter_pair
 		                   .set_shift(shift_w)
 		                   .create();
 	} else {
-		bool h_first = unresize_h_first((double)orig_width / up_width, (double)orig_height / up_height);
+		bool h_first = unresize_h_first(static_cast<double>(orig_width) / up_width, static_cast<double>(orig_height) / up_height);
 
 		if (h_first) {
 			ret.first = builder.set_horizontal(true)

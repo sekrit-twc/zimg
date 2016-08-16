@@ -268,7 +268,7 @@ class MemoryMappedFile::impl {
 			win32::trap_error("error mapping view of file");
 
 		m_map_view.reset(map_view);
-		m_size = (size_t)file_size.QuadPart;
+		m_size = static_cast<size_t>(file_size.QuadPart);
 	}
 public:
 	impl() : m_size{}, m_writable{}
@@ -345,7 +345,7 @@ class MemoryMappedFile::impl {
 			posix::trap_error("error mapping file");
 
 		m_ptr.reset(ptr);
-		m_size = (size_t)file_size;
+		m_size = static_cast<size_t>(file_size);
 	}
 public:
 	impl() : m_size{}, m_writable{}

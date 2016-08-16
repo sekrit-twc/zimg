@@ -67,7 +67,7 @@ inline FORCE_INLINE __m128i mm_packus_epi32(__m128i a, __m128i b)
 
 inline FORCE_INLINE __m128 mm_cvtph_ps(__m128i x)
 {
-	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32((uint32_t)113 << 23));
+	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32(113UL << 23));
 	__m128i shift_exp = _mm_set1_epi32(0x7C00UL << 13);
 	__m128i sign_mask = _mm_set1_epi32(0x8000U);
 	__m128i mant_mask = _mm_set1_epi32(0x7FFF);
@@ -104,9 +104,9 @@ inline FORCE_INLINE __m128 mm_cvtph_ps(__m128i x)
 
 inline FORCE_INLINE __m128i mm_cvtps_ph(__m128 x)
 {
-	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32((uint32_t)15 << 23));
-	__m128i inf = _mm_set1_epi32((uint32_t)255UL << 23);
-	__m128i f16inf = _mm_set1_epi32((uint32_t)31UL << 23);
+	__m128 magic = _mm_castsi128_ps(_mm_set1_epi32(15UL << 23));
+	__m128i inf = _mm_set1_epi32(255UL << 23);
+	__m128i f16inf = _mm_set1_epi32(31UL << 23);
 	__m128i sign_mask = _mm_set1_epi32(0x80000000UL);
 	__m128i round_mask = _mm_set1_epi32(~0x0FFFU);
 
@@ -190,7 +190,7 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 		_mm_storel_epi64((__m128i *)&f16qw, f16_val);
 
 		for (unsigned j = 0; j < vec_left - left; ++j) {
-			dst_p[vec_left - j - 1] = (uint16_t)(f16qw >> (48 - 16 * j));
+			dst_p[vec_left - j - 1] = static_cast<uint16_t>(f16qw >> (48 - 16 * j));
 		}
 	}
 
@@ -206,7 +206,7 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 		_mm_storel_epi64((__m128i *)&f16qw, f16_val);
 
 		for (unsigned j = 0; j < right - vec_right; ++j) {
-			dst_p[vec_right + j] = (uint16_t)(f16qw >> (16 * j));
+			dst_p[vec_right + j] = static_cast<uint16_t>(f16qw >> (16 * j));
 		}
 	}
 
