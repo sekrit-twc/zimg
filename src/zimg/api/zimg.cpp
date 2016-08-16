@@ -329,8 +329,8 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 	if (src.version >= API_VERSION_2_1) {
 		out->active_left = std::isnan(src.active_region.left) ? 0 : src.active_region.left;
 		out->active_top = std::isnan(src.active_region.top) ? 0 : src.active_region.top;
-		out->active_width = std::isnan(src.active_region.width) ? 0 : src.width;
-		out->active_height = std::isnan(src.active_region.height) ? 0 : src.height;
+		out->active_width = std::isnan(src.active_region.width) ? src.width : src.active_region.width;
+		out->active_height = std::isnan(src.active_region.height) ? src.height : src.active_region.height;
 	} else {
 		out->active_left = 0.0;
 		out->active_top = 0.0;
