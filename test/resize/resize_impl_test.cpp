@@ -26,13 +26,14 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 	for (const zimg::resize::Filter *resample_filter : resample_filters) {
 		SCOPED_TRACE(resample_filter->support());
 
-		auto filter = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }.
-			set_horizontal(horizontal).
-			set_dst_dim((unsigned)std::lrint(scale_factor * (horizontal ? src_w : src_h))).
-			set_depth(format.depth).
-			set_filter(resample_filter).
-			set_shift(shift).
-			set_subwidth(subwidth_factor * (horizontal ? src_w : src_h)).create();
+		auto filter = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }
+			.set_horizontal(horizontal)
+			.set_dst_dim((unsigned)std::lrint(scale_factor * (horizontal ? src_w : src_h)))
+			.set_depth(format.depth)
+			.set_filter(resample_filter)
+			.set_shift(shift)
+			.set_subwidth(subwidth_factor * (horizontal ? src_w : src_h))
+			.create();
 
 		ASSERT_TRUE(filter);
 		validate_filter(filter.get(), src_w, src_h, format, expected_sha1[sha1_idx++]);

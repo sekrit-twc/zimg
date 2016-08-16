@@ -153,11 +153,11 @@ int depth_main(int argc, char **argv)
 		std::unique_ptr<zimg::graph::ImageFilter> filter;
 		std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
 
-		auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }.
-			set_pixel_in(args.format_in).
-			set_pixel_out(args.format_out).
-			set_dither_type(args.dither).
-			set_cpu(args.cpu);
+		auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }
+			.set_pixel_in(args.format_in)
+			.set_pixel_out(args.format_out)
+			.set_dither_type(args.dither)
+			.set_cpu(args.cpu);
 
 		filter = conv.create();
 

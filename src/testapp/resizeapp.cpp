@@ -176,17 +176,17 @@ int resize_main(int argc, char **argv)
 
 		ImageFrame dst_frame{ args.width_out, args.height_out, src_frame.pixel_type(), src_frame.planes(), src_frame.is_yuv() };
 
-		auto filter_pair = zimg::resize::ResizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }.
-			set_depth(args.working_format.depth).
-			set_filter(args.filter.get()).
-			set_dst_width(dst_frame.width()).
-			set_dst_height(dst_frame.height()).
-			set_shift_w(args.shift_w).
-			set_shift_h(args.shift_h).
-			set_subwidth(args.subwidth).
-			set_subheight(args.subheight).
-			set_cpu(args.cpu).
-			create();
+		auto filter_pair = zimg::resize::ResizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }
+			.set_depth(args.working_format.depth)
+			.set_filter(args.filter.get())
+			.set_dst_width(dst_frame.width())
+			.set_dst_height(dst_frame.height())
+			.set_shift_w(args.shift_w)
+			.set_shift_h(args.shift_h)
+			.set_subwidth(args.subwidth)
+			.set_subheight(args.subheight)
+			.set_cpu(args.cpu)
+			.create();
 
 		if (filter_pair.second)
 			filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));

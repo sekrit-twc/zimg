@@ -23,9 +23,9 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	}
 
 	zimg::PixelFormat format = zimg::PixelType::FLOAT;
-	auto builder = zimg::colorspace::ColorspaceConversion{ w, h, }.
-		set_csp_in(csp_in).
-		set_csp_out(csp_out);
+	auto builder = zimg::colorspace::ColorspaceConversion{ w, h }
+		.set_csp_in(csp_in)
+		.set_csp_out(csp_out);
 
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_sse = builder.set_cpu(zimg::CPUClass::X86_SSE).create();

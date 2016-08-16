@@ -587,9 +587,10 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		if (params)
 			graph_params = import_graph_params(*params);
 
-		return zimg::graph::GraphBuilder{}.set_source(src_state).
-		                                   connect_graph(dst_state, params ? &graph_params : nullptr).
-		                                   complete_graph().release();
+		return zimg::graph::GraphBuilder{}.set_source(src_state)
+		                                  .connect_graph(dst_state, params ? &graph_params : nullptr)
+		                                  .complete_graph()
+		                                  .release();
 	} catch (const zimg::error::Exception &) {
 		handle_exception(std::current_exception());
 		return nullptr;

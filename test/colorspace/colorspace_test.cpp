@@ -13,10 +13,10 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned h = 480;
 
 	zimg::PixelFormat format = zimg::PixelType::FLOAT;
-	auto convert = zimg::colorspace::ColorspaceConversion{ w, h, }.
-		set_csp_in(csp_in).
-		set_csp_out(csp_out).
-		create();
+	auto convert = zimg::colorspace::ColorspaceConversion{ w, h }
+		.set_csp_in(csp_in)
+		.set_csp_out(csp_out)
+		.create();
 
 	validate_filter(convert.get(), w, h, format, expected_sha1);
 }

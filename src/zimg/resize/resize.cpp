@@ -55,46 +55,46 @@ auto ResizeConversion::create() const -> filter_pair try
 	filter_pair ret{};
 
 	if (skip_h) {
-		ret.first = builder.set_horizontal(false).
-		                    set_dst_dim(dst_height).
-		                    set_shift(shift_h).
-		                    set_subwidth(subheight).
-		                    create();
+		ret.first = builder.set_horizontal(false)
+		                   .set_dst_dim(dst_height)
+		                   .set_shift(shift_h)
+		                   .set_subwidth(subheight)
+		                   .create();
 	} else if (skip_v) {
-		ret.first = builder.set_horizontal(true).
-		                    set_dst_dim(dst_width).
-		                    set_shift(shift_w).
-		                    set_subwidth(subwidth).
-		                    create();
+		ret.first = builder.set_horizontal(true)
+		                   .set_dst_dim(dst_width)
+		                   .set_shift(shift_w)
+		                   .set_subwidth(subwidth)
+		                   .create();
 	} else {
 		bool h_first = resize_h_first((double)dst_width / src_width, (double)dst_height / src_height);
 
 		if (h_first) {
-			ret.first = builder.set_horizontal(true).
-			                    set_dst_dim(dst_width).
-			                    set_shift(shift_w).
-			                    set_subwidth(subwidth).
-			                    create();
+			ret.first = builder.set_horizontal(true)
+			                   .set_dst_dim(dst_width)
+			                   .set_shift(shift_w)
+			                   .set_subwidth(subwidth)
+			                   .create();
 
 			builder.src_width = dst_width;
-			ret.second = builder.set_horizontal(false).
-			                     set_dst_dim(dst_height).
-			                     set_shift(shift_h).
-			                     set_subwidth(subheight).
-			                     create();
+			ret.second = builder.set_horizontal(false)
+			                    .set_dst_dim(dst_height)
+			                    .set_shift(shift_h)
+			                    .set_subwidth(subheight)
+			                    .create();
 		} else {
-			ret.first = builder.set_horizontal(false).
-			                    set_dst_dim(dst_height).
-			                    set_shift(shift_h).
-			                    set_subwidth(subheight).
-			                    create();
+			ret.first = builder.set_horizontal(false)
+			                   .set_dst_dim(dst_height)
+			                   .set_shift(shift_h)
+			                   .set_subwidth(subheight)
+			                   .create();
 
 			builder.src_height = dst_height;
-			ret.second = builder.set_horizontal(true).
-			                     set_dst_dim(dst_width).
-			                     set_shift(shift_w).
-			                     set_subwidth(subwidth).
-			                     create();
+			ret.second = builder.set_horizontal(true)
+			                    .set_dst_dim(dst_width)
+			                    .set_shift(shift_w)
+			                    .set_subwidth(subwidth)
+			                    .create();
 		}
 	}
 

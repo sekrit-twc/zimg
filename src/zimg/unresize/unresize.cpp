@@ -45,40 +45,40 @@ auto UnresizeConversion::create() const -> filter_pair
 	filter_pair ret{};
 
 	if (skip_h) {
-		ret.first = builder.set_horizontal(false).
-		                    set_orig_dim(orig_height).
-		                    set_shift(shift_h).
-		                    create();
+		ret.first = builder.set_horizontal(false)
+		                   .set_orig_dim(orig_height)
+		                   .set_shift(shift_h)
+		                   .create();
 	} else if (skip_v) {
-		ret.first = builder.set_horizontal(true).
-		                    set_orig_dim(orig_width).
-		                    set_shift(shift_w).
-		                    create();
+		ret.first = builder.set_horizontal(true)
+		                   .set_orig_dim(orig_width)
+		                   .set_shift(shift_w)
+		                   .create();
 	} else {
 		bool h_first = unresize_h_first((double)orig_width / up_width, (double)orig_height / up_height);
 
 		if (h_first) {
-			ret.first = builder.set_horizontal(true).
-			                    set_orig_dim(orig_width).
-			                    set_shift(shift_w).
-			                    create();
+			ret.first = builder.set_horizontal(true)
+			                   .set_orig_dim(orig_width)
+			                   .set_shift(shift_w)
+			                   .create();
 
 			builder.up_width = orig_width;
-			ret.second = builder.set_horizontal(false).
-			                     set_orig_dim(orig_height).
-			                     set_shift(shift_h).
-			                     create();
+			ret.second = builder.set_horizontal(false)
+			                    .set_orig_dim(orig_height)
+			                    .set_shift(shift_h)
+			                    .create();
 		} else {
-			ret.first = builder.set_horizontal(false).
-			                    set_orig_dim(orig_height).
-			                    set_shift(shift_h).
-			                    create();
+			ret.first = builder.set_horizontal(false)
+			                   .set_orig_dim(orig_height)
+			                   .set_shift(shift_h)
+			                   .create();
 
 			builder.up_height = orig_height;
-			ret.second = builder.set_horizontal(true).
-			                     set_orig_dim(orig_width).
-			                     set_shift(shift_w).
-			                     create();
+			ret.second = builder.set_horizontal(true)
+			                    .set_orig_dim(orig_width)
+			                    .set_shift(shift_w)
+			                    .create();
 		}
 	}
 

@@ -204,9 +204,9 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const JsonObject &spec,
 	*src_state_out = src_state;
 	*dst_state_out = dst_state;
 
-	return zimg::graph::GraphBuilder{}.set_source(src_state).
-	                                   connect_graph(dst_state, has_params ? &params : nullptr, &factory).
-	                                   complete_graph();
+	return zimg::graph::GraphBuilder{}.set_source(src_state)
+	                                  .connect_graph(dst_state, has_params ? &params : nullptr, &factory)
+	                                  .complete_graph();
 }
 
 ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)

@@ -22,12 +22,12 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(filter.support());
 	SCOPED_TRACE(horizontal ? (double)dst_w / src_w : (double)dst_h / src_h);
 
-	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, type }.
-		set_horizontal(horizontal).
-		set_dst_dim(horizontal ? dst_w : dst_h).
-		set_filter(&filter).
-		set_shift(0.0).
-		set_subwidth(horizontal ? src_w : src_h);
+	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, type }
+		.set_horizontal(horizontal)
+		.set_dst_dim(horizontal ? dst_w : dst_h)
+		.set_filter(&filter)
+		.set_shift(0.0)
+		.set_subwidth(horizontal ? src_w : src_h);
 
 	auto filter_avx2 = builder.set_cpu(zimg::CPUClass::X86_AVX2).create();
 	validate_filter(filter_avx2.get(), src_w, src_h, type, expected_sha1);

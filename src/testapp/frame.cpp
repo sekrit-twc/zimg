@@ -291,9 +291,9 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
-		auto conv = zimg::depth::DepthConversion{ width, height }.
-			set_pixel_in(src_format).
-			set_pixel_out(dst_format);
+		auto conv = zimg::depth::DepthConversion{ width, height }
+			.set_pixel_in(src_format)
+			.set_pixel_out(dst_format);
 
 		graph->attach_filter(conv.create());
 
@@ -461,21 +461,23 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 		src_format.fullrange = fullrange;
 		dst_format.fullrange = fullrange;
 
-		auto conv = zimg::depth::DepthConversion{ width, height }.
-			set_pixel_in(src_format).
-			set_pixel_out(dst_format);
+		auto conv = zimg::depth::DepthConversion{ width, height }
+			.set_pixel_in(src_format)
+			.set_pixel_out(dst_format)
+			.create();
 
-		graph->attach_filter(conv.create());
+		graph->attach_filter(std::move(conv));
 
 		if (color) {
 			src_format.chroma = spec.is_yuv;
 			dst_format.chroma = spec.is_yuv;
 
-			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }.
-				set_pixel_in(src_format).
-				set_pixel_out(dst_format);
+			auto conv_uv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
+				.set_pixel_in(src_format)
+				.set_pixel_out(dst_format)
+				.create();
 
-			graph->attach_filter_uv(conv.create());
+			graph->attach_filter_uv(std::move(conv_uv));
 		}
 	}
 

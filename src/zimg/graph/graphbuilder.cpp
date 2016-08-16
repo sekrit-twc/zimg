@@ -288,10 +288,10 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 
 	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
 
-	auto conv = colorspace::ColorspaceConversion{ m_state.width, m_state.height }.
-		set_csp_in(m_state.colorspace).
-		set_csp_out(colorspace).
-		set_cpu(cpu);
+	auto conv = colorspace::ColorspaceConversion{ m_state.width, m_state.height }
+		.set_csp_in(m_state.colorspace)
+		.set_csp_out(colorspace)
+		.set_cpu(cpu);
 
 	for (auto &&filter : factory->create_colorspace(conv)) {
 		attach_filter(std::move(filter));
@@ -311,11 +311,11 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
 	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::NONE;
 
-	auto conv = depth::DepthConversion{ m_state.width, m_state.height }.
-		set_pixel_in(src_format).
-		set_pixel_out(format).
-		set_dither_type(dither_type).
-		set_cpu(cpu);
+	auto conv = depth::DepthConversion{ m_state.width, m_state.height }
+		.set_pixel_in(src_format)
+		.set_pixel_out(format)
+		.set_dither_type(dither_type)
+		.set_cpu(cpu);
 
 	FilterFactory::filter_list filter_list = factory->create_depth(conv);
 	FilterFactory::filter_list filter_list_uv;
@@ -396,16 +396,16 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	if (do_resize_luma) {
 		double extra_shift_h = luma_shift_factor(m_state.parity, m_state.height, spec.height);
 
-		auto conv = resize::ResizeConversion{ m_state.width, m_state.height, m_state.type }.
-			set_depth(m_state.depth).
-			set_filter(resample_filter).
-			set_dst_width(spec.width).
-			set_dst_height(spec.height).
-			set_shift_w(spec.shift_w).
-			set_shift_h(spec.shift_h + extra_shift_h).
-			set_subwidth(spec.subwidth).
-			set_subheight(spec.subheight).
-			set_cpu(cpu);
+		auto conv = resize::ResizeConversion{ m_state.width, m_state.height, m_state.type }
+			.set_depth(m_state.depth)
+			.set_filter(resample_filter)
+			.set_dst_width(spec.width)
+			.set_dst_height(spec.height)
+			.set_shift_w(spec.shift_w)
+			.set_shift_h(spec.shift_h + extra_shift_h)
+			.set_subwidth(spec.subwidth)
+			.set_subheight(spec.subheight)
+			.set_cpu(cpu);
 
 		filter_list = factory->create_resize(conv);
 
@@ -427,16 +427,16 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 		unsigned chroma_width_out = spec.width >> subsample_w;
 		unsigned chroma_height_out = spec.height >> subsample_h;
 
-		auto conv = resize::ResizeConversion{ chroma_width_in, chroma_height_in, m_state.type }.
-			set_depth(m_state.depth).
-			set_filter(resample_filter_uv).
-			set_dst_width(chroma_width_out).
-			set_dst_height(chroma_height_out).
-			set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w).
-			set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h).
-			set_subwidth(spec.subwidth / (1 << m_state.subsample_w)).
-			set_subheight(spec.subheight / (1 << m_state.subsample_h)).
-			set_cpu(cpu);
+		auto conv = resize::ResizeConversion{ chroma_width_in, chroma_height_in, m_state.type }
+			.set_depth(m_state.depth)
+			.set_filter(resample_filter_uv)
+			.set_dst_width(chroma_width_out)
+			.set_dst_height(chroma_height_out)
+			.set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w)
+			.set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h)
+			.set_subwidth(spec.subwidth / (1 << m_state.subsample_w))
+			.set_subheight(spec.subheight / (1 << m_state.subsample_h))
+			.set_cpu(cpu);
 
 		filter_list_uv = factory->create_resize(conv);
 	}
