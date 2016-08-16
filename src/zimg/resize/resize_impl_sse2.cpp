@@ -92,7 +92,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 	__m128i accum_hi = _mm_setzero_si128();
 	__m128i x0, x1, xl, xh, c, coeffs;
 
-	unsigned k_end = DoLoop ? floor_n(filter_width, 8) : 0;
+	unsigned k_end = DoLoop ? floor_n(filter_width + 1, 8) : 0;
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k));
@@ -302,7 +302,7 @@ const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_la
 	resize_line8_h_u16_sse2<true, 4>,
 	resize_line8_h_u16_sse2<true, 6>,
 	resize_line8_h_u16_sse2<true, 6>,
-	resize_line8_h_u16_sse2<true, 8>,
+	resize_line8_h_u16_sse2<true, 0>,
 };
 
 
