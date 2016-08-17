@@ -439,7 +439,7 @@ unsigned zimg_select_buffer_mask(unsigned count)
   zimg_error_code_e ret = ZIMG_ERROR_SUCCESS; \
   try {
 #define EX_END \
-  } catch (const zimg::error::Exception &) { \
+  } catch (...) { \
     ret = handle_exception(std::current_exception()); \
   } \
   return ret;
@@ -591,7 +591,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		                                  .connect_graph(dst_state, params ? &graph_params : nullptr)
 		                                  .complete_graph()
 		                                  .release();
-	} catch (const zimg::error::Exception &) {
+	} catch (...) {
 		handle_exception(std::current_exception());
 		return nullptr;
 	}
