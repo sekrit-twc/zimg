@@ -433,7 +433,7 @@ int main(int argc, char **argv)
 		return 2;
 	} catch (const std::logic_error &e) {
 		std::cerr << "logic_error: " << e.what() << '\n';
-		throw;
+		return 2;
 	}
 
 	return 0;

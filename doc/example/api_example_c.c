@@ -99,7 +99,8 @@ static int read_image_from_file(const char *path, unsigned w, unsigned h, void *
 
 	ret = 0;
 fail:
-	fclose(file);
+	if (file)
+		fclose(file);
 	return ret;
 }
 
@@ -138,7 +139,8 @@ static int write_image_to_file(const char *path, unsigned w, unsigned h, const v
 
 	ret = 0;
 fail:
-	fclose(file);
+	if (file)
+		fclose(file);
 	return ret;
 }
 
