@@ -4,10 +4,13 @@ set -e
 echo "PWD: $(pwd)"
 echo "CC: ${CC}"
 echo "CXX: ${CXX}"
+echo "TRAVIS_BRANCH: ${TRAVIS_BRANCH}"
 ls -l
 
 # Do not execute build on coverity branch.
-if [ "x$CC" = "xgcc-4.9" ]; then
+if [ "x$TRAVIS_BRANCH" = "xcoverity_scan" ]; then
+  test -f cov-int/build-log.txt && tail -n 100 cov-int/build-log.txt || true
+  test -f cov-int/scm_log.txt && tail -n 100 cov-int/scm_log.txt || true
   exit
 fi
 
