@@ -1,3 +1,9 @@
+2.2 (API 2.1):
+api: add fields to zimg_image_format for image active region
+colorspace: add separate error messages for ill-formed colorspace definition
+resize: fix crash on negative or zero lanczos tap count
+resize: improve performance on SSE2 horizontal resize
+
 2.1:
 graph: optimize resizing to 4:4:4/RGB target
 graph: optimize resizing with different output pixel type
@@ -18,7 +24,7 @@ graph: fix crash when resizing in only one direction
 colorspace: fix incorrect gamut processing
 graph: fix possible buffer overflow on certain widths
 
-2.0:
+2.0 (API 2.0):
 api: new simplified API for all-in-one conversions
 api: remove zimg_set_cpu
 api: add zimg_get_version_info and zimg_get_api_version
