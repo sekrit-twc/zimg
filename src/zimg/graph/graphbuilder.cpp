@@ -205,6 +205,13 @@ auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -
 }
 
 
+GraphBuilder::params::params() :
+	dither_type{},
+	peak_luminance{ NAN },
+	cpu{}
+{
+}
+
 GraphBuilder::resize_spec::resize_spec(const state &state) :
 	width{ state.width },
 	height{ state.height },
@@ -292,6 +299,8 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 		.set_csp_in(m_state.colorspace)
 		.set_csp_out(colorspace)
 		.set_cpu(cpu);
+	if (params && !std::isnan(params->peak_luminance))
+		conv.set_peak_luminance(params->peak_luminance);
 
 	for (auto &&filter : factory->create_colorspace(conv)) {
 		attach_filter(std::move(filter));

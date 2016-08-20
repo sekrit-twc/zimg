@@ -22,6 +22,7 @@ namespace {
 
 const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
 const unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
+const unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 
 #define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
 #define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
@@ -215,13 +216,15 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 6> map{
+	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 8> map{
 		{ ZIMG_TRANSFER_709,         TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::UNSPECIFIED },
 		{ ZIMG_TRANSFER_601,         TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_2020_10,     TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_2020_12,     TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::LINEAR },
+		{ ZIMG_TRANSFER_ST2084,      TransferCharacteristics::ST_2084 },
+		{ ZIMG_TRANSFER_ARIB_B67,    TransferCharacteristics::ARIB_B67 },
 	};
 	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
 }
@@ -385,6 +388,9 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 		params.filter_uv = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
 		params.dither_type = translate_dither(src.dither_type);
 		params.cpu = translate_cpu(src.cpu_type);
+	}
+	if (src.version >= API_VERSION_2_2) {
+		params.peak_luminance = src.nominal_peak_luminance;
 	}
 
 	return params;
@@ -570,6 +576,9 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
 		ptr->dither_type = ZIMG_DITHER_NONE;
 
 		ptr->cpu_type = ZIMG_CPU_AUTO;
+	}
+	if (version >= API_VERSION_2_2) {
+		ptr->nominal_peak_luminance = NAN;
 	}
 }
 
