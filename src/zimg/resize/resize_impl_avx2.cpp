@@ -227,11 +227,9 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
 
 template <class Traits, unsigned FWidth, unsigned Tail>
 void resize_line8_h_fp_avx2(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                            const typename Traits::pixel_type *src_ptr, typename Traits::pixel_type * const *dst_ptr, unsigned left, unsigned right)
+							const typename Traits::pixel_type *src_ptr, typename Traits::pixel_type * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
-
-	unsigned src_base = floor_n(filter_left[left], 8);
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -310,7 +308,6 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 	resize_line8_h_fp_avx2<Traits, 0, 2>,
 	resize_line8_h_fp_avx2<Traits, 0, 3>
 };
-
 
 template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
 inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
@@ -508,7 +505,7 @@ public:
 		dst_ptr[7] = dst_buf[std::min(i + 7, height - 1)];
 
 		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
-		       transpose_buf, dst_ptr, left, right);
+		       transpose_buf, dst_ptr, floor_n(range.first, 8), left, right);
 	}
 };
 

@@ -228,10 +228,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 template <bool DoLoop, unsigned Tail>
 void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                             const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned left, unsigned right, uint16_t limit)
+                             const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
-	unsigned src_base = floor_n(filter_left[left], 8);
-
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
@@ -517,7 +515,7 @@ public:
 		}
 
 		m_func(m_filter.left.data(), m_filter.data_i16.data(), m_filter.stride_i16, m_filter.filter_width,
-		       transpose_buf, dst_ptr, left, right, m_pixel_max);
+		       transpose_buf, dst_ptr, floor_n(range.first, 8), left, right, m_pixel_max);
 	}
 };
 

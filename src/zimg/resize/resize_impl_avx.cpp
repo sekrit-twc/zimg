@@ -137,10 +137,8 @@ inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j,
 
 template <unsigned FWidth, unsigned Tail>
 void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-							const float * RESTRICT src_ptr, float * const *dst_ptr, unsigned left, unsigned right)
+							const float * RESTRICT src_ptr, float * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
 {
-	unsigned src_base = floor_n(filter_left[left], 8);
-
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
@@ -400,7 +398,7 @@ public:
 		dst_ptr[7] = dst_buf[std::min(i + 7, height - 1)];
 
 		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
-			   transpose_buf, dst_ptr, left, right);
+			   transpose_buf, dst_ptr, floor_n(range.first, 8), left, right);
 	}
 };
 
