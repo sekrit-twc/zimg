@@ -12,13 +12,8 @@ extern "C" {
 /**
  * Greatest version of API described by this header.
  *
- * Generally, later versions of the API are backwards-compatible
- * with prior versions. In order to maintain compatibility with the maximum
- * number of library versions, the user should pass the lowest required
- * API version wherever possible to relevant API functions.
- *
  * A number of structure definitions described in this header begin with
- * a member indicating the API version used by the caller. Whenver such
+ * a member indicating the API version used by the caller. Whenever such
  * a structure is a parameter to a function, the version field should be set
  * to the API version corresponding to its layout to ensure that the library
  * does not access memory beyond the end of the structure.
@@ -522,7 +517,6 @@ typedef struct zimg_graph_builder_params {
 	double filter_param_b_uv;                  /**< @see filter_param_a */
 
 	zimg_dither_type_e dither_type;            /**< Dithering method (default ZIMG_DITHER_NONE). */
-
 	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default ZIMG_CPU_AUTO). */
 } zimg_graph_builder_params;
 
