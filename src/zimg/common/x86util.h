@@ -19,7 +19,7 @@ extern const uint8_t ymm_mask_table_r alignas(32)[33][32];
 #ifdef HAVE_CPU_SSE
 
 // Store the right-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm_store_left_ps(float *dst, __m128 x, unsigned count)
+static inline FORCE_INLINE void mm_store_left_ps(float *dst, __m128 x, unsigned count)
 {
 	__m128 orig = _mm_load_ps(dst);
 	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table_l[count]));
@@ -32,7 +32,7 @@ inline FORCE_INLINE void mm_store_left_ps(float *dst, __m128 x, unsigned count)
 }
 
 // Store the left-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm_store_right_ps(float *dst, __m128 x, unsigned count)
+static inline FORCE_INLINE void mm_store_right_ps(float *dst, __m128 x, unsigned count)
 {
 	__m128 orig = _mm_load_ps(dst);
 	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table_r[count]));
@@ -49,7 +49,7 @@ inline FORCE_INLINE void mm_store_right_ps(float *dst, __m128 x, unsigned count)
 #ifdef HAVE_CPU_SSE2
 
 // Store the right-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm_store_left_si128(__m128i *dst, __m128i x, unsigned count)
+static inline FORCE_INLINE void mm_store_left_si128(__m128i *dst, __m128i x, unsigned count)
 {
 	__m128i orig = _mm_load_si128(dst);
 	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table_l[count]));
@@ -62,7 +62,7 @@ inline FORCE_INLINE void mm_store_left_si128(__m128i *dst, __m128i x, unsigned c
 }
 
 // Store the left-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm_store_right_si128(__m128i *dst, __m128i x, unsigned count)
+static inline FORCE_INLINE void mm_store_right_si128(__m128i *dst, __m128i x, unsigned count)
 {
 	__m128i orig = _mm_load_si128(dst);
 	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table_r[count]));
@@ -75,8 +75,8 @@ inline FORCE_INLINE void mm_store_right_si128(__m128i *dst, __m128i x, unsigned 
 }
 
 // Stores the elements of [x] into [dst0]-[dst7].
-inline FORCE_INLINE void mm_scatter_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
-                                          uint16_t *dst4, uint16_t *dst5, uint16_t *dst6, uint16_t *dst7, __m128i x)
+static inline FORCE_INLINE void mm_scatter_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
+                                                 uint16_t *dst4, uint16_t *dst5, uint16_t *dst6, uint16_t *dst7, __m128i x)
 {
 	*dst0 = _mm_extract_epi16(x, 0);
 	*dst1 = _mm_extract_epi16(x, 1);
@@ -89,7 +89,7 @@ inline FORCE_INLINE void mm_scatter_epi16(uint16_t *dst0, uint16_t *dst1, uint16
 }
 
 // Transpose in-place the 8x8 matrix stored in [x0]-[x7].
-inline FORCE_INLINE void mm_transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3, __m128i &x4, __m128i &x5, __m128i &x6, __m128i &x7)
+static inline FORCE_INLINE void mm_transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &x2, __m128i &x3, __m128i &x4, __m128i &x5, __m128i &x6, __m128i &x7)
 {
 	__m128i t0, t1, t2, t3, t4, t5, t6, t7;
 	__m128i tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
@@ -127,7 +127,7 @@ inline FORCE_INLINE void mm_transpose8_epi16(__m128i &x0, __m128i &x1, __m128i &
 #ifdef HAVE_CPU_AVX
 
 // Store the right-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm256_store_left_ps(float *dst, __m256 x, unsigned count)
+static inline FORCE_INLINE void mm256_store_left_ps(float *dst, __m256 x, unsigned count)
 {
 	__m256 orig = _mm256_load_ps(dst);
 	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table_l[count]));
@@ -140,7 +140,7 @@ inline FORCE_INLINE void mm256_store_left_ps(float *dst, __m256 x, unsigned coun
 }
 
 // Store the left-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsigned count)
+static inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsigned count)
 {
 	__m256 orig = _mm256_load_ps(dst);
 	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table_r[count]));
@@ -153,8 +153,8 @@ inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsigned cou
 }
 
 // Stores the elements of [x] into [dst0]-[dst7].
-inline FORCE_INLINE void mm256_scatter_ps(float *dst0, float *dst1, float *dst2, float *dst3,
-                                          float *dst4, float *dst5, float *dst6, float *dst7, __m256 y)
+static inline FORCE_INLINE void mm256_scatter_ps(float *dst0, float *dst1, float *dst2, float *dst3,
+                                                 float *dst4, float *dst5, float *dst6, float *dst7, __m256 y)
 {
 	__m128 x;
 
@@ -174,7 +174,7 @@ inline FORCE_INLINE void mm256_scatter_ps(float *dst0, float *dst1, float *dst2,
 }
 
 // Transpose in-place the 8x8 matrix stored in [x0]-[x7]
-inline FORCE_INLINE void mm256_transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
+static inline FORCE_INLINE void mm256_transpose8_ps(__m256 &row0, __m256 &row1, __m256 &row2, __m256 &row3, __m256 &row4, __m256 &row5, __m256 &row6, __m256 &row7)
 {
 	__m256 t0, t1, t2, t3, t4, t5, t6, t7;
 	__m256 tt0, tt1, tt2, tt3, tt4, tt5, tt6, tt7;
@@ -209,7 +209,7 @@ inline FORCE_INLINE void mm256_transpose8_ps(__m256 &row0, __m256 &row1, __m256 
 #ifdef HAVE_CPU_AVX2
 
 // Store the right-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, unsigned count)
+static inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, unsigned count)
 {
 	__m256i orig = _mm256_load_si256(dst);
 	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table_l[count]));
@@ -222,7 +222,7 @@ inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, unsigne
 }
 
 // Store the left-most [count] bytes from [x] into [dst].
-inline FORCE_INLINE void mm256_store_right_si256(__m256i *dst, __m256i x, unsigned count)
+static inline FORCE_INLINE void mm256_store_right_si256(__m256i *dst, __m256i x, unsigned count)
 {
 	__m256i orig = _mm256_load_si256(dst);
 	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table_r[count]));
