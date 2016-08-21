@@ -112,7 +112,7 @@ public:
 	{
 	}
 
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		matrix_filter_line_sse(static_cast<const float *>(&m_matrix[0][0]), src, dst, left, right);
 	}

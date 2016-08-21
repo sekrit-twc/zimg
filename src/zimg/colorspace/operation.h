@@ -33,7 +33,7 @@ public:
 	 * @param left left column index
 	 * @param right right column index
 	 */
-	virtual void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const = 0;
+	virtual void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const = 0;
 };
 
 /**

@@ -32,7 +32,7 @@ public:
 	{
 	}
 
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		for (unsigned i = left; i < right; ++i) {
 			float a, b, c;
@@ -55,7 +55,7 @@ public:
 
 class Rec709GammaOperationC : public Operation {
 public:
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		for (unsigned p = 0; p < 3; ++p) {
 			for (unsigned i = left; i < right; ++i) {
@@ -69,7 +69,7 @@ public:
 
 class Rec709InverseGammaOperationC : public Operation {
 public:
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		for (unsigned p = 0; p < 3; ++p) {
 			for (unsigned i = left; i < right; ++i) {
@@ -83,7 +83,7 @@ public:
 
 class Rec2020CLToRGBOperationC : public Operation {
 public:
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		float kr = static_cast<float>(REC_2020_KR);
 		float kb = static_cast<float>(REC_2020_KB);
@@ -127,7 +127,7 @@ public:
 
 class Rec2020CLToYUVOperationC : public Operation {
 public:
-	void process(const float * const *src, float * const * dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		float kr = static_cast<float>(REC_2020_KR);
 		float kb = static_cast<float>(REC_2020_KB);
