@@ -52,4 +52,3 @@ test-driver
 test-suite.log
 
 !doc/example/Makefile
-!m4/ax_pthread.m4
