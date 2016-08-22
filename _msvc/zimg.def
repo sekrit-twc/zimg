@@ -1,0 +1,15 @@
+LIBRARY z
+EXPORTS
+	zimg_get_version_info
+	zimg_get_api_version
+	zimg_get_last_error
+	zimg_clear_last_error
+	zimg_select_buffer_mask
+	zimg_filter_graph_free
+	zimg_filter_graph_get_tmp_size
+	zimg_filter_graph_get_input_buffering
+	zimg_filter_graph_get_output_buffering
+	zimg_filter_graph_process
+	zimg_image_format_default
+	zimg_graph_builder_params_default
+	zimg_filter_graph_build
