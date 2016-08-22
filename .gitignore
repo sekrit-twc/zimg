@@ -29,7 +29,8 @@ doc/example/alpha_example
 doc/example/api_example
 doc/example/api_example_c
 doc/example/interlace_example
-m4/*
+m4/libtool.m4
+m4/lt*.m4
 test/unit_test
 Makefile
 Makefile.in

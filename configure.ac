@@ -20,6 +20,9 @@ AC_ARG_ENABLE([unit-test], AS_HELP_STRING([--enable-unit-test], [Compile unit te
 AC_ARG_ENABLE([debug],     AS_HELP_STRING([--enable-debug],     [Enable compilation options required for debugging. (default=no)]))
 AC_ARG_ENABLE([simd],      AS_HELP_STRING([--disable-simd],     [Disable SIMD code. (default=no)]))
 
+AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                      [CFLAGS="-fvisibility=hidden $CFLAGS" CXXFLAGS="-fvisibility=hidden $CXXFLAGS"])
+
 AX_PTHREAD(, AC_MSG_WARN([Unable to find pthread. Testapp will be single-threaded.]))
 AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
 

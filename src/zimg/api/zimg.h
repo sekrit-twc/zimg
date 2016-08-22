@@ -3,6 +3,13 @@
 
 #include <stddef.h>
 
+/* Support for ELF hidden visibility. DLL targets use export maps instead. */
+#if defined(_WIN32) || defined(__CYGWIN__)
+  #define ZIMG_VISIBILITY
+#elif defined(__GNUC__)
+  #define ZIMG_VISIBILITY __attribute__((visibility("default")))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,6 +43,7 @@ extern "C" {
  * @param[out] minor set to the minor verison
  * @param[out] micro set to the micro (patch) version
  */
+ZIMG_VISIBILITY
 void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
 
 /**
@@ -48,6 +56,7 @@ void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro);
  * @param[out] minor set to the minor version, may be NULL
  * @return composite API version number
  */
+ZIMG_VISIBILITY
 unsigned zimg_get_api_version(unsigned *major, unsigned *minor);
 
 /**
@@ -116,6 +125,7 @@ typedef enum zimg_error_code_e {
  * @param n length of {@p err_msg} buffer in bytes
  * @return error code
  */
+ZIMG_VISIBILITY
 zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n);
 
 /**
@@ -125,6 +135,7 @@ zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n);
  *
  * @post zimg_get_last_error() == 0
  */
+ZIMG_VISIBILITY
 void zimg_clear_last_error(void);
 
 
@@ -347,6 +358,7 @@ typedef struct zimg_image_buffer {
  * @param count number of lines, can be {@link ZIMG_BUFFER_MAX}
  * @return buffer mask, can be {@link ZIMG_BUFFER_MAX}
  */
+ZIMG_VISIBILITY
 unsigned zimg_select_buffer_mask(unsigned count);
 
 
@@ -396,6 +408,7 @@ typedef int (*zimg_filter_graph_callback)(void *user, unsigned i, unsigned left,
  *
  * @param ptr graph handle, may be NULL
  */
+ZIMG_VISIBILITY
 void zimg_filter_graph_free(zimg_filter_graph *ptr);
 
 /**
@@ -410,6 +423,7 @@ void zimg_filter_graph_free(zimg_filter_graph *ptr);
  * @param[out] out set to the size of the buffer in bytes
  * @return error code
  */
+ZIMG_VISIBILITY
 zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, size_t *out);
 
 /**
@@ -424,6 +438,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
  * @param[out] out set to the number of scanlines
  * @return error code
  */
+ZIMG_VISIBILITY
 zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
 /**
@@ -435,6 +450,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
  * @return error code
  * @see zimg2_filter_graph_get_input_buffering
  */
+ZIMG_VISIBILITY
 zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph *ptr, unsigned *out);
 
 /**
@@ -450,6 +466,7 @@ zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph
  * @param pack_user private data for callback
  * @return error code
  */
+ZIMG_VISIBILITY
 zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const zimg_image_buffer_const *src, const zimg_image_buffer *dst, void *tmp,
                                             zimg_filter_graph_callback unpack_cb, void *unpack_user,
                                             zimg_filter_graph_callback pack_cb, void *pack_user);
@@ -526,6 +543,7 @@ typedef struct zimg_graph_builder_params {
  * @param[out] ptr structure to be initialized
  * @param version API version used by caller
  */
+ZIMG_VISIBILITY
 void zimg_image_format_default(zimg_image_format *ptr, unsigned version);
 
 /**
@@ -534,6 +552,7 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version);
  * @param[out] ptr structure to be initialized
  * @param version API version used by caller
  */
+ZIMG_VISIBILITY
 void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned version);
 
 /**
@@ -547,6 +566,7 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
  * @param[in] params filter parameters, may be NULL
  * @return graph handle, or NULL on failure
  */
+ZIMG_VISIBILITY
 zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params);
 
 #ifdef __cplusplus
