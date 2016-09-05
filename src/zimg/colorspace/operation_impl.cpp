@@ -123,6 +123,34 @@ public:
 	}
 };
 
+class B67GammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = arib_b67_gamma(x * (1.0f / 12.0f));
+			}
+		}
+	}
+};
+
+class B67InverseGammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = 12.0f * arib_b67_inverse_gamma(x);
+			}
+		}
+	}
+};
+
 class Rec2020CLToRGBOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
@@ -295,6 +323,40 @@ float st_2084_inverse_gamma(float x)
 	return x;
 }
 
+float arib_b67_gamma(float x)
+{
+	unsigned w = fpu_save();
+	fpu_set_single();
+
+	// Prevent negative pixels from yielding NAN.
+	x = std::max(x, 0.0f);
+
+	if (x <= (1.0f / 12.0f))
+		x = zimg_x_sqrtf(3.0f * x);
+	else
+		x = ARIB_B67_A * zimg_x_logf(12.0f * x - ARIB_B67_B) + ARIB_B67_C;
+
+	fpu_restore(w);
+	return x;
+}
+
+float arib_b67_inverse_gamma(float x)
+{
+	unsigned w = fpu_save();
+	fpu_set_single();
+
+	// Prevent negative pixels expanding into positive values.
+	x = std::max(x, 0.0f);
+
+	if (x <= 0.5f)
+		x = (x * x) * (1.0f / 3.0f);
+	else
+		x = (zimg_x_expf((x - ARIB_B67_C) * (1.0f / ARIB_B67_A)) + ARIB_B67_B) * (1.0f / 12.0f);
+
+	fpu_restore(w);
+	return x;
+}
+
 
 MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
 {
@@ -339,6 +401,16 @@ std::unique_ptr<Operation> create_st2084_inverse_gamma_operation(double peak_lum
 {
 	zassert_d(!std::isnan(peak_luminance), "nan detected");
 	return ztd::make_unique<St2084InverseGammaOperationC>(peak_luminance);
+}
+
+std::unique_ptr<Operation> create_b67_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<B67GammaOperationC>();
+}
+
+std::unique_ptr<Operation> create_b67_inverse_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<B67InverseGammaOperationC>();
 }
 
 std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu)
