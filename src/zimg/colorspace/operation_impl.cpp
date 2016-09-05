@@ -241,12 +241,12 @@ std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu)
 	return ztd::make_unique<Rec709InverseGammaOperationC>();
 }
 
-std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu)
 {
 	return ztd::make_unique<Rec2020CLToRGBOperationC>();
 }
 
-std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(const OperationParams &params, CPUClass cpu)
 {
 	return ztd::make_unique<Rec2020CLToYUVOperationC>();
 }

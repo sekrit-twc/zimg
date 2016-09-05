@@ -142,6 +142,9 @@ class ColorspaceGraph {
 public:
 	ColorspaceGraph()
 	{
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+
 		zassert_d(!is_valid_csp({ MatrixCoefficients::REC_2020_CL, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 }), "accepted bad colorspace");
 		zassert_d(!is_valid_csp({ MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::REC_709 }), "accepted bad colorspace");
 		zassert_d(!is_valid_csp({ MatrixCoefficients::UNSPECIFIED, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 }), "accepted bad colorspace");
@@ -166,30 +169,30 @@ public:
 					if (coeffs == MatrixCoefficients::REC_2020_CL && csp.transfer == TransferCharacteristics::LINEAR)
 						link(csp, csp.to(coeffs).to(TransferCharacteristics::REC_709), create_2020_cl_rgb_to_yuv_operation);
 					else if (coeffs != MatrixCoefficients::RGB && coeffs != MatrixCoefficients::REC_2020_CL && coeffs != MatrixCoefficients::UNSPECIFIED)
-						link(csp, csp.to(coeffs), std::bind(create_ncl_rgb_to_yuv_operation, coeffs, std::placeholders::_1));
+						link(csp, csp.to(coeffs), std::bind(create_ncl_rgb_to_yuv_operation, coeffs, _1, _2));
 				}
 
 				// Linear RGB can be converted to gamma to other primaries.
 				if (csp.transfer == TransferCharacteristics::LINEAR) {
 					for (auto transfer : all_transfer()) {
 						if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED)
-							link(csp, csp.to(transfer), std::bind(create_linear_to_gamma_operation, transfer, std::placeholders::_1));
+							link(csp, csp.to(transfer), std::bind(create_linear_to_gamma_operation, transfer, _1, _2));
 					}
 					for (auto primaries : all_primaries()) {
 						if (primaries != csp.primaries)
-							link(csp, csp.to(primaries), std::bind(create_gamut_operation, csp.primaries, primaries, std::placeholders::_1));
+							link(csp, csp.to(primaries), std::bind(create_gamut_operation, csp.primaries, primaries, _1, _2));
 					}
 				}
 
 				// Gamma RGB can be converted to linear.
 				if (csp.transfer != TransferCharacteristics::LINEAR && csp.transfer != TransferCharacteristics::UNSPECIFIED)
-					link(csp, csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, std::placeholders::_1));
+					link(csp, csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, _1, _2));
 			} else {
 				// YUV can only be converted to RGB.
 				if (csp.matrix == MatrixCoefficients::REC_2020_CL)
 					link(csp, csp.to_rgb().to_linear(), create_2020_cl_yuv_to_rgb_operation);
 				else if (csp.matrix != MatrixCoefficients::UNSPECIFIED)
-					link(csp, csp.to_rgb(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, std::placeholders::_1));
+					link(csp, csp.to_rgb(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, _1, _2));
 			}
 		}
 	}

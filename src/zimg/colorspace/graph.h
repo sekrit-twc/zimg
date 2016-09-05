@@ -14,9 +14,10 @@ enum class CPUClass;
 namespace colorspace {
 
 struct ColorspaceDefinition;
+struct OperationParams;
 class Operation;
 
-typedef std::function<std::unique_ptr<Operation>(CPUClass)> OperationFactory;
+typedef std::function<std::unique_ptr<Operation>(const OperationParams &, CPUClass)> OperationFactory;
 
 /**
  * Find the shortest path between two colorspaces.

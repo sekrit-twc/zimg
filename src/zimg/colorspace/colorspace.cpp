@@ -28,8 +28,9 @@ public:
 		auto path = get_operation_path(in, out);
 		zassert(!path.empty(), "empty path");
 
+		OperationParams params;
 		for (const auto &func : path) {
-			m_operations.emplace_back(func(cpu));
+			m_operations.emplace_back(func(params, cpu));
 		}
 	}
 
