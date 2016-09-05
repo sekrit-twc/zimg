@@ -3,6 +3,7 @@
 #ifndef ZIMG_COLORSPACE_OPERATION_H_
 #define ZIMG_COLORSPACE_OPERATION_H_
 
+#include <cmath>
 #include <memory>
 
 namespace zimg {
@@ -18,7 +19,16 @@ enum class ColorPrimaries;
 /**
  * Parameters struct for operation factory functions.
  */
-struct OperationParams {};
+struct OperationParams {
+#include "common/builder.h"
+	BUILDER_MEMBER(double, peak_luminance)
+#undef BUILDER_MEMBER
+
+	/**
+	 * Default construct OperationParams, initializing it with invalid values.
+	 */
+	OperationParams() : peak_luminance{ NAN } {}
+};
 
 /**
  * Base class for colorspace conversion operations.
