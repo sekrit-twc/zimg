@@ -85,14 +85,17 @@ class Rec2020CLToRGBOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		float kr = static_cast<float>(REC_2020_KR);
-		float kb = static_cast<float>(REC_2020_KB);
-		float kg = 1.0f - kr - kb;
+		const float kr = static_cast<float>(REC_2020_KR);
+		const float kb = static_cast<float>(REC_2020_KB);
+		const float kg = 1.0f - kr - kb;
 
-		float pb = 0.7909854f;
-		float nb = -0.9701716f;
-		float pr = 0.4969147f;
-		float nr = -0.8591209f;
+		const float pb = 0.7909854f;
+		const float nb = -0.9701716f;
+		const float pr = 0.4969147f;
+		const float nr = -0.8591209f;
+
+		unsigned w = fpu_save();
+		fpu_set_single();
 
 		for (unsigned i = left; i < right; ++i) {
 			float y = src[0][i];
@@ -122,6 +125,8 @@ public:
 			dst[1][i] = g;
 			dst[2][i] = b;
 		}
+
+		fpu_restore(w);
 	}
 };
 
@@ -129,14 +134,17 @@ class Rec2020CLToYUVOperationC : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		float kr = static_cast<float>(REC_2020_KR);
-		float kb = static_cast<float>(REC_2020_KB);
-		float kg = 1.0f - kr - kb;
+		const float kr = static_cast<float>(REC_2020_KR);
+		const float kb = static_cast<float>(REC_2020_KB);
+		const float kg = 1.0f - kr - kb;
 
-		float pb = 0.7909854f;
-		float nb = -0.9701716f;
-		float pr = 0.4969147f;
-		float nr = -0.8591209f;
+		const float pb = 0.7909854f;
+		const float nb = -0.9701716f;
+		const float pr = 0.4969147f;
+		const float nr = -0.8591209f;
+
+		unsigned w = fpu_save();
+		fpu_set_single();
 
 		for (unsigned i = left; i < right; ++i) {
 			float r = src[0][i];
@@ -163,6 +171,8 @@ public:
 			dst[1][i] = u;
 			dst[2][i] = v;
 		}
+
+		fpu_restore(w);
 	}
 };
 
