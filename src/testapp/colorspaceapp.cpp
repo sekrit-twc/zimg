@@ -97,7 +97,7 @@ const ArgparseOption program_positional[] = {
 const char help_str[] =
 "Colorspace specifier format: matrix:transfer:primaries\n"
 "matrix:    unspec, rgb, 601, 709, 2020_ncl, 2020_cl\n"
-"transfer:  unspec, linear, 709\n"
+"transfer:  unspec, linear, 709, st_2084, arib_b67\n"
 "primaries: unspec, smpte_c, 709, 2020\n"
 "\n"
 PATH_SPECIFIER_HELP_STR;

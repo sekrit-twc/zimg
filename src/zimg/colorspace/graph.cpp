@@ -54,7 +54,7 @@ EnumRange<MatrixCoefficients> all_matrix()
 
 EnumRange<TransferCharacteristics> all_transfer()
 {
-	return{ TransferCharacteristics::UNSPECIFIED, TransferCharacteristics::REC_709 };
+	return{ TransferCharacteristics::UNSPECIFIED, TransferCharacteristics::ARIB_B67 };
 }
 
 EnumRange<ColorPrimaries> all_primaries()
