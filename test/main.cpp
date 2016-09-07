@@ -9,9 +9,11 @@ namespace {
 
 void wrap_libm()
 {
+	zimg_x_expf = myexpf;
+	zimg_x_logf = mylogf;
+	zimg_x_powf = mypowf;
 	zimg_x_sin = mysin;
 	zimg_x_cos = mycos;
-	zimg_x_powf = mypowf;
 }
 
 } // namespace

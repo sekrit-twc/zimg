@@ -2,9 +2,13 @@
   #include <float.h>
 #endif
 
+extern float _myexpf(float x);
+extern float _mylogf(float x);
+
+extern float _mypowf(float x, float y);
+
 extern double _mysin(double x);
 extern double _mycos(double y);
-extern float _mypowf(float x, float y);
 
 #if defined(_MSC_VER) && defined(_M_IX86)
   #define fpu_save() _control87(0, 0)
@@ -17,6 +21,36 @@ extern float _mypowf(float x, float y);
   #define fpu_set_double() (void)0
   #define fpu_restore(x) (void)x
 #endif /* _MSC_VER */
+
+float myexpf(float x)
+{
+	unsigned state = fpu_save();
+	float y;
+	fpu_set_single();
+	y = _myexpf(x);
+	fpu_restore(state);
+	return y;
+}
+
+float mylogf(float x)
+{
+	unsigned state = fpu_save();
+	float y;
+	fpu_set_single();
+	y = _mylogf(x);
+	fpu_restore(state);
+	return y;
+}
+
+float mypowf(float x, float y)
+{
+	unsigned state = fpu_save();
+	float z;
+	fpu_set_single();
+	z = _mypowf(x, y);
+	fpu_restore(state);
+	return z;
+}
 
 double mysin(double x)
 {
@@ -36,14 +70,4 @@ double mycos(double x)
 	y = _mycos(x);
 	fpu_restore(state);
 	return y;
-}
-
-float mypowf(float x, float y)
-{
-	unsigned state = fpu_save();
-	float z;
-	fpu_set_single();
-	z = _mypowf(x, y);
-	fpu_restore(state);
-	return z;
 }
