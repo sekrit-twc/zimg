@@ -33,7 +33,7 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 		x += d;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
 
-		dst_p[j] = static_cast<U>(std::lrintf(x));
+		dst_p[j] = static_cast<U>(std::lrint(x));
 	}
 }
 
@@ -58,7 +58,7 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		x += err;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
 
-		U q = static_cast<U>(std::lrintf(x));
+		U q = static_cast<U>(std::lrint(x));
 
 		dst_p[j] = q;
 		error_cur_p[j] = x - static_cast<float>(q);
