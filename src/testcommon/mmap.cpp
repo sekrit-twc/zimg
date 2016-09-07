@@ -104,8 +104,12 @@ void create_new_file(const char *path, size_t size)
 		win32::trap_error("error setting file pointer");
 	if (::SetEndOfFile(file_handle) == 0)
 		win32::trap_error("error setting end of file");
-	if (::CloseHandle(file_handle) == 0)
+
+	if (::CloseHandle(file_handle) == 0) {
+		file_handle_uptr.release();
 		win32::trap_error("error closing file handle");
+	}
+	file_handle_uptr.release();
 }
 
 } // namespace win32
