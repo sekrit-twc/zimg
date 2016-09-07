@@ -121,7 +121,7 @@ public:
 	template <class U>
 	const ImageBuffer<U> &static_buffer_cast() const
 	{
-		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(m_data)))>::value,
+		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(nullptr)))>::value,
 		              "type not convertible by static_cast");
 
 		// Break strict aliasing to avoid unnecessary object copies.
@@ -197,7 +197,7 @@ public:
 	template <class U>
 	const ColorImageBuffer<U> &static_buffer_cast() const
 	{
-		static_assert(std::is_standard_layout<decltype(m_buffer->template static_buffer_cast<U>())>::value,
+		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(nullptr)))>::value,
 		              "type not convertible by static_cast");
 
 		// Break strict aliasing to avoid unnecessary object copies.
