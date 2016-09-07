@@ -11,7 +11,6 @@ void wrap_libm()
 {
 	zimg_x_sin = mysin;
 	zimg_x_cos = mycos;
-	zimg_x_pow = mypow;
 	zimg_x_powf = mypowf;
 }
 

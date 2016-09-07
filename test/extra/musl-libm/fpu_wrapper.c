@@ -4,7 +4,6 @@
 
 extern double _mysin(double x);
 extern double _mycos(double y);
-extern double _mypow(double x, double y);
 extern float _mypowf(float x, float y);
 
 #if defined(_MSC_VER) && defined(_M_IX86)
@@ -37,16 +36,6 @@ double mycos(double x)
 	y = _mycos(x);
 	fpu_restore(state);
 	return y;
-}
-
-double mypow(double x, double y)
-{
-	unsigned state = fpu_save();
-	double z;
-	fpu_set_double();
-	z = _mypow(x, y);
-	fpu_restore(state);
-	return z;
 }
 
 float mypowf(float x, float y)

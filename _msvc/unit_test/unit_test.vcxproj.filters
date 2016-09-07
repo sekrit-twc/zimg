@@ -81,9 +81,6 @@
     <ClCompile Include="..\..\test\extra\musl-libm\fpu_wrapper.c">
       <Filter>Source Files\extra\musl-libm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\extra\musl-libm\pow.c">
-      <Filter>Source Files\extra\musl-libm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\powf.c">
       <Filter>Source Files\extra\musl-libm</Filter>
     </ClCompile>

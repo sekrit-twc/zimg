@@ -7,7 +7,6 @@ extern "C" {
 
 double mycos(double x);
 double mysin(double x);
-double mypow(double x, double y);
 float mypowf(float x, float y);
 
 #ifdef __cplusplus

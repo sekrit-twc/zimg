@@ -17,7 +17,6 @@ extern "C" {
 
 extern double (*zimg_x_sin)(double x);
 extern double (*zimg_x_cos)(double x);
-extern double (*zimg_x_pow)(double x, double y);
 extern float (*zimg_x_powf)(float x, float y);
 
 #ifdef __cplusplus

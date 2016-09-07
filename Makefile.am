@@ -256,7 +256,6 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/fpu_wrapper.c \
 	test/extra/musl-libm/libm.h \
 	test/extra/musl-libm/mymath.h \
-	test/extra/musl-libm/pow.c \
 	test/extra/musl-libm/powf.c \
 	test/extra/musl-libm/sin.c
 
