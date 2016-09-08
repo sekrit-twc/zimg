@@ -72,6 +72,67 @@ TEST(ColorspaceConversionTest, test_matrix_only)
 	          expected_sha1[2]);
 }
 
+TEST(ColorspaceConversionTest, test_transfer_only)
+{
+	using namespace zimg::colorspace;
+
+	ColorspaceDefinition csp_linear{ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED };
+	ColorspaceDefinition csp_gamma{ MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::UNSPECIFIED };
+	ColorspaceDefinition csp_st2084{ MatrixCoefficients::RGB, TransferCharacteristics::ST_2084, ColorPrimaries::UNSPECIFIED };
+	ColorspaceDefinition csp_arib_b67{ MatrixCoefficients::RGB, TransferCharacteristics::ARIB_B67, ColorPrimaries::UNSPECIFIED };
+
+	const char *expected_sha1[][6] = {
+		{
+			"330a4d5fb0f3681689c8ea75f12afc53d2abacfa",
+			"3b199c185b9a2ae677147694b424c4f1e1c2aa71",
+			"85ecb896add9a2cdcf3a859e90ebaf5c3db24428"
+		},
+		{
+			"72263d2c4e701fad7e19a98f7d4a6fd12c97f237",
+			"9aad4d81bd3ac29a2d647218b91b9e3bb6b031b9",
+			"a13696a7a2931b3ba549ef50ed061386f23ee354"
+		},
+		{
+			"eca72a34dee9d9e0aaccd0226d6b0e7d1e51dc59",
+			"f4364af193955c13ec7fe6fc36cf94e1e5e692b1",
+			"823ac60ee963298d89552f97416f04058c6d8c80"
+		},
+		{
+			"4498bb3edb2391f990849a1ac5341ce7ac6bc6a6",
+			"e85d2e8b26c7d979ff79784c0f62f796ad099f6d",
+			"1b975ddb99008f2c72de2af2c864b52ffdea4c58"
+		},
+		{
+			"4c62e5d775548495a170b6876a2e91b00d4b5f14",
+			"90eae848b7050edf12ca22f57bda4eeccad8d7ef",
+			"e2dc601f663ea61899f37a9db1b50b5e4110a38e"
+		},
+		{
+			"446c897635131babdcbc60527ea53a677777ab72",
+			"040517cd0eabb893d4bb79dc52c86dd983410b11",
+			"ceed0c7ee2be19bd334cd33548e5162078007cf8"
+		},
+	};
+
+	SCOPED_TRACE("gamma->linear");
+	test_case(csp_gamma, csp_linear, expected_sha1[0]);
+
+	SCOPED_TRACE("st2084->linear");
+	test_case(csp_st2084, csp_linear, expected_sha1[1]);
+
+	SCOPED_TRACE("b67->linear");
+	test_case(csp_arib_b67, csp_linear, expected_sha1[2]);
+
+	SCOPED_TRACE("linear->gamma");
+	test_case(csp_linear, csp_gamma, expected_sha1[3]);
+
+	SCOPED_TRACE("linear->st2084");
+	test_case(csp_linear, csp_st2084, expected_sha1[4]);
+
+	SCOPED_TRACE("linear->arib_b67");
+	test_case(csp_linear, csp_arib_b67, expected_sha1[5]);
+}
+
 TEST(ColorspaceConversionTest, test_matrix_transfer)
 {
 	using namespace zimg::colorspace;

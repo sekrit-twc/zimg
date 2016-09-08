@@ -290,6 +290,7 @@ if X86SIMD
 test_unit_test_SOURCES += \
 	test/colorspace/colorspace_avx_test.cpp \
 	test/colorspace/colorspace_sse_test.cpp \
+	test/colorspace/gamma_test.cpp \
 	test/depth/depth_convert_avx2_test.cpp \
 	test/depth/depth_convert_sse2_test.cpp \
 	test/depth/dither_avx2_test.cpp \
