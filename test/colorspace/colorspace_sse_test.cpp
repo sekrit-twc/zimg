@@ -31,7 +31,7 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	auto filter_sse = builder.set_cpu(zimg::CPUClass::X86_SSE).create();
 
 	validate_filter(filter_sse.get(), w, h, format, expected_sha1);
-	validate_filter_reference(filter_sse.get(), filter_sse.get(), w, h, format, expected_snr);
+	validate_filter_reference(filter_sse.get(), filter_c.get(), w, h, format, expected_snr);
 }
 
 } // namespace
