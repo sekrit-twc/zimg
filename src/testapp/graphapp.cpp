@@ -174,6 +174,8 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObje
 		params->dither_type = g_dither_table[val.string().c_str()];
 	if (const auto &val = obj["peak_luminance"])
 		params->peak_luminance = val.number();
+	if (const auto &val = obj["approximate_gamma"])
+		params->approximate_gamma = val.boolean();
 	if (const auto &val = obj["cpu"])
 		params->cpu = g_cpu_table[val.string().c_str()];
 }

@@ -103,6 +103,7 @@ public:
 		std::unique_ptr<const resize::Filter> filter_uv;
 		depth::DitherType dither_type;
 		double peak_luminance;
+		bool approximate_gamma;
 		CPUClass cpu;
 
 		params();

@@ -154,14 +154,14 @@ bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &t
 
 bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
-	if (is_greyscale(source) || is_greyscale(target))
+	if (is_greyscale(source) || is_greyscale(target)) {
 		return source.width != target.width ||
 		       source.height != target.height ||
 		       source.active_left != target.active_left ||
 		       source.active_top != target.active_top ||
 		       source.active_width != target.active_width ||
 		       source.active_height != target.active_height;
-	else
+	} else {
 		return source.width != target.width ||
 	           source.height != target.height ||
 	           source.subsample_w != target.subsample_w ||
@@ -172,6 +172,7 @@ bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &
 		       source.active_top != target.active_top ||
 		       source.active_width != target.active_width ||
 		       source.active_height != target.active_height;
+	}
 }
 
 } // namespace
@@ -208,6 +209,7 @@ auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -
 GraphBuilder::params::params() :
 	dither_type{},
 	peak_luminance{ NAN },
+	approximate_gamma{},
 	cpu{}
 {
 }
@@ -299,8 +301,12 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 		.set_csp_in(m_state.colorspace)
 		.set_csp_out(colorspace)
 		.set_cpu(cpu);
-	if (params && !std::isnan(params->peak_luminance))
-		conv.set_peak_luminance(params->peak_luminance);
+
+	if (params) {
+		if (!std::isnan(params->peak_luminance))
+			conv.set_peak_luminance(params->peak_luminance);
+		conv.set_approximate_gamma(params->approximate_gamma);
+	}
 
 	for (auto &&filter : factory->create_colorspace(conv)) {
 		attach_filter(std::move(filter));

@@ -73,6 +73,7 @@ struct ColorspaceConversion {
 	BUILDER_MEMBER(ColorspaceDefinition, csp_in)
 	BUILDER_MEMBER(ColorspaceDefinition, csp_out)
 	BUILDER_MEMBER(double, peak_luminance)
+	BUILDER_MEMBER(bool, approximate_gamma)
 	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 
