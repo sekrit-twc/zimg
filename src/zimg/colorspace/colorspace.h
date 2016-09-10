@@ -41,6 +41,7 @@ enum class ColorPrimaries {
 	SMPTE_C,
 	REC_709,
 	REC_2020,
+	DCI_P3_D65,
 };
 
 /**

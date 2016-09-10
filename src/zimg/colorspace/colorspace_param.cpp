@@ -61,6 +61,9 @@ void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 	case ColorPrimaries::REC_2020:
 		memcpy(out, REC_2020_PRIMARIES, sizeof(REC_2020_PRIMARIES));
 		break;
+	case ColorPrimaries::DCI_P3_D65:
+		memcpy(out, DCI_P3_PRIMARIES, sizeof(DCI_P3_PRIMARIES));
+		break;
 	default:
 		throw error::InternalError{ "unrecognized primaries" };
 	}

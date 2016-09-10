@@ -282,6 +282,7 @@ typedef enum zimg_color_primaries_e {
 	ZIMG_PRIMARIES_170M        = 6,
 	ZIMG_PRIMARIES_240M        = 7,  /* Equivalent to 6. */
 	ZIMG_PRIMARIES_2020        = 9,
+	ZIMG_PRIMARIES_ST432_1     = 12,
 } zimg_color_primaries_e;
 
 /**

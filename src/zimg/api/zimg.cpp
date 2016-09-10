@@ -233,12 +233,13 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 {
 	using zimg::colorspace::ColorPrimaries;
 
-	static const zimg::static_map<zimg_color_primaries_e, ColorPrimaries, 5> map{
+	static const zimg::static_map<zimg_color_primaries_e, ColorPrimaries, 6> map{
 		{ ZIMG_PRIMARIES_709,         ColorPrimaries::REC_709 },
 		{ ZIMG_PRIMARIES_UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 		{ ZIMG_PRIMARIES_170M,        ColorPrimaries::SMPTE_C },
 		{ ZIMG_PRIMARIES_240M,        ColorPrimaries::SMPTE_C },
 		{ ZIMG_PRIMARIES_2020,        ColorPrimaries::REC_2020 },
+		{ ZIMG_PRIMARIES_ST432_1,     ColorPrimaries::DCI_P3_D65 },
 	};
 	return search_itu_enum_map(map, primaries, "unrecognized color primaries");
 }

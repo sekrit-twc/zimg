@@ -38,7 +38,7 @@ extern const zimg::static_string_map<zimg::CPUClass, 7> g_cpu_table;
 extern const zimg::static_string_map<zimg::PixelType, 4> g_pixel_table;
 extern const zimg::static_string_map<zimg::colorspace::MatrixCoefficients, 7> g_matrix_table;
 extern const zimg::static_string_map<zimg::colorspace::TransferCharacteristics, 5> g_transfer_table;
-extern const zimg::static_string_map<zimg::colorspace::ColorPrimaries, 4> g_primaries_table;
+extern const zimg::static_string_map<zimg::colorspace::ColorPrimaries, 5> g_primaries_table;
 extern const zimg::static_string_map<zimg::depth::DitherType, 4> g_dither_table;
 extern const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 6> g_resize_table;
 

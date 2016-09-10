@@ -162,6 +162,11 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 			"1e14ec2d359417837a6501c948ec110597535bb4",
 			"c564d33ae070a54e5f10baa262f6da6c8450ed80",
 			"e511d90a33b8e27ee96adfda987038cd4d540f8e"
+		},
+		{
+			"6eecdcbf5cb11437ecab1700f0b0769c09a942e7",
+			"37c2a61353e006672fe4169b3eef588f4f08b69a",
+			"be47b698c9252af496b7d5b1bf7c678f1e39e615"
 		}
 	};
 
@@ -174,6 +179,11 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 	test_case({ MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
 	          { MatrixCoefficients::REC_2020_NCL, TransferCharacteristics::REC_709, ColorPrimaries::REC_2020 },
 	          expected_sha1[1]);
+
+	SCOPED_TRACE("709->p3d65");
+	test_case({ MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
+	          { MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::DCI_P3_D65 },
+	          expected_sha1[2]);
 }
 
 TEST(ColorspaceConversionTest, test_rec2020_cl)
