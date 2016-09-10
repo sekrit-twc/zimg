@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\api\api_test.cpp" />
+    <ClCompile Include="..\..\test\colorspace\colorspace_avx2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_avx_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_sse2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />

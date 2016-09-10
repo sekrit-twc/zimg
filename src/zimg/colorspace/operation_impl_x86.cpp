@@ -34,9 +34,13 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation_x86(TransferCharacte
 	std::unique_ptr<Operation> ret;
 
 	if (cpu == CPUClass::AUTO) {
+		if (!ret && caps.avx2 && caps.f16c)
+			ret = create_gamma_to_linear_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
 			ret = create_gamma_to_linear_operation_sse2(transfer, params);
 	} else {
+		if (!ret && cpu >= CPUClass::X86_AVX2)
+			ret = create_gamma_to_linear_operation_avx2(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_gamma_to_linear_operation_sse2(transfer, params);
 	}
@@ -50,9 +54,13 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacte
 	std::unique_ptr<Operation> ret;
 
 	if (cpu == CPUClass::AUTO) {
+		if (!ret && caps.avx2)
+			ret = create_linear_to_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
 			ret = create_linear_to_gamma_operation_sse2(transfer, params);
 	} else {
+		if (!ret && cpu >= CPUClass::X86_AVX2)
+			ret = create_linear_to_gamma_operation_avx2(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_linear_to_gamma_operation_sse2(transfer, params);
 	}

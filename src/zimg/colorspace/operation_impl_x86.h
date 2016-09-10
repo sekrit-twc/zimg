@@ -25,10 +25,12 @@ std::unique_ptr<Operation> create_matrix_operation_avx(const Matrix3x3 &m);
 std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu);
 
 std::unique_ptr<Operation> create_gamma_to_linear_operation_sse2(TransferCharacteristics transfer, const OperationParams &params);
+std::unique_ptr<Operation> create_gamma_to_linear_operation_avx2(TransferCharacteristics transfer, const OperationParams &params);
 
 std::unique_ptr<Operation> create_gamma_to_linear_operation_x86(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu);
 
 std::unique_ptr<Operation> create_linear_to_gamma_operation_sse2(TransferCharacteristics transfer, const OperationParams &params);
+std::unique_ptr<Operation> create_linear_to_gamma_operation_avx2(TransferCharacteristics transfer, const OperationParams &params);
 
 std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu);
 
