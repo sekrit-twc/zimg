@@ -391,6 +391,7 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 	}
 	if (src.version >= API_VERSION_2_2) {
 		params.peak_luminance = src.nominal_peak_luminance;
+		params.approximate_gamma = !!src.allow_approximate_gamma;
 	}
 
 	return params;
@@ -579,6 +580,7 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
 	}
 	if (version >= API_VERSION_2_2) {
 		ptr->nominal_peak_luminance = NAN;
+		ptr->allow_approximate_gamma = 0;
 	}
 }
 
