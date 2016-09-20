@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -70,21 +71,23 @@ struct Arguments {
 	zimg::colorspace::ColorspaceDefinition csp_out;
 	int fullrange_in;
 	int fullrange_out;
+	double peak_luminance;
 	const char *visualise_path;
 	unsigned times;
 	zimg::CPUClass cpu;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, "w",     "width",     offsetof(Arguments, width),           nullptr, "image width" },
-	{ OPTION_UINTEGER, "h",     "height",    offsetof(Arguments, height),          nullptr, "image height" },
-	{ OPTION_FALSE,    nullptr, "tv-in",     offsetof(Arguments, fullrange_in),    nullptr, "input is TV range" },
-	{ OPTION_TRUE,     nullptr, "pc-in",     offsetof(Arguments, fullrange_in),    nullptr, "input is PC range" },
-	{ OPTION_FALSE,    nullptr, "tv-out",    offsetof(Arguments, fullrange_out),   nullptr, "output is TV range" },
-	{ OPTION_TRUE,     nullptr, "pc-out",    offsetof(Arguments, fullrange_out),   nullptr, "output is PC range" },
-	{ OPTION_STRING,   nullptr, "visualise", offsetof(Arguments, visualise_path),  nullptr, "path to BMP file for visualisation" },
-	{ OPTION_UINTEGER, nullptr, "times",     offsetof(Arguments, times),           nullptr, "number of benchmark cycles" },
-	{ OPTION_USER,     nullptr, "cpu",       offsetof(Arguments, cpu),             arg_decode_cpu, "select CPU type" },
+	{ OPTION_UINTEGER, "w",     "width",          offsetof(Arguments, width),          nullptr, "image width" },
+	{ OPTION_UINTEGER, "h",     "height",         offsetof(Arguments, height),         nullptr, "image height" },
+	{ OPTION_FALSE,    nullptr, "tv-in",          offsetof(Arguments, fullrange_in),   nullptr, "input is TV range" },
+	{ OPTION_TRUE,     nullptr, "pc-in",          offsetof(Arguments, fullrange_in),   nullptr, "input is PC range" },
+	{ OPTION_FALSE,    nullptr, "tv-out",         offsetof(Arguments, fullrange_out),  nullptr, "output is TV range" },
+	{ OPTION_TRUE,     nullptr, "pc-out",         offsetof(Arguments, fullrange_out),  nullptr, "output is PC range" },
+	{ OPTION_FLOAT,    nullptr, "peak-luminance", offsetof(Arguments, peak_luminance), nullptr, "nominal peak luminance for SDR (cd/m^2)" },
+	{ OPTION_STRING,   nullptr, "visualise",      offsetof(Arguments, visualise_path), nullptr, "path to BMP file for visualisation" },
+	{ OPTION_UINTEGER, nullptr, "times",          offsetof(Arguments, times),          nullptr, "number of benchmark cycles" },
+	{ OPTION_USER,     nullptr, "cpu",            offsetof(Arguments, cpu),            arg_decode_cpu, "select CPU type" },
 };
 
 const ArgparseOption program_positional[] = {
@@ -97,7 +100,7 @@ const ArgparseOption program_positional[] = {
 const char help_str[] =
 "Colorspace specifier format: matrix:transfer:primaries\n"
 "matrix:    unspec, rgb, 601, 709, 2020_ncl, 2020_cl\n"
-"transfer:  unspec, linear, 709\n"
+"transfer:  unspec, linear, 709, st_2084, arib_b67\n"
 "primaries: unspec, smpte_c, 709, 2020\n"
 "\n"
 PATH_SPECIFIER_HELP_STR;
@@ -120,6 +123,7 @@ int colorspace_main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
+	args.peak_luminance = NAN;
 	args.times = 1;
 
 	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
@@ -135,12 +139,14 @@ int colorspace_main(int argc, char **argv)
 		if (src_frame.is_yuv() != yuv_in)
 			std::cerr << "warning: input file is of different color family than declared format\n";
 
-		auto convert = zimg::colorspace::ColorspaceConversion{ src_frame.width(), src_frame.height() }
-			.set_csp_in(args.csp_in)
-			.set_csp_out(args.csp_out)
-			.set_cpu(args.cpu)
-			.create();
+		zimg::colorspace::ColorspaceConversion conv{ src_frame.width(), src_frame.height() };
+		conv.set_csp_in(args.csp_in)
+		    .set_csp_out(args.csp_out)
+		    .set_cpu(args.cpu);
+		if (!std::isnan(args.peak_luminance))
+			conv.set_peak_luminance(args.peak_luminance);
 
+		auto convert = conv.create();
 		execute(convert.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)

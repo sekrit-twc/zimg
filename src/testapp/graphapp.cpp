@@ -28,13 +28,14 @@ class TracingFilterFactory : public zimg::graph::DefaultFilterFactory {
 public:
 	filter_list create_colorspace(const zimg::colorspace::ColorspaceConversion &conv) override
 	{
-		printf("colorspace: [%d, %d, %d] => [%d, %d, %d]\n",
+		printf("colorspace: [%d, %d, %d] => [%d, %d, %d] (%f)\n",
 		       static_cast<int>(conv.csp_in.matrix),
 		       static_cast<int>(conv.csp_in.transfer),
 		       static_cast<int>(conv.csp_in.primaries),
 		       static_cast<int>(conv.csp_out.matrix),
 		       static_cast<int>(conv.csp_out.transfer),
-		       static_cast<int>(conv.csp_out.primaries));
+		       static_cast<int>(conv.csp_out.primaries),
+		       conv.peak_luminance);
 
 		return zimg::graph::DefaultFilterFactory::create_colorspace(conv);
 	}
@@ -171,6 +172,8 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObje
 
 	if (const auto &val = obj["dither_type"])
 		params->dither_type = g_dither_table[val.string().c_str()];
+	if (const auto &val = obj["peak_luminance"])
+		params->peak_luminance = val.number();
 	if (const auto &val = obj["cpu"])
 		params->cpu = g_cpu_table[val.string().c_str()];
 }

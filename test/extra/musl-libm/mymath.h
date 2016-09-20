@@ -5,9 +5,13 @@
 extern "C" {
 #endif
 
+float myexpf(float x);
+float mylogf(float x);
+
+float mypowf(float x, float y);
+
 double mycos(double x);
 double mysin(double x);
-float mypowf(float x, float y);
 
 #ifdef __cplusplus
 } /* extern "C" */

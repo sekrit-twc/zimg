@@ -27,7 +27,7 @@ extern "C" {
  */
 #define ZIMG_MAKE_API_VERSION(x, y) (((x) << 8) | (y))
 #define ZIMG_API_VERSION_MAJOR 2
-#define ZIMG_API_VERSION_MINOR 1
+#define ZIMG_API_VERSION_MINOR 2
 #define ZIMG_API_VERSION ZIMG_MAKE_API_VERSION(ZIMG_API_VERSION_MAJOR, ZIMG_API_VERSION_MINOR)
 
 /**
@@ -271,6 +271,8 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_LINEAR      = 8,
 	ZIMG_TRANSFER_2020_10     = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_2020_12     = 15, /* Equivalent to 1. */
+	ZIMG_TRANSFER_ST2084      = 16,
+	ZIMG_TRANSFER_ARIB_B67    = 18,
 } zimg_transfer_characteristics_e;
 
 typedef enum zimg_color_primaries_e {
@@ -535,6 +537,25 @@ typedef struct zimg_graph_builder_params {
 
 	zimg_dither_type_e dither_type;            /**< Dithering method (default ZIMG_DITHER_NONE). */
 	zimg_cpu_type_e cpu_type;                  /**< Target CPU architecture (default ZIMG_CPU_AUTO). */
+
+	/**
+	 * Nominal peak luminance (cd/m^2) for standard-dynamic range (SDR) systems.
+	 *
+	 * When a high dynamic range (HDR) transfer function is converted to linear
+	 * light, the linear values are scaled such that nominal white (L = 1.0)
+	 * matches the nominal SDR luminance. The HDR component of the signal is
+	 * represented as multiples of the SDR luminance (L > 1.0).
+	 *
+	 * Certain HDR transfer functions (e.g. ST.2084) have a defined mapping
+	 * between code values and physical luminance. When converting between
+	 * absolute and relative transfer functions, the nominal peak luminance is
+	 * used to scale the dequantized linear light values.
+	 *
+	 * Since API 2.2.
+	 *
+	 * The default value is NAN, which is interpreted as 100 cd/m^2.
+	 */
+	double nominal_peak_luminance;
 } zimg_graph_builder_params;
 
 /**

@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\test\colorspace\colorspace_avx_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp" />
+    <ClCompile Include="..\..\test\colorspace\gamma_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp" />
@@ -37,7 +38,19 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4244</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4244</DisableSpecificWarnings>
     </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\expf.c">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4244</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4244</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4244</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4244</DisableSpecificWarnings>
+    </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\fpu_wrapper.c" />
+    <ClCompile Include="..\..\test\extra\musl-libm\logf.c">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4244;4305;4723</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4244;4305;4723</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4244;4305;4723</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4244;4305;4723</DisableSpecificWarnings>
+    </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\powf.c">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4305</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4305</DisableSpecificWarnings>

@@ -147,6 +147,15 @@
     <ClCompile Include="..\..\test\api\api_test.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\expf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\logf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\gamma_test.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

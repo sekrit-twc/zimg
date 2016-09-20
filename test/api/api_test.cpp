@@ -38,3 +38,19 @@ TEST(APITest, test_api_2_0_compat)
 	EXPECT_TRUE(graph);
 	zimg_filter_graph_free(graph);
 }
+
+TEST(APITest, test_api_2_1_compat)
+{
+	const unsigned API_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
+	const size_t extra_off = offsetof(zimg_graph_builder_params, nominal_peak_luminance);
+	const size_t extra_len = sizeof(zimg_graph_builder_params) - extra_off;
+
+	zimg_graph_builder_params params;
+	std::memset(reinterpret_cast<unsigned char *>(&params) + extra_off, 0xCC, extra_len);
+
+	zimg_graph_builder_params_default(&params, API_2_1);
+	EXPECT_EQ(API_2_1, params.version);
+	for (size_t i = extra_off; i < extra_len; ++i) {
+		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&params) + i));
+	}
+}

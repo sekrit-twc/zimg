@@ -254,7 +254,9 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/__sin.c \
 	test/extra/musl-libm/cos.c \
 	test/extra/musl-libm/fpu_wrapper.c \
+	test/extra/musl-libm/expf.c \
 	test/extra/musl-libm/libm.h \
+	test/extra/musl-libm/logf.c \
 	test/extra/musl-libm/mymath.h \
 	test/extra/musl-libm/powf.c \
 	test/extra/musl-libm/sin.c
@@ -288,6 +290,7 @@ if X86SIMD
 test_unit_test_SOURCES += \
 	test/colorspace/colorspace_avx_test.cpp \
 	test/colorspace/colorspace_sse_test.cpp \
+	test/colorspace/gamma_test.cpp \
 	test/depth/depth_convert_avx2_test.cpp \
 	test/depth/depth_convert_sse2_test.cpp \
 	test/depth/dither_avx2_test.cpp \
