@@ -22,15 +22,12 @@ class ColorspaceConversionImpl final : public graph::ImageFilterBase {
 	unsigned m_height;
 public:
 	ColorspaceConversionImpl(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out,
-	                         double peak_luminance, CPUClass cpu) :
+	                         const OperationParams &params, CPUClass cpu) :
 		m_width{ width },
 		m_height{ height }
 	{
 		auto path = get_operation_path(in, out);
 		zassert(!path.empty(), "empty path");
-
-		OperationParams params;
-		params.set_peak_luminance(peak_luminance);
 
 		for (const auto &func : path) {
 			m_operations.emplace_back(func(params, cpu));
@@ -116,16 +113,21 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	csp_in{},
 	csp_out{},
 	peak_luminance{ 100.0 },
+	approximate_gamma{},
 	cpu{ CPUClass::NONE }
 {
 }
 
 std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 {
+	OperationParams params;
+	params.set_peak_luminance(peak_luminance)
+	      .set_approximate_gamma(approximate_gamma);
+
 	if (csp_in == csp_out)
 		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
 	else
-		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, peak_luminance, cpu);
+		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {
 	throw error::OutOfMemory{};
 }

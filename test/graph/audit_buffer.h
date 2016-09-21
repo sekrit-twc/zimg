@@ -30,8 +30,6 @@ public:
 	AuditBuffer(unsigned width, unsigned height, const zimg::PixelFormat &format, unsigned lines,
 	            unsigned subsample_w, unsigned subsample_h, bool color);
 
-	void set_format(const zimg::PixelFormat &format);
-
 	void set_fill_val(unsigned char x);
 
 	void set_fill_val(unsigned char x, unsigned plane);

@@ -156,6 +156,12 @@
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\colorspace_sse2_test.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\colorspace_avx2_test.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

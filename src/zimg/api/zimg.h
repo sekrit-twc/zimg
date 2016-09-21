@@ -513,7 +513,8 @@ typedef struct zimg_image_format {
 typedef struct zimg_graph_builder_params {
 	unsigned version; /**< @see ZIMG_API_VERSION */
 
-	zimg_resample_filter_e resample_filter;    /**< Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
+        /** Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
+	zimg_resample_filter_e resample_filter;
 
 	/**
 	 * Parameters for resampling filter.
@@ -556,6 +557,9 @@ typedef struct zimg_graph_builder_params {
 	 * The default value is NAN, which is interpreted as 100 cd/m^2.
 	 */
 	double nominal_peak_luminance;
+
+        /** Allow evaluating transfer functions at reduced precision (default false). */
+	char allow_approximate_gamma;
 } zimg_graph_builder_params;
 
 /**

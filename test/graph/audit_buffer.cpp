@@ -142,12 +142,6 @@ AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, const zimg::PixelFo
 }
 
 template <class T>
-void AuditBuffer<T>::set_format(const zimg::PixelFormat &format)
-{
-	m_format = format;
-}
-
-template <class T>
 void AuditBuffer<T>::set_fill_val(unsigned char x)
 {
 	set_fill_val(x, 0);

@@ -138,6 +138,7 @@ libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 libsse2_la_SOURCES = \
+	src/zimg/colorspace/operation_impl_sse2.cpp \
 	src/zimg/depth/depth_convert_sse2.cpp \
 	src/zimg/depth/dither_sse2.cpp \
 	src/zimg/depth/f16c_sse2.cpp \
@@ -159,6 +160,7 @@ libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
 libf16c_la_CPPFLAGS = -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = \
+	src/zimg/colorspace/operation_impl_avx2.cpp \
 	src/zimg/depth/depth_convert_avx2.cpp \
 	src/zimg/depth/dither_avx2.cpp \
 	src/zimg/resize/resize_impl_avx2.cpp
@@ -289,7 +291,9 @@ test_unit_test_SOURCES = \
 if X86SIMD
 test_unit_test_SOURCES += \
 	test/colorspace/colorspace_avx_test.cpp \
+	test/colorspace/colorspace_avx2_test.cpp \
 	test/colorspace/colorspace_sse_test.cpp \
+	test/colorspace/colorspace_sse2_test.cpp \
 	test/colorspace/gamma_test.cpp \
 	test/depth/depth_convert_avx2_test.cpp \
 	test/depth/depth_convert_sse2_test.cpp \

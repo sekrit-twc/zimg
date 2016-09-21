@@ -22,6 +22,7 @@ enum class ColorPrimaries;
 struct OperationParams {
 #include "common/builder.h"
 	BUILDER_MEMBER(double, peak_luminance)
+	BUILDER_MEMBER(bool, approximate_gamma)
 #undef BUILDER_MEMBER
 
 	/**
