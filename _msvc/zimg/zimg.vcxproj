@@ -249,6 +249,10 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AVXI</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AVXI</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AVXI</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AVXI</UseProcessorExtensions>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />

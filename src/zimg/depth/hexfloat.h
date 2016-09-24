@@ -1,3 +1,11 @@
+#ifndef ZIMG_DEPTH_HEXFLOAT_H_
+#define ZIMG_DEPTH_HEXFLOAT_H_
+
+// ICL is not able to parse the constexpr implementation.
+#ifdef __INTEL_COMPILER
+#include <stdlib.h>
+#define HEX_LF_C(num) strtof(#num, 0)
+#else
 #include <limits>
 
 namespace zimg {
@@ -152,3 +160,6 @@ public:
 
 } // namespace depth
 } // namespace zimg
+
+#endif // __INTEL_COMPILER
+#endif // ZIMG_DEPTH_HEXFLOAT_H_
