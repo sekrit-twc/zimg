@@ -29,7 +29,7 @@ std::pair<float, float> get_scale_factor(TransferCharacteristics transfer, float
 	case TransferCharacteristics::ST_2084:
 		return{ peak_luminance / ST2084_PEAK_LUMINANCE, ST2084_PEAK_LUMINANCE / peak_luminance };
 	case TransferCharacteristics::ARIB_B67:
-		return{ 1.0f / 12.0f, 1.0f };
+		return{ 1.0f / 12.0f, 12.0f };
 	default:
 		return{ 1.0f, 1.0f };
 	}
