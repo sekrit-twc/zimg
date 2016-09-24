@@ -513,7 +513,7 @@ typedef struct zimg_image_format {
 typedef struct zimg_graph_builder_params {
 	unsigned version; /**< @see ZIMG_API_VERSION */
 
-        /** Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
+	/** Luma resampling filter (default ZIMG_RESIZE_BICUBIC). */
 	zimg_resample_filter_e resample_filter;
 
 	/**
@@ -558,7 +558,7 @@ typedef struct zimg_graph_builder_params {
 	 */
 	double nominal_peak_luminance;
 
-        /** Allow evaluating transfer functions at reduced precision (default false). */
+	/** Allow evaluating transfer functions at reduced precision (default false). */
 	char allow_approximate_gamma;
 } zimg_graph_builder_params;
 
