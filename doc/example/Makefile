@@ -11,13 +11,15 @@ misc_OBJS = \
 	misc/mmap.o \
 	misc/win32_bitmap.o
 
-all: alpha_example api_example api_example_c interlace_example
+all: alpha_example api_example api_example_c hdr_example interlace_example
 
 alpha_example: alpha_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 api_example: api_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 api_example_c: api_example_c.o $(misc_OBJS)
+	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
+hdr_example: hdr_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 interlace_example: interlace_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@

@@ -24,6 +24,7 @@ dist_example_DATA = \
 	doc/example/alpha_example.cpp \
 	doc/example/api_example.cpp \
 	doc/example/api_example_c.c \
+	doc/example/hdr_example.cpp \
 	doc/example/interlace_example.cpp \
 	doc/example/Makefile
 
@@ -34,7 +35,7 @@ dist_examplemisc_DATA = \
 	src/testcommon/mmap.cpp \
 	src/testcommon/mmap.h \
 	src/testcommon/win32_bitmap.cpp \
-	src/testcommon/win32_bitmap.o
+	src/testcommon/win32_bitmap.h
 
 
 noinst_PROGRAMS =
@@ -190,6 +191,7 @@ noinst_PROGRAMS += \
 	doc/example/alpha_example \
 	doc/example/api_example \
 	doc/example/api_example_c \
+	doc/example/hdr_example \
 	doc/example/interlace_example
 noinst_LTLIBRARIES += libtestcommon.la
 
@@ -207,6 +209,10 @@ doc_example_api_example_LDADD = $(EXAMPLE_LDADD)
 doc_example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
 doc_example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+
+doc_example_hdr_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_hdr_example_SOURCES = doc/example/hdr_example.cpp
+doc_example_hdr_example_LDADD = $(EXAMPLE_LDADD)
 
 doc_example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_interlace_example_SOURCES = doc/example/interlace_example.cpp

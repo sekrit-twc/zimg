@@ -54,6 +54,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dll_universal", "dll_univer
 		{DBBFB1CB-5854-490C-B549-63F7B8FBE1F2} = {DBBFB1CB-5854-490C-B549-63F7B8FBE1F2}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_example_hdr", "_example_hdr\_example_hdr.vcxproj", "{613FBE86-C438-4F7C-AB69-4C024C5305D5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8629E57-4D6F-40FA-82FC-B39824195932} = {C8629E57-4D6F-40FA-82FC-B39824195932}
+		{3849AF96-797C-4322-AD39-810D8367684D} = {3849AF96-797C-4322-AD39-810D8367684D}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -170,6 +176,16 @@ Global
 		{DC46DBC0-F7BB-40F1-B57F-DC884057340F}.Release|ARM.Build.0 = Release|ARM
 		{DC46DBC0-F7BB-40F1-B57F-DC884057340F}.Release|Win32.ActiveCfg = Release|ARM
 		{DC46DBC0-F7BB-40F1-B57F-DC884057340F}.Release|x64.ActiveCfg = Release|ARM
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Debug|ARM.ActiveCfg = Debug|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Debug|Win32.Build.0 = Debug|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Debug|x64.ActiveCfg = Debug|x64
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Debug|x64.Build.0 = Debug|x64
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Release|ARM.ActiveCfg = Release|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Release|Win32.ActiveCfg = Release|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Release|Win32.Build.0 = Release|Win32
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Release|x64.ActiveCfg = Release|x64
+		{613FBE86-C438-4F7C-AB69-4C024C5305D5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
