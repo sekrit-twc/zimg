@@ -351,7 +351,7 @@ float arib_b67_inverse_gamma(float x)
 	if (x <= 0.5f)
 		x = (x * x) * (1.0f / 3.0f);
 	else
-		x = (zimg_x_expf((x - ARIB_B67_C) * (1.0f / ARIB_B67_A)) + ARIB_B67_B) * (1.0f / 12.0f);
+		x = (zimg_x_expf((x - ARIB_B67_C) / ARIB_B67_A) + ARIB_B67_B) / 12.0f;
 
 	fpu_restore(w);
 	return x;

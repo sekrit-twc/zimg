@@ -93,7 +93,7 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"a13696a7a2931b3ba549ef50ed061386f23ee354"
 		},
 		{
-			"eca72a34dee9d9e0aaccd0226d6b0e7d1e51dc59",
+			"9344bde7a73ad908baa5dd8ebe15cfbcf9e40b81",
 			"f4364af193955c13ec7fe6fc36cf94e1e5e692b1",
 			"823ac60ee963298d89552f97416f04058c6d8c80"
 		},
