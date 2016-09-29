@@ -5,7 +5,6 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -24,23 +23,21 @@ namespace {
 
 int decode_mask_key(const ArgparseOption *, void *out, int argc, char **argv)
 {
+	const char HEX_DIGITS[] = "0123456789abcdefABCDEF";
+
 	if (argc < 1)
 		return -1;
 
 	uint8_t *mask_key = static_cast<uint8_t *>(out);
 
 	try {
-		std::regex mask_regex{ R"(^([0-9|a-f|A-F]+)$)" };
-		std::cmatch match;
-
-		if (!std::regex_match(*argv, match, mask_regex))
+		std::string s{ *argv };
+		if (s.size() != 6 || s.find_first_not_of(HEX_DIGITS) != std::string::npos)
 			throw std::runtime_error{ "bad hex string" };
-		if (match[1].length() != 6)
-			throw std::runtime_error{ "unexpected hex string length" };
 
-		mask_key[0] = static_cast<uint8_t>(std::stoi(match[1].str().substr(0, 2), nullptr, 16));
-		mask_key[1] = static_cast<uint8_t>(std::stoi(match[1].str().substr(2, 2), nullptr, 16));
-		mask_key[2] = static_cast<uint8_t>(std::stoi(match[1].str().substr(4, 2), nullptr, 16));
+		mask_key[0] = static_cast<uint8_t>(std::stoi(s.substr(0, 2), nullptr, 16));
+		mask_key[1] = static_cast<uint8_t>(std::stoi(s.substr(2, 2), nullptr, 16));
+		mask_key[2] = static_cast<uint8_t>(std::stoi(s.substr(4, 2), nullptr, 16));
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
@@ -82,7 +79,7 @@ const ArgparseCommandLine program_def = {
 	sizeof(program_positional) / sizeof(program_positional[0]),
 	"hdr_example",
 	"show legacy and HDR portion of HDR10 images",
-	"input must be HDR10 (YUV 4:2:0, 10 bpc), SDR output is BMP, HDR output is planar HDR10 RGB"
+	"Input must be HDR10 (YUV 4:2:0, 10 bpc), SDR output is BMP, HDR output is planar HDR10 RGB"
 };
 
 
