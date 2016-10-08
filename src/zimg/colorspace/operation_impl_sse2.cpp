@@ -83,7 +83,7 @@ void lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, float presca
 		int idx = _mm_cvt_ss2si(_mm_mul_ss(x, scale));
 		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
 	}
-	for (ptrdiff_t j = vec_left; j < vec_right; j += 4) {
+	for (ptrdiff_t j = vec_left; j < static_cast<ptrdiff_t>(vec_right); j += 4) {
 		__m128 x;
 		__m128i xi;
 
