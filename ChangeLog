@@ -1,3 +1,9 @@
+2.3 (API 2.2)
+api: add 'allow_approximate_gamma' flag to zimg_graph_builder_params
+colorspace: add support for SMPTE ST.2084 (Dolby PQ) and ARIB STD-B67 (HLG)
+colorspace: add support for SMPTE ST.432-1 (P3-D65)
+colorspace: SSE2 and AVX2 LUT-based transfer function implementation
+
 2.2.1:
 resize: fix crash on horizontal resize with negative shift amount
 resize: fix illegal instruction on SSE2 horizontal resize with MSVC (introduced in 2.2)
