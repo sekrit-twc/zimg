@@ -28,7 +28,11 @@ struct OperationParams {
 	/**
 	 * Default construct OperationParams, initializing it with invalid values.
 	 */
-	OperationParams() : peak_luminance{ NAN } {}
+	OperationParams() :
+		peak_luminance{ NAN },
+		approximate_gamma{ false }
+	{
+	}
 };
 
 /**
