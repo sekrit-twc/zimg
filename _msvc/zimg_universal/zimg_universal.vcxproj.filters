@@ -79,7 +79,13 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx2.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse2.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp">

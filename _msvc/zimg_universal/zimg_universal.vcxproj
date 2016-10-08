@@ -19,7 +19,9 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx2.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse2.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp" />
     <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp" />
