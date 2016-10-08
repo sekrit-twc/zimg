@@ -21,7 +21,7 @@ namespace {
 
 const unsigned LUT_DEPTH = 15;
 
-typedef float(*gamma_func)(float);
+typedef float (*gamma_func)(float);
 
 std::pair<float, float> get_scale_factor(TransferCharacteristics transfer, float peak_luminance)
 {
