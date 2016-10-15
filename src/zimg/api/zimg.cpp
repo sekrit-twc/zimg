@@ -43,8 +43,7 @@ T *assert_dynamic_cast(U *ptr)
 	return pptr;
 }
 
-template <class T>
-void record_exception_message(const T &e)
+void record_exception_message(const zimg::error::Exception &e)
 {
 	strncpy(g_last_error_msg, e.what(), sizeof(g_last_error_msg) - 1);
 	g_last_error_msg[sizeof(g_last_error_msg) - 1] = '\0';
