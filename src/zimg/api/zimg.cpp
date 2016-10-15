@@ -35,12 +35,10 @@ const unsigned VERSION_INFO[] = { 2, 3, 0 };
 
 
 template <class T, class U>
-T *assert_dynamic_cast(U *ptr)
+T *assert_dynamic_type(U *ptr)
 {
-	static_assert(std::is_base_of<U, T>::value, "type does not derive from base");
-	T *pptr = dynamic_cast<T *>(ptr);
-	zassert_d(pptr, "bad dynamic type");
-	return pptr;
+	zassert_d(dynamic_cast<T *>(ptr), "bad dynamic type");
+	return static_cast<T *>(ptr);
 }
 
 void clear_last_error_message()
@@ -471,7 +469,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_tmp_size();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_tmp_size();
 	EX_END
 }
 
@@ -481,7 +479,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_input_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_input_buffering();
 	EX_END
 }
 
@@ -491,7 +489,7 @@ zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr)->get_output_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_output_buffering();
 	EX_END
 }
 
@@ -522,7 +520,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	POINTER_ALIGNMENT_ASSERT(tmp);
 
 	EX_BEGIN
-	const zimg::graph::FilterGraph *graph = assert_dynamic_cast<const zimg::graph::FilterGraph>(ptr);
+	const zimg::graph::FilterGraph *graph = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr);
 	auto src_buf = import_image_buffer(*src);
 	auto dst_buf = import_image_buffer(*dst);
 
