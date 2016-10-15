@@ -1,5 +1,6 @@
 #include <cmath>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -28,7 +29,7 @@ const unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 #define STRIDE_ALIGNMENT_ASSERT(x) zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
 
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
-thread_local char g_last_error_msg[1024];
+thread_local std::string g_last_error_msg;
 
 const unsigned VERSION_INFO[] = { 2, 3, 0 };
 
@@ -42,10 +43,19 @@ T *assert_dynamic_cast(U *ptr)
 	return pptr;
 }
 
+void clear_last_error_message()
+{
+	g_last_error_msg.clear();
+	g_last_error_msg.shrink_to_fit();
+}
+
 void record_exception_message(const zimg::error::Exception &e)
 {
-	strncpy(g_last_error_msg, e.what(), sizeof(g_last_error_msg) - 1);
-	g_last_error_msg[sizeof(g_last_error_msg) - 1] = '\0';
+	try {
+		g_last_error_msg = e.what();
+	} catch (const std::bad_alloc &) {
+		clear_last_error_message();
+	}
 }
 
 zimg_error_code_e handle_exception(std::exception_ptr eptr)
@@ -423,7 +433,7 @@ unsigned zimg_get_api_version(unsigned *major, unsigned *minor)
 zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n)
 {
 	if (err_msg && n) {
-		strncpy(err_msg, g_last_error_msg, n);
+		std::strncpy(err_msg, g_last_error_msg.c_str(), n);
 		err_msg[n - 1] = '\0';
 	}
 
@@ -432,8 +442,8 @@ zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n)
 
 void zimg_clear_last_error(void)
 {
-	g_last_error_msg[0] = '\0';
 	g_last_error = ZIMG_ERROR_SUCCESS;
+	clear_last_error_message();
 }
 
 unsigned zimg_select_buffer_mask(unsigned count)
