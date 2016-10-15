@@ -3,7 +3,6 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"

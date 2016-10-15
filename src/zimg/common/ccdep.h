@@ -25,8 +25,4 @@
   #define ASSUME_CONDITION(x) ((void)0)
 #endif
 
-#ifdef __APPLE__
-  #define thread_local __thread
-#endif
-
 #endif /* ZIMG_CCDEP_H_ */
