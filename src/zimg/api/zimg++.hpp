@@ -23,7 +23,7 @@
 namespace ZIMGXX_NAMESPACE {
 
 struct zerror {
-	int code;
+	zimg_error_code_e code;
 	char msg[1024];
 
 	zerror()
@@ -148,9 +148,9 @@ private:
 
 	FilterGraph &operator=(const FilterGraph &);
 
-	void check(int x) const
+	void check(zimg_error_code_e err) const
 	{
-		if (x)
+		if (err)
 			throw zerror();
 	}
 public:
