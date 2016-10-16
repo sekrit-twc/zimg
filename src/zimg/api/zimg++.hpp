@@ -24,7 +24,7 @@ namespace ZIMGXX_NAMESPACE {
 
 struct zerror {
 	zimg_error_code_e code;
-	char msg[1024];
+	char msg[64];
 
 	zerror()
 	{
