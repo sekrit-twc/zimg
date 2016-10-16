@@ -129,7 +129,12 @@ ZIMG_VISIBILITY
 zimg_error_code_e zimg_get_last_error(char *err_msg, size_t n);
 
 /**
- * Clear the stored error code.
+ * Clear the stored error details.
+ *
+ * Error details from the last error to occur are stored in per-thread memory.
+ * If an error occurs on a thread, and the application does not intend to make
+ * further library calls, this function may be used to reclaim memory used to
+ * store the error details, such as the error message.
  *
  * @see zimg_get_last_error
  *
