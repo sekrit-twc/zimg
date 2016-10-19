@@ -1,21 +1,19 @@
 #include <algorithm>
-#include <cctype>
-#include <stdexcept>
-#include <tuple>
+#include <cassert>
+#include <climits>
+#include <iterator>
+#include <locale>
+#include <sstream>
+#include <string>
 #include <utility>
-#include <vector>
 #include "json.h"
 
-using std::nullptr_t;
-
+namespace json {
 namespace {
+namespace parser {
 
-struct Token;
-
-typedef std::string::const_iterator string_iterator;
-typedef std::vector<Token>::const_iterator token_iterator;
-
-struct Token {
+class Token {
+public:
 	enum tag_type {
 		EMPTY,
 		CURLY_BRACE_LEFT,
@@ -24,324 +22,627 @@ struct Token {
 		SQUARE_BRACE_RIGHT,
 		COMMA,
 		COLON,
+		MINUS,
 		STRING_LITERAL,
 		NUMBER_LITERAL,
+		INFINITY_,
+		NAN_,
 		TRUE_,
 		FALSE_,
 		NULL_,
-	} tag;
-
-	std::string str;
-
-	Token() : tag{ EMPTY }
+	};
+private:
+	tag_type m_tag;
+	int m_line;
+	int m_col;
+	std::string m_str;
+public:
+	Token() : m_tag{ EMPTY }, m_line{}, m_col{}
 	{
 	}
 
-	Token(tag_type t, std::string s = {}) : tag{ t }, str{ s }
+	Token(tag_type tag, int line, int col, std::string str = {}) :
+		m_tag{ tag },
+		m_line{ line },
+		m_col{ col },
+		m_str{ std::move(str) }
 	{
 	}
+
+	tag_type tag() const { return m_tag; }
+	int line() const { return m_line; }
+	int col() const { return m_col; }
+	const std::string &str() const { return m_str; }
 };
 
-template <class InputIt1, class InputIt2>
-bool equal_prefix(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+template <class ForwardIt>
+class TracingIterator : private ForwardIt {
+public:
+	using typename ForwardIt::difference_type;
+	using typename ForwardIt::value_type;
+	using typename ForwardIt::reference;
+	using typename ForwardIt::pointer;
+	typedef std::forward_iterator_tag iterator_category;
+private:
+	static const int SPACES_PER_TAB = 4;
+
+	int m_line;
+	int m_col;
+
+	ForwardIt &base() { return *this; }
+	const ForwardIt &base() const { return *this; }
+
+	void next()
+	{
+		if (*base() == '\n') {
+			++m_line;
+			m_col = 0;
+		} else if (*base() == '\t') {
+			m_col = m_col + SPACES_PER_TAB - m_col % SPACES_PER_TAB;
+		} else {
+			++m_col;
+		}
+
+		++base();
+	}
+public:
+	explicit TracingIterator(ForwardIt it) : ForwardIt{ it }, m_line{}, m_col{}
+	{
+	}
+
+	ForwardIt base_iterator() const { return *this; }
+
+	int line() const { return m_line; }
+	int col() const { return m_col; }
+
+	reference operator*() const { return *base(); }
+	pointer operator->() const { return &(*base()); }
+
+	TracingIterator &operator++()
+	{
+		next();
+		return *this;
+	}
+
+	TracingIterator operator++(int)
+	{
+		TracingIterator ret = *this;
+		next();
+		return ret;
+	}
+
+	bool operator==(const TracingIterator &other) const { return base() == other.base(); }
+	bool operator!=(const TracingIterator &other) const { return base() != other.base(); }
+};
+
+template <class ForwardIt, class Pred>
+ForwardIt skip_while(ForwardIt first, ForwardIt last, Pred pred)
+{
+	while (first != last && pred(*first)) {
+		++first;
+	}
+	return first;
+}
+
+template <class InputIt, class Difference>
+InputIt skip_n(InputIt it, Difference n)
+{
+	std::advance(it, n);
+	return it;
+}
+
+template <class ForwardIt1, class ForwardIt2>
+bool prefix_match(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2, ForwardIt2 last2)
 {
 	if (std::distance(first2, last2) < std::distance(first1, last1))
 		return false;
-	else
-		return std::equal(first1, last1, first2);
+	return std::equal(first1, last1, first2);
 }
 
-template <class Pred>
-string_iterator skip_if(string_iterator pos, string_iterator last, Pred pred)
+bool is_ascii(char c)
 {
-	while (pos != last && pred(*pos)) {
-		++pos;
-	}
-	return pos;
+	return static_cast<signed char>(c) >= 0;
 }
 
-std::pair<Token, string_iterator> match_token_string_literal(string_iterator pos, string_iterator last)
+bool is_json_digit(char c)
 {
-	string_iterator first = pos;
-	char prev_c;
+	return std::isdigit(c, std::locale::classic());
+}
 
-	if ((prev_c = *pos++) != '"')
-		throw std::invalid_argument{ "bad character" };
+bool is_json_space(char c)
+{
+	return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
 
-	while (pos != last && (*pos != '"' && prev_c != '\\')) {
-		prev_c = *pos++;
-	}
+bool is_number_or_keyword(Token::tag_type type)
+{
+	return type >= Token::NUMBER_LITERAL;
+}
 
-	if (pos == last)
-		throw std::runtime_error{ "expected '\"' before end of string" };
+template <class ForwardIt>
+std::pair<Token, TracingIterator<ForwardIt>> match_string_literal(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
+{
+	TracingIterator<ForwardIt> pos = first;
+	int line = first.line();
+	int col = first.col();
+	char prev_c = '\0';
 
+	assert(*pos == '"');
 	++pos;
-	return{ { Token::STRING_LITERAL, { first, pos } }, pos };
+
+	while (pos != last) {
+		if (!is_ascii(*pos))
+			throw JsonError{ "unicode not allowed", pos.line(), pos.col() };
+		if (*pos == '"' && prev_c != '\\')
+			break;
+
+		prev_c = *pos;
+		++pos;
+	}
+	if (pos == last)
+		throw JsonError{ "expected matching '\"'", line, col };
+
+	assert(*pos == '"');
+	++pos;
+
+	return{ { Token::STRING_LITERAL, line, col, { first, pos } }, pos };
 }
 
-std::pair<Token, string_iterator> match_token_number_literal(string_iterator pos, string_iterator last)
+template <class ForwardIt>
+std::pair<Token, TracingIterator<ForwardIt>> match_number_literal(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
 {
-	string_iterator first = pos;
+	TracingIterator<ForwardIt> pos = first;
+	int line = first.line();
+	int col = first.col();
 
-	if (*pos == '-')
+	pos = skip_while(pos, last, is_json_digit);
+	if (pos != last && *pos == '.') {
 		++pos;
-
-	if (pos == last)
-		throw std::runtime_error{ "expected a digit" };
-
-	pos = skip_if(pos, last, isdigit);
-
-	if (pos != last && (*pos == '.')) {
-		++pos;
-		pos = skip_if(pos, last, isdigit);
+		pos = skip_while(pos, last, is_json_digit);
 	}
 
 	if (pos != last && (*pos == 'e' || *pos == 'E')) {
 		++pos;
-
 		if (pos != last && (*pos == '-' || *pos == '+'))
 			++pos;
-		if (pos == last)
-			throw std::runtime_error{ "expected an exponent" };
 
-		pos = skip_if(pos, last, isdigit);
+		if (pos == last)
+			throw JsonError{ "expected digits following exponent indicator", line, col };
+
+		pos = skip_while(first, last, is_json_digit);
 	}
 
-	return{ { Token::NUMBER_LITERAL, { first, pos } }, pos };
+	return{ { Token::NUMBER_LITERAL, line, col, { first, pos } }, pos };
 }
 
-std::pair<Token, string_iterator> match_token_keyword(string_iterator pos, string_iterator last)
+template <class ForwardIt>
+std::pair<Token, TracingIterator<ForwardIt>> match_keyword(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
 {
-	std::string true_str{ "true" };
-	std::string false_str{ "false" };
-	std::string null_str{ "null" };
+	static const std::string keyword_infinity{ "Infinity" };
+	static const std::string keyword_nan{ "NaN" };
+	static const std::string keyword_true{ "true" };
+	static const std::string keyword_false{ "false" };
+	static const std::string keyword_null{ "null" };
 
-	if (equal_prefix(true_str.begin(), true_str.end(), pos, last))
-		return{ Token::TRUE_, pos + true_str.size() };
-	else if (equal_prefix(false_str.begin(), false_str.end(), pos, last))
-		return{ Token::FALSE_, pos + false_str.size() };
-	else if (equal_prefix(null_str.begin(), null_str.end(), pos, last))
-		return{ Token::NULL_, pos + null_str.size() };
-	else
-		throw std::runtime_error{ "expected a keyword" };
+	int line = first.line();
+	int col = first.col();
+
+	ForwardIt base_first = first.base_iterator();
+	ForwardIt base_last = last.base_iterator();
+
+#define MATCH(s, tag) do { \
+    if (prefix_match(s.begin(), s.end(), base_first, base_last)) \
+      return{ { tag, line, col }, skip_n(first, s.size()) }; \
+  } while (0)
+
+	MATCH(keyword_infinity, Token::INFINITY_);
+	MATCH(keyword_nan, Token::NAN_);
+	MATCH(keyword_true, Token::TRUE_);
+	MATCH(keyword_false, Token::FALSE_);
+	MATCH(keyword_null, Token::NULL_);
+
+#undef MATCH
+	throw JsonError{ "not a token", line, col };
 }
 
-std::pair<Token, string_iterator> match_token(string_iterator pos, string_iterator last)
+template <class ForwardIt>
+std::pair<Token, TracingIterator<ForwardIt>> match_next_token(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
 {
-	if (isspace(*pos))
-		return{ Token{}, skip_if(pos, last, isspace) };
-	else if (*pos == '{')
-		return{ Token::CURLY_BRACE_LEFT, pos + 1 };
-	else if (*pos == '}')
-		return{ Token::CURLY_BRACE_RIGHT, pos + 1 };
-	else if (*pos == '[')
-		return{ Token::SQUARE_BRACE_LEFT, pos + 1 };
-	else if (*pos == ']')
-		return{ Token::SQUARE_BRACE_RIGHT, pos + 1 };
-	else if (*pos == ',')
-		return{ Token::COMMA, pos + 1 };
-	else if (*pos == ':')
-		return{ Token::COLON, pos + 1 };
-	else if (*pos == '"')
-		return match_token_string_literal(pos, last);
-	else if (*pos == '-' || isdigit(*pos))
-		return match_token_number_literal(pos, last);
+	char c = *first;
+	int line = first.line();
+	int col = first.col();
+
+	if (!is_ascii(c))
+		throw JsonError{ "unicode not allowed", line, col };
+	if (std::isspace(c, std::locale::classic()) && !is_json_space(c))
+		throw JsonError{ "special character not allowed", line, col };
+	if (std::iscntrl(c, std::locale::classic()) && !is_json_space(c))
+		throw JsonError{ "control character not allowed", line, col };
+
+	if (is_json_space(c))
+		return{ {}, skip_while(first, last, is_json_space) };
+	else if (c == '{')
+		return{ { Token::CURLY_BRACE_LEFT, line, col }, std::next(first) };
+	else if (c == '}')
+		return{ { Token::CURLY_BRACE_RIGHT, line, col }, std::next(first) };
+	else if (c == '[')
+		return{ { Token::SQUARE_BRACE_LEFT, line, col }, std::next(first) };
+	else if (c == ']')
+		return{ { Token::SQUARE_BRACE_RIGHT, line, col }, std::next(first) };
+	else if (c == ',')
+		return{ { Token::COMMA, line, col }, std::next(first) };
+	else if (c == ':')
+		return{ { Token::COLON, line, col }, std::next(first) };
+	else if (c == '-')
+		return{ { Token::MINUS, line, col }, std::next(first) };
+	else if (c == '"')
+		return match_string_literal(first, last);
+	else if (is_json_digit(c))
+		return match_number_literal(first, last);
 	else
-		return match_token_keyword(pos, last);
+		return match_keyword(first, last);
 }
 
-std::vector<Token> tokenize(const std::string &str)
+template <class ForwardIt>
+std::vector<Token> tokenize(ForwardIt first_, ForwardIt last_)
 {
 	std::vector<Token> tokens;
+	Token::tag_type prev_tag = Token::EMPTY;
 
-	string_iterator pos = str.begin();
-	string_iterator last = str.end();
+	TracingIterator<ForwardIt> first{ first_ };
+	TracingIterator<ForwardIt> last{ last_ };
 
-	while (pos != last) {
-		auto tok = match_token(pos, last);
+	while (first != last) {
+		Token tok;
 
-		if (tok.first.tag != Token::EMPTY)
-			tokens.emplace_back(std::move(tok.first));
+		std::tie(tok, first) = match_next_token(first, last);
+		if (is_number_or_keyword(tok.tag()) && is_number_or_keyword(prev_tag))
+			throw JsonError{ "not a token", tokens.back().line(), tokens.back().col() };
 
-		pos = tok.second;
+		if (tok.tag() != Token::EMPTY)
+			tokens.emplace_back(std::move(tok));
 	}
-
 	return tokens;
 }
 
-
-std::string decode_string_literal(const std::string &str)
+template <class ForwardIt>
+void expect_token(Token::tag_type type, ForwardIt first, ForwardIt last, const char *msg)
 {
-	std::string ret;
-	bool is_escape = false;
+	if (first == last)
+		throw JsonError{ "unexpected EOF" };
+	if (first->tag() != type)
+		throw JsonError{ msg, first->line(), first->col() };
+}
 
-	if (str.size() < 2)
-		throw std::invalid_argument{ "bad string literal" };
+char decode_escape_code(char c)
+{
+	switch (c) {
+	case '"':
+		return '"';
+	case '\\':
+		return '\\';
+	case '/':
+		return '/';
+	case 'b':
+		return '\b';
+	case 'f':
+		return '\f';
+	case 'n':
+		return '\n';
+	case 'r':
+		return '\r';
+	case 't':
+		return '\t';
+	case 'u':
+		throw JsonError{ "unicode not allowed" };
+	default:
+		throw JsonError{ "bad escape code" };
+	}
+}
 
-	for (string_iterator it = str.begin() + 1; it != str.end() - 1; ++it) {
-		if (is_escape) {
-			char x;
+std::string decode_string_literal(const Token &tok)
+{
+	std::string s;
+	bool escaped = false;
 
-			switch (*it) {
-			case 'b':
-				x = '\b';
-				break;
-			case 'f':
-				x = '\f';
-				break;
-			case 'n':
-				x = '\n';
-				break;
-			case 'r':
-				x = '\r';
-				break;
-			case 't':
-				x = '\t';
-				break;
-			case 'u':
-				throw std::runtime_error{ "unicode not supported" };
-			default:
-				x = *it;
-				break;
+	assert(tok.str().size() >= 2);
+	assert(tok.str().front() == '"');
+	assert(tok.str().back() == '"');
+
+	s.reserve(tok.str().size() - 2);
+
+	for (auto it = tok.str().begin() + 1; it != tok.str().end() - 1; ++it) {
+		int col = tok.col() + static_cast<int>(it - tok.str().begin());
+		char c = *it;
+
+		if (!is_ascii(c))
+			throw JsonError{ "unicode not allowed", tok.line(), col };
+		if (std::iscntrl(c, std::locale::classic()))
+			throw JsonError{ "control character not allowed", tok.line(), col };
+		if (std::isspace(c, std::locale::classic()) && c != ' ')
+			throw JsonError{ "unescaped whitespace not allowed", tok.line(), col };
+
+		if (escaped) {
+			try {
+				s.push_back(decode_escape_code(c));
+			} catch (const JsonError &e) {
+				e.add_trace(tok.line(), col);
+				throw;
 			}
-
-			ret.push_back(x);
-			is_escape = false;
-		} else if (*it == '\\') {
-			is_escape = true;
+			escaped = false;
+		} else if (c == '\\') {
+			escaped = true;
 		} else {
-			ret.push_back(*it);
+			s.push_back(c);
 		}
 	}
-	return ret;
+	return s;
 }
 
-double decode_number_literal(const std::string &str)
+double decode_number_literal(const Token &tok)
 {
-	try {
-		size_t pos;
-		double d = std::stod(str, &pos);
+	std::istringstream ss{ tok.str() };
+	double x = 0.0;
 
-		if (pos != str.size())
-			throw std::runtime_error{ "bad number literal" };
+	ss.imbue(std::locale::classic());
 
-		return d;
-	} catch (std::logic_error &e) {
-		throw std::runtime_error{ e.what() };
+	if (!(ss >> x))
+		throw JsonError{ "bad number literal", tok.line(), tok.col() };
+	if (ss.peek() != std::istringstream::traits_type::eof())
+		throw JsonError{ "bad number literal", tok.line(), tok.col() };
+
+	return x;
+}
+
+template <class ForwardIt>
+std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last);
+
+template <class ForwardIt>
+std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
+{
+	int line = first->line();
+	int col = first->col();
+
+	double x = 0.0;
+	bool negative = false;
+
+	if (first->tag() == Token::MINUS) {
+		negative = true;
+		if (++first == last)
+			throw JsonError{ "unexpected EOF after '-'", line, col };
 	}
-}
 
-token_iterator expect_token(Token::tag_type type, token_iterator pos, token_iterator last)
-{
-	if (pos == last)
-		throw std::runtime_error{ "expected a token" };
-	if (pos->tag != type)
-		throw std::runtime_error{ "unexpected token type" };
-	return ++pos;
-}
-
-std::pair<JsonValue, token_iterator> parse_value(token_iterator pos, token_iterator last);
-
-std::pair<JsonValue, token_iterator> parse_object(token_iterator pos, token_iterator last);
-
-std::pair<JsonValue, token_iterator> parse_array(token_iterator pos, token_iterator last)
-{
-	std::vector<JsonValue> array;
-
-	pos = expect_token(Token::SQUARE_BRACE_LEFT, pos, last);
-
-	while (pos != last && pos->tag != Token::SQUARE_BRACE_RIGHT) {
-		auto val = parse_value(pos, last);
-
-		array.emplace_back(std::move(val.first));
-		pos = val.second;
-
-		if (pos == last)
-			throw std::runtime_error{ "expected ']' before end of string" };
-		if (pos->tag == Token::SQUARE_BRACE_RIGHT)
-			break;
-
-		pos = expect_token(Token::COMMA, pos, last);
-	};
-	pos = expect_token(Token::SQUARE_BRACE_RIGHT, pos, last);
-
-	return{ JsonValue{ std::move(array) }, pos };
-}
-
-std::pair<JsonValue, token_iterator> parse_object(token_iterator pos, token_iterator last)
-{
-	JsonObject obj;
-
-	pos = expect_token(Token::CURLY_BRACE_LEFT, pos, last);
-
-	while (pos != last && pos->tag != Token::CURLY_BRACE_RIGHT) {
-		expect_token(Token::STRING_LITERAL, pos, last);
-
-		std::string name = decode_string_literal((pos++)->str);
-		pos = expect_token(Token::COLON, pos, last);
-
-		std::tie(obj[name], pos) = parse_value(pos, last);
-
-		if (pos == last)
-			throw std::runtime_error{ "expected '}' before end of string" };
-		if (pos->tag == Token::CURLY_BRACE_RIGHT)
-			break;
-
-		pos = expect_token(Token::COMMA, pos, last);
-	};
-	pos = expect_token(Token::CURLY_BRACE_RIGHT, pos, last);
-
-	return{ JsonValue{ std::move(obj) }, pos };
-}
-
-std::pair<JsonValue, token_iterator> parse_value(token_iterator pos, token_iterator last)
-{
-	if (pos == last)
-		throw std::runtime_error{ "expected a token" };
-
-	switch (pos->tag) {
+	switch (first->tag()) {
 	case Token::NUMBER_LITERAL:
-		return{ decode_number_literal(pos->str), pos + 1 };
-	case Token::STRING_LITERAL:
-		return{ decode_string_literal(pos->str), pos + 1 };
-	case Token::SQUARE_BRACE_LEFT:
-		return parse_array(pos, last);
-	case Token::CURLY_BRACE_LEFT:
-		return parse_object(pos, last);
-	case Token::TRUE_:
-		return{ true, pos + 1 };
-	case Token::FALSE_:
-		return{ false, pos + 1 };
-	case Token::NULL_:
-		return{ nullptr, pos + 1 };
+		x = decode_number_literal(*first);
+		break;
+	case Token::INFINITY_:
+		x = INFINITY;
+		break;
+	case Token::NAN_:
+		x = NAN;
+		break;
 	default:
-		throw std::runtime_error{ "expected a value" };
+		throw JsonError{ "bad number literal", first->line(), first->col() };
 	}
+	++first;
+
+	return{ Value{ negative ? -x : x }, first };
+}
+
+template <class ForwardIt>
+std::pair<Value, ForwardIt> parse_object(ForwardIt first, ForwardIt last)
+{
+	int line = first->line();
+	int col = first->col();
+
+	assert(first->tag() == Token::CURLY_BRACE_LEFT);
+	++first;
+
+	Object object;
+
+	try {
+		while (true) {
+			if (first == last)
+				throw JsonError{ "unexpected EOF" };
+			if (first->tag() == Token::CURLY_BRACE_RIGHT)
+				break;
+
+			expect_token(Token::STRING_LITERAL, first, last, "expected member name");
+			std::string name = decode_string_literal(*first++);
+
+			expect_token(Token::COLON, first, last, "expected ':' after member name");
+			++first;
+
+			Value value;
+			std::tie(value, first) = parse_value(first, last);
+
+			object[name] = std::move(value);
+
+			if (first != last && first->tag() != Token::CURLY_BRACE_RIGHT) {
+				expect_token(Token::COMMA, first, last, "expected ',' after object member");
+				++first;
+			}
+		}
+
+		assert(first->tag() == Token::CURLY_BRACE_RIGHT);
+		++first;
+	} catch (const JsonError &e) {
+		e.add_trace(line, col);
+		throw;
+	}
+
+	return{ Value{ std::move(object) }, first };
+}
+
+template <class ForwardIt>
+std::pair<Value, ForwardIt> parse_array(ForwardIt first, ForwardIt last)
+{
+	int line = first->line();
+	int col = first->col();
+
+	assert(first->tag() == Token::SQUARE_BRACE_LEFT);
+	++first;
+
+	Array array;
+
+	try {
+		while (true) {
+			if (first == last)
+				throw JsonError{ "unexpected EOF" };
+			if (first->tag() == Token::SQUARE_BRACE_RIGHT)
+				break;
+
+			Value value;
+			std::tie(value, first) = parse_value(first, last);
+			array.emplace_back(std::move(value));
+
+			if (first != last && first->tag() != Token::SQUARE_BRACE_RIGHT) {
+				expect_token(Token::COMMA, first, last, "expected ',' after array element");
+				++first;
+			}
+		}
+
+		assert(first->tag() == Token::SQUARE_BRACE_RIGHT);
+		++first;
+	} catch (const JsonError &e) {
+		e.add_trace(line, col);
+		throw;
+	}
+
+	return{ Value{ std::move(array) }, first };
+}
+
+template <class ForwardIt>
+std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last)
+{
+	if (first == last)
+		throw JsonError{ "empty document" };
+
+	switch (first->tag()) {
+	case Token::CURLY_BRACE_LEFT:
+		return parse_object(first, last);
+	case Token::SQUARE_BRACE_LEFT:
+		return parse_array(first, last);
+	case Token::STRING_LITERAL:
+		return{ Value{ decode_string_literal(*first) }, std::next(first) };
+	case Token::MINUS:
+	case Token::NUMBER_LITERAL:
+	case Token::NAN_:
+	case Token::INFINITY_:
+		return parse_number(first, last);
+	case Token::TRUE_:
+		return{ Value{ true }, std::next(first) };
+	case Token::FALSE_:
+		return{ Value{ false }, std::next(first) };
+	case Token::NULL_:
+		return{ Value{}, std::next(first) };
+	default:
+		throw JsonError{ "unexpected token while parsing value", first->line(), first->col() };
+	}
+}
+
+} // namespace parser
+
+
+template <class T>
+void uninitialized_move(void *src, void *dst)
+{
+	T *src_p = static_cast<T *>(src);
+	T *dst_p = static_cast<T *>(dst);
+
+	new(dst_p) T{ std::move(*src_p) };
+	src_p->~T();
 }
 
 } // namespace
 
 
-void JsonValue::union_move(union_type &src, tag_type &src_tag, union_type &dst, tag_type &dst_tag)
+JsonError::JsonError(const char *msg, int line, int col) :
+	std::runtime_error{ msg }
+{
+	add_trace(line, col);
+}
+
+JsonError::JsonError(const JsonError &other) :
+	std::runtime_error{ other }
+{
+	try {
+		m_stack_trace = other.m_stack_trace;
+	} catch (const std::bad_alloc &) {
+		// ...
+	}
+}
+
+JsonError &JsonError::operator=(const JsonError &other)
+{
+	std::runtime_error::operator=(other);
+
+	try {
+		if (&other != this) {
+			m_stack_trace.clear();
+			m_stack_trace = other.m_stack_trace;
+		}
+	} catch (const std::bad_alloc &) {
+		// ...
+	}
+	return *this;
+}
+
+void JsonError::add_trace(int line, int col) const
+{
+	try {
+		m_stack_trace.emplace_back(line, col);
+	} catch (const std::bad_alloc &) {
+		// ...
+	}
+}
+
+std::string JsonError::error_details() const
+{
+	std::string s;
+
+	try {
+		s += what();
+		s += "\nbacktrace: \n";
+
+		for (const auto &pos : m_stack_trace) {
+			s += "\tat (l ";
+			s += std::to_string(pos.first + 1);
+			s += ", c ";
+			s += std::to_string(pos.second + 1);
+			s += ")\n";
+		}
+	} catch (const std::bad_alloc &) {
+		// ...
+	}
+
+	return s;
+}
+
+void Value::move_helper(tag_type &src_tag, union_type &src_union,
+						tag_type &dst_tag, union_type &dst_union)
 {
 	switch (src_tag) {
 	case NULL_:
-		new (&dst) nullptr_t{};
 		break;
 	case NUMBER:
-		new (&dst) number_type{ std::move(reinterpret_cast<number_type &>(src)) };
+		uninitialized_move<double>(&src_union, &dst_union);
 		break;
 	case STRING:
-		new (&dst) string_type{ std::move(reinterpret_cast<string_type &>(src)) };
-		break;
-	case ARRAY:
-		new (&dst) array_type{ std::move(reinterpret_cast<array_type &>(src)) };
+		uninitialized_move<std::string>(&src_union, &dst_union);
 		break;
 	case OBJECT:
-		new (&dst) object_type{ std::move(reinterpret_cast<object_type &>(src)) };
+		uninitialized_move<Object>(&src_union, &dst_union);
+		break;
+	case ARRAY:
+		uninitialized_move<Array>(&src_union, &dst_union);
 		break;
 	case BOOL_:
-		new (&dst) boolean_type{ std::move(reinterpret_cast<boolean_type &>(src)) };
+		uninitialized_move<bool>(&src_union, &dst_union);
+		break;
+	default:
+		assert(false);
 		break;
 	}
 
@@ -349,100 +650,89 @@ void JsonValue::union_move(union_type &src, tag_type &src_tag, union_type &dst, 
 	src_tag = NULL_;
 }
 
-JsonValue::JsonValue(const JsonValue &other) :
-	m_tag{ NULL_ }
+Value::Value(const Value &other) : m_tag{ NULL_ }
 {
 	switch (other.get_type()) {
 	case NULL_:
-		construct(nullptr);
 		break;
 	case NUMBER:
-		construct(other.number());
+		construct<double>(other.number());
 		break;
 	case STRING:
-		construct(other.string());
-		break;
-	case ARRAY:
-		construct(other.array());
+		construct<std::string>(other.string());
 		break;
 	case OBJECT:
-		construct(other.object());
+		construct<Object>(other.object());
+		break;
+	case ARRAY:
+		construct<Array>(other.array());
 		break;
 	case BOOL_:
-		construct(other.boolean());
+		construct<bool>(other.boolean());
+		break;
+	default:
+		assert(false);
 		break;
 	}
-
-	m_tag = other.m_tag;
+	m_tag = other.get_type();
 }
 
-JsonValue::JsonValue(JsonValue &&other) :
-	m_tag{ NULL_ }
+Value::Value(Value &&other) : m_tag{ NULL_ }
 {
-	swap(other);
+	swap(*this, other);
 }
 
-JsonValue::~JsonValue()
+Value::~Value()
 {
 	switch (get_type()) {
 	case NULL_:
-		destroy<nullptr_t>();
 		break;
 	case NUMBER:
-		destroy<number_type>();
+		destroy<double>();
 		break;
 	case STRING:
-		destroy<string_type>();
-		break;
-	case ARRAY:
-		destroy<array_type>();
+		destroy<std::string>();
 		break;
 	case OBJECT:
-		destroy<object_type>();
+		destroy<Object>();
+		break;
+	case ARRAY:
+		destroy<Array>();
 		break;
 	case BOOL_:
-		destroy<boolean_type>();
+		destroy<bool>();
+		break;
+	default:
+		assert(false);
 		break;
 	}
 }
 
-JsonValue &JsonValue::operator=(JsonValue other)
+Value &Value::operator=(Value other)
 {
-	swap(other);
+	swap(*this, other);
 	return *this;
 }
 
-void JsonValue::swap(JsonValue &other)
+void swap(Value &a, Value &b)
 {
-	union_type tmp;
-	tag_type tmp_type;
+	Value::tag_type tag;
+	Value::union_type union_;
 
-	union_move(other.m_data, other.m_tag, tmp, tmp_type);
-	union_move(m_data, m_tag, other.m_data, other.m_tag);
-	union_move(tmp, tmp_type, m_data, m_tag);
+	Value::move_helper(a.m_tag, a.m_union, tag, union_);
+	Value::move_helper(b.m_tag, b.m_union, a.m_tag, a.m_union);
+	Value::move_helper(tag, union_, b.m_tag, b.m_union);
 }
 
-const JsonValue &JsonObject::operator[](const std::string &key) const
+Value parse_document(const std::string &str)
 {
-	static const JsonValue null_value{};
+	std::vector<parser::Token> tokens = parser::tokenize(str.begin(), str.end());
 
-	auto it = find(key);
-	return it == end() ? null_value : it->second;
-}
+	auto result = parser::parse_value(tokens.begin(), tokens.end());
+	if (result.second != tokens.end())
+		throw JsonError{ "unparsed document content", result.second->line(), result.second->col() };
 
-
-namespace json {
-
-JsonValue parse_document(const std::string &str)
-{
-	std::vector<Token> tokens = tokenize(str);
-
-	auto val = parse_value(tokens.begin(), tokens.end());
-
-	if (val.second != tokens.end())
-		throw std::runtime_error{ "unparsed document content" };
-
-	return std::move(val.first);
+	return std::move(result.first);
 }
 
 } // namespace json

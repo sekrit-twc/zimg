@@ -4,20 +4,35 @@
 #define JSON_H_
 
 #include <cmath>
-#include <cstddef>
 #include <map>
-#include <memory>
-#include <new>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
-class JsonValue;
-class JsonObject;
+namespace json {
 
-class JsonObject : private std::map<std::string, JsonValue> {
-	typedef std::map<std::string, JsonValue> base_type;
+class JsonError : public std::runtime_error {
+	mutable std::vector<std::pair<int, int>> m_stack_trace;
+public:
+	using std::runtime_error::runtime_error;
+
+	JsonError(const char *msg, int line, int col);
+
+	JsonError(const JsonError &other);
+
+	JsonError &operator=(const JsonError &other);
+
+	void add_trace(int line, int col) const;
+
+	std::string error_details() const;
+};
+
+class Value;
+
+class Object : private std::map<std::string, Value> {
+	typedef std::map<std::string, Value> base_type;
 public:
 	using base_type::iterator;
 	using base_type::const_iterator;
@@ -28,20 +43,26 @@ public:
 
 	using base_type::begin;
 	using base_type::end;
+
 	using base_type::cbegin;
 	using base_type::cend;
 
-	const JsonValue &operator[](const std::string &key) const;
+	using base_type::empty;
+	using base_type::size;
+
+	using base_type::clear;
+	using base_type::erase;
+	using base_type::swap;
+
+	const Value &operator[](const std::string &key) const;
+
+	friend void swap(Object &a, Object &b);
 };
 
-class JsonValue {
-public:
-	typedef double number_type;
-	typedef std::string string_type;
-	typedef JsonObject object_type;
-	typedef std::vector<JsonValue> array_type;
-	typedef bool boolean_type;
+typedef std::vector<Value> Array;
 
+class Value {
+public:
 	enum tag_type {
 		NULL_,
 		NUMBER,
@@ -56,171 +77,90 @@ private:
 #else
 	typedef std::aligned_union<0,
 		std::nullptr_t,
-		number_type,
-		string_type,
-		array_type,
-		object_type>::type union_type;
+		double,
+		std::string,
+		Array,
+		Object>::type union_type;
 #endif
-	union_type m_data;
+
 	tag_type m_tag;
+	union_type m_union;
 
-	static void union_move(union_type &src, tag_type &src_tag, union_type &dst, tag_type &dst_tag);
+	static void move_helper(tag_type &src_tag, union_type &src_union,
+	                        tag_type &dst_tag, union_type &dst_union);
 
-	void check_type(tag_type type) const
+	template <class T>
+	void construct(T x) { new (&m_union) T{ std::move(x) }; }
+
+	template <class T>
+	void destroy() { reinterpret_cast<T &>(m_union).~T(); }
+
+	template <class T>
+	T &as() { return reinterpret_cast<T &>(m_union); }
+
+	template <class T>
+	const T &as() const { return reinterpret_cast<const T &>(m_union); }
+
+	void check_tag(tag_type tag) const
 	{
-		if (m_tag != type)
+		if (get_type() != tag)
 			throw std::invalid_argument{ "access as wrong type" };
 	}
-
-	template <class T>
-	void construct(T val)
-	{
-		new (&m_data) T{ std::move(val) };
-	}
-
-	template <class T>
-	void destroy()
-	{
-		reinterpret_cast<T *>(&m_data)->~T();
-	}
-
-	template <class T>
-	const T &as() const
-	{
-		return *reinterpret_cast<const T *>(&m_data);
-	}
-
-	template <class T>
-	T &as()
-	{
-		return *reinterpret_cast<T *>(&m_data);
-	}
 public:
-	JsonValue(std::nullptr_t = nullptr) : m_tag{ NULL_ }
-	{
-		construct(nullptr);
-	}
+	Value(std::nullptr_t = nullptr) : m_tag{ NULL_ } {}
 
-	JsonValue(bool x) : m_tag{ BOOL_ }
-	{
-		construct(x);
-	}
+	explicit Value(double val) : m_tag{ NUMBER } { construct(val); }
+	explicit Value(std::string val) : m_tag{ STRING } { construct(std::move(val)); }
+	explicit Value(Array val) : m_tag{ ARRAY } { construct(std::move(val)); }
+	explicit Value(Object val) : m_tag{ OBJECT } { construct(std::move(val)); }
+	explicit Value(bool val) : m_tag{ BOOL_ } { construct(val); }
 
-	JsonValue(number_type x) : m_tag{ NUMBER }
-	{
-		construct(x);
-	}
+	Value(const Value &other);
+	Value(Value &&other);
 
-	JsonValue(string_type str) : m_tag{ STRING }
-	{
-		construct(std::move(str));
-	}
+	~Value();
 
-	explicit JsonValue(array_type array) : m_tag{ ARRAY }
-	{
-		construct(std::move(array));
-	}
+	Value &operator=(Value other);
 
-	explicit JsonValue(object_type object) : m_tag{ OBJECT }
-	{
-		construct(std::move(object));
-	}
+	explicit operator bool() const { return !is_null(); }
 
-	JsonValue(const JsonValue &other);
+	bool is_null() const { return get_type() == NULL_; }
 
-	JsonValue(JsonValue &&other);
+	tag_type get_type() const { return m_tag; }
 
-	~JsonValue();
+#define JSON_VALUE_GET_SET(T, name, tag) \
+  const T &name() const { check_tag(tag); return as<T>(); } \
+  T &name() { check_tag(tag); return as<T>(); } \
+  static_assert(true, "")
 
-	JsonValue &operator=(JsonValue other);
+	JSON_VALUE_GET_SET(double, number, NUMBER);
+	JSON_VALUE_GET_SET(std::string, string, STRING);
+	JSON_VALUE_GET_SET(Array, array, ARRAY);
+	JSON_VALUE_GET_SET(Object, object, OBJECT);
+	JSON_VALUE_GET_SET(bool, boolean, BOOL_);
 
-	explicit operator bool() const
-	{
-		return !is_null();
-	}
+#undef JSON_VALUE_GET_SET
 
-	tag_type get_type() const
-	{
-		return m_tag;
-	}
+	long long integer() const { return std::llrint(number()); }
 
-	bool is_null() const
-	{
-		return get_type() == NULL_;
-	}
-
-	const number_type &number() const
-	{
-		check_type(NUMBER);
-		return as<number_type>();
-	}
-
-	number_type &number()
-	{
-		check_type(NUMBER);
-		return as<number_type>();
-	}
-
-	long long integer() const
-	{
-		return llrint(number());
-	}
-
-	const string_type &string() const
-	{
-		check_type(STRING);
-		return as<string_type>();
-	}
-
-	string_type &string()
-	{
-		check_type(STRING);
-		return as<string_type>();
-	}
-
-	const object_type &object() const
-	{
-		check_type(OBJECT);
-		return as<object_type>();
-	}
-
-	object_type &object()
-	{
-		check_type(OBJECT);
-		return as<object_type>();
-	}
-
-	const array_type &array() const
-	{
-		check_type(ARRAY);
-		return as<array_type>();
-	}
-
-	array_type &array()
-	{
-		check_type(ARRAY);
-		return as<array_type>();
-	}
-
-	const boolean_type &boolean() const
-	{
-		check_type(BOOL_);
-		return as<boolean_type>();
-	}
-
-	boolean_type &boolean()
-	{
-		check_type(BOOL_);
-		return as<boolean_type>();
-	}
-
-	void swap(JsonValue &other);
+	friend void swap(Value &a, Value &b);
 };
 
+inline const Value &Object::operator[](const std::string &key) const
+{
+	static Value null_value{};
 
-namespace json {
+	auto it = find(key);
+	return it == end() ? null_value : it->second;
+}
 
-JsonValue parse_document(const std::string &str);
+inline void swap(Object &a, Object &b)
+{
+	a.swap(b);
+}
+
+
+Value parse_document(const std::string &str);
 
 } // namespace json
 

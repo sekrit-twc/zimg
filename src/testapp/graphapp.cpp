@@ -72,7 +72,7 @@ public:
 };
 
 
-JsonObject read_graph_spec(const char *path)
+json::Object read_graph_spec(const char *path)
 {
 	std::ifstream f;
 
@@ -83,7 +83,7 @@ JsonObject read_graph_spec(const char *path)
 	return std::move(json::parse_document(spec_json).object());
 }
 
-void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject &obj)
+void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Object &obj)
 {
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::ColorFamily, 3> color_map{
 		{ "grey", zimg::graph::GraphBuilder::ColorFamily::GREY },
@@ -120,7 +120,7 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject 
 	if (const auto &val = obj["color"])
 		state->color = color_map[val.string().c_str()];
 	if (const auto &val = obj["colorspace"]) {
-		const JsonObject &colorspace_obj = val.object();
+		const json::Object &colorspace_obj = val.object();
 
 		state->colorspace.matrix = g_matrix_table[colorspace_obj["matrix"].string().c_str()];
 		state->colorspace.transfer = g_transfer_table[colorspace_obj["transfer"].string().c_str()];
@@ -152,10 +152,10 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject 
 	}
 }
 
-void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObject &obj)
+void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Object &obj)
 {
 	if (const auto &val = obj["filter"]) {
-		const JsonObject &filter_obj = val.object();
+		const json::Object &filter_obj = val.object();
 		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
 		params->filter = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
 	} else {
@@ -163,7 +163,7 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObje
 	}
 
 	if (const auto &val = obj["filter_uv"]) {
-		const JsonObject &filter_obj = val.object();
+		const json::Object &filter_obj = val.object();
 		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
 		params->filter_uv = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
 	} else {
@@ -180,7 +180,7 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObje
 		params->cpu = g_cpu_table[val.string().c_str()];
 }
 
-std::unique_ptr<zimg::graph::FilterGraph> create_graph(const JsonObject &spec,
+std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
                                                        zimg::graph::GraphBuilder::state *src_state_out,
                                                        zimg::graph::GraphBuilder::state *dst_state_out)
 {
@@ -251,7 +251,7 @@ void thread_target(const zimg::graph::FilterGraph *graph,
 	}
 }
 
-void execute(const JsonObject &spec, unsigned times, unsigned threads)
+void execute(const json::Object &spec, unsigned times, unsigned threads)
 {
 	zimg::graph::GraphBuilder::state src_state;
 	zimg::graph::GraphBuilder::state dst_state;
@@ -337,7 +337,7 @@ int graph_main(int argc, char **argv)
 		return ret == ARGPARSE_HELP ? 0 : ret;
 
 	try {
-		JsonObject spec = read_graph_spec(args.specpath);
+		json::Object spec = read_graph_spec(args.specpath);
 		execute(spec, args.times, args.threads);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
