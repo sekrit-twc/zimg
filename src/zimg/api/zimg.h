@@ -8,6 +8,8 @@
   #define ZIMG_VISIBILITY
 #elif defined(__GNUC__)
   #define ZIMG_VISIBILITY __attribute__((visibility("default")))
+#else
+  #define ZIMG_VISIBILITY
 #endif
 
 #ifdef __cplusplus
