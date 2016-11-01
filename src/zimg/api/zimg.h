@@ -332,7 +332,7 @@ typedef enum zimg_resample_filter_e {
   * necessary.
   *
   * Generally, the image stride must be a multiple of the alignment
-  * imposed by the host CPU architecture, which is up to 64 bytes on
+  * imposed by the host CPU architecture, which is up to 32 bytes on
   * x86 and AMD64. The stride may be negative.
   */
 typedef struct zimg_image_buffer_const {
