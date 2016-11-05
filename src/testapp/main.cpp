@@ -38,34 +38,27 @@ main_func lookup_app(const char *name)
 } // namespace
 
 
-int arg_decode_cpu(const struct ArgparseOption *, void *out, int argc, char **argv)
+int arg_decode_cpu(const struct ArgparseOption *, void *out, const char *param, int)
 {
-	if (argc < 1)
-		return -1;
-
 	try {
 		zimg::CPUClass *cpu = static_cast<zimg::CPUClass *>(out);
-
-		*cpu = g_cpu_table[*argv];
+		*cpu = g_cpu_table[param];
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
-int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char **argv)
+int arg_decode_pixfmt(const struct ArgparseOption *, void *out, const char *param, int)
 {
-	if (argc < 1)
-		return -1;
-
 	try {
 		zimg::PixelFormat *format = static_cast<zimg::PixelFormat *>(out);
 		std::regex format_regex{ R"(^(byte|word|half|float)(?::(f|l)(c|l)?(?::(\d+))?)?$)" };
 		std::cmatch match;
 
-		if (!std::regex_match(*argv, match, format_regex))
+		if (!std::regex_match(param, match, format_regex))
 			throw std::runtime_error{ "bad format string" };
 
 		*format = g_pixel_table[match[1].str().c_str()];
@@ -81,7 +74,7 @@ int arg_decode_pixfmt(const struct ArgparseOption *, void *out, int argc, char *
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 

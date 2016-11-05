@@ -25,23 +25,16 @@ struct Arguments {
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path specifier" },
-	{ OPTION_STRING,   nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path specifier" },
-	{ OPTION_UINTEGER, nullptr, "in_width",   offsetof(struct Arguments, in_w),    nullptr, "input width" },
-	{ OPTION_UINTEGER, nullptr, "in_height",  offsetof(struct Arguments, in_h),    nullptr, "input height" },
-	{ OPTION_UINTEGER, nullptr, "out_width",  offsetof(struct Arguments, out_w),   nullptr, "output width" },
-	{ OPTION_UINTEGER, nullptr, "out_height", offsetof(struct Arguments, out_h),   nullptr, "output height" }
+	{ OPTION_STRING, nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING, nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_UINT,   nullptr, "in_width",   offsetof(struct Arguments, in_w),    nullptr, "input width" },
+	{ OPTION_UINT,   nullptr, "in_height",  offsetof(struct Arguments, in_h),    nullptr, "input height" },
+	{ OPTION_UINT,   nullptr, "out_width",  offsetof(struct Arguments, out_w),   nullptr, "output width" },
+	{ OPTION_UINT,   nullptr, "out_height", offsetof(struct Arguments, out_h),   nullptr, "output height" },
+	{ OPTION_NULL }
 };
 
-const ArgparseCommandLine program_def = {
-	nullptr,
-	0,
-	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
-	"interlace_example",
-	"resize interlaced 4:2:0 images",
-	nullptr
-};
+const ArgparseCommandLine program_def = { nullptr, program_positional, "interlace_example", "resize interlaced 4:2:0 images" };
 
 
 struct YV12Image {
@@ -248,8 +241,8 @@ int main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		execute(args);

@@ -11,7 +11,7 @@
 
 #include <zimg++.hpp>
 #if ZIMG_API_VERSION < ZIMG_MAKE_API_VERSION(2, 2)
-#error API 2.2 required for HDR
+  #error API 2.2 required for HDR
 #endif
 
 #include "aligned_malloc.h"
@@ -21,17 +21,14 @@
 
 namespace {
 
-int decode_mask_key(const ArgparseOption *, void *out, int argc, char **argv)
+int decode_mask_key(const struct ArgparseOption *, void *out, const char *param, int)
 {
 	const char HEX_DIGITS[] = "0123456789abcdefABCDEF";
-
-	if (argc < 1)
-		return -1;
 
 	uint8_t *mask_key = static_cast<uint8_t *>(out);
 
 	try {
-		std::string s{ *argv };
+		std::string s{ param };
 		if (s.size() != 6 || s.find_first_not_of(HEX_DIGITS) != std::string::npos)
 			throw std::runtime_error{ "bad hex string" };
 
@@ -43,7 +40,7 @@ int decode_mask_key(const ArgparseOption *, void *out, int argc, char **argv)
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -55,28 +52,28 @@ struct Arguments {
 	unsigned height;
 	double luminance;
 	uint8_t mask_key[3];
-	int fast;
+	char fast;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_TRUE,   "f", "fast",      offsetof(Arguments, fast),      nullptr, "use fast gamma functions" },
+	{ OPTION_FLAG,   "f", "fast",      offsetof(Arguments, fast),      nullptr, "use fast gamma functions" },
 	{ OPTION_FLOAT,  "l", "luminance", offsetof(Arguments, luminance), nullptr, "legacy peak brightness (cd/m^2)" },
-	{ OPTION_USER,   "k", "key",       offsetof(Arguments, mask_key),  decode_mask_key, "HDR color key (RRGGBB hex string)" },
+	{ OPTION_USER1,  "k", "key",       offsetof(Arguments, mask_key),  decode_mask_key, "HDR color key (RRGGBB hex string)" },
 	{ OPTION_STRING, "m", "mask",      offsetof(Arguments, hdrpath),   nullptr, "HDR difference mask" },
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr, "inpath",  offsetof(Arguments, inpath),  nullptr, "input path" },
-	{ OPTION_STRING,   nullptr, "outpath", offsetof(Arguments, sdrpath), nullptr, "output path" },
-	{ OPTION_UINTEGER, "w",     "width",   offsetof(Arguments, width),   nullptr, "image width" },
-	{ OPTION_UINTEGER, "h",     "height",  offsetof(Arguments, height),  nullptr, "image height" },
+	{ OPTION_STRING, nullptr, "inpath",  offsetof(Arguments, inpath),  nullptr, "input path" },
+	{ OPTION_STRING, nullptr, "outpath", offsetof(Arguments, sdrpath), nullptr, "output path" },
+	{ OPTION_UINT,   "w",     "width",   offsetof(Arguments, width),   nullptr, "image width" },
+	{ OPTION_UINT,   "h",     "height",  offsetof(Arguments, height),  nullptr, "image height" },
+	{ OPTION_NULL }
 };
 
 const ArgparseCommandLine program_def = {
 	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
 	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
 	"hdr_example",
 	"show legacy and HDR portion of HDR10 images",
 	"Input must be HDR10 (YUV 4:2:0, 10 bpc), SDR output is BMP, HDR output is planar HDR10 RGB"
@@ -316,8 +313,8 @@ int main(int argc, char **argv)
 
 	args.luminance = NAN;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		execute(args);

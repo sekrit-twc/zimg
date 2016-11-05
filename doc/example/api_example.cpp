@@ -31,26 +31,26 @@ struct Arguments {
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, nullptr, "in-width",   offsetof(Arguments, in_w),      nullptr, "input width" },
-	{ OPTION_UINTEGER, nullptr, "in-height",  offsetof(Arguments, in_h),      nullptr, "input height" },
-	{ OPTION_FLOAT,    nullptr, "shift-w",    offsetof(Arguments, shift_w),   nullptr, "shift image to the left by x subpixels" },
-	{ OPTION_FLOAT,    nullptr, "shift-h",    offsetof(Arguments, shift_h),   nullptr, "shift image to the top by x subpixels" },
-	{ OPTION_FLOAT,    nullptr, "sub-width",  offsetof(Arguments, subwidth),  nullptr, "treat image width differently from actual width" },
-	{ OPTION_FLOAT,    nullptr, "sub-height", offsetof(Arguments, subheight), nullptr, "treat image height differently from actual height" },
+	{ OPTION_UINT,  nullptr, "in-width",   offsetof(Arguments, in_w),      nullptr, "input width" },
+	{ OPTION_UINT,  nullptr, "in-height",  offsetof(Arguments, in_h),      nullptr, "input height" },
+	{ OPTION_FLOAT, nullptr, "shift-w",    offsetof(Arguments, shift_w),   nullptr, "shift image to the left by x subpixels" },
+	{ OPTION_FLOAT, nullptr, "shift-h",    offsetof(Arguments, shift_h),   nullptr, "shift image to the top by x subpixels" },
+	{ OPTION_FLOAT, nullptr, "sub-width",  offsetof(Arguments, subwidth),  nullptr, "treat image width differently from actual width" },
+	{ OPTION_FLOAT, nullptr, "sub-height", offsetof(Arguments, subheight), nullptr, "treat image height differently from actual height" },
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr, "inpath",  offsetof(Arguments, inpath),  nullptr, "input path specifier" },
-	{ OPTION_STRING,   nullptr, "outpath", offsetof(Arguments, outpath), nullptr, "output path specifier" },
-	{ OPTION_UINTEGER, "w",     "width",   offsetof(Arguments, out_w),   nullptr, "output width" },
-	{ OPTION_UINTEGER, "h",     "height",  offsetof(Arguments, out_h),   nullptr, "output height" },
+	{ OPTION_STRING, nullptr, "inpath",  offsetof(Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING, nullptr, "outpath", offsetof(Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_UINT,   "w",     "width",   offsetof(Arguments, out_w),   nullptr, "output width" },
+	{ OPTION_UINT,   "h",     "height",  offsetof(Arguments, out_h),   nullptr, "output height" },
+	{ OPTION_NULL }
 };
 
 const ArgparseCommandLine program_def = {
 	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
 	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
 	"api_example",
 	"convert images between BMP and YUY2",
 	"Path specifier format: (bmp|yuy2):path"
@@ -417,8 +417,8 @@ int main(int argc, char **argv)
 	Arguments args{};
 	int ret;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		execute(args);

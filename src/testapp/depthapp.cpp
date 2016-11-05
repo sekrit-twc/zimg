@@ -16,26 +16,27 @@
 
 namespace {
 
-int decode_dither(const ArgparseOption *, void *out, int argc, char **argv)
+int decode_dither(const struct ArgparseOption *, void *out, const char *param, int)
 {
-	if (argc < 1)
-		return -1;
-
 	try {
 		zimg::depth::DitherType *dither = static_cast<zimg::depth::DitherType *>(out);
-
-		*dither = g_dither_table[*argv];
+		*dither = g_dither_table[param];
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
-int decode_force_rgb_yuv(const ArgparseOption *opt, void *out, int, char **)
+int decode_force_rgb_yuv(const struct ArgparseOption *opt, void *out, const char *, int negated)
 {
 	int *family = static_cast<int *>(out);
+
+	if (negated) {
+		std::cerr << "argument '" << opt->long_name << "' can not be negated\n";
+		return 1;
+	}
 
 	if (!strcmp(opt->long_name, "yuv"))
 		*family = 1;
@@ -79,21 +80,23 @@ struct Arguments {
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, "w",     "width",      offsetof(Arguments, width),              nullptr, "image width" },
-	{ OPTION_UINTEGER, "h",     "height",     offsetof(Arguments, height),             nullptr, "image height"},
-	{ OPTION_USER,     nullptr, "dither",     offsetof(Arguments, dither),             decode_dither, "select dithering method" },
-	{ OPTION_USER,     nullptr, "yuv",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret RGB image as YUV" },
-	{ OPTION_USER,     nullptr, "rgb",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret YUV image as RGB"},
-	{ OPTION_STRING,   nullptr, "visualise",  offsetof(Arguments, visualise_path),     nullptr, "path to BMP file for visualisation"},
-	{ OPTION_UINTEGER, nullptr, "times",      offsetof(Arguments, times),              nullptr, "number of benchmark cycles"},
-	{ OPTION_USER,     nullptr, "cpu",        offsetof(Arguments, cpu),                arg_decode_cpu, "select CPU type"},
+	{ OPTION_UINT,   "w",     "width",      offsetof(Arguments, width),              nullptr, "image width" },
+	{ OPTION_UINT,   "h",     "height",     offsetof(Arguments, height),             nullptr, "image height"},
+	{ OPTION_USER1,  nullptr, "dither",     offsetof(Arguments, dither),             decode_dither, "select dithering method" },
+	{ OPTION_USER0,  nullptr, "yuv",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret RGB image as YUV" },
+	{ OPTION_USER0,  nullptr, "rgb",        offsetof(Arguments, force_color_family), decode_force_rgb_yuv, "interpret YUV image as RGB"},
+	{ OPTION_STRING, nullptr, "visualise",  offsetof(Arguments, visualise_path),     nullptr, "path to BMP file for visualisation"},
+	{ OPTION_UINT,   nullptr, "times",      offsetof(Arguments, times),              nullptr, "number of benchmark cycles"},
+	{ OPTION_USER1,  nullptr, "cpu",        offsetof(Arguments, cpu),                arg_decode_cpu, "select CPU type"},
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
 	{ OPTION_STRING, nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
 	{ OPTION_STRING, nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
-	{ OPTION_USER,   nullptr, "format-in",  offsetof(Arguments, format_in),  arg_decode_pixfmt, "input pixel format"},
-	{ OPTION_USER,   nullptr, "format-out", offsetof(Arguments, format_out), arg_decode_pixfmt, "output pixel format"},
+	{ OPTION_USER1,  nullptr, "format-in",  offsetof(Arguments, format_in),  arg_decode_pixfmt, "input pixel format"},
+	{ OPTION_USER1,  nullptr, "format-out", offsetof(Arguments, format_out), arg_decode_pixfmt, "output pixel format"},
+	{ OPTION_NULL }
 };
 
 const char help_str[] =
@@ -103,15 +106,7 @@ PIXFMT_SPECIFIER_HELP_STR
 "\n"
 PATH_SPECIFIER_HELP_STR;
 
-const ArgparseCommandLine program_def = {
-	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
-	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
-	"depth",
-	"convert images between pixel formats",
-	help_str
-};
+const ArgparseCommandLine program_def = { program_switches, program_positional, "depth", "convert images between pixel formats", help_str };
 
 } // namespace
 
@@ -123,8 +118,8 @@ int depth_main(int argc, char **argv)
 
 	args.times = 1;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		ImageFrame src_frame = imageframe::read(args.inpath, "i444", args.width, args.height);

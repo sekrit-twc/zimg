@@ -16,13 +16,16 @@ struct Arguments {
 };
 
 static const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   0, "inpath",     offsetof(struct Arguments, inpath),  0, "input path specifier" },
-	{ OPTION_STRING,   0, "outpath",    offsetof(struct Arguments, outpath), 0, "output path specifier" },
-	{ OPTION_UINTEGER, 0, "in_width",   offsetof(struct Arguments, in_w),    0, "input width" },
-	{ OPTION_UINTEGER, 0, "in_height",  offsetof(struct Arguments, in_h),    0, "input height" },
-	{ OPTION_UINTEGER, 0, "out_width",  offsetof(struct Arguments, out_w),   0, "output width" },
-	{ OPTION_UINTEGER, 0, "out_height", offsetof(struct Arguments, out_h),   0, "output height" }
+	{ OPTION_STRING, 0, "inpath",     offsetof(struct Arguments, inpath),  0, "input path specifier" },
+	{ OPTION_STRING, 0, "outpath",    offsetof(struct Arguments, outpath), 0, "output path specifier" },
+	{ OPTION_UINT,   0, "in_width",   offsetof(struct Arguments, in_w),    0, "input width" },
+	{ OPTION_UINT,   0, "in_height",  offsetof(struct Arguments, in_h),    0, "input height" },
+	{ OPTION_UINT,   0, "out_width",  offsetof(struct Arguments, out_w),   0, "output width" },
+	{ OPTION_UINT,   0, "out_height", offsetof(struct Arguments, out_h),   0, "output height" },
+	{ OPTION_NULL }
 };
+
+static const ArgparseCommandLine program_def = { 0, program_positional, "api_example_c", "resize 4:2:0 images" };
 
 static ptrdiff_t width_to_stride(unsigned w)
 {
@@ -262,17 +265,11 @@ fail:
 
 int main(int argc, char **argv)
 {
-	ArgparseCommandLine cmd = { 0 };
 	struct Arguments args = { 0 };
 	int ret;
 
-	cmd.positional = program_positional;
-	cmd.num_positional = sizeof(program_positional) / sizeof(program_positional[0]);
-	cmd.program_name = "api_example_c";
-	cmd.summary = "resize 4:2:0 images";
-
-	if ((ret = argparse_parse(&cmd, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	if ((ret = execute(&args)))
 		fprintf(stderr, "error: %d\n", ret);

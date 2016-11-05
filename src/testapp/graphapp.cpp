@@ -305,23 +305,17 @@ struct Arguments {
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, nullptr, "times",   offsetof(Arguments, times),   nullptr, "number of benchmark cycles per thread" },
-	{ OPTION_UINTEGER, nullptr, "threads", offsetof(Arguments, threads), nullptr, "number of threads" },
+	{ OPTION_UINT, nullptr, "times",   offsetof(Arguments, times),   nullptr, "number of benchmark cycles per thread" },
+	{ OPTION_UINT, nullptr, "threads", offsetof(Arguments, threads), nullptr, "number of threads" },
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING, nullptr, "specpath", offsetof(Arguments, specpath), nullptr, "graph specification file" }
+	{ OPTION_STRING, nullptr, "specpath", offsetof(Arguments, specpath), nullptr, "graph specification file" },
+	{ OPTION_NULL }
 };
 
-const ArgparseCommandLine program_def = {
-	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
-	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
-	"graph",
-	"benchmark filter graph",
-	nullptr
-};
+const ArgparseCommandLine program_def = { program_switches, program_positional, "graph", "benchmark filter graph", };
 
 } // namespace
 
@@ -333,8 +327,8 @@ int graph_main(int argc, char **argv)
 
 	args.times = 100;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		json::Object spec = read_graph_spec(args.specpath);

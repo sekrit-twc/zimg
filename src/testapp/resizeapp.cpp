@@ -26,11 +26,8 @@ bool is_set_pixel_format(const zimg::PixelFormat &format)
 	return format != zimg::PixelFormat{};
 }
 
-int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
+int decode_filter(const struct ArgparseOption *, void *out, const char *param, int)
 {
-	if (argc < 1)
-		return -1;
-
 	try {
 		std::unique_ptr<zimg::resize::Filter> *filter = static_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
 		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };
@@ -39,7 +36,7 @@ int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 		double param_a = NAN;
 		double param_b = NAN;
 
-		if (!std::regex_match(*argv, match, filter_regex))
+		if (!std::regex_match(param, match, filter_regex))
 			throw std::runtime_error{ "bad filter string" };
 
 		filter_str = match[1];
@@ -55,7 +52,7 @@ int decode_filter(const ArgparseOption *, void *out, int argc, char **argv)
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -80,24 +77,26 @@ struct Arguments {
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, "w",     "width-in",     offsetof(Arguments, width_in),       nullptr, "image width" },
-	{ OPTION_UINTEGER, "h",     "height-in",    offsetof(Arguments, height_in),      nullptr, "image height"},
-	{ OPTION_USER,     nullptr, "filter",       offsetof(Arguments, filter),         decode_filter, "select resampling filter" },
-	{ OPTION_FLOAT,    nullptr, "shift-w",      offsetof(Arguments, shift_w),        nullptr, "subpixel shift" },
-	{ OPTION_FLOAT,    nullptr, "shift-h",      offsetof(Arguments, shift_h),        nullptr, "subpixel shift" },
-	{ OPTION_FLOAT,    nullptr, "sub-width",    offsetof(Arguments, subwidth),       nullptr, "active image width" },
-	{ OPTION_FLOAT,    nullptr, "sub-height",   offsetof(Arguments, subheight),      nullptr, "active image height" },
-	{ OPTION_USER,     nullptr, "format",       offsetof(Arguments, working_format), arg_decode_pixfmt, "working pixel format" },
-	{ OPTION_STRING,   nullptr, "visualise",    offsetof(Arguments, visualise_path), nullptr, "path to BMP file for visualisation" },
-	{ OPTION_UINTEGER, nullptr, "times",        offsetof(Arguments, times),          nullptr, "number of benchmark cycles" },
-	{ OPTION_USER,     nullptr, "cpu",          offsetof(Arguments, cpu),            arg_decode_cpu, "select CPU type" },
+	{ OPTION_UINT,   "w",     "width-in",     offsetof(Arguments, width_in),       nullptr, "image width" },
+	{ OPTION_UINT,   "h",     "height-in",    offsetof(Arguments, height_in),      nullptr, "image height"},
+	{ OPTION_USER1,  nullptr, "filter",       offsetof(Arguments, filter),         decode_filter, "select resampling filter" },
+	{ OPTION_FLOAT,  nullptr, "shift-w",      offsetof(Arguments, shift_w),        nullptr, "subpixel shift" },
+	{ OPTION_FLOAT,  nullptr, "shift-h",      offsetof(Arguments, shift_h),        nullptr, "subpixel shift" },
+	{ OPTION_FLOAT,  nullptr, "sub-width",    offsetof(Arguments, subwidth),       nullptr, "active image width" },
+	{ OPTION_FLOAT,  nullptr, "sub-height",   offsetof(Arguments, subheight),      nullptr, "active image height" },
+	{ OPTION_USER1,  nullptr, "format",       offsetof(Arguments, working_format), arg_decode_pixfmt, "working pixel format" },
+	{ OPTION_STRING, nullptr, "visualise",    offsetof(Arguments, visualise_path), nullptr, "path to BMP file for visualisation" },
+	{ OPTION_UINT,   nullptr, "times",        offsetof(Arguments, times),          nullptr, "number of benchmark cycles" },
+	{ OPTION_USER1,  nullptr, "cpu",          offsetof(Arguments, cpu),            arg_decode_cpu, "select CPU type" },
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
-	{ OPTION_STRING,   nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
-	{ OPTION_UINTEGER, nullptr, "width-out",  offsetof(Arguments, width_out),  nullptr, "output width" },
-	{ OPTION_UINTEGER, nullptr, "height-out", offsetof(Arguments, height_out), nullptr, "output height" },
+	{ OPTION_STRING, nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
+	{ OPTION_STRING, nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
+	{ OPTION_UINT,   nullptr, "width-out",  offsetof(Arguments, width_out),  nullptr, "output width" },
+	{ OPTION_UINT,   nullptr, "height-out", offsetof(Arguments, height_out), nullptr, "output height" },
+	{ OPTION_NULL }
 };
 
 const char help_str[] =
@@ -108,15 +107,8 @@ PIXFMT_SPECIFIER_HELP_STR
 "\n"
 PATH_SPECIFIER_HELP_STR;
 
-const ArgparseCommandLine program_def = {
-	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
-	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
-	"resize",
-	"resize images",
-	help_str
-};
+const ArgparseCommandLine program_def = { program_switches, program_positional, "resize", "resize images", help_str };
+
 
 double ns_per_sample(const ImageFrame &frame, double seconds)
 {
@@ -151,8 +143,8 @@ int resize_main(int argc, char **argv)
 	args.subheight = NAN;
 	args.times = 1;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	if (std::isnan(args.shift_w))
 		args.shift_w = 0.0;

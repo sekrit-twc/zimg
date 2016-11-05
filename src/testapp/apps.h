@@ -14,9 +14,9 @@ struct ArgparseOption;
 extern "C" {
 #endif
 
-int arg_decode_cpu(const struct ArgparseOption *opt, void *out, int argc, char **argv);
+int arg_decode_cpu(const struct ArgparseOption *opt, void *out, const char *param, int negated);
 
-int arg_decode_pixfmt(const struct ArgparseOption *opt, void *out, int argc, char **argv);
+int arg_decode_pixfmt(const struct ArgparseOption *opt, void *out, const char *param, int negated);
 
 int colorspace_main(int argc, char **argv);
 

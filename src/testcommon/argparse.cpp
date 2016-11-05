@@ -1,200 +1,400 @@
-#include <algorithm>
-#include <cctype>
-#include <climits>
-#include <cstddef>
 #include <cstring>
+#include <exception>
 #include <iostream>
+#include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include "argparse.h"
 
 namespace {
 
-int handle_argument_bool(const ArgparseOption *, void *out, int argc, char **argv)
+static const ArgparseOption HELP_OPTION_FULL = { OPTION_HELP, "?", "help", 0, nullptr, "print help message" };
+static const ArgparseOption HELP_OPTION_LONG_ONLY = { OPTION_HELP, nullptr, "help", 0, nullptr, "print help message" };
+
+const int HELP_INDENT = 32;
+
+
+const char *get_short_name(const ArgparseOption &opt)
 {
-	if (argc < 1)
-		return -1;
-
-	std::string str = *argv;
-	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-	int *out_p = static_cast<int *>(out);
-	int value = 0;
-
-	if (str == "true" || str == "1")
-		value = 1;
-	else if (str == "false" || str =="0")
-		value = 0;
+	if (opt.short_name)
+		return opt.short_name;
+	else if (opt.long_name)
+		return opt.long_name;
 	else
-		return -1;
-
-	*out_p = value;
-	return 1;
+		return "";
 }
 
-int handle_argument_true(const ArgparseOption *, void *out, int, char **)
+const char *get_long_name(const ArgparseOption &opt)
 {
-	int *out_p = static_cast<int *>(out);
-	*out_p = 1;
-	return 0;
+	if (opt.long_name)
+		return opt.long_name;
+	else if (opt.short_name)
+		return opt.short_name;
+	else
+		return "";
 }
 
-int handle_argument_false(const ArgparseOption *, void *out, int, char **)
+bool opt_has_param(OptionType type)
 {
-	int *out_p = static_cast<int *>(out);
-	*out_p = 0;
-	return 0;
-}
-
-int handle_argument_integer(const ArgparseOption *, void *out, int argc, char **argv)
-{
-	if (argc < 1)
-		return -1;
-
-	try {
-		int *out_p = static_cast<int *>(out);
-		*out_p = std::stoi(*argv);
-		return 1;
-	} catch (const std::logic_error &) {
-		return -1;
-	}
-}
-
-int handle_argument_uinteger(const ArgparseOption *, void *out, int argc, char **argv)
-{
-	if (argc < 1)
-		return -1;
-
-	try {
-		unsigned *out_p = static_cast<unsigned *>(out);
-		unsigned long x = std::stoul(*argv);
-
-		if (x > UINT_MAX)
-			throw std::out_of_range{ "" };
-
-		*out_p = static_cast<unsigned>(x);
-		return 1;
-	} catch (const std::logic_error &) {
-		return -1;
-	}
-}
-
-int handle_argument_float(const ArgparseOption *, void *out, int argc, char **argv)
-{
-	if (argc < 1)
-		return -1;
-
-	try {
-		double *out_p = static_cast<double *>(out);
-		*out_p = std::stod(*argv);
-		return 1;
-	} catch (const std::logic_error &) {
-		return -1;
-	}
-}
-
-int handle_argument_string(const ArgparseOption *, void *out, int argc, char **argv)
-{
-	if (argc < 1)
-		return -1;
-
-	const char **out_p = static_cast<const char **>(out);
-	*out_p = *argv;
-	return 1;
-}
-
-int handle_argument(const ArgparseOption *opt, void *out, int argc, char **argv)
-{
-	void *out_p = static_cast<char *>(out) + opt->offset;
-
-	switch (opt->type) {
-	case OPTION_BOOL:
-		return handle_argument_bool(opt, out_p, argc, argv);
-	case OPTION_TRUE:
-		return handle_argument_true(opt, out_p, argc, argv);
-	case OPTION_FALSE:
-		return handle_argument_false(opt, out_p, argc, argv);
-	case OPTION_INTEGER:
-		return handle_argument_integer(opt, out_p, argc, argv);
-	case OPTION_UINTEGER:
-		return handle_argument_uinteger(opt, out_p, argc, argv);
+	switch (type) {
+	case OPTION_INT:
+	case OPTION_UINT:
+	case OPTION_LONGLONG:
+	case OPTION_ULONGLONG:
 	case OPTION_FLOAT:
-		return handle_argument_float(opt, out_p, argc, argv);
 	case OPTION_STRING:
-		return handle_argument_string(opt, out_p, argc, argv);
-	case OPTION_USER:
-		return opt->func(opt, out_p, argc, argv);
+	case OPTION_USER1:
+		return true;
 	default:
-		throw std::invalid_argument{ "bad argument type" };
+		return false;
 	}
 }
 
-void print_usage(const ArgparseCommandLine *cmd)
-{
-	if (cmd->summary)
-		std::cout << cmd->program_name << ": " << cmd->summary << "\n\n";
 
-	std::cout << "Usage: " << cmd->program_name << " [opts] ";
-	for (size_t i = 0; i < cmd->num_positional; ++i) {
-		const ArgparseOption *opt = cmd->positional + i;
-		const char *name = opt->short_name ? opt->short_name : opt->long_name;
-		std::cout << name << ' ';
+struct Error {
+	int code;
+};
+
+class OptionIterator {
+public:
+	typedef ptrdiff_t difference_type;
+	typedef ArgparseOption value_type;
+	typedef const ArgparseOption *pointer;
+	typedef const ArgparseOption &reference;
+	typedef std::bidirectional_iterator_tag iterator_category;
+private:
+	pointer m_opt;
+
+	bool is_null() const { return !m_opt || m_opt->type == OPTION_NULL; }
+public:
+	explicit OptionIterator(pointer opt = nullptr) : m_opt{ opt } {}
+
+	pointer get() const { return m_opt; }
+
+	explicit operator bool() const { return !is_null(); }
+
+	reference operator*() const { return *get(); }
+	pointer operator->() const { return get(); }
+
+	OptionIterator &operator++() { ++m_opt; return *this; }
+	OptionIterator operator++(int) { OptionIterator ret = *this; ++*this; return ret; }
+
+	OptionIterator &operator--() { --m_opt; return *this; }
+	OptionIterator operator--(int) { OptionIterator ret = *this; ++*this; return ret; }
+
+	bool operator==(const OptionIterator &other) const
+	{
+		return m_opt == other.m_opt || (is_null() && other.is_null());
 	}
-	std::cout << "\n";
 
-	std::cout << "Options:\n";
-	for (size_t i = 0; i < cmd->num_switches; ++i) {
-		const ArgparseOption *opt = cmd->switches + i;
-		const char *short_name = opt->short_name;
-		const char *long_name = opt->long_name;
-		size_t len;
+	bool operator!=(const OptionIterator &other) const { return !(*this == other); }
+};
 
-		std::cout << "\t";
+class OptionRange {
+	const ArgparseOption *m_first;
+public:
+	explicit OptionRange(const ArgparseOption *first) : m_first{ first } {}
 
-		if (short_name && long_name) {
-			std::cout << "--" << long_name << " / -" << short_name;
-			len = strlen(short_name) + strlen(long_name) + 2 + 4;
-		} else if (short_name) {
-			std::cout << "-" << short_name;
-			len = strlen(short_name) + 1;
+	OptionIterator begin() const { return OptionIterator{ m_first }; }
+	OptionIterator end() const { return OptionIterator{}; }
+};
+
+class OptionMap {
+	std::unordered_map<char, const ArgparseOption *> m_short;
+	std::unordered_map<std::string, const ArgparseOption *> m_long;
+public:
+	void insert_opt(const ArgparseOption *opt)
+	{
+		if (opt->short_name)
+			m_short[opt->short_name[0]] = opt;
+		if (opt->long_name)
+			m_long[opt->long_name] = opt;
+	}
+
+	const ArgparseOption *find_short(char c) const
+	{
+		auto it = m_short.find(c);
+		return it == m_short.end() ? nullptr : it->second;
+	}
+
+	const ArgparseOption *find_long(const std::string &s) const
+	{
+		auto it = m_long.find(s);
+		return it == m_long.end() ? nullptr : it->second;
+	}
+};
+
+
+template <class T>
+struct stox;
+
+template <>
+struct stox<int> {
+	static int f(const char *s, size_t *pos) { return std::stoi(s, pos); }
+};
+
+template <>
+struct stox<unsigned> {
+	static unsigned long f(const char *s, size_t *pos) { return std::stoul(s, pos); }
+};
+
+template <>
+struct stox<long long> {
+	static long long f(const char *s, size_t *pos) { return std::stoll(s, pos); }
+};
+
+template <>
+struct stox<unsigned long long> {
+	static unsigned long long f(const char *s, size_t *pos) { return std::stoull(s, pos); }
+};
+
+template <class T>
+T parse_integer(const char *s)
+{
+	try {
+		size_t pos;
+		auto x = stox<T>::f(s, &pos);
+
+		if (s[pos] != '\0')
+			throw std::invalid_argument{ "unparsed characters" };
+		if (x < std::numeric_limits<T>::min() || x > std::numeric_limits<T>::max())
+			throw std::out_of_range{ "integer out of range" };
+
+		return static_cast<T>(x);
+	} catch (const std::exception &e) {
+		std::cerr << "error parsing integer from '" << s << "': " << e.what() << '\n';
+		throw Error{ ARGPARSE_BAD_PARAMETER };
+	}
+}
+
+double parse_double(const char *s)
+{
+	try {
+		size_t pos;
+		auto x = std::stod(s, &pos);
+
+		if (s[pos] != '\0')
+			throw std::invalid_argument{ "unparsed characters" };
+		return x;
+	} catch (const std::exception &e) {
+		std::cerr << "error parsing float from: '" << s << "': " << e.what() << '\n';
+		throw Error{ ARGPARSE_BAD_PARAMETER };
+	}
+}
+
+void handle_switch(const ArgparseOption &opt, void *out, const char *param, bool negated)
+{
+	if (negated && opt.type != OPTION_FLAG && opt.type != OPTION_USER0) {
+		std::cerr << "switch '" << get_long_name(opt) << "' can not be negated\n";
+		throw Error{ ARGPARSE_BAD_PARAMETER };
+	}
+	if (opt_has_param(opt.type) && !param) {
+		std::cerr << "switch '" << get_long_name(opt) << "' missing parameter\n";
+		throw Error{ ARGPARSE_BAD_PARAMETER };
+	}
+
+	void *out_ptr = static_cast<char *>(out) + opt.offset;
+
+	switch (opt.type) {
+	case OPTION_FLAG:
+		*static_cast<char *>(out_ptr) = negated;
+		break;
+	case OPTION_HELP:
+		throw Error{ ARGPARSE_HELP_MESSAGE };
+	case OPTION_INCREMENT:
+		*static_cast<int *>(out_ptr) += 1;
+		break;
+	case OPTION_DECREMENT:
+		*static_cast<int *>(out_ptr) -= 1;
+		break;
+	case OPTION_INT:
+		*static_cast<int *>(out_ptr) = parse_integer<int>(param);
+		break;
+	case OPTION_UINT:
+		*static_cast<unsigned int *>(out_ptr) = parse_integer<unsigned>(param);
+		break;
+	case OPTION_LONGLONG:
+		*static_cast<long long *>(out_ptr) = parse_integer<long long>(param);
+		break;
+	case OPTION_ULONGLONG:
+		*static_cast<unsigned long long *>(out_ptr) = parse_integer<unsigned long long>(param);
+		break;
+	case OPTION_FLOAT:
+		*static_cast<double *>(out_ptr) = parse_double(param);
+		break;
+	case OPTION_STRING:
+		*static_cast<const char **>(out_ptr) = param;
+		break;
+	case OPTION_USER0:
+	case OPTION_USER1:
+		if (opt.func(&opt, out_ptr, param, negated))
+			throw Error{ ARGPARSE_BAD_PARAMETER };
+		break;
+	case OPTION_NULL:
+	default:
+		throw std::logic_error{ "bad option type" };
+	}
+}
+
+void handle_long_switch(const OptionMap &options, void *out, int argc, const char * const *argv, int *pos, const char *s, size_t len)
+{
+	const char *param = nullptr;
+
+	if (const char *find = std::strchr(s, '=')) {
+		param = find + 1;
+		len = find - s;
+	}
+
+	const ArgparseOption *opt = nullptr;
+	bool negated = false;
+
+	std::string sw{ s, len };
+
+	if ((opt = options.find_long(sw))) {
+		// Ordinary switch: "--abc".
+		negated = false;
+	} else if (sw.find("no-") == 0 && (opt = options.find_long(sw.substr(3)))) {
+		// Negated switch: "--no-abc".
+		negated = true;
+	} else {
+		std::cerr << "unrecognized switch '--" << sw << "'\n";
+		throw Error{ ARGPARSE_INVALID_SWITCH };
+	}
+
+	// Parameter as next argument: "--xyz 123".
+	if (opt_has_param(opt->type) && !param && *pos < argc)
+		param = argv[++*pos];
+
+	handle_switch(*opt, out, param, negated);
+};
+
+void handle_short_switch(const OptionMap &options, void *out, int argc, const char * const *argv, int *pos, const char *s, size_t len)
+{
+	for (size_t i = 0; i < len; ++i) {
+		const ArgparseOption *opt = options.find_short(s[i]);
+		if (!opt) {
+			std::cerr << "unrecognized switch '" << s[i] << "' (-" << s << ")\n";
+			throw Error{ ARGPARSE_INVALID_SWITCH };
+		}
+
+		const char *param = nullptr;
+		if (opt_has_param(opt->type)) {
+			if (i < len - 1) {
+				// Parameter in same argument: "-a=3".
+				param = s + i + 1;
+			} else if (*pos < argc) {
+				// Parameter as next argument: "-a 3".
+				param = argv[++*pos];
+			}
+
+			// No more switches exist in the same argument.
+			handle_switch(*opt, out, param, false);
+			break;
 		} else {
-			std::cout << "--" << long_name;
-			len = strlen(long_name) + 2;
+			handle_switch(*opt, out, nullptr, false);
 		}
-
-		if (opt->description) {
-			for (; len < 32; ++len) {
-				std::cout << ' ';
-			}
-			std::cout << opt->description;
-		}
-		std::cout << '\n';
 	}
-	std::cout << "Arguments:\n";
-	for (size_t i = 0; i < cmd->num_positional; ++i) {
-		const ArgparseOption *opt = cmd->positional + i;
-		const char *name = opt->long_name;
-		size_t len = strlen(name);
+};
 
-		std::cout << "\t" << name;
-		if (opt->description) {
-			for (; len < 32; ++len) {
-				std::cout << ' ';
-			}
-			std::cout << opt->description;
-		}
-		std::cout << '\n';
-	}
 
-	if (cmd->help_message)
-		std::cout << '\n' << cmd->help_message << '\n';
+void write(const char *s, size_t *len)
+{
+	std::cout << s;
+	*len += std::strlen(s);
 }
 
-template <class MapType, class K = typename MapType::key_type, class T = typename MapType::mapped_type>
-T map_find_default(const MapType &map, const K &key)
+void print_switch(const ArgparseOption &opt)
 {
-	auto it = map.find(key);
-	return it == map.end() ? T{} : it->second;
+	const char *short_name = opt.short_name;
+	const char *long_name = opt.long_name;
+	size_t len = 0;
+
+	std::cout << '\t';
+
+	if (long_name) {
+		if (opt.type == OPTION_FLAG)
+			write("--[no-]", &len);
+		else
+			write("--", &len);
+
+		write(long_name, &len);
+	}
+	if (short_name) {
+		if (long_name)
+			write(" / ", &len);
+
+		write("-", &len);
+		write(short_name, &len);
+	}
+
+	if (opt.description) {
+		for (; len < HELP_INDENT; ++len) {
+			std::cout << ' ';
+		}
+		std::cout << opt.description;
+	}
+	std::cout << '\n';
+}
+
+void print_positional(const ArgparseOption &opt)
+{
+	const char *name = get_long_name(opt);
+	size_t len = std::strlen(name);
+
+	std::cout << '\t' << name;
+	if (opt.description) {
+		for (; len < HELP_INDENT; ++len)
+			std::cout << ' ';
+		std::cout << opt.description;
+	}
+	std::cout << '\n';
+}
+
+void print_help_message(const ArgparseCommandLine &cmd)
+{
+	bool has_help = false;
+	bool has_q = false;
+
+	// Print summary.
+	if (cmd.summary)
+		std::cout << cmd.program_name << ": " << cmd.summary << "\n\n";
+
+	// Print short help.
+	std::cout << "Usage: " << cmd.program_name << " [opts] ";
+	for (const auto &opt : OptionRange{ cmd.positional }) {
+		std::cout << get_short_name(opt) << ' ';
+	}
+	std::cout << '\n';
+
+	// Print help for switches.
+	std::cout << "Options:\n";
+	for (const auto &opt : OptionRange{ cmd.switches }) {
+		if (opt.type == OPTION_HELP || (opt.long_name && !std::strcmp(opt.long_name, "help")))
+			has_help = true;
+		if (opt.short_name && opt.short_name[1] == '?')
+			has_q = true;
+
+		print_switch(opt);
+	}
+	// Print built-in help option.
+	if (!has_help) {
+		if (!has_q)
+			print_switch(HELP_OPTION_FULL);
+		else
+			print_switch(HELP_OPTION_LONG_ONLY);
+	}
+
+	// Print help for positional arguments.
+	std::cout << "Arguments:\n";
+	for (const auto &opt : OptionRange{ cmd.positional }) {
+		print_positional(opt);
+	}
+
+	if (cmd.help_message)
+		std::cout << '\n' << cmd.help_message << '\n';
 }
 
 } // namespace
@@ -202,87 +402,78 @@ T map_find_default(const MapType &map, const K &key)
 
 int argparse_parse(const ArgparseCommandLine *cmd, void *out, int argc, char **argv)
 {
-	std::unordered_map<std::string, const ArgparseOption *> switch_short_map;
-	std::unordered_map<std::string, const ArgparseOption *> switch_long_map;
-	bool has_short_help = false;
-	int error = 0;
-
-	for (size_t i = 0; i < cmd->num_switches; ++i) {
-		const ArgparseOption *opt = cmd->switches + i;
-
-		if (opt->short_name)
-			switch_short_map[opt->short_name] = opt;
-		if (opt->long_name && strcmp(opt->long_name, "help"))
-			switch_long_map[opt->long_name] = opt;
-	}
-	has_short_help = (switch_short_map.find("h") == switch_short_map.end());
+	int ret = 0;
 
 	try {
-		int arg_index = 1;
-		size_t positional_count = 0;
-		bool positional_flag = false;
-		std::string str;
+		OptionMap options;
+		bool has_user_help = false;
 
-		while (arg_index < argc) {
-			const ArgparseOption *opt = nullptr;
-			int adjust;
-			int ret;
+		OptionIterator positional_cur{ cmd->positional };
+		bool is_positional = false;
+		int pos;
 
-			str = argv[arg_index];
+		for (const auto &opt : OptionRange{ cmd->switches }) {
+			if (opt.type == OPTION_HELP || (opt.long_name && !std::strcmp(opt.long_name, "help")))
+				has_user_help = true;
 
-			if (!positional_flag) {
-				if ((has_short_help && str == "-h") || str == "--help") {
-					error = ARGPARSE_HELP;
-					break;
-				}
-				if (!opt && str.find("--no-") == 0)
-					opt = map_find_default(switch_long_map, str.substr(5));
-				if (!opt && str.find("--") == 0)
-					opt = map_find_default(switch_long_map, str.substr(2));
-				if (!opt && str.find("-") == 0)
-					opt = map_find_default(switch_short_map, str.substr(1));
-
-				if (!opt)
-					positional_flag = true;
-			}
-
-			if (positional_flag) {
-				if (positional_count >= cmd->num_positional) {
-					std::cerr << "too many positional arguments\n";
-					error = ARGPARSE_ERROR;
-					break;
-				}
-
-				opt = cmd->positional + positional_count++;
-			}
-
-			adjust = positional_flag ? 0 : 1;
-
-			if ((ret = handle_argument(opt, out, argc - arg_index - adjust, argv + arg_index + adjust)) < 0) {
-				std::cerr << "error parsing argument: " << (opt->short_name ? opt->short_name : opt->long_name) << '\n';
-				error = ARGPARSE_ERROR;
-				break;
-			}
-			if (positional_flag && ret == 0)
-				throw std::logic_error{ "positional argument must advance argument list" };
-
-			arg_index += ret + adjust;
+			options.insert_opt(&opt);
+		}
+		if (!has_user_help) {
+			if (!options.find_short('?'))
+				options.insert_opt(&HELP_OPTION_FULL);
+			else
+				options.insert_opt(&HELP_OPTION_LONG_ONLY);
 		}
 
-		if (arg_index >= argc && positional_count != cmd->num_positional) {
-			const ArgparseOption *opt = cmd->positional + positional_count;
+		for (pos = 1; pos < argc; ++pos) {
+			const char *s = argv[pos];
+			size_t len = std::strlen(s);
 
-			std::cerr << "missing positional argument: ";
-			std::cerr << (opt->short_name ? opt->short_name : opt->long_name) << '\n';
-			error = ARGPARSE_ERROR;
+			if (!is_positional) {
+				if (len > 2 && s[0] == '-' && s[1] == '-') {
+					// Long form switch: "--[no-]xyz[=123]".
+					handle_long_switch(options, out, argc, argv, &pos, s + 2, len - 2);
+				} else if (len > 1 && s[0] == '-') {
+					// Special end of switches marker: "--".
+					if (s[1] == '-') {
+						is_positional = true;
+						continue;
+					}
+					// Short switch sequence: "-abc".
+					handle_short_switch(options, out, argc, argv, &pos, s + 1, len - 1);
+				} else {
+					is_positional = true;
+				}
+			}
+			if (is_positional) {
+				// End of positional arguments or possible varargs.
+				if (!positional_cur)
+					break;
+
+				// Next positional argument.
+				handle_switch(*positional_cur++, out, s, false);
+			}
 		}
+		if (positional_cur && positional_cur->type != OPTION_NULL) {
+			// Insufficient positional arguments.
+			std::cerr << "expected argument '" << get_long_name(*positional_cur) << "'\n";
+			throw Error{ ARGPARSE_INSUFFICIENT_ARGS };
+		}
+
+		// Successful parse.
+		ret = pos;
+	} catch (const Error &e) {
+		ret = e.code;
 	} catch (const std::logic_error &e) {
-		std::cerr << e.what() << '\n';
-		error = ARGPARSE_FATAL;
+		std::cerr << "malformed command line definition: " << e.what();
+		std::terminate();
+	} catch (const std::exception &e) {
+		std::cerr << "error: " << e.what();
+		ret = ARGPARSE_FATAL;
 	}
 
-	if (error == ARGPARSE_HELP || error == ARGPARSE_ERROR)
-		print_usage(cmd);
+	if (ret < 0 && ret != ARGPARSE_FATAL)
+		print_help_message(*cmd);
 
-	return error;
+	return ret;
 }

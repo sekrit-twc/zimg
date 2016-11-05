@@ -18,18 +18,15 @@
 
 namespace {
 
-int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
+int decode_colorspace(const struct ArgparseOption *opt, void *out, const char *param, int negated)
 {
-	if (argc < 1)
-		return -1;
-
 	zimg::colorspace::ColorspaceDefinition *csp = static_cast<zimg::colorspace::ColorspaceDefinition *>(out);
 
 	try {
 		std::regex csp_regex{ R"(^(\w+):(\w+):(\w+)$)" };
 		std::cmatch match;
 
-		if (!std::regex_match(*argv, match, csp_regex))
+		if (!std::regex_match(param, match, csp_regex))
 			throw std::runtime_error{ "bad colorspace string" };
 
 		csp->matrix = g_matrix_table[match[1].str().c_str()];
@@ -40,7 +37,7 @@ int decode_colorspace(const ArgparseOption *, void *out, int argc, char **argv)
 		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -69,35 +66,34 @@ struct Arguments {
 	unsigned height;
 	zimg::colorspace::ColorspaceDefinition csp_in;
 	zimg::colorspace::ColorspaceDefinition csp_out;
-	int fullrange_in;
-	int fullrange_out;
+	char fullrange_in;
+	char fullrange_out;
 	double peak_luminance;
-	int approximate_gamma;
+	char approximate_gamma;
 	const char *visualise_path;
 	unsigned times;
 	zimg::CPUClass cpu;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINTEGER, "w",     "width",          offsetof(Arguments, width),             nullptr, "image width" },
-	{ OPTION_UINTEGER, "h",     "height",         offsetof(Arguments, height),            nullptr, "image height" },
-	{ OPTION_FALSE,    nullptr, "tv-in",          offsetof(Arguments, fullrange_in),      nullptr, "input is TV range" },
-	{ OPTION_TRUE,     nullptr, "pc-in",          offsetof(Arguments, fullrange_in),      nullptr, "input is PC range" },
-	{ OPTION_FALSE,    nullptr, "tv-out",         offsetof(Arguments, fullrange_out),     nullptr, "output is TV range" },
-	{ OPTION_TRUE,     nullptr, "pc-out",         offsetof(Arguments, fullrange_out),     nullptr, "output is PC range" },
-	{ OPTION_FLOAT,    nullptr, "peak-luminance", offsetof(Arguments, peak_luminance),    nullptr, "nominal peak luminance for SDR (cd/m^2)" },
-	{ OPTION_TRUE,     nullptr, "gamma-lut",      offsetof(Arguments, approximate_gamma), nullptr, "use LUT to evaluate transfer functions" },
-	{ OPTION_FALSE,    nullptr, "gamma-direct",   offsetof(Arguments, approximate_gamma), nullptr, "directly evaluate transfer functions" },
-	{ OPTION_STRING,   nullptr, "visualise",      offsetof(Arguments, visualise_path),    nullptr, "path to BMP file for visualisation" },
-	{ OPTION_UINTEGER, nullptr, "times",          offsetof(Arguments, times),             nullptr, "number of benchmark cycles" },
-	{ OPTION_USER,     nullptr, "cpu",            offsetof(Arguments, cpu),               arg_decode_cpu, "select CPU type" },
+	{ OPTION_UINT,   "w",     "width",          offsetof(Arguments, width),             nullptr, "image width" },
+	{ OPTION_UINT,   "h",     "height",         offsetof(Arguments, height),            nullptr, "image height" },
+	{ OPTION_FLAG,   nullptr, "fullrange-in",   offsetof(Arguments, fullrange_in),      nullptr, "input is PC range" },
+	{ OPTION_FLAG,   nullptr, "fullrange-out",  offsetof(Arguments, fullrange_out),     nullptr, "output is PC range" },
+	{ OPTION_FLOAT,  nullptr, "peak-luminance", offsetof(Arguments, peak_luminance),    nullptr, "nominal peak luminance for SDR (cd/m^2)" },
+	{ OPTION_FLAG,   nullptr, "lut",            offsetof(Arguments, approximate_gamma), nullptr, "use LUT to evaluate transfer functions" },
+	{ OPTION_STRING, nullptr, "visualise",      offsetof(Arguments, visualise_path),    nullptr, "path to BMP file for visualisation" },
+	{ OPTION_UINT,   nullptr, "times",          offsetof(Arguments, times),             nullptr, "number of benchmark cycles" },
+	{ OPTION_USER1,  nullptr, "cpu",            offsetof(Arguments, cpu),               arg_decode_cpu, "select CPU type" },
+	{ OPTION_NULL }
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING,   nullptr,   "inpath",         offsetof(Arguments, inpath),  nullptr, "input path specifier" },
-	{ OPTION_STRING,   nullptr,   "outpath",        offsetof(Arguments, outpath), nullptr, "output path specifier" },
-	{ OPTION_USER,     "csp-in",  "colorspace-in",  offsetof(Arguments, csp_in),  decode_colorspace, "input colorspace specifier" },
-	{ OPTION_USER,     "csp-out", "colorspace-out", offsetof(Arguments, csp_out), decode_colorspace, "output colorspace specifier" },
+	{ OPTION_STRING, nullptr,   "inpath",         offsetof(Arguments, inpath),  nullptr, "input path specifier" },
+	{ OPTION_STRING, nullptr,   "outpath",        offsetof(Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_USER1,  "csp-in",  "colorspace-in",  offsetof(Arguments, csp_in),  decode_colorspace, "input colorspace specifier" },
+	{ OPTION_USER1,  "csp-out", "colorspace-out", offsetof(Arguments, csp_out), decode_colorspace, "output colorspace specifier" },
+	{ OPTION_NULL }
 };
 
 const char help_str[] =
@@ -108,15 +104,7 @@ const char help_str[] =
 "\n"
 PATH_SPECIFIER_HELP_STR;
 
-const ArgparseCommandLine program_def = {
-	program_switches,
-	sizeof(program_switches) / sizeof(program_switches[0]),
-	program_positional,
-	sizeof(program_positional) / sizeof(program_positional[0]),
-	"colorspace",
-	"convert images between colorspaces",
-	help_str
-};
+const ArgparseCommandLine program_def = { program_switches, program_positional, "colorspace", "convert images between colorspaces", help_str };
 
 } // namespace
 
@@ -129,8 +117,8 @@ int colorspace_main(int argc, char **argv)
 	args.peak_luminance = NAN;
 	args.times = 1;
 
-	if ((ret = argparse_parse(&program_def, &args, argc, argv)))
-		return ret == ARGPARSE_HELP ? 0 : ret;
+	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
+		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	bool yuv_in = args.csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB;
 	bool yuv_out = args.csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB;
