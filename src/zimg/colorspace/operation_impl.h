@@ -15,8 +15,11 @@ namespace colorspace {
 struct Matrix3x3;
 class Operation;
 
-const float TRANSFER_ALPHA = 1.09929682680944f;
-const float TRANSFER_BETA = 0.018053968510807f;
+const float REC709_ALPHA = 1.09929682680944f;
+const float REC709_BETA = 0.018053968510807f;
+
+const float SRGB_ALPHA = 1.055f;
+const float SRGB_BETA = 0.0031308f;
 
 const float ST2084_M1 = 0.1593017578125f;
 const float ST2084_M2 = 78.84375f;
@@ -31,6 +34,9 @@ const float ARIB_B67_C = 0.55991073f;
 
 float rec_709_gamma(float x);
 float rec_709_inverse_gamma(float x);
+
+float srgb_gamma(float x);
+float srgb_inverse_gamma(float x);
 
 float st_2084_gamma(float x);
 float st_2084_inverse_gamma(float x);
@@ -79,6 +85,22 @@ std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu);
  * @see create_rec709_gamma_operation
  */
 std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu);
+
+/**
+ * Create operation consisting of applying sRGB transfer function.
+ *
+ * @param cpu create operation optimized for given cpu
+ * @return concrete operation
+ */
+std::unique_ptr<Operation> create_srgb_gamma_operation(CPUClass cpu);
+
+/**
+ * Create operation consisting of inverting sRGB transfer function.
+ *
+ * @see create_rec709_gamma_operation
+ */
+std::unique_ptr<Operation> create_srgb_inverse_gamma_operation(CPUClass cpu);
+
 
 /**
  * Create operation consisting of applying SMPTE ST 2084 (PQ) transfer function.

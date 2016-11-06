@@ -41,6 +41,8 @@ gamma_func get_gamma_func(TransferCharacteristics transfer)
 	switch (transfer) {
 	case TransferCharacteristics::REC_709:
 		return rec_709_gamma;
+	case TransferCharacteristics::SRGB:
+		return srgb_gamma;
 	case TransferCharacteristics::ST_2084:
 		return st_2084_gamma;
 	case TransferCharacteristics::ARIB_B67:
@@ -56,6 +58,8 @@ gamma_func get_inverse_gamma_func(TransferCharacteristics transfer)
 	switch (transfer) {
 	case TransferCharacteristics::REC_709:
 		return rec_709_inverse_gamma;
+	case TransferCharacteristics::SRGB:
+		return srgb_inverse_gamma;
 	case TransferCharacteristics::ST_2084:
 		return st_2084_inverse_gamma;
 	case TransferCharacteristics::ARIB_B67:

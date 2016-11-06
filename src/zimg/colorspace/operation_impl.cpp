@@ -83,6 +83,34 @@ public:
 	}
 };
 
+class SRGBGammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = srgb_gamma(x);
+			}
+		}
+	}
+};
+
+class SRGBInverseGammaOperationC : public Operation {
+public:
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		for (unsigned p = 0; p < 3; ++p) {
+			for (unsigned i = left; i < right; ++i) {
+				float x = src[p][i];
+
+				dst[p][i] = srgb_inverse_gamma(x);
+			}
+		}
+	}
+};
+
 class St2084GammaOperationC : public Operation {
 	float m_scale;
 public:
@@ -254,10 +282,10 @@ float rec_709_gamma(float x)
 	unsigned w = fpu_save();
 	fpu_set_single();
 
-	if (x < TRANSFER_BETA)
+	if (x < REC709_BETA)
 		x = x * 4.5f;
 	else
-		x = TRANSFER_ALPHA * zimg_x_powf(x, 0.45f) - (TRANSFER_ALPHA - 1.0f);
+		x = REC709_ALPHA * zimg_x_powf(x, 0.45f) - (REC709_ALPHA - 1.0f);
 
 	fpu_restore(w);
 	return x;
@@ -268,14 +296,43 @@ float rec_709_inverse_gamma(float x)
 	unsigned w = fpu_save();
 	fpu_set_single();
 
-	if (x < 4.5f * TRANSFER_BETA)
+	if (x < 4.5f * REC709_BETA)
 		x = x / 4.5f;
 	else
-		x = zimg_x_powf((x + (TRANSFER_ALPHA - 1.0f)) / TRANSFER_ALPHA, 1.0f / 0.45f);
+		x = zimg_x_powf((x + (REC709_ALPHA - 1.0f)) / REC709_ALPHA, 1.0f / 0.45f);
 
 	fpu_restore(w);
 	return x;
 }
+
+float srgb_gamma(float x)
+{
+	unsigned w = fpu_save();
+	fpu_set_single();
+
+	if (x < SRGB_BETA)
+		x = x * 12.92f;
+	else
+		x = SRGB_ALPHA * zimg_x_powf(x, 1.0f / 2.4f) - (SRGB_ALPHA - 1.0f);
+
+	fpu_restore(w);
+	return x;
+}
+
+float srgb_inverse_gamma(float x)
+{
+	unsigned w = fpu_save();
+	fpu_set_single();
+
+	if (x < 12.92f * SRGB_BETA)
+		x = x / 12.92f;
+	else
+		x = zimg_x_powf((x + (SRGB_ALPHA - 1.0f)) / SRGB_ALPHA, 2.4f);
+
+	fpu_restore(w);
+	return x;
+}
+
 
 float st_2084_gamma(float x)
 {
@@ -389,6 +446,16 @@ std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu)
 std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu)
 {
 	return ztd::make_unique<Rec709InverseGammaOperationC>();
+}
+
+std::unique_ptr<Operation> create_srgb_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<SRGBGammaOperationC>();
+}
+
+std::unique_ptr<Operation> create_srgb_inverse_gamma_operation(CPUClass cpu)
+{
+	return ztd::make_unique<SRGBInverseGammaOperationC>();
 }
 
 std::unique_ptr<Operation> create_st2084_gamma_operation(double peak_luminance, CPUClass cpu)

@@ -223,14 +223,15 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 	using zimg::colorspace::TransferCharacteristics;
 
 	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 8> map{
-		{ ZIMG_TRANSFER_709,         TransferCharacteristics::REC_709 },
-		{ ZIMG_TRANSFER_UNSPECIFIED, TransferCharacteristics::UNSPECIFIED },
-		{ ZIMG_TRANSFER_601,         TransferCharacteristics::REC_709 },
-		{ ZIMG_TRANSFER_2020_10,     TransferCharacteristics::REC_709 },
-		{ ZIMG_TRANSFER_2020_12,     TransferCharacteristics::REC_709 },
-		{ ZIMG_TRANSFER_LINEAR,      TransferCharacteristics::LINEAR },
-		{ ZIMG_TRANSFER_ST2084,      TransferCharacteristics::ST_2084 },
-		{ ZIMG_TRANSFER_ARIB_B67,    TransferCharacteristics::ARIB_B67 },
+		{ ZIMG_TRANSFER_709,           TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_UNSPECIFIED,   TransferCharacteristics::UNSPECIFIED },
+		{ ZIMG_TRANSFER_601,           TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_IEC_61966_2_1, TransferCharacteristics::SRGB },
+		{ ZIMG_TRANSFER_2020_10,       TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_2020_12,       TransferCharacteristics::REC_709 },
+		{ ZIMG_TRANSFER_LINEAR,        TransferCharacteristics::LINEAR },
+		{ ZIMG_TRANSFER_ST2084,        TransferCharacteristics::ST_2084 },
+		{ ZIMG_TRANSFER_ARIB_B67,      TransferCharacteristics::ARIB_B67 },
 	};
 	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
 }

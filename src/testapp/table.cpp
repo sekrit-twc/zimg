@@ -70,10 +70,11 @@ const zimg::static_string_map<MatrixCoefficients, 7> g_matrix_table{
 	{ "2020_cl",  MatrixCoefficients::REC_2020_CL },
 };
 
-const zimg::static_string_map<TransferCharacteristics, 5> g_transfer_table{
+const zimg::static_string_map<TransferCharacteristics, 6> g_transfer_table{
 	{ "unspec",   TransferCharacteristics::UNSPECIFIED },
 	{ "linear",   TransferCharacteristics::LINEAR },
 	{ "709",      TransferCharacteristics::REC_709 },
+	{ "srgb",     TransferCharacteristics::SRGB },
 	{ "st_2084",  TransferCharacteristics::ST_2084 },
 	{ "arib_b67", TransferCharacteristics::ARIB_B67 },
 };

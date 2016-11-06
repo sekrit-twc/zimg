@@ -68,6 +68,31 @@ TEST(GammaTest, test_rec709)
 	test_monotonic(zimg::colorspace::rec_709_inverse_gamma, -1.0f, 0.0f, 1UL << 16);
 }
 
+TEST(GammaTest, test_srgb)
+{
+	EXPECT_EQ(0.0f, zimg::colorspace::srgb_gamma(0.0f));
+	EXPECT_EQ(1.0f, zimg::colorspace::srgb_gamma(1.0f));
+	EXPECT_EQ(0.0f, zimg::colorspace::srgb_inverse_gamma(0.0f));
+	EXPECT_EQ(1.0f, zimg::colorspace::srgb_inverse_gamma(1.0f));
+
+	SCOPED_TRACE("forward");
+	test_monotonic(zimg::colorspace::srgb_gamma, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("reverse");
+	test_monotonic(zimg::colorspace::srgb_inverse_gamma, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("forward->reverse");
+	test_accuracy(zimg::colorspace::srgb_gamma, zimg::colorspace::srgb_inverse_gamma, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("reverse->forward");
+	test_accuracy(zimg::colorspace::srgb_inverse_gamma, zimg::colorspace::srgb_gamma, 0.0f, 1.0f, 1e-6f, 1e-6f);
+
+	SCOPED_TRACE("wtw");
+	test_monotonic(zimg::colorspace::srgb_gamma, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::srgb_inverse_gamma, 1.0f, 2.0f, 1UL << 16);
+
+	SCOPED_TRACE("btb");
+	test_monotonic(zimg::colorspace::srgb_gamma, -1.0f, 0.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::srgb_inverse_gamma, -1.0f, 0.0f, 1UL << 16);
+}
+
 TEST(GammaTest, test_st_2084)
 {
 	EXPECT_EQ(0.0f, zimg::colorspace::st_2084_gamma(0.0f));
