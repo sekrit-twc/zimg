@@ -31,46 +31,24 @@ class close_handle {
 	struct handle {
 		::HANDLE h = INVALID_HANDLE_VALUE;
 
-		handle(nullptr_t x = nullptr)
-		{
-		}
+		handle(nullptr_t x = nullptr) {}
+		handle(::HANDLE h) : h{ h } {}
 
-		handle(::HANDLE h) : h{ h }
-		{
-		}
+		operator ::HANDLE() const { return h; }
 
-		operator ::HANDLE() const
-		{
-			return h;
-		}
-
-		bool operator==(nullptr_t) const
-		{
-			return h != 0 && h != INVALID_HANDLE_VALUE;
-		}
-
-		bool operator!=(nullptr_t) const
-		{
-			return !(*this == nullptr);
-		}
+		bool operator==(nullptr_t) const { return h != 0 && h != INVALID_HANDLE_VALUE; }
+		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
 	};
-
 public:
 	typedef handle pointer;
 
-	void operator()(handle h)
-	{
-		::CloseHandle(h);
-	}
+	void operator()(handle h) { ::CloseHandle(h); }
 };
 
 typedef std::unique_ptr<void, win32::close_handle> handle_uptr;
 
 struct unmap_view_of_file {
-	void operator()(void *ptr)
-	{
-		::UnmapViewOfFile(ptr);
-	}
+	void operator()(void *ptr) { ::UnmapViewOfFile(ptr); }
 };
 
 void trap_error(const char *msg = "")
@@ -112,78 +90,42 @@ void create_new_file(const char *path, size_t size)
 #else
 namespace posix {
 
-struct close_fd {
+class close_fd {
 	struct descriptor {
 		int fd = -1;
 
-		descriptor(nullptr_t x = nullptr)
-		{
-		}
+		descriptor(nullptr_t x = nullptr) {}
+		descriptor(int fd) : fd{ fd } {}
 
-		descriptor(int fd) : fd{ fd }
-		{
-		}
+		operator int() const { return fd; }
 
-		operator int() const
-		{
-			return fd;
-		}
-
-		bool operator==(nullptr_t) const
-		{
-			return fd < 0;
-		}
-
-		bool operator!=(nullptr_t) const
-		{
-			return !(*this == nullptr);
-		}
+		bool operator==(nullptr_t) const { return fd < 0; }
+		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
 	};
-
+public:
 	typedef descriptor pointer;
 
-	void operator()(descriptor x)
-	{
-		::close(x);
-	}
+	void operator()(descriptor x) { ::close(x); }
 };
 
-struct munmap_file {
+class munmap_file {
 	struct map_pointer {
 		void *ptr = MAP_FAILED;
 
-		map_pointer(nullptr_t x = nullptr)
-		{
-		}
+		map_pointer(nullptr_t x = nullptr) {}
+		map_pointer(void *ptr) : ptr{ ptr } {}
 
-		map_pointer(void *ptr) : ptr{ ptr }
-		{
-		}
+		operator void *() const { return ptr; }
 
-		operator void *() const
-		{
-			return ptr;
-		}
-
-		bool operator==(nullptr_t) const
-		{
-			return ptr == MAP_FAILED;
-		}
-
-		bool operator!=(nullptr_t) const
-		{
-			return !(*this == nullptr);
-		}
+		bool operator==(nullptr_t) const { return ptr == MAP_FAILED; }
+		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
 	};
-
+public:
 	typedef map_pointer pointer;
 
-	size_t size;
+	size_t size = 0;
 
-	void operator()(map_pointer ptr)
-	{
-		::munmap(ptr, size);
-	}
+	void operator()(map_pointer ptr) { ::munmap(ptr, size); }
 };
 
 void trap_error(const char *msg = "")
@@ -330,8 +272,12 @@ class MemoryMappedFile::impl {
 	{
 		std::unique_ptr<void, posix::close_fd> fd_uptr;
 		int fd;
+		long page_size;
 		off_t file_size;
 		void *ptr;
+
+		if ((page_size = sysconf(_SC_PAGESIZE)) < 0)
+			posix::trap_error("error determining page size");
 
 		if ((fd = ::open(path, open_flags)) < 0)
 			posix::trap_error("error opening file");
@@ -344,8 +290,10 @@ class MemoryMappedFile::impl {
 		if ((ptr = ::mmap(nullptr, file_size, prot, mmap_flags, fd, 0)) == MAP_FAILED)
 			posix::trap_error("error mapping file");
 
-		m_ptr.reset(ptr);
 		m_size = static_cast<size_t>(file_size);
+
+		m_ptr.reset(ptr);
+		m_ptr.get_deleter().size = m_size % page_size ? m_size + page_size - m_size % page_size : m_size;
 	}
 public:
 	impl() : m_size{}, m_writable{}
