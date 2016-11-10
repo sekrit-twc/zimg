@@ -4,11 +4,12 @@
 #include "mmap.h"
 #include "win32_bitmap.h"
 
+namespace {
 
 // From Windows.h
-#define DWORD uint32_t
-#define WORD  uint16_t
-#define LONG  int32_t
+typedef uint32_t DWORD;
+typedef uint16_t WORD;
+typedef int32_t LONG;
 
 #define BMP_MAGIC 0x4d42
 
@@ -35,9 +36,6 @@ typedef struct tagBITMAPINFOHEADER {
 	DWORD biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 #pragma pack(pop)
-
-
-namespace {
 
 static size_t bitmap_row_size(int width, int bit_count)
 {
