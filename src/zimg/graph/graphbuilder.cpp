@@ -97,21 +97,21 @@ void validate_state(const GraphBuilder::state &state)
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)
 			throw error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
-		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "GREY color family cannot be RGB" };
+		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
+			throw error::ColorFamilyMismatch{ "GREY color family cannot have RGB matrix coefficients" };
 	}
 
 	if (is_rgb(state)) {
 		if (state.subsample_w || state.subsample_h)
-			throw zimg::error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
-		if (state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::UNSPECIFIED &&
-			state.colorspace.matrix != zimg::colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
+			throw error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
+		if (state.colorspace.matrix != colorspace::MatrixCoefficients::UNSPECIFIED &&
+			state.colorspace.matrix != colorspace::MatrixCoefficients::RGB)
+			throw error::ColorFamilyMismatch{ "RGB color family cannot have YUV matrix coefficients" };
 	}
 
 	if (is_yuv(state)) {
-		if (state.colorspace.matrix == zimg::colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "YUV color family cannot be RGB" };
+		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
+			throw error::ColorFamilyMismatch{ "YUV color family cannot have RGB matrix coefficients" };
 	}
 
 	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::PROGRESSIVE)
@@ -295,7 +295,7 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 	if (m_state.colorspace == colorspace)
 		return;
 
-	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
+	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
 
 	auto conv = colorspace::ColorspaceConversion{ m_state.width, m_state.height }
 		.set_csp_in(m_state.colorspace)
@@ -323,7 +323,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 	if (src_format == format)
 		return;
 
-	CPUClass cpu = params ? params->cpu : zimg::CPUClass::AUTO;
+	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
 	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::NONE;
 
 	auto conv = depth::DepthConversion{ m_state.width, m_state.height }
