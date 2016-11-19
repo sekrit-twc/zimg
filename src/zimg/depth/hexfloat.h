@@ -3,8 +3,7 @@
 
 // ICL is not able to parse the constexpr implementation.
 #ifdef __INTEL_COMPILER
-#include <stdlib.h>
-#define HEX_LF_C(num) strtof(#num, 0)
+#define HEX_LF_C(num) num
 #else
 #include <limits>
 
