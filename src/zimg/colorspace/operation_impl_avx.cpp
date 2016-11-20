@@ -105,7 +105,7 @@ void matrix_filter_line_avx(const float *matrix, const float * const * RESTRICT 
 }
 
 
-class MatrixOperationAVX : public MatrixOperationImpl {
+class MatrixOperationAVX final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationAVX(const Matrix3x3 &m) :
 		MatrixOperationImpl(m)
