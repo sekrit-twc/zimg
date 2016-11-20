@@ -150,9 +150,6 @@
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\propagate_const.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>

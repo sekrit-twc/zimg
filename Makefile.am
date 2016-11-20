@@ -79,7 +79,6 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/common/matrix.cpp \
 	src/zimg/common/matrix.h \
 	src/zimg/common/pixel.h \
-	src/zimg/common/propagate_const.h \
 	src/zimg/common/static_map.h \
 	src/zimg/common/zassert.h \
 	src/zimg/depth/depth_convert.cpp \

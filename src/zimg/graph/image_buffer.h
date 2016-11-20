@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <limits>
 #include <type_traits>
-#include "common/propagate_const.h"
 
 namespace zimg {
 namespace graph {
@@ -21,15 +20,18 @@ const unsigned BUFFER_MAX = -1;
  */
 template <class T>
 class ImageBuffer {
+	typedef typename std::conditional<std::is_const<T>::value, const void, void>::type void_pointer;
+	typedef typename std::conditional<std::is_const<T>::value, const char, char>::type char_pointer;
+
 	// Use a void pointer to ensure all instantiations are layout compatible.
-	typename propagate_const<T, void>::type *m_data;
+	void_pointer *m_data;
 	ptrdiff_t m_stride;
 	unsigned m_mask;
 
 	T *at_line(unsigned i) const
 	{
-		auto *byte_ptr = static_cast<typename propagate_const<T, char>::type *>(m_data);
-		return reinterpret_cast<T *>(byte_ptr + static_cast<ptrdiff_t>(i & m_mask) * m_stride);
+		char_pointer *data = static_cast<char_pointer *>(m_data);
+		return reinterpret_cast<T *>(data + static_cast<ptrdiff_t>(i & m_mask) * m_stride);
 	}
 public:
 	/**

@@ -73,7 +73,6 @@
     <ClInclude Include="..\..\src\zimg\common\make_unique.h" />
     <ClInclude Include="..\..\src\zimg\common\matrix.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
-    <ClInclude Include="..\..\src\zimg\common\propagate_const.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
     <ClInclude Include="..\..\src\zimg\common\x86util.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
