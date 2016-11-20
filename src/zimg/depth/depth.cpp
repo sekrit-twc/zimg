@@ -33,8 +33,7 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 	pixel_out{},
 	dither_type{ DitherType::NONE },
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 {

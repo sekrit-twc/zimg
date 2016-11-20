@@ -5,54 +5,37 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <type_traits>
 #include "common/pixel.h"
 
 namespace zimg {
 namespace depth {
 
 template <class T>
-T identity(T x)
-{
-	return x;
-}
+constexpr T &identity(T x) noexcept { return x; }
 
 template <class T, class U>
-T bit_cast(const U &x)
+T bit_cast(const U &x) noexcept
 {
 	static_assert(sizeof(T) == sizeof(U), "object sizes must match");
+	static_assert(std::is_pod<T>::value && std::is_pod<U>::value, "object types must be POD");
 
 	T ret;
 	std::copy_n(reinterpret_cast<const char *>(&x), sizeof(x), reinterpret_cast<char *>(&ret));
 	return ret;
 }
 
-inline int32_t numeric_max(int bits)
+constexpr int32_t numeric_max(int bits) noexcept
 {
 	return (1L << bits) - 1;
 }
 
-inline int32_t integer_offset(const PixelFormat &format)
+constexpr int32_t integer_offset(const PixelFormat &format) noexcept
 {
-	if (pixel_is_float(format.type))
-		return 0;
-	else if (format.chroma)
-		return 1L << (format.depth - 1);
-	else if (!format.fullrange)
-		return 16L << (format.depth - 8);
-	else
-		return 0;
-}
-
-inline int32_t integer_range(const PixelFormat &format)
-{
-	if (pixel_is_float(format.type))
-		return 1;
-	else if (format.fullrange)
-		return numeric_max(format.depth);
-	else if (format.chroma && !format.ycgco)
-		return 224L << (format.depth - 8);
-	else
-		return 219L << (format.depth - 8);
+	return pixel_is_float(format.type) ? 0
+		: format.chroma ? 1L << (format.depth - 1)
+		: !format.fullrange ? 16L << (format.depth - 8)
+		: 0;
 }
 
 constexpr int32_t integer_range(const PixelFormat &format) noexcept

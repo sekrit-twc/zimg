@@ -99,7 +99,6 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu)
 bool needs_dither_f16c_func_x86(CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-
 	return (cpu == CPUClass::AUTO && !caps.avx2) || cpu < CPUClass::X86_AVX2;
 }
 
