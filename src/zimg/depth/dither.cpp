@@ -152,7 +152,7 @@ public:
 	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const = 0;
 };
 
-class NoneDitherTable : public OrderedDitherTable {
+class NoneDitherTable final : public OrderedDitherTable {
 	AlignedVector<float> m_table;
 public:
 	NoneDitherTable()
@@ -166,7 +166,7 @@ public:
 	}
 };
 
-class BayerDitherTable : public OrderedDitherTable {
+class BayerDitherTable final : public OrderedDitherTable {
 	AlignedVector<float> m_table;
 public:
 	BayerDitherTable()
@@ -186,7 +186,7 @@ public:
 	}
 };
 
-class RandomDitherTable : public OrderedDitherTable {
+class RandomDitherTable final : public OrderedDitherTable {
 	static const size_t RAND_NUM = 1 << 14;
 
 	AlignedVector<float> m_table;
@@ -228,7 +228,7 @@ public:
 	}
 };
 
-class OrderedDither : public graph::ImageFilterBase {
+class OrderedDither final : public graph::ImageFilterBase {
 	std::unique_ptr<OrderedDitherTable> m_dither_table;
 	dither_convert_func m_func;
 	dither_f16c_func m_f16c;
@@ -322,7 +322,7 @@ public:
 	}
 };
 
-class ErrorDiffusion : public graph::ImageFilterBase {
+class ErrorDiffusion final : public graph::ImageFilterBase {
 public:
 	typedef void(*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
