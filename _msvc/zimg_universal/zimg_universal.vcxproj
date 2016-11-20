@@ -38,6 +38,7 @@
     <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\f16c_ivb.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\f16c_sse2.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\quantize.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />
