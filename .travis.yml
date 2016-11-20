@@ -3,6 +3,18 @@ language: cpp
 
 matrix:
   include:
+    # GCC 4.9.
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-4.9
+            - g++-4.9
+      env: 
+        - MY_CC: gcc-4.9
+        - MY_CXX: g++-4.9
     # GCC 6.
     - compiler: gcc
       addons:
