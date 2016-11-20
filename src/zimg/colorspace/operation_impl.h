@@ -32,17 +32,17 @@ const float ARIB_B67_A = 0.17883277f;
 const float ARIB_B67_B = 0.28466892f;
 const float ARIB_B67_C = 0.55991073f;
 
-float rec_709_gamma(float x);
-float rec_709_inverse_gamma(float x);
+float rec_709_gamma(float x) noexcept;
+float rec_709_inverse_gamma(float x) noexcept;
 
-float srgb_gamma(float x);
-float srgb_inverse_gamma(float x);
+float srgb_gamma(float x) noexcept;
+float srgb_inverse_gamma(float x) noexcept;
 
-float st_2084_gamma(float x);
-float st_2084_inverse_gamma(float x);
+float st_2084_gamma(float x) noexcept;
+float st_2084_inverse_gamma(float x) noexcept;
 
-float arib_b67_gamma(float x);
-float arib_b67_inverse_gamma(float x);
+float arib_b67_gamma(float x) noexcept;
+float arib_b67_inverse_gamma(float x) noexcept;
 
 /**
  * Base class for matrix operation implementations.

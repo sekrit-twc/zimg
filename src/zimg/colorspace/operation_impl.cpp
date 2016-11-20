@@ -277,7 +277,7 @@ public:
 } // namespace
 
 
-float rec_709_gamma(float x)
+float rec_709_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -291,7 +291,7 @@ float rec_709_gamma(float x)
 	return x;
 }
 
-float rec_709_inverse_gamma(float x)
+float rec_709_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -305,7 +305,7 @@ float rec_709_inverse_gamma(float x)
 	return x;
 }
 
-float srgb_gamma(float x)
+float srgb_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -319,7 +319,7 @@ float srgb_gamma(float x)
 	return x;
 }
 
-float srgb_inverse_gamma(float x)
+float srgb_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -334,7 +334,7 @@ float srgb_inverse_gamma(float x)
 }
 
 
-float st_2084_gamma(float x)
+float st_2084_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -361,7 +361,7 @@ float st_2084_gamma(float x)
 	return x;
 }
 
-float st_2084_inverse_gamma(float x)
+float st_2084_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -380,7 +380,7 @@ float st_2084_inverse_gamma(float x)
 	return x;
 }
 
-float arib_b67_gamma(float x)
+float arib_b67_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -397,7 +397,7 @@ float arib_b67_gamma(float x)
 	return x;
 }
 
-float arib_b67_inverse_gamma(float x)
+float arib_b67_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
