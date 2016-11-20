@@ -3,9 +3,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <immintrin.h>
-#ifdef __clang__
-  #include <x86intrin.h>
-#endif
 #include "common/align.h"
 #include "common/ccdep.h"
 
