@@ -36,26 +36,28 @@ struct PixelTraits {
 };
 
 /**
+ * Table used by {@link pixel_get_traits}.
+ */
+constexpr PixelTraits pixel_traits_table[] = {
+	{ sizeof(uint8_t),   8, AlignmentOf<uint8_t>::value,  true },
+	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, true },
+	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, false },
+	{ sizeof(float),    32, AlignmentOf<float>::value,    false },
+};
+
+/**
  * Query traits for a given pixel type.
  *
  * @param type pixel type
  * @return static reference to traits structure
  */
-inline const PixelTraits &pixel_get_traits(PixelType type)
+constexpr const PixelTraits &pixel_get_traits(PixelType type) noexcept
 {
 	static_assert(std::numeric_limits<float>::is_iec559, "IEEE-754 not detected");
-
-	static const PixelTraits traits[] = {
-		{ sizeof(uint8_t),   8, AlignmentOf<uint8_t>::value,  true },
-		{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, true },
-		{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, false },
-		{ sizeof(float),    32, AlignmentOf<float>::value,    false },
-	};
-	static_assert(sizeof(traits) / sizeof(traits[0]) == static_cast<int>(PixelType::FLOAT) + 1,
+	static_assert(sizeof(pixel_traits_table) / sizeof(pixel_traits_table[0]) == static_cast<int>(PixelType::FLOAT) + 1,
 	              "table size incorrect");
-
-	zassert_d(type >= PixelType::BYTE && type <= PixelType::FLOAT, "pixel type out of range");
-	return traits[static_cast<int>(type)];
+	// zassert_d(type >= PixelType::BYTE && type <= PixelType::FLOAT, "pixel type out of range");
+	return pixel_traits_table[static_cast<int>(type)];
 }
 
 /**
@@ -64,7 +66,7 @@ inline const PixelTraits &pixel_get_traits(PixelType type)
  * @param type pixel type
  * @return size
  */
-inline unsigned pixel_size(PixelType type)
+constexpr unsigned pixel_size(PixelType type) noexcept
 {
 	return pixel_get_traits(type).size;
 }
@@ -75,7 +77,7 @@ inline unsigned pixel_size(PixelType type)
  * @param type pixel type
  * @return bit depth
  */
-inline unsigned pixel_depth(PixelType type)
+constexpr unsigned pixel_depth(PixelType type) noexcept
 {
 	return pixel_get_traits(type).depth;
 }
@@ -86,7 +88,7 @@ inline unsigned pixel_depth(PixelType type)
  * @param type pixel type
  * @return alignment
  */
-inline unsigned pixel_alignment(PixelType type)
+constexpr unsigned pixel_alignment(PixelType type) noexcept
 {
 	return pixel_get_traits(type).alignment;
 }
@@ -97,7 +99,7 @@ inline unsigned pixel_alignment(PixelType type)
  * @param type pixel type
  * @return true if integral, else false
  */
-inline bool pixel_is_integer(PixelType type)
+constexpr bool pixel_is_integer(PixelType type) noexcept
 {
 	return pixel_get_traits(type).is_integer;
 }
@@ -108,7 +110,7 @@ inline bool pixel_is_integer(PixelType type)
  * @param type pixel type
  * @return true if float, else false
  */
-inline bool pixel_is_float(PixelType type)
+constexpr bool pixel_is_float(PixelType type) noexcept
 {
 	return !pixel_is_integer(type);
 }
@@ -126,14 +128,13 @@ struct PixelFormat {
 	/**
 	 * Default construct PixelFormat, initializing it with an invalid format.
 	 */
-	PixelFormat() :
+	constexpr PixelFormat() noexcept :
 		type{},
 		depth{},
 		fullrange{},
 		chroma{},
 		ycgco{}
-	{
-	}
+	{}
 
 	/**
 	 * Construct PixelFormat with default parameters for a given pixel type,
@@ -141,14 +142,13 @@ struct PixelFormat {
 	 *
 	 * @param type pixel type
 	 */
-	PixelFormat(PixelType type) :
+	constexpr PixelFormat(PixelType type) noexcept :
 		type{ type },
 		depth{ pixel_depth(type) },
 		fullrange{},
 		chroma{},
 		ycgco{}
-	{
-	}
+	{}
 
 	/**
 	 * Initialize PixelFormat with given parameters.
@@ -158,18 +158,18 @@ struct PixelFormat {
 	 * @param fullrange true if full range, else false
 	 * @param chroma true if chroma, else false
 	 */
-	PixelFormat(PixelType type, unsigned depth, bool fullrange = false, bool chroma = false, bool ycgco = false) :
+	constexpr PixelFormat(PixelType type, unsigned depth, bool fullrange = false, bool chroma = false, bool ycgco = false) noexcept :
 		type{ type },
 		depth{ depth },
 		fullrange{ fullrange },
 		chroma{ chroma },
 		ycgco{ ycgco }
-	{
-	}
+	{}
 };
 
 /**
  * Compare PixelFormat structures for equality.
+ *
  * Integer formats are considered equal if all fields match, whereas
  * floating-point formats are defined only by their type and chroma.
  *
@@ -177,12 +177,11 @@ struct PixelFormat {
  * @param b rhs structure
  * @return true if equal, else false
  */
-inline bool operator==(const PixelFormat &a, const PixelFormat &b)
+constexpr bool operator==(const PixelFormat &a, const PixelFormat &b) noexcept
 {
-	if (pixel_is_float(a.type))
-		return a.type == b.type && a.chroma == b.chroma;
-	else
-		return a.type == b.type && a.depth == b.depth && a.fullrange == b.fullrange && a.chroma == b.chroma;
+	return pixel_is_float(a.type)
+		? a.type == b.type && a.chroma == b.chroma
+		: a.type == b.type && a.depth == b.depth && a.fullrange == b.fullrange && a.chroma == b.chroma;
 }
 
 /**
@@ -190,7 +189,7 @@ inline bool operator==(const PixelFormat &a, const PixelFormat &b)
  *
  * @see operator==(const PixelFormat &, const PixelFormat &)
  */
-inline bool operator!=(const PixelFormat &a, const PixelFormat &b)
+constexpr bool operator!=(const PixelFormat &a, const PixelFormat &b) noexcept
 {
 	return !(a == b);
 }

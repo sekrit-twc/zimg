@@ -20,7 +20,7 @@ enum class CPUClass {
 #endif // ZIMG_X86
 };
 
-bool cpu_has_fast_f16(CPUClass cpu);
+bool cpu_has_fast_f16(CPUClass cpu) noexcept;
 
 
 #ifdef ZIMG_X86
@@ -46,7 +46,7 @@ struct X86Capabilities {
  *
  * @return capabilities
  */
-X86Capabilities query_x86_capabilities();
+X86Capabilities query_x86_capabilities() noexcept;
 
 #endif // ZIMG_X86
 

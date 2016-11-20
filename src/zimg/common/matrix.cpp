@@ -4,29 +4,12 @@
 
 namespace zimg {
 
-namespace {
-
 template <class T>
-struct Equals {
-	T value;
-
-	template <class U>
-	bool operator()(const U &other) const
-	{
-		return value == other;
-	}
-};
-
-} // namespace
-
-
-template <class T>
-RowMatrix<T>::proxy::proxy(RowMatrix *matrix, size_type i, size_type j) :
+RowMatrix<T>::proxy::proxy(RowMatrix *matrix, size_type i, size_type j) noexcept :
 	matrix{ matrix },
 	i{ i },
 	j{ j }
-{
-}
+{}
 
 template <class T>
 auto RowMatrix<T>::proxy::operator=(const T &val) const -> const proxy &
@@ -62,43 +45,34 @@ auto RowMatrix<T>::proxy::operator/=(const T &val) const -> const proxy &
 }
 
 template <class T>
-RowMatrix<T>::proxy::operator T() const
-{
-	return matrix->val(i, j);
-}
+RowMatrix<T>::proxy::operator T() const noexcept { return matrix->val(i, j); }
 
 template <class T>
-RowMatrix<T>::row_proxy::row_proxy(RowMatrix *matrix, size_type i) :
+RowMatrix<T>::row_proxy::row_proxy(RowMatrix *matrix, size_type i) noexcept :
 	matrix{ matrix },
 	i{ i }
-{
-}
+{}
 
 template <class T>
-auto RowMatrix<T>::row_proxy::operator[](size_type j) const -> proxy
+auto RowMatrix<T>::row_proxy::operator[](size_type j) const noexcept -> proxy
 {
 	return{ matrix, i, j };
 }
 
 template <class T>
-RowMatrix<T>::row_const_proxy::row_const_proxy(const RowMatrix *matrix, size_type i) :
+RowMatrix<T>::row_const_proxy::row_const_proxy(const RowMatrix *matrix, size_type i) noexcept :
 	matrix{ matrix },
 	i{ i }
-{
-}
+{}
 
 template <class T>
-T RowMatrix<T>::row_const_proxy::operator[](size_type j) const
+T RowMatrix<T>::row_const_proxy::operator[](size_type j) const noexcept
 {
 	return matrix->val(i, j);
 }
 
 template <class T>
-RowMatrix<T>::RowMatrix() :
-	m_rows{},
-	m_cols{}
-{
-}
+RowMatrix<T>::RowMatrix() noexcept : m_rows{}, m_cols{} {}
 
 template <class T>
 RowMatrix<T>::RowMatrix(size_type m, size_type n) :
@@ -106,18 +80,17 @@ RowMatrix<T>::RowMatrix(size_type m, size_type n) :
 	m_offsets(m),
 	m_rows{ m },
 	m_cols{ n }
-{
-}
+{}
 
 template <class T>
-void RowMatrix<T>::check_bounds(size_type i, size_type j) const
+void RowMatrix<T>::check_bounds(size_type i, size_type j) const noexcept
 {
 	zassert_d(i < m_rows, "row index out of bounds");
 	zassert_d(j < m_cols, "column index out of bounds");
 }
 
 template <class T>
-T RowMatrix<T>::val(size_type i, size_type j) const
+T RowMatrix<T>::val(size_type i, size_type j) const noexcept
 {
 	check_bounds(i, j);
 
@@ -156,39 +129,33 @@ T &RowMatrix<T>::ref(size_type i, size_type j)
 }
 
 template <class T>
-auto RowMatrix<T>::rows() const -> size_type
-{
-	return m_rows;
-}
+auto RowMatrix<T>::rows() const noexcept -> size_type { return m_rows; }
 
 template <class T>
-auto RowMatrix<T>::cols() const -> size_type
-{
-	return m_cols;
-}
+auto RowMatrix<T>::cols() const noexcept -> size_type { return m_cols; }
 
 template <class T>
-auto RowMatrix<T>::row_left(size_type i) const -> size_type
+auto RowMatrix<T>::row_left(size_type i) const noexcept -> size_type
 {
 	check_bounds(i, 0);
 	return m_offsets[i];
 }
 
 template <class T>
-auto RowMatrix<T>::row_right(size_type i) const -> size_type
+auto RowMatrix<T>::row_right(size_type i) const noexcept -> size_type
 {
 	check_bounds(i, 0);
 	return m_offsets[i] + m_storage[i].size();
 }
 
 template <class T>
-auto RowMatrix<T>::operator[](size_type i) const -> row_const_proxy
+auto RowMatrix<T>::operator[](size_type i) noexcept -> row_proxy
 {
 	return{ this, i };
 }
 
 template <class T>
-auto RowMatrix<T>::operator[](size_type i) -> row_proxy
+auto RowMatrix<T>::operator[](size_type i) const noexcept -> row_const_proxy
 {
 	return{ this, i };
 }
@@ -196,13 +163,13 @@ auto RowMatrix<T>::operator[](size_type i) -> row_proxy
 template <class T>
 void RowMatrix<T>::compress()
 {
-	Equals<T> eq_zero{ static_cast<T>(0) };
+	auto not_zero = [](T x) { return x != 0; };
 
 	for (size_type i = 0; i < m_rows; ++i) {
 		auto &row_data = m_storage[i];
 
-		auto left = std::find_if_not(row_data.cbegin(), row_data.cend(), eq_zero) - row_data.cbegin();
-		auto right = row_data.size() - (std::find_if_not(row_data.crbegin(), row_data.crend() - left, eq_zero) - row_data.crbegin());
+		auto left = std::find_if(row_data.cbegin(), row_data.cend(), not_zero) - row_data.cbegin();
+		auto right = row_data.size() - (std::find_if(row_data.crbegin(), row_data.crend() - left, not_zero) - row_data.crbegin());
 
 		// Shrink if non-empty, else free row.
 		if (right - left) {

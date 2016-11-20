@@ -41,7 +41,9 @@ public:
 	 *
 	 * @param ptr pointer to buffer
 	 */
-	LinearAllocator(void *ptr) : m_ptr{ static_cast<char *>(ptr) }, m_count{}
+	LinearAllocator(void *ptr) noexcept :
+		m_ptr{ static_cast<char *>(ptr) },
+		m_count{}
 	{}
 
 	/**
@@ -75,7 +77,7 @@ public:
 	 *
 	 * @return allocated size
 	 */
-	size_t count() const
+	size_t count() const noexcept
 	{
 		return m_count;
 	}
@@ -91,8 +93,7 @@ public:
 	/**
 	 * Initialize a FakeAllocator.
 	 */
-	FakeAllocator() : m_count{}
-	{}
+	FakeAllocator() noexcept : m_count{} {}
 
 	/**
 	 * @see LinearAllocator::allocate
@@ -118,7 +119,7 @@ public:
 	 *
 	 * @return allocated size
 	 */
-	size_t count() const
+	size_t count() const noexcept
 	{
 		return m_count;
 	}
@@ -136,9 +137,7 @@ struct AlignedAllocator {
 	AlignedAllocator() = default;
 
 	template <class U>
-	AlignedAllocator(const AlignedAllocator<U> &)
-	{
-	}
+	AlignedAllocator(const AlignedAllocator<U> &) noexcept {}
 
 	T *allocate(size_t n) const
 	{
@@ -150,20 +149,13 @@ struct AlignedAllocator {
 		return ptr;
 	}
 
-	void deallocate(void *ptr, size_t) const
+	void deallocate(void *ptr, size_t) const noexcept
 	{
 		zimg_x_aligned_free(ptr);
 	}
 
-	bool operator==(const AlignedAllocator &) const
-	{
-		return true;
-	}
-
-	bool operator!=(const AlignedAllocator &) const
-	{
-		return false;
-	}
+	bool operator==(const AlignedAllocator &) const noexcept { return true; }
+	bool operator!=(const AlignedAllocator &) const noexcept { return false; }
 };
 
 /**
