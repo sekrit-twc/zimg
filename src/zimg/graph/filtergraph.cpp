@@ -1052,7 +1052,16 @@ FilterGraph::callback::operator bool() const
 
 void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right) const
 {
-	if (m_func(m_user, i, left, right))
+	int ret;
+
+	try {
+		ret = m_func(m_user, i, left, right);
+	} catch (...) {
+		zassert_d(false, "user callback must not throw");
+		ret = 1;
+	}
+
+	if (ret)
 		throw error::UserCallbackFailed{ "user callback failed" };
 }
 
