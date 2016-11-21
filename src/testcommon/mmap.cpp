@@ -351,51 +351,39 @@ const MemoryMappedFile::read_tag MemoryMappedFile::READ_TAG{};
 const MemoryMappedFile::write_tag MemoryMappedFile::WRITE_TAG{};
 const MemoryMappedFile::create_tag MemoryMappedFile::CREATE_TAG{};
 
-MemoryMappedFile::MemoryMappedFile() = default;
+MemoryMappedFile::MemoryMappedFile() noexcept = default;
 
-MemoryMappedFile::MemoryMappedFile(MemoryMappedFile &&other) = default;
+MemoryMappedFile::MemoryMappedFile(MemoryMappedFile &&other) noexcept = default;
 
 MemoryMappedFile::MemoryMappedFile(const char *path, read_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_read(path);
+	get_impl()->map_read(path);
 }
 
 MemoryMappedFile::MemoryMappedFile(const char *path, write_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_write(path);
+	get_impl()->map_write(path);
 }
 
 MemoryMappedFile::MemoryMappedFile(const char *path, size_t size, create_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_create(path, size);
+	get_impl()->map_create(path, size);
 }
 
 MemoryMappedFile::~MemoryMappedFile() = default;
 
-MemoryMappedFile &MemoryMappedFile::operator=(MemoryMappedFile &&other) = default;
+MemoryMappedFile &MemoryMappedFile::operator=(MemoryMappedFile &&other) noexcept = default;
 
-size_t MemoryMappedFile::size() const
-{
-	return m_impl->size();
-}
+size_t MemoryMappedFile::size() const noexcept { return get_impl()->size(); }
 
-const void *MemoryMappedFile::read_ptr() const
-{
-	return m_impl->read_ptr();
-}
+const void *MemoryMappedFile::read_ptr() const noexcept { return get_impl()->read_ptr(); }
 
-void *MemoryMappedFile::write_ptr()
-{
-	return m_impl->write_ptr();
-}
+void *MemoryMappedFile::write_ptr() noexcept { return get_impl()->write_ptr(); }
 
-void MemoryMappedFile::flush()
-{
-	m_impl->flush();
-}
+void MemoryMappedFile::flush() { get_impl()->flush(); }
 
 void MemoryMappedFile::close()
 {
-	m_impl->flush();
-	m_impl->unmap();
+	get_impl()->flush();
+	get_impl()->unmap();
 }

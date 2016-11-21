@@ -18,10 +18,13 @@ public:
 	static const create_tag CREATE_TAG;
 private:
 	std::unique_ptr<impl> m_impl;
-public:
-	MemoryMappedFile();
 
-	MemoryMappedFile(MemoryMappedFile &&other);
+	impl *get_impl() { return m_impl.get(); }
+	const impl *get_impl() const { return m_impl.get(); }
+public:
+	MemoryMappedFile() noexcept;
+
+	MemoryMappedFile(MemoryMappedFile &&other) noexcept;
 
 	MemoryMappedFile(const char *path, read_tag);
 
@@ -31,13 +34,13 @@ public:
 
 	~MemoryMappedFile();
 
-	MemoryMappedFile &operator=(MemoryMappedFile &&other);
+	MemoryMappedFile &operator=(MemoryMappedFile &&other) noexcept;
 
-	size_t size() const;
+	size_t size() const noexcept;
 
-	const void *read_ptr() const;
+	const void *read_ptr() const noexcept;
 
-	void *write_ptr();
+	void *write_ptr() noexcept;
 
 	void flush();
 

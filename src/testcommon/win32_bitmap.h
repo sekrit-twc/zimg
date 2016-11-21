@@ -21,8 +21,11 @@ public:
 	static const write_tag WRITE_TAG;
 private:
 	std::unique_ptr<impl> m_impl;
+
+	impl *get_impl() noexcept { return m_impl.get(); }
+	const impl *get_impl() const noexcept { return m_impl.get(); }
 public:
-	WindowsBitmap(WindowsBitmap &&other);
+	WindowsBitmap(WindowsBitmap &&other) noexcept;
 
 	WindowsBitmap(const char *path, read_tag);
 
@@ -32,19 +35,19 @@ public:
 
 	~WindowsBitmap();
 
-	WindowsBitmap &operator=(WindowsBitmap &&other);
+	WindowsBitmap &operator=(WindowsBitmap &&other) noexcept;
 
-	ptrdiff_t stride() const;
+	ptrdiff_t stride() const noexcept;
 
-	int width() const;
+	int width() const noexcept;
 
-	int height() const;
+	int height() const noexcept;
 
-	int bit_count() const;
+	int bit_count() const noexcept;
 
-	const unsigned char *read_ptr() const;
+	const unsigned char *read_ptr() const noexcept;
 
-	unsigned char *write_ptr();
+	unsigned char *write_ptr() noexcept;
 
 	void flush();
 

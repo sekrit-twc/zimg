@@ -206,13 +206,12 @@ public:
 };
 
 
-WindowsBitmap::WindowsBitmap(WindowsBitmap &&other) = default;
+WindowsBitmap::WindowsBitmap(WindowsBitmap &&other) noexcept = default;
 
 WindowsBitmap::WindowsBitmap(const char *path, read_tag)
 {
 	MemoryMappedFile mmap{ path, MemoryMappedFile::READ_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
-
 	m_impl = std::move(impl_);
 }
 
@@ -220,55 +219,29 @@ WindowsBitmap::WindowsBitmap(const char *path, write_tag)
 {
 	MemoryMappedFile mmap{ path, MemoryMappedFile::WRITE_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
-
 	m_impl = std::move(impl_);
 }
 
 WindowsBitmap::WindowsBitmap(const char *path, int width, int height, int bit_count) :
 	m_impl{ new impl{ path, width, height, bit_count} }
-{
-}
+{}
 
 WindowsBitmap::~WindowsBitmap() = default;
 
-WindowsBitmap &WindowsBitmap::operator=(WindowsBitmap &&other) = default;
+WindowsBitmap &WindowsBitmap::operator=(WindowsBitmap &&other) noexcept = default;
 
-ptrdiff_t WindowsBitmap::stride() const
-{
-	return m_impl->stride();
-}
+ptrdiff_t WindowsBitmap::stride() const noexcept { return get_impl()->stride(); }
 
-int WindowsBitmap::width() const
-{
-	return m_impl->width();
-}
+int WindowsBitmap::width() const noexcept { return get_impl()->width(); }
 
-int WindowsBitmap::height() const
-{
-	return m_impl->height();
-}
+int WindowsBitmap::height() const noexcept { return get_impl()->height(); }
 
-int WindowsBitmap::bit_count() const
-{
-	return m_impl->bit_count();
-}
+int WindowsBitmap::bit_count() const noexcept { return get_impl()->bit_count(); }
 
-const unsigned char *WindowsBitmap::read_ptr() const
-{
-	return m_impl->read_ptr();
-}
+const unsigned char *WindowsBitmap::read_ptr() const noexcept { return get_impl()->read_ptr(); }
 
-unsigned char *WindowsBitmap::write_ptr()
-{
-	return m_impl->write_ptr();
-}
+unsigned char *WindowsBitmap::write_ptr() noexcept { return get_impl()->write_ptr(); }
 
-void WindowsBitmap::flush()
-{
-	m_impl->flush();
-}
+void WindowsBitmap::flush() { get_impl()->flush(); }
 
-void WindowsBitmap::close()
-{
-	m_impl->close();
-}
+void WindowsBitmap::close() { get_impl()->close(); }
