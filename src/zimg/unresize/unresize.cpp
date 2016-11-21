@@ -10,7 +10,7 @@ namespace unresize {
 
 namespace {
 
-bool unresize_h_first(double xscale, double yscale)
+bool unresize_h_first(double xscale, double yscale) noexcept
 {
 	double h_first_cost = std::max(xscale, 1.0) * 2.0 + xscale * std::max(yscale, 1.0);
 	double v_first_cost = std::max(yscale, 1.0) + yscale * std::max(xscale, 1.0) * 2.0;
@@ -30,8 +30,7 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 	shift_w{},
 	shift_h{},
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 auto UnresizeConversion::create() const -> filter_pair
 {
