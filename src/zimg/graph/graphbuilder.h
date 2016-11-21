@@ -106,7 +106,7 @@ public:
 		bool approximate_gamma;
 		CPUClass cpu;
 
-		params();
+		params() noexcept;
 	};
 
 	/**
@@ -158,7 +158,7 @@ public:
 	/**
 	 * Default construct GraphBuilder, creating a builder that manages no graph.
 	 */
-	GraphBuilder();
+	GraphBuilder() noexcept;
 
 	/**
 	 * Destroy builder.

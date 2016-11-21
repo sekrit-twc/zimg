@@ -92,7 +92,7 @@ public:
 	 *
 	 * @param other rvalue
 	 */
-	FilterGraph(FilterGraph &&other);
+	FilterGraph(FilterGraph &&other) noexcept;
 
 	/**
 	 * Destroy graph.
@@ -105,7 +105,7 @@ public:
 	 * @param other rvalue
 	 * @return this
 	 */
-	FilterGraph &operator=(FilterGraph &&other);
+	FilterGraph &operator=(FilterGraph &&other) noexcept;
 
 	/**
 	 * Attach a filter to the graph, transferring ownership.

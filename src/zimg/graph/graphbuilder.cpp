@@ -206,6 +206,13 @@ auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -
 }
 
 
+GraphBuilder::params::params() noexcept :
+	dither_type {},
+	peak_luminance{ NAN },
+	approximate_gamma{},
+	cpu{}
+{}
+
 struct GraphBuilder::resize_spec {
 	unsigned width;
 	unsigned height;
@@ -233,7 +240,6 @@ struct GraphBuilder::resize_spec {
 		chroma_location_h{ state.chroma_location_h }
 	{}
 };
-
 
 GraphBuilder::GraphBuilder() noexcept : m_state{} {}
 

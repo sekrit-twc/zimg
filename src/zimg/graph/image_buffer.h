@@ -28,7 +28,7 @@ class ImageBuffer {
 	ptrdiff_t m_stride;
 	unsigned m_mask;
 
-	T *at_line(unsigned i) const
+	T *at_line(unsigned i) const noexcept
 	{
 		char_pointer *data = static_cast<char_pointer *>(m_data);
 		return reinterpret_cast<T *>(data + static_cast<ptrdiff_t>(i & m_mask) * m_stride);
@@ -37,12 +37,7 @@ public:
 	/**
 	 * Default construct ImageBuffer, creating a null buffer.
 	 */
-	ImageBuffer() :
-		m_data{},
-		m_stride{},
-		m_mask{}
-	{
-	}
+	constexpr ImageBuffer() noexcept : m_data{}, m_stride{}, m_mask{} {}
 
 	/**
 	 * Construct an ImageBuffer from pointer and mask.
@@ -51,7 +46,7 @@ public:
 	 * @param stride buffer stride in bytes, may be negative
 	 * @param mask row index mask
 	 */
-	ImageBuffer(T *data, ptrdiff_t stride, unsigned mask) :
+	constexpr ImageBuffer(T *data, ptrdiff_t stride, unsigned mask) noexcept :
 		m_data{ data },
 		m_stride{ stride },
 		m_mask{ mask }
@@ -66,42 +61,31 @@ public:
 	 * @param other original buffer
 	 */
 	template <class U>
-	ImageBuffer(const ImageBuffer<U> &other, typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) :
-		m_data{ other.data() },
-		m_stride{ other.stride() },
-		m_mask{ other.mask() }
-	{
-	}
+	constexpr ImageBuffer(const ImageBuffer<U> &other,
+	                      typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) noexcept :
+		ImageBuffer{ other.data(), other.stride(), other.mask() }
+	{}
 
 	/**
 	 * Get the underlying data pointer.
 	 *
 	 * @return pointer
 	 */
-	T *data() const
-	{
-		return at_line(0);
-	}
+	T *data() const noexcept { return at_line(0); }
 
 	/**
 	 * Get the underlying image stride.
 	 *
 	 * @return stride
 	 */
-	ptrdiff_t stride() const
-	{
-		return m_stride;
-	}
+	ptrdiff_t stride() const noexcept { return m_stride; }
 
 	/**
 	 * Get the underlying row mask.
 	 *
 	 * @return mask
 	 */
-	unsigned mask() const
-	{
-		return m_mask;
-	}
+	unsigned mask() const noexcept { return m_mask; }
 
 	/**
 	 * Get pointer to scanline.
@@ -109,10 +93,7 @@ public:
 	 * @param i row index
 	 * @return pointer to beginning of line
 	 */
-	T *operator[](unsigned i) const
-	{
-		return at_line(i);
-	}
+	T *operator[](unsigned i) const noexcept { return at_line(i); }
 
 	/**
 	 * Cast buffer to another type.
@@ -121,7 +102,7 @@ public:
 	 * @return buffer as other type
 	 */
 	template <class U>
-	const ImageBuffer<U> &static_buffer_cast() const
+	const ImageBuffer<U> &static_buffer_cast() const noexcept
 	{
 		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(nullptr)))>::value,
 		              "type not convertible by static_cast");
@@ -143,10 +124,7 @@ public:
 	/**
 	 * Default construct ColorImageBuffer, creating an array of null buffers.
 	 */
-	ColorImageBuffer() :
-		m_buffer{}
-	{
-	}
+	constexpr ColorImageBuffer() noexcept : m_buffer{} {}
 
 	/**
 	 * Construct a ColorImageBuffer from individual buffers.
@@ -155,10 +133,9 @@ public:
 	 * @param buf2 second channel
 	 * @param buf3 third channel
 	 */
-	ColorImageBuffer(const ImageBuffer<T> &buf1, const ImageBuffer<T> &buf2, const ImageBuffer<T> &buf3) :
+	constexpr ColorImageBuffer(const ImageBuffer<T> &buf1, const ImageBuffer<T> &buf2, const ImageBuffer<T> &buf3) noexcept :
 		m_buffer{ buf1, buf2, buf3 }
-	{
-	}
+	{}
 
 	/**
 	 * Construct a ColorImageBuffer from an implicitly convertible type.
@@ -167,28 +144,22 @@ public:
 	 * @param other original buffer
 	 */
 	template <class U>
-	ColorImageBuffer(const ColorImageBuffer<U> &other, typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) :
-		m_buffer{ other[0], other[1], other[2] }
-	{
-	}
+	constexpr ColorImageBuffer(const ColorImageBuffer<U> &other,
+	                           typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) noexcept :
+		ColorImageBuffer{ other[0], other[1], other[2] }
+	{}
 
 	/**
 	 * Implicit conversion to array of {@link ImageBuffer}.
 	 *
 	 * @return pointer
 	 */
-	operator const ImageBuffer<T> *() const
-	{
-		return m_buffer;
-	}
+	operator const ImageBuffer<T> *() const noexcept { return m_buffer; }
 
 	/**
 	 * @see operator const ImageBuffer<T> *
 	 */
-	operator ImageBuffer<T> *()
-	{
-		return m_buffer;
-	}
+	operator ImageBuffer<T> *() noexcept { return m_buffer; }
 
 	/**
 	* Cast buffer to another type.
@@ -197,7 +168,7 @@ public:
 	* @return buffer as other type
 	*/
 	template <class U>
-	const ColorImageBuffer<U> &static_buffer_cast() const
+	const ColorImageBuffer<U> &static_buffer_cast() const noexcept
 	{
 		static_assert(std::is_standard_layout<decltype(static_cast<U *>(static_cast<T *>(nullptr)))>::value,
 		              "type not convertible by static_cast");
@@ -211,7 +182,7 @@ public:
  * @see ImageBuffer::static_buffer_cast
  */
 template <class U, class T>
-const ImageBuffer<U> &static_buffer_cast(const ImageBuffer<T> &buf)
+const ImageBuffer<U> &static_buffer_cast(const ImageBuffer<T> &buf) noexcept
 {
 	return buf.template static_buffer_cast<U>();
 }
@@ -220,7 +191,7 @@ const ImageBuffer<U> &static_buffer_cast(const ImageBuffer<T> &buf)
  * @see ImageBuffer::static_buffer_cast
  */
 template <class U, class T>
-const ImageBuffer<U> *static_buffer_cast(const ImageBuffer<T> *buf)
+const ImageBuffer<U> *static_buffer_cast(const ImageBuffer<T> *buf) noexcept
 {
 	return &static_buffer_cast<U>(*buf);
 }
@@ -229,7 +200,7 @@ const ImageBuffer<U> *static_buffer_cast(const ImageBuffer<T> *buf)
  * @see ColorImageBuffer::static_buffer_cast
  */
 template <class U, class T>
-const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf)
+const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf) noexcept
 {
 	return buf.template static_buffer_cast<U>();
 }
@@ -240,7 +211,7 @@ const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf)
  * @param count line count, may be {@link BUFFER_MAX}
  * @return mask, may be {@link BUFFER_MAX}
  */
-inline unsigned select_zimg_buffer_mask(unsigned count)
+inline unsigned select_zimg_buffer_mask(unsigned count) noexcept
 {
 	const unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
 

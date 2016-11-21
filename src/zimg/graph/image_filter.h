@@ -171,29 +171,13 @@ public:
 		return{ left, right };
 	}
 
-	unsigned get_simultaneous_lines() const override
-	{
-		return 1;
-	}
+	unsigned get_simultaneous_lines() const override { return 1; }
+	unsigned get_max_buffering() const override { return 1; }
 
-	unsigned get_max_buffering() const override
-	{
-		return 1;
-	}
+	size_t get_context_size() const override { return 0; }
+	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
 
-	size_t get_context_size() const override
-	{
-		return 0;
-	}
-
-	size_t get_tmp_size(unsigned, unsigned) const override
-	{
-		return 0;
-	}
-
-	void init_context(void *ctx) const override
-	{
-	}
+	void init_context(void *ctx) const override {}
 };
 
 ImageFilter::~ImageFilter() = default;
@@ -205,7 +189,7 @@ ImageFilterBase::~ImageFilterBase() = default;
  *
  * @return true if structures are equal, else false
  */
-inline bool operator==(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b)
+constexpr bool operator==(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b) noexcept
 {
 	return a.width == b.width && a.height == b.height && a.type == b.type;
 }
@@ -213,9 +197,9 @@ inline bool operator==(const ImageFilter::image_attributes &a, const ImageFilter
 /**
  * @see operator==(const ImageFilter::image_attributes &, const ImageFilter::image_attributes &)
  */
-inline bool operator!=(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b)
+constexpr bool operator!=(const ImageFilter::image_attributes &a, const ImageFilter::image_attributes &b) noexcept
 {
-	return !operator==(a, b);
+	return !(a == b);
 }
 
 } // namespace graph
