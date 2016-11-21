@@ -13,32 +13,24 @@ double det2(double a00, double a01, double a10, double a11)
 } // namespace
 
 
-Vector3::Vector3(double a, double b, double c) :
-	std::array<double, 3>({ { a, b, c } })
-{}
-
-Matrix3x3::Matrix3x3(const Vector3 &a, const Vector3 &b, const Vector3 &c) :
-	std::array<Vector3, 3>({ { a, b, c } })
-{}
-
-Vector3 operator*(const Vector3 &v1, const Vector3 &v2)
+Vector3 operator*(const Vector3 &v1, const Vector3 &v2) noexcept
 {
 	Vector3 ret;
 
-	for (int i = 0; i < 3; ++i) {
+	for (size_t i = 0; i < 3; ++i) {
 		ret[i] = v1[i] * v2[i];
 	}
 	return ret;
 }
 
-Vector3 operator*(const Matrix3x3 &m, const Vector3 &v)
+Vector3 operator*(const Matrix3x3 &m, const Vector3 &v) noexcept
 {
 	Vector3 ret;
 
-	for (int i = 0; i < 3; ++i) {
+	for (size_t i = 0; i < 3; ++i) {
 		double accum = 0;
 
-		for (int k = 0; k < 3; ++k) {
+		for (size_t k = 0; k < 3; ++k) {
 			accum += m[i][k] * v[k];
 		}
 		ret[i] = accum;
@@ -46,12 +38,12 @@ Vector3 operator*(const Matrix3x3 &m, const Vector3 &v)
 	return ret;
 }
 
-Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b)
+Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b) noexcept
 {
 	Matrix3x3 ret;
 
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j) {
+	for (size_t i = 0; i < 3; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
 			double accum = 0;
 
 			for (int k = 0; k < 3; ++k) {
@@ -63,7 +55,7 @@ Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b)
 	return ret;
 }
 
-double determinant(const Matrix3x3 &m)
+double determinant(const Matrix3x3 &m) noexcept
 {
 	double det = 0;
 
@@ -74,7 +66,7 @@ double determinant(const Matrix3x3 &m)
 	return det;
 }
 
-Matrix3x3 inverse(const Matrix3x3 &m)
+Matrix3x3 inverse(const Matrix3x3 &m) noexcept
 {
 	Matrix3x3 ret;
 	double det = determinant(m);
@@ -92,12 +84,12 @@ Matrix3x3 inverse(const Matrix3x3 &m)
 	return ret;
 }
 
-Matrix3x3 transpose(const Matrix3x3 &m)
+Matrix3x3 transpose(const Matrix3x3 &m) noexcept
 {
 	Matrix3x3 ret;
 
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j) {
+	for (size_t i = 0; i < 3; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
 			ret[i][j] = m[j][i];
 		}
 	}

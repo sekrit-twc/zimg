@@ -124,8 +124,7 @@ public:
 UnresizeImplH::UnresizeImplH(const BilinearContext &context, const image_attributes &attr) :
 	m_context(context),
 	m_attr(attr)
-{
-}
+{}
 
 auto UnresizeImplH::get_flags() const -> filter_flags
 {
@@ -137,10 +136,7 @@ auto UnresizeImplH::get_flags() const -> filter_flags
 	return flags;
 }
 
-auto UnresizeImplH::get_image_attributes() const -> image_attributes
-{
-	return m_attr;
-}
+auto UnresizeImplH::get_image_attributes() const -> image_attributes { return m_attr; }
 
 auto UnresizeImplH::get_required_row_range(unsigned i) const -> pair_unsigned
 {
@@ -161,8 +157,7 @@ unsigned UnresizeImplH::get_max_buffering() const
 UnresizeImplV::UnresizeImplV(const BilinearContext &context, const image_attributes &attr) :
 	m_context(context),
 	m_attr(attr)
-{
-}
+{}
 
 auto UnresizeImplV::get_flags() const -> filter_flags
 {
@@ -175,10 +170,7 @@ auto UnresizeImplV::get_flags() const -> filter_flags
 	return flags;
 }
 
-auto UnresizeImplV::get_image_attributes() const -> image_attributes
-{
-	return m_attr;
-}
+auto UnresizeImplV::get_image_attributes() const -> image_attributes { return m_attr; }
 
 auto UnresizeImplV::get_required_row_range(unsigned) const -> pair_unsigned
 {
@@ -190,15 +182,9 @@ auto UnresizeImplV::get_required_col_range(unsigned, unsigned) const -> pair_uns
 	return{ 0, get_image_attributes().width };
 }
 
-unsigned UnresizeImplV::get_simultaneous_lines() const
-{
-	return graph::BUFFER_MAX;
-}
+unsigned UnresizeImplV::get_simultaneous_lines() const { return graph::BUFFER_MAX; }
 
-unsigned UnresizeImplV::get_max_buffering() const
-{
-	return graph::BUFFER_MAX;
-}
+unsigned UnresizeImplV::get_max_buffering() const { return graph::BUFFER_MAX; }
 
 
 UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type) :
@@ -209,8 +195,7 @@ UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, 
 	orig_dim{},
 	shift{},
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 std::unique_ptr<graph::ImageFilter> UnresizeImplBuilder::create() const
 {

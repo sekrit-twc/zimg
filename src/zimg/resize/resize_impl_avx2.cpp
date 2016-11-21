@@ -461,10 +461,7 @@ public:
 			m_func = resize_line8_h_fp_avx2_jt<Traits>::large[filter.filter_width % 4];
 	}
 
-	unsigned get_simultaneous_lines() const override
-	{
-		return 8;
-	}
+	unsigned get_simultaneous_lines() const override { return 8; }
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
@@ -515,8 +512,7 @@ class ResizeImplV_FP_AVX2 final : public ResizeImplV {
 public:
 	ResizeImplV_FP_AVX2(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, Traits::type_constant })
-	{
-	}
+	{}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{

@@ -31,24 +31,24 @@ class close_handle {
 	struct handle {
 		::HANDLE h = INVALID_HANDLE_VALUE;
 
-		handle(nullptr_t x = nullptr) {}
-		handle(::HANDLE h) : h{ h } {}
+		handle(nullptr_t x = nullptr) noexcept {}
+		handle(::HANDLE h) noexcept : h{ h } {}
 
-		operator ::HANDLE() const { return h; }
+		operator ::HANDLE() const noexcept { return h; }
 
-		bool operator==(nullptr_t) const { return h != 0 && h != INVALID_HANDLE_VALUE; }
-		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
+		bool operator==(nullptr_t) const noexcept { return h != 0 && h != INVALID_HANDLE_VALUE; }
+		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef handle pointer;
 
-	void operator()(handle h) { ::CloseHandle(h); }
+	void operator()(handle h) noexcept { ::CloseHandle(h); }
 };
 
 typedef std::unique_ptr<void, win32::close_handle> handle_uptr;
 
 struct unmap_view_of_file {
-	void operator()(void *ptr) { ::UnmapViewOfFile(ptr); }
+	void operator()(void *ptr) noexcept { ::UnmapViewOfFile(ptr); }
 };
 
 void trap_error(const char *msg = "")
@@ -94,38 +94,38 @@ class close_fd {
 	struct descriptor {
 		int fd = -1;
 
-		descriptor(nullptr_t x = nullptr) {}
-		descriptor(int fd) : fd{ fd } {}
+		descriptor(nullptr_t x = nullptr) noexcept {}
+		descriptor(int fd) noexcept : fd{ fd } {}
 
-		operator int() const { return fd; }
+		operator int() const noexcept { return fd; }
 
-		bool operator==(nullptr_t) const { return fd < 0; }
-		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
+		bool operator==(nullptr_t) const noexcept { return fd < 0; }
+		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef descriptor pointer;
 
-	void operator()(descriptor x) { ::close(x); }
+	void operator()(descriptor x) noexcept { ::close(x); }
 };
 
 class munmap_file {
 	struct map_pointer {
 		void *ptr = MAP_FAILED;
 
-		map_pointer(nullptr_t x = nullptr) {}
-		map_pointer(void *ptr) : ptr{ ptr } {}
+		map_pointer(nullptr_t x = nullptr) noexcept {}
+		map_pointer(void *ptr) noexcept : ptr{ ptr } {}
 
-		operator void *() const { return ptr; }
+		operator void *() const noexcept { return ptr; }
 
-		bool operator==(nullptr_t) const { return ptr == MAP_FAILED; }
-		bool operator!=(nullptr_t) const { return !(*this == nullptr); }
+		bool operator==(nullptr_t) const noexcept { return ptr == MAP_FAILED; }
+		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef map_pointer pointer;
 
 	size_t size = 0;
 
-	void operator()(map_pointer ptr) { ::munmap(ptr, size); }
+	void operator()(map_pointer ptr) noexcept { ::munmap(ptr, size); }
 };
 
 void trap_error(const char *msg = "")
@@ -213,24 +213,13 @@ class MemoryMappedFile::impl {
 		m_size = static_cast<size_t>(file_size.QuadPart);
 	}
 public:
-	impl() : m_size{}, m_writable{}
-	{
-	}
+	impl() noexcept : m_size{}, m_writable{} {}
 
-	size_t size() const
-	{
-		return m_size;
-	}
+	size_t size() const noexcept { return m_size; }
 
-	const void *read_ptr() const
-	{
-		return m_map_view.get();
-	}
+	const void *read_ptr() const noexcept { return m_map_view.get(); }
 
-	void *write_ptr() const
-	{
-		return m_writable ? m_map_view.get() : nullptr;
-	}
+	void *write_ptr() const noexcept { return m_writable ? m_map_view.get() : nullptr; }
 
 	void map_read(const char *path)
 	{
@@ -256,10 +245,7 @@ public:
 			win32::trap_error("error flushing file");
 	}
 
-	void unmap()
-	{
-		m_map_view.release();
-	}
+	void unmap() noexcept { m_map_view.release(); }
 };
 #else
 class MemoryMappedFile::impl {
@@ -296,24 +282,13 @@ class MemoryMappedFile::impl {
 		m_ptr.get_deleter().size = m_size % page_size ? m_size + page_size - m_size % page_size : m_size;
 	}
 public:
-	impl() : m_size{}, m_writable{}
-	{
-	}
+	impl() noexcept : m_size{}, m_writable{} {}
 
-	size_t size() const
-	{
-		return m_size;
-	}
+	size_t size() const noexcept { return m_size; }
 
-	const void *read_ptr() const
-	{
-		return m_ptr.get();
-	}
+	const void *read_ptr() const noexcept { return m_ptr.get(); }
 
-	void *write_ptr() const
-	{
-		return m_writable ? m_ptr.get() : nullptr;
-	}
+	void *write_ptr() const noexcept { return m_writable ? m_ptr.get() : nullptr; }
 
 	void map_read(const char *path)
 	{
@@ -339,10 +314,7 @@ public:
 			posix::trap_error("error flushing file");
 	}
 
-	void unmap()
-	{
-		m_ptr.release();
-	}
+	void unmap() noexcept { m_ptr.release(); }
 };
 #endif // _WIN32
 
@@ -351,51 +323,39 @@ const MemoryMappedFile::read_tag MemoryMappedFile::READ_TAG{};
 const MemoryMappedFile::write_tag MemoryMappedFile::WRITE_TAG{};
 const MemoryMappedFile::create_tag MemoryMappedFile::CREATE_TAG{};
 
-MemoryMappedFile::MemoryMappedFile() = default;
+MemoryMappedFile::MemoryMappedFile() noexcept = default;
 
-MemoryMappedFile::MemoryMappedFile(MemoryMappedFile &&other) = default;
+MemoryMappedFile::MemoryMappedFile(MemoryMappedFile &&other) noexcept = default;
 
 MemoryMappedFile::MemoryMappedFile(const char *path, read_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_read(path);
+	get_impl()->map_read(path);
 }
 
 MemoryMappedFile::MemoryMappedFile(const char *path, write_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_write(path);
+	get_impl()->map_write(path);
 }
 
 MemoryMappedFile::MemoryMappedFile(const char *path, size_t size, create_tag) : m_impl{ new impl{} }
 {
-	m_impl->map_create(path, size);
+	get_impl()->map_create(path, size);
 }
 
 MemoryMappedFile::~MemoryMappedFile() = default;
 
-MemoryMappedFile &MemoryMappedFile::operator=(MemoryMappedFile &&other) = default;
+MemoryMappedFile &MemoryMappedFile::operator=(MemoryMappedFile &&other) noexcept = default;
 
-size_t MemoryMappedFile::size() const
-{
-	return m_impl->size();
-}
+size_t MemoryMappedFile::size() const noexcept { return get_impl()->size(); }
 
-const void *MemoryMappedFile::read_ptr() const
-{
-	return m_impl->read_ptr();
-}
+const void *MemoryMappedFile::read_ptr() const noexcept { return get_impl()->read_ptr(); }
 
-void *MemoryMappedFile::write_ptr()
-{
-	return m_impl->write_ptr();
-}
+void *MemoryMappedFile::write_ptr() noexcept { return get_impl()->write_ptr(); }
 
-void MemoryMappedFile::flush()
-{
-	m_impl->flush();
-}
+void MemoryMappedFile::flush() { get_impl()->flush(); }
 
 void MemoryMappedFile::close()
 {
-	m_impl->flush();
-	m_impl->unmap();
+	get_impl()->flush();
+	get_impl()->unmap();
 }

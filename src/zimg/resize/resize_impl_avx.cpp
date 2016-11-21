@@ -354,10 +354,7 @@ public:
 			m_func = resize_line8_h_f32_avx_jt_large[filter.filter_width % 4];
 	}
 
-	unsigned get_simultaneous_lines() const override
-	{
-		return 8;
-	}
+	unsigned get_simultaneous_lines() const override { return 8; }
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
@@ -407,8 +404,7 @@ class ResizeImplV_F32_AVX final : public ResizeImplV {
 public:
 	ResizeImplV_F32_AVX(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, zimg::PixelType::FLOAT })
-	{
-	}
+	{}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{

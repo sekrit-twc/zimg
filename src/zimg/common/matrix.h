@@ -22,9 +22,7 @@ public:
 private:
 	struct non_copyable {
 		non_copyable() = default;
-
 		non_copyable(const non_copyable &) = delete;
-
 		non_copyable &operator=(const non_copyable &) = delete;
 	};
 
@@ -35,7 +33,7 @@ private:
 		size_type i;
 		size_type j;
 
-		proxy(RowMatrix *matrix, size_type i, size_type j);
+		proxy(RowMatrix *matrix, size_type i, size_type j) noexcept;
 	public:
 		const proxy &operator=(const T &val) const;
 
@@ -47,7 +45,7 @@ private:
 
 		const proxy &operator/=(const T &val) const;
 
-		operator T() const;
+		operator T() const noexcept;
 
 		friend class RowMatrix::row_proxy;
 	};
@@ -56,9 +54,9 @@ private:
 		RowMatrix *matrix;
 		size_type i;
 
-		row_proxy(RowMatrix *matrix, size_type i);
+		row_proxy(RowMatrix *matrix, size_type i) noexcept;
 	public:
-		proxy operator[](size_type j) const;
+		proxy operator[](size_type j) const noexcept;
 
 		friend class RowMatrix;
 	};
@@ -67,9 +65,9 @@ private:
 		const RowMatrix *matrix;
 		size_type i;
 
-		row_const_proxy(const RowMatrix *matrix, size_type i);
+		row_const_proxy(const RowMatrix *matrix, size_type i) noexcept;
 	public:
-		T operator[](size_type j) const;
+		T operator[](size_type j) const noexcept;
 
 		friend class RowMatrix;
 	};
@@ -79,16 +77,16 @@ private:
 	size_type m_rows;
 	size_type m_cols;
 
-	void check_bounds(size_type i, size_type j) const;
+	void check_bounds(size_type i, size_type j) const noexcept;
 
-	T val(size_type i, size_type j) const;
+	T val(size_type i, size_type j) const noexcept;
 
 	T &ref(size_type i, size_type j);
 public:
 	/**
 	 * Default construct RowMatrix, creating a zero dimension matrix.
 	 */
-	RowMatrix();
+	RowMatrix() noexcept;
 
 	/**
 	 * Construct a RowMatrix of a given size, creating an empty matrix.
@@ -103,14 +101,14 @@ public:
 	 *
 	 * @return rows
 	 */
-	size_type rows() const;
+	size_type rows() const noexcept;
 
 	/**
 	 * Get the number of columns.
 	 *
 	 * @return columns
 	 */
-	size_type cols() const;
+	size_type cols() const noexcept;
 
 	/**
 	 * Get the left-most non-sparse column in a given row.
@@ -118,7 +116,7 @@ public:
 	 * @param i row index
 	 * @return column index
 	 */
-	size_type row_left(size_type i) const;
+	size_type row_left(size_type i) const noexcept;
 
 	/**
 	 * Get the right-most non-sparse column in a given row, plus one.
@@ -126,7 +124,7 @@ public:
 	 * @param i row index
 	 * @return column index
 	 */
-	size_type row_right(size_type i) const;
+	size_type row_right(size_type i) const noexcept;
 
 	/**
 	 * Access a row of the matrix.
@@ -138,14 +136,14 @@ public:
 	 * @param i row index
 	 * @return proxy to matrix row
 	 */
-	row_proxy operator[](size_type i);
+	row_proxy operator[](size_type i) noexcept;
 
 	/**
 	 * Read-only access to a matrix row. Creates an rvalue.
 	 *
 	 * @see operator[](size_type)
 	 */
-	row_const_proxy operator[](size_type i) const;
+	row_const_proxy operator[](size_type i) const noexcept;
 
 	/**
 	 * Remove sparse entries from the internal storage.
@@ -156,9 +154,24 @@ public:
 	void compress();
 };
 
+/**
+ * Transpose of matrix.
+ *
+ * @tparam T numeric type
+ * @param r matrix;
+ * @return transpose
+ */
 template <class T>
 RowMatrix<T> operator~(const RowMatrix<T> &r);
 
+/**
+ * Matrix-matrix product.
+ *
+ * @tparan T numeric type
+ * @param lhs lhs
+ * @param rhs rhs
+ * @return product
+ */
 template <class T>
 RowMatrix<T> operator*(const RowMatrix<T> &lhs, const RowMatrix<T> &rhs);
 

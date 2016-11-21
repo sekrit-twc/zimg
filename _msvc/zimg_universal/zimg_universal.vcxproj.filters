@@ -178,6 +178,9 @@
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx2.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\quantize.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">

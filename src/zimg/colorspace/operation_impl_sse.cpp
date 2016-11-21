@@ -105,7 +105,7 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 }
 
 
-class MatrixOperationSSE : public MatrixOperationImpl {
+class MatrixOperationSSE final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationSSE(const Matrix3x3 &m) :
 		MatrixOperationImpl(m)

@@ -308,5 +308,8 @@
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx2.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\quantize.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

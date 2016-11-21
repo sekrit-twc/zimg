@@ -135,7 +135,8 @@ void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float
 	}
 }
 
-class ToLinearLutOperationAVX2 : public Operation {
+
+class ToLinearLutOperationAVX2 final : public Operation {
 	std::vector<float> m_lut;
 	unsigned m_lut_depth;
 public:
@@ -158,7 +159,7 @@ public:
 	}
 };
 
-class ToGammaLutOperationAVX2 : public Operation {
+class ToGammaLutOperationAVX2 final : public Operation {
 	std::vector<float> m_lut;
 public:
 	ToGammaLutOperationAVX2(gamma_func func, float prescale) :

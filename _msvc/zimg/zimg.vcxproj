@@ -253,6 +253,7 @@
       <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AVXI</UseProcessorExtensions>
       <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AVXI</UseProcessorExtensions>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\quantize.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />

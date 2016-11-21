@@ -16,7 +16,7 @@ namespace zimg {
 namespace _static_map {
 
 struct strcmp_less {
-	bool operator()(const char *a, const char *b) const
+	bool operator()(const char *a, const char *b) const noexcept
 	{
 		return strcmp(a, b) < 0;
 	}
@@ -42,41 +42,34 @@ public:
 	typedef std::size_t size_type;
 	typedef std::ptrdiff_t difference_type;
 	typedef Compare key_compare;
-	typedef const value_type *const_iterator;
+	typedef const value_type &reference;
+	typedef reference const_reference;
+	typedef const value_type *pointer;
+	typedef pointer const_pointer;
+	typedef const_pointer iterator;
+	typedef iterator const_iterator;
 private:
 	struct value_compare {
-		key_compare comp;
+		const key_compare &comp;
 
-		bool operator()(const value_type &a, const value_type &b)
-		{
-			return comp(a.first, b.first);
-		}
+		bool operator()(const value_type &a, const value_type &b) noexcept { return comp(a.first, b.first); }
 	};
 
 	struct data_member : private Compare {
 		std::array<value_type, Sz> array;
 
-		data_member(const Compare &comp) : Compare(comp)
-		{
-		}
+		data_member(const Compare &comp) noexcept : Compare(comp) {}
 
-		key_compare get_key_comp() const
-		{
-			return *this;
-		}
-
-		value_compare get_value_comp() const
-		{
-			return{ *this };
-		}
+		const key_compare &get_key_comp() const noexcept { return *this; }
+		value_compare get_value_comp() const noexcept { return{ *this }; }
 	};
 
 	data_member m_head;
 	size_t m_size;
 
-	bool equiv(const Key &a, const Key &b) const
+	bool equiv(const Key &a, const Key &b) const noexcept
 	{
-		key_compare comp = m_head.get_key_comp();
+		const key_compare &comp = m_head.get_key_comp();
 		return !comp(a, b) && !comp(b, a);
 	}
 public:
@@ -89,7 +82,7 @@ public:
 	 * @param init initializer list
 	 * @param comp comparator
 	 */
-	explicit static_map(std::initializer_list<value_type> init, const Compare &comp = Compare()) :
+	explicit static_map(std::initializer_list<value_type> init, const Compare &comp = Compare()) noexcept :
 		m_head{ comp },
 		m_size{ init.size() }
 	{
@@ -104,10 +97,12 @@ public:
 	 *
 	 * @return number of elements
 	 */
-	size_type size() const
-	{
-		return m_size;
-	}
+	size_type size() const noexcept { return m_size; }
+
+	/**
+	 * Get the number of elements in the largest possible map.
+	 */
+	size_type max_size() const noexcept { return SIZE_MAX; }
 
 	/**
 	 * Get an iterator to the first map entry.
@@ -115,20 +110,24 @@ public:
 	 *
 	 * @return first entry
 	 */
-	const_iterator begin() const
-	{
-		return m_head.array.data();
-	}
+	const_iterator begin() const noexcept { return m_head.array.data(); }
 
 	/**
 	 * Get an iterator to one past the last map entry.
 	 *
 	 * @return one past the end
 	 */
-	const_iterator end() const
-	{
-		return begin() + m_size;
-	}
+	const_iterator end() const noexcept { return begin() + m_size; }
+
+	/**
+	 * @see begin
+	 */
+	const_iterator cbegin() const noexcept { return begin(); }
+
+	/**
+	 * @see end
+	 */
+	const_iterator cend() const noexcept { return end(); }
 
 	/**
 	 * Get the mapped value corresponding to a key.
@@ -140,20 +139,13 @@ public:
 	const T &at(const Key &key) const
 	{
 		const auto it = find(key);
-
-		if (it == end())
-			throw std::out_of_range{ "key not found" };
-
-		return it->second;
+		return it == end() ? (throw std::out_of_range{ "key not found" }, it->second) : it->second;
 	}
 
 	/**
 	 * @see at
 	 */
-	const T &operator[](const Key &key) const
-	{
-		return at(key);
-	}
+	const T &operator[](const Key &key) const { return at(key); }
 
 	/**
 	 * Search for a key in the map
@@ -161,14 +153,10 @@ public:
 	 * @param key searched key
 	 * @return iterator to key if found, else end iterator
 	 */
-	const_iterator find(const Key &key) const
+	const_iterator find(const Key &key) const noexcept
 	{
-		auto it = std::lower_bound(begin(), end(), value_type{ key, mapped_type{} }, m_head.get_value_comp());
-
-		if (it == end() || !equiv(it->first, key))
-			return end();
-		else
-			return it;
+		const_iterator it = std::lower_bound(begin(), end(), value_type{ key, mapped_type{} }, m_head.get_value_comp());
+		return (it == end() || !equiv(it->first, key)) ? end() : it;
 	}
 };
 

@@ -54,17 +54,42 @@ struct ColorspaceDefinition {
 	ColorPrimaries primaries;
 
 	// Helper functions to create modified colorspaces.
-	ColorspaceDefinition to(MatrixCoefficients matrix) const;
-	ColorspaceDefinition to(TransferCharacteristics transfer) const;
-	ColorspaceDefinition to(ColorPrimaries primaries) const;
+	constexpr ColorspaceDefinition to(MatrixCoefficients matrix_) const noexcept
+	{
+		return{ matrix_, transfer, primaries };
+	}
 
-	ColorspaceDefinition to_rgb() const;
-	ColorspaceDefinition to_linear() const;
+	constexpr ColorspaceDefinition to(TransferCharacteristics transfer_) const noexcept
+	{
+		return{ matrix, transfer_, primaries };
+	}
+
+	constexpr ColorspaceDefinition to(ColorPrimaries primaries_) const noexcept
+	{
+		return{ matrix, transfer, primaries_ };
+	}
+
+	constexpr ColorspaceDefinition to_rgb() const noexcept
+	{
+		return to(MatrixCoefficients::RGB);
+	}
+
+	constexpr ColorspaceDefinition to_linear() const noexcept
+	{
+		return to(TransferCharacteristics::LINEAR);
+	}
 };
 
 // Compare colorspaces by comparing each component.
-bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
-bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b);
+constexpr bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b) noexcept
+{
+	return a.matrix == b.matrix && a.transfer == b.transfer && a.primaries == b.primaries;
+}
+
+constexpr bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b) noexcept
+{
+	return !(a == b);
+}
 
 
 struct ColorspaceConversion {

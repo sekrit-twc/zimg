@@ -35,19 +35,19 @@ const unsigned VERSION_INFO[] = { 2, 3, 0 };
 
 
 template <class T, class U>
-T *assert_dynamic_type(U *ptr)
+T *assert_dynamic_type(U *ptr) noexcept
 {
 	zassert_d(dynamic_cast<T *>(ptr), "bad dynamic type");
 	return static_cast<T *>(ptr);
 }
 
-void clear_last_error_message()
+void clear_last_error_message() noexcept
 {
 	g_last_error_msg.clear();
 	g_last_error_msg.shrink_to_fit();
 }
 
-void record_exception_message(const zimg::error::Exception &e)
+void record_exception_message(const zimg::error::Exception &e) noexcept
 {
 	try {
 		g_last_error_msg = e.what();
@@ -56,7 +56,7 @@ void record_exception_message(const zimg::error::Exception &e)
 	}
 }
 
-zimg_error_code_e handle_exception(std::exception_ptr eptr)
+zimg_error_code_e handle_exception(std::exception_ptr eptr) noexcept
 {
 	using namespace zimg::error;
 

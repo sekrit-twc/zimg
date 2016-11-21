@@ -106,7 +106,7 @@ public:
 		bool approximate_gamma;
 		CPUClass cpu;
 
-		params();
+		params() noexcept;
 	};
 
 	/**
@@ -135,22 +135,7 @@ public:
 		double active_height;
 	};
 private:
-	struct resize_spec {
-		unsigned width;
-		unsigned height;
-		unsigned subsample_w;
-		unsigned subsample_h;
-		double shift_w;
-		double shift_h;
-		double subwidth;
-		double subheight;
-		ChromaLocationW chroma_location_w;
-		ChromaLocationH chroma_location_h;
-
-		resize_spec() = default;
-
-		explicit resize_spec(const state &state);
-	};
+	struct resize_spec;
 
 	std::unique_ptr<FilterGraph> m_graph;
 	state m_state;
@@ -173,7 +158,7 @@ public:
 	/**
 	 * Default construct GraphBuilder, creating a builder that manages no graph.
 	 */
-	GraphBuilder();
+	GraphBuilder() noexcept;
 
 	/**
 	 * Destroy builder.

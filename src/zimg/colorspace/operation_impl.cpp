@@ -27,7 +27,7 @@ namespace colorspace {
 
 namespace {
 
-class MatrixOperationC : public MatrixOperationImpl {
+class MatrixOperationC final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationC(const Matrix3x3 &m) :
 		MatrixOperationImpl(m)
@@ -55,7 +55,7 @@ public:
 	}
 };
 
-class Rec709GammaOperationC : public Operation {
+class Rec709GammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -69,7 +69,7 @@ public:
 	}
 };
 
-class Rec709InverseGammaOperationC : public Operation {
+class Rec709InverseGammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -83,7 +83,7 @@ public:
 	}
 };
 
-class SRGBGammaOperationC : public Operation {
+class SRGBGammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -97,7 +97,7 @@ public:
 	}
 };
 
-class SRGBInverseGammaOperationC : public Operation {
+class SRGBInverseGammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -111,7 +111,7 @@ public:
 	}
 };
 
-class St2084GammaOperationC : public Operation {
+class St2084GammaOperationC final : public Operation {
 	float m_scale;
 public:
 	explicit St2084GammaOperationC(double peak_luminance) :
@@ -131,7 +131,7 @@ public:
 	}
 };
 
-class St2084InverseGammaOperationC : public Operation {
+class St2084InverseGammaOperationC final : public Operation {
 	float m_scale;
 public:
 	explicit St2084InverseGammaOperationC(double peak_luminance) :
@@ -151,7 +151,7 @@ public:
 	}
 };
 
-class B67GammaOperationC : public Operation {
+class B67GammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -165,7 +165,7 @@ public:
 	}
 };
 
-class B67InverseGammaOperationC : public Operation {
+class B67InverseGammaOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -179,7 +179,7 @@ public:
 	}
 };
 
-class Rec2020CLToRGBOperationC : public Operation {
+class Rec2020CLToRGBOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -228,7 +228,7 @@ public:
 	}
 };
 
-class Rec2020CLToYUVOperationC : public Operation {
+class Rec2020CLToYUVOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -277,7 +277,7 @@ public:
 } // namespace
 
 
-float rec_709_gamma(float x)
+float rec_709_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -291,7 +291,7 @@ float rec_709_gamma(float x)
 	return x;
 }
 
-float rec_709_inverse_gamma(float x)
+float rec_709_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -305,7 +305,7 @@ float rec_709_inverse_gamma(float x)
 	return x;
 }
 
-float srgb_gamma(float x)
+float srgb_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -319,7 +319,7 @@ float srgb_gamma(float x)
 	return x;
 }
 
-float srgb_inverse_gamma(float x)
+float srgb_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -334,7 +334,7 @@ float srgb_inverse_gamma(float x)
 }
 
 
-float st_2084_gamma(float x)
+float st_2084_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -361,7 +361,7 @@ float st_2084_gamma(float x)
 	return x;
 }
 
-float st_2084_inverse_gamma(float x)
+float st_2084_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -380,7 +380,7 @@ float st_2084_inverse_gamma(float x)
 	return x;
 }
 
-float arib_b67_gamma(float x)
+float arib_b67_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();
@@ -397,7 +397,7 @@ float arib_b67_gamma(float x)
 	return x;
 }
 
-float arib_b67_inverse_gamma(float x)
+float arib_b67_inverse_gamma(float x) noexcept
 {
 	unsigned w = fpu_save();
 	fpu_set_single();

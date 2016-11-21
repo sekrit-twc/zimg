@@ -17,7 +17,7 @@ static const ArgparseOption HELP_OPTION_LONG_ONLY = { OPTION_HELP, nullptr, "hel
 const int HELP_INDENT = 32;
 
 
-const char *get_short_name(const ArgparseOption &opt)
+const char *get_short_name(const ArgparseOption &opt) noexcept
 {
 	if (opt.short_name)
 		return opt.short_name;
@@ -27,7 +27,7 @@ const char *get_short_name(const ArgparseOption &opt)
 		return "";
 }
 
-const char *get_long_name(const ArgparseOption &opt)
+const char *get_long_name(const ArgparseOption &opt) noexcept
 {
 	if (opt.long_name)
 		return opt.long_name;
@@ -68,38 +68,38 @@ public:
 private:
 	pointer m_opt;
 
-	bool is_null() const { return !m_opt || m_opt->type == OPTION_NULL; }
+	bool is_null() const noexcept { return !m_opt || m_opt->type == OPTION_NULL; }
 public:
-	explicit OptionIterator(pointer opt = nullptr) : m_opt{ opt } {}
+	explicit OptionIterator(pointer opt = nullptr) noexcept : m_opt{ opt } {}
 
-	pointer get() const { return m_opt; }
+	pointer get() const noexcept { return m_opt; }
 
-	explicit operator bool() const { return !is_null(); }
+	explicit operator bool() const noexcept { return !is_null(); }
 
-	reference operator*() const { return *get(); }
-	pointer operator->() const { return get(); }
+	reference operator*() const noexcept { return *get(); }
+	pointer operator->() const noexcept { return get(); }
 
-	OptionIterator &operator++() { ++m_opt; return *this; }
-	OptionIterator operator++(int) { OptionIterator ret = *this; ++*this; return ret; }
+	OptionIterator &operator++() noexcept { ++m_opt; return *this; }
+	OptionIterator operator++(int) noexcept { OptionIterator ret = *this; ++*this; return ret; }
 
-	OptionIterator &operator--() { --m_opt; return *this; }
-	OptionIterator operator--(int) { OptionIterator ret = *this; ++*this; return ret; }
+	OptionIterator &operator--() noexcept { --m_opt; return *this; }
+	OptionIterator operator--(int) noexcept { OptionIterator ret = *this; ++*this; return ret; }
 
-	bool operator==(const OptionIterator &other) const
+	bool operator==(const OptionIterator &other) const noexcept
 	{
 		return m_opt == other.m_opt || (is_null() && other.is_null());
 	}
 
-	bool operator!=(const OptionIterator &other) const { return !(*this == other); }
+	bool operator!=(const OptionIterator &other) const noexcept { return !(*this == other); }
 };
 
 class OptionRange {
 	const ArgparseOption *m_first;
 public:
-	explicit OptionRange(const ArgparseOption *first) : m_first{ first } {}
+	explicit OptionRange(const ArgparseOption *first) noexcept : m_first{ first } {}
 
-	OptionIterator begin() const { return OptionIterator{ m_first }; }
-	OptionIterator end() const { return OptionIterator{}; }
+	OptionIterator begin() const noexcept { return OptionIterator{ m_first }; }
+	OptionIterator end() const noexcept { return OptionIterator{}; }
 };
 
 class OptionMap {
@@ -114,13 +114,13 @@ public:
 			m_long[opt->long_name] = opt;
 	}
 
-	const ArgparseOption *find_short(char c) const
+	const ArgparseOption *find_short(char c) const noexcept
 	{
 		auto it = m_short.find(c);
 		return it == m_short.end() ? nullptr : it->second;
 	}
 
-	const ArgparseOption *find_long(const std::string &s) const
+	const ArgparseOption *find_long(const std::string &s) const noexcept
 	{
 		auto it = m_long.find(s);
 		return it == m_long.end() ? nullptr : it->second;

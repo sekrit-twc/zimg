@@ -1052,7 +1052,16 @@ FilterGraph::callback::operator bool() const
 
 void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right) const
 {
-	if (m_func(m_user, i, left, right))
+	int ret;
+
+	try {
+		ret = m_func(m_user, i, left, right);
+	} catch (...) {
+		zassert_d(false, "user callback must not throw");
+		ret = 1;
+	}
+
+	if (ret)
 		throw error::UserCallbackFailed{ "user callback failed" };
 }
 
@@ -1062,55 +1071,55 @@ FilterGraph::FilterGraph(unsigned width, unsigned height, PixelType type, unsign
 {
 }
 
-FilterGraph::FilterGraph(FilterGraph &&other) = default;
+FilterGraph::FilterGraph(FilterGraph &&other) noexcept = default;
 
 FilterGraph::~FilterGraph() = default;
 
-FilterGraph &FilterGraph::operator=(FilterGraph &&other) = default;
+FilterGraph &FilterGraph::operator=(FilterGraph &&other) noexcept = default;
 
 void FilterGraph::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter(std::move(filter));
+	get_impl()->attach_filter(std::move(filter));
 }
 
 void FilterGraph::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter_uv(std::move(filter));
+	get_impl()->attach_filter_uv(std::move(filter));
 }
 
 void FilterGraph::color_to_grey()
 {
-	m_impl->color_to_grey();
+	get_impl()->color_to_grey();
 }
 
 void FilterGraph::grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth)
 {
-	m_impl->grey_to_color(yuv, subsample_w, subsample_h, depth);
+	get_impl()->grey_to_color(yuv, subsample_w, subsample_h, depth);
 }
 
 void FilterGraph::complete()
 {
-	m_impl->complete();
+	get_impl()->complete();
 }
 
 size_t FilterGraph::get_tmp_size() const
 {
-	return m_impl->get_tmp_size();
+	return get_impl()->get_tmp_size();
 }
 
 unsigned FilterGraph::get_input_buffering() const
 {
-	return m_impl->get_input_buffering();
+	return get_impl()->get_input_buffering();
 }
 
 unsigned FilterGraph::get_output_buffering() const
 {
-	return m_impl->get_output_buffering();
+	return get_impl()->get_output_buffering();
 }
 
 void FilterGraph::process(const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *tmp, callback unpack_cb, callback pack_cb) const
 {
-	m_impl->process(src, dst, tmp, unpack_cb, pack_cb);
+	get_impl()->process(src, dst, tmp, unpack_cb, pack_cb);
 }
 
 } // namespace graph

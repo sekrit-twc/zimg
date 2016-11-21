@@ -71,42 +71,6 @@ public:
 } // namespace
 
 
-ColorspaceDefinition ColorspaceDefinition::to(MatrixCoefficients matrix_) const
-{
-	return{ matrix_, transfer, primaries };
-}
-
-ColorspaceDefinition ColorspaceDefinition::to(TransferCharacteristics transfer_) const
-{
-	return{ matrix, transfer_, primaries };
-}
-
-ColorspaceDefinition ColorspaceDefinition::to(ColorPrimaries primaries_) const
-{
-	return{ matrix, transfer, primaries_ };
-}
-
-ColorspaceDefinition ColorspaceDefinition::to_rgb() const
-{
-	return to(MatrixCoefficients::RGB);
-}
-
-ColorspaceDefinition ColorspaceDefinition::to_linear() const
-{
-	return to(TransferCharacteristics::LINEAR);
-}
-
-bool operator==(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
-{
-	return a.matrix == b.matrix && a.primaries == b.primaries && a.transfer == b.transfer;
-}
-
-bool operator!=(const ColorspaceDefinition &a, const ColorspaceDefinition &b)
-{
-	return !operator==(a, b);
-}
-
-
 ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	width{ width },
 	height{ height },
@@ -115,8 +79,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	peak_luminance{ 100.0 },
 	approximate_gamma{},
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 {

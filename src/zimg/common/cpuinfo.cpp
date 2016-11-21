@@ -35,7 +35,7 @@ void do_cpuid(int regs[4], int eax, int ecx)
 } // namespace
 
 
-X86Capabilities query_x86_capabilities()
+X86Capabilities query_x86_capabilities() noexcept
 {
 	X86Capabilities caps = { 0 };
 	int regs[4] = { 0 };
@@ -57,7 +57,7 @@ X86Capabilities query_x86_capabilities()
 	return caps;
 }
 
-bool cpu_has_fast_f16(CPUClass cpu)
+bool cpu_has_fast_f16(CPUClass cpu) noexcept
 {
 	// Although F16C is supported on Ivy Bridge, the latency penalty is too great before Haswell.
 	if (cpu == CPUClass::AUTO) {

@@ -1,7 +1,5 @@
 #ifdef ZIMG_X86
 
-#include "common/ccdep.h"
-
 #include <cstdint>
 #include <immintrin.h>
 #include "common/align.h"

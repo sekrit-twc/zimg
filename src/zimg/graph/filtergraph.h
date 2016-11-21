@@ -71,6 +71,9 @@ public:
 	};
 private:
 	std::unique_ptr<impl> m_impl;
+
+	impl *get_impl() noexcept { return m_impl.get(); }
+	const impl *get_impl() const noexcept { return m_impl.get(); }
 public:
 	/**
 	 * Construct a FilterGraph from a specific source format.
@@ -89,7 +92,7 @@ public:
 	 *
 	 * @param other rvalue
 	 */
-	FilterGraph(FilterGraph &&other);
+	FilterGraph(FilterGraph &&other) noexcept;
 
 	/**
 	 * Destroy graph.
@@ -102,7 +105,7 @@ public:
 	 * @param other rvalue
 	 * @return this
 	 */
-	FilterGraph &operator=(FilterGraph &&other);
+	FilterGraph &operator=(FilterGraph &&other) noexcept;
 
 	/**
 	 * Attach a filter to the graph, transferring ownership.

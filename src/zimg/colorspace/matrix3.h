@@ -14,7 +14,9 @@ namespace colorspace {
 struct Vector3 : public std::array<double, 3> {
 	Vector3() = default;
 
-	Vector3(double a, double b, double c);
+	constexpr Vector3(double a, double b, double c) :
+		std::array<double, 3>{ { a, b, c } }
+	{}
 };
 
 /**
@@ -23,7 +25,9 @@ struct Vector3 : public std::array<double, 3> {
 struct Matrix3x3 : public std::array<Vector3, 3> {
 	Matrix3x3() = default;
 
-	Matrix3x3(const Vector3 &a, const Vector3 &b, const Vector3 &c);
+	constexpr Matrix3x3(const Vector3 &a, const Vector3 &b, const Vector3 &c) :
+		std::array<Vector3, 3>{ { a, b, c } }
+	{}
 };
 
 /**
@@ -33,7 +37,7 @@ struct Matrix3x3 : public std::array<Vector3, 3> {
  * @param v2 rhs
  * @return element-wise product
  */
-Vector3 operator*(const Vector3 &v1, const Vector3 &v2);
+Vector3 operator*(const Vector3 &v1, const Vector3 &v2) noexcept;
 
 /**
  * Matrix-vector multiplication.
@@ -42,7 +46,7 @@ Vector3 operator*(const Vector3 &v1, const Vector3 &v2);
  * @param v vector
  * @return product
  */
-Vector3 operator*(const Matrix3x3 &m, const Vector3 &v);
+Vector3 operator*(const Matrix3x3 &m, const Vector3 &v) noexcept;
 
 /**
  * Matrix-matrix multiplication.
@@ -51,7 +55,7 @@ Vector3 operator*(const Matrix3x3 &m, const Vector3 &v);
  * @param b rhs
  * @return product
  */
-Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b);
+Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b) noexcept;
 
 /**
  * Determinant of matrix.
@@ -59,7 +63,7 @@ Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b);
  * @param m matrix
  * @return determinant
  */
-double determinant(const Matrix3x3 &m);
+double determinant(const Matrix3x3 &m) noexcept;
 
 /**
  * Inverse of matrix.
@@ -67,7 +71,7 @@ double determinant(const Matrix3x3 &m);
  * @param m matrix
  * @return inverse
  */
-Matrix3x3 inverse(const Matrix3x3 &m);
+Matrix3x3 inverse(const Matrix3x3 &m) noexcept;
 
 /**
  * Transpose of matrix.
@@ -75,7 +79,7 @@ Matrix3x3 inverse(const Matrix3x3 &m);
  * @param m matrix
  * @return transpose
  */
-Matrix3x3 transpose(const Matrix3x3 &m);
+Matrix3x3 transpose(const Matrix3x3 &m) noexcept;
 
 } // namespace colorspace
 } // namespace zimg

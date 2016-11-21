@@ -17,23 +17,23 @@ namespace {
 
 const double PI = 3.14159265358979323846;
 
-double sinc(double x)
+double sinc(double x) noexcept
 {
 	// Guaranteed to not yield division by zero on IEEE machine with accurate sin(x).
 	return x == 0.0 ? 1.0 : zimg_x_sin(x * PI) / (x * PI);
 }
 
-double sq(double x)
+double sq(double x) noexcept
 {
 	return x * x;
 }
 
-double cube(double x)
+double cube(double x) noexcept
 {
 	return x * x * x;
 }
 
-double round_halfup(double x)
+double round_halfup(double x) noexcept
 {
 	/* When rounding on the pixel grid, the invariant
 	 *   round(x - 1) == round(x) - 1
@@ -124,25 +124,18 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 Filter::~Filter() = default;
 
-int PointFilter::support() const
-{
-	return 0;
-}
+int PointFilter::support() const { return 0; }
 
-double PointFilter::operator()(double x) const
-{
-	return 1.0;
-}
+double PointFilter::operator()(double x) const { return 1.0; }
 
-int BilinearFilter::support() const
-{
-	return 1;
-}
+
+int BilinearFilter::support() const { return 1; }
 
 double BilinearFilter::operator()(double x) const
 {
 	return std::max(1.0 - std::abs(x), 0.0);
 }
+
 
 BicubicFilter::BicubicFilter(double b, double c) :
 	p0{ (  6.0 -  2.0 * b           ) / 6.0 },
@@ -152,13 +145,9 @@ BicubicFilter::BicubicFilter(double b, double c) :
 	q1{ (       -12.0 * b - 48.0 * c) / 6.0 },
 	q2{ (         6.0 * b + 30.0 * c) / 6.0 },
 	q3{ (              -b -  6.0 * c) / 6.0 }
-{
-}
+{}
 
-int BicubicFilter::support() const
-{
-	return 2;
-}
+int BicubicFilter::support() const { return 2; }
 
 double BicubicFilter::operator()(double x) const
 {
@@ -172,10 +161,8 @@ double BicubicFilter::operator()(double x) const
 		return 0.0;
 }
 
-int Spline16Filter::support() const
-{
-	return 2;
-}
+
+int Spline16Filter::support() const { return 2; }
 
 double Spline16Filter::operator()(double x) const
 {
@@ -191,10 +178,8 @@ double Spline16Filter::operator()(double x) const
 	}
 }
 
-int Spline36Filter::support() const
-{
-	return 3;
-}
+
+int Spline36Filter::support() const { return 3; }
 
 double Spline36Filter::operator()(double x) const
 {
@@ -213,22 +198,21 @@ double Spline36Filter::operator()(double x) const
 	}
 }
 
+
 LanczosFilter::LanczosFilter(int taps) : taps{ taps }
 {
 	if (taps <= 0)
 		throw error::IllegalArgument{ "lanczos tap count must be positive" };
 }
 
-int LanczosFilter::support() const
-{
-	return taps;
-}
+int LanczosFilter::support() const { return taps; }
 
 double LanczosFilter::operator()(double x) const
 {
 	x = std::abs(x);
 	return x < taps ? sinc(x) * sinc(x / taps) : 0.0;
 }
+
 
 FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim, double shift, double width)
 {

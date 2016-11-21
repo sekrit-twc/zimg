@@ -20,18 +20,18 @@
 namespace {
 
 #ifdef _WIN32
-bool is_null_device(const std::string &s)
+bool is_null_device(const std::string &s) noexcept
 {
 	return s == "NUL";
 }
 #else
-bool is_null_device(const std::string &s)
+bool is_null_device(const std::string &s) noexcept
 {
 	return s == "/dev/null";
 }
 #endif
 
-enum class PackingFormat{
+enum class PackingFormat {
 	PACK_PLANAR,
 	PACK_YUY2,
 	PACK_BMP
@@ -122,7 +122,7 @@ PathSpecifier parse_path_specifier(const char *spec, const char *assumed)
 	return parsed_spec;
 }
 
-ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel)
+constexpr ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel) noexcept
 {
 	return zimg::ceil_n(width * zimg::pixel_size(pixel), zimg::ALIGNMENT);
 }
@@ -152,47 +152,28 @@ ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, u
 	}
 }
 
-unsigned ImageFrame::width(unsigned plane) const
+unsigned ImageFrame::width(unsigned plane) const noexcept
 {
 	return m_width >> ((plane == 1 || plane == 2) ? m_subsample_w : 0);
 }
 
-unsigned ImageFrame::height(unsigned plane) const
+unsigned ImageFrame::height(unsigned plane) const noexcept
 {
 	return m_height >> ((plane == 1 || plane == 2) ? m_subsample_h : 0);
 }
 
-zimg::PixelType ImageFrame::pixel_type() const
-{
-	return m_pixel;
-}
+zimg::PixelType ImageFrame::pixel_type() const noexcept { return m_pixel; }
+unsigned ImageFrame::planes() const noexcept { return m_planes; }
+unsigned ImageFrame::subsample_w() const noexcept { return m_subsample_w; }
+unsigned ImageFrame::subsample_h() const noexcept { return m_subsample_h; }
+bool ImageFrame::is_yuv() const noexcept { return m_yuv; }
 
-unsigned ImageFrame::planes() const
-{
-	return m_planes;
-}
-
-unsigned ImageFrame::subsample_w() const
-{
-	return m_subsample_w;
-}
-
-unsigned ImageFrame::subsample_h() const
-{
-	return m_subsample_h;
-}
-
-bool ImageFrame::is_yuv() const
-{
-	return m_yuv;
-}
-
-zimg::graph::ImageBuffer<const void> ImageFrame::as_read_buffer(unsigned plane) const
+zimg::graph::ImageBuffer<const void> ImageFrame::as_read_buffer(unsigned plane) const noexcept
 {
 	return const_cast<ImageFrame *>(this)->as_write_buffer(plane);
 }
 
-zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
+zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const noexcept
 {
 	zimg::graph::ColorImageBuffer<const void> ret{};
 
@@ -202,13 +183,13 @@ zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const
 	return ret;
 }
 
-zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane)
+zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane) noexcept
 {
 	zassert(plane < m_planes, "plane index out of bounds");
 	return{ m_vector[plane].data() + m_offset[plane], width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
 }
 
-zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer()
+zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer() noexcept
 {
 	zimg::graph::ColorImageBuffer<void> ret{};
 

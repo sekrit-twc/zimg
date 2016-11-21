@@ -80,7 +80,7 @@ depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_o
 }
 
 
-class IntegerLeftShift : public graph::ImageFilterBase {
+class IntegerLeftShift final : public graph::ImageFilterBase {
 	left_shift_func m_func;
 
 	PixelType m_pixel_in;
@@ -146,7 +146,7 @@ public:
 };
 
 
-class ConvertToFloat : public graph::ImageFilterBase {
+class ConvertToFloat final : public graph::ImageFilterBase {
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
 

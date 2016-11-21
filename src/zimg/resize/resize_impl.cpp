@@ -17,12 +17,12 @@ namespace resize {
 
 namespace {
 
-int32_t unpack_pixel_u16(uint16_t x)
+int32_t unpack_pixel_u16(uint16_t x) noexcept
 {
 	return static_cast<int32_t>(x) + INT16_MIN;
 }
 
-uint16_t pack_pixel_u16(int32_t x, int32_t pixel_max)
+uint16_t pack_pixel_u16(int32_t x, int32_t pixel_max) noexcept
 {
 	x = ((x + (1 << 13)) >> 14) - INT16_MIN;
 	x = std::max(std::min(x, pixel_max), static_cast<int32_t>(0));
@@ -154,8 +154,7 @@ ResizeImplH::ResizeImplH(const FilterContext &filter, const image_attributes &at
 	m_filter(filter),
 	m_attr(attr),
 	m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
-{
-}
+{}
 
 graph::ImageFilter::filter_flags ResizeImplH::get_flags() const
 {
@@ -167,10 +166,7 @@ graph::ImageFilter::filter_flags ResizeImplH::get_flags() const
 	return flags;
 }
 
-graph::ImageFilter::image_attributes ResizeImplH::get_image_attributes() const
-{
-	return m_attr;
-}
+graph::ImageFilter::image_attributes ResizeImplH::get_image_attributes() const { return m_attr; }
 
 graph::ImageFilter::pair_unsigned ResizeImplH::get_required_row_range(unsigned i) const
 {
@@ -199,8 +195,7 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, const image_attributes &at
 	m_filter(filter),
 	m_attr(attr),
 	m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
-{
-}
+{}
 
 graph::ImageFilter::filter_flags ResizeImplV::get_flags() const
 {
@@ -211,10 +206,7 @@ graph::ImageFilter::filter_flags ResizeImplV::get_flags() const
 	return flags;
 }
 
-graph::ImageFilter::image_attributes ResizeImplV::get_image_attributes() const
-{
-	return m_attr;
-}
+graph::ImageFilter::image_attributes ResizeImplV::get_image_attributes() const { return m_attr; }
 
 graph::ImageFilter::pair_unsigned ResizeImplV::get_required_row_range(unsigned i) const
 {
@@ -255,8 +247,7 @@ ResizeImplBuilder::ResizeImplBuilder(unsigned src_width, unsigned src_height, Pi
 	shift{},
 	subwidth{},
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 std::unique_ptr<graph::ImageFilter> ResizeImplBuilder::create() const
 {

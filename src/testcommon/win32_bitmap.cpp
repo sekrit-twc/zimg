@@ -37,7 +37,7 @@ typedef struct tagBITMAPINFOHEADER {
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 #pragma pack(pop)
 
-static size_t bitmap_row_size(int width, int bit_count)
+size_t bitmap_row_size(int width, int bit_count) noexcept
 {
 	size_t row_size;
 
@@ -47,7 +47,7 @@ static size_t bitmap_row_size(int width, int bit_count)
 	return row_size;
 }
 
-static size_t bitmap_data_size(int width, int height, int bit_count)
+size_t bitmap_data_size(int width, int height, int bit_count) noexcept
 {
 	return bitmap_row_size(width, bit_count) * height;
 }
@@ -57,9 +57,8 @@ struct BitmapFileData {
 	BITMAPINFOHEADER *biHeader;
 	void *image_data;
 
-	BitmapFileData() : bfHeader{}, biHeader{}, image_data{}
-	{
-	}
+	BitmapFileData() noexcept : bfHeader{}, biHeader{}, image_data{}
+	{}
 
 	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
@@ -127,7 +126,7 @@ class WindowsBitmap::impl {
 	BitmapFileData m_bitmap;
 	bool m_writable;
 
-	size_t row_size() const
+	size_t row_size() const noexcept
 	{
 		size_t row_size = static_cast<size_t>(width()) * (bit_count() / 8);
 		row_size = (row_size % 4) ? row_size + 4 - row_size % 4 : row_size;
@@ -163,56 +162,34 @@ public:
 		m_bitmap.init(m_mmap.size(), width, height, bit_count);
 	}
 
-	const unsigned char *read_ptr() const
+	const unsigned char *read_ptr() const noexcept
 	{
 		const unsigned char *image_data = static_cast<const unsigned char *>(m_bitmap.image_data);
 		return image_data + row_size() * (height() - 1);
 	}
 
-	unsigned char *write_ptr()
+	unsigned char *write_ptr() noexcept
 	{
 		return m_writable ? const_cast<unsigned char *>(read_ptr()) : nullptr;
 	}
 
-	ptrdiff_t stride() const
-	{
-		return -static_cast<ptrdiff_t>(row_size());
-	}
+	ptrdiff_t stride() const noexcept { return -static_cast<ptrdiff_t>(row_size()); }
 
-	int width() const
-	{
-		return m_bitmap.biHeader->biWidth;
-	}
+	int width() const noexcept { return m_bitmap.biHeader->biWidth; }
+	int height() const noexcept { return m_bitmap.biHeader->biHeight; }
+	int bit_count() const noexcept { return m_bitmap.biHeader->biBitCount; }
 
-	int height() const
-	{
-		return m_bitmap.biHeader->biHeight;
-	}
-
-	int bit_count() const
-	{
-		return m_bitmap.biHeader->biBitCount;
-	}
-
-	void flush()
-	{
-		m_mmap.flush();
-	}
-
-	void close()
-	{
-		m_mmap.close();
-	}
+	void flush() { m_mmap.flush(); }
+	void close() { m_mmap.close(); }
 };
 
 
-WindowsBitmap::WindowsBitmap(WindowsBitmap &&other) = default;
+WindowsBitmap::WindowsBitmap(WindowsBitmap &&other) noexcept = default;
 
 WindowsBitmap::WindowsBitmap(const char *path, read_tag)
 {
 	MemoryMappedFile mmap{ path, MemoryMappedFile::READ_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
-
 	m_impl = std::move(impl_);
 }
 
@@ -220,55 +197,29 @@ WindowsBitmap::WindowsBitmap(const char *path, write_tag)
 {
 	MemoryMappedFile mmap{ path, MemoryMappedFile::WRITE_TAG };
 	std::unique_ptr<impl> impl_{ new impl{ std::move(mmap), false } };
-
 	m_impl = std::move(impl_);
 }
 
 WindowsBitmap::WindowsBitmap(const char *path, int width, int height, int bit_count) :
 	m_impl{ new impl{ path, width, height, bit_count} }
-{
-}
+{}
 
 WindowsBitmap::~WindowsBitmap() = default;
 
-WindowsBitmap &WindowsBitmap::operator=(WindowsBitmap &&other) = default;
+WindowsBitmap &WindowsBitmap::operator=(WindowsBitmap &&other) noexcept = default;
 
-ptrdiff_t WindowsBitmap::stride() const
-{
-	return m_impl->stride();
-}
+ptrdiff_t WindowsBitmap::stride() const noexcept { return get_impl()->stride(); }
 
-int WindowsBitmap::width() const
-{
-	return m_impl->width();
-}
+int WindowsBitmap::width() const noexcept { return get_impl()->width(); }
 
-int WindowsBitmap::height() const
-{
-	return m_impl->height();
-}
+int WindowsBitmap::height() const noexcept { return get_impl()->height(); }
 
-int WindowsBitmap::bit_count() const
-{
-	return m_impl->bit_count();
-}
+int WindowsBitmap::bit_count() const noexcept { return get_impl()->bit_count(); }
 
-const unsigned char *WindowsBitmap::read_ptr() const
-{
-	return m_impl->read_ptr();
-}
+const unsigned char *WindowsBitmap::read_ptr() const noexcept { return get_impl()->read_ptr(); }
 
-unsigned char *WindowsBitmap::write_ptr()
-{
-	return m_impl->write_ptr();
-}
+unsigned char *WindowsBitmap::write_ptr() noexcept { return get_impl()->write_ptr(); }
 
-void WindowsBitmap::flush()
-{
-	m_impl->flush();
-}
+void WindowsBitmap::flush() { get_impl()->flush(); }
 
-void WindowsBitmap::close()
-{
-	m_impl->close();
-}
+void WindowsBitmap::close() { get_impl()->close(); }

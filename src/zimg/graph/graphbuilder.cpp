@@ -206,31 +206,42 @@ auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -
 }
 
 
-GraphBuilder::params::params() :
-	dither_type{},
+GraphBuilder::params::params() noexcept :
+	dither_type {},
 	peak_luminance{ NAN },
 	approximate_gamma{},
 	cpu{}
-{
-}
+{}
 
-GraphBuilder::resize_spec::resize_spec(const state &state) :
-	width{ state.width },
-	height{ state.height },
-	subsample_w{ state.subsample_w },
-	subsample_h{ state.subsample_h },
-	shift_w{ state.active_left },
-	shift_h{ state.active_top },
-	subwidth{ state.active_width },
-	subheight{ state.active_height },
-	chroma_location_w{ state.chroma_location_w },
-	chroma_location_h{ state.chroma_location_h }
-{
-}
+struct GraphBuilder::resize_spec {
+	unsigned width;
+	unsigned height;
+	unsigned subsample_w;
+	unsigned subsample_h;
+	double shift_w;
+	double shift_h;
+	double subwidth;
+	double subheight;
+	ChromaLocationW chroma_location_w;
+	ChromaLocationH chroma_location_h;
 
-GraphBuilder::GraphBuilder() : m_state{}
-{
-}
+	resize_spec() = default;
+
+	explicit resize_spec(const state &state) :
+		width{ state.width },
+		height{ state.height },
+		subsample_w{ state.subsample_w },
+		subsample_h{ state.subsample_h },
+		shift_w{ state.active_left },
+		shift_h{ state.active_top },
+		subwidth{ state.active_width },
+		subheight{ state.active_height },
+		chroma_location_w{ state.chroma_location_w },
+		chroma_location_h{ state.chroma_location_h }
+	{}
+};
+
+GraphBuilder::GraphBuilder() noexcept : m_state{} {}
 
 GraphBuilder::~GraphBuilder() = default;
 

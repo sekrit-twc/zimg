@@ -481,10 +481,7 @@ public:
 			m_func = resize_line8_h_u16_sse2_jt_small[filter.filter_width - 1];
 	}
 
-	unsigned get_simultaneous_lines() const override
-	{
-		return 8;
-	}
+	unsigned get_simultaneous_lines() const override { return 8; }
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
@@ -526,8 +523,7 @@ public:
 	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
-	{
-	}
+	{}
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{

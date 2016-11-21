@@ -298,10 +298,7 @@ public:
 			m_func = resize_line4_h_f32_sse_jt_large[filter.filter_width % 4];
 	}
 
-	unsigned get_simultaneous_lines() const override
-	{
-		return 4;
-	}
+	unsigned get_simultaneous_lines() const override { return 4; }
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
@@ -342,8 +339,7 @@ class ResizeImplV_F32_SSE final : public ResizeImplV {
 public:
 	ResizeImplV_F32_SSE(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::FLOAT })
-	{
-	}
+	{}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{

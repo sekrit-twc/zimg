@@ -111,7 +111,8 @@ void lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, float presca
 	}
 }
 
-class LutOperationSSE2 : public Operation {
+
+class LutOperationSSE2 final : public Operation {
 	std::vector<float> m_lut;
 	unsigned m_lut_depth;
 	float m_prescale;
