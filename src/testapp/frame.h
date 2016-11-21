@@ -34,27 +34,27 @@ public:
 	ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
 	           bool yuv = false, unsigned subsample_w = 0, unsigned subsample_h = 0);
 
-	unsigned width(unsigned plane = 0) const;
+	unsigned width(unsigned plane = 0) const noexcept;
 
-	unsigned height(unsigned plane = 0) const;
+	unsigned height(unsigned plane = 0) const noexcept;
 
-	zimg::PixelType pixel_type() const;
+	zimg::PixelType pixel_type() const noexcept;
 
-	unsigned planes() const;
+	unsigned planes() const noexcept;
 
-	unsigned subsample_w() const;
+	unsigned subsample_w() const noexcept;
 
-	unsigned subsample_h() const;
+	unsigned subsample_h() const noexcept;
 
-	bool is_yuv() const;
+	bool is_yuv() const noexcept;
 
-	zimg::graph::ImageBuffer<const void> as_read_buffer(unsigned plane) const;
+	zimg::graph::ImageBuffer<const void> as_read_buffer(unsigned plane) const noexcept;
 
-	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const;
+	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const noexcept;
 
-	zimg::graph::ImageBuffer<void> as_write_buffer(unsigned plane);
+	zimg::graph::ImageBuffer<void> as_write_buffer(unsigned plane) noexcept;
 
-	zimg::graph::ColorImageBuffer<void> as_write_buffer();
+	zimg::graph::ColorImageBuffer<void> as_write_buffer() noexcept;
 };
 
 

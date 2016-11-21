@@ -70,12 +70,9 @@ size_t PairFilter::get_cache_size_one_plane() const
 	return get_cache_line_count() * get_cache_stride();
 }
 
-unsigned PairFilter::get_num_planes() const
-{
-	return m_color ? 3 : 1;
-}
+unsigned PairFilter::get_num_planes() const { return m_color ? 3 : 1; }
 
-zimg::graph::ImageFilter::filter_flags PairFilter::get_flags() const
+auto PairFilter::get_flags() const -> filter_flags
 {
 	filter_flags flags{};
 
@@ -89,12 +86,12 @@ zimg::graph::ImageFilter::filter_flags PairFilter::get_flags() const
 	return flags;
 }
 
-zimg::graph::ImageFilter::image_attributes PairFilter::get_image_attributes() const
+auto PairFilter::get_image_attributes() const -> image_attributes
 {
 	return m_second_attr;
 }
 
-zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_row_range(unsigned i) const
+auto PairFilter::get_required_row_range(unsigned i) const -> pair_unsigned
 {
 	auto second_range = m_second->get_required_row_range(i);
 	auto top_range = m_first->get_required_row_range(zimg::floor_n(second_range.first, m_first_step));
@@ -103,7 +100,7 @@ zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_row_range(unsig
 	return{ top_range.first, bot_range.second };
 }
 
-zimg::graph::ImageFilter::pair_unsigned PairFilter::get_required_col_range(unsigned left, unsigned right) const
+auto PairFilter::get_required_col_range(unsigned left, unsigned right) const -> pair_unsigned
 {
 	auto second_range = m_second->get_required_col_range(left, right);
 	auto first_range = m_first->get_required_col_range(second_range.first, second_range.second);

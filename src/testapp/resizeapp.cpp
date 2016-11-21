@@ -21,7 +21,7 @@
 
 namespace {
 
-bool is_set_pixel_format(const zimg::PixelFormat &format)
+constexpr bool is_set_pixel_format(const zimg::PixelFormat &format) noexcept
 {
 	return format != zimg::PixelFormat{};
 }
