@@ -13,7 +13,7 @@ namespace resize {
 
 namespace {
 
-bool resize_h_first(double xscale, double yscale)
+bool resize_h_first(double xscale, double yscale) noexcept
 {
 	double h_first_cost = std::max(xscale, 1.0) * 2.0 + xscale * std::max(yscale, 1.0);
 	double v_first_cost = std::max(yscale, 1.0) + yscale * std::max(xscale, 1.0) * 2.0;
@@ -37,8 +37,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	subwidth{ static_cast<double>(src_width) },
 	subheight{ static_cast<double>(src_height) },
 	cpu{ CPUClass::NONE }
-{
-}
+{}
 
 auto ResizeConversion::create() const -> filter_pair try
 {
@@ -48,10 +47,10 @@ auto ResizeConversion::create() const -> filter_pair try
 	if (skip_h && skip_v)
 		return{ ztd::make_unique<graph::CopyFilter>(src_width, src_height, type), nullptr };
 
-	auto builder = ResizeImplBuilder{ src_width, src_height, type }.
-		set_depth(depth).
-		set_filter(filter).
-		set_cpu(cpu);
+	auto builder = ResizeImplBuilder{ src_width, src_height, type }
+		.set_depth(depth)
+		.set_filter(filter)
+		.set_cpu(cpu);
 	filter_pair ret{};
 
 	if (skip_h) {
