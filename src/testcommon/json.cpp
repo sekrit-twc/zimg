@@ -37,22 +37,19 @@ private:
 	int m_col;
 	std::string m_str;
 public:
-	Token() : m_tag{ EMPTY }, m_line{}, m_col{}
-	{
-	}
+	Token() noexcept : m_tag{ EMPTY }, m_line{}, m_col{} {}
 
 	Token(tag_type tag, int line, int col, std::string str = {}) :
 		m_tag{ tag },
 		m_line{ line },
 		m_col{ col },
 		m_str{ std::move(str) }
-	{
-	}
+	{}
 
-	tag_type tag() const { return m_tag; }
-	int line() const { return m_line; }
-	int col() const { return m_col; }
-	const std::string &str() const { return m_str; }
+	tag_type tag() const noexcept { return m_tag; }
+	int line() const noexcept { return m_line; }
+	int col() const noexcept { return m_col; }
+	const std::string &str() const noexcept { return m_str; }
 };
 
 template <class ForwardIt>
@@ -87,13 +84,12 @@ private:
 	}
 public:
 	explicit TracingIterator(ForwardIt it) : ForwardIt{ it }, m_line{}, m_col{}
-	{
-	}
+	{}
 
 	ForwardIt base_iterator() const { return *this; }
 
-	int line() const { return m_line; }
-	int col() const { return m_col; }
+	int line() const noexcept { return m_line; }
+	int col() const noexcept { return m_col; }
 
 	reference operator*() const { return *base(); }
 	pointer operator->() const { return &(*base()); }
@@ -139,22 +135,22 @@ bool prefix_match(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2, Forwar
 	return std::equal(first1, last1, first2);
 }
 
-bool is_ascii(char c)
+constexpr bool is_ascii(char c) noexcept
 {
 	return static_cast<signed char>(c) >= 0;
 }
 
-bool is_json_digit(char c)
+constexpr bool is_json_digit(char c) noexcept
 {
-	return std::isdigit(c, std::locale::classic());
+	return c >= '0' && c <= '9';
 }
 
-bool is_json_space(char c)
+constexpr bool is_json_space(char c) noexcept
 {
 	return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-bool is_number_or_keyword(Token::tag_type type)
+constexpr bool is_number_or_keyword(Token::tag_type type) noexcept
 {
 	return type >= Token::NUMBER_LITERAL;
 }
@@ -546,7 +542,7 @@ std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last)
 
 
 template <class T>
-void uninitialized_move(void *src, void *dst)
+void uninitialized_move(void *src, void *dst) noexcept
 {
 	T *src_p = static_cast<T *>(src);
 	T *dst_p = static_cast<T *>(dst);
@@ -558,13 +554,13 @@ void uninitialized_move(void *src, void *dst)
 } // namespace
 
 
-JsonError::JsonError(const char *msg, int line, int col) :
+JsonError::JsonError(const char *msg, int line, int col) noexcept :
 	std::runtime_error{ msg }
 {
 	add_trace(line, col);
 }
 
-JsonError::JsonError(const JsonError &other) :
+JsonError::JsonError(const JsonError &other) noexcept :
 	std::runtime_error{ other }
 {
 	try {
@@ -574,7 +570,7 @@ JsonError::JsonError(const JsonError &other) :
 	}
 }
 
-JsonError &JsonError::operator=(const JsonError &other)
+JsonError &JsonError::operator=(const JsonError &other) noexcept
 {
 	std::runtime_error::operator=(other);
 
@@ -589,7 +585,7 @@ JsonError &JsonError::operator=(const JsonError &other)
 	return *this;
 }
 
-void JsonError::add_trace(int line, int col) const
+void JsonError::add_trace(int line, int col) const noexcept
 {
 	try {
 		m_stack_trace.emplace_back(line, col);
@@ -598,7 +594,7 @@ void JsonError::add_trace(int line, int col) const
 	}
 }
 
-std::string JsonError::error_details() const
+std::string JsonError::error_details() const noexcept
 {
 	std::string s;
 
@@ -621,7 +617,7 @@ std::string JsonError::error_details() const
 }
 
 void Value::move_helper(tag_type &src_tag, union_type &src_union,
-						tag_type &dst_tag, union_type &dst_union)
+						tag_type &dst_tag, union_type &dst_union) noexcept
 {
 	switch (src_tag) {
 	case NULL_:
@@ -677,7 +673,7 @@ Value::Value(const Value &other) : m_tag{ NULL_ }
 	m_tag = other.get_type();
 }
 
-Value::Value(Value &&other) : m_tag{ NULL_ }
+Value::Value(Value &&other) noexcept : m_tag{ NULL_ }
 {
 	swap(*this, other);
 }
@@ -708,13 +704,20 @@ Value::~Value()
 	}
 }
 
-Value &Value::operator=(Value other)
+Value &Value::operator=(const Value &other)
+{
+	Value tmp{ other };
+	swap(*this, tmp);
+	return *this;
+}
+
+Value &Value::operator=(Value &&other) noexcept
 {
 	swap(*this, other);
 	return *this;
 }
 
-void swap(Value &a, Value &b)
+void swap(Value &a, Value &b) noexcept
 {
 	Value::tag_type tag;
 	Value::union_type union_;

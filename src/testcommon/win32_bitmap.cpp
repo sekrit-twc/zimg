@@ -37,7 +37,7 @@ typedef struct tagBITMAPINFOHEADER {
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 #pragma pack(pop)
 
-static size_t bitmap_row_size(int width, int bit_count)
+size_t bitmap_row_size(int width, int bit_count) noexcept
 {
 	size_t row_size;
 
@@ -47,7 +47,7 @@ static size_t bitmap_row_size(int width, int bit_count)
 	return row_size;
 }
 
-static size_t bitmap_data_size(int width, int height, int bit_count)
+size_t bitmap_data_size(int width, int height, int bit_count) noexcept
 {
 	return bitmap_row_size(width, bit_count) * height;
 }
@@ -57,9 +57,8 @@ struct BitmapFileData {
 	BITMAPINFOHEADER *biHeader;
 	void *image_data;
 
-	BitmapFileData() : bfHeader{}, biHeader{}, image_data{}
-	{
-	}
+	BitmapFileData() noexcept : bfHeader{}, biHeader{}, image_data{}
+	{}
 
 	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
@@ -127,7 +126,7 @@ class WindowsBitmap::impl {
 	BitmapFileData m_bitmap;
 	bool m_writable;
 
-	size_t row_size() const
+	size_t row_size() const noexcept
 	{
 		size_t row_size = static_cast<size_t>(width()) * (bit_count() / 8);
 		row_size = (row_size % 4) ? row_size + 4 - row_size % 4 : row_size;
@@ -163,46 +162,25 @@ public:
 		m_bitmap.init(m_mmap.size(), width, height, bit_count);
 	}
 
-	const unsigned char *read_ptr() const
+	const unsigned char *read_ptr() const noexcept
 	{
 		const unsigned char *image_data = static_cast<const unsigned char *>(m_bitmap.image_data);
 		return image_data + row_size() * (height() - 1);
 	}
 
-	unsigned char *write_ptr()
+	unsigned char *write_ptr() noexcept
 	{
 		return m_writable ? const_cast<unsigned char *>(read_ptr()) : nullptr;
 	}
 
-	ptrdiff_t stride() const
-	{
-		return -static_cast<ptrdiff_t>(row_size());
-	}
+	ptrdiff_t stride() const noexcept { return -static_cast<ptrdiff_t>(row_size()); }
 
-	int width() const
-	{
-		return m_bitmap.biHeader->biWidth;
-	}
+	int width() const noexcept { return m_bitmap.biHeader->biWidth; }
+	int height() const noexcept { return m_bitmap.biHeader->biHeight; }
+	int bit_count() const noexcept { return m_bitmap.biHeader->biBitCount; }
 
-	int height() const
-	{
-		return m_bitmap.biHeader->biHeight;
-	}
-
-	int bit_count() const
-	{
-		return m_bitmap.biHeader->biBitCount;
-	}
-
-	void flush()
-	{
-		m_mmap.flush();
-	}
-
-	void close()
-	{
-		m_mmap.close();
-	}
+	void flush() { m_mmap.flush(); }
+	void close() { m_mmap.close(); }
 };
 
 

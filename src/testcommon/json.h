@@ -18,15 +18,15 @@ class JsonError : public std::runtime_error {
 public:
 	using std::runtime_error::runtime_error;
 
-	JsonError(const char *msg, int line, int col);
+	JsonError(const char *msg, int line, int col) noexcept;
 
-	JsonError(const JsonError &other);
+	JsonError(const JsonError &other) noexcept;
 
-	JsonError &operator=(const JsonError &other);
+	JsonError &operator=(const JsonError &other) noexcept;
 
-	void add_trace(int line, int col) const;
+	void add_trace(int line, int col) const noexcept;
 
-	std::string error_details() const;
+	std::string error_details() const noexcept;
 };
 
 class Value;
@@ -54,9 +54,9 @@ public:
 	using base_type::erase;
 	using base_type::swap;
 
-	const Value &operator[](const std::string &key) const;
+	const Value &operator[](const std::string &key) const noexcept;
 
-	friend void swap(Object &a, Object &b);
+	friend void swap(Object &a, Object &b) noexcept;
 };
 
 typedef std::vector<Value> Array;
@@ -87,19 +87,19 @@ private:
 	union_type m_union;
 
 	static void move_helper(tag_type &src_tag, union_type &src_union,
-	                        tag_type &dst_tag, union_type &dst_union);
+	                        tag_type &dst_tag, union_type &dst_union) noexcept;
 
 	template <class T>
 	void construct(T x) { new (&m_union) T{ std::move(x) }; }
 
 	template <class T>
-	void destroy() { reinterpret_cast<T &>(m_union).~T(); }
+	void destroy() noexcept { reinterpret_cast<T &>(m_union).~T(); }
 
 	template <class T>
-	T &as() { return reinterpret_cast<T &>(m_union); }
+	T &as() noexcept { return reinterpret_cast<T &>(m_union); }
 
 	template <class T>
-	const T &as() const { return reinterpret_cast<const T &>(m_union); }
+	const T &as() const noexcept { return reinterpret_cast<const T &>(m_union); }
 
 	void check_tag(tag_type tag) const
 	{
@@ -107,26 +107,27 @@ private:
 			throw std::invalid_argument{ "access as wrong type" };
 	}
 public:
-	Value(std::nullptr_t = nullptr) : m_tag{ NULL_ } {}
+	Value(std::nullptr_t = nullptr) noexcept : m_tag{ NULL_ } {}
 
-	explicit Value(double val) : m_tag{ NUMBER } { construct(val); }
+	explicit Value(double val) noexcept : m_tag{ NUMBER } { construct(val); }
 	explicit Value(std::string val) : m_tag{ STRING } { construct(std::move(val)); }
 	explicit Value(Array val) : m_tag{ ARRAY } { construct(std::move(val)); }
 	explicit Value(Object val) : m_tag{ OBJECT } { construct(std::move(val)); }
-	explicit Value(bool val) : m_tag{ BOOL_ } { construct(val); }
+	explicit Value(bool val) noexcept : m_tag{ BOOL_ } { construct(val); }
 
 	Value(const Value &other);
-	Value(Value &&other);
+	Value(Value &&other) noexcept;
 
 	~Value();
 
-	Value &operator=(Value other);
+	Value &operator=(const Value &other);
+	Value &operator=(Value &&other) noexcept;
 
-	explicit operator bool() const { return !is_null(); }
+	explicit operator bool() const noexcept { return !is_null(); }
 
-	bool is_null() const { return get_type() == NULL_; }
+	bool is_null() const noexcept { return get_type() == NULL_; }
 
-	tag_type get_type() const { return m_tag; }
+	tag_type get_type() const noexcept { return m_tag; }
 
 #define JSON_VALUE_GET_SET(T, name, tag) \
   const T &name() const { check_tag(tag); return as<T>(); } \
@@ -143,21 +144,18 @@ public:
 
 	long long integer() const { return std::llrint(number()); }
 
-	friend void swap(Value &a, Value &b);
+	friend void swap(Value &a, Value &b) noexcept;
 };
 
-inline const Value &Object::operator[](const std::string &key) const
+inline const Value &Object::operator[](const std::string &key) const noexcept
 {
-	static Value null_value{};
+	static const Value null_value{};
 
 	auto it = find(key);
 	return it == end() ? null_value : it->second;
 }
 
-inline void swap(Object &a, Object &b)
-{
-	a.swap(b);
-}
+inline void swap(Object &a, Object &b) noexcept { a.swap(b); }
 
 
 Value parse_document(const std::string &str);
