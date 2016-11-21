@@ -1079,47 +1079,47 @@ FilterGraph &FilterGraph::operator=(FilterGraph &&other) = default;
 
 void FilterGraph::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter(std::move(filter));
+	get_impl()->attach_filter(std::move(filter));
 }
 
 void FilterGraph::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
 {
-	m_impl->attach_filter_uv(std::move(filter));
+	get_impl()->attach_filter_uv(std::move(filter));
 }
 
 void FilterGraph::color_to_grey()
 {
-	m_impl->color_to_grey();
+	get_impl()->color_to_grey();
 }
 
 void FilterGraph::grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth)
 {
-	m_impl->grey_to_color(yuv, subsample_w, subsample_h, depth);
+	get_impl()->grey_to_color(yuv, subsample_w, subsample_h, depth);
 }
 
 void FilterGraph::complete()
 {
-	m_impl->complete();
+	get_impl()->complete();
 }
 
 size_t FilterGraph::get_tmp_size() const
 {
-	return m_impl->get_tmp_size();
+	return get_impl()->get_tmp_size();
 }
 
 unsigned FilterGraph::get_input_buffering() const
 {
-	return m_impl->get_input_buffering();
+	return get_impl()->get_input_buffering();
 }
 
 unsigned FilterGraph::get_output_buffering() const
 {
-	return m_impl->get_output_buffering();
+	return get_impl()->get_output_buffering();
 }
 
 void FilterGraph::process(const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *tmp, callback unpack_cb, callback pack_cb) const
 {
-	m_impl->process(src, dst, tmp, unpack_cb, pack_cb);
+	get_impl()->process(src, dst, tmp, unpack_cb, pack_cb);
 }
 
 } // namespace graph

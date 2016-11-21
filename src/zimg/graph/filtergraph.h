@@ -71,6 +71,9 @@ public:
 	};
 private:
 	std::unique_ptr<impl> m_impl;
+
+	impl *get_impl() noexcept { return m_impl.get(); }
+	const impl *get_impl() const noexcept { return m_impl.get(); }
 public:
 	/**
 	 * Construct a FilterGraph from a specific source format.
