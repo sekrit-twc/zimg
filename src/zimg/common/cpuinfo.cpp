@@ -74,7 +74,7 @@ bool cpu_has_fast_f16(CPUClass cpu) noexcept
 
 namespace zimg {
 
-bool cpu_has_fast_f16(CPUClass) { return false; }
+bool cpu_has_fast_f16(CPUClass) noexcept { return false; }
 
 } // namespace zimg
 
