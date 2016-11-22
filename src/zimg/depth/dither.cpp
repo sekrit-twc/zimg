@@ -130,9 +130,9 @@ decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pix
 }
 
 
-const unsigned BAYER_TABLE_LEN = 8;
+constexpr unsigned BAYER_TABLE_LEN = 8;
 
-const unsigned short BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN] = {
+constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN] = {
 	 1, 49, 13, 61,  4, 52, 16, 64,
 	33, 17, 45, 29, 36, 20, 48, 32,
 	 9, 57,  5, 53, 12, 60,  8, 56,
@@ -143,7 +143,7 @@ const unsigned short BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN] = {
 	43, 27, 39, 23, 42, 26, 38, 22
 };
 
-const unsigned short BAYER_TABLE_SCALE = 65;
+constexpr unsigned BAYER_TABLE_SCALE = 65;
 
 class OrderedDitherTable {
 public:
@@ -187,7 +187,7 @@ public:
 };
 
 class RandomDitherTable final : public OrderedDitherTable {
-	static const size_t RAND_NUM = 1 << 14;
+	static constexpr size_t RAND_NUM = 1 << 14;
 
 	AlignedVector<float> m_table;
 	std::vector<unsigned> m_row_offset;

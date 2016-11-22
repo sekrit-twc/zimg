@@ -11,10 +11,10 @@
 
 namespace {
 
-static const ArgparseOption HELP_OPTION_FULL = { OPTION_HELP, "?", "help", 0, nullptr, "print help message" };
-static const ArgparseOption HELP_OPTION_LONG_ONLY = { OPTION_HELP, nullptr, "help", 0, nullptr, "print help message" };
+const ArgparseOption HELP_OPTION_FULL = { OPTION_HELP, "?", "help", 0, nullptr, "print help message" };
+const ArgparseOption HELP_OPTION_LONG_ONLY = { OPTION_HELP, nullptr, "help", 0, nullptr, "print help message" };
 
-const int HELP_INDENT = 32;
+constexpr int HELP_INDENT = 32;
 
 
 const char *get_short_name(const ArgparseOption &opt) noexcept

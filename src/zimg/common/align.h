@@ -8,7 +8,7 @@ namespace zimg {
 /**
  * 32-byte alignment allows the use of instructions up to AVX.
  */
-const int ALIGNMENT = 32;
+constexpr int ALIGNMENT = 32;
 
 /**
  * Round up the argument x to the nearest multiple of n.
@@ -31,7 +31,7 @@ constexpr T floor_n(T x, U n) noexcept { return x - (x % n); }
  */
 template <class T>
 struct AlignmentOf {
-	static const unsigned value = ALIGNMENT / sizeof(T);
+	static constexpr unsigned value = ALIGNMENT / sizeof(T);
 };
 
 } // namespace zimg

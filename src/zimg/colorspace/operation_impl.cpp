@@ -183,14 +183,14 @@ class Rec2020CLToRGBOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		const float kr = static_cast<float>(REC_2020_KR);
-		const float kb = static_cast<float>(REC_2020_KB);
-		const float kg = 1.0f - kr - kb;
+		constexpr float kr = static_cast<float>(REC_2020_KR);
+		constexpr float kb = static_cast<float>(REC_2020_KB);
+		constexpr float kg = 1.0f - kr - kb;
 
-		const float pb = 0.7909854f;
-		const float nb = -0.9701716f;
-		const float pr = 0.4969147f;
-		const float nr = -0.8591209f;
+		constexpr float pb = 0.7909854f;
+		constexpr float nb = -0.9701716f;
+		constexpr float pr = 0.4969147f;
+		constexpr float nr = -0.8591209f;
 
 		unsigned w = fpu_save();
 		fpu_set_single();
@@ -232,14 +232,14 @@ class Rec2020CLToYUVOperationC final : public Operation {
 public:
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		const float kr = static_cast<float>(REC_2020_KR);
-		const float kb = static_cast<float>(REC_2020_KB);
-		const float kg = 1.0f - kr - kb;
+		constexpr float kr = static_cast<float>(REC_2020_KR);
+		constexpr float kb = static_cast<float>(REC_2020_KB);
+		constexpr float kg = 1.0f - kr - kb;
 
-		const float pb = 0.7909854f;
-		const float nb = -0.9701716f;
-		const float pr = 0.4969147f;
-		const float nr = -0.8591209f;
+		constexpr float pb = 0.7909854f;
+		constexpr float nb = -0.9701716f;
+		constexpr float pr = 0.4969147f;
+		constexpr float nr = -0.8591209f;
 
 		unsigned w = fpu_save();
 		fpu_set_single();

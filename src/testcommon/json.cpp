@@ -61,7 +61,7 @@ public:
 	using typename ForwardIt::pointer;
 	typedef std::forward_iterator_tag iterator_category;
 private:
-	static const int SPACES_PER_TAB = 4;
+	static constexpr int SPACES_PER_TAB = 4;
 
 	int m_line;
 	int m_col;

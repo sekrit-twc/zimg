@@ -15,22 +15,22 @@ namespace colorspace {
 struct Matrix3x3;
 class Operation;
 
-const float REC709_ALPHA = 1.09929682680944f;
-const float REC709_BETA = 0.018053968510807f;
+constexpr float REC709_ALPHA = 1.09929682680944f;
+constexpr float REC709_BETA = 0.018053968510807f;
 
-const float SRGB_ALPHA = 1.055f;
-const float SRGB_BETA = 0.0031308f;
+constexpr float SRGB_ALPHA = 1.055f;
+constexpr float SRGB_BETA = 0.0031308f;
 
-const float ST2084_M1 = 0.1593017578125f;
-const float ST2084_M2 = 78.84375f;
-const float ST2084_C1 = 0.8359375f;
-const float ST2084_C2 = 18.8515625f;
-const float ST2084_C3 = 18.6875f;
-const float ST2084_PEAK_LUMINANCE = 10000.0f; // Units of cd/m^2.
+constexpr float ST2084_M1 = 0.1593017578125f;
+constexpr float ST2084_M2 = 78.84375f;
+constexpr float ST2084_C1 = 0.8359375f;
+constexpr float ST2084_C2 = 18.8515625f;
+constexpr float ST2084_C3 = 18.6875f;
+constexpr float ST2084_PEAK_LUMINANCE = 10000.0f; // Units of cd/m^2.
 
-const float ARIB_B67_A = 0.17883277f;
-const float ARIB_B67_B = 0.28466892f;
-const float ARIB_B67_C = 0.55991073f;
+constexpr float ARIB_B67_A = 0.17883277f;
+constexpr float ARIB_B67_B = 0.28466892f;
+constexpr float ARIB_B67_C = 0.55991073f;
 
 float rec_709_gamma(float x) noexcept;
 float rec_709_inverse_gamma(float x) noexcept;

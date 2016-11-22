@@ -20,9 +20,9 @@
 
 namespace {
 
-const unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
-const unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
-const unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
+constexpr unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
+constexpr unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
+constexpr unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 
 #define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
 #define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
@@ -31,7 +31,7 @@ const unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local std::string g_last_error_msg;
 
-const unsigned VERSION_INFO[] = { 2, 3, 0 };
+constexpr unsigned VERSION_INFO[] = { 2, 3, 0 };
 
 
 template <class T, class U>

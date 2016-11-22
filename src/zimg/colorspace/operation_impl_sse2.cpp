@@ -20,7 +20,7 @@ namespace colorspace {
 
 namespace {
 
-const unsigned LUT_DEPTH = 15;
+constexpr unsigned LUT_DEPTH = 15;
 
 typedef float (*gamma_func)(float);
 

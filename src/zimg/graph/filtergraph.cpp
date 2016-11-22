@@ -202,7 +202,7 @@ public:
 class GraphNode {
 protected:
 	struct node_context {
-		static const uint64_t GUARD_PATTERN = 0xDEADBEEFDEADBEEFULL;
+		static constexpr uint64_t GUARD_PATTERN = 0xDEADBEEFDEADBEEFULL;
 		const uint64_t guard_pattern = GUARD_PATTERN;
 		unsigned cache_pos;
 		unsigned source_left;
@@ -738,8 +738,8 @@ public:
 
 
 class FilterGraph::impl {
-	static const unsigned HORIZONTAL_STEP = 512;
-	static const unsigned TILE_MIN = 64;
+	static constexpr unsigned HORIZONTAL_STEP = 512;
+	static constexpr unsigned TILE_MIN = 64;
 
 	std::vector<std::unique_ptr<GraphNode>> m_node_set;
 	GraphNode *m_head;

@@ -15,7 +15,7 @@ namespace resize {
 
 namespace {
 
-const double PI = 3.14159265358979323846;
+constexpr double PI = 3.14159265358979323846;
 
 double sinc(double x) noexcept
 {
@@ -23,15 +23,9 @@ double sinc(double x) noexcept
 	return x == 0.0 ? 1.0 : zimg_x_sin(x * PI) / (x * PI);
 }
 
-double sq(double x) noexcept
-{
-	return x * x;
-}
+double sq(double x) noexcept { return x * x; }
 
-double cube(double x) noexcept
-{
-	return x * x * x;
-}
+double cube(double x) noexcept { return x * x * x; }
 
 double round_halfup(double x) noexcept
 {

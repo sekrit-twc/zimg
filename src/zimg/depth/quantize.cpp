@@ -7,10 +7,10 @@ namespace depth {
 #define FLOAT_HALF_EXP_ADJUST (127 - 15)
 float half_to_float(uint16_t f16w) noexcept
 {
-	const unsigned exp_nonfinite_f16 = 0x1F;
-	const unsigned exp_nonfinite_f32 = 0xFF;
+	constexpr unsigned exp_nonfinite_f16 = 0x1F;
+	constexpr unsigned exp_nonfinite_f32 = 0xFF;
 
-	const uint32_t mant_qnan_f32 = 0x00400000UL;
+	constexpr uint32_t mant_qnan_f32 = 0x00400000UL;
 
 	uint16_t sign = (f16w & 0x8000U) >> 15;
 	uint16_t exp = (f16w & 0x7C00U) >> 10;
@@ -64,11 +64,11 @@ float half_to_float(uint16_t f16w) noexcept
 
 uint16_t float_to_half(float f32) noexcept
 {
-	const unsigned exp_nonfinite_f32 = 0xFF;
-	const unsigned exp_nonfinite_f16 = 0x1F;
+	constexpr unsigned exp_nonfinite_f32 = 0xFF;
+	constexpr unsigned exp_nonfinite_f16 = 0x1F;
 
-	const unsigned mant_qnan_f16 = 0x0200;
-	const unsigned mant_max_f16 = 0x03FF;
+	constexpr unsigned mant_qnan_f16 = 0x0200;
+	constexpr unsigned mant_max_f16 = 0x03FF;
 
 	uint32_t f32dw = bit_cast<uint32_t>(f32);
 	uint32_t sign = (f32dw & 0x80000000UL) >> 31;
