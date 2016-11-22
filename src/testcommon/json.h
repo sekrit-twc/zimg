@@ -63,6 +63,8 @@ typedef std::vector<Value> Array;
 
 class Value {
 public:
+	struct static_initializer_tag {};
+
 	enum tag_type {
 		NULL_,
 		NUMBER,
@@ -106,8 +108,11 @@ private:
 		if (get_type() != tag)
 			throw std::invalid_argument{ "access as wrong type" };
 	}
+
 public:
-	Value(std::nullptr_t = nullptr) noexcept : m_tag{ NULL_ } {}
+	constexpr explicit Value(static_initializer_tag) noexcept : m_tag{ NULL_ }, m_union{} {}
+
+	Value(std::nullptr_t = nullptr) noexcept : m_tag{ NULL_ }, m_union{} {}
 
 	explicit Value(double val) noexcept : m_tag{ NUMBER } { construct(val); }
 	explicit Value(std::string val) : m_tag{ STRING } { construct(std::move(val)); }
@@ -149,7 +154,7 @@ public:
 
 inline const Value &Object::operator[](const std::string &key) const noexcept
 {
-	static const Value null_value{};
+	static const Value null_value{ Value::static_initializer_tag{} };
 
 	auto it = find(key);
 	return it == end() ? null_value : it->second;
