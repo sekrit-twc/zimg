@@ -258,12 +258,8 @@ class MemoryMappedFile::impl {
 	{
 		std::unique_ptr<void, posix::close_fd> fd_uptr;
 		int fd;
-		long page_size;
 		off_t file_size;
 		void *ptr;
-
-		if ((page_size = sysconf(_SC_PAGESIZE)) < 0)
-			posix::trap_error("error determining page size");
 
 		if ((fd = ::open(path, open_flags)) < 0)
 			posix::trap_error("error opening file");
@@ -279,7 +275,7 @@ class MemoryMappedFile::impl {
 		m_size = static_cast<size_t>(file_size);
 
 		m_ptr.reset(ptr);
-		m_ptr.get_deleter().size = m_size % page_size ? m_size + page_size - m_size % page_size : m_size;
+		m_ptr.get_deleter().size = m_size;
 	}
 public:
 	impl() noexcept : m_size{}, m_writable{} {}
