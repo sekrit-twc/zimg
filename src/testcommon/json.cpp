@@ -9,6 +9,7 @@
 #include "json.h"
 
 namespace json {
+
 namespace {
 namespace parser {
 
@@ -617,7 +618,7 @@ std::string JsonError::error_details() const noexcept
 }
 
 void Value::move_helper(tag_type &src_tag, union_type &src_union,
-						tag_type &dst_tag, union_type &dst_union) noexcept
+                        tag_type &dst_tag, union_type &dst_union) noexcept
 {
 	switch (src_tag) {
 	case NULL_:
