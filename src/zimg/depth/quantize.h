@@ -11,9 +11,6 @@
 namespace zimg {
 namespace depth {
 
-template <class T>
-constexpr T &identity(T x) noexcept { return x; }
-
 template <class T, class U>
 T bit_cast(const U &x) noexcept
 {
