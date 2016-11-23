@@ -222,7 +222,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 8> map{
+	static const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 9> map{
 		{ ZIMG_TRANSFER_709,           TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED,   TransferCharacteristics::UNSPECIFIED },
 		{ ZIMG_TRANSFER_601,           TransferCharacteristics::REC_709 },
