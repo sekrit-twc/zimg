@@ -165,6 +165,7 @@ public:
 	ToGammaLutOperationAVX2(gamma_func func, float prescale) :
 		m_lut(static_cast<uint32_t>(UINT16_MAX) + 1)
 	{
+		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
 		for (unsigned long i = 0; i <= UINT16_MAX; ++i) {
 			uint16_t half = static_cast<uint16_t>(i);
 			float x = _mm_cvtss_f32(_mm_cvtph_ps(_mm_set1_epi16(half)));

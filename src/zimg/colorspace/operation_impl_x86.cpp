@@ -54,7 +54,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacte
 	std::unique_ptr<Operation> ret;
 
 	if (cpu == CPUClass::AUTO) {
-		if (!ret && caps.avx2)
+		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_linear_to_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
 			ret = create_linear_to_gamma_operation_sse2(transfer, params);
