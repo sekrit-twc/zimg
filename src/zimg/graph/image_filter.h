@@ -25,7 +25,7 @@ public:
 	struct filter_flags {
 		/**
 		 * Filter retains state between invocations and must be invoked on
-		 * sequentially increasing lines indices.
+		 * sequentially increasing line indices.
 		 */
 		bool has_state : 1;
 
@@ -95,7 +95,7 @@ public:
 	virtual pair_unsigned get_required_row_range(unsigned i) const = 0;
 
 	/**
-	 * Get the column range required to produce a given line.
+	 * Get the column range required to produce a given horizontal span.
 	 *
 	 * @param left left column index
 	 * @param right right column index, plus one
