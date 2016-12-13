@@ -70,7 +70,7 @@ public:
 	/**
 	 * Destroy filter.
 	 */
-	virtual inline ~ImageFilter() = 0;
+	virtual ~ImageFilter() = 0;
 
 	/**
 	 * Get the filter flags structure.
@@ -159,7 +159,7 @@ public:
  */
 class ImageFilterBase : public ImageFilter {
 public:
-	virtual inline ~ImageFilterBase() = 0;
+	virtual ~ImageFilterBase() = 0;
 
 	pair_unsigned get_required_row_range(unsigned i) const override
 	{
@@ -180,9 +180,9 @@ public:
 	void init_context(void *ctx) const override {}
 };
 
-ImageFilter::~ImageFilter() = default;
+inline ImageFilter::~ImageFilter() = default;
 
-ImageFilterBase::~ImageFilterBase() = default;
+inline ImageFilterBase::~ImageFilterBase() = default;
 
 /**
  * Compare two {@link ImageFilter::image_attributes} structures.

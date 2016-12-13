@@ -147,7 +147,7 @@ constexpr unsigned BAYER_TABLE_SCALE = 65;
 
 class OrderedDitherTable {
 public:
-	virtual ~OrderedDitherTable() {}
+	virtual ~OrderedDitherTable() = default;
 
 	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const = 0;
 };
