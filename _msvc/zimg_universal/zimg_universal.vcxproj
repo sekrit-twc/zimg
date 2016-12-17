@@ -14,6 +14,7 @@
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\graph.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
@@ -59,6 +60,7 @@
     <ClInclude Include="..\..\src\zimg\api\zimg.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\colorspace.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\colorspace_param.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\gamma.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\graph.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\matrix3.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\operation.h" />

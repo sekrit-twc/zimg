@@ -58,6 +58,8 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/colorspace/colorspace.h \
 	src/zimg/colorspace/colorspace_param.cpp \
 	src/zimg/colorspace/colorspace_param.h \
+	src/zimg/colorspace/gamma.cpp \
+	src/zimg/colorspace/gamma.h \
 	src/zimg/colorspace/graph.cpp \
 	src/zimg/colorspace/graph.h \
 	src/zimg/colorspace/matrix3.cpp \

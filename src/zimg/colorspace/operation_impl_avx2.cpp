@@ -10,8 +10,8 @@
 #include "common/make_unique.h"
 #include "common/zassert.h"
 #include "colorspace.h"
+#include "gamma.h"
 #include "operation.h"
-#include "operation_impl.h"
 #include "operation_impl_x86.h"
 
 namespace zimg {
@@ -39,13 +39,13 @@ gamma_func get_gamma_func(TransferCharacteristics transfer)
 {
 	switch (transfer) {
 	case TransferCharacteristics::REC_709:
-		return rec_709_gamma;
+		return rec_709_oetf;
 	case TransferCharacteristics::SRGB:
-		return srgb_gamma;
+		return srgb_inverse_eotf;
 	case TransferCharacteristics::ST_2084:
-		return st_2084_gamma;
+		return st_2084_inverse_eotf;
 	case TransferCharacteristics::ARIB_B67:
-		return arib_b67_gamma;
+		return arib_b67_oetf;
 	default:
 		zassert_d(false, "bad transfer function");
 		return nullptr;
@@ -56,13 +56,13 @@ gamma_func get_inverse_gamma_func(TransferCharacteristics transfer)
 {
 	switch (transfer) {
 	case TransferCharacteristics::REC_709:
-		return rec_709_inverse_gamma;
+		return rec_709_inverse_oetf;
 	case TransferCharacteristics::SRGB:
-		return srgb_inverse_gamma;
+		return srgb_eotf;
 	case TransferCharacteristics::ST_2084:
-		return st_2084_inverse_gamma;
+		return st_2084_eotf;
 	case TransferCharacteristics::ARIB_B67:
-		return arib_b67_inverse_gamma;
+		return arib_b67_inverse_oetf;
 	default:
 		zassert_d(false, "bad transfer function");
 		return nullptr;

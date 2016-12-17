@@ -181,6 +181,9 @@
     <ClCompile Include="..\..\src\zimg\depth\quantize.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">
@@ -308,6 +311,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\depth\hexfloat.h">
       <Filter>Header Files\depth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\gamma.h">
+      <Filter>Header Files\colorspace</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

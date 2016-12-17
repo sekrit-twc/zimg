@@ -15,35 +15,6 @@ namespace colorspace {
 struct Matrix3x3;
 class Operation;
 
-constexpr float REC709_ALPHA = 1.09929682680944f;
-constexpr float REC709_BETA = 0.018053968510807f;
-
-constexpr float SRGB_ALPHA = 1.055f;
-constexpr float SRGB_BETA = 0.0031308f;
-
-constexpr float ST2084_M1 = 0.1593017578125f;
-constexpr float ST2084_M2 = 78.84375f;
-constexpr float ST2084_C1 = 0.8359375f;
-constexpr float ST2084_C2 = 18.8515625f;
-constexpr float ST2084_C3 = 18.6875f;
-constexpr float ST2084_PEAK_LUMINANCE = 10000.0f; // Units of cd/m^2.
-
-constexpr float ARIB_B67_A = 0.17883277f;
-constexpr float ARIB_B67_B = 0.28466892f;
-constexpr float ARIB_B67_C = 0.55991073f;
-
-float rec_709_gamma(float x) noexcept;
-float rec_709_inverse_gamma(float x) noexcept;
-
-float srgb_gamma(float x) noexcept;
-float srgb_inverse_gamma(float x) noexcept;
-
-float st_2084_gamma(float x) noexcept;
-float st_2084_inverse_gamma(float x) noexcept;
-
-float arib_b67_gamma(float x) noexcept;
-float arib_b67_inverse_gamma(float x) noexcept;
-
 /**
  * Base class for matrix operation implementations.
  */
@@ -59,7 +30,7 @@ protected:
 	 *
 	 * @param m transformation matrix
 	 */
-	MatrixOperationImpl(const Matrix3x3 &matrix);
+	explicit MatrixOperationImpl(const Matrix3x3 &matrix);
 };
 
 /**
