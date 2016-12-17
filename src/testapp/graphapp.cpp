@@ -176,6 +176,8 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 		params->peak_luminance = val.number();
 	if (const auto &val = obj["approximate_gamma"])
 		params->approximate_gamma = val.boolean();
+	if (const auto &val = obj["scene_referred"])
+		params->scene_referred = val.boolean();
 	if (const auto &val = obj["cpu"])
 		params->cpu = g_cpu_table[val.string().c_str()];
 }

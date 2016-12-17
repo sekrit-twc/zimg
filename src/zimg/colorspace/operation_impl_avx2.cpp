@@ -21,54 +21,6 @@ namespace {
 
 constexpr unsigned LUT_DEPTH = 15;
 
-typedef float (*gamma_func)(float);
-
-std::pair<float, float> get_scale_factor(TransferCharacteristics transfer, float peak_luminance)
-{
-	switch (transfer) {
-	case TransferCharacteristics::ST_2084:
-		return{ peak_luminance / ST2084_PEAK_LUMINANCE, ST2084_PEAK_LUMINANCE / peak_luminance };
-	case TransferCharacteristics::ARIB_B67:
-		return{ 1.0f / 12.0f, 12.0f };
-	default:
-		return{ 1.0f, 1.0f };
-	}
-}
-
-gamma_func get_gamma_func(TransferCharacteristics transfer)
-{
-	switch (transfer) {
-	case TransferCharacteristics::REC_709:
-		return rec_709_oetf;
-	case TransferCharacteristics::SRGB:
-		return srgb_inverse_eotf;
-	case TransferCharacteristics::ST_2084:
-		return st_2084_inverse_eotf;
-	case TransferCharacteristics::ARIB_B67:
-		return arib_b67_oetf;
-	default:
-		zassert_d(false, "bad transfer function");
-		return nullptr;
-	}
-}
-
-gamma_func get_inverse_gamma_func(TransferCharacteristics transfer)
-{
-	switch (transfer) {
-	case TransferCharacteristics::REC_709:
-		return rec_709_inverse_oetf;
-	case TransferCharacteristics::SRGB:
-		return srgb_eotf;
-	case TransferCharacteristics::ST_2084:
-		return st_2084_eotf;
-	case TransferCharacteristics::ARIB_B67:
-		return arib_b67_inverse_oetf;
-	default:
-		zassert_d(false, "bad transfer function");
-		return nullptr;
-	}
-}
-
 void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, const float *src, float *dst, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 8);
@@ -190,9 +142,9 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation_avx2(TransferCharact
 		return nullptr;
 
 	zassert_d(!std::isnan(params.peak_luminance), "nan detected");
-	std::pair<float, float> scale_factor = get_scale_factor(transfer, static_cast<float>(params.peak_luminance));
-	gamma_func func = get_inverse_gamma_func(transfer);
-	return ztd::make_unique<ToLinearLutOperationAVX2>(func, LUT_DEPTH, scale_factor.second);
+
+	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
+	return ztd::make_unique<ToLinearLutOperationAVX2>(func.to_linear, LUT_DEPTH, func.to_linear_scale);
 }
 
 std::unique_ptr<Operation> create_linear_to_gamma_operation_avx2(TransferCharacteristics transfer, const OperationParams &params)
@@ -201,9 +153,9 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_avx2(TransferCharact
 		return nullptr;
 
 	zassert_d(!std::isnan(params.peak_luminance), "nan detected");
-	std::pair<float, float> scale_factor = get_scale_factor(transfer, static_cast<float>(params.peak_luminance));
-	gamma_func func = get_gamma_func(transfer);
-	return ztd::make_unique<ToGammaLutOperationAVX2>(func, scale_factor.first);
+
+	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
+	return ztd::make_unique<ToGammaLutOperationAVX2>(func.to_gamma, func.to_gamma_scale);
 }
 
 } // namespace colorspace

@@ -23,6 +23,7 @@ struct OperationParams {
 #include "common/builder.h"
 	BUILDER_MEMBER(double, peak_luminance)
 	BUILDER_MEMBER(bool, approximate_gamma)
+	BUILDER_MEMBER(bool, scene_referred)
 #undef BUILDER_MEMBER
 
 	/**
@@ -30,9 +31,9 @@ struct OperationParams {
 	 */
 	OperationParams() :
 		peak_luminance{ NAN },
-		approximate_gamma{ false }
-	{
-	}
+		approximate_gamma{},
+		scene_referred{}
+	{}
 };
 
 /**
