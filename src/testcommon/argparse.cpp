@@ -200,7 +200,7 @@ void handle_switch(const ArgparseOption &opt, void *out, const char *param, bool
 
 	switch (opt.type) {
 	case OPTION_FLAG:
-		*static_cast<char *>(out_ptr) = negated;
+		*static_cast<char *>(out_ptr) = !negated;
 		break;
 	case OPTION_HELP:
 		throw Error{ ARGPARSE_HELP_MESSAGE };
