@@ -283,7 +283,7 @@ void handle_short_switch(const OptionMap &options, void *out, int argc, const ch
 		const char *param = nullptr;
 		if (opt_has_param(opt->type)) {
 			if (i < len - 1) {
-				// Parameter in same argument: "-a=3".
+				// Parameter in same argument: "-a3".
 				param = s + i + 1;
 			} else if (*pos < argc) {
 				// Parameter as next argument: "-a 3".
@@ -346,8 +346,9 @@ void print_positional(const ArgparseOption &opt)
 
 	std::cout << '\t' << name;
 	if (opt.description) {
-		for (; len < HELP_INDENT; ++len)
+		for (; len < HELP_INDENT; ++len) {
 			std::cout << ' ';
+		}
 		std::cout << opt.description;
 	}
 	std::cout << '\n';
