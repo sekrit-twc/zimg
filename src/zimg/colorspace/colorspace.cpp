@@ -78,6 +78,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	csp_out{},
 	peak_luminance{ 100.0 },
 	approximate_gamma{},
+	scene_referred{},
 	cpu{ CPUClass::NONE }
 {}
 
@@ -85,7 +86,8 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 {
 	OperationParams params;
 	params.set_peak_luminance(peak_luminance)
-	      .set_approximate_gamma(approximate_gamma);
+	      .set_approximate_gamma(approximate_gamma)
+	      .set_scene_referred(scene_referred);
 
 	if (csp_in == csp_out)
 		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));

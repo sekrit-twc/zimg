@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <cfloat>
-#include <cmath>
 
 #include "common/make_unique.h"
 #include "common/zassert.h"
+#include "colorspace.h"
 #include "colorspace_param.h"
+#include "gamma.h"
 #include "matrix3.h"
 #include "operation.h"
 #include "operation_impl.h"
@@ -29,10 +30,7 @@ namespace {
 
 class MatrixOperationC final : public MatrixOperationImpl {
 public:
-	explicit MatrixOperationC(const Matrix3x3 &m) :
-		MatrixOperationImpl(m)
-	{
-	}
+	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m) {}
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -55,127 +53,32 @@ public:
 	}
 };
 
-class Rec709GammaOperationC final : public Operation {
+class GammaOperationC final : public Operation {
+	gamma_func m_func;
+	float m_prescale;
+	float m_postscale;
 public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = rec_709_gamma(x);
-			}
-		}
-	}
-};
-
-class Rec709InverseGammaOperationC final : public Operation {
-public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = rec_709_inverse_gamma(x);
-			}
-		}
-	}
-};
-
-class SRGBGammaOperationC final : public Operation {
-public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = srgb_gamma(x);
-			}
-		}
-	}
-};
-
-class SRGBInverseGammaOperationC final : public Operation {
-public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = srgb_inverse_gamma(x);
-			}
-		}
-	}
-};
-
-class St2084GammaOperationC final : public Operation {
-	float m_scale;
-public:
-	explicit St2084GammaOperationC(double peak_luminance) :
-		m_scale{ static_cast<float>(peak_luminance / ST2084_PEAK_LUMINANCE) }
-	{
-	}
+	explicit GammaOperationC(gamma_func func, float prescale, float postscale) :
+		m_func{ func },
+		m_prescale{ prescale },
+		m_postscale{ postscale }
+	{}
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-					float x = src[p][i];
+		unsigned w = fpu_save();
+		fpu_set_single();
 
-					dst[p][i] = st_2084_gamma(m_scale * x);
+		for (unsigned p = 0; p < 3; ++p) {
+			const float *src_p = src[p];
+			float *dst_p = dst[p];
+
+			for (unsigned i = left; i < right; ++i) {
+				dst_p[i] = m_postscale * m_func(src_p[i] * m_prescale);
 			}
 		}
-	}
-};
 
-class St2084InverseGammaOperationC final : public Operation {
-	float m_scale;
-public:
-	explicit St2084InverseGammaOperationC(double peak_luminance) :
-		m_scale{ static_cast<float>(ST2084_PEAK_LUMINANCE / peak_luminance) }
-	{
-	}
-
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = m_scale * st_2084_inverse_gamma(x);
-			}
-		}
-	}
-};
-
-class B67GammaOperationC final : public Operation {
-public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = arib_b67_gamma(x * (1.0f / 12.0f));
-			}
-		}
-	}
-};
-
-class B67InverseGammaOperationC final : public Operation {
-public:
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
-	{
-		for (unsigned p = 0; p < 3; ++p) {
-			for (unsigned i = left; i < right; ++i) {
-				float x = src[p][i];
-
-				dst[p][i] = 12.0f * arib_b67_inverse_gamma(x);
-			}
-		}
+		fpu_restore(w);
 	}
 };
 
@@ -213,10 +116,10 @@ public:
 			else
 				r_minus_y = v * 2.0f * pr;
 
-			b = rec_709_inverse_gamma(b_minus_y + y);
-			r = rec_709_inverse_gamma(r_minus_y + y);
+			b = rec_709_inverse_oetf(b_minus_y + y);
+			r = rec_709_inverse_oetf(r_minus_y + y);
 
-			y = rec_709_inverse_gamma(y);
+			y = rec_709_inverse_oetf(y);
 			g = (y - kr * r - kb * b) / kg;
 
 			dst[0][i] = r;
@@ -249,11 +152,11 @@ public:
 			float g = src[1][i];
 			float b = src[2][i];
 
-			float y = rec_709_gamma(kr * r + kg * g + kb * b);
+			float y = rec_709_oetf(kr * r + kg * g + kb * b);
 			float u, v;
 
-			b = rec_709_gamma(b);
-			r = rec_709_gamma(r);
+			b = rec_709_oetf(b);
+			r = rec_709_oetf(r);
 
 			if (b - y < 0.0f)
 				u = (b - y) / (2.0f * -nb);
@@ -275,144 +178,6 @@ public:
 };
 
 } // namespace
-
-
-float rec_709_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	if (x < REC709_BETA)
-		x = x * 4.5f;
-	else
-		x = REC709_ALPHA * zimg_x_powf(x, 0.45f) - (REC709_ALPHA - 1.0f);
-
-	fpu_restore(w);
-	return x;
-}
-
-float rec_709_inverse_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	if (x < 4.5f * REC709_BETA)
-		x = x / 4.5f;
-	else
-		x = zimg_x_powf((x + (REC709_ALPHA - 1.0f)) / REC709_ALPHA, 1.0f / 0.45f);
-
-	fpu_restore(w);
-	return x;
-}
-
-float srgb_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	if (x < SRGB_BETA)
-		x = x * 12.92f;
-	else
-		x = SRGB_ALPHA * zimg_x_powf(x, 1.0f / 2.4f) - (SRGB_ALPHA - 1.0f);
-
-	fpu_restore(w);
-	return x;
-}
-
-float srgb_inverse_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	if (x < 12.92f * SRGB_BETA)
-		x = x / 12.92f;
-	else
-		x = zimg_x_powf((x + (SRGB_ALPHA - 1.0f)) / SRGB_ALPHA, 2.4f);
-
-	fpu_restore(w);
-	return x;
-}
-
-
-float st_2084_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	// Filter negative values to avoid NAN, and also special-case 0 so that (f(g(0)) == 0).
-	if (x > 0.0f) {
-		float xpow = zimg_x_powf(x, ST2084_M1);
-#if 0
-		// Original formulation from SMPTE ST 2084:2014 publication.
-		float num = ST2084_C1 + ST2084_C2 * xpow;
-		float den = 1.0f + ST2084_C3 * xpow;
-		x = zimg_x_powf(num / den, ST2084_M2);
-#else
-		// More stable arrangement that avoids some cancellation error.
-		float num = (ST2084_C1 - 1.0f) + (ST2084_C2 - ST2084_C3) * xpow;
-		float den = 1.0f + ST2084_C3 * xpow;
-		x = zimg_x_powf(1.0f + num / den, ST2084_M2);
-#endif
-	} else {
-		x = 0.0f;
-	}
-
-	fpu_restore(w);
-	return x;
-}
-
-float st_2084_inverse_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	// Filter negative values to avoid NAN.
-	if (x > 0.0f) {
-		float xpow = zimg_x_powf(x, 1.0f / ST2084_M2);
-		float num = std::max(xpow - ST2084_C1, 0.0f);
-		float den = std::max(ST2084_C2 - ST2084_C3 * xpow, FLT_MIN);
-		x = zimg_x_powf(num / den, 1.0f / ST2084_M1);
-	} else {
-		x = 0.0f;
-	}
-
-	fpu_restore(w);
-	return x;
-}
-
-float arib_b67_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	// Prevent negative pixels from yielding NAN.
-	x = std::max(x, 0.0f);
-
-	if (x <= (1.0f / 12.0f))
-		x = zimg_x_sqrtf(3.0f * x);
-	else
-		x = ARIB_B67_A * zimg_x_logf(12.0f * x - ARIB_B67_B) + ARIB_B67_C;
-
-	fpu_restore(w);
-	return x;
-}
-
-float arib_b67_inverse_gamma(float x) noexcept
-{
-	unsigned w = fpu_save();
-	fpu_set_single();
-
-	// Prevent negative pixels expanding into positive values.
-	x = std::max(x, 0.0f);
-
-	if (x <= 0.5f)
-		x = (x * x) * (1.0f / 3.0f);
-	else
-		x = (zimg_x_expf((x - ARIB_B67_C) / ARIB_B67_A) + ARIB_B67_B) / 12.0f;
-
-	fpu_restore(w);
-	return x;
-}
 
 
 MatrixOperationImpl::MatrixOperationImpl(const Matrix3x3 &m)
@@ -438,46 +203,16 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 	return ret;
 }
 
-std::unique_ptr<Operation> create_rec709_gamma_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_gamma_operation(TransferCharacteristics transfer, const OperationParams &params)
 {
-	return ztd::make_unique<Rec709GammaOperationC>();
+	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
+	return ztd::make_unique<GammaOperationC>(func.to_gamma, func.to_gamma_scale, 1.0f);
 }
 
-std::unique_ptr<Operation> create_rec709_inverse_gamma_operation(CPUClass cpu)
+std::unique_ptr<Operation> create_inverse_gamma_operation(TransferCharacteristics transfer, const OperationParams &params)
 {
-	return ztd::make_unique<Rec709InverseGammaOperationC>();
-}
-
-std::unique_ptr<Operation> create_srgb_gamma_operation(CPUClass cpu)
-{
-	return ztd::make_unique<SRGBGammaOperationC>();
-}
-
-std::unique_ptr<Operation> create_srgb_inverse_gamma_operation(CPUClass cpu)
-{
-	return ztd::make_unique<SRGBInverseGammaOperationC>();
-}
-
-std::unique_ptr<Operation> create_st2084_gamma_operation(double peak_luminance, CPUClass cpu)
-{
-	zassert_d(!std::isnan(peak_luminance), "nan detected");
-	return ztd::make_unique<St2084GammaOperationC>(peak_luminance);
-}
-
-std::unique_ptr<Operation> create_st2084_inverse_gamma_operation(double peak_luminance, CPUClass cpu)
-{
-	zassert_d(!std::isnan(peak_luminance), "nan detected");
-	return ztd::make_unique<St2084InverseGammaOperationC>(peak_luminance);
-}
-
-std::unique_ptr<Operation> create_b67_gamma_operation(CPUClass cpu)
-{
-	return ztd::make_unique<B67GammaOperationC>();
-}
-
-std::unique_ptr<Operation> create_b67_inverse_gamma_operation(CPUClass cpu)
-{
-	return ztd::make_unique<B67InverseGammaOperationC>();
+	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
+	return ztd::make_unique<GammaOperationC>(func.to_linear, 1.0f, func.to_linear_scale);
 }
 
 std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu)

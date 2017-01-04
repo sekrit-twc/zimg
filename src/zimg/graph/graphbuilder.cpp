@@ -210,6 +210,7 @@ GraphBuilder::params::params() noexcept :
 	dither_type {},
 	peak_luminance{ NAN },
 	approximate_gamma{},
+	scene_referred{},
 	cpu{}
 {}
 
@@ -317,6 +318,7 @@ void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &co
 		if (!std::isnan(params->peak_luminance))
 			conv.set_peak_luminance(params->peak_luminance);
 		conv.set_approximate_gamma(params->approximate_gamma);
+		conv.set_scene_referred(params->scene_referred);
 	}
 
 	for (auto &&filter : factory->create_colorspace(conv)) {

@@ -44,14 +44,14 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 
 	const char *expected_sha1[][3] = {
 		{
-			"73f3a3c16120ec49271d9e5904071e3e622eca9b",
-			"9ad3294130e4d8fbe68216e2a879d44d57a124c8",
-			"182f73790a3e83005046ab165279e150d928c150"
+			"3c7196b6a704e2f3d88c2a02143d77dbdefdb234",
+			"fa7ab9deaee4790fa49a1d9d8249e5d323674ec2",
+			"162687e701627cdc17283a32c36ea711d28a953e"
 		},
 		{
-			"b533ba048e355aed6a08a5d70f5bd2ad634420ed",
-			"94ce6f495fe459d32d1ddecdb2b5807dd4525828",
-			"6021760c5366f41b5d6967e89901abff335e6cb2"
+			"ac27dc26b2cef34cc017155052ffb071d1d9e9d6",
+			"3b0694e9fbce61466cb5a575f300d784089b6cad",
+			"b68f103f52ccafae867d664d7f27fe56ae9208af"
 		},
 		{
 			"48c1ec7de50653817c678ea87ee6e1c84ef014d5",

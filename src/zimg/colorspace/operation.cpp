@@ -29,19 +29,7 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacterist
 	if (std::unique_ptr<Operation> op = create_gamma_to_linear_operation_x86(transfer, params, cpu))
 		return op;
 #endif
-
-	switch (transfer) {
-	case TransferCharacteristics::REC_709:
-		return create_rec709_inverse_gamma_operation(cpu);
-	case TransferCharacteristics::SRGB:
-		return create_srgb_inverse_gamma_operation(cpu);
-	case TransferCharacteristics::ST_2084:
-		return create_st2084_inverse_gamma_operation(params.peak_luminance, cpu);
-	case TransferCharacteristics::ARIB_B67:
-		return create_b67_inverse_gamma_operation(cpu);
-	default:
-		throw error::InternalError{ "unsupported transfer function" };
-	}
+	return create_inverse_gamma_operation(transfer, params);
 }
 
 std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu)
@@ -52,19 +40,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacterist
 	if (std::unique_ptr<Operation> op = create_linear_to_gamma_operation_x86(transfer, params, cpu))
 		return op;
 #endif
-
-	switch (transfer) {
-	case TransferCharacteristics::REC_709:
-		return create_rec709_gamma_operation(cpu);
-	case TransferCharacteristics::SRGB:
-		return create_srgb_gamma_operation(cpu);
-	case TransferCharacteristics::ST_2084:
-		return create_st2084_gamma_operation(params.peak_luminance, cpu);
-	case TransferCharacteristics::ARIB_B67:
-		return create_b67_gamma_operation(cpu);
-	default:
-		throw error::InternalError{ "unsupported transfer function" };
-	}
+	return create_gamma_operation(transfer, params);
 }
 
 std::unique_ptr<Operation> create_gamut_operation(ColorPrimaries primaries_in, ColorPrimaries primaries_out, const OperationParams &params, CPUClass cpu)

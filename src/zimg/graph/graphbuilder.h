@@ -104,6 +104,7 @@ public:
 		depth::DitherType dither_type;
 		double peak_luminance;
 		bool approximate_gamma;
+		bool scene_referred;
 		CPUClass cpu;
 
 		params() noexcept;

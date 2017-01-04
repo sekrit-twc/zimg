@@ -83,9 +83,9 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 
 	const char *expected_sha1[][6] = {
 		{
-			"330a4d5fb0f3681689c8ea75f12afc53d2abacfa",
-			"3b199c185b9a2ae677147694b424c4f1e1c2aa71",
-			"85ecb896add9a2cdcf3a859e90ebaf5c3db24428"
+			"b606c8645f868f1e763b3e6a88b16bd004db998a",
+			"1020e7d1b081bde7ca05ba61656811aeead95f01",
+			"4e74929009d94738f47c47001c54c2293d58f03d"
 		},
 		{
 			"72263d2c4e701fad7e19a98f7d4a6fd12c97f237",
@@ -93,14 +93,14 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"a13696a7a2931b3ba549ef50ed061386f23ee354"
 		},
 		{
-			"9344bde7a73ad908baa5dd8ebe15cfbcf9e40b81",
-			"f4364af193955c13ec7fe6fc36cf94e1e5e692b1",
-			"823ac60ee963298d89552f97416f04058c6d8c80"
+			"4c190cb9ddfef9a6e220c61cb2e480c69a8f0b4d",
+			"17e41c66ddd3eb07a4eee31b9bb6e6c717cbd92f",
+			"19aa1aa5d54b0231bfe7ec03caede636f5dfc429"
 		},
 		{
-			"4498bb3edb2391f990849a1ac5341ce7ac6bc6a6",
-			"e85d2e8b26c7d979ff79784c0f62f796ad099f6d",
-			"1b975ddb99008f2c72de2af2c864b52ffdea4c58"
+			"d39fa08fda52893d294c2bf3c6563bc3035392a9",
+			"e99ba9e53c3b43e5babb580c279b2d1558a6ffa0",
+			"790eb9960fd57ff146029a0783b033e2bbdbd836"
 		},
 		{
 			"4c62e5d775548495a170b6876a2e91b00d4b5f14",
@@ -108,9 +108,9 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"e2dc601f663ea61899f37a9db1b50b5e4110a38e"
 		},
 		{
-			"446c897635131babdcbc60527ea53a677777ab72",
-			"040517cd0eabb893d4bb79dc52c86dd983410b11",
-			"ceed0c7ee2be19bd334cd33548e5162078007cf8"
+			"e142f8335b67b30acaa562fa84b0fd79aeea86b8",
+			"48459e4fc6b1c93df3cad0642a2dc60232eeac2a",
+			"a61729320be4d2232ea08ca45d1b0cff0e3e5dda"
 		},
 	};
 
@@ -138,9 +138,9 @@ TEST(ColorspaceConversionTest, test_matrix_transfer)
 	using namespace zimg::colorspace;
 
 	const char *expected_sha1[3] = {
-		"bc43116e500bb281fc17020b731813cddde8e057",
-		"b7da9c5d86dff2004f82466f42da419e1f3bb02e",
-		"10748bd4fa7c424b52c255b82d371a8534e124f8"
+		"7e524dfcdf751f628d32c2f511a1c44247e96691",
+		"40cc64287b861f0a55268ee0a4698689a48bb65c",
+		"c3f0840878fe4d267bac85f21778ba293f494cf2"
 	};
 
 	test_case({ MatrixCoefficients::REC_709, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED },
@@ -154,19 +154,19 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 
 	const char *expected_sha1[][3] = {
 		{
-			"4cd9db8fd2ded345aafffda2358cd6de9c763e00",
-			"2dd41a82f55933f35988ca5f2d57c09f8157d43a",
-			"2262468fb4840160c880dcaace12a44568e44246"
+			"23704c9a7da6e06cdc479ef2027c72b66bb7d96a",
+			"0fe8a961ec40272e73b5a9fa7d4827c927aad8cc",
+			"d7542d498a9942e767cd6c64c0a463d34fde8614"
 		},
 		{
-			"1e14ec2d359417837a6501c948ec110597535bb4",
-			"c564d33ae070a54e5f10baa262f6da6c8450ed80",
-			"e511d90a33b8e27ee96adfda987038cd4d540f8e"
+			"9915126526bff4830a0060176f1ad0ae8241c2c6",
+			"6e252e9ee7e287dcd5a31cc39b1fb6934a4c2f0a",
+			"72f558ba789b112ff64136007218124b6f26c144"
 		},
 		{
-			"6eecdcbf5cb11437ecab1700f0b0769c09a942e7",
-			"37c2a61353e006672fe4169b3eef588f4f08b69a",
-			"be47b698c9252af496b7d5b1bf7c678f1e39e615"
+			"54bcee0dbf129d8e8647b5686f61f6e5fd5a154e",
+			"6743f2845f8025105cf5ce30c68cde578af5ddfb",
+			"5a20b8900a6f388ea1aad469a8c1e77595b9732c"
 		}
 	};
 
@@ -194,24 +194,24 @@ TEST(ColorspaceConversionTest, test_rec2020_cl)
 
 	const char *expected_sha1[][3] = {
 		{
-			"f97ba4eff570e8f913d81df0c4586b4acdfe9a09",
-			"1ee95d1ede59503c04766b0ae784494ceab55ed5",
-			"bfacffcdeaaf2c84aac56f16b48b1397703a4d43"
+			"5088f01f06b08983b7cb08b6a00532eb2084f505",
+			"ad891e72a53caa3d1b597ea653d16dc08c1dd5f2",
+			"a08f04519a7a11c6eeab86a9a5bd0c6b5989eda1"
 		},
 		{
-			"371a25d860f9afb1577da1fcc20899f0d674c273",
-			"6a04c69315f33e16a1c93f88a138902ac5b9437d",
-			"087305d52cec79f609294963f66a529b07b72b0d"
+			"ebc7919d4d491c5d98c27793974d6f5e37ecb906",
+			"df01a3bd7bd43812c9f56e4be8abbcfa23c729e7",
+			"41a894bc2bc0f40243d3b5397c9d99a522e97ffd"
 		},
 		{
-			"15cf79998d301bf6192c75e916e14f524e697210",
-			"8159f5c700c0eb9c7792a7b3431e7ca257c882b7",
-			"6b06893a576c7271ea0fb15724c87dc8771c251c"
+			"8f8479117084312cb3e0dc74d0c0600b284615af",
+			"71f9932b2e992836c7c16671dbf0648c0e847f79",
+			"8d51f73a86f8b04b7f781db8932260d35e96349a"
 		},
 		{
-			"85a4798b25fbf178eb687dd7b80137e9ffcdb524",
-			"3174c7fa05b21434ced0462828f94586518d27e7",
-			"0f30c42546ed72792e08115292a15ae00e01eeff"
+			"7d6b3cdfad24dc8693dd30f8cc50740888c426e3",
+			"dfb7b58f0757078c71b631ab73496d1f5e7593e0",
+			"e8b545d4ff09ad9da6dcf8122d34de8391658362"
 		},
 	};
 
