@@ -28,6 +28,17 @@ namespace colorspace {
 
 namespace {
 
+class EnsureSinglePrecision {
+	unsigned m_fpu_word;
+public:
+	EnsureSinglePrecision() noexcept : m_fpu_word{ fpu_save() } { fpu_set_single(); }
+	EnsureSinglePrecision(const EnsureSinglePrecision &) = delete;
+
+	~EnsureSinglePrecision() { fpu_restore(m_fpu_word); }
+
+	EnsureSinglePrecision &operator=(const EnsureSinglePrecision &) = delete;
+};
+
 class MatrixOperationC final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m) {}
@@ -66,8 +77,7 @@ public:
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		unsigned w = fpu_save();
-		fpu_set_single();
+		EnsureSinglePrecision x87;
 
 		for (unsigned p = 0; p < 3; ++p) {
 			const float *src_p = src[p];
@@ -77,8 +87,6 @@ public:
 				dst_p[i] = m_postscale * m_func(src_p[i] * m_prescale);
 			}
 		}
-
-		fpu_restore(w);
 	}
 };
 
@@ -95,8 +103,7 @@ public:
 		constexpr float pr = 0.4969147f;
 		constexpr float nr = -0.8591209f;
 
-		unsigned w = fpu_save();
-		fpu_set_single();
+		EnsureSinglePrecision x87;
 
 		for (unsigned i = left; i < right; ++i) {
 			float y = src[0][i];
@@ -126,8 +133,6 @@ public:
 			dst[1][i] = g;
 			dst[2][i] = b;
 		}
-
-		fpu_restore(w);
 	}
 };
 
@@ -144,8 +149,7 @@ public:
 		constexpr float pr = 0.4969147f;
 		constexpr float nr = -0.8591209f;
 
-		unsigned w = fpu_save();
-		fpu_set_single();
+		EnsureSinglePrecision x87;
 
 		for (unsigned i = left; i < right; ++i) {
 			float r = src[0][i];
@@ -172,8 +176,6 @@ public:
 			dst[1][i] = u;
 			dst[2][i] = v;
 		}
-
-		fpu_restore(w);
 	}
 };
 
