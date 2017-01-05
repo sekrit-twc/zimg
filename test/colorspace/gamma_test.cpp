@@ -7,6 +7,8 @@ namespace {
 
 void test_monotonic(float (*func)(float), float min, float max, unsigned long steps)
 {
+	zimg::colorspace::EnsureSinglePrecision x87;
+
 	float cur = -INFINITY;
 
 	for (unsigned long i = 0; i <= steps; ++i) {
@@ -20,6 +22,8 @@ void test_monotonic(float (*func)(float), float min, float max, unsigned long st
 
 void test_accuracy(float (*f)(float), float (*g)(float), float min, float max, float errthr, float biasthr)
 {
+	zimg::colorspace::EnsureSinglePrecision x87;
+
 	const unsigned long STEPS = 1UL << 16;
 	float err = 0.0f;
 	float bias = 0.0f;

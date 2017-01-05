@@ -75,6 +75,8 @@ public:
 		m_lut_depth{ lut_depth },
 		m_prescale{ static_cast<float>(prescale) }
 	{
+		EnsureSinglePrecision x87;
+
 		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
 		for (unsigned i = 0; i < m_lut.size(); ++i) {
 			float x = static_cast<float>(i) / (1 << lut_depth);

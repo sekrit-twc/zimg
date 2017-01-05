@@ -46,6 +46,32 @@ struct TransferFunction {
 
 TransferFunction select_transfer_function(TransferCharacteristics transfer, double peak_luminance, bool scene_referred);
 
+
+// MSVC 32-bit compiler generates x87 instructions when operating on floats
+// returned from external functions. The caller must set the x87 precision to
+// 24-bit (single precision) to ensure reproducible results.
+#if defined(_MSC_VER) && defined(_M_IX86)
+class EnsureSinglePrecision {
+	unsigned m_fpu_word;
+public:
+	EnsureSinglePrecision() noexcept;
+	EnsureSinglePrecision(const EnsureSinglePrecision &) = delete;
+
+	~EnsureSinglePrecision();
+
+	EnsureSinglePrecision &operator=(const EnsureSinglePrecision &) = delete;
+};
+#else
+struct EnsureSinglePrecision {
+	EnsureSinglePrecision() {}
+	EnsureSinglePrecision(const EnsureSinglePrecision &) = delete;
+
+	~EnsureSinglePrecision() {}
+
+	EnsureSinglePrecision &operator=(const EnsureSinglePrecision &) = delete;
+};
+#endif
+
 } // namespace colorspace
 } // namespace zimg
 

@@ -11,33 +11,10 @@
 #include "operation_impl.h"
 #include "operation_impl_x86.h"
 
-// MSVC 32-bit compiler generates x87 instructions when operating on floats
-// returned from external functions. Force single precision to avoid errors.
-#if defined(_MSC_VER) && defined(_M_IX86)
-  #define fpu_save() _control87(0, 0)
-  #define fpu_set_single() _control87(_PC_24, _MCW_PC)
-  #define fpu_restore(x) _control87((x), _MCW_PC)
-#else
-  #define fpu_save() 0
-  #define fpu_set_single() (void)0
-  #define fpu_restore(x) (void)x
-#endif /* _MSC_VER */
-
 namespace zimg {
 namespace colorspace {
 
 namespace {
-
-class EnsureSinglePrecision {
-	unsigned m_fpu_word;
-public:
-	EnsureSinglePrecision() noexcept : m_fpu_word{ fpu_save() } { fpu_set_single(); }
-	EnsureSinglePrecision(const EnsureSinglePrecision &) = delete;
-
-	~EnsureSinglePrecision() { fpu_restore(m_fpu_word); }
-
-	EnsureSinglePrecision &operator=(const EnsureSinglePrecision &) = delete;
-};
 
 class MatrixOperationC final : public MatrixOperationImpl {
 public:

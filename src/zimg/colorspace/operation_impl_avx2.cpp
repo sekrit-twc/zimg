@@ -96,6 +96,8 @@ public:
 		m_lut((1 << lut_depth) + 1),
 		m_lut_depth{ lut_depth }
 	{
+		EnsureSinglePrecision x87;
+
 		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
 		for (unsigned i = 0; i < m_lut.size(); ++i) {
 			float x = static_cast<float>(i) / (1 << lut_depth);
@@ -117,6 +119,8 @@ public:
 	ToGammaLutOperationAVX2(gamma_func func, float prescale) :
 		m_lut(static_cast<uint32_t>(UINT16_MAX) + 1)
 	{
+		EnsureSinglePrecision x87;
+
 		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
 		for (unsigned long i = 0; i <= UINT16_MAX; ++i) {
 			uint16_t half = static_cast<uint16_t>(i);

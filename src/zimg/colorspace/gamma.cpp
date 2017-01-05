@@ -1,24 +1,11 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
-
 #include "common/except.h"
 #include "common/libm_wrapper.h"
 #include "common/zassert.h"
 #include "colorspace.h"
 #include "gamma.h"
-
-// MSVC 32-bit compiler generates x87 instructions when operating on floats
-// returned from external functions. Force single precision to avoid errors.
-#if defined(_MSC_VER) && defined(_M_IX86)
-  #define fpu_save() _control87(0, 0)
-  #define fpu_set_single() _control87(_PC_24, _MCW_PC)
-  #define fpu_restore(x) _control87((x), _MCW_PC)
-#else
-  #define fpu_save() 0
-  #define fpu_set_single() (void)0
-  #define fpu_restore(x) (void)x
-#endif /* _MSC_VER */
 
 namespace zimg {
 namespace colorspace {
@@ -42,26 +29,13 @@ constexpr float ARIB_B67_B = 0.28466892f;
 constexpr float ARIB_B67_C = 0.55991073f;
 
 
-class EnsureSinglePrecision {
-	unsigned m_fpu_word;
-public:
-	EnsureSinglePrecision() noexcept : m_fpu_word{ fpu_save() } { fpu_set_single(); }
-	EnsureSinglePrecision(const EnsureSinglePrecision &) = delete;
-
-	~EnsureSinglePrecision() { fpu_restore(m_fpu_word); }
-
-	EnsureSinglePrecision &operator=(const EnsureSinglePrecision &) = delete;
-};
-
 float ootf_1_2(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return x < 0.0f ? x : zimg_x_powf(x, 1.2f);
 }
 
 float inverse_ootf_1_2(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return x < 0.0f ? x : zimg_x_powf(x, 1.0f / 1.2f);
 }
 
@@ -70,8 +44,6 @@ float inverse_ootf_1_2(float x) noexcept
 
 float rec_709_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	if (x < REC709_BETA)
 		x = x * 4.5f;
 	else
@@ -82,8 +54,6 @@ float rec_709_oetf(float x) noexcept
 
 float rec_709_inverse_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	if (x < 4.5f * REC709_BETA)
 		x = x / 4.5f;
 	else
@@ -94,8 +64,6 @@ float rec_709_inverse_oetf(float x) noexcept
 
 float arib_b67_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	// Prevent negative pixels from yielding NAN.
 	x = std::max(x, 0.0f);
 
@@ -109,8 +77,6 @@ float arib_b67_oetf(float x) noexcept
 
 float arib_b67_inverse_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	// Prevent negative pixels expanding into positive values.
 	x = std::max(x, 0.0f);
 
@@ -125,20 +91,16 @@ float arib_b67_inverse_oetf(float x) noexcept
 // Ignore the BT.1886 provisions for limited contrast and assume an ideal CRT.
 float rec_1886_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.4f);
 }
 
 float rec_1886_inverse_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.4f);
 }
 
 float srgb_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	if (x < 12.92f * SRGB_BETA)
 		x = x / 12.92f;
 	else
@@ -149,8 +111,6 @@ float srgb_eotf(float x) noexcept
 
 float srgb_inverse_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	if (x < SRGB_BETA)
 		x = x * 12.92f;
 	else
@@ -161,8 +121,6 @@ float srgb_inverse_eotf(float x) noexcept
 
 float st_2084_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	// Filter negative values to avoid NAN.
 	if (x > 0.0f) {
 		float xpow = zimg_x_powf(x, 1.0f / ST2084_M2);
@@ -178,8 +136,6 @@ float st_2084_eotf(float x) noexcept
 
 float st_2084_inverse_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
-
 	// Filter negative values to avoid NAN, and also special-case 0 so that (f(g(0)) == 0).
 	if (x > 0.0f) {
 		float xpow = zimg_x_powf(x, ST2084_M1);
@@ -204,26 +160,22 @@ float st_2084_inverse_eotf(float x) noexcept
 // Applies a per-channel correction instead of the iterative method specified in Rec.2100.
 float arib_b67_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return ootf_1_2(arib_b67_inverse_oetf(x));
 }
 
 float arib_b67_inverse_eotf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return arib_b67_oetf(inverse_ootf_1_2(x));
 }
 
 // Apples a 1.2 pure-power OOTF instead of the chained Rec.709/Rec.1886 method described in Rec.2100.
 float st_2084_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return st_2084_inverse_eotf(ootf_1_2(x));
 }
 
 float st_2084_inverse_oetf(float x) noexcept
 {
-	EnsureSinglePrecision x87;
 	return inverse_ootf_1_2(st_2084_eotf(x));
 }
 
@@ -263,6 +215,15 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 
 	return func;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+EnsureSinglePrecision::EnsureSinglePrecision() noexcept : m_fpu_word(_control87(0, 0))
+{
+	_control87(_PC_24, _MCW_PC);
+}
+
+EnsureSinglePrecision::~EnsureSinglePrecision() { _control87(m_fpu_word, _MCW_PC); }
+#endif
 
 } // namespace colorspace
 } // namespace zimg
