@@ -364,7 +364,7 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	zimgxx::zimage_format out_format = get_image_format(out_data);
 
 	// Additional fields in API structures do not break binary compatibility.
-	// If relying on the specific semantics of field not present in earlier versions,
+	// If relying on the specific semantics of fields not present in earlier versions,
 	// the application should also check the API version at runtime.
 #if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 1)
 	if (!std::isnan(args.shift_w) || !std::isnan(args.shift_h) || !std::isnan(args.subheight) || !std::isnan(args.subheight)) {

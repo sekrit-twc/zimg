@@ -112,7 +112,7 @@ typedef enum zimg_error_code_e {
 	ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING    = ZIMG_ERROR_UNSUPPORTED_OPERATION + 1, /**< Subsampling format not supported. */
 	ZIMG_ERROR_NO_COLORSPACE_CONVERSION   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 2, /**< No conversion between colorspaces. */
 	ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION = ZIMG_ERROR_UNSUPPORTED_OPERATION + 3, /**< No conversion between field parity. */
-	ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 4, /**< Resampling filter not available for given image size. */
+	ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE   = ZIMG_ERROR_UNSUPPORTED_OPERATION + 4  /**< Resampling filter not available for given image size. */
 } zimg_error_code_e;
 
 /**
@@ -165,7 +165,7 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_SSE42 = 1006,
 	ZIMG_CPU_X86_AVX   = 1007,
 	ZIMG_CPU_X86_F16C  = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
-	ZIMG_CPU_X86_AVX2  = 1009,
+	ZIMG_CPU_X86_AVX2  = 1009
 #endif
 } zimg_cpu_type_e;
 
@@ -179,7 +179,7 @@ typedef enum zimg_pixel_type_e {
 	ZIMG_PIXEL_BYTE  = 0, /**< Unsigned integer, one byte per sample. */
 	ZIMG_PIXEL_WORD  = 1, /**< Unsigned integer, two bytes per sample. */
 	ZIMG_PIXEL_HALF  = 2, /**< IEEE-754 half precision (binary16). */
-	ZIMG_PIXEL_FLOAT = 3, /**< IEEE-754 single precision (binary32). */
+	ZIMG_PIXEL_FLOAT = 3  /**< IEEE-754 single precision (binary32). */
 } zimg_pixel_type_e;
 
 /**
@@ -193,7 +193,7 @@ typedef enum zimg_pixel_type_e {
 typedef enum zimg_pixel_range_e {
 	ZIMG_RANGE_INTERNAL = -1, /**< Not part of the API. */
 	ZIMG_RANGE_LIMITED  = 0,  /**< Studio (TV) legal range, 16-235 in 8 bits. */
-	ZIMG_RANGE_FULL     = 1,  /**< Full (PC) dynamic range, 0-255 in 8 bits. */
+	ZIMG_RANGE_FULL     = 1   /**< Full (PC) dynamic range, 0-255 in 8 bits. */
 } zimg_pixel_range_e;
 
 /**
@@ -202,7 +202,7 @@ typedef enum zimg_pixel_range_e {
 typedef enum zimg_color_family_e {
 	ZIMG_COLOR_GREY = 0, /**< Single image plane. */
 	ZIMG_COLOR_RGB  = 1, /**< Generic RGB color image. */
-	ZIMG_COLOR_YUV  = 2, /**< Generic YUV color image. */
+	ZIMG_COLOR_YUV  = 2  /**< Generic YUV color image. */
 } zimg_color_family_e;
 
 /**
@@ -215,7 +215,7 @@ typedef enum zimg_color_family_e {
 typedef enum zimg_field_parity_e {
 	ZIMG_FIELD_PROGRESSIVE = 0, /**< Progressive scan image. */
 	ZIMG_FIELD_TOP         = 1, /**< Top field of interlaced image. */
-	ZIMG_FIELD_BOTTOM      = 2, /**< Bottom field of interlaced image. */
+	ZIMG_FIELD_BOTTOM      = 2  /**< Bottom field of interlaced image. */
 } zimg_field_parity_e;
 
 /**
@@ -239,7 +239,7 @@ typedef enum zimg_chroma_location_e {
 	ZIMG_CHROMA_TOP_LEFT    = 2,  /**< DV */
 	ZIMG_CHROMA_TOP         = 3,
 	ZIMG_CHROMA_BOTTOM_LEFT = 4,
-	ZIMG_CHROMA_BOTTOM      = 5,
+	ZIMG_CHROMA_BOTTOM      = 5
 } zimg_chroma_location_e;
 
 /**
@@ -267,7 +267,7 @@ typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_170M        = 6,  /* Equivalent to 5. */
 	ZIMG_MATRIX_YCGCO       = 8,
 	ZIMG_MATRIX_2020_NCL    = 9,
-	ZIMG_MATRIX_2020_CL     = 10,
+	ZIMG_MATRIX_2020_CL     = 10
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {
@@ -280,7 +280,7 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_2020_10       = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_2020_12       = 15, /* Equivalent to 1. */
 	ZIMG_TRANSFER_ST2084        = 16,
-	ZIMG_TRANSFER_ARIB_B67      = 18,
+	ZIMG_TRANSFER_ARIB_B67      = 18
 } zimg_transfer_characteristics_e;
 
 typedef enum zimg_color_primaries_e {
@@ -290,7 +290,7 @@ typedef enum zimg_color_primaries_e {
 	ZIMG_PRIMARIES_170M        = 6,
 	ZIMG_PRIMARIES_240M        = 7,  /* Equivalent to 6. */
 	ZIMG_PRIMARIES_2020        = 9,
-	ZIMG_PRIMARIES_ST432_1     = 12,
+	ZIMG_PRIMARIES_ST432_1     = 12
 } zimg_color_primaries_e;
 
 /**
@@ -300,7 +300,7 @@ typedef enum zimg_dither_type_e {
 	ZIMG_DITHER_NONE            = 0, /**< Round to nearest. */
 	ZIMG_DITHER_ORDERED         = 1, /**< Bayer patterned dither. */
 	ZIMG_DITHER_RANDOM          = 2, /**< Pseudo-random noise of magnitude 0.5. */
-	ZIMG_DITHER_ERROR_DIFFUSION = 3, /**< Floyd-Steinberg error diffusion. */
+	ZIMG_DITHER_ERROR_DIFFUSION = 3  /**< Floyd-Steinberg error diffusion. */
 } zimg_dither_type_e;
 
 /**
@@ -312,7 +312,7 @@ typedef enum zimg_resample_filter_e {
 	ZIMG_RESIZE_BICUBIC  = 2, /**< Bicubic convolution (separable) filter. */
 	ZIMG_RESIZE_SPLINE16 = 3, /**< "Spline16" filter from AviSynth. */
 	ZIMG_RESIZE_SPLINE36 = 4, /**< "Spline36" filter from AviSynth. */
-	ZIMG_RESIZE_LANCZOS  = 5, /**< Lanczos resampling filter with variable number of taps. */
+	ZIMG_RESIZE_LANCZOS  = 5  /**< Lanczos resampling filter with variable number of taps. */
 } zimg_resample_filter_e;
 
 
