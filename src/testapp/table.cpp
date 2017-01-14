@@ -38,6 +38,8 @@ filter_uptr make_lanczos_filter(double taps, double)
 	return filter_uptr{ new zimg::resize::LanczosFilter{ static_cast<int>(std::floor(taps)) } };
 }
 
+filter_uptr make_null_filter(double, double) { return nullptr; }
+
 } // namespace
 
 
@@ -94,11 +96,12 @@ const zimg::static_string_map<DitherType, 4> g_dither_table{
 	{ "error_diffusion", DitherType::ERROR_DIFFUSION },
 };
 
-const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 6> g_resize_table{
+const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 7> g_resize_table{
 	{ "point",    make_filter<zimg::resize::PointFilter> },
 	{ "bilinear", make_filter<zimg::resize::BilinearFilter> },
 	{ "bicubic",  make_bicubic_filter },
 	{ "spline16", make_filter<zimg::resize::Spline16Filter> },
 	{ "spline36", make_filter<zimg::resize::Spline36Filter> },
 	{ "lanczos",  make_lanczos_filter },
+	{ "unresize", make_null_filter },
 };

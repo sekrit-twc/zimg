@@ -9,6 +9,7 @@
 #include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/resize.h"
+#include "unresize/unresize.h"
 
 namespace zimg {
 
@@ -52,6 +53,13 @@ public:
 	 * @see create_colorspace
 	 */
 	virtual filter_list create_resize(const resize::ResizeConversion &conv) = 0;
+
+	/**
+	 * Create filters implementing unresizing.
+	 *
+	 * @see create_unresize
+	 */
+	virtual filter_list create_unresize(const unresize::UnresizeConversion &conv) = 0;
 };
 
 /**
@@ -64,6 +72,8 @@ public:
 	filter_list create_depth(const depth::DepthConversion &conv) override;
 
 	filter_list create_resize(const resize::ResizeConversion &conv) override;
+
+	filter_list create_unresize(const unresize::UnresizeConversion &conv) override;
 };
 
 
@@ -101,6 +111,7 @@ public:
 	struct params {
 		std::unique_ptr<const resize::Filter> filter;
 		std::unique_ptr<const resize::Filter> filter_uv;
+		bool unresize;
 		depth::DitherType dither_type;
 		double peak_luminance;
 		bool approximate_gamma;

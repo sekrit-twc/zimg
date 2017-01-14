@@ -205,8 +205,22 @@ auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -
 	return list;
 }
 
+auto DefaultFilterFactory::create_unresize(const unresize::UnresizeConversion &conv) -> filter_list
+{
+	auto filter_pair = conv.create();
+	filter_list list;
+
+	if (filter_pair.first)
+		list.emplace_back(std::move(filter_pair.first));
+	if (filter_pair.second)
+		list.emplace_back(std::move(filter_pair.second));
+
+	return list;
+}
+
 
 GraphBuilder::params::params() noexcept :
+	unresize{},
 	dither_type {},
 	peak_luminance{ NAN },
 	approximate_gamma{},
@@ -409,6 +423,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 
 	const resize::Filter *resample_filter = params ? params->filter.get() : &bicubic_filter;
 	const resize::Filter *resample_filter_uv = params ? params->filter_uv.get() : &bilinear_filter;
+	bool unresize = params && params->unresize;
 	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
 
 	bool do_resize_luma = m_state.width != spec.width || m_state.height != spec.height || image_shifted;
@@ -421,21 +436,35 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	FilterFactory::filter_list filter_list;
 	FilterFactory::filter_list filter_list_uv;
 
+	if (unresize && (spec.subwidth != m_state.width || spec.subheight != m_state.height))
+		throw error::ResamplingNotAvailable{ "unresize not supported for given subregion" };
+
 	if (do_resize_luma) {
 		double extra_shift_h = luma_shift_factor(m_state.parity, m_state.height, spec.height);
 
-		auto conv = resize::ResizeConversion{ m_state.width, m_state.height, m_state.type }
-			.set_depth(m_state.depth)
-			.set_filter(resample_filter)
-			.set_dst_width(spec.width)
-			.set_dst_height(spec.height)
-			.set_shift_w(spec.shift_w)
-			.set_shift_h(spec.shift_h + extra_shift_h)
-			.set_subwidth(spec.subwidth)
-			.set_subheight(spec.subheight)
-			.set_cpu(cpu);
+		if (unresize) {
+			auto conv = unresize::UnresizeConversion{ m_state.width, m_state.height, m_state.type }
+				.set_orig_width(spec.width)
+				.set_orig_height(spec.height)
+				.set_shift_w(spec.shift_w)
+				.set_shift_h(spec.shift_h + extra_shift_h)
+				.set_cpu(cpu);
 
-		filter_list = factory->create_resize(conv);
+			filter_list = factory->create_unresize(conv);
+		} else {
+			auto conv = resize::ResizeConversion{ m_state.width, m_state.height, m_state.type }
+				.set_depth(m_state.depth)
+				.set_filter(resample_filter)
+				.set_dst_width(spec.width)
+				.set_dst_height(spec.height)
+				.set_shift_w(spec.shift_w)
+				.set_shift_h(spec.shift_h + extra_shift_h)
+				.set_subwidth(spec.subwidth)
+				.set_subheight(spec.subheight)
+				.set_cpu(cpu);
+
+			filter_list = factory->create_resize(conv);
+		}
 
 		if (is_rgb(m_state)) {
 			for (auto &&filter : filter_list) {
@@ -455,18 +484,29 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 		unsigned chroma_width_out = spec.width >> subsample_w;
 		unsigned chroma_height_out = spec.height >> subsample_h;
 
-		auto conv = resize::ResizeConversion{ chroma_width_in, chroma_height_in, m_state.type }
-			.set_depth(m_state.depth)
-			.set_filter(resample_filter_uv)
-			.set_dst_width(chroma_width_out)
-			.set_dst_height(chroma_height_out)
-			.set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w)
-			.set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h)
-			.set_subwidth(spec.subwidth / (1 << m_state.subsample_w))
-			.set_subheight(spec.subheight / (1 << m_state.subsample_h))
-			.set_cpu(cpu);
+		if (unresize) {
+			auto conv = unresize::UnresizeConversion{ chroma_width_in, chroma_height_in, m_state.type }
+				.set_orig_width(chroma_width_out)
+				.set_orig_height(chroma_height_out)
+				.set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w)
+				.set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h)
+				.set_cpu(cpu);
 
-		filter_list_uv = factory->create_resize(conv);
+			filter_list_uv = factory->create_unresize(conv);
+		} else {
+			auto conv = resize::ResizeConversion{ chroma_width_in, chroma_height_in, m_state.type }
+				.set_depth(m_state.depth)
+				.set_filter(resample_filter_uv)
+				.set_dst_width(chroma_width_out)
+				.set_dst_height(chroma_height_out)
+				.set_shift_w(spec.shift_w / (1 << m_state.subsample_w) + extra_shift_w)
+				.set_shift_h(spec.shift_h / (1 << m_state.subsample_h) + extra_shift_h)
+				.set_subwidth(spec.subwidth / (1 << m_state.subsample_w))
+				.set_subheight(spec.subheight / (1 << m_state.subsample_h))
+				.set_cpu(cpu);
+
+			filter_list_uv = factory->create_resize(conv);
+		}
 	}
 
 	for (auto &&filter : filter_list) {
@@ -548,18 +588,19 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			color_to_grey(target.colorspace.matrix);
 		} else if (needs_resize(m_state, target)) {
 			// Convert to the target pixel format to reduce the required number of conversions.
-			if (target.type == PixelType::WORD)
-				convert_depth(PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params, factory);
-			if (target.type == PixelType::HALF && fast_f16)
-				convert_depth(PixelType::HALF, params, factory);
-			if (target.type == PixelType::FLOAT)
-				convert_depth(PixelType::FLOAT, params, factory);
-
 			// If neither the source nor target pixel format is directly supported, select a different format.
-			if (m_state.type == PixelType::BYTE)
-				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params, factory);
 			// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
-			if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
+			if (params && params->unresize)
+				convert_depth(PixelType::FLOAT, params, factory);
+			else if (target.type == PixelType::WORD)
+				convert_depth(PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params, factory);
+			else if (target.type == PixelType::HALF && fast_f16)
+				convert_depth(PixelType::HALF, params, factory);
+			else if (target.type == PixelType::FLOAT)
+				convert_depth(PixelType::FLOAT, params, factory);
+			else if (m_state.type == PixelType::BYTE)
+				convert_depth(PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params, factory);
+			else if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
 				convert_depth(PixelType::FLOAT, params, factory);
 
 			resize_spec spec{ m_state };

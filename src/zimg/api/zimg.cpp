@@ -18,6 +18,8 @@
 #include "resize/filter.h"
 #include "zimg.h"
 
+#define ZIMG_RESIZE_UNRESIZE static_cast<zimg_resample_filter_e>(-1)
+
 namespace {
 
 constexpr unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
@@ -266,6 +268,9 @@ zimg::depth::DitherType translate_dither(zimg_dither_type_e dither)
 
 std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filter_e filter_type, double param_a, double param_b)
 {
+	if (filter_type == ZIMG_RESIZE_UNRESIZE)
+		return nullptr;
+
 	try {
 		switch (filter_type) {
 		case ZIMG_RESIZE_POINT:
@@ -394,6 +399,7 @@ zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_p
 	if (src.version >= API_VERSION_2_0) {
 		params.filter = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
 		params.filter_uv = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
+		params.unresize = src.resample_filter == ZIMG_RESIZE_UNRESIZE;
 		params.dither_type = translate_dither(src.dither_type);
 		params.cpu = translate_cpu(src.cpu_type);
 	}

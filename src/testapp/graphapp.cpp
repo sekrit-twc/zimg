@@ -69,6 +69,19 @@ public:
 
 		return zimg::graph::DefaultFilterFactory::create_resize(conv);
 	}
+
+	filter_list create_unresize(const zimg::unresize::UnresizeConversion &conv) override
+	{
+		printf("unresize: [%d, %d] => [%d, %d] (%f, %f)\n",
+		       conv.up_width,
+		       conv.up_height,
+		       conv.orig_width,
+		       conv.orig_height,
+		       conv.shift_w,
+		       conv.shift_h);
+
+		return zimg::graph::DefaultFilterFactory::create_unresize(conv);
+	}
 };
 
 
@@ -158,6 +171,7 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 		const json::Object &filter_obj = val.object();
 		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
 		params->filter = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		params->unresize = filter_obj["name"].string() == "unresize";
 	} else {
 		params->filter.reset(new zimg::resize::BicubicFilter{ 1.0 / 3.0, 1.0 / 3.0 });
 	}
