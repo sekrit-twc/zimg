@@ -1,3 +1,7 @@
+2.4
+colorspace: add support for IEC 61966-2-1 (sRGB)
+colorspace: transfer function conversion conforms to ITU-R BT.2100
+
 2.3 (API 2.2)
 api: add 'allow_approximate_gamma' flag to zimg_graph_builder_params
 colorspace: add support for SMPTE ST.2084 (Dolby PQ) and ARIB STD-B67 (HLG)
