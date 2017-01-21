@@ -139,7 +139,7 @@ public:
 	const T &at(const Key &key) const
 	{
 		const auto it = find(key);
-		return it == end() ? (throw std::out_of_range{ "key not found" }, it->second) : it->second;
+		return *(it == end() ? throw std::out_of_range{ "key not found" } : &it->second);
 	}
 
 	/**

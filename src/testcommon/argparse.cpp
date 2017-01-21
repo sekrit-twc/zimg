@@ -1,8 +1,8 @@
+#include <climits>
 #include <cstring>
 #include <exception>
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -129,39 +129,38 @@ public:
 
 
 template <class T>
-struct stox;
+T stox(const char *s, size_t *pos);
 
 template <>
-struct stox<int> {
-	static int f(const char *s, size_t *pos) { return std::stoi(s, pos); }
-};
+int stox<int>(const char *s, size_t *pos) { return std::stoi(s, pos); }
 
 template <>
-struct stox<unsigned> {
-	static unsigned long f(const char *s, size_t *pos) { return std::stoul(s, pos); }
-};
+unsigned stox<unsigned>(const char *s, size_t *pos)
+{
+#if ULONG_MAX > UINT_MAX
+	unsigned long x = std::stoul(s, pos);
+	return x > UINT_MAX ? throw std::out_of_range{ "integer out of range" } : static_cast<unsigned>(x);
+#else
+	return std::stoul(s, pos);
+#endif
+}
 
 template <>
-struct stox<long long> {
-	static long long f(const char *s, size_t *pos) { return std::stoll(s, pos); }
-};
+long long stox<long long>(const char *s, size_t *pos) { return std::stoll(s, pos); }
 
 template <>
-struct stox<unsigned long long> {
-	static unsigned long long f(const char *s, size_t *pos) { return std::stoull(s, pos); }
-};
+unsigned long long stox<unsigned long long>(const char *s, size_t *pos) { return std::stoull(s, pos); }
+
 
 template <class T>
 T parse_integer(const char *s)
 {
 	try {
 		size_t pos;
-		auto x = stox<T>::f(s, &pos);
+		T x = stox<T>(s, &pos);
 
 		if (s[pos] != '\0')
 			throw std::invalid_argument{ "unparsed characters" };
-		if (x < std::numeric_limits<T>::min() || x > std::numeric_limits<T>::max())
-			throw std::out_of_range{ "integer out of range" };
 
 		return static_cast<T>(x);
 	} catch (const std::exception &e) {

@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include "common/make_unique.h"
@@ -141,11 +141,13 @@ ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, u
 	m_subsample_h{ subsample_h },
 	m_yuv{ yuv }
 {
+	std::random_device rng;
+
 	for (unsigned p = 0; p < planes; ++p) {
 		unsigned width_p = this->width(p);
 		unsigned height_p = this->height(p);
 		size_t rowsize_p = width_to_stride(width_p, pixel);
-		ptrdiff_t offset_p = zimg::floor_n(rand(), 64) % 4096;
+		ptrdiff_t offset_p = zimg::floor_n(rng(), 64) % 4096;
 
 		m_vector[p].resize(rowsize_p * height_p + offset_p);
 		m_offset[p] = offset_p;
