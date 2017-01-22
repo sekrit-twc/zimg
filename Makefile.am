@@ -144,6 +144,7 @@ libsse2_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_sse2.cpp \
 	src/zimg/depth/depth_convert_sse2.cpp \
 	src/zimg/depth/dither_sse2.cpp \
+	src/zimg/depth/error_diffusion_sse2.cpp \
 	src/zimg/depth/f16c_sse2.cpp \
 	src/zimg/resize/resize_impl_sse2.cpp
 
@@ -307,6 +308,7 @@ test_unit_test_SOURCES += \
 	test/depth/depth_convert_sse2_test.cpp \
 	test/depth/dither_avx2_test.cpp \
 	test/depth/dither_sse2_test.cpp \
+	test/depth/error_diffusion_sse2_test.cpp \
 	test/depth/f16c_ivb_test.cpp \
 	test/depth/f16c_sse2_test.cpp \
 	test/resize/resize_impl_avx_test.cpp \

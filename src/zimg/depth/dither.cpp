@@ -420,6 +420,11 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 
 std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
+#ifdef ZIMG_X86
+	if (auto ret = create_error_diffusion_x86(width, height, pixel_in, pixel_out, cpu))
+		return ret;
+#endif
+
 	ErrorDiffusion::ed_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);

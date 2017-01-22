@@ -244,6 +244,10 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_sse2.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\f16c_sse2.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\f16c_ivb.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>

@@ -2,6 +2,7 @@
 
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "graph/image_filter.h"
 #include "dither_x86.h"
 #include "f16c_x86.h"
 
@@ -100,6 +101,22 @@ bool needs_dither_f16c_func_x86(CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
 	return (cpu == CPUClass::AUTO && !caps.avx2) || cpu < CPUClass::X86_AVX2;
+}
+
+std::unique_ptr<graph::ImageFilter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+{
+	X86Capabilities caps = query_x86_capabilities();
+	std::unique_ptr<graph::ImageFilter> ret;
+
+	if (cpu == CPUClass::AUTO) {
+		if (!ret && caps.sse2)
+			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
+	} else {
+		if (!ret && cpu >= CPUClass::X86_SSE2)
+			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
+	}
+
+	return ret;
 }
 
 } // namespace depth

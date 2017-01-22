@@ -32,6 +32,7 @@
     <ClCompile Include="..\..\test\depth\dither_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_test.cpp" />
+    <ClCompile Include="..\..\test\depth\error_diffusion_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\f16c_ivb_test.cpp" />
     <ClCompile Include="..\..\test\depth\f16c_sse2_test.cpp" />
     <ClCompile Include="..\..\test\extra\musl-libm\cos.c">
