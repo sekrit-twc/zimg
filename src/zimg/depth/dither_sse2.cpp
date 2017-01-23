@@ -7,7 +7,7 @@
 
 #define HAVE_CPU_SSE2
   #include "common/x86util.h"
-#undef HAVE_SSE2
+#undef HAVE_CPU_SSE2
 
 #include "dither_x86.h"
 
