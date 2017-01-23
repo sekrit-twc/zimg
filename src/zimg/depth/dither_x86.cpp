@@ -109,9 +109,13 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion_x86(unsigned width, u
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (cpu == CPUClass::AUTO) {
+		if (!ret && caps.avx2 && caps.f16c && caps.fma)
+			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
 		if (!ret && caps.sse2)
 			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	} else {
+		if (!ret && cpu >= CPUClass::X86_AVX2)
+			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	}

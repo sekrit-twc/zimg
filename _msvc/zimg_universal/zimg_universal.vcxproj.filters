@@ -187,6 +187,9 @@
     <ClCompile Include="..\..\src\zimg\depth\error_diffusion_sse2.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">
