@@ -40,20 +40,23 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 template <class T, class U>
 void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
-	const float *error_top_p = static_cast<const float *>(error_top) + AlignmentOf<float>::value;
-	float *error_cur_p = static_cast<float *>(error_cur) + AlignmentOf<float>::value;
+	const float *error_top_p = static_cast<const float *>(error_top);
+	float *error_cur_p = static_cast<float *>(error_cur);
 
 	const T *src_p = static_cast<const T *>(src);
 	U *dst_p = static_cast<U *>(dst);
 
-	for (int j = 0; j < static_cast<int>(width); ++j) {
+	for (unsigned j = 0; j < width; ++j) {
+		// Error array is padded by one on each side.
+		unsigned j_err = j + 1;
+
 		float x = static_cast<float>(src_p[j]) * scale + offset;
 		float err = 0;
 
-		err += error_cur_p[j - 1] * (7.0f / 16.0f);
-		err += error_top_p[j + 1] * (3.0f / 16.0f);
-		err += error_top_p[j + 0] * (5.0f / 16.0f);
-		err += error_top_p[j - 1] * (1.0f / 16.0f);
+		err += error_cur_p[j_err - 1] * (7.0f / 16.0f);
+		err += error_top_p[j_err + 1] * (3.0f / 16.0f);
+		err += error_top_p[j_err + 0] * (5.0f / 16.0f);
+		err += error_top_p[j_err - 1] * (1.0f / 16.0f);
 
 		x += err;
 		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
@@ -61,7 +64,7 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		U q = static_cast<U>(std::lrint(x));
 
 		dst_p[j] = q;
-		error_cur_p[j] = x - static_cast<float>(q);
+		error_cur_p[j_err] = x - static_cast<float>(q);
 	}
 }
 
@@ -362,10 +365,15 @@ public:
 
 		flags.has_state = true;
 		flags.same_row = true;
-		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
+		flags.in_place = pixel_size(m_pixel_in) == pixel_size(m_pixel_out);
 		flags.entire_row = true;
 
 		return flags;
+	}
+
+	pair_unsigned get_required_col_range(unsigned, unsigned) const override
+	{
+		return{ 0, get_image_attributes().width };
 	}
 
 	image_attributes get_image_attributes() const override
@@ -375,7 +383,7 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return 2 * (ceil_n(static_cast<size_t>(m_width), AlignmentOf<float>::value) + 2 * AlignmentOf<float>::value) * sizeof(float);
+		return (m_width + 2) * sizeof(float) * 2;
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override
@@ -394,7 +402,7 @@ public:
 		void *dst_p = (*dst)[i];
 
 		void *error_a = ctx;
-		void *error_b = static_cast<float *>(ctx) + get_context_size() / (2 * sizeof(float));
+		void *error_b = static_cast<unsigned char *>(ctx) + get_context_size() / 2;
 
 		void *error_top = i % 2 ? error_a : error_b;
 		void *error_cur = i % 2 ? error_b : error_a;
