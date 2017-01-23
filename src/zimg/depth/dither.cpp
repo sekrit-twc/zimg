@@ -77,19 +77,6 @@ void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 }
 
 
-std::pair<float, float> get_scale_offset(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
-{
-	double range_in = integer_range(pixel_in);
-	double offset_in = integer_offset(pixel_in);
-	double range_out = integer_range(pixel_out);
-	double offset_out = integer_offset(pixel_out);
-
-	float scale = static_cast<float>(range_out / range_in);
-	float offset = static_cast<float>(-offset_in * range_out / range_in + offset_out);
-
-	return{ scale, offset };
-}
-
 dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::HALF)
