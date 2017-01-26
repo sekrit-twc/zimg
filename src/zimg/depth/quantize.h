@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 #include "common/pixel.h"
 
 namespace zimg {
@@ -30,6 +31,19 @@ constexpr int32_t integer_range(const PixelFormat &format) noexcept
 		: format.fullrange ? numeric_max(format.depth)
 		: format.chroma && !format.ycgco ? 224L << (format.depth - 8)
 		: 219L << (format.depth - 8);
+}
+
+inline std::pair<float, float> get_scale_offset(const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+{
+	double range_in = integer_range(pixel_in);
+	double offset_in = integer_offset(pixel_in);
+	double range_out = integer_range(pixel_out);
+	double offset_out = integer_offset(pixel_out);
+
+	float scale = static_cast<float>(range_out / range_in);
+	float offset = static_cast<float>(-offset_in * range_out / range_in + offset_out);
+
+	return{ scale, offset };
 }
 
 float half_to_float(uint16_t f16w) noexcept;

@@ -317,5 +317,11 @@
     <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_sse2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_avx2.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

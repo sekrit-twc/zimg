@@ -122,6 +122,30 @@ static inline FORCE_INLINE void mm_transpose8_epi16(__m128i &x0, __m128i &x1, __
 	x7 = _mm_unpackhi_epi64(tt5, tt7);
 }
 
+// Saturated convert signed 32-bit to unsigned 16-bit, biased by INT16_MIN.
+static inline FORCE_INLINE __m128i mm_packus_epi32_bias(__m128i a, __m128i b)
+{
+	const __m128i i16_min_epi32 = _mm_set1_epi32(INT16_MIN);
+
+	a = _mm_add_epi32(a, i16_min_epi32);
+	b = _mm_add_epi32(b, i16_min_epi32);
+
+	a = _mm_packs_epi32(a, b);
+
+	return a;
+}
+
+// Saturated convert signed 32-bit to unsigned 16-bit.
+static inline FORCE_INLINE __m128i mm_packus_epi32(__m128i a, __m128i b)
+{
+	const __m128i i16_min_epi16 = _mm_set1_epi16(INT16_MIN);
+
+	a = mm_packus_epi32_bias(a, b);
+	a = _mm_sub_epi16(a, i16_min_epi16);
+
+	return a;
+}
+
 #endif // HAVE_CPU_SSE2
 
 #ifdef HAVE_CPU_AVX
