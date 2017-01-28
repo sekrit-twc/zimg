@@ -32,12 +32,33 @@ void do_cpuid(int regs[4], int eax, int ecx)
 #endif
 }
 
+
+/**
+ * Execute the XGETBV instruction.
+ *
+ * @param ecx argument to instruction
+ * @return (edx << 32) | eax
+ */
+unsigned long long do_xgetbv(unsigned ecx)
+{
+#if defined(_MSC_VER)
+	return _xgetbv(ecx);
+#elif defined(__GNUC__)
+	unsigned eax, edx;
+	__asm("xgetbv" : "=a"(eax), "=d"(edx) : "c"(ecx) : );
+	return (static_cast<unsigned long long>(edx) << 32) | eax;
+#else
+	return 0;
+#endif
+}
+
 } // namespace
 
 
 X86Capabilities query_x86_capabilities() noexcept
 {
 	X86Capabilities caps = { 0 };
+	unsigned long long xcr0 = 0;
 	int regs[4] = { 0 };
 
 	do_cpuid(regs, 1, 0);
@@ -48,6 +69,15 @@ X86Capabilities query_x86_capabilities() noexcept
 	caps.fma   = !!(regs[2] & (1 << 12));
 	caps.sse41 = !!(regs[2] & (1 << 19));
 	caps.sse42 = !!(regs[2] & (1 << 20));
+
+	// osxsave
+	if (regs[2] & (1 << 27))
+		xcr0 = do_xgetbv(0);
+
+	// XMM and YMM state.
+	if ((xcr0 & 0x06) != 0x06)
+		return caps;
+
 	caps.avx   = !!(regs[2] & (1 << 28));
 	caps.f16c  = !!(regs[2] & (1 << 29));
 
