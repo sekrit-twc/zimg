@@ -206,6 +206,15 @@ const ColorImageBuffer<U> &static_buffer_cast(const ColorImageBuffer<T> &buf) no
 }
 
 /**
+ * @see ColorImageBuffer::static_buffer_cast
+ */
+template <class U, class T>
+const ColorImageBuffer<U> *static_buffer_cast(const ColorImageBuffer<T> *buf) noexcept
+{
+	return &static_buffer_cast<U>(*buf);
+}
+
+/**
  * Convert a line count to a buffer mask.
  *
  * @param count line count, may be {@link BUFFER_MAX}
