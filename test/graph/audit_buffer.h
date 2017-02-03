@@ -8,10 +8,17 @@
 #include "common/pixel.h"
 #include "graph/image_buffer.h"
 
+enum class AuditBufferType {
+	PLANE,
+	COLOR_RGB,
+	COLOR_YUV,
+};
+
 template <class T>
 class AuditBuffer {
 	zimg::AlignedVector<T> m_vector[3];
-	zimg::graph::ImageBuffer<T> m_buffer[3];
+	zimg::graph::ColorImageBuffer<T> m_buffer;
+	AuditBufferType m_buffer_type;
 	zimg::PixelFormat m_format;
 	unsigned m_width[3];
 	unsigned m_buffer_height[3];
@@ -19,16 +26,17 @@ class AuditBuffer {
 	unsigned m_subsample_h;
 	T m_fill_val[3];
 	T m_guard_val;
-	bool m_color;
 
 	static T splat_byte(unsigned char b);
 
 	void add_guard_bytes();
 
 	ptrdiff_t stride_T(unsigned p) const;
+
+	unsigned planes() const;
 public:
-	AuditBuffer(unsigned width, unsigned height, const zimg::PixelFormat &format, unsigned lines,
-	            unsigned subsample_w, unsigned subsample_h, bool color);
+	AuditBuffer(AuditBufferType buffer_type, unsigned width, unsigned height, const zimg::PixelFormat &format,
+	            unsigned lines, unsigned subsample_w, unsigned subsample_h);
 
 	void set_fill_val(unsigned char x);
 

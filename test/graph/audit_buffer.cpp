@@ -42,11 +42,11 @@ class Mt19937Generator {
 	bool m_float;
 	bool m_chroma;
 public:
-	Mt19937Generator(unsigned p, unsigned i, unsigned left, const zimg::PixelFormat &format) :
+	Mt19937Generator(unsigned p, unsigned i, unsigned left, const zimg::PixelFormat &format, bool chroma) :
 		m_gen{ (static_cast<uint_fast32_t>(p) << 30) | i },
 		m_depth{ static_cast<uint32_t>(format.depth) },
 		m_float{ format.type == zimg::PixelType::HALF || format.type == zimg::PixelType::FLOAT },
-		m_chroma{ p > 0 || format.chroma }
+		m_chroma{ chroma }
 	{
 		m_gen.discard(left);
 	}
@@ -70,17 +70,14 @@ template <class T>
 T AuditBuffer<T>::splat_byte(unsigned char b)
 {
 	T val;
-
-	for (size_t i = 0; i < sizeof(val); ++i) {
-		reinterpret_cast<unsigned char *>(&val)[i] = b;
-	}
+	std::fill_n(reinterpret_cast<unsigned char *>(&val), sizeof(T), b);
 	return val;
 }
 
 template <class T>
 void AuditBuffer<T>::add_guard_bytes()
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		std::fill(m_vector[p].begin(), m_vector[p].begin() + m_buffer[p].stride() / static_cast<ptrdiff_t>(sizeof(T)), m_guard_val);
 
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
@@ -104,20 +101,26 @@ ptrdiff_t AuditBuffer<T>::stride_T(unsigned p) const
 }
 
 template <class T>
-AuditBuffer<T>::AuditBuffer(unsigned width, unsigned height, const zimg::PixelFormat &format, unsigned lines,
-                            unsigned subsample_w, unsigned subsample_h, bool color) :
+unsigned AuditBuffer<T>::planes() const
+{
+	return m_buffer_type == AuditBufferType::PLANE ? 1 : 3;
+}
+
+template <class T>
+AuditBuffer<T>::AuditBuffer(AuditBufferType buffer_type, unsigned width, unsigned height, const zimg::PixelFormat &format,
+							unsigned lines, unsigned subsample_w, unsigned subsample_h) :
+	m_buffer_type{ buffer_type },
 	m_format(format),
 	m_width{},
 	m_buffer_height{},
 	m_subsample_w{ subsample_w },
 	m_subsample_h{ subsample_h },
 	m_fill_val{ splat_byte(0xCD), splat_byte(0xCD), splat_byte(0xCD) },
-	m_guard_val{ splat_byte(0xFE) },
-	m_color{ color }
+	m_guard_val{ splat_byte(0xFE) }
 {
 	unsigned mask = zimg::graph::select_zimg_buffer_mask(lines);
 
-	for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		unsigned width_plane = p ? width >> subsample_w : width;
 		unsigned height_plane = p ? height >> subsample_h : height;
 
@@ -160,7 +163,7 @@ bool AuditBuffer<T>::detect_write(unsigned i, unsigned left, unsigned right) con
 {
 	bool write = true;
 
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		unsigned i_plane = i >> (p ? m_subsample_h : 0);
 		unsigned left_plane = left >> (p ? m_subsample_w : 0);
 		unsigned right_plane = right >> (p ? m_subsample_h : 0);
@@ -173,7 +176,7 @@ bool AuditBuffer<T>::detect_write(unsigned i, unsigned left, unsigned right) con
 template <class T>
 void AuditBuffer<T>::assert_eq(const AuditBuffer &other, unsigned i, unsigned left, unsigned right) const
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		unsigned left_plane = left >> (p ? m_subsample_w : 0);
 		unsigned right_plane = right >> (p ? m_subsample_h : 0);
 
@@ -185,7 +188,7 @@ void AuditBuffer<T>::assert_eq(const AuditBuffer &other, unsigned i, unsigned le
 template <class T>
 void AuditBuffer<T>::assert_guard_bytes() const
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		ASSERT_TRUE(contains_only(m_vector[p].begin(), m_vector[p].begin() + stride_T(p), m_guard_val)) <<
 			"header guard bytes corrupted";
 
@@ -208,14 +211,17 @@ void AuditBuffer<T>::assert_guard_bytes() const
 template <class T>
 void AuditBuffer<T>::random_fill(unsigned first_row, unsigned last_row, unsigned first_col, unsigned last_col)
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		unsigned first_row_plane = first_row << (p ? m_subsample_h : 0);
 		unsigned last_row_plane = last_row << (p ? m_subsample_h : 0);
 		unsigned first_col_plane = first_col << (p ? m_subsample_w : 0);
 		unsigned last_col_plane = last_col << (p ? m_subsample_w : 0);
 
+		bool chroma = (m_buffer_type == AuditBufferType::PLANE && m_format.chroma) ||
+			(m_buffer_type == AuditBufferType::COLOR_RGB && p > 0);
+
 		for (unsigned i = first_row_plane; i < last_row_plane; ++i) {
-			Mt19937Generator<T> engine{ p, i, first_col_plane, m_format };
+			Mt19937Generator<T> engine{ p, i, first_col_plane, m_format, chroma };
 
 			std::generate(m_buffer[p][i] + first_col_plane, m_buffer[p][i] + last_col_plane, engine);
 		}
@@ -225,7 +231,7 @@ void AuditBuffer<T>::random_fill(unsigned first_row, unsigned last_row, unsigned
 template <class T>
 void AuditBuffer<T>::default_fill()
 {
-	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+	for (unsigned p = 0; p < planes(); ++p) {
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
 			std::fill_n(m_buffer[p][i], m_width[p], m_fill_val[p]);
 		}
@@ -241,7 +247,7 @@ zimg::graph::ColorImageBuffer<const void> AuditBuffer<T>::as_read_buffer() const
 template <class T>
 zimg::graph::ColorImageBuffer<void> AuditBuffer<T>::as_write_buffer() const
 {
-	return{ m_buffer[0], m_buffer[1], m_buffer[2] };
+	return m_buffer;
 }
 
 template class AuditBuffer<uint8_t>;

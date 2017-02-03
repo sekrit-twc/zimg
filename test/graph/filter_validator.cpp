@@ -194,8 +194,10 @@ void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned s
 	auto flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
 
-	AuditBuffer<T> src_buf{ src_width, src_height, src_format, filter->get_max_buffering(), 0, 0, !!flags.color };
-	AuditBuffer<U> dst_buf{ attr.width, attr.height, attr.type, filter->get_simultaneous_lines(), 0, 0, !!flags.color };
+	AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+
+	AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, filter->get_max_buffering(), 0, 0 };
+	AuditBuffer<U> dst_buf{ buffer_type, attr.width, attr.height, attr.type, filter->get_simultaneous_lines(), 0, 0 };
 
 	unsigned init = flags.has_state ? 0 : attr.height / 4;
 	unsigned vstep = filter->get_simultaneous_lines();
@@ -242,8 +244,10 @@ struct ValidateFilter {
 		if (flags.same_row)
 			validate_same_row(filter);
 
-		AuditBuffer<T> src_buf{ src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
-		AuditBuffer<U> dst_buf{ attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
+		AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+
+		AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0 };
+		AuditBuffer<U> dst_buf{ buffer_type, attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0 };
 
 		src_buf.random_fill(0, src_height, 0, src_width);
 		dst_buf.default_fill();
@@ -277,9 +281,11 @@ struct ValidateFilterReference {
 		zimg::graph::ImageFilter::filter_flags flags = ref_filter->get_flags();
 		auto attr = ref_filter->get_image_attributes();
 
-		AuditBuffer<T> src_buf{ src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
-		AuditBuffer<U> ref_buf{ attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
-		AuditBuffer<U> test_buf{ attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0, !!flags.color };
+		AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+
+		AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0 };
+		AuditBuffer<U> ref_buf{ buffer_type, attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0 };
+		AuditBuffer<U> test_buf{ buffer_type, attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0 };
 
 		src_buf.random_fill(0, src_height, 0, src_width);
 		ref_buf.default_fill();
