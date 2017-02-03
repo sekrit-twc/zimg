@@ -34,6 +34,7 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	FilterValidator validator{ filter_sse2.get(), w, h, format };
 	validator.set_sha1(expected_sha1)
 	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .set_yuv(csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB)
 	         .validate();
 }
 

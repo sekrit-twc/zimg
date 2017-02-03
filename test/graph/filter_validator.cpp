@@ -64,6 +64,15 @@ std::string hash_to_str(const unsigned char digest[20])
 }
 
 
+AuditBufferType select_buffer_type(bool color, bool yuv)
+{
+	if (color)
+		return yuv ? AuditBufferType::COLOR_YUV : AuditBufferType::COLOR_RGB;
+	else
+		return AuditBufferType::PLANE;
+}
+
+
 template <class T>
 std::pair<double, double> snr_line(const T *ref, const T *test, unsigned count, zimg::PixelType type)
 {
@@ -189,12 +198,12 @@ void validate_filter_plane(const zimg::graph::ImageFilter *filter, AuditBuffer<T
 }
 
 template <class T, class U>
-void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const AuditBuffer<U> &ref_buffer)
+void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, bool yuv, const AuditBuffer<U> &ref_buffer)
 {
 	auto flags = filter->get_flags();
 	auto attr = filter->get_image_attributes();
 
-	AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+	AuditBufferType buffer_type = select_buffer_type(flags.color, yuv);
 
 	AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, filter->get_max_buffering(), 0, 0 };
 	AuditBuffer<U> dst_buf{ buffer_type, attr.width, attr.height, attr.type, filter->get_simultaneous_lines(), 0, 0 };
@@ -233,10 +242,10 @@ void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned s
 
 template <class T, class U>
 struct ValidateFilter {
-	void operator()(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format,
+	void operator()(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, bool yuv,
 				    const char * const sha1_str[3])
 	{
-		zimg::graph::ImageFilter::filter_flags flags = filter->get_flags();
+		auto flags = filter->get_flags();
 		auto attr = filter->get_image_attributes();
 
 		validate_flags(filter);
@@ -244,7 +253,7 @@ struct ValidateFilter {
 		if (flags.same_row)
 			validate_same_row(filter);
 
-		AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+		AuditBufferType buffer_type = select_buffer_type(flags.color, yuv);
 
 		AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0 };
 		AuditBuffer<U> dst_buf{ buffer_type, attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0 };
@@ -253,7 +262,7 @@ struct ValidateFilter {
 		dst_buf.default_fill();
 
 		validate_filter_plane<T>(filter, &src_buf, &dst_buf);
-		validate_filter_buffered<T>(filter, src_width, src_height, src_format, dst_buf);
+		validate_filter_buffered<T>(filter, src_width, src_height, src_format, yuv, dst_buf);
 
 		if (!sha1_str)
 			return;
@@ -276,12 +285,12 @@ struct ValidateFilter {
 template <class T, class U>
 struct ValidateFilterReference {
 	void operator()(const zimg::graph::ImageFilter *ref_filter, const zimg::graph::ImageFilter *test_filter,
-	                unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
+	                unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, bool yuv, double snr_thresh)
 	{
 		zimg::graph::ImageFilter::filter_flags flags = ref_filter->get_flags();
 		auto attr = ref_filter->get_image_attributes();
 
-		AuditBufferType buffer_type = flags.color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
+		AuditBufferType buffer_type = select_buffer_type(flags.color, yuv);
 
 		AuditBuffer<T> src_buf{ buffer_type, src_width, src_height, src_format, zimg::graph::BUFFER_MAX, 0, 0 };
 		AuditBuffer<U> ref_buf{ buffer_type, attr.width, attr.height, attr.type, zimg::graph::BUFFER_MAX, 0, 0 };
@@ -335,7 +344,8 @@ FilterValidator::FilterValidator(const zimg::graph::ImageFilter *test_filter, un
 	m_src_width{ src_width },
 	m_src_height{ src_height },
 	m_sha1_str{},
-	m_snr_thresh{}
+	m_snr_thresh{},
+	m_yuv{}
 {}
 
 FilterValidator &FilterValidator::set_ref_filter(const zimg::graph::ImageFilter *ref_filter, double snr_thresh)
@@ -351,6 +361,12 @@ FilterValidator &FilterValidator::set_sha1(const char * const sha1_str[3])
 	return *this;
 }
 
+FilterValidator &FilterValidator::set_yuv(bool yuv)
+{
+	m_yuv = yuv;
+	return *this;
+}
+
 void FilterValidator::validate()
 {
 	auto test_attr = m_test_filter->get_image_attributes();
@@ -359,7 +375,7 @@ void FilterValidator::validate()
 	zimg::PixelType src_type = m_src_format.type;
 	zimg::PixelType dst_type = test_attr.type;
 
-	dispatch<ValidateFilter>(src_type, dst_type, m_test_filter, m_src_width, m_src_height, m_src_format, m_sha1_str);
+	dispatch<ValidateFilter>(src_type, dst_type, m_test_filter, m_src_width, m_src_height, m_src_format, m_yuv, m_sha1_str);
 
 	if (m_ref_filter) {
 		auto ref_flags = m_ref_filter->get_flags();
@@ -370,7 +386,7 @@ void FilterValidator::validate()
 		ASSERT_EQ(ref_attr.height, test_attr.height);
 		ASSERT_EQ(ref_attr.type, test_attr.type);
 
-		dispatch<ValidateFilterReference>(src_type, dst_type, m_ref_filter, m_test_filter, m_src_width, m_src_height, m_src_format, m_snr_thresh);
+		dispatch<ValidateFilterReference>(src_type, dst_type, m_ref_filter, m_test_filter, m_src_width, m_src_height, m_src_format, m_yuv, m_snr_thresh);
 	}
 }
 

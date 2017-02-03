@@ -24,11 +24,14 @@ class FilterValidator {
 
 	const char * const *m_sha1_str;
 	double m_snr_thresh;
+
+	bool m_yuv;
 public:
 	FilterValidator(const zimg::graph::ImageFilter *test_filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format);
 
 	FilterValidator &set_ref_filter(const zimg::graph::ImageFilter *ref_filter, double snr_thresh);
 	FilterValidator &set_sha1(const char * const sha1_str[3]);
+	FilterValidator &set_yuv(bool yuv);
 
 	void validate();
 };
