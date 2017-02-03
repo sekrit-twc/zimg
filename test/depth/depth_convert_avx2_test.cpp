@@ -24,8 +24,10 @@ void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::Pixe
 	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_avx2 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX2);
 
-	validate_filter(filter_avx2.get(), w, h, pixel_in, expected_sha1);
-	validate_filter_reference(filter_c.get(), filter_avx2.get(), w, h, pixel_in, expected_snr);
+	FilterValidator validator{ filter_avx2.get(), w, h, pixel_in };
+	validator.set_sha1(expected_sha1)
+	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .validate();
 }
 
 } // namespace

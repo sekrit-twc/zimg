@@ -23,7 +23,10 @@ TEST(BasicFilterTest, test_copy_filter)
 		SCOPED_TRACE(static_cast<int>(types[x]));
 
 		zimg::graph::CopyFilter copy{ w, h, types[x] };
-		validate_filter(&copy, w, h, types[x], expected_sha1[x]);
+
+		FilterValidator validator{ &copy, w, h, types[x] };
+		validator.set_sha1(expected_sha1[x]);
+		validator.validate();
 	}
 }
 
@@ -73,7 +76,9 @@ TEST(BasicFilterTest, test_mux_filter)
 				EXPECT_EQ(303U, range.second);
 			}
 
-			validate_filter(&mux, w, h, type, expected_sha1);
+			FilterValidator validator{ &mux, w, h, type };
+			validator.set_sha1(expected_sha1);
+			validator.validate();
 		}
 	}
 }

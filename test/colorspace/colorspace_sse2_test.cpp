@@ -31,8 +31,10 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::X86_SSE2).create();
 
-	validate_filter(filter_sse2.get(), w, h, format, expected_sha1);
-	validate_filter_reference(filter_sse2.get(), filter_c.get(), w, h, format, expected_snr);
+	FilterValidator validator{ filter_sse2.get(), w, h, format };
+	validator.set_sha1(expected_sha1)
+	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .validate();
 }
 
 } // namespace

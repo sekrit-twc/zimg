@@ -36,7 +36,10 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 			.create();
 
 		ASSERT_TRUE(filter);
-		validate_filter(filter.get(), src_w, src_h, format, expected_sha1[sha1_idx++]);
+
+		FilterValidator validator{ filter.get(), src_w, src_h, format };
+		validator.set_sha1(expected_sha1[sha1_idx++]);
+		validator.validate();
 	}
 }
 

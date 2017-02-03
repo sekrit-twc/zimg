@@ -35,8 +35,10 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 
 	ASSERT_FALSE(assert_different_dynamic_type(filter_c.get(), filter_sse2.get()));
 
-	validate_filter(filter_sse2.get(), src_w, src_h, format, expected_sha1);
-	validate_filter_reference(filter_c.get(), filter_sse2.get(), src_w, src_h, format, expected_snr);
+	FilterValidator validator{ filter_sse2.get(), src_w, src_h, format };
+	validator.set_sha1(expected_sha1)
+	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .validate();
 }
 
 } // namespace

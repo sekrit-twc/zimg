@@ -31,7 +31,10 @@ void test_case(bool fullrange, bool chroma, bool ycgco, const char *(*expected_s
 			fmt_out.ycgco = ycgco;
 
 			auto convert = zimg::depth::DepthConversion{ w, h }.set_pixel_in(fmt_in).set_pixel_out(fmt_out).create();
-			validate_filter(convert.get(), w, h, fmt_in, expected_sha1[sha1_idx++]);
+
+			FilterValidator validator{ convert.get(), w, h, fmt_in };
+			validator.set_sha1(expected_sha1[sha1_idx++]);
+			validator.validate();
 		}
 	}
 }
@@ -171,6 +174,9 @@ TEST(DepthConvertTest, test_non_full_integer)
 		dst_format.chroma = format.chroma;
 
 		auto convert = zimg::depth::DepthConversion{ w, h, }.set_pixel_in(format).set_pixel_out(dst_format).create();
-		validate_filter(convert.get(), w, h, format, expected_sha1[idx++]);
+
+		FilterValidator validator{ convert.get(), w, h, format };
+		validator.set_sha1(expected_sha1[idx++]);
+		validator.validate();
 	}
 }

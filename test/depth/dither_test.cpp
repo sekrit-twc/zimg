@@ -32,7 +32,10 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			fmt_out.chroma = chroma;
 
 			auto dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::NONE);
-			validate_filter(dither.get(), w, h, pxin, expected_sha1[sha1_idx++]);
+
+			FilterValidator validator{ dither.get(), w, h, pxin };
+			validator.set_sha1(expected_sha1[sha1_idx++]);
+			validator.validate();
 		}
 	}
 }

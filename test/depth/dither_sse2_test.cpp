@@ -26,8 +26,10 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 	auto filter_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_sse2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::X86_SSE2);
 
-	validate_filter(filter_sse2.get(), w, h, pixel_in, expected_sha1);
-	validate_filter_reference(filter_c.get(), filter_sse2.get(), w, h, pixel_in, expected_snr);
+	FilterValidator validator{ filter_sse2.get(), w, h, pixel_in };
+	validator.set_sha1(expected_sha1)
+	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .validate();
 }
 
 } // namespace

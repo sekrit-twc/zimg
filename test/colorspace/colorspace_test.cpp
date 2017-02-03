@@ -18,7 +18,9 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		.set_csp_out(csp_out)
 		.create();
 
-	validate_filter(convert.get(), w, h, format, expected_sha1);
+	FilterValidator validator{ convert.get(), w, h, format };
+	validator.set_sha1(expected_sha1);
+	validator.validate();
 }
 
 } // namespace

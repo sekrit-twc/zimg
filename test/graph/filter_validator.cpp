@@ -328,6 +328,53 @@ void dispatch(zimg::PixelType src_type, zimg::PixelType dst_type, Args&&... args
 } // namespace
 
 
+FilterValidator::FilterValidator(const zimg::graph::ImageFilter *test_filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format) :
+	m_test_filter{ test_filter },
+	m_ref_filter{},
+	m_src_format(src_format),
+	m_src_width{ src_width },
+	m_src_height{ src_height },
+	m_sha1_str{},
+	m_snr_thresh{}
+{}
+
+FilterValidator &FilterValidator::set_ref_filter(const zimg::graph::ImageFilter *ref_filter, double snr_thresh)
+{
+	m_ref_filter = ref_filter;
+	m_snr_thresh = snr_thresh;
+	return *this;
+}
+
+FilterValidator &FilterValidator::set_sha1(const char * const sha1_str[3])
+{
+	m_sha1_str = sha1_str;
+	return *this;
+}
+
+void FilterValidator::validate()
+{
+	auto test_attr = m_test_filter->get_image_attributes();
+	auto test_flags = m_test_filter->get_flags();
+
+	zimg::PixelType src_type = m_src_format.type;
+	zimg::PixelType dst_type = test_attr.type;
+
+	dispatch<ValidateFilter>(src_type, dst_type, m_test_filter, m_src_width, m_src_height, m_src_format, m_sha1_str);
+
+	if (m_ref_filter) {
+		auto ref_flags = m_ref_filter->get_flags();
+		auto ref_attr = m_ref_filter->get_image_attributes();
+
+		ASSERT_EQ(ref_flags.color, test_flags.color);
+		ASSERT_EQ(ref_attr.width, test_attr.width);
+		ASSERT_EQ(ref_attr.height, test_attr.height);
+		ASSERT_EQ(ref_attr.type, test_attr.type);
+
+		dispatch<ValidateFilterReference>(src_type, dst_type, m_ref_filter, m_test_filter, m_src_width, m_src_height, m_src_format, m_snr_thresh);
+	}
+}
+
+
 bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, const zimg::graph::ImageFilter *filter_b)
 {
 	const auto &tid_a = typeid(*filter_a);
@@ -338,32 +385,4 @@ bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, con
 		return true;
 	}
 	return false;
-}
-
-void validate_filter(const zimg::graph::ImageFilter *filter, unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, const char * const sha1_str[3])
-{
-	zimg::PixelType src_type = src_format.type;
-	auto attr = filter->get_image_attributes();
-
-	dispatch<ValidateFilter>(src_type, attr.type, filter, src_width, src_height, src_format, sha1_str);
-}
-
-void validate_filter_reference(const zimg::graph::ImageFilter *ref_filter, const zimg::graph::ImageFilter *test_filter,
-                               unsigned src_width, unsigned src_height, const zimg::PixelFormat &src_format, double snr_thresh)
-{
-	auto ref_flags = ref_filter->get_flags();
-	auto test_flags = test_filter->get_flags();
-
-	auto ref_attr = ref_filter->get_image_attributes();
-	auto test_attr = test_filter->get_image_attributes();
-
-	zimg::PixelType src_type = src_format.type;
-	zimg::PixelType dst_type = ref_attr.type;
-
-	ASSERT_EQ(ref_flags.color, test_flags.color);
-	ASSERT_EQ(ref_attr.width, test_attr.width);
-	ASSERT_EQ(ref_attr.height, test_attr.height);
-	ASSERT_EQ(ref_attr.type, test_attr.type);
-
-	dispatch<ValidateFilterReference>(src_type, dst_type, ref_filter, test_filter, src_width, src_height, src_format, snr_thresh);
 }
