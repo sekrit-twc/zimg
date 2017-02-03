@@ -33,7 +33,7 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 
 			auto dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, zimg::CPUClass::NONE);
 
-			FilterValidator validator{ dither.get(), w, h, pxin };
+			FilterValidator validator{ dither.get(), w, h, fmt_in };
 			validator.set_sha1(expected_sha1[sha1_idx++]);
 			validator.validate();
 		}
@@ -71,11 +71,11 @@ TEST(DitherTest, test_limited_chroma)
 		{ "6b4f540bab559ae1ef9b352a187980c32869dccb" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "e86412979136ccf931dff6b71621e7883767466e" },
-		{ "0bb320e7da86bec4a97849a97326d4309d6f3f2d" },
+		{ "060f6e8e7210c498427cef730c3602a0b5f31240" },
+		{ "459af9f2faa1bc11ff8cd7e1d5995194ca7330d1" },
 
-		{ "b5f02444cc800fae5cf3440bd0fa3ea5b002e0c1" },
-		{ "02a87cf37521da2e674c3d89491a932614a0e3aa" },
+		{ "3c1832c2c1cfdd9907de1367b3ebdf0eca6d8b31" },
+		{ "0686f300af1924d6592d6b422595616bfbc7e63e" },
 	};
 
 	test_case(zimg::depth::DitherType::NONE, false, true, expected_sha1);
@@ -109,11 +109,11 @@ TEST(DitherTest, test_full_chroma)
 		{ "997e708b6c0ec8861bace71884852984512494cb" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "65486aaa893bc373b510168b0211b03d07b9ebd6" },
-		{ "1374dbe6d9574768d7ee156aee92928dfa74c1ea" },
+		{ "1dedc59f9d9fd1680aa42fdba8465f4114bc50f2" },
+		{ "9602dd577a97f1d1e7939b1a9e00c4db1110b8db" },
 
-		{ "88d248b9f51fc73e07f87f43c86eaff483ba3f50" },
-		{ "2b449e40db3a8d4d5a4ca4c2cd74ef38e237ac57" },
+		{ "a0680c0b28fbc02561fea7746adc430354db472a" },
+		{ "1bda9505b332e08f9810d75b9858cacec4e50201" },
 	};
 
 	test_case(zimg::depth::DitherType::NONE, true, true, expected_sha1);
