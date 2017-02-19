@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <memory>
 #include <random>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include "common/alloc.h"
+#include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -273,18 +275,22 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		size_t size = 0;
+		checked_size_t size = 0;
 
-		if (m_f16c) {
-			unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
+		try {
+			if (m_f16c) {
+				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 
-			left = floor_n(left, pixel_align);
-			right = ceil_n(right, pixel_align);
+				left = floor_n(left, pixel_align);
+				right = ceil_n(right, pixel_align);
 
-			size = (right - left) * sizeof(float);
+				size += static_cast<checked_size_t>(right - left) * sizeof(float);
+			}
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
 		}
 
-		return size;
+		return size.get();
 	}
 
 	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
@@ -377,12 +383,22 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return (m_width + 2) * sizeof(float) * 2;
+		try {
+			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override
 	{
-		return m_f16c ? ceil_n(m_width, AlignmentOf<float>::value) * sizeof(float) : 0;
+		try {
+			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) : 0;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	void init_context(void *ctx) const override

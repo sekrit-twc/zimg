@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cstdint>
+#include <stdexcept>
+#include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -207,18 +209,22 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		size_t size = 0;
+		checked_size_t size = 0;
 
-		if (m_func && m_f16c) {
-			unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
+		try {
+			if (m_func && m_f16c) {
+				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 
-			left = floor_n(left, pixel_align);
-			right = ceil_n(right, pixel_align);
+				left = floor_n(left, pixel_align);
+				right = ceil_n(right, pixel_align);
 
-			size = (right - left) * sizeof(float);
+				size += static_cast<checked_size_t>(right - left) * sizeof(float);
+			}
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
 		}
 
-		return size;
+		return size.get();
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override

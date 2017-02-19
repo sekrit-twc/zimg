@@ -1,17 +1,19 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 
 #define HAVE_CPU_SSE2
-#include "common/x86util.h"
+  #include "common/x86util.h"
 #undef HAVE_CPU_SSE2
 
 #include "common/zassert.h"
@@ -439,12 +441,22 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return (m_width + 2) * sizeof(float) * 2;
+		try {
+			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override
 	{
-		return m_f16c ? ceil_n(m_width, AlignmentOf<float>::value) * sizeof(float) * 4 : 0;
+		try {
+			checked_ptrdiff_t size = m_f16c ? ceil_n(static_cast<checked_ptrdiff_t>(m_width) * sizeof(float), ALIGNMENT) * 4 : 0;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	void init_context(void *ctx) const override

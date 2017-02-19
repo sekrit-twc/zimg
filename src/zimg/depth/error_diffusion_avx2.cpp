@@ -1,17 +1,19 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
 
 #define HAVE_CPU_AVX
-#include "common/x86util.h"
+  #include "common/x86util.h"
 #undef HAVE_CPU_AVX
 
 #include "common/zassert.h"
@@ -542,7 +544,12 @@ public:
 
 	size_t get_context_size() const override
 	{
-		return (m_width + 2) * sizeof(float) * 2;
+		try {
+			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
