@@ -41,6 +41,9 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 
 auto ResizeConversion::create() const -> filter_pair try
 {
+	if (src_width > pixel_max_width(type) || dst_width > pixel_max_width(type))
+		throw error::OutOfMemory{};
+
 	bool skip_h = (src_width == dst_width && shift_w == 0 && subwidth == src_width);
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
