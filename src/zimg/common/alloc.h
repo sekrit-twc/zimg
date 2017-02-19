@@ -4,8 +4,11 @@
 #define ZIMG_ALLOC_H_
 
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 #include "align.h"
+#include "checked_int.h"
+#include "except.h"
 
 #ifdef _WIN32
   #include <malloc.h>
@@ -88,7 +91,7 @@ public:
  * The pointers returned must not be dereferenced or incremented.
  */
 class FakeAllocator {
-	size_t m_count;
+	checked_size_t m_count;
 public:
 	/**
 	 * Initialize a FakeAllocator.
@@ -96,20 +99,35 @@ public:
 	FakeAllocator() noexcept : m_count{} {}
 
 	/**
-	 * @see LinearAllocator::allocate
+	 * Allocate a given number of bytes.
+	 *
+	 * @tparam T buffer type
+	 * @param bytes number of bytes
+	 * @return nullptr
+	 * @throw error::OutOfMemory if total allocation exceeds SIZE_MAX
 	 */
 	template <class T = void>
-	T *allocate(size_t bytes)
+	T *allocate(checked_size_t bytes)
 	{
-		m_count += ceil_n(bytes, ALIGNMENT);
+		try {
+			m_count += ceil_n(bytes, ALIGNMENT);
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
+
 		return nullptr;
 	}
 
 	/**
-	 * @see LinearAllocator::allocate_n
+	 * Allocate a given number of objects.
+	 *
+	 * @tparam T buffer type
+	 * @param count number of objects
+	 * @return nullptr
+	 * @throw error::OutOfMemory if total allocation exceeds SIZE_MAX
 	 */
 	template <class T>
-	T *allocate_n(size_t count)
+	T *allocate_n(checked_size_t count)
 	{
 		return allocate<T>(count * sizeof(T));
 	}
@@ -121,7 +139,7 @@ public:
 	 */
 	size_t count() const noexcept
 	{
-		return m_count;
+		return m_count.get();
 	}
 };
 
