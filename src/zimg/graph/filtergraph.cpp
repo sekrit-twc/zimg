@@ -759,8 +759,8 @@ class FilterGraph::impl {
 
 		if (!entire_row) {
 			double scale = std::max(static_cast<double>(tail_attr.width) / head_attr.width, 1.0);
-			unsigned step = static_cast<unsigned>(floor_n(std::lrint(HORIZONTAL_STEP * scale), ALIGNMENT));
-			return std::min(step, tail_attr.width);
+			double step = std::min(HORIZONTAL_STEP * scale, static_cast<double>(tail_attr.width));
+			return floor_n(static_cast<unsigned>(std::lrint(step)), ALIGNMENT);
 		} else {
 			return tail_attr.width;
 		}
