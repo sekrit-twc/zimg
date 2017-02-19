@@ -3,6 +3,7 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
+#include "common/zassert.h"
 #include "unresize_impl.h"
 
 namespace zimg {
@@ -82,6 +83,9 @@ public:
 	UnresizeImplH_C(const BilinearContext &context, unsigned height, PixelType type) :
 		UnresizeImplH(context, image_attributes{ context.output_width, height, type })
 	{
+		zassert_d(context.input_width <= pixel_max_width(type), "overflow");
+		zassert_d(context.output_width <= pixel_max_width(type), "overflow");
+
 		if (type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };
 	}
@@ -97,6 +101,9 @@ public:
 	UnresizeImplV_C(const BilinearContext &context, unsigned width, PixelType type) :
 		UnresizeImplV(context, image_attributes{ width, context.output_width, type })
 	{
+		zassert_d(context.input_width <= pixel_max_width(type), "overflow");
+		zassert_d(context.output_width <= pixel_max_width(type), "overflow");
+
 		if (type != PixelType::FLOAT)
 			throw error::InternalError{ "pixel type not supported" };
 	}
