@@ -72,6 +72,7 @@
     <ClInclude Include="..\..\src\zimg\common\alloc.h" />
     <ClInclude Include="..\..\src\zimg\common\builder.h" />
     <ClInclude Include="..\..\src\zimg\common\ccdep.h" />
+    <ClInclude Include="..\..\src\zimg\common\checked_int.h" />
     <ClInclude Include="..\..\src\zimg\common\cpuinfo.h" />
     <ClInclude Include="..\..\src\zimg\common\except.h" />
     <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h" />

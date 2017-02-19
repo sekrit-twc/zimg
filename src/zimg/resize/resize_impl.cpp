@@ -4,6 +4,7 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
+#include "common/zassert.h"
 #include "graph/image_filter.h"
 #include "filter.h"
 #include "resize_impl.h"
@@ -154,7 +155,10 @@ ResizeImplH::ResizeImplH(const FilterContext &filter, const image_attributes &at
 	m_filter(filter),
 	m_attr(attr),
 	m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
-{}
+{
+	zassert_d(m_filter.input_width <= pixel_max_width(attr.type), "overflow");
+	zassert_d(attr.width <= pixel_max_width(attr.type), "overflow");
+}
 
 graph::ImageFilter::filter_flags ResizeImplH::get_flags() const
 {
@@ -195,7 +199,10 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, const image_attributes &at
 	m_filter(filter),
 	m_attr(attr),
 	m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
-{}
+{
+	zassert_d(m_filter.input_width <= pixel_max_width(attr.type), "overflow");
+	zassert_d(attr.width <= pixel_max_width(attr.type), "overflow");
+}
 
 graph::ImageFilter::filter_flags ResizeImplV::get_flags() const
 {

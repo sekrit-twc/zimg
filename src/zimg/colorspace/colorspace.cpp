@@ -26,6 +26,8 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
+		zassert_d(width <= pixel_max_width(PixelType::FLOAT), "overflow");
+
 		auto path = get_operation_path(in, out);
 		zassert(!path.empty(), "empty path");
 

@@ -37,6 +37,9 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 
 std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 {
+	if (width > pixel_max_width(pixel_in.type) || width > pixel_max_width(pixel_out.type))
+		throw error::OutOfMemory{};
+
 	if (pixel_in == pixel_out)
 		return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
 	else if (is_lossless_conversion(pixel_in, pixel_out))

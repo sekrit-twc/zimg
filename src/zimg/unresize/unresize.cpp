@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "common/cpuinfo.h"
+#include "common/except.h"
 #include "common/make_unique.h"
+#include "common/pixel.h"
 #include "graph/basic_filter.h"
 #include "unresize.h"
 #include "unresize_impl.h"
@@ -32,8 +34,11 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 	cpu{ CPUClass::NONE }
 {}
 
-auto UnresizeConversion::create() const -> filter_pair
+auto UnresizeConversion::create() const -> filter_pair try
 {
+	if (up_width > pixel_max_width(PixelType::FLOAT) || orig_width > pixel_max_width(PixelType::FLOAT))
+		throw error::OutOfMemory{};
+
 	bool skip_h = (up_width == orig_width && shift_w == 0);
 	bool skip_v = (up_height == orig_height && shift_h == 0);
 
@@ -82,6 +87,8 @@ auto UnresizeConversion::create() const -> filter_pair
 	}
 
 	return ret;
+} catch (const std::bad_alloc &) {
+	throw error::OutOfMemory{};
 }
 
 } // namespace unresize

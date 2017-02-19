@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <stdexcept>
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/checked_int.h"
+#include "common/except.h"
 
 #define HAVE_CPU_SSE2
   #include "common/x86util.h"
@@ -486,7 +489,13 @@ public:
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
 		auto range = get_required_col_range(left, right);
-		return 8 * ((range.second - floor_n(range.first, 8) + 8) * sizeof(uint16_t));
+
+		try {
+			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 8) + 8) * sizeof(uint16_t) * 8;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
@@ -527,10 +536,16 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		if (m_filter.filter_width > 4)
-			return (ceil_n(right, 8) - floor_n(left, 8)) * sizeof(uint32_t);
-		else
-			return 0;
+		checked_size_t size = 0;
+
+		try {
+			if (m_filter.filter_width > 4)
+				size += (ceil_n(checked_size_t{ right }, 8) - floor_n(left, 8)) * sizeof(uint32_t);
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
+
+		return size.get();
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override

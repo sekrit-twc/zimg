@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <vector>
+#include "common/except.h"
 #include "common/matrix.h"
+#include "common/zassert.h"
 #include "bilinear.h"
 
 namespace zimg {
@@ -106,44 +109,55 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 {
 	BilinearContext ctx;
 
-	// Map output shift to input shift.
-	RowMatrix<double> m = bilinear_weights(in, out, -shift * in / out);
-	RowMatrix<double> transpose_m = ~m;
-	RowMatrix<double> pinv_m = transpose_m * m;
-	TridiagonalLU<double> lu = tridiagonal_decompose(pinv_m);
+	try {
+		// Map output shift to input shift.
+		RowMatrix<double> m = bilinear_weights(in, out, -shift * in / out);
+		RowMatrix<double> transpose_m = ~m;
+		RowMatrix<double> pinv_m = transpose_m * m;
+		TridiagonalLU<double> lu = tridiagonal_decompose(pinv_m);
 
-	size_t rows = transpose_m.rows();
-	size_t cols = transpose_m.cols();
+		size_t rows = transpose_m.rows();
+		size_t cols = transpose_m.cols();
 
-	ctx.input_width = out;
-	ctx.output_width = in;
+		ctx.input_width = out;
+		ctx.output_width = in;
 
-	size_t rowsize = 0;
-	for (size_t i = 0; i < rows; ++i) {
-		rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
-	}
-	size_t rowstride = ceil_n(rowsize, AlignmentOf<float>::value);
-
-	ctx.matrix_coefficients.resize(rowstride * rows);
-	ctx.matrix_row_offsets.resize(rows);
-	ctx.matrix_row_size = static_cast<unsigned>(rowsize);
-	ctx.matrix_row_stride = static_cast<unsigned>(rowstride);
-	for (size_t i = 0; i < rows; ++i) {
-		size_t left = std::min(transpose_m.row_left(i), cols - rowsize);
-
-		for (size_t j = 0; j < transpose_m.row_right(i) - left; ++j) {
-			ctx.matrix_coefficients[i * rowstride + j] = static_cast<float>(transpose_m[i][left + j]);
+		size_t rowsize = 0;
+		for (size_t i = 0; i < rows; ++i) {
+			rowsize = std::max(transpose_m.row_right(i) - transpose_m.row_left(i), rowsize);
 		}
-		ctx.matrix_row_offsets[i] = static_cast<unsigned>(left);
-	}
+		zassert_d(rowsize, "empty matrix");
 
-	ctx.lu_c.resize(rows);
-	ctx.lu_l.resize(rows);
-	ctx.lu_u.resize(rows);
-	for (size_t i = 0; i < rows; ++i) {
-		ctx.lu_c[i] = static_cast<float>(lu.c[i]);
-		ctx.lu_l[i] = static_cast<float>((1.0 / (lu.l[i] + epsilon<float>()))); // Pre-invert this value, as it is used in division.
-		ctx.lu_u[i] = static_cast<float>(lu.u[i]);
+		if (rowsize > floor_n(SIZE_MAX, AlignmentOf<float>::value))
+			throw error::OutOfMemory{};
+
+		size_t rowstride = ceil_n(rowsize, AlignmentOf<float>::value);
+		if (rows > SIZE_MAX / rowstride)
+			throw error::OutOfMemory{};
+
+		ctx.matrix_coefficients.resize(rowstride * rows);
+		ctx.matrix_row_offsets.resize(rows);
+		ctx.matrix_row_size = static_cast<unsigned>(rowsize);
+		ctx.matrix_row_stride = static_cast<unsigned>(rowstride);
+		for (size_t i = 0; i < rows; ++i) {
+			size_t left = std::min(transpose_m.row_left(i), cols - rowsize);
+
+			for (size_t j = 0; j < transpose_m.row_right(i) - left; ++j) {
+				ctx.matrix_coefficients[i * rowstride + j] = static_cast<float>(transpose_m[i][left + j]);
+			}
+			ctx.matrix_row_offsets[i] = static_cast<unsigned>(left);
+		}
+
+		ctx.lu_c.resize(rows);
+		ctx.lu_l.resize(rows);
+		ctx.lu_u.resize(rows);
+		for (size_t i = 0; i < rows; ++i) {
+			ctx.lu_c[i] = static_cast<float>(lu.c[i]);
+			ctx.lu_l[i] = static_cast<float>((1.0 / (lu.l[i] + epsilon<float>()))); // Pre-invert this value, as it is used in division.
+			ctx.lu_u[i] = static_cast<float>(lu.u[i]);
+		}
+	} catch (const std::length_error &) {
+		throw error::OutOfMemory{};
 	}
 
 	return ctx;

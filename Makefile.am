@@ -72,6 +72,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/common/alloc.h \
 	src/zimg/common/builder.h \
 	src/zimg/common/ccdep.h \
+	src/zimg/common/checked_int.h \
 	src/zimg/common/cpuinfo.cpp \
 	src/zimg/common/cpuinfo.h \
 	src/zimg/common/except.h \

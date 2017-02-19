@@ -1,14 +1,23 @@
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <iterator>
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
+#include "common/pixel.h"
 #include "resize/filter.h"
 #include "filtergraph.h"
 #include "basic_filter.h"
 #include "graphbuilder.h"
 #include "image_filter.h"
+
+#ifndef ZIMG_UNSAFE_IMAGE_SIZE
+#include <limits>
+static constexpr size_t IMAGE_DIMENSION_MAX = static_cast<size_t>(1U) << (std::numeric_limits<size_t>::digits / 2 - 2);
+#else
+static constexpr size_t IMAGE_DIMENSION_MAX = ~static_cast<size_t>(0);
+#endif // ZIMG_UNSAFE_IMAGE_SIZE
 
 namespace zimg {
 namespace graph {
@@ -93,6 +102,10 @@ void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
 		throw error::InvalidImageSize{ "image dimensions must be non-zero" };
+	if (state.width > IMAGE_DIMENSION_MAX || state.height > IMAGE_DIMENSION_MAX)
+		throw error::InvalidImageSize{ "image dimensions exceed implementation limit" };
+	if (state.width > pixel_max_width(state.type))
+		throw error::InvalidImageSize{ "image width exceeds memory addressing limit" };
 
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)

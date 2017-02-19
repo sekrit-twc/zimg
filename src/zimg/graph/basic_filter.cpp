@@ -1,5 +1,7 @@
 #include <memory>
+#include <stdexcept>
 #include "common/alloc.h"
+#include "common/checked_int.h"
 #include "common/except.h"
 #include "common/pixel.h"
 #include "basic_filter.h"
@@ -82,7 +84,13 @@ unsigned MuxFilter::get_max_buffering() const
 
 size_t MuxFilter::get_context_size() const
 {
-	return zimg::ceil_n(m_filter->get_context_size(), ALIGNMENT) * 3;
+	try {
+		checked_size_t filter_ctx_size = m_filter->get_context_size();
+		checked_size_t ctx_size = zimg::ceil_n(filter_ctx_size, ALIGNMENT) * 3;
+		return ctx_size.get();
+	} catch (const std::overflow_error &) {
+		throw error::OutOfMemory{};
+	}
 }
 
 size_t MuxFilter::get_tmp_size(unsigned left, unsigned right) const
