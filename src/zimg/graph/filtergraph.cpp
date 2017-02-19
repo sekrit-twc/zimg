@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 #include "common/align.h"
 #include "common/alloc.h"
@@ -479,7 +480,10 @@ public:
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
 
-		alloc.allocate(static_cast<size_t>(num_planes) * cache_lines * stride);
+		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
+			throw error::OutOfMemory{};
+
+		alloc.allocate(static_cast<checked_size_t>(num_planes) * cache_lines * stride);
 		alloc.allocate(m_filter->get_context_size());
 
 		return alloc.count();
@@ -487,7 +491,6 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-
 		size_t tmp_size = 0;
 
 		auto range = m_filter->get_required_col_range(left, right);
@@ -625,7 +628,6 @@ public:
 
 		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
-
 			m_parent->simulate(sim, range.first, range.second, true);
 		}
 
@@ -643,7 +645,10 @@ public:
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
 
-		alloc.allocate(static_cast<size_t>(num_planes) * cache_lines * stride);
+		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
+			throw error::OutOfMemory{};
+
+		alloc.allocate(static_cast<checked_size_t>(num_planes) * cache_lines * stride);
 		alloc.allocate(m_filter->get_context_size());
 		alloc.allocate(m_filter->get_context_size());
 
@@ -652,7 +657,6 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-
 		size_t tmp_size = 0;
 
 		auto range = m_filter->get_required_col_range(left, right);
@@ -787,6 +791,8 @@ public:
 		m_subsample_h{},
 		m_is_complete{}
 	{
+		zassert_d(width <= pixel_max_width(type), "image stride causes overflow");
+
 		if (!color && (subsample_w || subsample_h))
 			throw error::InternalError{ "greyscale images can not be subsampled" };
 		if (subsample_w > 2 || subsample_h > 2)

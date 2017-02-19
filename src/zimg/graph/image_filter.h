@@ -121,6 +121,7 @@ public:
 	 * Get size of the per-frame filter context.
 	 *
 	 * @return size in bytes
+	 * @throw error::OutOfMemory if size exceeds SIZE_MAX
 	 */
 	virtual size_t get_context_size() const = 0;
 
@@ -130,6 +131,7 @@ public:
 	 * @param left left column index to produce
 	 * @param right right column index, plus one
 	 * @return size in bytes
+	 * @throw error::OutOfMemory if size exceeds SIZE_MAX
 	 */
 	virtual size_t get_tmp_size(unsigned left, unsigned right) const = 0;
 
