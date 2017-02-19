@@ -4,6 +4,7 @@
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
+#include "common/pixel.h"
 #include "resize/filter.h"
 #include "filtergraph.h"
 #include "basic_filter.h"
@@ -93,6 +94,8 @@ void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
 		throw error::InvalidImageSize{ "image dimensions must be non-zero" };
+	if (state.width > pixel_max_width(state.type))
+		throw error::InvalidImageSize{ "image width exceeds memory addressing limit" };
 
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)

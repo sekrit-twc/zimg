@@ -3,6 +3,7 @@
 #ifndef ZIMG_PIXEL_H_
 #define ZIMG_PIXEL_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include "align.h"
@@ -113,6 +114,19 @@ constexpr bool pixel_is_integer(PixelType type) noexcept
 constexpr bool pixel_is_float(PixelType type) noexcept
 {
 	return !pixel_is_integer(type);
+}
+
+/**
+ * Query the maximum image width that can be supported for a pixel type.
+ *
+ * @param type pixel type
+ * @return maximum width
+ */
+constexpr unsigned pixel_max_width(PixelType type) noexcept
+{
+	return static_cast<size_t>(std::numeric_limits<ptrdiff_t>::max()) > std::numeric_limits<unsigned>::max()
+		? floor_n(std::numeric_limits<unsigned>::max(), pixel_alignment(type))
+		: floor_n(static_cast<unsigned>(std::numeric_limits<ptrdiff_t>::max()), ALIGNMENT) / pixel_size(type);
 }
 
 /**
