@@ -14,6 +14,7 @@
 #include "common/x86util.h"
 #undef HAVE_CPU_AVX
 
+#include "common/zassert.h"
 #include "graph/image_buffer.h"
 #include "graph/image_filter.h"
 #include "dither_x86.h"
@@ -499,6 +500,9 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
+		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+
 		if (!pixel_is_integer(format_out.type))
 			throw error::InternalError{ "cannot dither to non-integer format" };
 

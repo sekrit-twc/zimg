@@ -3,6 +3,7 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
+#include "common/zassert.h"
 #include "graph/image_filter.h"
 #include "depth_convert.h"
 #include "depth_convert_x86.h"
@@ -98,6 +99,9 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
+
 		if (!pixel_is_integer(pixel_in.type) || !pixel_is_integer(pixel_out.type))
 			throw error::InternalError{ "cannot left shift floating point types" };
 		if (pixel_in.fullrange || pixel_out.fullrange)
@@ -169,6 +173,9 @@ public:
 		m_width{ width },
 		m_height{ height }
 	{
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
+
 		if (pixel_in == pixel_out)
 			throw error::InternalError{ "cannot perform no-op conversion" };
 		if (f16c && pixel_in.type != PixelType::HALF && pixel_out.type != PixelType::HALF)
