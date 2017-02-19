@@ -321,5 +321,8 @@
     <ClInclude Include="..\..\src\zimg\colorspace\gamma.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\checked_int.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
