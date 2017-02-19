@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cfloat>
+#include <climits>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
+#include <stdexcept>
 #include <vector>
 #include "common/except.h"
 #include "common/libm_wrapper.h"
@@ -48,17 +50,31 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 	for (size_t i = 0; i < m.rows(); ++i) {
 		width = std::max(width, m.row_right(i) - m.row_left(i));
 	}
+	zassert_d(width, "empty matrix");
+
+	if (width > floor_n(UINT_MAX, AlignmentOf<uint16_t>::value))
+		throw error::OutOfMemory{};
+	if (width > floor_n(UINT_MAX, AlignmentOf<float>::value))
+		throw error::OutOfMemory{};
 
 	FilterContext e{};
 
-	e.filter_width = static_cast<unsigned>(width);
-	e.filter_rows = static_cast<unsigned>(m.rows());
-	e.input_width = static_cast<unsigned>(m.cols());
-	e.stride = static_cast<unsigned>(ceil_n(width, AlignmentOf<float>::value));
-	e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>::value));
-	e.data.resize(static_cast<size_t>(e.stride) * e.filter_rows);
-	e.data_i16.resize(static_cast<size_t>(e.stride_i16) * e.filter_rows);
-	e.left.resize(e.filter_rows);
+	try {
+		e.filter_width = static_cast<unsigned>(width);
+		e.filter_rows = static_cast<unsigned>(m.rows());
+		e.input_width = static_cast<unsigned>(m.cols());
+		e.stride = static_cast<unsigned>(ceil_n(width, AlignmentOf<float>::value));
+		e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>::value));
+
+		if (e.filter_rows > UINT_MAX / e.stride || e.filter_rows > UINT_MAX / e.stride_i16)
+			throw error::OutOfMemory{};
+
+		e.data.resize(static_cast<size_t>(e.stride) * e.filter_rows);
+		e.data_i16.resize(static_cast<size_t>(e.stride_i16) * e.filter_rows);
+		e.left.resize(e.filter_rows);
+	} catch (const std::length_error &) {
+		throw error::OutOfMemory{};
+	}
 
 	for (size_t i = 0; i < m.rows(); ++i) {
 		unsigned left = static_cast<unsigned>(std::min(m.row_left(i), m.cols() - width));
@@ -220,35 +236,40 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	if (src_dim <= support || width <= support)
 		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
 
-	RowMatrix<double> m{ dst_dim, src_dim };
-	for (unsigned i = 0; i < dst_dim; ++i) {
-		// Position of output sample on input grid.
-		double pos = (i + 0.5) / scale + shift;
-		double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;
+	try {
+		RowMatrix<double> m{ dst_dim, src_dim };
 
-		double total = 0.0;
-		for (int j = 0; j < filter_size; ++j) {
-			double xpos = begin_pos + j;
-			total += f((xpos - pos) * step);
+		for (unsigned i = 0; i < dst_dim; ++i) {
+			// Position of output sample on input grid.
+			double pos = (i + 0.5) / scale + shift;
+			double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;
+
+			double total = 0.0;
+			for (int j = 0; j < filter_size; ++j) {
+				double xpos = begin_pos + j;
+				total += f((xpos - pos) * step);
+			}
+
+			for (int j = 0; j < filter_size; ++j) {
+				double xpos = begin_pos + j;
+				double real_pos;
+
+				// Mirror the position if it goes beyond image bounds.
+				if (xpos < 0.0)
+					real_pos = -xpos;
+				else if (xpos >= src_dim)
+					real_pos = std::min(2.0 * src_dim - xpos, src_dim - 0.5);
+				else
+					real_pos = xpos;
+
+				m[i][static_cast<size_t>(std::floor(real_pos))] += f((xpos - pos) * step) / total;
+			}
 		}
 
-		for (int j = 0; j < filter_size; ++j) {
-			double xpos = begin_pos + j;
-			double real_pos;
-
-			// Mirror the position if it goes beyond image bounds.
-			if (xpos < 0.0)
-				real_pos = -xpos;
-			else if (xpos >= src_dim)
-				real_pos = std::min(2.0 * src_dim - xpos, src_dim - 0.5);
-			else
-				real_pos = xpos;
-
-			m[i][static_cast<size_t>(std::floor(real_pos))] += f((xpos - pos) * step) / total;
-		}
+		return matrix_to_filter(m);
+	} catch (const std::length_error &) {
+		throw error::OutOfMemory{};
 	}
-
-	return matrix_to_filter(m);
 }
 
 } // namespace resize
