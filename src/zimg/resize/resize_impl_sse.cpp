@@ -1,9 +1,12 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
+#include <stdexcept>
 #include <xmmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/checked_int.h"
+#include "common/except.h"
 
 #define HAVE_CPU_SSE
   #include "common/x86util.h"
@@ -303,7 +306,13 @@ public:
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
 		auto range = get_required_col_range(left, right);
-		return 4 * ((range.second - floor_n(range.first, 4) + 4) * sizeof(float));
+
+		try {
+			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 4) + 4) * sizeof(float) * 4;
+			return size.get();
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
