@@ -229,8 +229,9 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	double scale = static_cast<double>(dst_dim) / width;
 	double step = std::min(scale, 1.0);
 	double support = static_cast<double>(f.support()) / step;
-	int filter_size = std::max(static_cast<int>(std::ceil(support)) * 2, 1);
 
+	if (support > UINT_MAX / 2)
+		throw error::ResamplingNotAvailable{ "filter width too great" };
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
 	if (src_dim <= support || width <= support)
@@ -238,6 +239,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 
 	try {
 		RowMatrix<double> m{ dst_dim, src_dim };
+		unsigned filter_size = std::max(static_cast<unsigned>(std::ceil(support)) * 2U, 1U);
 
 		for (unsigned i = 0; i < dst_dim; ++i) {
 			// Position of output sample on input grid.
@@ -245,12 +247,12 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 			double begin_pos = round_halfup(pos - filter_size / 2.0) + 0.5;
 
 			double total = 0.0;
-			for (int j = 0; j < filter_size; ++j) {
+			for (unsigned j = 0; j < filter_size; ++j) {
 				double xpos = begin_pos + j;
 				total += f((xpos - pos) * step);
 			}
 
-			for (int j = 0; j < filter_size; ++j) {
+			for (unsigned j = 0; j < filter_size; ++j) {
 				double xpos = begin_pos + j;
 				double real_pos;
 
@@ -262,7 +264,8 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 				else
 					real_pos = xpos;
 
-				m[i][static_cast<size_t>(std::floor(real_pos))] += f((xpos - pos) * step) / total;
+				size_t idx = static_cast<size_t>(std::floor(real_pos));
+				m[i][idx] += f((xpos - pos) * step) / total;
 			}
 		}
 
