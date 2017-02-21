@@ -22,7 +22,7 @@ public:
 	/**
 	 * @return filter support
 	 */
-	virtual int support() const = 0;
+	virtual unsigned support() const = 0;
 
 	/**
 	 * @param x position to evaluate
@@ -36,7 +36,7 @@ public:
  */
 class PointFilter : public Filter {
 public:
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };
@@ -46,7 +46,7 @@ public:
  */
 class BilinearFilter : public Filter {
 public:
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };
@@ -66,7 +66,7 @@ public:
 	 */
 	BicubicFilter(double b, double c);
 
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };
@@ -76,7 +76,7 @@ public:
  */
 class Spline16Filter : public Filter {
 public:
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };
@@ -86,7 +86,7 @@ public:
  */
 class Spline36Filter : public Filter {
 public:
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };
@@ -95,16 +95,16 @@ public:
  * Lanczos filter.
  */
 class LanczosFilter : public Filter {
-	int taps;
+	unsigned taps;
 public:
 	/**
 	 * Initialize a LanczosFilter for a given number of taps.
 	 *
 	 * @param taps number of taps
 	 */
-	explicit LanczosFilter(int taps);
+	explicit LanczosFilter(unsigned taps);
 
-	int support() const override;
+	unsigned support() const override;
 
 	double operator()(double x) const override;
 };

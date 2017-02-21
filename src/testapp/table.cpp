@@ -35,7 +35,7 @@ filter_uptr make_bicubic_filter(double b, double c)
 filter_uptr make_lanczos_filter(double taps, double)
 {
 	taps = std::isnan(taps) ? 4.0 : taps;
-	return filter_uptr{ new zimg::resize::LanczosFilter{ static_cast<int>(std::floor(taps)) } };
+	return filter_uptr{ new zimg::resize::LanczosFilter{ static_cast<unsigned>(std::floor(taps)) } };
 }
 
 filter_uptr make_null_filter(double, double) { return nullptr; }

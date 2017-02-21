@@ -134,12 +134,12 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 Filter::~Filter() = default;
 
-int PointFilter::support() const { return 0; }
+unsigned PointFilter::support() const { return 0; }
 
 double PointFilter::operator()(double x) const { return 1.0; }
 
 
-int BilinearFilter::support() const { return 1; }
+unsigned BilinearFilter::support() const { return 1; }
 
 double BilinearFilter::operator()(double x) const
 {
@@ -157,7 +157,7 @@ BicubicFilter::BicubicFilter(double b, double c) :
 	q3{ (              -b -  6.0 * c) / 6.0 }
 {}
 
-int BicubicFilter::support() const { return 2; }
+unsigned BicubicFilter::support() const { return 2; }
 
 double BicubicFilter::operator()(double x) const
 {
@@ -172,7 +172,7 @@ double BicubicFilter::operator()(double x) const
 }
 
 
-int Spline16Filter::support() const { return 2; }
+unsigned Spline16Filter::support() const { return 2; }
 
 double Spline16Filter::operator()(double x) const
 {
@@ -189,7 +189,7 @@ double Spline16Filter::operator()(double x) const
 }
 
 
-int Spline36Filter::support() const { return 3; }
+unsigned Spline36Filter::support() const { return 3; }
 
 double Spline36Filter::operator()(double x) const
 {
@@ -209,13 +209,13 @@ double Spline36Filter::operator()(double x) const
 }
 
 
-LanczosFilter::LanczosFilter(int taps) : taps{ taps }
+LanczosFilter::LanczosFilter(unsigned taps) : taps{ taps }
 {
 	if (taps <= 0)
 		throw error::IllegalArgument{ "lanczos tap count must be positive" };
 }
 
-int LanczosFilter::support() const { return taps; }
+unsigned LanczosFilter::support() const { return taps; }
 
 double LanczosFilter::operator()(double x) const
 {

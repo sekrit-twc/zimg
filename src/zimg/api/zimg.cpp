@@ -287,7 +287,7 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 			return ztd::make_unique<zimg::resize::Spline36Filter>();
 		case ZIMG_RESIZE_LANCZOS:
 			param_a = std::isnan(param_a) ? 3.0 : std::floor(param_a);
-			return ztd::make_unique<zimg::resize::LanczosFilter>(static_cast<int>(param_a));
+			return ztd::make_unique<zimg::resize::LanczosFilter>(static_cast<unsigned>(param_a));
 		default:
 			throw zimg::error::EnumOutOfRange{ "unrecognized resampling filter" };
 		}
