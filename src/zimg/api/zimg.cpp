@@ -92,8 +92,8 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr) noexcept
 	FATAL(InternalError,           ZIMG_ERROR_UNKNOWN, "internal error generated")
 	FATAL(Exception,               ZIMG_ERROR_UNKNOWN, "unregistered error generated")
 	catch (...) {
-		zassert_d(false, "bad exception type");
 		g_last_error_msg[0] = '\0';
+		zassert_d(false, "bad exception type");
 	}
 #undef CATCH
 #undef FATAL
