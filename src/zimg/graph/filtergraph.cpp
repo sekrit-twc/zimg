@@ -240,7 +240,7 @@ protected:
 	ptrdiff_t get_cache_stride() const
 	{
 		auto attr = get_image_attributes(false);
-		return ceil_n(attr.width * pixel_size(attr.type), ALIGNMENT);
+		return ceil_n(static_cast<ptrdiff_t>(attr.width) * pixel_size(attr.type), ALIGNMENT);
 	}
 
 	void set_cache_lines(unsigned n)
@@ -480,11 +480,17 @@ public:
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
 
-		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
+		zassert_d(stride >= 0, "negative cache stride");
+
+		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX) / stride)
 			throw error::OutOfMemory{};
 
-		alloc.allocate(static_cast<checked_size_t>(num_planes) * cache_lines * stride);
-		alloc.allocate(m_filter->get_context_size());
+		try {
+			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * num_planes);
+			alloc.allocate(m_filter->get_context_size());
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 
 		return alloc.count();
 	}
@@ -597,11 +603,6 @@ class FilterNodeUV final : public GraphNode {
 	ImageFilter::filter_flags m_flags;
 	GraphNode *m_parent;
 	unsigned m_step;
-
-	unsigned get_num_planes() const
-	{
-		return 2;
-	}
 public:
 	FilterNodeUV(unsigned id, std::unique_ptr<ImageFilter> &&filter, GraphNode *parent) :
 		GraphNode(id),
@@ -641,16 +642,20 @@ public:
 
 		alloc.allocate_n<node_context>(1);
 
-		unsigned num_planes = get_num_planes();
 		unsigned cache_lines = get_real_cache_lines();
 		ptrdiff_t stride = get_cache_stride();
+
+		zassert_d(stride >= 0, "negative cache stride");
 
 		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
 			throw error::OutOfMemory{};
 
-		alloc.allocate(static_cast<checked_size_t>(num_planes) * cache_lines * stride);
-		alloc.allocate(m_filter->get_context_size());
-		alloc.allocate(m_filter->get_context_size());
+		try {
+			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * 2);
+			alloc.allocate(static_cast<checked_size_t>(m_filter->get_context_size()) * 2);
+		} catch (const std::overflow_error &) {
+			throw error::OutOfMemory{};
+		}
 
 		return alloc.count();
 	}
