@@ -7,6 +7,10 @@
 #include <limits>
 #include <type_traits>
 
+#ifdef _MSC_VER
+  #include <intrin.h>
+#endif
+
 namespace zimg {
 namespace graph {
 
@@ -222,17 +226,27 @@ const ColorImageBuffer<U> *static_buffer_cast(const ColorImageBuffer<T> *buf) no
  */
 inline unsigned select_zimg_buffer_mask(unsigned count) noexcept
 {
-	const unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
+	constexpr unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
 
-	if (count != 0 && ((count - 1) & (1U << (UINT_BITS - 1))))
-		return BUFFER_MAX;
+	unsigned long msb = 0;
 
-	for (unsigned i = UINT_BITS - 1; i != 0; --i) {
-		if ((count - 1) & (1U << (i - 1)))
-			return (1U << i) - 1;
+	if (count <= 1U)
+		return 0;
+
+#if defined(_MSC_VER)
+	_BitScanReverse(&msb, count - 1);
+#elif defined(__GNUC__)
+	msb = UINT_BITS - __builtin_clz(count - 1) - 1;
+#else
+	for (unsigned i = UINT_BITS; i != 0; --i) {
+		if ((count - 1) & (1U << (i - 1))) {
+			msb = i - 1;
+			break;
+		}
 	}
+#endif
 
-	return 0;
+	return msb == UINT_BITS - 1 ? BUFFER_MAX : (1U << (msb + 1)) - 1;
 }
 
 } // namespace graph
