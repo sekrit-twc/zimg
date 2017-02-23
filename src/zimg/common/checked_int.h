@@ -284,6 +284,11 @@ namespace zimg {
 template <class T, bool = std::numeric_limits<T>::is_signed>
 struct _checked_arithmetic;
 
+[[noreturn]] inline void _checked_arithmetic_throw()
+{
+	throw std::overflow_error("overflow_error");
+}
+
 // Unsigned.
 template <class T>
 struct _checked_arithmetic<T, false> {
@@ -302,49 +307,49 @@ struct _checked_arithmetic<T, false> {
 	static void add(T &lhs, const T &rhs)
 	{
 		if (rhs > std::numeric_limits<T>::max() - lhs)
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		lhs += rhs;
 	}
 
 	static void sub(T &lhs, const T &rhs)
 	{
 		if (rhs > lhs)
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		lhs -= rhs;
 	}
 
 	static void mul(T &lhs, const T &rhs)
 	{
 		if (lhs && rhs > std::numeric_limits<T>::max() / lhs)
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		lhs *= rhs;
 	}
 
 	static void div(T &lhs, const T &rhs)
 	{
 		if (rhs == T())
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		lhs /= rhs;
 	}
 
 	static void mod(T &lhs, const T &rhs)
 	{
 		if (rhs == T())
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		lhs %= rhs;
 	}
 
 	static void lshift(T &value, unsigned n)
 	{
 		if (n >= std::numeric_limits<T>::digits || (value > (std::numeric_limits<T>::max() >> n)))
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		value <<= n;
 	}
 
 	static void rshift(T &value, unsigned n)
 	{
 		if (n >= std::numeric_limits<T>::digits)
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		value >>= n;
 	}
 };
@@ -355,7 +360,7 @@ struct _checked_arithmetic<T, true> {
 	static T neg(const T &value)
 	{
 		if (value == std::numeric_limits<T>::min())
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		return -value;
 	}
 
@@ -364,9 +369,8 @@ struct _checked_arithmetic<T, true> {
 		if ((rhs > T() && (lhs > std::numeric_limits<T>::max() - rhs)) ||
 		    (rhs < T() && (lhs < std::numeric_limits<T>::min() - rhs)))
 		{
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		}
-
 		lhs += rhs;
 	}
 
@@ -375,9 +379,8 @@ struct _checked_arithmetic<T, true> {
 		if ((rhs > T() && (lhs < std::numeric_limits<T>::min() + rhs)) ||
 		    (rhs < T() && (lhs > std::numeric_limits<T>::max() + rhs)))
 		{
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		}
-
 		lhs -= rhs;
 	}
 
@@ -388,41 +391,36 @@ struct _checked_arithmetic<T, true> {
 		    (lhs < 0 && rhs > 0 && lhs < std::numeric_limits<T>::min() / rhs) ||
 		    (lhs < 0 && rhs < 0 && rhs < std::numeric_limits<T>::max() / lhs))
 		{
-			throw std::overflow_error("overflow_error");
+			_checked_arithmetic_throw();
 		}
-
 		lhs *= rhs;
 	}
 
 	static void div(T &lhs, const T &rhs)
 	{
 		if (rhs == T() || (lhs == std::numeric_limits<T>::min() && rhs == -1))
-			throw std::overflow_error("overflow_error");
-
+			_checked_arithmetic_throw();
 		lhs /= rhs;
 	}
 
 	static void mod(T &lhs, const T &rhs)
 	{
 		if (rhs == T() || (lhs == std::numeric_limits<T>::min() && rhs == -1))
-			throw std::overflow_error("overflow_error");
-
+			_checked_arithmetic_throw();
 		lhs %= rhs;
 	}
 
 	static void lshift(T &value, unsigned n)
 	{
 		if (n >= std::numeric_limits<T>::digits || value < T() || (value > (std::numeric_limits<T>::max() >> n)))
-			throw std::overflow_error("overflow_error");
-
+			_checked_arithmetic_throw();
 		value <<= n;
 	}
 
 	static void rshift(T &value, unsigned n)
 	{
 		if (n >= std::numeric_limits<T>::digits || value < T())
-			throw std::overflow_error("overflow_error");
-
+			_checked_arithmetic_throw();
 		value >>= n;
 	}
 };
@@ -436,7 +434,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::false_type)
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	return static_cast<T>(value);
 }
 
@@ -448,7 +446,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::true_type)
 
 	// coverity[result_independent_of_operands]
 	if (value < U() || common_type(value) > common_type(std::numeric_limits<T>::max()))
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	return static_cast<T>(value);
 }
 
@@ -460,7 +458,7 @@ T _checked_integer_cast(const U &value, std::true_type, std::false_type)
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	return static_cast<T>(value);
 }
 
@@ -474,7 +472,7 @@ T _checked_integer_cast(const U &value, std::true_type, std::true_type)
 	if (common_type(value) < common_type(std::numeric_limits<T>::min()) ||
 	    common_type(value) > common_type(std::numeric_limits<T>::max()))
 	{
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	}
 	return static_cast<T>(value);
 }
@@ -574,7 +572,7 @@ template <class T>
 checked_integer<T> &checked_integer<T>::operator++()
 {
 	if (m_value == std::numeric_limits<T>::max())
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	++m_value;
 	return *this;
 }
@@ -584,7 +582,7 @@ template <class T>
 checked_integer<T> &checked_integer<T>::operator--()
 {
 	if (m_value == std::numeric_limits<T>::min())
-		throw std::overflow_error("overflow_error");
+		_checked_arithmetic_throw();
 	--m_value;
 	return *this;
 }
