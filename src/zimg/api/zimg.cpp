@@ -65,7 +65,7 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr) noexcept
 	zimg_error_code_e code = ZIMG_ERROR_UNKNOWN;
 
 #define CATCH(type, error_code) catch (const type &e) { record_exception_message(e); code = (error_code); }
-#define FATAL(type, error_code, msg) catch (const type &e) { zassert_d(false, msg); record_exception_message(e); code = (error_code); }
+#define FATAL(type, error_code, msg) catch (const type &e) { record_exception_message(e); code = (error_code); zassert_d(false, msg); }
 	try {
 		std::rethrow_exception(eptr);
 	}
