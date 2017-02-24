@@ -143,7 +143,7 @@ inline FORCE_INLINE __m256 rotate_insert_lo(__m256 x, float y)
 
 template <PixelType SrcType, PixelType DstType>
 void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT error_top, float * RESTRICT error_cur,
-							float scale, float offset, unsigned bits, unsigned width)
+                            float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
 	typedef error_diffusion_traits<DstType> dst_traits;
@@ -210,7 +210,7 @@ decltype(&error_diffusion_scalar<PixelType::BYTE, PixelType::BYTE>) select_error
 
 inline FORCE_INLINE void error_diffusion_wf_avx2_xiter(__m256 &v, unsigned j, const float *error_top, float *error_cur, const __m256 &max_val,
                                                        const __m256 &err_left_w, const __m256 &err_top_right_w, const __m256 &err_top_w, const __m256 &err_top_left_w,
-													   __m256 &err_left, __m256 &err_top_right, __m256 &err_top, __m256 &err_top_left)
+                                                       __m256 &err_left, __m256 &err_top_right, __m256 &err_top, __m256 &err_top_left)
 {
 	unsigned j_err = j + 1;
 
