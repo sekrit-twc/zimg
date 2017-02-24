@@ -487,10 +487,11 @@ public:
 
 		try {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * num_planes);
-			alloc.allocate(m_filter->get_context_size());
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
+
+		alloc.allocate(m_filter->get_context_size());
 
 		return alloc.count();
 	}
@@ -652,10 +653,12 @@ public:
 
 		try {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * 2);
-			alloc.allocate(static_cast<checked_size_t>(m_filter->get_context_size()) * 2);
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
+
+		alloc.allocate(m_filter->get_context_size());
+		alloc.allocate(m_filter->get_context_size());
 
 		return alloc.count();
 	}
