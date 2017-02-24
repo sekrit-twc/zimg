@@ -46,7 +46,7 @@ Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b) noexcept
 		for (size_t j = 0; j < 3; ++j) {
 			double accum = 0;
 
-			for (int k = 0; k < 3; ++k) {
+			for (size_t k = 0; k < 3; ++k) {
 				accum += a[i][k] * b[k][j];
 			}
 			ret[i][j] = accum;
