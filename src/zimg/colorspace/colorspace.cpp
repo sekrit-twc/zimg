@@ -96,7 +96,7 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 	else
 		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 } // namespace colorspace

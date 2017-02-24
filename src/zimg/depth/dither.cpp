@@ -98,7 +98,7 @@ dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pix
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
 		return dither_ordered<float, uint16_t>;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pixel_in, PixelType pixel_out)
@@ -119,7 +119,7 @@ decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pix
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
 		return dither_ed<float, uint16_t>;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 
@@ -252,7 +252,7 @@ public:
 		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
 
 		if (!pixel_is_integer(format_out.type))
-			throw error::InternalError{ "cannot dither to non-integer format" };
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 		m_dither_table = std::move(table);
@@ -287,7 +287,7 @@ public:
 				size += static_cast<checked_size_t>(right - left) * sizeof(float);
 			}
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 
 		return size.get();
@@ -324,7 +324,7 @@ public:
 
 class ErrorDiffusion final : public graph::ImageFilterBase {
 public:
-	typedef void(*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
+	typedef void (*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
 	ed_func m_func;
 	dither_f16c_func m_f16c;
@@ -354,7 +354,7 @@ public:
 		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
 
 		if (!pixel_is_integer(format_out.type))
-			throw error::InternalError{ "cannot dither to non-integer format" };
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
@@ -387,7 +387,7 @@ public:
 			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
 			return size.get();
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 	}
 
@@ -397,7 +397,7 @@ public:
 			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) : 0;
 			return size.get();
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 	}
 
@@ -437,7 +437,7 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 	case DitherType::RANDOM:
 		return ztd::make_unique<RandomDitherTable>(width, height);
 	default:
-		throw error::InternalError{ "unrecognized dither type" };
+		error::throw_<error::InternalError>("unrecognized dither type");
 	}
 }
 

@@ -114,7 +114,7 @@ public:
 		m_pixel_max{ static_cast<int32_t>(1UL << depth) - 1 }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
-			throw error::InternalError{ "pixel type not supported" };
+			error::throw_<error::InternalError>("pixel type not supported");
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
@@ -136,7 +136,7 @@ public:
 		m_pixel_max{ static_cast<int32_t>(1UL << depth) - 1 }
 	{
 		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
-			throw error::InternalError{ "pixel type not supported" };
+			error::throw_<error::InternalError>("pixel type not supported");
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override

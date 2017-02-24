@@ -204,7 +204,7 @@ decltype(&error_diffusion_scalar<PixelType::BYTE, PixelType::BYTE>) select_error
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
 		return error_diffusion_scalar<PixelType::FLOAT, PixelType::WORD>;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 
@@ -451,7 +451,7 @@ decltype(&error_diffusion_avx2<PixelType::BYTE, PixelType::BYTE>) select_error_d
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
 		return error_diffusion_avx2<PixelType::FLOAT, PixelType::WORD>;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 
@@ -506,7 +506,7 @@ public:
 		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
 
 		if (!pixel_is_integer(format_out.type))
-			throw error::InternalError{ "cannot dither to non-integer format" };
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
 		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
 	}
@@ -548,7 +548,7 @@ public:
 			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
 			return size.get();
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 	}
 

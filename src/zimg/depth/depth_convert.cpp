@@ -62,7 +62,7 @@ left_shift_func select_left_shift_func(PixelType pixel_in, PixelType pixel_out)
 	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
 		return integer_to_integer<uint16_t, uint16_t>;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_out)
@@ -79,7 +79,7 @@ depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_o
 	else if (type_in == PixelType::FLOAT && type_out == PixelType::FLOAT)
 		return nullptr;
 	else
-		throw error::InternalError{ "no conversion between pixel types" };
+		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
 
@@ -105,15 +105,15 @@ public:
 		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
 		if (!pixel_is_integer(pixel_in.type) || !pixel_is_integer(pixel_out.type))
-			throw error::InternalError{ "cannot left shift floating point types" };
+			error::throw_<error::InternalError>("cannot left shift floating point types");
 		if (pixel_in.fullrange || pixel_out.fullrange)
-			throw error::InternalError{ "cannot left shift full-range format" };
+			error::throw_<error::InternalError>("cannot left shift full-range format");
 		if (pixel_in.chroma != pixel_out.chroma)
-			throw error::InternalError{ "cannot convert between luma and chroma" };
+			error::throw_<error::InternalError>("cannot convert between luma and chroma");
 		if (pixel_in.depth > pixel_out.depth)
-			throw error::InternalError{ "cannot reduce depth by left shifting" };
+			error::throw_<error::InternalError>("cannot reduce depth by left shifting");
 		if (pixel_out.depth - pixel_in.depth > 15)
-			throw error::InternalError{ "too much shifting" };
+			error::throw_<error::InternalError>("too much shifting");
 
 		m_shift = pixel_out.depth - pixel_in.depth;
 	}
@@ -179,11 +179,11 @@ public:
 		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
 		if (pixel_in == pixel_out)
-			throw error::InternalError{ "cannot perform no-op conversion" };
+			error::throw_<error::InternalError>("cannot perform no-op conversion");
 		if (f16c && pixel_in.type != PixelType::HALF && pixel_out.type != PixelType::HALF)
-			throw error::InternalError{ "cannot provide f16c function for non-HALF types" };
+			error::throw_<error::InternalError>("cannot provide f16c function for non-HALF types");
 		if (!pixel_is_float(pixel_out.type))
-			throw error::InternalError{ "DepthConvert only converts to floating point types" };
+			error::throw_<error::InternalError>("DepthConvert only converts to floating point types");
 
 		int32_t range = integer_range(pixel_in);
 		int32_t offset = integer_offset(pixel_in);
@@ -221,7 +221,7 @@ public:
 				size += static_cast<checked_size_t>(right - left) * sizeof(float);
 			}
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 
 		return size.get();

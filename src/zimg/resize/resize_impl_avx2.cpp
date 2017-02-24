@@ -475,7 +475,7 @@ public:
 			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 8) + 8) * sizeof(pixel_type) * 8;
 			return size.get();
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 	}
 

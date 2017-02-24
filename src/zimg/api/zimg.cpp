@@ -105,17 +105,21 @@ template <class Map, class Key>
 typename Map::mapped_type search_enum_map(const Map &map, const Key &key, const char *msg)
 {
 	auto it = map.find(key);
-	return it == map.end() ? throw zimg::error::EnumOutOfRange{ msg } : it->second;
+	if (it == map.end())
+		zimg::error::throw_<zimg::error::EnumOutOfRange>(msg);
+	return it->second;
 }
 
 template <class Map, class Key>
 typename Map::mapped_type search_itu_enum_map(const Map &map, const Key &key, const char *msg)
 {
 	if (static_cast<int>(key) < 0 || static_cast<int>(key) > 255)
-		throw zimg::error::EnumOutOfRange{ msg };
+		zimg::error::throw_<zimg::error::EnumOutOfRange>(msg);
 
 	auto it = map.find(key);
-	return it == map.end() ? throw zimg::error::NoColorspaceConversion{ msg } : it->second;
+	if (it == map.end())
+		zimg::error::throw_<zimg::error::NoColorspaceConversion>(msg);
+	return it->second;
 }
 
 zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
@@ -289,10 +293,10 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 			param_a = std::isnan(param_a) ? 3.0 : std::floor(param_a);
 			return ztd::make_unique<zimg::resize::LanczosFilter>(static_cast<unsigned>(param_a));
 		default:
-			throw zimg::error::EnumOutOfRange{ "unrecognized resampling filter" };
+			zimg::error::throw_<zimg::error::EnumOutOfRange>("unrecognized resampling filter");
 		}
 	} catch (const std::bad_alloc &) {
-		throw zimg::error::OutOfMemory{};
+		zimg::error::throw_<zimg::error::OutOfMemory>();
 	}
 }
 

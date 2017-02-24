@@ -483,13 +483,13 @@ public:
 		zassert_d(stride >= 0, "negative cache stride");
 
 		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX) / stride)
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 
 		try {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * num_planes);
 			alloc.allocate(m_filter->get_context_size());
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 
 		return alloc.count();
@@ -648,13 +648,13 @@ public:
 		zassert_d(stride >= 0, "negative cache stride");
 
 		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 
 		try {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * 2);
 			alloc.allocate(static_cast<checked_size_t>(m_filter->get_context_size()) * 2);
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 
 		return alloc.count();
@@ -778,13 +778,13 @@ class FilterGraph::impl {
 	void check_incomplete() const
 	{
 		if (m_is_complete)
-			throw error::InternalError{ "cannot modify completed graph" };
+			error::throw_<error::InternalError>("cannot modify completed graph");
 	}
 
 	void check_complete() const
 	{
 		if (!m_is_complete)
-			throw error::InternalError{ "cannot query properties on incomplete graph" };
+			error::throw_<error::InternalError>("cannot query properties on incomplete graph");
 	}
 public:
 	impl(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
@@ -799,9 +799,9 @@ public:
 		zassert_d(width <= pixel_max_width(type), "image stride causes overflow");
 
 		if (!color && (subsample_w || subsample_h))
-			throw error::InternalError{ "greyscale images can not be subsampled" };
+			error::throw_<error::InternalError>("greyscale images can not be subsampled");
 		if (subsample_w > 2 || subsample_h > 2)
-			throw error::UnsupportedSubsampling{ "subsampling factor must not exceed 4" };
+			error::throw_<error::InternalError>("subsampling factor must not exceed 4");
 
 		m_node_set.emplace_back(
 			ztd::make_unique<SourceNode>(m_id_counter++, width, height, type, subsample_w, subsample_h));
@@ -825,9 +825,9 @@ public:
 			auto attr_uv = m_node->get_image_attributes();
 
 			if (!m_node_uv)
-				throw error::InternalError{ "cannot use color filter in greyscale graph" };
+				error::throw_<error::InternalError>("cannot use color filter in greyscale graph");
 			if (attr.width != attr_uv.width || attr.height != attr_uv.height || attr.type != attr_uv.type)
-				throw error::InternalError{ "cannot use color filter with mismatching Y and UV format" };
+				error::throw_<error::InternalError>("cannot use color filter with mismatching Y and UV format");
 
 			parent_uv = m_node_uv;
 		}
@@ -850,7 +850,7 @@ public:
 		check_incomplete();
 
 		if (filter->get_flags().color)
-			throw error::InternalError{ "cannot use color filter as UV filter" };
+			error::throw_<error::InternalError>("cannot use color filter as UV filter");
 
 		GraphNode *parent = m_node_uv;
 
@@ -866,7 +866,7 @@ public:
 		check_incomplete();
 
 		if (!m_node_uv)
-			throw error::InternalError{ "cannot remove chroma from greyscale image" };
+			error::throw_<error::InternalError>("cannot remove chroma from greyscale image");
 
 		ImageFilter::image_attributes attr = m_node->get_image_attributes();
 		GraphNode *parent = m_node;
@@ -885,7 +885,7 @@ public:
 		check_incomplete();
 
 		if (m_node_uv)
-			throw error::InternalError{ "cannot add chroma to color image" };
+			error::throw_<error::InternalError>("cannot add chroma to color image");
 
 		ImageFilter::image_attributes attr = m_node->get_image_attributes();
 		GraphNode *parent = m_node;
@@ -918,11 +918,11 @@ public:
 		}
 
 		if (node_attr.width != node_attr_uv.width << subsample_w)
-			throw error::InternalError{ "unsupported horizontal subsampling" };
+			error::throw_<error::InternalError>("unsupported horizontal subsampling");
 		if (node_attr.height != node_attr_uv.height << subsample_h)
-			throw error::InternalError{ "unsupported vertical subsampling" };
+			error::throw_<error::InternalError>("unsupported vertical subsampling");
 		if (node_attr.type != node_attr_uv.type)
-			throw error::InternalError{ "UV pixel type can not differ" };
+			error::throw_<error::InternalError>("UV pixel type can not differ");
 
 		if (m_node == m_head || m_node->get_ref())
 			attach_filter(ztd::make_unique<CopyFilter>(node_attr.width, node_attr.height, node_attr.type));
@@ -1068,12 +1068,12 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 	try {
 		ret = m_func(m_user, i, left, right);
 	} catch (...) {
-		zassert_d(false, "user callback must not throw");
 		ret = 1;
+		zassert_d(false, "user callback must not throw");
 	}
 
 	if (ret)
-		throw error::UserCallbackFailed{ "user callback failed" };
+		error::throw_<error::UserCallbackFailed>("user callback failed");
 }
 
 

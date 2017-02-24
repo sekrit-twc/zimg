@@ -129,11 +129,11 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 		zassert_d(rowsize, "empty matrix");
 
 		if (rowsize > floor_n(SIZE_MAX, AlignmentOf<float>::value))
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 
 		size_t rowstride = ceil_n(rowsize, AlignmentOf<float>::value);
 		if (rows > SIZE_MAX / rowstride)
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 
 		ctx.matrix_coefficients.resize(rowstride * rows);
 		ctx.matrix_row_offsets.resize(rows);
@@ -157,7 +157,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 			ctx.lu_u[i] = static_cast<float>(lu.u[i]);
 		}
 	} catch (const std::length_error &) {
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 	}
 
 	return ctx;

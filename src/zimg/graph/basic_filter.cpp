@@ -43,7 +43,7 @@ void CopyFilter::process(void *, const ImageBuffer<const void> src[], const Imag
 MuxFilter::MuxFilter(std::unique_ptr<ImageFilter> &&filter)
 {
 	if (filter->get_flags().color)
-		throw error::InternalError{ "can not mux color filter" };
+		error::throw_<error::InternalError>("can not mux color filter");
 
 	m_filter = std::move(filter);
 }
@@ -89,7 +89,7 @@ size_t MuxFilter::get_context_size() const
 		checked_size_t ctx_size = zimg::ceil_n(filter_ctx_size, ALIGNMENT) * 3;
 		return ctx_size.get();
 	} catch (const std::overflow_error &) {
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 	}
 }
 

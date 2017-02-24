@@ -112,7 +112,7 @@ public:
 		try {
 			m_count += ceil_n(bytes, ALIGNMENT);
 		} catch (const std::overflow_error &) {
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 		}
 
 		return nullptr;

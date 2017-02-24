@@ -38,7 +38,7 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 {
 	if (width > pixel_max_width(pixel_in.type) || width > pixel_max_width(pixel_out.type))
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 
 	if (pixel_in == pixel_out)
 		return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
@@ -49,7 +49,7 @@ std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 	else
 		return create_dither(dither_type, width, height, pixel_in, pixel_out, cpu);
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 } // namespace depth

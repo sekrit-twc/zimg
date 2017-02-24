@@ -209,7 +209,7 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 		func.to_gamma_scale = 1.0f / 12.0f;
 		break;
 	default:
-		throw error::InternalError{ "invalid transfer characteristics" };
+		error::throw_<error::InternalError>("invalid transfer characteristics");
 		break;
 	}
 

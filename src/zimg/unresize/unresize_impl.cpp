@@ -87,7 +87,7 @@ public:
 		zassert_d(context.output_width <= pixel_max_width(type), "overflow");
 
 		if (type != PixelType::FLOAT)
-			throw error::InternalError{ "pixel type not supported" };
+			error::throw_<error::InternalError>("pixel type not supported");
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned, unsigned) const override
@@ -105,7 +105,7 @@ public:
 		zassert_d(context.output_width <= pixel_max_width(type), "overflow");
 
 		if (type != PixelType::FLOAT)
-			throw error::InternalError{ "pixel type not supported" };
+			error::throw_<error::InternalError>("pixel type not supported");
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned, unsigned, unsigned) const override

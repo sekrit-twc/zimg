@@ -80,7 +80,7 @@ class ColorspaceGraph {
 	{
 		auto it = std::find(m_vertices.begin(), m_vertices.end(), csp);
 		if (it == m_vertices.end())
-			throw error::NoColorspaceConversion{ "colorspace not present in database" };
+			error::throw_<error::NoColorspaceConversion>("colorspace not present in database");
 
 		return it - m_vertices.begin();
 	}
@@ -132,7 +132,7 @@ class ColorspaceGraph {
 			}
 		}
 
-		throw error::NoColorspaceConversion{ "no path between colorspaces" };
+		error::throw_<error::NoColorspaceConversion>("no path between colorspaces");
 	}
 public:
 	ColorspaceGraph()

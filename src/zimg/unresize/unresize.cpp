@@ -37,7 +37,7 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 auto UnresizeConversion::create() const -> filter_pair try
 {
 	if (up_width > pixel_max_width(PixelType::FLOAT) || orig_width > pixel_max_width(PixelType::FLOAT))
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 
 	bool skip_h = (up_width == orig_width && shift_w == 0);
 	bool skip_v = (up_height == orig_height && shift_h == 0);
@@ -88,7 +88,7 @@ auto UnresizeConversion::create() const -> filter_pair try
 
 	return ret;
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 } // namespace unresize

@@ -10,9 +10,7 @@ namespace error {
 
 class Exception : private std::runtime_error {
 public:
-	Exception() : std::runtime_error{ "" }
-	{
-	}
+	Exception() : std::runtime_error{ "" } {}
 
 	using std::runtime_error::runtime_error;
 
@@ -46,6 +44,18 @@ DECLARE_EXCEPTION(ResamplingNotAvailable, UnsupportedOperation)
 DECLARE_EXCEPTION(NoFieldParityConversion, UnsupportedOperation)
 
 #undef DECLARE_EXCEPTION
+
+template <class T>
+[[noreturn]] void throw_()
+{
+	throw T{};
+}
+
+template <class T>
+[[noreturn]] void throw_(const char *msg)
+{
+	throw T{ msg };
+}
 
 } // namespace error
 } // namespace zimg

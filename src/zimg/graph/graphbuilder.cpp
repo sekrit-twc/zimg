@@ -101,49 +101,48 @@ bool is_ycgco(const GraphBuilder::state &state)
 void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
-		throw error::InvalidImageSize{ "image dimensions must be non-zero" };
+		error::throw_<error::InvalidImageSize>("image dimensions must be non-zero");
 	if (state.width > IMAGE_DIMENSION_MAX || state.height > IMAGE_DIMENSION_MAX)
-		throw error::InvalidImageSize{ "image dimensions exceed implementation limit" };
+		error::throw_<error::InvalidImageSize>("image dimensions exceed implementation limit");
 	if (state.width > pixel_max_width(state.type))
-		throw error::InvalidImageSize{ "image width exceeds memory addressing limit" };
+		error::throw_<error::InvalidImageSize>("image width exceeds memory addressing limit");
 
 	if (is_greyscale(state)) {
 		if (state.subsample_w || state.subsample_h)
-			throw error::GreyscaleSubsampling{ "cannot subsample greyscale image" };
+			error::throw_<error::GreyscaleSubsampling>("cannot subsample greyscale image");
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "GREY color family cannot have RGB matrix coefficients" };
+			error::throw_<error::ColorFamilyMismatch>("GREY color family cannot have RGB matrix coefficients");
 	}
 
 	if (is_rgb(state)) {
 		if (state.subsample_w || state.subsample_h)
-			throw error::UnsupportedSubsampling{ "subsampled RGB image not supported" };
-		if (state.colorspace.matrix != colorspace::MatrixCoefficients::UNSPECIFIED &&
-			state.colorspace.matrix != colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "RGB color family cannot have YUV matrix coefficients" };
+			error::throw_<error::UnsupportedSubsampling>("subsampled RGB image not supported");
+		if (state.colorspace.matrix != colorspace::MatrixCoefficients::UNSPECIFIED && state.colorspace.matrix != colorspace::MatrixCoefficients::RGB)
+			error::throw_<error::ColorFamilyMismatch>("RGB color family cannot have YUV matrix coefficients");
 	}
 
 	if (is_yuv(state)) {
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
-			throw error::ColorFamilyMismatch{ "YUV color family cannot have RGB matrix coefficients" };
+			error::throw_<error::ColorFamilyMismatch>("YUV color family cannot have RGB matrix coefficients");
 	}
 
 	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::PROGRESSIVE)
-		throw error::UnsupportedSubsampling{ "vertical subsampling greater than 2x is not supported" };
+		error::throw_<error::UnsupportedSubsampling>("vertical subsampling greater than 2x is not supported");
 	if (state.subsample_w > 2 || state.subsample_h > 2)
-		throw error::UnsupportedSubsampling{ "subsampling greater than 4x is not supported" };
+		error::throw_<error::UnsupportedSubsampling>("subsampling greater than 4x is not supported");
 
 	if (state.width % (1 << state.subsample_w) || state.height % (1 << state.subsample_h))
-		throw error::ImageNotDivisible{ "image dimensions must be divisible by subsampling factor" };
+		error::throw_<error::ImageNotDivisible>("image dimensions must be divisible by subsampling factor");
 
 	if (state.depth > pixel_depth(state.type))
-		throw error::BitDepthOverflow{ "bit depth exceeds limits of type" };
+		error::throw_<error::BitDepthOverflow>("bit depth exceeds limits of type");
 	if (!state.fullrange && state.depth < 8)
-		throw error::BitDepthOverflow{ "bit depth must be at least 8 for limited range" };
+		error::throw_<error::BitDepthOverflow>("bit depth must be at least 8 for limited range");
 
 	if (!std::isfinite(state.active_left) || !std::isfinite(state.active_top) || !std::isfinite(state.active_width) || !std::isfinite(state.active_height))
-		throw error::InvalidImageSize{ "active window must be finite" };
+		error::throw_<error::InvalidImageSize>("active window must be finite");
 	if (state.active_width <= 0 || state.active_height <= 0)
-		throw error::InvalidImageSize{ "active window must be positive" };
+		error::throw_<error::InvalidImageSize>("active window must be positive");
 }
 
 bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)
@@ -294,9 +293,9 @@ void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
 	if (m_state.color == ColorFamily::GREY)
 		return;
 	if (m_state.color == ColorFamily::RGB)
-		throw error::InternalError{ "cannot discard chroma planes from RGB" };
+		error::throw_<error::InternalError>("cannot discard chroma planes from RGB");
 	if (matrix == colorspace::MatrixCoefficients::RGB)
-		throw error::InternalError{ "GREY color family cannot be RGB" };
+		error::throw_<error::InternalError>("GREY color family cannot be RGB");
 
 	m_graph->color_to_grey();
 	m_state.color = ColorFamily::GREY;
@@ -306,10 +305,10 @@ void GraphBuilder::color_to_grey(colorspace::MatrixCoefficients matrix)
 void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficients matrix, unsigned subsample_w, unsigned subsample_h,
                                  ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
 {
+	if (color == ColorFamily::RGB && matrix != colorspace::MatrixCoefficients::UNSPECIFIED && matrix != colorspace::MatrixCoefficients::RGB)
+		error::throw_<error::InternalError>("RGB color family cannot be YUV");
 	if (m_state.color == color || color == ColorFamily::GREY)
 		return;
-	if (color == ColorFamily::RGB && matrix != colorspace::MatrixCoefficients::UNSPECIFIED && matrix != colorspace::MatrixCoefficients::RGB)
-		throw error::ColorFamilyMismatch{ "RGB color family cannot be YUV" };
 
 	if (!subsample_w)
 		chroma_location_w = ChromaLocationW::CENTER;
@@ -330,7 +329,7 @@ void GraphBuilder::grey_to_color(ColorFamily color, colorspace::MatrixCoefficien
 void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory)
 {
 	if (is_greyscale(m_state))
-		throw error::NoColorspaceConversion{ "cannot apply colorspace conversion to greyscale image" };
+		error::throw_<error::InternalError>("cannot apply colorspace conversion to greyscale image");
 	if (m_state.colorspace == colorspace)
 		return;
 
@@ -450,7 +449,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	FilterFactory::filter_list filter_list_uv;
 
 	if (unresize && (spec.subwidth != m_state.width || spec.subheight != m_state.height))
-		throw error::ResamplingNotAvailable{ "unresize not supported for given subregion" };
+		error::throw_<error::ResamplingNotAvailable>("unresize not supported for given subregion");
 
 	if (do_resize_luma) {
 		double extra_shift_h = luma_shift_factor(m_state.parity, m_state.height, spec.height);
@@ -544,7 +543,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	if (m_graph)
-		throw error::InternalError{ "source already set" };
+		error::throw_<error::InternalError>("source already set");
 
 	validate_state(source);
 	m_graph = ztd::make_unique<FilterGraph>(source.width, source.height, source.type, source.subsample_w, source.subsample_h, !is_greyscale(source));
@@ -552,7 +551,7 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 
 	return *this;
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) try
@@ -560,16 +559,16 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	DefaultFilterFactory default_factory;
 
 	if (!m_graph)
-		throw error::InternalError{ "no active graph" };
+		error::throw_<error::InternalError>("no active graph");
 	if (!factory)
 		factory = &default_factory;
 
 	validate_state(target);
 
 	if (target.active_left != 0 || target.active_top != 0 || target.active_width != target.width || target.active_height != target.height)
-		throw error::ResamplingNotAvailable{ "active subregions not supported on target image" };
+		error::throw_<error::ResamplingNotAvailable>("active subregions not supported on target image");
 	if (m_state.parity != target.parity)
-		throw error::NoFieldParityConversion{ "conversion between field parity not supported" };
+		error::throw_<error::NoFieldParityConversion>("conversion between field parity not supported");
 
 	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
 
@@ -637,7 +636,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 
 	return *this;
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
@@ -645,7 +644,7 @@ std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
 	m_graph->complete();
 	return std::move(m_graph);
 } catch (const std::bad_alloc &) {
-	throw error::OutOfMemory{};
+	error::throw_<error::OutOfMemory>();
 }
 
 } // namespace graph

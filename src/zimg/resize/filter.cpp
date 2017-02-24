@@ -53,9 +53,9 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 	zassert_d(width, "empty matrix");
 
 	if (width > floor_n(UINT_MAX, AlignmentOf<uint16_t>::value))
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 	if (width > floor_n(UINT_MAX, AlignmentOf<float>::value))
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 
 	FilterContext e{};
 
@@ -67,13 +67,13 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 		e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>::value));
 
 		if (e.filter_rows > UINT_MAX / e.stride || e.filter_rows > UINT_MAX / e.stride_i16)
-			throw error::OutOfMemory{};
+			error::throw_<error::OutOfMemory>();
 
 		e.data.resize(static_cast<size_t>(e.stride) * e.filter_rows);
 		e.data_i16.resize(static_cast<size_t>(e.stride_i16) * e.filter_rows);
 		e.left.resize(e.filter_rows);
 	} catch (const std::length_error &) {
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 	}
 
 	for (size_t i = 0; i < m.rows(); ++i) {
@@ -212,7 +212,7 @@ double Spline36Filter::operator()(double x) const
 LanczosFilter::LanczosFilter(unsigned taps) : taps{ taps }
 {
 	if (taps <= 0)
-		throw error::IllegalArgument{ "lanczos tap count must be positive" };
+		error::throw_<error::IllegalArgument>("lanczos tap count must be positive");
 }
 
 unsigned LanczosFilter::support() const { return taps; }
@@ -231,11 +231,11 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	double support = static_cast<double>(f.support()) / step;
 
 	if (support > UINT_MAX / 2)
-		throw error::ResamplingNotAvailable{ "filter width too great" };
+		error::throw_<error::ResamplingNotAvailable>("filter width too great");
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
-		throw error::ResamplingNotAvailable{ "image shift or subwindow too great" };
+		error::throw_<error::ResamplingNotAvailable>("image shift or subwindow too great");
 	if (src_dim <= support || width <= support)
-		throw error::ResamplingNotAvailable{ "filter width too great for image dimensions" };
+		error::throw_<error::ResamplingNotAvailable>("filter width too great for image dimensions");
 
 	try {
 		RowMatrix<double> m{ dst_dim, src_dim };
@@ -271,7 +271,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 
 		return matrix_to_filter(m);
 	} catch (const std::length_error &) {
-		throw error::OutOfMemory{};
+		error::throw_<error::OutOfMemory>();
 	}
 }
 

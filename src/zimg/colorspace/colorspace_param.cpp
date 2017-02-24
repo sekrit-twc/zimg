@@ -29,7 +29,7 @@ void get_yuv_constants(double *kr, double *kb, MatrixCoefficients matrix)
 		*kb = REC_2020_KB;
 		break;
 	default:
-		throw error::InternalError{ "unrecognized matrix coefficients" };
+		error::throw_<error::InternalError>("unrecognized matrix coefficients");
 	}
 }
 
@@ -65,7 +65,7 @@ void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 		memcpy(out, DCI_P3_PRIMARIES, sizeof(DCI_P3_PRIMARIES));
 		break;
 	default:
-		throw error::InternalError{ "unrecognized primaries" };
+		error::throw_<error::InternalError>("unrecognized primaries");
 	}
 }
 
