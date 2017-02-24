@@ -50,7 +50,7 @@ public:
 	typedef iterator const_iterator;
 private:
 	struct value_compare {
-		const key_compare &comp;
+		key_compare comp;
 
 		bool operator()(const value_type &a, const value_type &b) noexcept { return comp(a.first, b.first); }
 	};
@@ -60,8 +60,8 @@ private:
 
 		data_member(const Compare &comp) noexcept : Compare(comp) {}
 
-		const key_compare &get_key_comp() const noexcept { return *this; }
-		value_compare get_value_comp() const noexcept { return{ *this }; }
+		key_compare get_key_comp() const noexcept { return *this; }
+		value_compare get_value_comp() const noexcept { return value_compare{ get_key_comp() }; }
 	};
 
 	data_member m_head;
