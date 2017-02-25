@@ -1,6 +1,7 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
+#include <climits>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -427,7 +428,8 @@ public:
 
 	pair_unsigned get_required_row_range(unsigned i) const override
 	{
-		return{ i, std::min(i + 4, m_height) };
+		unsigned last = std::min(i, UINT_MAX - 4) + 4;
+		return{ i, std::min(last, m_height) };
 	}
 
 	pair_unsigned get_required_col_range(unsigned, unsigned) const override
