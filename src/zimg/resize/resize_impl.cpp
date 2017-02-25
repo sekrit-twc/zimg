@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <climits>
 #include <cstdint>
 #include "common/cpuinfo.h"
 #include "common/except.h"
@@ -174,7 +175,10 @@ graph::ImageFilter::image_attributes ResizeImplH::get_image_attributes() const {
 
 graph::ImageFilter::pair_unsigned ResizeImplH::get_required_row_range(unsigned i) const
 {
-	return{ i, std::min(i + get_simultaneous_lines(), get_image_attributes().height) };
+	unsigned lines = get_simultaneous_lines();
+	unsigned last = std::min(i, UINT_MAX - lines) + lines;
+
+	return{ i, std::min(last, get_image_attributes().height) };
 }
 
 graph::ImageFilter::pair_unsigned ResizeImplH::get_required_col_range(unsigned left, unsigned right) const
@@ -217,11 +221,15 @@ graph::ImageFilter::image_attributes ResizeImplV::get_image_attributes() const {
 
 graph::ImageFilter::pair_unsigned ResizeImplV::get_required_row_range(unsigned i) const
 {
-	unsigned bot = std::min(i + get_simultaneous_lines(), get_image_attributes().height);
-
 	if (m_is_sorted) {
+		unsigned lines = get_simultaneous_lines();
+		unsigned last = std::min(i, UINT_MAX - lines) + lines;
+		unsigned bot = std::min(last, get_image_attributes().height);
+
 		unsigned row_top = m_filter.left[i];
 		unsigned row_bot = m_filter.left[bot - 1];
+
+		zassert_d(row_bot <= UINT_MAX - m_filter.filter_width, "overflow");
 
 		return{ row_top, row_bot + m_filter.filter_width };
 	} else {
