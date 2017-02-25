@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <climits>
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -147,7 +148,9 @@ auto UnresizeImplH::get_image_attributes() const -> image_attributes { return m_
 
 auto UnresizeImplH::get_required_row_range(unsigned i) const -> pair_unsigned
 {
-	return{ i, std::min(i + get_simultaneous_lines(), get_image_attributes().height) };
+	unsigned lines = get_simultaneous_lines();
+	unsigned last = std::min(i, UINT_MAX - lines) + lines;
+	return{ i, std::min(last, get_image_attributes().height) };
 }
 
 auto UnresizeImplH::get_required_col_range(unsigned left, unsigned right) const -> pair_unsigned
