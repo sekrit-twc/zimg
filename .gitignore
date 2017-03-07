@@ -25,6 +25,7 @@ Release
 .libs
 .deps/
 .dirstamp
+_msvc/.vs
 doc/example/alpha_example
 doc/example/api_example
 doc/example/api_example_c
