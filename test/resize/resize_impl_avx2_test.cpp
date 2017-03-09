@@ -12,7 +12,7 @@
 namespace {
 
 void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src_w, unsigned src_h, unsigned dst_w, unsigned dst_h,
-               zimg::PixelType type, const char * const expected_sha1[3], double expected_snr)
+               const zimg::PixelFormat &format, const char * const expected_sha1[3], double expected_snr)
 {
 	if (!zimg::query_x86_capabilities().avx2) {
 		SUCCEED() << "avx2 not available, skipping";
@@ -22,9 +22,10 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	SCOPED_TRACE(filter.support());
 	SCOPED_TRACE(horizontal ? static_cast<double>(dst_w) / src_w : static_cast<double>(dst_h) / src_h);
 
-	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, type }
+	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }
 		.set_horizontal(horizontal)
 		.set_dst_dim(horizontal ? dst_w : dst_h)
+		.set_depth(format.depth)
 		.set_filter(&filter)
 		.set_shift(0.0)
 		.set_subwidth(horizontal ? src_w : src_h);
@@ -32,11 +33,11 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	std::unique_ptr<zimg::graph::ImageFilter> filter_avx2 = builder.set_cpu(zimg::CPUClass::X86_AVX2).create();
 	std::unique_ptr<zimg::graph::ImageFilter> filter_c;
 
-	FilterValidator validator{ filter_avx2.get(), src_w, src_h, type };
+	FilterValidator validator{ filter_avx2.get(), src_w, src_h, format };
 	validator.set_sha1(expected_sha1);
 
 	// No half-precision implementation is available in C. Make sure to visually check results if they differ from hash.
-	if (type != zimg::PixelType::HALF) {
+	if (format.type != zimg::PixelType::HALF) {
 		filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 		ASSERT_FALSE(assert_different_dynamic_type(filter_c.get(), filter_avx2.get()));
 		validator.set_ref_filter(filter_c.get(), expected_snr);
@@ -47,6 +48,48 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 
 } // namespace
 
+
+TEST(ResizeImplAVX2Test, test_resize_v_u10)
+{
+	const unsigned w = 640;
+	const unsigned src_h = 480;
+	const unsigned dst_h = 720;
+	const zimg::PixelFormat format{ zimg::PixelType::WORD, 10 };
+
+	const char *expected_sha1[][3] = {
+		{ "41ac207d1e61c7222a77532134d39dc182e78222" },
+		{ "7d75acf35753b20cc48a04fad8966ecc82105a0c" },
+		{ "450d1cf4ee91656026b00da583181224475c1b70" },
+		{ "8231b3b149106a06acd1bbcfa56398423d27a579" }
+	};
+	const double expected_snr = INFINITY;
+
+	test_case(zimg::resize::BilinearFilter{}, false, w, src_h, w, dst_h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, false, w, src_h, w, dst_h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, src_h, w, dst_h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, dst_h, w, src_h, format, expected_sha1[3], expected_snr);
+}
+
+TEST(ResizeImplAVX2Test, test_resize_v_u16)
+{
+	const unsigned w = 640;
+	const unsigned src_h = 480;
+	const unsigned dst_h = 720;
+	const zimg::PixelFormat format{ zimg::PixelType::WORD, 16 };
+
+	const char *expected_sha1[][3] = {
+		{ "fbde3fbb93720f073dcc8579bc17edf6c2cab982" },
+		{ "2e0b375e7014b842016e7db4fb62ecf96bb230d7" },
+		{ "5f9d6c73f468d1cbfb2bc850828dd0ac9f05193d" },
+		{ "9747a61169a63015fd8491b566c5f3e577f7e93e" }
+	};
+	const double expected_snr = INFINITY;
+
+	test_case(zimg::resize::BilinearFilter{}, false, w, src_h, w, dst_h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, false, w, src_h, w, dst_h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, src_h, w, dst_h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, dst_h, w, src_h, format, expected_sha1[3], expected_snr);
+}
 
 TEST(ResizeImplAVX2Test, test_resize_h_f16)
 {

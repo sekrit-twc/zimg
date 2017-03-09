@@ -15,9 +15,11 @@
 
 #define HAVE_CPU_SSE2
 #define HAVE_CPU_AVX
+#define HAVE_CPU_AVX2
   #include "common/x86util.h"
 #undef HAVE_CPU_SSE2
 #undef HAVE_CPU_AVX
+#undef HAVE_CPU_AVX2
 
 #include "common/pixel.h"
 #include "common/make_unique.h"
@@ -128,6 +130,31 @@ struct f32_traits {
 	}
 };
 
+
+inline FORCE_INLINE void mm256_store_left_epi16(uint16_t *dst, __m256i x, unsigned count)
+{
+	mm256_store_left_si256((__m256i *)dst, x, count * 2);
+}
+
+inline FORCE_INLINE void mm256_store_right_epi16(uint16_t *dst, __m256i x, unsigned count)
+{
+	mm256_store_right_si256((__m256i *)dst, x, count * 2);
+}
+
+inline FORCE_INLINE __m256i export_i30_u16(__m256i lo, __m256i hi, uint16_t limit)
+{
+	const __m256i round = _mm256_set1_epi32(1 << 13);
+
+	lo = _mm256_add_epi32(lo, round);
+	hi = _mm256_add_epi32(hi, round);
+
+	lo = _mm256_srai_epi32(lo, 14);
+	hi = _mm256_srai_epi32(hi, 14);
+
+	lo = _mm256_packs_epi32(lo, hi);
+
+	return lo;
+}
 
 template <class Traits, class T>
 void transpose_line_8x8(T *dst,
@@ -311,6 +338,169 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 	resize_line8_h_fp_avx2<Traits, 0, 1>,
 	resize_line8_h_fp_avx2<Traits, 0, 2>,
 	resize_line8_h_fp_avx2<Traits, 0, 3>
+};
+
+
+
+template <unsigned N, bool ReadAccum, bool WriteToAccum>
+inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
+                                                         const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
+                                                         const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
+                                                         const uint32_t *accum_p, const __m256i &c01, const __m256i &c23, const __m256i &c45, const __m256i &c67, uint16_t limit)
+{
+	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
+	const __m256i lim = _mm256_set1_epi16(limit + INT16_MIN);
+
+	__m256i accum_lo = _mm256_setzero_si256();
+	__m256i accum_hi = _mm256_setzero_si256();
+	__m256i x0, x1, xl, xh;
+
+	if (N >= 0) {
+		x0 = _mm256_load_si256((const __m256i *)(src_p0 + j));
+		x1 = _mm256_load_si256((const __m256i *)(src_p1 + j));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x1 = _mm256_add_epi16(x1, i16_min);
+
+		xl = _mm256_unpacklo_epi16(x0, x1);
+		xh = _mm256_unpackhi_epi16(x0, x1);
+		xl = _mm256_madd_epi16(c01, xl);
+		xh = _mm256_madd_epi16(c01, xh);
+
+		if (ReadAccum) {
+			accum_lo = _mm256_add_epi32(_mm256_load_si256((const __m256i *)(accum_p + j - accum_base + 0)), xl);
+			accum_hi = _mm256_add_epi32(_mm256_load_si256((const __m256i *)(accum_p + j - accum_base + 8)), xh);
+		} else {
+			accum_lo = xl;
+			accum_hi = xh;
+		}
+	}
+	if (N >= 2) {
+		x0 = _mm256_load_si256((const __m256i *)(src_p2 + j));
+		x1 = _mm256_load_si256((const __m256i *)(src_p3 + j));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x1 = _mm256_add_epi16(x1, i16_min);
+
+		xl = _mm256_unpacklo_epi16(x0, x1);
+		xh = _mm256_unpackhi_epi16(x0, x1);
+		xl = _mm256_madd_epi16(c23, xl);
+		xh = _mm256_madd_epi16(c23, xh);
+
+		accum_lo = _mm256_add_epi32(accum_lo, xl);
+		accum_hi = _mm256_add_epi32(accum_hi, xh);
+	}
+	if (N >= 4) {
+		x0 = _mm256_load_si256((const __m256i *)(src_p4 + j));
+		x1 = _mm256_load_si256((const __m256i *)(src_p5 + j));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x1 = _mm256_add_epi16(x1, i16_min);
+
+		xl = _mm256_unpacklo_epi16(x0, x1);
+		xh = _mm256_unpackhi_epi16(x0, x1);
+		xl = _mm256_madd_epi16(c45, xl);
+		xh = _mm256_madd_epi16(c45, xh);
+
+		accum_lo = _mm256_add_epi32(accum_lo, xl);
+		accum_hi = _mm256_add_epi32(accum_hi, xh);
+	}
+	if (N >= 6) {
+		x0 = _mm256_load_si256((const __m256i *)(src_p6 + j));
+		x1 = _mm256_load_si256((const __m256i *)(src_p7 + j));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x1 = _mm256_add_epi16(x1, i16_min);
+
+		xl = _mm256_unpacklo_epi16(x0, x1);
+		xh = _mm256_unpackhi_epi16(x0, x1);
+		xl = _mm256_madd_epi16(c67, xl);
+		xh = _mm256_madd_epi16(c67, xh);
+
+		accum_lo = _mm256_add_epi32(accum_lo, xl);
+		accum_hi = _mm256_add_epi32(accum_hi, xh);
+	}
+
+	if (WriteToAccum) {
+		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 0), accum_lo);
+		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 8), accum_hi);
+		return _mm256_setzero_si256();
+	} else {
+		accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+		accum_lo = _mm256_min_epi16(accum_lo, lim);
+		accum_lo = _mm256_sub_epi16(accum_lo, i16_min);
+
+		return accum_lo;
+	}
+}
+
+template <unsigned N, bool ReadAccum, bool WriteToAccum>
+void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t *dst, uint32_t *accum, unsigned left, unsigned right, uint16_t limit)
+{
+	const uint16_t * RESTRICT src_p0 = src_lines[0];
+	const uint16_t * RESTRICT src_p1 = src_lines[1];
+	const uint16_t * RESTRICT src_p2 = src_lines[2];
+	const uint16_t * RESTRICT src_p3 = src_lines[3];
+	const uint16_t * RESTRICT src_p4 = src_lines[4];
+	const uint16_t * RESTRICT src_p5 = src_lines[5];
+	const uint16_t * RESTRICT src_p6 = src_lines[6];
+	const uint16_t * RESTRICT src_p7 = src_lines[7];
+	uint16_t * RESTRICT dst_p = dst;
+	uint32_t * RESTRICT accum_p = accum;
+
+	unsigned vec_left = ceil_n(left, 16);
+	unsigned vec_right = floor_n(right, 16);
+	unsigned accum_base = floor_n(left, 16);
+
+	const __m256i c01 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[0]), _mm256_set1_epi16(filter_data[1]));
+	const __m256i c23 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[2]), _mm256_set1_epi16(filter_data[3]));
+	const __m256i c45 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[4]), _mm256_set1_epi16(filter_data[5]));
+	const __m256i c67 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[6]), _mm256_set1_epi16(filter_data[7]));
+
+	__m256i out;
+
+#define XITER resize_line_v_u16_avx2_xiter<N, ReadAccum, WriteToAccum>
+#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
+	if (left != vec_left) {
+		out = XITER(vec_left - 16, XARGS);
+
+		if (!WriteToAccum)
+			mm256_store_left_epi16(dst_p + vec_left - 16, out, vec_left - left);
+	}
+
+	for (unsigned j = vec_left; j < vec_right; j += 16) {
+		out = XITER(j, XARGS);
+
+		if (!WriteToAccum)
+			_mm256_store_si256((__m256i *)(dst_p + j), out);
+	}
+
+	if (right != vec_right) {
+		out = XITER(vec_right, XARGS);
+
+		if (!WriteToAccum)
+			mm256_store_right_epi16(dst_p + vec_right, out, right - vec_right);
+	}
+#undef XITER
+#undef XARGS
+}
+
+const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_jt_a[] = {
+	resize_line_v_u16_avx2<0, false, false>,
+	resize_line_v_u16_avx2<0, false, false>,
+	resize_line_v_u16_avx2<2, false, false>,
+	resize_line_v_u16_avx2<2, false, false>,
+	resize_line_v_u16_avx2<4, false, false>,
+	resize_line_v_u16_avx2<4, false, false>,
+	resize_line_v_u16_avx2<6, false, false>,
+	resize_line_v_u16_avx2<6, false, false>,
+};
+
+const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_jt_b[] = {
+	resize_line_v_u16_avx2<0, true, false>,
+	resize_line_v_u16_avx2<0, true, false>,
+	resize_line_v_u16_avx2<2, true, false>,
+	resize_line_v_u16_avx2<2, true, false>,
+	resize_line_v_u16_avx2<4, true, false>,
+	resize_line_v_u16_avx2<4, true, false>,
+	resize_line_v_u16_avx2<6, true, false>,
+	resize_line_v_u16_avx2<6, true, false>,
 };
 
 template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
@@ -516,6 +706,66 @@ public:
 	}
 };
 
+class ResizeImplV_U16_AVX2 final : public ResizeImplV {
+	uint16_t m_pixel_max;
+public:
+	ResizeImplV_U16_AVX2(const FilterContext &filter, unsigned width, unsigned depth) :
+		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
+		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
+	{}
+
+	size_t get_tmp_size(unsigned left, unsigned right) const override
+	{
+		checked_size_t size = 0;
+
+		try {
+			if (m_filter.filter_width > 8)
+				size += (ceil_n(checked_size_t{ right }, 16) - floor_n(left, 16)) * sizeof(uint32_t);
+		} catch (const std::overflow_error &) {
+			error::throw_<error::OutOfMemory>();
+		}
+
+		return size.get();
+	}
+
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	{
+		auto src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		auto dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
+
+		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
+		unsigned filter_width = m_filter.filter_width;
+		unsigned src_height = m_filter.input_width;
+
+		const uint16_t *src_lines[8] = { 0 };
+		uint16_t *dst_line = dst_buf[i];
+		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
+
+		unsigned k_end = ceil_n(filter_width, 8) - 8;
+		unsigned top = m_filter.left[i];
+
+		for (unsigned k = 0; k < k_end; k += 8) {
+			for (unsigned n = 0; n < 8; ++n) {
+				src_lines[n] = src_buf[std::min(top + k + n, src_height - 1)];
+			}
+
+			if (k == 0)
+				resize_line_v_u16_avx2<6, false, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			else
+				resize_line_v_u16_avx2<6, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		}
+
+		for (unsigned n = 0; n < 8; ++n) {
+			src_lines[n] = src_buf[std::min(top + k_end + n, src_height - 1)];
+		}
+
+		if (k_end == 0)
+			resize_line_v_u16_avx2_jt_a[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		else
+			resize_line_v_u16_avx2_jt_b[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+	}
+};
+
 template <class Traits>
 class ResizeImplV_FP_AVX2 final : public ResizeImplV {
 	typedef typename Traits::pixel_type pixel_type;
@@ -576,7 +826,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx2(const FilterContex
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (type == PixelType::HALF)
+	if (type == PixelType::WORD)
+		ret = ztd::make_unique<ResizeImplV_U16_AVX2>(context, width, depth);
+	else if (type == PixelType::HALF)
 		ret = ztd::make_unique<ResizeImplV_FP_AVX2<f16_traits>>(context, width);
 	else if (type == PixelType::FLOAT)
 		ret = ztd::make_unique<ResizeImplV_FP_AVX2<f32_traits>>(context, width);
