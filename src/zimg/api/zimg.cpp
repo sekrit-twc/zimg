@@ -33,7 +33,7 @@ constexpr unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local std::string g_last_error_msg;
 
-constexpr unsigned VERSION_INFO[] = { 2, 4, 0 };
+constexpr unsigned VERSION_INFO[] = { 2, 5, 0 };
 
 
 template <class T, class U>

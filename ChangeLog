@@ -1,3 +1,9 @@
+2.5
+api: images larger than 16384x16384 rejected on 32-bit (2Gx2G on 64-bit)
+depth: SSE2 and AVX2 error diffusion implementation
+resize: AVX2 integer resize implementation
+x86: fix crash with AVX CPU on non-AVX OS
+
 2.4
 colorspace: add support for IEC 61966-2-1 (sRGB)
 colorspace: transfer function conversion conforms to ITU-R BT.2100
