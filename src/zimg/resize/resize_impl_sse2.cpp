@@ -539,7 +539,7 @@ public:
 		checked_size_t size = 0;
 
 		try {
-			if (m_filter.filter_width > 4)
+			if (m_filter.filter_width > 8)
 				size += (ceil_n(checked_size_t{ right }, 8) - floor_n(left, 8)) * sizeof(uint32_t);
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
