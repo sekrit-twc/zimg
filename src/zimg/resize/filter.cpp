@@ -230,7 +230,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	double step = std::min(scale, 1.0);
 	double support = static_cast<double>(f.support()) / step;
 
-	if (support > UINT_MAX / 2)
+	if (support > static_cast<unsigned>(UINT_MAX / 2))
 		error::throw_<error::ResamplingNotAvailable>("filter width too great");
 	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
 		error::throw_<error::ResamplingNotAvailable>("image shift or subwindow too great");
