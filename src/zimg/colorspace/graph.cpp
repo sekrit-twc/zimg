@@ -134,6 +134,9 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 
 std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out)
 {
+	if (!is_valid_csp(in) || !is_valid_csp(out))
+		error::throw_<error::NoColorspaceConversion>("invalid colorspace definition");
+	
 	std::vector<OperationFactory> path;
 	std::deque<ColorspaceDefinition> queue;
 	std::unordered_set<ColorspaceDefinition, ColorspaceHash> visited;
