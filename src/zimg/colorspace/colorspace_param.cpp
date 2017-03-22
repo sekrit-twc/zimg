@@ -96,12 +96,27 @@ Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix)
 Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 {
 	Matrix3x3 ret;
+	double kr, kg, kb;
+	double uscale;
+	double vscale;
 
-	if (matrix != MatrixCoefficients::YCGCO) {
-		double kr, kg, kb;
-		double uscale;
-		double vscale;
-
+	switch (matrix)
+	{
+	case MatrixCoefficients::YCGCO:
+		ret = {
+			{  0.25, 0.5,  0.25 },
+			{ -0.25, 0.5, -0.25 },
+			{  0.5,  0,   -0.5 }
+		};
+		break;
+	case MatrixCoefficients::REC_2100_LMS:
+		ret = {
+			{ 1688.0 / 4096.0, 2146.0 / 4096.0,  262.0 / 4096.0 },
+			{  683.0 / 4096.0, 2951.0 / 4096.0,  462.0 / 4096.0 },
+			{   99.0 / 4096.0,  309.0 / 4096.0, 3688.0 / 4096.0 }
+		};
+		break;
+	default:
 		get_yuv_constants(&kr, &kb, matrix);
 		kg = 1.0 - kr - kb;
 		uscale = 1.0 / (2.0 - 2.0 * kb);
@@ -118,15 +133,24 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 		ret[2][0] = (1.0 - kr) * vscale;
 		ret[2][1] = -kg * vscale;
 		ret[2][2] = -kb * vscale;
-	} else {
-		ret = {
-			{  0.25, 0.5,  0.25 },
-			{ -0.25, 0.5, -0.25 },
-			{  0.5,  0,   -0.5 }
-		};
+		break;
 	}
 
 	return ret;
+}
+
+Matrix3x3 ictcp_to_lms_matrix()
+{
+	return inverse(lms_to_ictcp_matrix());
+}
+
+Matrix3x3 lms_to_ictcp_matrix()
+{
+	return {
+		{              0.5,               0.5,             0.0 },
+		{  6610.0 / 4096.0, -13613.0 / 4096.0, 7003.0 / 4096.0 },
+		{ 17933.0 / 4096.0, -17390.0 / 4096.0, -543.0 / 4096.0 }
+	};
 }
 
 // http://www.brucelindbloom.com/Eqn_RGB_XYZ_Matrix.html

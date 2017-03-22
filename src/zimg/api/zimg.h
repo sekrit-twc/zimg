@@ -267,7 +267,8 @@ typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_170M        = 6,  /* Equivalent to 5. */
 	ZIMG_MATRIX_YCGCO       = 8,
 	ZIMG_MATRIX_2020_NCL    = 9,
-	ZIMG_MATRIX_2020_CL     = 10
+	ZIMG_MATRIX_2020_CL     = 10,
+	ZIMG_MATRIX_ICTCP       = 14
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {

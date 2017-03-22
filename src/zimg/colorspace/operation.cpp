@@ -21,6 +21,16 @@ std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(MatrixCoefficients ma
 	return create_matrix_operation(ncl_rgb_to_yuv_matrix(matrix), cpu);
 }
 
+std::unique_ptr<Operation> create_ictcp_to_lms_operation(const OperationParams &params, CPUClass cpu)
+{
+	return create_matrix_operation(ictcp_to_lms_matrix(), cpu);
+}
+
+std::unique_ptr<Operation> create_lms_to_ictcp_operation(const OperationParams &params, CPUClass cpu)
+{
+	return create_matrix_operation(lms_to_ictcp_matrix(), cpu);
+}
+
 std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(transfer != TransferCharacteristics::LINEAR, "linear op");

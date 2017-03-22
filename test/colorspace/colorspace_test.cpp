@@ -84,7 +84,7 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 	ColorspaceDefinition csp_st2084{ MatrixCoefficients::RGB, TransferCharacteristics::ST_2084, ColorPrimaries::UNSPECIFIED };
 	ColorspaceDefinition csp_arib_b67{ MatrixCoefficients::RGB, TransferCharacteristics::ARIB_B67, ColorPrimaries::UNSPECIFIED };
 
-	const char *expected_sha1[][6] = {
+	const char *expected_sha1[][3] = {
 		{
 			"b606c8645f868f1e763b3e6a88b16bd004db998a",
 			"1020e7d1b081bde7ca05ba61656811aeead95f01",
@@ -170,7 +170,7 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 			"9196061dd36c8455a10b68767f8baad59280ef1b",
 			"14f947d077d545930765b457e767da2852186180",
 			"0894c577a74198718602d4fd7449d2f3ce5ecf28"
-		}
+		},
 	};
 
 	SCOPED_TRACE("709->smpte_c");
@@ -229,4 +229,49 @@ TEST(ColorspaceConversionTest, test_rec2020_cl)
 
 	SCOPED_TRACE("2020ncl->2020cl");
 	test_case(csp_2020cl.to(MatrixCoefficients::REC_2020_NCL), csp_2020cl, expected_sha1[3]);
+}
+
+TEST(ColorspaceConversionTest, test_rec2100_ictcp)
+{
+	using namespace zimg::colorspace;
+
+	const char *expected_sha1[][3] = {
+		{
+			"683b41dcef47cd020e2dadf9f5e149769fcc80ff",
+			"2523d842508d8332cdc46984e1a144b94c29bdb3",
+			"ccb32c84ad13f87eb0c53927690c8d9a33d046fd"
+		},
+		{
+			"2d59753ba28bfe458841ef135b5a3e9c3f4eaa8a",
+			"4a141fab23c2b427fe3d11dcd53d0576180b16ef",
+			"51ec7fe875c09400577b3b8ae9ac383504751183"
+		},
+		{
+			"935fc4cab59118b382a925464bf61e8d04df3b15",
+			"3513e233d321b3620bd2c9121643cce7293a029a",
+			"2e4c4ac369cb50618e5501c64aa69ed4bad259a5"
+		},
+		{
+			"fc37fb0136ef19c42e603a6bcea420029c0900f2",
+			"645754227f593b42f1a7bd3fe3df20bfa4e6bfc3",
+			"bd9b5a9511a35dd633d8f8fde8e7da79fe717847"
+		},
+	};
+
+	SCOPED_TRACE("linear rgb->st2084 ictcp");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 },
+	          { MatrixCoefficients::REC_2100_ICTCP, TransferCharacteristics::ST_2084, ColorPrimaries::REC_2020 },
+	          expected_sha1[0]);
+	SCOPED_TRACE("linear rgb->b67 ictcp");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 },
+	          { MatrixCoefficients::REC_2100_ICTCP, TransferCharacteristics::ARIB_B67, ColorPrimaries::REC_2020 },
+	          expected_sha1[1]);
+	SCOPED_TRACE("st2084 ictcp->linear rgb");
+	test_case({ MatrixCoefficients::REC_2100_ICTCP, TransferCharacteristics::ST_2084, ColorPrimaries::REC_2020 },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 },
+	          expected_sha1[2]);
+	SCOPED_TRACE("b67 ictcp->linear rgb");
+	test_case({ MatrixCoefficients::REC_2100_ICTCP, TransferCharacteristics::ARIB_B67, ColorPrimaries::REC_2020 },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::REC_2020 },
+	          expected_sha1[3]);
 }

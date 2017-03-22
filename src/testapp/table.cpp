@@ -62,7 +62,7 @@ const zimg::static_string_map<PixelType, 4> g_pixel_table{
 	{ "float", PixelType::FLOAT },
 };
 
-const zimg::static_string_map<MatrixCoefficients, 7> g_matrix_table{
+const zimg::static_string_map<MatrixCoefficients, 8> g_matrix_table{
 	{ "unspec",   MatrixCoefficients::UNSPECIFIED },
 	{ "rgb",      MatrixCoefficients::RGB },
 	{ "601",      MatrixCoefficients::REC_601 },
@@ -70,6 +70,7 @@ const zimg::static_string_map<MatrixCoefficients, 7> g_matrix_table{
 	{ "ycgco",    MatrixCoefficients::YCGCO },
 	{ "2020_ncl", MatrixCoefficients::REC_2020_NCL },
 	{ "2020_cl",  MatrixCoefficients::REC_2020_CL },
+	{ "ictcp",    MatrixCoefficients::REC_2100_ICTCP },
 };
 
 const zimg::static_string_map<TransferCharacteristics, 6> g_transfer_table{

@@ -26,6 +26,8 @@ enum class MatrixCoefficients {
 	YCGCO,
 	REC_2020_NCL,
 	REC_2020_CL,
+	REC_2100_LMS,
+	REC_2100_ICTCP,
 };
 
 enum class TransferCharacteristics {

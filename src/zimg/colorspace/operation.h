@@ -75,6 +75,22 @@ std::unique_ptr<Operation> create_ncl_yuv_to_rgb_operation(MatrixCoefficients ma
 std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(MatrixCoefficients matrix, const OperationParams &params, CPUClass cpu);
 
 /**
+* Create an operation converting from ICtCp to LMS via a 3x3 matrix.
+*
+* @param params parameters
+* @param cpu create operation optimized for given cpu
+* @return concrete operation
+*/
+std::unique_ptr<Operation> create_ictcp_to_lms_operation(const OperationParams &params, CPUClass cpu);
+
+/**
+* Create an operation converting from LMS to ICtCp via a 3x3 matrix.
+*
+* @see create_ictcp_to_lms_operation
+*/
+std::unique_ptr<Operation> create_lms_to_ictcp_operation(const OperationParams &params, CPUClass cpu);
+
+/**
  * Create an operation inverting an optical transfer function.
  *
  * @param transfer transfer characteristics
@@ -99,7 +115,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacterist
 std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu);
 
 /**
- * Create an operation converting from RGB to YUV via Rec.2020 Constant Luinance method.
+ * Create an operation converting from RGB to YUV via Rec.2020 Constant Luminance method.
  *
  * @see create_2020_cl_yuv_to_rgb_operation
  */
