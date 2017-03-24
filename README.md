@@ -24,7 +24,7 @@ system. Visual Studio project files are not stable and are subject to change.
 
 Capabilities
 -----
-###Colorspace
+### Colorspace
 
 Colorspaces: SMPTE-C (NTSC), Rec.709, Rec.2020
 
@@ -39,7 +39,7 @@ chroma subsampling. Note that "z" is not a color management system and should
 not be used to perform drastic contrast or gamut reduction, such as BT.2020
 to BT.709.
 
-###Depth
+### Depth
 
 Formats: BYTE, WORD, HALF, FLOAT
 
@@ -50,7 +50,7 @@ integer formats are supported, including conversion between such formats.
 Multiple dithering methods are available when converting to integer formats,
 from basic rounding to high quality error diffusion.
 
-###Resize
+### Resize
 
 The resize module provides high fidelity linear resamplers, including the
 popular Bicubic and Lanczos filters. Resampling ratios of up to 100x are
