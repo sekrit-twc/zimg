@@ -141,6 +141,11 @@ constexpr bool is_ascii(char c) noexcept
 	return static_cast<signed char>(c) >= 0;
 }
 
+constexpr bool is_json_cntrl(char c) noexcept
+{
+	return static_cast<unsigned char>(c) <= 0x1F;
+}
+
 constexpr bool is_json_digit(char c) noexcept
 {
 	return c >= '0' && c <= '9';
@@ -251,9 +256,7 @@ std::pair<Token, TracingIterator<ForwardIt>> match_next_token(TracingIterator<Fo
 
 	if (!is_ascii(c))
 		throw JsonError{ "unicode not allowed", line, col };
-	if (std::isspace(c, std::locale::classic()) && !is_json_space(c))
-		throw JsonError{ "special character not allowed", line, col };
-	if (std::iscntrl(c, std::locale::classic()) && !is_json_space(c))
+	if ((is_json_cntrl(c) && !is_json_space(c)) || c == 0x7F)
 		throw JsonError{ "control character not allowed", line, col };
 
 	if (is_json_space(c))
@@ -354,10 +357,8 @@ std::string decode_string_literal(const Token &tok)
 
 		if (!is_ascii(c))
 			throw JsonError{ "unicode not allowed", tok.line(), col };
-		if (std::iscntrl(c, std::locale::classic()))
+		if (is_json_cntrl(c))
 			throw JsonError{ "control character not allowed", tok.line(), col };
-		if (std::isspace(c, std::locale::classic()) && c != ' ')
-			throw JsonError{ "unescaped whitespace not allowed", tok.line(), col };
 
 		if (escaped) {
 			try {
@@ -454,7 +455,7 @@ std::pair<Value, ForwardIt> parse_object(ForwardIt first, ForwardIt last)
 			Value value;
 			std::tie(value, first) = parse_value(first, last);
 
-			object[name] = std::move(value);
+			object[std::move(name)] = std::move(value);
 
 			if (first != last && first->tag() != Token::CURLY_BRACE_RIGHT) {
 				expect_token(Token::COMMA, first, last, "expected ',' after object member");
