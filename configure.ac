@@ -20,6 +20,16 @@ AC_ARG_ENABLE([unit-test], AS_HELP_STRING([--enable-unit-test], [Compile unit te
 AC_ARG_ENABLE([debug],     AS_HELP_STRING([--enable-debug],     [Enable compilation options required for debugging. (default=no)]))
 AC_ARG_ENABLE([simd],      AS_HELP_STRING([--disable-simd],     [Disable SIMD code. (default=no)]))
 
+AC_LANG_PUSH([C++])
+AS_IF([test "x$CXXSTD" = "x"],
+      AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXSTD="c++14"]))
+AS_IF([test "x$CXXSTD" = "x"],
+      AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXSTD="c++11"]))
+AS_IF([test "x$CXXSTD" = "x"], AC_MSG_ERROR([C++11 support required]))
+AC_LANG_POP([C++])
+
+AC_SUBST([CXXSTD], [$CXXSTD])
+
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
                       [CFLAGS="-fvisibility=hidden $CFLAGS" CXXFLAGS="-fvisibility=hidden $CXXFLAGS"])
 
@@ -42,7 +52,7 @@ AS_IF([test "x$enable_debug" = "xyes"],
       [AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])],
       [AC_SUBST([DEBUGCFLAGS], ["-DNDEBUG"])])
 
-AS_IF([test "x$STL_LIBS" == "x"], [STL_LIBS="-lstdc++"])
+AS_IF([test "x$STL_LIBS" = "x"], [STL_LIBS="-lstdc++"])
 AC_SUBST([STL_LIBS], [$STL_LIBS])
 
 X86="no"
