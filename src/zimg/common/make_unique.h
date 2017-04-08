@@ -3,6 +3,12 @@
 #ifndef ZIMG_MAKE_UNIQUE_H_
 #define ZIMG_MAKE_UNIQUE_H_
 
+#if __cplusplus >= 201402L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
+#include <memory>
+namespace ztd {
+using std::make_unique;
+} // namespace ztd
+#else
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -29,5 +35,6 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 }
 
 } // namespace ztd
+#endif // __cplusplus >= 201402L
 
 #endif // ZIMG_MAKE_UNIQUE_H_
