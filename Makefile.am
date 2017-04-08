@@ -114,7 +114,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/unresize/unresize_impl.cpp \
 	src/zimg/unresize/unresize_impl.h
 
-libzimg_internal_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 
 if X86SIMD
@@ -139,7 +139,7 @@ libsse_la_SOURCES = \
 	src/zimg/resize/resize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
-libsse_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libsse2_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_sse2.cpp \
@@ -150,19 +150,19 @@ libsse2_la_SOURCES = \
 	src/zimg/resize/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
-libsse2_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_avx.cpp \
 	src/zimg/resize/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx
-libavx_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libf16c_la_SOURCES = src/zimg/depth/f16c_ivb.cpp
 
 libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
-libf16c_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_avx2.cpp \
@@ -172,7 +172,7 @@ libavx2_la_SOURCES = \
 	src/zimg/resize/resize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
-libavx2_la_CPPFLAGS = -I$(srcdir)/src/zimg
+libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libzimg_internal_la_LIBADD = libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 endif
@@ -200,7 +200,7 @@ noinst_PROGRAMS += \
 	doc/example/interlace_example
 noinst_LTLIBRARIES += libtestcommon.la
 
-EXAMPLE_CPPFLAGS = -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
+EXAMPLE_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
 EXAMPLE_LDADD = libtestcommon.la libzimg.la
 
 doc_example_alpha_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
@@ -228,7 +228,7 @@ endif # EXAMPLES
 if TESTAPP
 noinst_PROGRAMS += testapp
 noinst_LTLIBRARIES += libtestcommon.la
-testapp_CPPFLAGS = -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon
+testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon
 
 testapp_SOURCES = \
 	src/testapp/apps.h \
@@ -275,6 +275,7 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/sin.c
 
 test_unit_test_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-I$(srcdir)/src/zimg \
 	-I$(srcdir)/test \
 	-I$(srcdir)/test/extra \
