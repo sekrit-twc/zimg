@@ -13,4 +13,4 @@
   static void aligned_free(void *ptr) { free(ptr); }
 #endif
 
-#endif // ALIGNED_MALLOC_H_
+#endif /* ALIGNED_MALLOC_H_ */
