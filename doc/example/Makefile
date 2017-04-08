@@ -1,6 +1,7 @@
 ZIMG_INCLUDES := $(shell pkg-config --cflags zimg)
 ZIMG_LIBS := $(shell pkg-config --libs zimg)
 
+MY_CFLAGS := -std=c89 $(CFLAGS)
 MY_CXXFLAGS := -std=c++11 $(CXXFLAGS)
 MY_CPPFLAGS := $(ZIMG_INCLUDES) -Imisc $(CPPFLAGS)
 MY_LDFLAGS := $(LDFLAGS)

@@ -5,7 +5,7 @@ SUBDIRS = $(CONFIG_SUBDIRS)
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
 AM_CXXFLAGS = -std=$(CXXSTD) $(commonflags)
-AM_CFLAGS = $(commonflags)
+AM_CFLAGS = -std=c89 $(commonflags)
 
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -258,7 +258,7 @@ TESTS = test/unit_test
 check_LTLIBRARIES = test/libmusl_m.la
 check_PROGRAMS = test/unit_test
 
-test_libmusl_m_la_CFLAGS = $(AM_CFLAGS) -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable
+test_libmusl_m_la_CFLAGS = $(AM_CFLAGS) -std=c99 -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable
 
 test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/__cos.c \
