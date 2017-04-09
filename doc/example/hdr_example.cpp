@@ -87,7 +87,7 @@ struct ImageBuffer {
 
 size_t align(size_t n)
 {
-	return n % 64 ? n + 64 - n % 64 : n;
+	return n % 32 ? n + 32 - n % 32 : n;
 }
 
 ImageBuffer allocate_buffer(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h, size_t bytes_per_pel)
@@ -102,7 +102,7 @@ ImageBuffer allocate_buffer(unsigned width, unsigned height, unsigned subsample_
 	buf.buffer.mask(2) = ZIMG_BUFFER_MAX;
 
 	size_t buffer_size = buf.buffer.stride(0) * height + 2 * buf.buffer.stride(1) * (height >> subsample_h);
-	buf.handle = std::shared_ptr<void>(aligned_malloc(buffer_size, 64), aligned_free);
+	buf.handle = std::shared_ptr<void>(aligned_malloc(buffer_size, 32), aligned_free);
 
 	uint8_t *ptr = static_cast<uint8_t *>(buf.handle.get());
 	buf.buffer.data(0) = ptr;
@@ -284,7 +284,7 @@ void execute(const Arguments &args)
 	zimgxx::FilterGraph tosdr_graph{ zimgxx::FilterGraph::build(linear_format, sdr_format, &params) };
 
 	size_t tmp_size = std::max({ tolinear_graph.get_tmp_size(), tohdr_graph.get_tmp_size(), tosdr_graph.get_tmp_size() });
-	std::shared_ptr<void> tmp_buf{ aligned_malloc(tmp_size, 64), aligned_free };
+	std::shared_ptr<void> tmp_buf{ aligned_malloc(tmp_size, 32), aligned_free };
 
 	// Convert from HDR-10 to linear Rec.709.
 	tolinear_graph.process(in.buffer.as_const(), linear.buffer, tmp_buf.get());

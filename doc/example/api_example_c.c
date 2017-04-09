@@ -33,7 +33,7 @@ static const ArgparseCommandLine program_def = { 0, program_positional, "api_exa
 
 static ptrdiff_t width_to_stride(unsigned w)
 {
-	return w % 64 ? w - w % 64 + 64 : w;
+	return w % 32 ? w - w % 32 + 32 : w;
 }
 
 static void *init_image(unsigned w, unsigned h, void *data[3], ptrdiff_t stride[3])
@@ -49,7 +49,7 @@ static void *init_image(unsigned w, unsigned h, void *data[3], ptrdiff_t stride[
 	size += rowsize * (h / 2);
 	size += rowsize * (h / 2);
 
-	if (!(ptr = aligned_malloc(size, 64)))
+	if (!(ptr = aligned_malloc(size, 32)))
 		return 0;
 
 	pptr = ptr;
@@ -203,7 +203,7 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 
 	printf("heap usage: %lu\n", (unsigned long)tmp_size);
 
-	if (!(tmp = aligned_malloc(tmp_size, 64)))
+	if (!(tmp = aligned_malloc(tmp_size, 32)))
 		goto fail;
 
 	for (p = 0; p < 3; ++p) {
