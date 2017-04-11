@@ -245,7 +245,11 @@ public:
 			win32::trap_error("error flushing file");
 	}
 
-	void unmap() noexcept { m_map_view.release(); }
+	void close()
+	{
+		flush();
+		m_map_view.reset();
+	}
 };
 #else
 class MemoryMappedFile::impl {
@@ -272,15 +276,13 @@ class MemoryMappedFile::impl {
 		if ((ptr = ::mmap(nullptr, file_size, prot, mmap_flags, fd, 0)) == MAP_FAILED)
 			posix::trap_error("error mapping file");
 
-		m_size = static_cast<size_t>(file_size);
-
 		m_ptr.reset(ptr);
-		m_ptr.get_deleter().size = m_size;
+		m_ptr.get_deleter().size = static_cast<size_t>(file_size);
 	}
 public:
 	impl() noexcept : m_size{}, m_writable{} {}
 
-	size_t size() const noexcept { return m_size; }
+	size_t size() const noexcept { return m_ptr.get_deleter().size; }
 
 	const void *read_ptr() const noexcept { return m_ptr.get(); }
 
@@ -310,7 +312,11 @@ public:
 			posix::trap_error("error flushing file");
 	}
 
-	void unmap() noexcept { m_ptr.release(); }
+	void close()
+	{
+		flush();
+		m_ptr.reset();
+	}
 };
 #endif // _WIN32
 
@@ -350,8 +356,4 @@ void *MemoryMappedFile::write_ptr() noexcept { return get_impl()->write_ptr(); }
 
 void MemoryMappedFile::flush() { get_impl()->flush(); }
 
-void MemoryMappedFile::close()
-{
-	get_impl()->flush();
-	get_impl()->unmap();
-}
+void MemoryMappedFile::close() { get_impl()->close(); }
