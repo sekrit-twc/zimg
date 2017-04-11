@@ -66,6 +66,7 @@ public:
 	struct static_initializer_tag {};
 
 	enum tag_type {
+		UNDEFINED,
 		NULL_,
 		NUMBER,
 		STRING,
@@ -110,15 +111,19 @@ private:
 	}
 
 public:
-	constexpr explicit Value(static_initializer_tag) noexcept : m_tag{ NULL_ }, m_union{} {}
+	constexpr explicit Value(static_initializer_tag) noexcept : m_tag{ UNDEFINED }, m_union{} {}
 
-	Value(std::nullptr_t = nullptr) noexcept : m_tag{ NULL_ }, m_union{} {}
+	Value() noexcept : m_tag{ UNDEFINED } {}
 
+	explicit Value(std::nullptr_t) noexcept : m_tag{ NULL_ } {}
 	explicit Value(double val) noexcept : m_tag{ NUMBER } { construct(val); }
 	explicit Value(std::string val) : m_tag{ STRING } { construct(std::move(val)); }
 	explicit Value(Array val) : m_tag{ ARRAY } { construct(std::move(val)); }
 	explicit Value(Object val) : m_tag{ OBJECT } { construct(std::move(val)); }
 	explicit Value(bool val) noexcept : m_tag{ BOOL_ } { construct(val); }
+
+	template <class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
+	explicit Value(T val) noexcept : Value{ static_cast<double>(val) } {}
 
 	Value(const Value &other);
 	Value(Value &&other) noexcept;
@@ -128,8 +133,9 @@ public:
 	Value &operator=(const Value &other);
 	Value &operator=(Value &&other) noexcept;
 
-	explicit operator bool() const noexcept { return !is_null(); }
+	explicit operator bool() const noexcept { return !is_undefined() && !is_null(); }
 
+	bool is_undefined() const noexcept { return get_type() == UNDEFINED; }
 	bool is_null() const noexcept { return get_type() == NULL_; }
 
 	tag_type get_type() const noexcept { return m_tag; }

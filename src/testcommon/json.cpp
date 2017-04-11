@@ -534,7 +534,7 @@ std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last)
 	case Token::FALSE_:
 		return{ Value{ false }, std::next(first) };
 	case Token::NULL_:
-		return{ Value{}, std::next(first) };
+		return{ Value{ nullptr }, std::next(first) };
 	default:
 		throw JsonError{ "unexpected token while parsing value", first->line(), first->col() };
 	}
@@ -549,7 +549,7 @@ void uninitialized_move(void *src, void *dst) noexcept
 	T *src_p = static_cast<T *>(src);
 	T *dst_p = static_cast<T *>(dst);
 
-	new(dst_p) T{ std::move(*src_p) };
+	new (dst_p) T{ std::move(*src_p) };
 	src_p->~T();
 }
 
@@ -577,10 +577,7 @@ JsonError &JsonError::operator=(const JsonError &other) noexcept
 	std::runtime_error::operator=(other);
 
 	try {
-		if (&other != this) {
-			m_stack_trace.clear();
-			m_stack_trace = other.m_stack_trace;
-		}
+		m_stack_trace = other.m_stack_trace;
 	} catch (const std::bad_alloc &) {
 		// ...
 	}
@@ -622,6 +619,7 @@ void Value::move_helper(tag_type &src_tag, union_type &src_union,
                         tag_type &dst_tag, union_type &dst_union) noexcept
 {
 	switch (src_tag) {
+	case UNDEFINED:
 	case NULL_:
 		break;
 	case NUMBER:
@@ -648,9 +646,10 @@ void Value::move_helper(tag_type &src_tag, union_type &src_union,
 	src_tag = NULL_;
 }
 
-Value::Value(const Value &other) : m_tag{ NULL_ }
+Value::Value(const Value &other) : m_tag{ UNDEFINED }
 {
 	switch (other.get_type()) {
+	case UNDEFINED:
 	case NULL_:
 		break;
 	case NUMBER:
@@ -675,7 +674,7 @@ Value::Value(const Value &other) : m_tag{ NULL_ }
 	m_tag = other.get_type();
 }
 
-Value::Value(Value &&other) noexcept : m_tag{ NULL_ }
+Value::Value(Value &&other) noexcept : m_tag{ UNDEFINED }
 {
 	swap(*this, other);
 }
@@ -683,6 +682,7 @@ Value::Value(Value &&other) noexcept : m_tag{ NULL_ }
 Value::~Value()
 {
 	switch (get_type()) {
+	case UNDEFINED:
 	case NULL_:
 		break;
 	case NUMBER:
