@@ -204,6 +204,7 @@ class GraphNode {
 protected:
 	struct node_context {
 		static constexpr uint64_t GUARD_PATTERN = 0xDEADBEEFDEADBEEFULL;
+
 		const uint64_t guard_pattern = GUARD_PATTERN;
 		unsigned cache_pos;
 		unsigned source_left;
