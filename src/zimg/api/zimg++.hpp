@@ -163,6 +163,24 @@ public:
 		zimg_filter_graph_free(m_graph);
 	}
 
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+	FilterGraph(FilterGraph &&other) : m_graph(other.m_graph)
+	{
+		other.m_graph = 0;
+	}
+
+	FilterGraph &operator=(FilterGraph &&other)
+	{
+		if (this != &other) {
+			zimg_filter_graph_free(m_graph);
+			m_graph = other.m_graph;
+			other.m_graph = 0;
+		}
+
+		return *this;
+	}
+#endif
+
 	size_t get_tmp_size() const
 	{
 		size_t ret;
