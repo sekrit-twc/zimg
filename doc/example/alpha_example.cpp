@@ -44,12 +44,12 @@ struct Callback {
 	bool premultiply;
 };
 
-zimgxx::zimage_format get_image_format(const WindowsBitmap *bmp, bool premultiply)
+zimgxx::zimage_format get_image_format(const WindowsBitmap &bmp, bool premultiply)
 {
 	zimgxx::zimage_format format;
 
-	format.width = bmp->width();
-	format.height = bmp->height();
+	format.width = bmp.width();
+	format.height = bmp.height();
 	format.pixel_type = premultiply ? ZIMG_PIXEL_BYTE : ZIMG_PIXEL_WORD;
 
 	format.color_family = ZIMG_COLOR_RGB;
@@ -58,12 +58,12 @@ zimgxx::zimage_format get_image_format(const WindowsBitmap *bmp, bool premultipl
 	return format;
 }
 
-zimgxx::zimage_format get_alpha_format(const WindowsBitmap *bmp, bool premultiply)
+zimgxx::zimage_format get_alpha_format(const WindowsBitmap &bmp, bool premultiply)
 {
 	zimgxx::zimage_format format;
 
-	format.width = bmp->width();
-	format.height = bmp->height();
+	format.width = bmp.width();
+	format.height = bmp.height();
 	format.pixel_type = ZIMG_PIXEL_BYTE;
 
 	format.color_family = ZIMG_COLOR_GREY;
@@ -264,7 +264,7 @@ int pack_bgra(void *user, unsigned i, unsigned left, unsigned right)
 	return 0;
 }
 
-void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultiply)
+void process(const WindowsBitmap &in_bmp, WindowsBitmap &out_bmp, bool premultiply)
 {
 	zimgxx::zimage_format in_format = get_image_format(in_bmp, premultiply);
 	zimgxx::zimage_format out_format = get_image_format(out_bmp, premultiply);
@@ -286,8 +286,8 @@ void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultip
 
 	auto tmp = allocate_buffer(tmp_size);
 
-	Callback unpack_cb_data{ const_cast<WindowsBitmap *>(in_bmp), &in_rgb_buf.first, &in_alpha_plane_buf.first, premultiply };
-	Callback pack_cb_data{ out_bmp, &out_rgb_plane_buf.first, &out_alpha_buf.first, premultiply };
+	Callback unpack_cb_data{ const_cast<WindowsBitmap *>(&in_bmp), &in_rgb_buf.first, &in_alpha_plane_buf.first, premultiply };
+	Callback pack_cb_data{ &out_bmp, &out_rgb_plane_buf.first, &out_alpha_buf.first, premultiply };
 
 	graph.process(in_rgb_buf.first.as_const(), out_rgb_plane_buf.first, tmp.get(), unpack_bgra, &unpack_cb_data, nullptr, nullptr);
 	graph_alpha.process(in_alpha_plane_buf.first.as_const(), out_alpha_buf.first, tmp.get(), nullptr, nullptr, pack_bgra, &pack_cb_data);
@@ -295,16 +295,12 @@ void process(const WindowsBitmap *in_bmp, WindowsBitmap *out_bmp, bool premultip
 
 void execute(const Arguments &args)
 {
-	std::shared_ptr<WindowsBitmap> in_bmp;
-	std::shared_ptr<WindowsBitmap> out_bmp;
-
-	in_bmp = std::make_shared<WindowsBitmap>(args.inpath, WindowsBitmap::READ_TAG);
-
-	if (in_bmp->bit_count() != 32)
+	WindowsBitmap in_bmp{ args.inpath, WindowsBitmap::READ_TAG };
+	if (in_bmp.bit_count() != 32)
 		throw std::runtime_error{ "no alpha component in bitmap" };
 
-	out_bmp = std::make_shared<WindowsBitmap>(args.outpath, args.out_w, args.out_h, 32);
-	process(in_bmp.get(), out_bmp.get(), !!args.premultiply);
+	WindowsBitmap out_bmp{ args.outpath, static_cast<int>(args.out_w), static_cast<int>(args.out_h), 32 };
+	process(in_bmp, out_bmp, !!args.premultiply);
 }
 
 } // namespace
