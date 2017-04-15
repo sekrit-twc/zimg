@@ -1,3 +1,6 @@
+2.5.1
+depth: fix AVX2 conversion from half to byte/word (introduced in 2.1)
+
 2.5
 api: images larger than 16384x16384 rejected on 32-bit (2Gx2G on 64-bit)
 depth: SSE2 and AVX2 error diffusion implementation
