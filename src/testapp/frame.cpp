@@ -53,7 +53,7 @@ PathSpecifier translate_pathspec_format(const char *format)
 #define ORDER_NUL { 0, 0, 0 }
 #define ORDER_DEF { 0, 1, 2 }
 #define ORDER_YVU { 0, 2, 1 }
-#define ORDER_GBR { 1, 2, 0 }
+#define ORDER_GBR { 2, 0, 1 }
 #define Z(x) zimg::PixelType::x
 	static const zimg::static_string_map<PathSpecifier, 30> map{
 		{ "bmp",   { Z(BYTE), 3, 0, 0, ORDER_NUL, false, PackingFormat::PACK_BMP } },
