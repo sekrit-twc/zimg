@@ -96,7 +96,7 @@ inline FORCE_INLINE void depth_convert_b2f_avx2_xiter(unsigned j, const uint8_t 
 
 template <class Pack>
 inline FORCE_INLINE void depth_convert_w2f_avx2_xiter(unsigned j, const uint16_t *src_p, __m256 scale, __m256 offset,
-													  typename Pack::type &lo_out, typename Pack::type &hi_out)
+                                                      typename Pack::type &lo_out, typename Pack::type &hi_out)
 {
 	__m256i x = _mm256_load_si256((const __m256i *)(src_p + j));
 	__m256 lo, hi;
