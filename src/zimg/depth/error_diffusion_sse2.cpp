@@ -344,7 +344,6 @@ decltype(&error_diffusion_sse2<uint8_t, uint8_t>) select_error_diffusion_sse2_fu
 }
 
 
-
 class ErrorDiffusionSSE2 final : public graph::ImageFilter {
 	decltype(&error_diffusion_scalar<uint8_t, uint8_t>) m_scalar_func;
 	decltype(&error_diffusion_sse2<uint8_t, uint8_t>) m_sse2_func;
