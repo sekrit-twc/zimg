@@ -133,10 +133,10 @@ public:
 		return{ m_width, m_height, m_pixel_out };
 	}
 
-	void process(void *, const graph::ImageBuffer<const void> src[], const graph::ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = graph::static_buffer_cast<const char>(*src)[i];
-		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
+		const char *src_line = static_cast<const char *>((*src)[i]);
+		char *dst_line = static_cast<char *>((*dst)[i]);
 
 		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 		unsigned line_base = floor_n(left, pixel_align);
@@ -229,8 +229,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = graph::static_buffer_cast<const char>(*src)[i];
-		char *dst_line = graph::static_buffer_cast<char>(*dst)[i];
+		const char *src_line = static_cast<const char *>((*src)[i]);
+		char *dst_line = static_cast<char *>((*dst)[i]);
 
 		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 		unsigned line_base = floor_n(left, pixel_align);

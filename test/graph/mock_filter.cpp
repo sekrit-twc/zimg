@@ -184,8 +184,8 @@ void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBuffer<const voi
 	for (unsigned p = 0; p < (get_flags().color ? 3U : 1U); ++p) {
 		if (m_input_checking) {
 			for (unsigned ii = row_range.first; ii < row_range.second; ++ii) {
-				const T *src_first = zimg::graph::static_buffer_cast<const T>(src[p])[ii] + col_range.first;
-				const T *src_last = zimg::graph::static_buffer_cast<const T>(src[p])[ii] + col_range.second;
+				const T *src_first = static_cast<const T *>(src[p][ii]) + col_range.first;
+				const T *src_last = static_cast<const T *>(src[p][ii]) + col_range.second;
 
 				const T *find_pos = std::find_if(src_first, src_last, [=](T x) { return x != m_src_val; });
 				ASSERT_TRUE(find_pos == src_last) << "found invalid value at position: (" << ii << ", " << find_pos - src_first << ")";
@@ -193,7 +193,7 @@ void SplatFilter<T>::process(void *ctx, const zimg::graph::ImageBuffer<const voi
 		}
 
 		for (unsigned ii = i; ii < std::min(i + get_simultaneous_lines(), m_attr.height); ++ii) {
-			std::fill(zimg::graph::static_buffer_cast<T>(dst[p])[ii] + left, zimg::graph::static_buffer_cast<T>(dst[p])[ii] + right, m_dst_val);
+			std::fill(static_cast<T *>(dst[p][ii]) + left, static_cast<T *>(dst[p][ii]) + right, m_dst_val);
 		}
 	}
 }

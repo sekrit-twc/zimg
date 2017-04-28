@@ -39,7 +39,7 @@ void hash_buffer(const AuditBuffer<T> &buf, unsigned p, unsigned width, unsigned
 	SHA1Init(&sha_ctx);
 
 	for (unsigned i = 0; i < height; ++i) {
-		const unsigned char *ptr = zimg::graph::static_buffer_cast<const unsigned char>(image_buffer[p])[i];
+		const unsigned char *ptr = static_cast<const unsigned char *>(image_buffer[p][i]);
 		SHA1Update(&sha_ctx, ptr, width * sizeof(T));
 	}
 
@@ -124,8 +124,8 @@ double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigne
 		double noise_plane = 0.0;
 
 		for (unsigned i = 0; i < height; ++i) {
-			const T *ref_ptr = zimg::graph::static_buffer_cast<const T>(ref_buf[p])[i];
-			const T *test_ptr = zimg::graph::static_buffer_cast<const T>(test_buf[p])[i];
+			const T *ref_ptr = static_cast<const T *>(ref_buf[p][i]);
+			const T *test_ptr = static_cast<const T *>(test_buf[p][i]);
 
 			auto snr_pair = snr_line(ref_ptr, test_ptr, width, type);
 			signal_plane += snr_pair.first;

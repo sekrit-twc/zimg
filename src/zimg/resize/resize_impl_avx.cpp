@@ -373,8 +373,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		auto src_buf = graph::static_buffer_cast<const float>(*src);
-		auto dst_buf = graph::static_buffer_cast<float>(*dst);
+		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
 		auto range = get_required_col_range(left, right);
 
 		const float *src_ptr[8] = { 0 };
@@ -417,8 +417,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		auto src_buf = graph::static_buffer_cast<const float>(*src);
-		auto dst_buf = graph::static_buffer_cast<float>(*dst);
+		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
 
 		const float *filter_data = m_filter.data.data() + i * m_filter.stride;
 		unsigned filter_width = m_filter.filter_width;

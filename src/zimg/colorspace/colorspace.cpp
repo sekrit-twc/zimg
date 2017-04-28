@@ -58,8 +58,8 @@ public:
 		float *dst_ptr[3];
 
 		for (unsigned p = 0; p < 3; ++p) {
-			src_ptr[p] = graph::static_buffer_cast<const float>(src[p])[i];
-			dst_ptr[p] = graph::static_buffer_cast<float>(dst[p])[i];
+			src_ptr[p] = static_cast<const float *>(src[p][i]);
+			dst_ptr[p] = static_cast<float *>(dst[p][i]);
 		}
 
 		m_operations[0]->process(src_ptr, dst_ptr, left, right);

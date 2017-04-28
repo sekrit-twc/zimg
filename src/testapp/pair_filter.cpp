@@ -201,5 +201,5 @@ void PairFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> s
 	for (; cache->cache_line_pos < row_range.second; cache->cache_line_pos += m_first_step) {
 		m_first->process(cache->first_ctx, src, cache_buf, tmp, cache->cache_line_pos, col_range.first, col_range.second);
 	}
-	m_second->process(cache->second_ctx, &zimg::graph::static_buffer_cast<const void>(*cache_buf), dst, tmp, i, left, right);
+	m_second->process(cache->second_ctx, zimg::graph::static_buffer_cast<const void>(cache_buf), dst, tmp, i, left, right);
 }

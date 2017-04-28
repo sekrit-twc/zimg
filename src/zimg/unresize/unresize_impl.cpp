@@ -93,7 +93,7 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned, unsigned) const override
 	{
-		unresize_line_h_f32_c(m_context, graph::static_buffer_cast<const float>(*src)[i], graph::static_buffer_cast<float>(*dst)[i]);
+		unresize_line_h_f32_c(m_context, static_cast<const float *>((*src)[i]), static_cast<float *>((*dst)[i]));
 	}
 };
 
@@ -111,8 +111,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned, unsigned, unsigned) const override
 	{
-		auto src_buf = graph::static_buffer_cast<const float>(*src);
-		auto dst_buf = graph::static_buffer_cast<float>(*dst);
+		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
 
 		unsigned width = get_image_attributes().width;
 		unsigned height = get_image_attributes().height;

@@ -500,8 +500,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		auto src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		auto dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
+		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
 		auto range = get_required_col_range(left, right);
 
 		const uint16_t *src_ptr[8] = { 0 };
@@ -550,8 +550,8 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		auto src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		auto dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
+		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
 
 		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
 		unsigned filter_width = m_filter.filter_width;

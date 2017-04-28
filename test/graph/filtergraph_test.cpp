@@ -488,12 +488,12 @@ TEST(FilterGraphTest, test_callback)
 		EXPECT_LE(right, w);
 
 		for (unsigned ii = i; ii < i + (1 << xptr->subsample_h); ++ii) {
-			zimg::graph::ImageBuffer<uint8_t> buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[0]);
+			const auto &buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[0]);
 
 			std::fill(buf[ii] + left, buf[ii] + right, xptr->byte_val);
 		}
 		for (unsigned p = 1; p < 3; ++p) {
-			zimg::graph::ImageBuffer<uint8_t> chroma_buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[p]);
+			const auto &chroma_buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[p]);
 			unsigned i_chroma = i >> xptr->subsample_h;
 			unsigned left_chroma = (left % 2 ? left - 1 : left) >> xptr->subsample_w;
 			unsigned right_chroma = (right % 2 ? right + 1 : right) >> xptr->subsample_w;

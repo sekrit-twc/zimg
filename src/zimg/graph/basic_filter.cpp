@@ -29,10 +29,10 @@ auto CopyFilter::get_image_attributes() const -> image_attributes
 	return m_attr;
 }
 
-void CopyFilter::process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const
+void CopyFilter::process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const
 {
-	const uint8_t *src_p = static_buffer_cast<const uint8_t>(*src)[i];
-	uint8_t *dst_p = static_buffer_cast<uint8_t>(*dst)[i];
+	const uint8_t *src_p = static_cast<const uint8_t *>((*src)[i]);
+	uint8_t *dst_p = static_cast<uint8_t *>((*dst)[i]);
 
 	unsigned left_bytes = left * pixel_size(m_attr.type);
 	unsigned right_bytes = right * pixel_size(m_attr.type);

@@ -121,9 +121,9 @@ public:
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		if (m_type == PixelType::WORD)
-			resize_line_h_u16_c(m_filter, graph::static_buffer_cast<const uint16_t>(*src)[i], graph::static_buffer_cast<uint16_t>(*dst)[i], left, right, m_pixel_max);
+			resize_line_h_u16_c(m_filter, static_cast<const uint16_t *>((*src)[i]), static_cast<uint16_t *>((*dst)[i]), left, right, m_pixel_max);
 		else
-			resize_line_h_f32_c(m_filter, graph::static_buffer_cast<const float>(*src)[i], graph::static_buffer_cast<float>(*dst)[i], left, right);
+			resize_line_h_f32_c(m_filter, static_cast<const float *>((*src)[i]), static_cast<float *>((*dst)[i]), left, right);
 	}
 };
 

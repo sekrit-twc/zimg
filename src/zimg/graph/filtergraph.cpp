@@ -413,7 +413,7 @@ public:
 			context->cache_pos = pos;
 		}
 
-		return static_buffer_cast<const void>(state->get_input_buffer());
+		return state->get_input_buffer();
 	}
 };
 
