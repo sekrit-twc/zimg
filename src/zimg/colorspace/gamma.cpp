@@ -168,7 +168,7 @@ float arib_b67_inverse_eotf(float x) noexcept
 	return arib_b67_oetf(inverse_ootf_1_2(x));
 }
 
-// Apples a 1.2 pure-power OOTF instead of the chained Rec.709/Rec.1886 method described in Rec.2100.
+// Applies a 1.2 pure-power OOTF instead of the chained Rec.709/Rec.1886 method described in Rec.2100.
 float st_2084_oetf(float x) noexcept
 {
 	return st_2084_inverse_eotf(ootf_1_2(x));
