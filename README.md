@@ -1,5 +1,7 @@
 z.lib
 ======
+
+[![Join the chat at https://gitter.im/sekrit-twc/zimg](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sekrit-twc/zimg?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 The "z" library implements the commonly required image processing basics of
 scaling, colorspace conversion, and depth conversion. A simple API enables
 conversion between any supported formats to operate with minimal knowledge
