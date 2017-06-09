@@ -536,7 +536,6 @@ void resize_line8_h_u16_avx2(const unsigned *filter_left, const int16_t * RESTRI
 		mm_scatter_epi16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j, _mm256_castsi256_si128(x));
 		mm_scatter_epi16(dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, _mm256_extractf128_si256(x, 1));
 	}
-
 #undef XITER
 #undef XARGS
 }
