@@ -214,7 +214,6 @@ protected:
 		{
 			zassert_d(guard_pattern == GUARD_PATTERN, "buffer overflow detected");
 		}
-
 	};
 private:
 	unsigned m_id;
