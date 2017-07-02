@@ -37,7 +37,7 @@ namespace zimg {
 #define REPEAT_31(x) REPEAT_16(x), REPEAT_15(x)
 #define REPEAT_32(x) REPEAT_16(x), REPEAT_16(x)
 
-const uint8_t xmm_mask_table_l alignas(16)[17][16] = {
+const uint8_t xmm_mask_table alignas(16)[17][16] = {
 	{ REPEAT_16(0x00) },
 	{ REPEAT_15(0x00), REPEAT_1(0xFF) },
 	{ REPEAT_14(0x00), REPEAT_2(0xFF) },
@@ -57,27 +57,7 @@ const uint8_t xmm_mask_table_l alignas(16)[17][16] = {
 	{ REPEAT_16(0xFF) }
 };
 
-const uint8_t xmm_mask_table_r alignas(16)[17][16] = {
-	{ REPEAT_16(0x00) },
-	{ REPEAT_1(0xFF),  REPEAT_15(0x00) },
-	{ REPEAT_2(0xFF),  REPEAT_14(0x00) },
-	{ REPEAT_3(0xFF),  REPEAT_13(0x00) },
-	{ REPEAT_4(0xFF),  REPEAT_12(0x00) },
-	{ REPEAT_5(0xFF),  REPEAT_11(0x00) },
-	{ REPEAT_6(0xFF),  REPEAT_10(0x00) },
-	{ REPEAT_7(0xFF),  REPEAT_9(0x00) },
-	{ REPEAT_8(0xFF),  REPEAT_8(0x00) },
-	{ REPEAT_9(0xFF),  REPEAT_7(0x00) },
-	{ REPEAT_10(0xFF), REPEAT_6(0x00) },
-	{ REPEAT_11(0xFF), REPEAT_5(0x00) },
-	{ REPEAT_12(0xFF), REPEAT_4(0x00) },
-	{ REPEAT_13(0xFF), REPEAT_3(0x00) },
-	{ REPEAT_14(0xFF), REPEAT_2(0x00) },
-	{ REPEAT_15(0xFF), REPEAT_1(0x00) },
-	{ REPEAT_16(0xFF) }
-};
-
-const uint8_t ymm_mask_table_l alignas(32)[33][32] = {
+const uint8_t ymm_mask_table alignas(32)[33][32] = {
 	{ REPEAT_32(0x00) },
 	{ REPEAT_31(0x00), REPEAT_1(0xFF) },
 	{ REPEAT_30(0x00), REPEAT_2(0xFF) },
@@ -111,43 +91,6 @@ const uint8_t ymm_mask_table_l alignas(32)[33][32] = {
 	{ REPEAT_2(0x00),  REPEAT_30(0xFF) },
 	{ REPEAT_1(0x00),  REPEAT_31(0xFF) },
 	{ REPEAT_32(0xFF) }
-};
-
-const uint8_t ymm_mask_table_r alignas(32)[33][32] = {
-	{ REPEAT_32(0x00) },
-	{ REPEAT_1(0xFF), REPEAT_31(0x00) },
-	{ REPEAT_2(0xFF), REPEAT_30(0x00) },
-	{ REPEAT_3(0xFF), REPEAT_29(0x00) },
-	{ REPEAT_4(0xFF), REPEAT_28(0x00) },
-	{ REPEAT_5(0xFF), REPEAT_27(0x00) },
-	{ REPEAT_6(0xFF), REPEAT_26(0x00) },
-	{ REPEAT_7(0xFF), REPEAT_25(0x00) },
-	{ REPEAT_8(0xFF), REPEAT_24(0x00) },
-	{ REPEAT_9(0xFF), REPEAT_23(0x00) },
-	{ REPEAT_10(0xFF), REPEAT_22(0x00) },
-	{ REPEAT_11(0xFF), REPEAT_21(0x00) },
-	{ REPEAT_12(0xFF), REPEAT_20(0x00) },
-	{ REPEAT_13(0xFF), REPEAT_19(0x00) },
-	{ REPEAT_14(0xFF), REPEAT_18(0x00) },
-	{ REPEAT_15(0xFF), REPEAT_17(0x00) },
-	{ REPEAT_16(0xFF), REPEAT_16(0x00) },
-	{ REPEAT_17(0xFF), REPEAT_15(0x00) },
-	{ REPEAT_18(0xFF), REPEAT_14(0x00) },
-	{ REPEAT_19(0xFF), REPEAT_13(0x00) },
-	{ REPEAT_20(0xFF), REPEAT_12(0x00) },
-	{ REPEAT_21(0xFF), REPEAT_11(0x00) },
-	{ REPEAT_22(0xFF), REPEAT_10(0x00) },
-	{ REPEAT_23(0xFF), REPEAT_9(0x00) },
-	{ REPEAT_24(0xFF), REPEAT_8(0x00) },
-	{ REPEAT_25(0xFF), REPEAT_7(0x00) },
-	{ REPEAT_26(0xFF), REPEAT_6(0x00) },
-	{ REPEAT_27(0xFF), REPEAT_5(0x00) },
-	{ REPEAT_28(0xFF), REPEAT_4(0x00) },
-	{ REPEAT_29(0xFF), REPEAT_3(0x00) },
-	{ REPEAT_30(0xFF), REPEAT_2(0x00) },
-	{ REPEAT_31(0xFF), REPEAT_1(0x00) },
-	{ REPEAT_32(0xFF) }
-
 };
 
 } // namespace zimg
