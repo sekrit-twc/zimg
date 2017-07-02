@@ -153,10 +153,7 @@ static inline FORCE_INLINE void mm256_store_left_ps(float *dst, __m256 x, unsign
 	__m256 orig = _mm256_load_ps(dst);
 	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[count]));
 
-	orig = _mm256_andnot_ps(mask, orig);
-	x = _mm256_and_ps(mask, x);
-	x = _mm256_or_ps(x, orig);
-
+	x = _mm256_blendv_ps(orig, x, mask);
 	_mm256_store_ps(dst, x);
 }
 
@@ -166,10 +163,7 @@ static inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsig
 	__m256 orig = _mm256_load_ps(dst);
 	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[32 - count]));
 
-	orig = _mm256_and_ps(mask, orig);
-	x = _mm256_andnot_ps(mask, x);
-	x = _mm256_or_ps(x, orig);
-
+	x = _mm256_blendv_ps(x, orig, mask);
 	_mm256_store_ps(dst, x);
 }
 
@@ -235,10 +229,7 @@ static inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, 
 	__m256i orig = _mm256_load_si256(dst);
 	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[count]));
 
-	orig = _mm256_andnot_si256(mask, orig);
-	x = _mm256_and_si256(mask, x);
-	x = _mm256_or_si256(x, orig);
-
+	x = _mm256_blendv_epi8(orig, x, mask);
 	_mm256_store_si256(dst, x);
 }
 
@@ -248,10 +239,7 @@ static inline FORCE_INLINE void mm256_store_right_si256(__m256i *dst, __m256i x,
 	__m256i orig = _mm256_load_si256(dst);
 	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[32 - count]));
 
-	orig = _mm256_and_si256(mask, orig);
-	x = _mm256_andnot_si256(mask, x);
-	x = _mm256_or_si256(x, orig);
-
+	x = _mm256_blendv_epi8(x, orig, mask);
 	_mm256_store_si256(dst, x);
 }
 
