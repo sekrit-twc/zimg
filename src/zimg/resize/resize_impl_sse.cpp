@@ -24,17 +24,6 @@ namespace resize {
 
 namespace {
 
-inline FORCE_INLINE void scatter4_ps(float *dst0, float *dst1, float *dst2, float *dst3, __m128 x)
-{
-	_mm_store_ss(dst0, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1));
-	_mm_store_ss(dst1, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2));
-	_mm_store_ss(dst2, x);
-	x = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3));
-	_mm_store_ss(dst3, x);
-}
-
 inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
 {
 	mm_store_left_ps(dst, x, count * 4);
@@ -153,7 +142,7 @@ void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT 
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = XITER(j, XARGS);
-		scatter4_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -174,7 +163,7 @@ void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT 
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = XITER(j, XARGS);
-		scatter4_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
 	}
 #undef XITER
 #undef XARGS

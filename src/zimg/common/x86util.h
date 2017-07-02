@@ -41,6 +41,15 @@ static inline FORCE_INLINE void mm_store_right_ps(float *dst, __m128 x, unsigned
 	_mm_store_ps(dst, x);
 }
 
+// Stores the elements of [x] into [dst0]-[dst3].
+static inline FORCE_INLINE void mm_scatter_ps(float *dst0, float *dst1, float *dst2, float *dst3, __m128 x)
+{
+	_mm_store_ss(dst0, x);
+	_mm_store_ss(dst1, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1)));
+	_mm_store_ss(dst2, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2)));
+	_mm_store_ss(dst3, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3)));
+}
+
 #endif // HAVE_CPU_SSE
 
 #ifdef HAVE_CPU_SSE2
@@ -165,27 +174,6 @@ static inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsig
 
 	x = _mm256_blendv_ps(x, orig, mask);
 	_mm256_store_ps(dst, x);
-}
-
-// Stores the elements of [x] into [dst0]-[dst7].
-static inline FORCE_INLINE void mm256_scatter_ps(float *dst0, float *dst1, float *dst2, float *dst3,
-                                                 float *dst4, float *dst5, float *dst6, float *dst7, __m256 y)
-{
-	__m128 x;
-
-	x = _mm256_castps256_ps128(y);
-
-	_MM_EXTRACT_FLOAT(*dst0, x, 0);
-	_MM_EXTRACT_FLOAT(*dst1, x, 1);
-	_MM_EXTRACT_FLOAT(*dst2, x, 2);
-	_MM_EXTRACT_FLOAT(*dst3, x, 3);
-
-	x = _mm256_castps256_ps128(_mm256_permute2f128_ps(y, y, 0x01));
-
-	_MM_EXTRACT_FLOAT(*dst4, x, 0);
-	_MM_EXTRACT_FLOAT(*dst5, x, 1);
-	_MM_EXTRACT_FLOAT(*dst6, x, 2);
-	_MM_EXTRACT_FLOAT(*dst7, x, 3);
 }
 
 // Transpose in-place the 8x8 matrix stored in [x0]-[x7]

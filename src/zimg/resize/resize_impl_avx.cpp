@@ -8,8 +8,10 @@
 #include "common/checked_int.h"
 #include "common/except.h"
 
+#define HAVE_CPU_SSE
 #define HAVE_CPU_AVX
   #include "common/x86util.h"
+#undef HAVE_CPU_SSE
 #undef HAVE_CPU_AVX
 
 #include "common/make_unique.h"
@@ -157,7 +159,8 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256 x = XITER(j, XARGS);
-		mm256_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, _mm256_castps256_ps128(x));
+		mm_scatter_ps(dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, _mm256_extractf128_ps(x, 1));
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -186,7 +189,8 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m256 x = XITER(j, XARGS);
-		mm256_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, _mm256_castps256_ps128(x));
+		mm_scatter_ps(dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, _mm256_extractf128_ps(x, 1));
 	}
 #undef XITER
 #undef XARGS

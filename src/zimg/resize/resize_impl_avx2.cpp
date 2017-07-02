@@ -13,10 +13,12 @@
 #include "common/checked_int.h"
 #include "common/except.h"
 
+#define HAVE_CPU_SSE
 #define HAVE_CPU_SSE2
 #define HAVE_CPU_AVX
 #define HAVE_CPU_AVX2
   #include "common/x86util.h"
+#undef HAVE_CPU_SSE
 #undef HAVE_CPU_SSE2
 #undef HAVE_CPU_AVX
 #undef HAVE_CPU_AVX2
@@ -116,7 +118,8 @@ struct f32_traits {
 	static inline FORCE_INLINE void scatter8(pixel_type *dst0, pixel_type *dst1, pixel_type *dst2, pixel_type *dst3,
 	                                         pixel_type *dst4, pixel_type *dst5, pixel_type *dst6, pixel_type *dst7, __m256 x)
 	{
-		mm256_scatter_ps(dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7, x);
+		mm_scatter_ps(dst0, dst1, dst2, dst3, _mm256_castps256_ps128(x));
+		mm_scatter_ps(dst4, dst5, dst6, dst7, _mm256_extractf128_ps(x, 1));
 	}
 
 	static inline FORCE_INLINE void store_left(pixel_type *dst, __m256 x, unsigned count)
