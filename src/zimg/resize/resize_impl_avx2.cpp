@@ -73,14 +73,14 @@ struct f16_traits {
 		mm_scatter_epi16(dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7, _mm256_cvtps_ph(x, 0));
 	}
 
-	static inline FORCE_INLINE void store_left(pixel_type *dst, __m256 x, unsigned count)
+	static inline FORCE_INLINE void store_idxlo(pixel_type *dst, __m256 x, unsigned count)
 	{
-		mm_store_left_si128((__m128i *)dst, _mm256_cvtps_ph(x, 0), count * sizeof(uint16_t));
+		mm_store_idxlo_epi16((__m128i *)dst, _mm256_cvtps_ph(x, 0), count);
 	}
 
-	static inline FORCE_INLINE void store_right(pixel_type *dst, __m256 x, unsigned count)
+	static inline FORCE_INLINE void store_idxhi(pixel_type *dst, __m256 x, unsigned count)
 	{
-		mm_store_right_si128((__m128i *)dst, _mm256_cvtps_ph(x, 0), count * sizeof(uint16_t));
+		mm_store_idxhi_epi16((__m128i *)dst, _mm256_cvtps_ph(x, 0), count);
 	}
 };
 
@@ -122,27 +122,17 @@ struct f32_traits {
 		mm_scatter_ps(dst4, dst5, dst6, dst7, _mm256_extractf128_ps(x, 1));
 	}
 
-	static inline FORCE_INLINE void store_left(pixel_type *dst, __m256 x, unsigned count)
+	static inline FORCE_INLINE void store_idxlo(pixel_type *dst, __m256 x, unsigned count)
 	{
-		mm256_store_left_ps(dst, x, count * sizeof(float));
+		mm256_store_idxlo_ps(dst, x, count);
 	}
 
-	static inline FORCE_INLINE void store_right(pixel_type *dst, __m256 x, unsigned count)
+	static inline FORCE_INLINE void store_idxhi(pixel_type *dst, __m256 x, unsigned count)
 	{
-		mm256_store_right_ps(dst, x, count * sizeof(float));
+		mm256_store_idxhi_ps(dst, x, count);
 	}
 };
 
-
-inline FORCE_INLINE void mm256_store_left_epi16(uint16_t *dst, __m256i x, unsigned count)
-{
-	mm256_store_left_si256((__m256i *)dst, x, count * 2);
-}
-
-inline FORCE_INLINE void mm256_store_right_epi16(uint16_t *dst, __m256i x, unsigned count)
-{
-	mm256_store_right_si256((__m256i *)dst, x, count * 2);
-}
 
 inline FORCE_INLINE __m256i export_i30_u16(__m256i lo, __m256i hi, uint16_t limit)
 {
@@ -835,7 +825,7 @@ void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_left - 16, XARGS);
 
 		if (!WriteToAccum)
-			mm256_store_left_epi16(dst_p + vec_left - 16, out, vec_left - left);
+			mm256_store_idxhi_epi16((__m256i *)(dst_p + vec_left - 16), out, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -849,7 +839,7 @@ void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm256_store_right_epi16(dst_p + vec_right, out, right - vec_right);
+			mm256_store_idxlo_epi16((__m256i *)(dst_p + vec_right), out, right - vec_right);
 	}
 #undef XITER
 #undef XARGS
@@ -963,7 +953,7 @@ void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixe
 #define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst_p, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 8, XARGS);
-		Traits::store_left(dst_p + vec_left - 8, accum, vec_left - left);
+		Traits::store_idxhi(dst_p + vec_left - 8, accum, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -973,7 +963,7 @@ void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixe
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		Traits::store_right(dst_p + vec_right, accum, right - vec_right);
+		Traits::store_idxlo(dst_p + vec_right, accum, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

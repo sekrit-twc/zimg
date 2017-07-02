@@ -23,16 +23,6 @@ namespace resize {
 
 namespace {
 
-inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	mm_store_left_si128((__m128i *)dst, x, count * 2);
-}
-
-inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	mm_store_right_si128((__m128i *)dst, x, count * 2);
-}
-
 void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
                               const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                               unsigned left, unsigned right)
@@ -426,7 +416,7 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_left - 8, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_left_epi16(dst_p + vec_left - 8, out, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), out, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -440,7 +430,7 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_right_epi16(dst_p + vec_right, out, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), out, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

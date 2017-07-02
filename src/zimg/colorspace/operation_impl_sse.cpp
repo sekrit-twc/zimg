@@ -17,16 +17,6 @@ namespace colorspace {
 
 namespace {
 
-inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
-{
-	mm_store_left_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void mm_store_right(float *dst, __m128 x, unsigned count)
-{
-	mm_store_right_ps(dst, x, count * 4);
-}
-
 inline FORCE_INLINE void matrix_filter_line_sse_xiter(unsigned j, const float * RESTRICT const * RESTRICT src, __m128 &out0, __m128 &out1, __m128 &out2,
                                                       const __m128 &c00, const __m128 &c01, const __m128 &c02,
                                                       const __m128 &c10, const __m128 &c11, const __m128 &c12,
@@ -80,9 +70,9 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	if (left != vec_left) {
 		XITER(vec_left - 4, XARGS);
 
-		mm_store_left(dst[0] + vec_left - 4, out0, vec_left - left);
-		mm_store_left(dst[1] + vec_left - 4, out1, vec_left - left);
-		mm_store_left(dst[2] + vec_left - 4, out2, vec_left - left);
+		mm_store_idxhi_ps(dst[0] + vec_left - 4, out0, vec_left - left);
+		mm_store_idxhi_ps(dst[1] + vec_left - 4, out1, vec_left - left);
+		mm_store_idxhi_ps(dst[2] + vec_left - 4, out2, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -96,9 +86,9 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 
-		mm_store_right(dst[0] + vec_right, out0, right - vec_right);
-		mm_store_right(dst[1] + vec_right, out1, right - vec_right);
-		mm_store_right(dst[2] + vec_right, out2, right - vec_right);
+		mm_store_idxlo_ps(dst[0] + vec_right, out0, right - vec_right);
+		mm_store_idxlo_ps(dst[1] + vec_right, out1, right - vec_right);
+		mm_store_idxlo_ps(dst[2] + vec_right, out2, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

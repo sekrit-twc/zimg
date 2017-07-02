@@ -24,16 +24,6 @@ namespace resize {
 
 namespace {
 
-inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
-{
-	mm_store_left_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void mm_store_right(float *dst, __m128 x, unsigned count)
-{
-	mm_store_right_ps(dst, x, count * 4);
-}
-
 void transpose_line_4x4_ps(float *dst, const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 4) {
@@ -246,7 +236,7 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 #define XARGS src_p0, src_p1, src_p2, src_p3, dst_p, c0, c1, c2, c3
 	if (left != vec_left) {
 		accum = XITER(vec_left - 4, XARGS);
-		mm_store_left(dst_p + vec_left - 4, accum, vec_left - left);
+		mm_store_idxhi_ps(dst_p + vec_left - 4, accum, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -256,7 +246,7 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		mm_store_right(dst_p + vec_right, accum, right - vec_right);
+		mm_store_idxlo_ps(dst_p + vec_right, accum, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

@@ -26,16 +26,6 @@ namespace resize {
 
 namespace {
 
-inline FORCE_INLINE void mm256_store_left(float *dst, __m256 x, unsigned count)
-{
-	mm256_store_left_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void mm256_store_right(float *dst, __m256 x, unsigned count)
-{
-	mm256_store_right_ps(dst, x, count * 4);
-}
-
 void transpose_line_8x8_ps(float *dst,
                            const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3,
                            const float *src_p4, const float *src_p5, const float *src_p6, const float *src_p7,
@@ -309,7 +299,7 @@ void resize_line_v_f32_avx(const float *filter_data, const float * const *src_li
 #define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst_p, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 8, XARGS);
-		mm256_store_left(dst_p + vec_left - 8, accum, vec_left - left);
+		mm256_store_idxhi_ps(dst_p + vec_left - 8, accum, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -319,7 +309,7 @@ void resize_line_v_f32_avx(const float *filter_data, const float * const *src_li
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		mm256_store_right(dst_p + vec_right, accum, right - vec_right);
+		mm256_store_idxlo_ps(dst_p + vec_right, accum, right - vec_right);
 	}
 #undef XITER
 #undef XARGS

@@ -10,17 +10,17 @@
 
 namespace zimg {
 
+// The n-th mask vector has the lower n bytes set to all-ones.
 extern const uint8_t xmm_mask_table alignas(16)[17][16];
 extern const uint8_t ymm_mask_table alignas(32)[33][32];
 
 #ifdef HAVE_CPU_SSE
 
-// Store the right-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm_store_left_ps(float *dst, __m128 x, unsigned count)
+// Store from [x] into [dst] the 32-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm_store_idxlo_ps(float *dst, __m128 x, unsigned idx)
 {
 	__m128 orig = _mm_load_ps(dst);
-	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[count]));
-
+	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[idx * 4]));
 	orig = _mm_andnot_ps(mask, orig);
 	x = _mm_and_ps(mask, x);
 	x = _mm_or_ps(x, orig);
@@ -28,11 +28,11 @@ static inline FORCE_INLINE void mm_store_left_ps(float *dst, __m128 x, unsigned 
 	_mm_store_ps(dst, x);
 }
 
-// Store the left-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm_store_right_ps(float *dst, __m128 x, unsigned count)
+// Store from [x] into [dst] the 32-bit elements with index greater than or equal to [idx]
+static inline FORCE_INLINE void mm_store_idxhi_ps(float *dst, __m128 x, unsigned idx)
 {
 	__m128 orig = _mm_load_ps(dst);
-	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[16 - count]));
+	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[16 - idx * 4]));
 
 	orig = _mm_and_ps(mask, orig);
 	x = _mm_andnot_ps(mask, x);
@@ -54,11 +54,11 @@ static inline FORCE_INLINE void mm_scatter_ps(float *dst0, float *dst1, float *d
 
 #ifdef HAVE_CPU_SSE2
 
-// Store the right-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm_store_left_si128(__m128i *dst, __m128i x, unsigned count)
+// Store from [x] into [dst] the 8-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm_store_idxlo_epi8(__m128i *dst, __m128i x, unsigned idx)
 {
 	__m128i orig = _mm_load_si128(dst);
-	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[count]));
+	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[idx]));
 
 	orig = _mm_andnot_si128(mask, orig);
 	x = _mm_and_si128(mask, x);
@@ -67,17 +67,29 @@ static inline FORCE_INLINE void mm_store_left_si128(__m128i *dst, __m128i x, uns
 	_mm_store_si128(dst, x);
 }
 
-// Store the left-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm_store_right_si128(__m128i *dst, __m128i x, unsigned count)
+// Store from [x] into [dst] the 8-bit elements with index greater than or equal to [idx].
+static inline FORCE_INLINE void mm_store_idxhi_epi8(__m128i *dst, __m128i x, unsigned idx)
 {
 	__m128i orig = _mm_load_si128(dst);
-	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[16 - count]));
+	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[16 - idx]));
 
 	orig = _mm_and_si128(mask, orig);
 	x = _mm_andnot_si128(mask, x);
 	x = _mm_or_si128(x, orig);
 
 	_mm_store_si128(dst, x);
+}
+
+// Store from [x] into [dst] the 16-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm_store_idxlo_epi16(__m128i *dst, __m128i x, unsigned idx)
+{
+	mm_store_idxlo_epi8(dst, x, idx * 2);
+}
+
+// Store from [x] into [dst] the 16-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm_store_idxhi_epi16(__m128i *dst, __m128i x, unsigned idx)
+{
+	mm_store_idxhi_epi8(dst, x, idx * 2);
 }
 
 // Stores the elements of [x] into [dst0]-[dst7].
@@ -156,21 +168,21 @@ static inline FORCE_INLINE __m128i mm_packus_epi32(__m128i a, __m128i b)
 
 #ifdef HAVE_CPU_AVX
 
-// Store the right-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm256_store_left_ps(float *dst, __m256 x, unsigned count)
+// Store from [x] into [dst] the 32-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm256_store_idxlo_ps(float *dst, __m256 x, unsigned idx)
 {
 	__m256 orig = _mm256_load_ps(dst);
-	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[count]));
+	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[idx * 4]));
 
 	x = _mm256_blendv_ps(orig, x, mask);
 	_mm256_store_ps(dst, x);
 }
 
-// Store the left-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm256_store_right_ps(float *dst, __m256 x, unsigned count)
+// Store from [x] into [dst] the 32-bit elements with index greater than or equal to [idx].
+static inline FORCE_INLINE void mm256_store_idxhi_ps(float *dst, __m256 x, unsigned idx)
 {
 	__m256 orig = _mm256_load_ps(dst);
-	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[32 - count]));
+	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[32 - idx * 4]));
 
 	x = _mm256_blendv_ps(x, orig, mask);
 	_mm256_store_ps(dst, x);
@@ -211,24 +223,36 @@ static inline FORCE_INLINE void mm256_transpose8_ps(__m256 &row0, __m256 &row1, 
 
 #ifdef HAVE_CPU_AVX2
 
-// Store the right-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm256_store_left_si256(__m256i *dst, __m256i x, unsigned count)
+// Store from [x] into [dst] the 8-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm256_store_idxlo_epi8(__m256i *dst, __m256i x, unsigned idx)
 {
 	__m256i orig = _mm256_load_si256(dst);
-	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[count]));
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[idx]));
 
 	x = _mm256_blendv_epi8(orig, x, mask);
 	_mm256_store_si256(dst, x);
 }
 
-// Store the left-most [count] bytes from [x] into [dst].
-static inline FORCE_INLINE void mm256_store_right_si256(__m256i *dst, __m256i x, unsigned count)
+// Store from [x] into [dst] the 8-bit elements with index greater than or equal to [idx].
+static inline FORCE_INLINE void mm256_store_idxhi_epi8(__m256i *dst, __m256i x, unsigned idx)
 {
 	__m256i orig = _mm256_load_si256(dst);
-	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[32 - count]));
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[32 - idx]));
 
 	x = _mm256_blendv_epi8(x, orig, mask);
 	_mm256_store_si256(dst, x);
+}
+
+// Store from [x] into [dst] the 16-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm256_store_idxlo_epi16(__m256i *dst, __m256i x, unsigned idx)
+{
+	mm256_store_idxlo_epi8(dst, x, idx * 2);
+}
+
+// Store from [x] into [dst] the 16-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm256_store_idxhi_epi16(__m256i *dst, __m256i x, unsigned idx)
+{
+	mm256_store_idxhi_epi8(dst, x, idx * 2);
 }
 
 #endif // HAVE_CPU_AVX2

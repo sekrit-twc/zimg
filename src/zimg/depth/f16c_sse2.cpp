@@ -17,16 +17,6 @@ namespace depth {
 
 namespace {
 
-inline FORCE_INLINE void mm_store_left(float *dst, __m128 x, unsigned count)
-{
-	mm_store_left_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void mm_store_right(float *dst, __m128 x, unsigned count)
-{
-	mm_store_right_ps(dst, x, count * 4);
-}
-
 inline FORCE_INLINE __m128i mm_blendv_ps(__m128i a, __m128i b, __m128i mask)
 {
 	a = _mm_and_si128(mask, a);
@@ -132,7 +122,7 @@ void f16c_half_to_float_sse2(const void *src, void *dst, unsigned left, unsigned
 	if (left != vec_left) {
 		f16_val = _mm_loadl_epi64((const __m128i *)(src_p + vec_left - 4));
 		f32_val = mm_cvtph_ps(f16_val);
-		mm_store_left(dst_p + vec_left - 4, f32_val, vec_left - left);
+		mm_store_idxhi_ps(dst_p + vec_left - 4, f32_val, vec_left - left);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -144,7 +134,7 @@ void f16c_half_to_float_sse2(const void *src, void *dst, unsigned left, unsigned
 	if (right != vec_right) {
 		f16_val = _mm_loadl_epi64((const __m128i *)(src_p + vec_right));
 		f32_val = mm_cvtph_ps(f16_val);
-		mm_store_right(dst_p + vec_right, f32_val, right - vec_right);
+		mm_store_idxlo_ps(dst_p + vec_right, f32_val, right - vec_right);
 	}
 }
 

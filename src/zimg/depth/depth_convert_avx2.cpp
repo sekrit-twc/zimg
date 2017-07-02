@@ -34,26 +34,6 @@ struct PackF32 {
 };
 
 
-inline FORCE_INLINE void mm_store_left_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	mm_store_left_si128((__m128i *)dst, x, count * 2);
-}
-
-inline FORCE_INLINE void mm_store_right_epi16(uint16_t *dst, __m128i x, unsigned count)
-{
-	mm_store_right_si128((__m128i *)dst, x, count * 2);
-}
-
-inline FORCE_INLINE void mm256_store_left(float *dst, __m256 x, unsigned count)
-{
-	mm256_store_left_ps(dst, x, count * 4);
-}
-
-inline FORCE_INLINE void mm256_store_right(float *dst, __m256 x, unsigned count)
-{
-	mm256_store_right_ps(dst, x, count * 4);
-}
-
 inline FORCE_INLINE __m256i mm256_zeroextend_epi8(__m128i y)
 {
 	__m256i x;
@@ -132,10 +112,10 @@ void depth_convert_b2h_avx2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 8) {
-			mm_store_left_epi16(dst_p + vec_left - 16, lo, vec_left - left - 8);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, vec_left - left - 8);
 			_mm_store_si128((__m128i *)(dst_p + vec_left - 8), hi);
 		} else {
-			mm_store_left_epi16(dst_p + vec_left - 8, hi, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, vec_left - left);
 		}
 	}
 
@@ -151,9 +131,9 @@ void depth_convert_b2h_avx2(const void *src, void *dst, float scale, float offse
 
 		if (right - vec_right > 8) {
 			_mm_store_si128((__m128i *)(dst_p + vec_right + 0), lo);
-			mm_store_right_epi16(dst_p + vec_right + 8, hi, right - vec_right - 8);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right - vec_right - 8);
 		} else {
-			mm_store_right_epi16(dst_p + vec_right, lo, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
 		}
 	}
 #undef XITER
@@ -179,10 +159,10 @@ void depth_convert_b2f_avx2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 8) {
-			mm256_store_left(dst_p + vec_left - 16, lo, vec_left - left - 8);
+			mm256_store_idxhi_ps(dst_p + vec_left - 16, lo, vec_left - left - 8);
 			_mm256_store_ps(dst_p + vec_left - 8, hi);
 		} else {
-			mm256_store_left(dst_p + vec_left - 8, hi, vec_left - left);
+			mm256_store_idxhi_ps(dst_p + vec_left - 8, hi, vec_left - left);
 		}
 	}
 
@@ -198,9 +178,9 @@ void depth_convert_b2f_avx2(const void *src, void *dst, float scale, float offse
 
 		if (right - vec_right > 8) {
 			_mm256_store_ps(dst_p + vec_right + 0, lo);
-			mm256_store_right(dst_p + vec_right + 8, hi, right - vec_right - 8);
+			mm256_store_idxlo_ps(dst_p + vec_right + 8, hi, right - vec_right - 8);
 		} else {
-			mm256_store_right(dst_p + vec_right, lo, right - vec_right);
+			mm256_store_idxlo_ps(dst_p + vec_right, lo, right - vec_right);
 		}
 	}
 #undef XITER
@@ -226,10 +206,10 @@ void depth_convert_w2h_avx2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 8) {
-			mm_store_left_epi16(dst_p + vec_left - 16, lo, vec_left - left - 8);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, vec_left - left - 8);
 			_mm_store_si128((__m128i *)(dst_p + vec_left - 8), hi);
 		} else {
-			mm_store_left_epi16(dst_p + vec_left - 8, hi, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, vec_left - left);
 		}
 	}
 
@@ -245,9 +225,9 @@ void depth_convert_w2h_avx2(const void *src, void *dst, float scale, float offse
 
 		if (right - vec_right > 8) {
 			_mm_store_si128((__m128i *)(dst_p + vec_right + 0), lo);
-			mm_store_right_epi16(dst_p + vec_right + 8, hi, right - vec_right - 8);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right - vec_right - 8);
 		} else {
-			mm_store_right_epi16(dst_p + vec_right, lo, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
 		}
 	}
 #undef XITER
@@ -273,10 +253,10 @@ void depth_convert_w2f_avx2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 8) {
-			mm256_store_left(dst_p + vec_left - 16, lo, vec_left - left - 8);
+			mm256_store_idxhi_ps(dst_p + vec_left - 16, lo, vec_left - left - 8);
 			_mm256_store_ps(dst_p + vec_left - 8, hi);
 		} else {
-			mm256_store_left(dst_p + vec_left - 8, hi, vec_left - left);
+			mm256_store_idxhi_ps(dst_p + vec_left - 8, hi, vec_left - left);
 		}
 	}
 
@@ -292,9 +272,9 @@ void depth_convert_w2f_avx2(const void *src, void *dst, float scale, float offse
 
 		if (right - vec_right > 8) {
 			_mm256_store_ps(dst_p + vec_right + 0, lo);
-			mm256_store_right(dst_p + vec_right + 8, hi, right - vec_right - 8);
+			mm256_store_idxlo_ps(dst_p + vec_right + 8, hi, right - vec_right - 8);
 		} else {
-			mm256_store_right(dst_p + vec_right, lo, right - vec_right);
+			mm256_store_idxlo_ps(dst_p + vec_right, lo, right - vec_right);
 		}
 	}
 #undef XITER
