@@ -16,6 +16,12 @@
   #define SM_CONSTEXPR_14
 #endif
 
+// ICL is unable to evaluate C++14 constexpr.
+#ifdef __INTEL_COMPILER
+  #undef SM_CONSTEXPR_14
+  #define SM_CONSTEXPR_14
+#endif
+
 namespace zimg {
 
 template <class...>
