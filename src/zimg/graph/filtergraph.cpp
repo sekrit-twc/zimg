@@ -760,6 +760,7 @@ class FilterGraph::impl {
 	unsigned m_id_counter;
 	unsigned m_subsample_w;
 	unsigned m_subsample_h;
+	bool m_requires_64b_alignment;
 	bool m_is_complete;
 
 	unsigned get_horizontal_step() const
@@ -797,6 +798,7 @@ public:
 		m_id_counter{},
 		m_subsample_w{},
 		m_subsample_h{},
+		m_requires_64b_alignment{},
 		m_is_complete{}
 	{
 		zassert_d(width <= pixel_max_width(type), "image stride causes overflow");
@@ -904,6 +906,12 @@ public:
 			attach_filter_uv(ztd::make_unique<ChromaInitializeFilter>(attr, subsample_w, subsample_h, depth));
 	}
 
+	void set_requires_64b_alignment()
+	{
+		check_incomplete();
+		m_requires_64b_alignment = true;
+	}
+
 	void complete()
 	{
 		check_incomplete();
@@ -999,6 +1007,12 @@ public:
 		}
 
 		return lines;
+	}
+
+	bool requires_64b_alignment() const
+	{
+		check_complete();
+		return m_requires_64b_alignment;
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
@@ -1111,6 +1125,11 @@ void FilterGraph::grey_to_color(bool yuv, unsigned subsample_w, unsigned subsamp
 	get_impl()->grey_to_color(yuv, subsample_w, subsample_h, depth);
 }
 
+void FilterGraph::set_requires_64b_alignment()
+{
+	get_impl()->set_requires_64b_alignment();
+}
+
 void FilterGraph::complete()
 {
 	get_impl()->complete();
@@ -1129,6 +1148,11 @@ unsigned FilterGraph::get_input_buffering() const
 unsigned FilterGraph::get_output_buffering() const
 {
 	return get_impl()->get_output_buffering();
+}
+
+bool FilterGraph::requires_64b_alignment() const
+{
+	return get_impl()->requires_64b_alignment();
 }
 
 void FilterGraph::process(const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *tmp, callback unpack_cb, callback pack_cb) const

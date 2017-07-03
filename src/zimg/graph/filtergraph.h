@@ -143,6 +143,11 @@ public:
 	void grey_to_color(bool yuv, unsigned subsample_w, unsigned subsample_h, unsigned depth);
 
 	/**
+	 * Set the graph as requiring 64-byte data alignment.
+	 */
+	void set_requires_64b_alignment();
+
+	/**
 	 * Finalize graph.
 	 *
 	 * No additional filters may be attached to a finalized graph. Upon calling
@@ -170,6 +175,13 @@ public:
 	 * @return number of lines
 	 */
 	unsigned get_output_buffering() const;
+
+	/**
+	 * Check if the graph requires 64-byte data alignment.
+	 *
+	 * @return true if 64-byte alignment is required, else false
+	 */
+	bool requires_64b_alignment() const;
 
 	/**
 	 * Process an image frame with filter graph.

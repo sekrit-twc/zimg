@@ -6,9 +6,9 @@
 namespace zimg {
 
 /**
- * 32-byte alignment allows the use of instructions up to AVX.
+ * 64-byte alignment allows the use of instructions up to AVX-512.
  */
-constexpr int ALIGNMENT = 32;
+constexpr int ALIGNMENT = 64;
 
 /**
  * Round up the argument x to the nearest multiple of n.

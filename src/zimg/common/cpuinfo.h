@@ -21,6 +21,7 @@ enum class CPUClass {
 };
 
 bool cpu_has_fast_f16(CPUClass cpu) noexcept;
+inline bool cpu_requires_64b_alignment(CPUClass cpu) noexcept { return false; }
 
 
 #ifdef ZIMG_X86
