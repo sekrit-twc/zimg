@@ -85,7 +85,7 @@ inline FORCE_INLINE void depth_convert_avx2_impl(const void *src, void *dst, flo
 		__m256 y = _mm256_cvtepi32_ps(x);
 		y = _mm256_fmadd_ps(scale_ps, y, offset_ps);
 
-		Store::store8_idxhi(dst_p + vec_left - 8, y, vec_left - left);
+		Store::store8_idxhi(dst_p + vec_left - 8, y, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -100,7 +100,7 @@ inline FORCE_INLINE void depth_convert_avx2_impl(const void *src, void *dst, flo
 		__m256 y = _mm256_cvtepi32_ps(x);
 		y = _mm256_fmadd_ps(scale_ps, y, offset_ps);
 
-		Store::store8_idxlo(dst_p + vec_right, y, right - vec_right);
+		Store::store8_idxlo(dst_p + vec_right, y, right % 8);
 	}
 }
 

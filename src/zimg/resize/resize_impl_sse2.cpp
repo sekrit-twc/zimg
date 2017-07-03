@@ -416,7 +416,7 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_left - 8, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), out, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), out, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -430,7 +430,7 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), out, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), out, right % 8);
 	}
 #undef XITER
 #undef XARGS

@@ -236,7 +236,7 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 #define XARGS src_p0, src_p1, src_p2, src_p3, dst_p, c0, c1, c2, c3
 	if (left != vec_left) {
 		accum = XITER(vec_left - 4, XARGS);
-		mm_store_idxhi_ps(dst_p + vec_left - 4, accum, vec_left - left);
+		mm_store_idxhi_ps(dst_p + vec_left - 4, accum, left % 4);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -246,7 +246,7 @@ void resize_line_v_f32_sse(const float *filter_data, const float * const *src_li
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		mm_store_idxlo_ps(dst_p + vec_right, accum, right - vec_right);
+		mm_store_idxlo_ps(dst_p + vec_right, accum, right % 4);
 	}
 #undef XITER
 #undef XARGS

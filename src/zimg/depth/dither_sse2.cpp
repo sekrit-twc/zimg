@@ -288,7 +288,7 @@ void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsign
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
 		__m128i x = XITER(vec_left - 16, XARGS);
-		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, vec_left - left);
+		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -298,7 +298,7 @@ void ordered_dither_b2b_sse2(const float *dither, unsigned dither_offset, unsign
 
 	if (right != vec_right) {
 		__m128i x = XITER(vec_right, XARGS);
-		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right % 16);
 	}
 #undef XITER
 #undef XARGS
@@ -325,10 +325,10 @@ void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsign
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 8) {
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, (vec_left - left) % 8);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, left % 8);
 			_mm_store_si128((__m128i *)(dst_p + vec_left - 8), hi);
 		} else {
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, left % 8);
 		}
 	}
 
@@ -344,9 +344,9 @@ void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsign
 
 		if (right - vec_right > 8) {
 			_mm_store_si128((__m128i *)(dst_p + vec_right), lo);
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, (right - vec_right) % 8);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right % 8);
 		} else {
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right % 8);
 		}
 	}
 #undef XITER
@@ -370,7 +370,7 @@ void ordered_dither_w2b_sse2(const float *dither, unsigned dither_offset, unsign
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
 		__m128i x = XITER(vec_left - 16, XARGS);
-		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, vec_left - left);
+		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -380,7 +380,7 @@ void ordered_dither_w2b_sse2(const float *dither, unsigned dither_offset, unsign
 
 	if (right != vec_right) {
 		__m128i x = XITER(vec_right, XARGS);
-		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right % 16);
 	}
 #undef XITER
 #undef XARGS
@@ -403,7 +403,7 @@ void ordered_dither_w2w_sse2(const float *dither, unsigned dither_offset, unsign
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
 		__m128i x = XITER(vec_left - 8, XARGS);
-		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, vec_left - left);
+		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -413,7 +413,7 @@ void ordered_dither_w2w_sse2(const float *dither, unsigned dither_offset, unsign
 
 	if (right != vec_right) {
 		__m128i x = XITER(vec_right, XARGS);
-		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right % 8);
 	}
 #undef XITER
 #undef XARGS
@@ -436,7 +436,7 @@ void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsign
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
 		__m128i x = XITER(vec_left - 16, XARGS);
-		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, vec_left - left);
+		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -446,7 +446,7 @@ void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsign
 
 	if (right != vec_right) {
 		__m128i x = XITER(vec_right, XARGS);
-		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right % 16);
 	}
 #undef XITER
 #undef XARGS
@@ -469,7 +469,7 @@ void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsign
 #define XARGS dither, dither_offset, dither_mask, src_p, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
 		__m128i x = XITER(vec_left - 8, XARGS);
-		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, vec_left - left);
+		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -479,7 +479,7 @@ void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsign
 
 	if (right != vec_right) {
 		__m128i x = XITER(vec_right, XARGS);
-		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right % 8);
 	}
 #undef XITER
 #undef XARGS

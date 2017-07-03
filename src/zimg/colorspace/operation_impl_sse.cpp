@@ -70,9 +70,9 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	if (left != vec_left) {
 		XITER(vec_left - 4, XARGS);
 
-		mm_store_idxhi_ps(dst[0] + vec_left - 4, out0, vec_left - left);
-		mm_store_idxhi_ps(dst[1] + vec_left - 4, out1, vec_left - left);
-		mm_store_idxhi_ps(dst[2] + vec_left - 4, out2, vec_left - left);
+		mm_store_idxhi_ps(dst[0] + vec_left - 4, out0, left % 4);
+		mm_store_idxhi_ps(dst[1] + vec_left - 4, out1, left % 4);
+		mm_store_idxhi_ps(dst[2] + vec_left - 4, out2, left % 4);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -86,9 +86,9 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 
-		mm_store_idxlo_ps(dst[0] + vec_right, out0, right - vec_right);
-		mm_store_idxlo_ps(dst[1] + vec_right, out1, right - vec_right);
-		mm_store_idxlo_ps(dst[2] + vec_right, out2, right - vec_right);
+		mm_store_idxlo_ps(dst[0] + vec_right, out0, right % 4);
+		mm_store_idxlo_ps(dst[1] + vec_right, out1, right % 4);
+		mm_store_idxlo_ps(dst[2] + vec_right, out2, right % 4);
 	}
 #undef XITER
 #undef XARGS

@@ -110,7 +110,7 @@ void left_shift_b2b_sse2(const void *src, void *dst, unsigned shift, unsigned le
 	if (left != vec_left) {
 		__m128i x = _mm_load_si128((const __m128i *)(src_p + vec_left - 16));
 		x = mm_sll_epi8(x, count);
-		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, vec_left - left);
+		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), x, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -122,7 +122,7 @@ void left_shift_b2b_sse2(const void *src, void *dst, unsigned shift, unsigned le
 	if (right != vec_right) {
 		__m128i x = _mm_load_si128((const __m128i *)(src_p + vec_right));
 		x = mm_sll_epi8(x, count);
-		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right % 16);
 	}
 }
 
@@ -144,10 +144,10 @@ void left_shift_b2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 		hi = _mm_sll_epi16(hi, count);
 
 		if (vec_left - left > 8) {
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, (vec_left - left) % 8);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 16), lo, left % 8);
 			_mm_store_si128((__m128i *)(dst_p + vec_left - 8), hi);
 		} else {
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, vec_left - left);
+			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), hi, left % 8);
 		}
 	}
 
@@ -171,9 +171,9 @@ void left_shift_b2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 
 		if (right - vec_right > 8) {
 			_mm_store_si128((__m128i *)(dst_p + vec_right), lo);
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, (right - vec_right) % 8);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right % 8);
 		} else {
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right % 8);
 		}
 	}
 }
@@ -194,7 +194,7 @@ void left_shift_w2b_sse2(const void *src, void *dst, unsigned shift, unsigned le
 		lo = _mm_sll_epi16(lo, count);
 		hi = _mm_sll_epi16(hi, count);
 		lo = _mm_packus_epi16(lo, hi);
-		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), lo, vec_left - left);
+		mm_store_idxhi_epi8((__m128i *)(dst_p + vec_left - 16), lo, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -212,7 +212,7 @@ void left_shift_w2b_sse2(const void *src, void *dst, unsigned shift, unsigned le
 		lo = _mm_sll_epi16(lo, count);
 		hi = _mm_sll_epi16(hi, count);
 		lo = _mm_packus_epi16(lo, hi);
-		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), lo, right - vec_right);
+		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), lo, right % 16);
 	}
 }
 
@@ -229,7 +229,7 @@ void left_shift_w2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 	if (left != vec_left) {
 		__m128i x = _mm_load_si128((const __m128i *)(src_p + vec_left - 8));
 		x = _mm_sll_epi16(x, count);
-		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, vec_left - left);
+		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -241,7 +241,7 @@ void left_shift_w2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 	if (right != vec_right) {
 		__m128i x = _mm_load_si128((const __m128i *)(src_p + vec_right));
 		x = _mm_sll_epi16(x, count);
-		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right % 8);
 	}
 }
 
@@ -264,19 +264,19 @@ void depth_convert_b2f_sse2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 16, XARGS);
 
 		if (vec_left - left > 12) {
-			mm_store_idxhi_ps(dst_p + vec_left - 16, lolo, vec_left - left - 12);
+			mm_store_idxhi_ps(dst_p + vec_left - 16, lolo, left % 4);
 			_mm_store_ps(dst_p + vec_left - 12, lohi);
 			_mm_store_ps(dst_p + vec_left - 8, hilo);
 			_mm_store_ps(dst_p + vec_left - 4, hihi);
 		} else if (vec_left - left > 8) {
-			mm_store_idxhi_ps(dst_p + vec_left - 12, lohi, vec_left - left - 8);
+			mm_store_idxhi_ps(dst_p + vec_left - 12, lohi, left % 4);
 			_mm_store_ps(dst_p + vec_left - 8, hilo);
 			_mm_store_ps(dst_p + vec_left - 4, hihi);
 		} else if (vec_left - left > 4) {
-			mm_store_idxhi_ps(dst_p + vec_left - 8, hilo, vec_left - left - 4);
+			mm_store_idxhi_ps(dst_p + vec_left - 8, hilo, left % 4);
 			_mm_store_ps(dst_p + vec_left - 4, hihi);
 		} else {
-			mm_store_idxhi_ps(dst_p + vec_left - 4, hihi, vec_left - left);
+			mm_store_idxhi_ps(dst_p + vec_left - 4, hihi, left % 4);
 		}
 	}
 
@@ -296,16 +296,16 @@ void depth_convert_b2f_sse2(const void *src, void *dst, float scale, float offse
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			_mm_store_ps(dst_p + vec_right + 4, lohi);
 			_mm_store_ps(dst_p + vec_right + 8, hilo);
-			mm_store_idxlo_ps(dst_p + vec_right + 12, hihi, right - vec_right - 12);
+			mm_store_idxlo_ps(dst_p + vec_right + 12, hihi, right % 4);
 		} else if (right - vec_right > 8) {
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			_mm_store_ps(dst_p + vec_right + 4, lohi);
-			mm_store_idxlo_ps(dst_p + vec_right + 8, hilo, right - vec_right - 8);
+			mm_store_idxlo_ps(dst_p + vec_right + 8, hilo, right % 4);
 		} else if (right - vec_right > 4) {
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
-			mm_store_idxlo_ps(dst_p + vec_right + 4, lohi, right - vec_right - 4);
+			mm_store_idxlo_ps(dst_p + vec_right + 4, lohi, right % 4);
 		} else {
-			mm_store_idxlo_ps(dst_p + vec_right, lolo, right - vec_right);
+			mm_store_idxlo_ps(dst_p + vec_right, lolo, right % 4);
 		}
 	}
 #undef XITER
@@ -331,10 +331,10 @@ void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offse
 		XITER(vec_left - 8, XARGS);
 
 		if (vec_left - left > 4) {
-			mm_store_idxhi_ps(dst_p + vec_left - 8, lo, vec_left - left - 4);
+			mm_store_idxhi_ps(dst_p + vec_left - 8, lo, left % 4);
 			_mm_store_ps(dst_p + vec_left - 4, hi);
 		} else {
-			mm_store_idxhi_ps(dst_p + vec_left - 4, hi, vec_left - left);
+			mm_store_idxhi_ps(dst_p + vec_left - 4, hi, left % 4);
 		}
 	}
 
@@ -350,9 +350,9 @@ void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offse
 
 		if (right - vec_right > 4) {
 			_mm_store_ps(dst_p + vec_right + 0, lo);
-			mm_store_idxlo_ps(dst_p + vec_right + 4, hi, right - vec_right - 4);
+			mm_store_idxlo_ps(dst_p + vec_right + 4, hi, right % 4);
 		} else {
-			mm_store_idxlo_ps(dst_p + vec_right, lo, right - vec_right);
+			mm_store_idxlo_ps(dst_p + vec_right, lo, right % 4);
 		}
 	}
 #undef XITER

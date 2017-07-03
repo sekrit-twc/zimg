@@ -21,6 +21,7 @@ static inline FORCE_INLINE void mm_store_idxlo_ps(float *dst, __m128 x, unsigned
 {
 	__m128 orig = _mm_load_ps(dst);
 	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[idx * 4]));
+
 	orig = _mm_andnot_ps(mask, orig);
 	x = _mm_and_ps(mask, x);
 	x = _mm_or_ps(x, orig);
@@ -32,7 +33,7 @@ static inline FORCE_INLINE void mm_store_idxlo_ps(float *dst, __m128 x, unsigned
 static inline FORCE_INLINE void mm_store_idxhi_ps(float *dst, __m128 x, unsigned idx)
 {
 	__m128 orig = _mm_load_ps(dst);
-	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[16 - idx * 4]));
+	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[idx * 4]));
 
 	orig = _mm_and_ps(mask, orig);
 	x = _mm_andnot_ps(mask, x);
@@ -71,7 +72,7 @@ static inline FORCE_INLINE void mm_store_idxlo_epi8(__m128i *dst, __m128i x, uns
 static inline FORCE_INLINE void mm_store_idxhi_epi8(__m128i *dst, __m128i x, unsigned idx)
 {
 	__m128i orig = _mm_load_si128(dst);
-	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[16 - idx]));
+	__m128i mask = _mm_load_si128((const __m128i *)(&xmm_mask_table[idx]));
 
 	orig = _mm_and_si128(mask, orig);
 	x = _mm_andnot_si128(mask, x);
@@ -182,7 +183,7 @@ static inline FORCE_INLINE void mm256_store_idxlo_ps(float *dst, __m256 x, unsig
 static inline FORCE_INLINE void mm256_store_idxhi_ps(float *dst, __m256 x, unsigned idx)
 {
 	__m256 orig = _mm256_load_ps(dst);
-	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[32 - idx * 4]));
+	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[idx * 4]));
 
 	x = _mm256_blendv_ps(x, orig, mask);
 	_mm256_store_ps(dst, x);
@@ -237,7 +238,7 @@ static inline FORCE_INLINE void mm256_store_idxlo_epi8(__m256i *dst, __m256i x, 
 static inline FORCE_INLINE void mm256_store_idxhi_epi8(__m256i *dst, __m256i x, unsigned idx)
 {
 	__m256i orig = _mm256_load_si256(dst);
-	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[32 - idx]));
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[idx]));
 
 	x = _mm256_blendv_epi8(x, orig, mask);
 	_mm256_store_si256(dst, x);

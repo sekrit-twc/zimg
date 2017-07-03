@@ -26,7 +26,7 @@ void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned 
 
 	if (left != vec_left) {
 		__m256 x = _mm256_cvtph_ps(_mm_load_si128((const __m128i *)(src_p + vec_left - 8)));
-		mm256_store_idxhi_ps(dst_p + vec_left - 8, x, vec_left - left);
+		mm256_store_idxhi_ps(dst_p + vec_left - 8, x, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -36,7 +36,7 @@ void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned 
 
 	if (right != vec_right) {
 		__m256 x = _mm256_cvtph_ps(_mm_load_si128((const __m128i *)(src_p + vec_right)));
-		mm256_store_idxlo_ps(dst_p + vec_right, x, right - vec_right);
+		mm256_store_idxlo_ps(dst_p + vec_right, x, right % 8);
 	}
 }
 
@@ -50,7 +50,7 @@ void f16c_float_to_half_ivb(const void *src, void *dst, unsigned left, unsigned 
 
 	if (left != vec_left) {
 		__m128i x = _mm256_cvtps_ph(_mm256_load_ps(src_p + vec_left - 8), 0);
-		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, vec_left - left);
+		mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), x, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -60,7 +60,7 @@ void f16c_float_to_half_ivb(const void *src, void *dst, unsigned left, unsigned 
 
 	if (right != vec_right) {
 		__m128i x = _mm256_cvtps_ph(_mm256_load_ps(src_p + vec_right), 0);
-		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right - vec_right);
+		mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), x, right % 8);
 	}
 }
 

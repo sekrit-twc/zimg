@@ -70,9 +70,9 @@ void matrix_filter_line_avx(const float *matrix, const float * const * RESTRICT 
 	if (left != vec_left) {
 		XITER(vec_left - 8, XARGS);
 
-		mm256_store_idxhi_ps(dst[0] + vec_left - 8, out0, vec_left - left);
-		mm256_store_idxhi_ps(dst[1] + vec_left - 8, out1, vec_left - left);
-		mm256_store_idxhi_ps(dst[2] + vec_left - 8, out2, vec_left - left);
+		mm256_store_idxhi_ps(dst[0] + vec_left - 8, out0, left % 8);
+		mm256_store_idxhi_ps(dst[1] + vec_left - 8, out1, left % 8);
+		mm256_store_idxhi_ps(dst[2] + vec_left - 8, out2, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -86,9 +86,9 @@ void matrix_filter_line_avx(const float *matrix, const float * const * RESTRICT 
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 
-		mm256_store_idxlo_ps(dst[0] + vec_right, out0, right - vec_right);
-		mm256_store_idxlo_ps(dst[1] + vec_right, out1, right - vec_right);
-		mm256_store_idxlo_ps(dst[2] + vec_right, out2, right - vec_right);
+		mm256_store_idxlo_ps(dst[0] + vec_right, out0, right % 8);
+		mm256_store_idxlo_ps(dst[1] + vec_right, out1, right % 8);
+		mm256_store_idxlo_ps(dst[2] + vec_right, out2, right % 8);
 	}
 #undef XITER
 #undef XARGS
