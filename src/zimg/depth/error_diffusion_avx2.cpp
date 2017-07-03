@@ -118,22 +118,6 @@ inline FORCE_INLINE float min(float x, float y)
 	return _mm_cvtss_f32(_mm_min_ss(_mm_set_ss(x), _mm_set_ss(y)));
 }
 
-inline FORCE_INLINE float extract_hi_ps(__m256 x)
-{
-	__m128 y = _mm256_extractf128_ps(x, 1);
-	return _mm_cvtss_f32(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(y), 12)));
-}
-
-inline FORCE_INLINE __m256 rotate_insert_lo(__m256 x, float y)
-{
-	__m256i mask = _mm256_set_epi32(6, 5, 4, 3, 2, 1, 0, 7);
-
-	x = _mm256_permutevar8x32_ps(x, mask);
-	x = _mm256_blend_ps(x, _mm256_castps128_ps256(_mm_set_ss(y)), 1);
-
-	return x;
-}
-
 
 template <PixelType SrcType, PixelType DstType>
 void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT error_top, float * RESTRICT error_cur,
@@ -206,9 +190,11 @@ inline FORCE_INLINE void error_diffusion_wf_avx2_xiter(__m256 &v, unsigned j, co
                                                        const __m256 &err_left_w, const __m256 &err_top_right_w, const __m256 &err_top_w, const __m256 &err_top_left_w,
                                                        __m256 &err_left, __m256 &err_top_right, __m256 &err_top, __m256 &err_top_left)
 {
+	const __m256i rot_mask = _mm256_set_epi32(6, 5, 4, 3, 2, 1, 0, 7);
+
 	unsigned j_err = j + 1;
 
-	__m256 x, y, err0, err1;
+	__m256 x, y, err0, err1, err_rot;
 	__m256i q;
 
 	err0 = _mm256_mul_ps(err_left_w, err_left);
@@ -226,12 +212,19 @@ inline FORCE_INLINE void error_diffusion_wf_avx2_xiter(__m256 &v, unsigned j, co
 	y = _mm256_cvtepi32_ps(q);
 	err0 = _mm256_sub_ps(x, y);
 
-	error_cur[j_err + 0] = extract_hi_ps(err0);
+	// Left-rotate err0 by 32 bits.
+	err_rot = _mm256_permutevar8x32_ps(err0, rot_mask);
+
+	// Extract the previous high error.
+	error_cur[j_err + 0] = _mm_cvtss_f32(_mm256_castps256_ps128(err_rot));
+
+	// Insert the next error into the low position.
+	err_rot = _mm256_blend_ps(err_rot, _mm256_castps128_ps256(_mm_set_ss(error_top[j_err + 14 + 2])), 1);
 
 	err_left = err0;
 	err_top_left = err_top;
 	err_top = err_top_right;
-	err_top_right = rotate_insert_lo(err0, error_top[j_err + 14 + 2]);
+	err_top_right = err_rot;
 }
 
 template <PixelType SrcType, PixelType DstType, class T, class U>

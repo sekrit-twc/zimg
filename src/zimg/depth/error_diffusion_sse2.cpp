@@ -89,16 +89,6 @@ inline FORCE_INLINE float min(float x, float y)
 	return _mm_cvtss_f32(_mm_min_ss(_mm_set_ss(x), _mm_set_ss(y)));
 }
 
-inline FORCE_INLINE float extract_hi_ps(__m128 x)
-{
-	return _mm_cvtss_f32(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(x), 12)));
-}
-
-inline FORCE_INLINE __m128 rotate_insert_lo(__m128 x, float y)
-{
-	return _mm_or_ps(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(x), 4)), _mm_set_ss(y));
-}
-
 
 template <class T, class U>
 void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT error_top, float * RESTRICT error_cur,
@@ -166,7 +156,7 @@ inline FORCE_INLINE void error_diffusion_wf_sse2_xiter(__m128 &v, unsigned j, co
 {
 	unsigned j_err = j + 1;
 
-	__m128 x, y, err0, err1;
+	__m128 x, y, err0, err1, err_rot;
 	__m128i q;
 
 	err0 = _mm_mul_ps(err_left_w, err_left);
@@ -184,12 +174,19 @@ inline FORCE_INLINE void error_diffusion_wf_sse2_xiter(__m128 &v, unsigned j, co
 	y = _mm_cvtepi32_ps(q);
 	err0 = _mm_sub_ps(x, y);
 
-	error_cur[j_err + 0] = extract_hi_ps(err0);
+	// Left-rotate err0 by 32 bits.
+	err_rot = _mm_shuffle_ps(err0, err0, _MM_SHUFFLE(2, 1, 0, 3));
+
+	// Extract the previous high error.
+	error_cur[j_err + 0] = _mm_cvtss_f32(err_rot);
+
+	// Insert the next error into the low position.
+	err_rot = _mm_move_ss(err_rot, _mm_set_ss(error_top[j_err + 6 + 2]));
 
 	err_left = err0;
 	err_top_left = err_top;
 	err_top = err_top_right;
-	err_top_right = rotate_insert_lo(err0, error_top[j_err + 6 + 2]);
+	err_top_right = err_rot;
 }
 
 template <class T, class U>
