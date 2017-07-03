@@ -48,11 +48,7 @@ struct error_diffusion_traits<PixelType::BYTE> {
 
 	static __m256 load8(const uint8_t *ptr)
 	{
-		__m256i x = _mm256_castsi128_si256(_mm_loadl_epi64((const __m128i *)ptr));
-		x = _mm256_unpacklo_epi8(x, _mm256_setzero_si256());
-		x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(0, 1, 0, 0));
-		x = _mm256_unpacklo_epi16(x, _mm256_setzero_si256());
-		return _mm256_cvtepi32_ps(x);
+		return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)ptr)));
 	}
 
 	static void store8(uint8_t *ptr, __m256i x)
@@ -73,10 +69,7 @@ struct error_diffusion_traits<PixelType::WORD> {
 
 	static __m256 load8(const uint16_t *ptr)
 	{
-		__m256i x = _mm256_castsi128_si256(_mm_loadu_si128((const __m128i *)ptr));
-		x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(0, 1, 0, 0));
-		x = _mm256_unpacklo_epi16(x, _mm256_setzero_si256());
-		return _mm256_cvtepi32_ps(x);
+		return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)ptr)));
 	}
 
 	static void store8(uint16_t *ptr, __m256i x)
