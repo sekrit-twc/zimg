@@ -52,10 +52,7 @@ unsigned long long do_xgetbv(unsigned ecx)
 #endif
 }
 
-} // namespace
-
-
-X86Capabilities query_x86_capabilities() noexcept
+X86Capabilities do_query_x86_capabilities() noexcept
 {
 	X86Capabilities caps = { 0 };
 	unsigned long long xcr0 = 0;
@@ -84,6 +81,15 @@ X86Capabilities query_x86_capabilities() noexcept
 	do_cpuid(regs, 7, 0);
 	caps.avx2  = !!(regs[1] & (1 << 5));
 
+	return caps;
+}
+
+} // namespace
+
+
+X86Capabilities query_x86_capabilities() noexcept
+{
+	static const X86Capabilities caps = do_query_x86_capabilities();
 	return caps;
 }
 
