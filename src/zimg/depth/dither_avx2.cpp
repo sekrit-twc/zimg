@@ -29,17 +29,8 @@ struct LoadF32 {
 	static __m256 load(const float *ptr) { return _mm256_load_ps(ptr); }
 };
 
-inline FORCE_INLINE __m256i mm256_zeroextend_epi8(__m128i y)
-{
-	__m256i x;
 
-	x = _mm256_permute4x64_epi64(_mm256_castsi128_si256(y), _MM_SHUFFLE(1, 1, 0, 0));
-	x = _mm256_unpacklo_epi8(x, _mm256_setzero_si256());
-
-	return x;
-}
-
-inline FORCE_INLINE __m128i mm256_packus_epi16_si256_si128(__m256i x)
+inline FORCE_INLINE __m128i mm256_cvtsepi16_epi8(__m256i x)
 {
 	x = _mm256_packus_epi16(x, x);
 	x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(3, 1, 2, 0));
@@ -47,20 +38,7 @@ inline FORCE_INLINE __m128i mm256_packus_epi16_si256_si128(__m256i x)
 	return _mm256_castsi256_si128(x);
 }
 
-inline FORCE_INLINE void mm256_cvtepu16_ps(__m256i x, __m256 &lo, __m256 &hi)
-{
-	__m256i lo_dw, hi_dw;
-
-	x = _mm256_permute4x64_epi64(x, _MM_SHUFFLE(3, 1, 2, 0));
-
-	lo_dw = _mm256_unpacklo_epi16(x, _mm256_setzero_si256());
-	hi_dw = _mm256_unpackhi_epi16(x, _mm256_setzero_si256());
-
-	lo = _mm256_cvtepi32_ps(lo_dw);
-	hi = _mm256_cvtepi32_ps(hi_dw);
-}
-
-inline FORCE_INLINE __m256i mm256_cvtps_epu16(__m256 lo, __m256 hi)
+inline FORCE_INLINE __m256i mm256_cvt2ps_epu16(__m256 lo, __m256 hi)
 {
 	__m256i lo_dw = _mm256_cvtps_epi32(lo);
 	__m256i hi_dw = _mm256_cvtps_epi32(hi);
@@ -76,12 +54,12 @@ inline FORCE_INLINE __m256i mm256_cvtps_epu16(__m256 lo, __m256 hi)
 inline FORCE_INLINE __m128i ordered_dither_b2b_avx2_xiter(unsigned j, const float *dither, unsigned dither_offset, unsigned dither_mask,
                                                           const uint8_t *src_p, __m256 scale, __m256 offset, __m128i out_max)
 {
-	__m128i y = _mm_load_si128((const __m128i *)(src_p + j));
-	__m256i x = mm256_zeroextend_epi8(y);
-	__m256 lo, hi;
-	__m256 dith;
+	__m256 lo = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(src_p + j + 0))));
+	__m256 hi = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(src_p + j + 8))));
 
-	mm256_cvtepu16_ps(x, lo, hi);
+	__m256i x;
+	__m128i y;
+	__m256 dith;
 
 	dith = _mm256_load_ps(dither + ((dither_offset + j + 0) & dither_mask));
 	lo = _mm256_fmadd_ps(scale, lo, offset);
@@ -91,8 +69,8 @@ inline FORCE_INLINE __m128i ordered_dither_b2b_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
-	y = mm256_packus_epi16_si256_si128(x);
+	x = mm256_cvt2ps_epu16(lo, hi);
+	y = mm256_cvtsepi16_epi8(x);
 	y = _mm_min_epu8(y, out_max);
 
 	return y;
@@ -101,12 +79,11 @@ inline FORCE_INLINE __m128i ordered_dither_b2b_avx2_xiter(unsigned j, const floa
 inline FORCE_INLINE __m256i ordered_dither_b2w_avx2_xiter(unsigned j, const float *dither, unsigned dither_offset, unsigned dither_mask,
                                                           const uint8_t *src_p, __m256 scale, __m256 offset, __m256i out_max)
 {
-	__m128i y = _mm_load_si128((const __m128i *)(src_p + j));
-	__m256i x = mm256_zeroextend_epi8(y);
-	__m256 lo, hi;
-	__m256 dith;
+	__m256 lo = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(src_p + j + 0))));
+	__m256 hi = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)(src_p + j + 8))));
 
-	mm256_cvtepu16_ps(x, lo, hi);
+	__m256i x;
+	__m256 dith;
 
 	dith = _mm256_load_ps(dither + ((dither_offset + j + 0) & dither_mask));
 	lo = _mm256_fmadd_ps(scale, lo, offset);
@@ -116,7 +93,7 @@ inline FORCE_INLINE __m256i ordered_dither_b2w_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
+	x = mm256_cvt2ps_epu16(lo, hi);
 	x = _mm256_min_epu16(x, out_max);
 
 	return x;
@@ -125,12 +102,12 @@ inline FORCE_INLINE __m256i ordered_dither_b2w_avx2_xiter(unsigned j, const floa
 inline FORCE_INLINE __m128i ordered_dither_w2b_avx2_xiter(unsigned j, const float *dither, unsigned dither_offset, unsigned dither_mask,
                                                           const uint16_t *src_p, __m256 scale, __m256 offset, __m128i out_max)
 {
-	__m256i x = _mm256_load_si256((const __m256i *)(src_p + j));
-	__m128i y;
-	__m256 lo, hi;
-	__m256 dith;
+	__m256 lo = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)(src_p + j + 0))));
+	__m256 hi = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)(src_p + j + 8))));
 
-	mm256_cvtepu16_ps(x, lo, hi);
+	__m256i x;
+	__m128i y;
+	__m256 dith;
 
 	dith = _mm256_load_ps(dither + ((dither_offset + j + 0) & dither_mask));
 	lo = _mm256_fmadd_ps(scale, lo, offset);
@@ -140,8 +117,8 @@ inline FORCE_INLINE __m128i ordered_dither_w2b_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
-	y = mm256_packus_epi16_si256_si128(x);
+	x = mm256_cvt2ps_epu16(lo, hi);
+	y = mm256_cvtsepi16_epi8(x);
 	y = _mm_min_epu8(y, out_max);
 
 	return y;
@@ -150,11 +127,11 @@ inline FORCE_INLINE __m128i ordered_dither_w2b_avx2_xiter(unsigned j, const floa
 inline FORCE_INLINE __m256i ordered_dither_w2w_avx2_xiter(unsigned j, const float *dither, unsigned dither_offset, unsigned dither_mask,
                                                           const uint16_t *src_p, __m256 scale, __m256 offset, __m256i out_max)
 {
-	__m256i x = _mm256_load_si256((const __m256i *)(src_p + j));
-	__m256 lo, hi;
-	__m256 dith;
+	__m256 lo = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)(src_p + j + 0))));
+	__m256 hi = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)(src_p + j + 8))));
 
-	mm256_cvtepu16_ps(x, lo, hi);
+	__m256i x;
+	__m256 dith;
 
 	dith = _mm256_load_ps(dither + ((dither_offset + j + 0) & dither_mask));
 	lo = _mm256_fmadd_ps(scale, lo, offset);
@@ -164,7 +141,7 @@ inline FORCE_INLINE __m256i ordered_dither_w2w_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
+	x = mm256_cvt2ps_epu16(lo, hi);
 	x = _mm256_min_epu16(x, out_max);
 
 	return x;
@@ -176,6 +153,7 @@ inline FORCE_INLINE __m128i ordered_dither_f2b_avx2_xiter(unsigned j, const floa
 {
 	__m256 lo = Load::load(src_p + j + 0);
 	__m256 hi = Load::load(src_p + j + 8);
+
 	__m256 dith;
 	__m256i x;
 	__m128i y;
@@ -188,8 +166,8 @@ inline FORCE_INLINE __m128i ordered_dither_f2b_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
-	y = mm256_packus_epi16_si256_si128(x);
+	x = mm256_cvt2ps_epu16(lo, hi);
+	y = mm256_cvtsepi16_epi8(x);
 	y = _mm_min_epu8(y, out_max);
 
 	return y;
@@ -212,7 +190,7 @@ inline FORCE_INLINE __m256i ordered_dither_f2w_avx2_xiter(unsigned j, const floa
 	hi = _mm256_fmadd_ps(scale, hi, offset);
 	hi = _mm256_add_ps(hi, dith);
 
-	x = mm256_cvtps_epu16(lo, hi);
+	x = mm256_cvt2ps_epu16(lo, hi);
 	x = _mm256_min_epu16(x, out_max);
 
 	return x;
