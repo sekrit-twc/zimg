@@ -69,14 +69,9 @@ void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		__m256 x;
 		__m256i xi;
-		__m128i xhalf;
-		__m128i xlo, xhi;
 
 		x = _mm256_load_ps(src + j);
-		xhalf = _mm256_cvtps_ph(x, 0);
-		xlo = _mm_unpacklo_epi16(xhalf, _mm_setzero_si128());
-		xhi = _mm_unpackhi_epi16(xhalf, _mm_setzero_si128());
-		xi = _mm256_insertf128_si256(_mm256_castsi128_si256(xlo), xhi, 1);
+		xi = _mm256_cvtepu16_epi32(_mm256_cvtps_ph(x, 0));
 		x = _mm256_i32gather_ps(lut, xi, sizeof(float));
 		_mm256_store_ps(dst + j, x);
 	}
