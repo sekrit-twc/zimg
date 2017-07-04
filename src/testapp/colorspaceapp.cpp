@@ -43,7 +43,7 @@ int decode_colorspace(const struct ArgparseOption *opt, void *out, const char *p
 
 double ns_per_sample(const ImageFrame &frame, double seconds)
 {
-	double samples = static_cast<double>(static_cast<size_t>(frame.width()) * frame.height() * 3);
+	double samples = static_cast<double>(static_cast<size_t>(frame.width()) * frame.height() * frame.planes());
 	return seconds * 1e9 / samples;
 }
 
