@@ -115,6 +115,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/unresize/unresize_impl.h
 
 libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libzimg_internal_la_LIBADD =
 
 
 if X86SIMD
@@ -174,8 +175,11 @@ libavx2_la_SOURCES = \
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
-libzimg_internal_la_LIBADD = libsse.la libsse2.la libavx.la libf16c.la libavx2.la
-endif
+libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
+endif # X86SIMD
+
+if X86SIMD_AVX512
+endif # X86SIMD_AVX512
 
 
 libtestcommon_la_SOURCES = \
@@ -320,6 +324,9 @@ test_unit_test_SOURCES += \
 	test/resize/resize_impl_sse_test.cpp \
 	test/resize/resize_impl_sse2_test.cpp
 endif #X86SIMD
+
+if X86SIMD_AVX512
+endif # X86SIMD_AVX512
 
 test_unit_test_LDADD = \
 	test/extra/googletest/googletest/lib/libgtest.la \
