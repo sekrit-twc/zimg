@@ -106,11 +106,21 @@ X86Capabilities query_x86_capabilities() noexcept
 bool cpu_has_fast_f16(CPUClass cpu) noexcept
 {
 	// Although F16C is supported on Ivy Bridge, the latency penalty is too great before Haswell.
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		X86Capabilities caps = query_x86_capabilities();
 		return caps.fma && caps.f16c && caps.avx2;
 	} else {
 		return cpu >= CPUClass::X86_AVX2;
+	}
+}
+
+bool cpu_requires_64b_alignment(CPUClass cpu) noexcept
+{
+	if (cpu == CPUClass::AUTO_64B) {
+		X86Capabilities caps = query_x86_capabilities();
+		return !!caps.avx512f;
+	} else {
+		return cpu >= CPUClass::X86_AVX512;
 	}
 }
 
@@ -121,6 +131,8 @@ bool cpu_has_fast_f16(CPUClass cpu) noexcept
 namespace zimg {
 
 bool cpu_has_fast_f16(CPUClass) noexcept { return false; }
+
+bool cpu_requires_64b_alignment(CPUClass) noexcept { return false; }
 
 } // namespace zimg
 

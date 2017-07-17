@@ -12,7 +12,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2)
 			ret = create_resize_impl_h_avx2(context, height, type, depth);
 		if (!ret && caps.avx)
@@ -40,7 +40,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<graph::ImageFilter> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2)
 			ret = create_resize_impl_v_avx2(context, width, type, depth);
 		if (!ret && caps.avx)

@@ -13,7 +13,7 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && caps.sse)
@@ -33,7 +33,7 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation_x86(TransferCharacte
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_gamma_to_linear_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
@@ -53,7 +53,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacte
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_linear_to_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
