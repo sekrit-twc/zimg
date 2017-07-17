@@ -179,6 +179,16 @@ libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.
 endif # X86SIMD
 
 if X86SIMD_AVX512
+noinst_LTLIBRARIES += libavx512.la
+
+libavx512_la_SOURCES = \
+	src/zimg/resize/resize_impl_avx512.cpp
+
+AVX512_SKL_CFLAGS = -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq
+libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) $(AVX512_SKL_CFLAGS)
+libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+
+libzimg_internal_la_LIBADD += libavx512.la
 endif # X86SIMD_AVX512
 
 
@@ -326,6 +336,8 @@ test_unit_test_SOURCES += \
 endif #X86SIMD
 
 if X86SIMD_AVX512
+test_unit_test_SOURCES += \
+	test/resize/resize_impl_avx512_test.cpp
 endif # X86SIMD_AVX512
 
 test_unit_test_LDADD = \
