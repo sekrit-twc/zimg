@@ -92,7 +92,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
@@ -109,7 +109,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
@@ -128,7 +128,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>

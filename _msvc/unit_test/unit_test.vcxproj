@@ -150,7 +150,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
@@ -167,7 +167,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
@@ -186,7 +186,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
@@ -206,7 +206,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
