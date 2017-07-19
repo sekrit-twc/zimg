@@ -299,7 +299,7 @@ public:
 		char *dst_line = static_cast<char *>((*dst)[i]);
 
 		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-		unsigned line_base = floor_n(left, pixel_align);
+		unsigned line_base = left & ~(pixel_align - 1); // floor_n(left, pixel_align);
 
 		const float *dither_table;
 		unsigned dither_offset;
