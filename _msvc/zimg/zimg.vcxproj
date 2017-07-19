@@ -244,7 +244,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -256,6 +261,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

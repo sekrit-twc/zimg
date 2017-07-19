@@ -37,6 +37,7 @@
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither_avx2.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\error_diffusion_avx2.cpp" />

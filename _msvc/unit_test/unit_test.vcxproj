@@ -32,6 +32,7 @@
     <ClCompile Include="..\..\test\depth\depth_convert_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_avx2_test.cpp" />
+    <ClCompile Include="..\..\test\depth\dither_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_test.cpp" />
     <ClCompile Include="..\..\test\depth\error_diffusion_avx2_test.cpp" />

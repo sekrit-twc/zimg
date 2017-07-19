@@ -335,5 +335,8 @@
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

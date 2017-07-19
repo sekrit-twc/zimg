@@ -184,6 +184,7 @@ noinst_LTLIBRARIES += libavx512.la
 libavx512_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_avx512.cpp \
 	src/zimg/depth/depth_convert_avx512.cpp \
+	src/zimg/depth/dither_avx512.cpp \
 	src/zimg/resize/resize_impl_avx512.cpp
 
 AVX512_SKL_CFLAGS = -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq
@@ -341,6 +342,7 @@ if X86SIMD_AVX512
 test_unit_test_SOURCES += \
 	test/colorspace/colorspace_avx512_test.cpp \
 	test/depth/depth_convert_avx512_test.cpp \
+	test/depth/dither_avx512_test.cpp \
 	test/resize/resize_impl_avx512_test.cpp
 endif # X86SIMD_AVX512
 
