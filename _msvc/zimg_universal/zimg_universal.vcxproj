@@ -32,6 +32,7 @@
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx2.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />

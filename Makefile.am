@@ -183,6 +183,7 @@ noinst_LTLIBRARIES += libavx512.la
 
 libavx512_la_SOURCES = \
 	src/zimg/colorspace/operation_impl_avx512.cpp \
+	src/zimg/depth/depth_convert_avx512.cpp \
 	src/zimg/resize/resize_impl_avx512.cpp
 
 AVX512_SKL_CFLAGS = -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq
