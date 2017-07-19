@@ -193,6 +193,9 @@
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx512.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx512.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">

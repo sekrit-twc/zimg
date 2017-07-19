@@ -1,3 +1,7 @@
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
@@ -14,11 +18,19 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f)
+			ret = create_matrix_operation_avx512(m);
+#endif
 		if (!ret && caps.avx)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && caps.sse)
 			ret = create_matrix_operation_sse(m);
 	} else {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu >= CPUClass::X86_AVX512)
+			ret = create_matrix_operation_avx512(m);
+#endif
 		if (!ret && cpu >= CPUClass::X86_AVX)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && cpu >= CPUClass::X86_SSE)

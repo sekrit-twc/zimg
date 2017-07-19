@@ -171,6 +171,9 @@
     <ClCompile Include="..\..\test\resize\resize_impl_avx512_test.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\colorspace_avx512_test.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
