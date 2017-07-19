@@ -41,7 +41,7 @@ TEST(DitherAVX2Test, test_ordered_dither_b2b)
 	zimg::PixelFormat pixel_out{ zimg::PixelType::BYTE, 1, true, false };
 
 	const char *expected_sha1[3] = {
-		"e53ddd497f8cc5e881518dcb0b800b872c9231c1"
+		"cd90fbe6881101c82387fbe4e630b7da215ab190"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -54,7 +54,7 @@ TEST(DitherAVX2Test, test_ordered_dither_b2w)
 	zimg::PixelFormat pixel_out{ zimg::PixelType::WORD, 9, true, false };
 
 	const char *expected_sha1[3] = {
-		"6ade59cee43eb811941a8aafed11fca2feb28557"
+		"551e95e2ab3a6cb21f5e8e532a70257b5a7ce5d7"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -66,7 +66,7 @@ TEST(DitherAVX2Test, test_ordered_dither_w2b)
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
 	const char *expected_sha1[3] = {
-		"ab2d2b92cd836f28080b28474b66faab21f2f372"
+		"6da260ba1fec3eda99d83739ad3ae9eaeba15df2"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -78,7 +78,7 @@ TEST(DitherAVX2Test, test_ordered_dither_w2w)
 	zimg::PixelFormat pixel_out{ zimg::PixelType::WORD, 10, false, false };
 
 	const char *expected_sha1[3] = {
-		"8c70968a3c9bd9ed508aee81dd06aa27f64fd0ff"
+		"094b16505a3030cda9283f1d2b0ebf6ed84d6535"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -90,7 +90,7 @@ TEST(DitherAVX2Test, test_ordered_dither_h2b)
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
 	const char *expected_sha1[3] = {
-		"71e8c03d502ce33036e4d73478aa2932a17c7599"
+		"30ef22fa882d6f4bc0dbb7224a1dffdedf108734"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -102,7 +102,7 @@ TEST(DitherAVX2Test, test_ordered_dither_h2w)
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
 
 	const char *expected_sha1[3] = {
-		"9f782faa689eeff1400880e4bc166a4a66ac229e"
+		"661fad247819b453a77fffb32aa4da95c0e7024e"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -114,7 +114,7 @@ TEST(DitherAVX2Test, test_ordered_dither_f2b)
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
 	const char *expected_sha1[3] = {
-		"23e5c6cb1fdd7f9c4dcbbe66178f5a47a5d4ed3e"
+		"6bf40dea8fb17f035be0e4fa14a303b3cde45dc5"
 	};
 
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
@@ -126,7 +126,7 @@ TEST(DitherAVX2Test, test_ordered_dither_f2w)
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
 
 	const char *expected_sha1[3] = {
-		"ea75546d27adb26c4fbf829113081cda1173c817"
+		"b902d8029f198214e39ca10582dbfe0714172a1d"
 	};
 
 	// The use of FMA changes the rounding of the result at 16-bits.

@@ -340,6 +340,7 @@ endif #X86SIMD
 if X86SIMD_AVX512
 test_unit_test_SOURCES += \
 	test/colorspace/colorspace_avx512_test.cpp \
+	test/depth/depth_convert_avx512_test.cpp \
 	test/resize/resize_impl_avx512_test.cpp
 endif # X86SIMD_AVX512
 
