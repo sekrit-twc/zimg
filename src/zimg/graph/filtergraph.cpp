@@ -1036,7 +1036,7 @@ public:
 				}
 
 				if (m_node_uv)
-					m_node_uv->generate_line(&state, state.get_output_buffer(), i / v_step, true);
+					m_node_uv->generate_line(&state, state.get_output_buffer(), i >> m_subsample_h, true);
 
 				if (state.get_pack_cb())
 					state.get_pack_cb()(i, j, j_end);
