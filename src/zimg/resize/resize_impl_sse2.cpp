@@ -551,28 +551,33 @@ public:
 		uint16_t *dst_line = dst_buf[i];
 		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
 
-		unsigned k_end = ceil_n(filter_width, 8) - 8;
 		unsigned top = m_filter.left[i];
 
-		for (unsigned k = 0; k < k_end; k += 8) {
+		if (filter_width <= 8) {
 			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(top + k + n, src_height - 1)];
+				src_lines[n] = src_buf[std::min(top + n, src_height - 1)];
+			}
+			resize_line_v_u16_sse2_jt_a[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		} else {
+			unsigned k_end = ceil_n(filter_width, 8) - 8;
+
+			for (unsigned n = 0; n < 8; ++n) {
+				src_lines[n] = src_buf[std::min(top + 0 + n, src_height - 1)];
+			}
+			resize_line_v_u16_sse2<6, false, true>(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+
+			for (unsigned k = 8; k < k_end; k += 8) {
+				for (unsigned n = 0; n < 8; ++n) {
+					src_lines[n] = src_buf[std::min(top + k + n, src_height - 1)];
+				}
+				resize_line_v_u16_sse2<6, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 			}
 
-			if (k == 0)
-				resize_line_v_u16_sse2<6, false, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
-			else
-				resize_line_v_u16_sse2<6, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
-		}
-
-		for (unsigned n = 0; n < 8; ++n) {
-			src_lines[n] = src_buf[std::min(top + k_end + n, src_height - 1)];
-		}
-
-		if (k_end == 0)
-			resize_line_v_u16_sse2_jt_a[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
-		else
+			for (unsigned n = 0; n < 8; ++n) {
+				src_lines[n] = src_buf[std::min(top + k_end + n, src_height - 1)];
+			}
 			resize_line_v_u16_sse2_jt_b[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		}
 	}
 };
 

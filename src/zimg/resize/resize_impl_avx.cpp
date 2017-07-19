@@ -421,7 +421,23 @@ public:
 		const float *src_lines[8] = { 0 };
 		float *dst_line = dst_buf[i];
 
-		for (unsigned k = 0; k < filter_width; k += 8) {
+		{
+			unsigned taps_remain = std::min(filter_width - 0, 8U);
+			unsigned top = m_filter.left[i] + 0;
+
+			src_lines[0] = src_buf[std::min(top + 0, src_height - 1)];
+			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
+			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
+			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
+			src_lines[4] = src_buf[std::min(top + 4, src_height - 1)];
+			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
+			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
+			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
+
+			resize_line_v_f32_avx_jt_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
+		}
+
+		for (unsigned k = 8; k < filter_width; k += 8) {
 			unsigned taps_remain = std::min(filter_width - k, 8U);
 			unsigned top = m_filter.left[i] + k;
 
@@ -433,11 +449,8 @@ public:
 			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-
-			if (k == 0)
-				resize_line_v_f32_avx_jt_a[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
-			else
-				resize_line_v_f32_avx_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
+			
+			resize_line_v_f32_avx_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
 };
