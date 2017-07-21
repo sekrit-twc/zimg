@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <random>
 #include <stdexcept>
 #include <string>
 #include "common/make_unique.h"
@@ -132,7 +131,7 @@ constexpr ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel) noexc
 
 ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
                        bool yuv, unsigned subsample_w, unsigned subsample_h) :
-	m_offset{},
+	m_offset{ 0, 832, 2368 },
 	m_width{ width },
 	m_height{ height },
 	m_pixel{ pixel },
@@ -141,16 +140,12 @@ ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, u
 	m_subsample_h{ subsample_h },
 	m_yuv{ yuv }
 {
-	std::random_device rng;
-
 	for (unsigned p = 0; p < planes; ++p) {
 		unsigned width_p = this->width(p);
 		unsigned height_p = this->height(p);
 		size_t rowsize_p = width_to_stride(width_p, pixel);
-		ptrdiff_t offset_p = zimg::floor_n(rng(), 64) % 4096;
 
-		m_vector[p].resize(rowsize_p * height_p + offset_p);
-		m_offset[p] = offset_p;
+		m_vector[p].resize(rowsize_p * height_p + m_offset[p]);
 	}
 }
 
