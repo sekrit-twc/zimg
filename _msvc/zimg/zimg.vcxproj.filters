@@ -219,6 +219,18 @@
     <ClInclude Include="..\..\src\zimg\common\x86\disable_avx512_msvc.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\sse_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\sse2_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\avx_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">

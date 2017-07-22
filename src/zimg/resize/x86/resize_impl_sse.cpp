@@ -7,17 +7,14 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-
-#define HAVE_CPU_SSE
-  #include "common/x86/x86util.h"
-#undef HAVE_CPU_SSE
-
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
+
+#include "common/x86/sse_util.h"
 
 namespace zimg {
 namespace resize {

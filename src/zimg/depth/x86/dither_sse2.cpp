@@ -4,12 +4,9 @@
 #include <emmintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-
-#define HAVE_CPU_SSE2
-  #include "common/x86/x86util.h"
-#undef HAVE_CPU_SSE2
-
 #include "dither_x86.h"
+
+#include "common/x86/sse2_util.h"
 
 namespace zimg {
 namespace depth {

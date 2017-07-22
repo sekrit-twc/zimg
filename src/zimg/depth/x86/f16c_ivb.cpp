@@ -4,14 +4,10 @@
 
 #include <immintrin.h>
 #include "common/align.h"
-
-#define HAVE_CPU_SSE2
-#define HAVE_CPU_AVX
-  #include "common/x86/x86util.h"
-#undef HAVE_CPU_SSE2
-#undef HAVE_CPU_AVX
-
 #include "f16c_x86.h"
+
+#include "common/x86/sse2_util.h"
+#include "common/x86/avx_util.h"
 
 namespace zimg {
 namespace depth {

@@ -13,20 +13,13 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
-
-#define HAVE_CPU_SSE
-#define HAVE_CPU_SSE2
-#define HAVE_CPU_AVX
-#define HAVE_CPU_AVX2
-  #include "common/x86/x86util.h"
-#undef HAVE_CPU_SSE
-#undef HAVE_CPU_SSE2
-#undef HAVE_CPU_AVX
-#undef HAVE_CPU_AVX2
-
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
+#include "common/x86/sse_util.h"
+#include "common/x86/sse2_util.h"
+#include "common/x86/avx_util.h"
+#include "common/x86/avx2_util.h"
 namespace zimg {
 namespace resize {
 

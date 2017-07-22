@@ -8,15 +8,12 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-
-#define HAVE_CPU_SSE2
-  #include "common/x86/x86util.h"
-#undef HAVE_CPU_SSE2
-
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
+
+#include "common/x86/sse2_util.h"
 
 namespace zimg {
 namespace resize {
