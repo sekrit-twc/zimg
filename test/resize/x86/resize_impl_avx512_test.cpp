@@ -1,6 +1,4 @@
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-  #undef ZIMG_X86_AVX512
-#endif
+#include "common/x86/disable_avx512_msvc.h"
 
 #ifdef ZIMG_X86_AVX512
 

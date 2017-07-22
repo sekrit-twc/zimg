@@ -216,6 +216,9 @@
     <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\disable_avx512_msvc.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
