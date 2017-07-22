@@ -572,6 +572,9 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 
 	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
 
+	if (params && cpu_requires_64b_alignment(params->cpu))
+		m_graph->set_requires_64b_alignment();
+
 	while (true) {
 		if (needs_colorspace(m_state, target)) {
 			resize_spec spec{ m_state };

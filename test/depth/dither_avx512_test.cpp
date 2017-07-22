@@ -1,4 +1,8 @@
-#ifdef ZIMG_X86
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
+#ifdef ZIMG_X86_AVX512
 
 #include <cmath>
 #include "common/cpuinfo.h"
@@ -18,15 +22,15 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 	const unsigned h = 480;
 	const zimg::depth::DitherType dither = zimg::depth::DitherType::RANDOM;
 
-	if (!zimg::query_x86_capabilities().avx2) {
-		SUCCEED() << "avx2 not available, skipping";
+	if (!zimg::query_x86_capabilities().avx512f) {
+		SUCCEED() << "avx512 not available, skipping";
 		return;
 	}
 
 	auto filter_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
-	auto filter_avx2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX2);
+	auto filter_avx512 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
 
-	FilterValidator validator{ filter_avx2.get(), w, h, pixel_in };
+	FilterValidator validator{ filter_avx512.get(), w, h, pixel_in };
 	validator.set_sha1(expected_sha1)
 	         .set_ref_filter(filter_c.get(), expected_snr)
 	         .validate();
@@ -35,7 +39,7 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 } // namespace
 
 
-TEST(DitherAVX2Test, test_ordered_dither_b2b)
+TEST(DitherAVX512Test, test_ordered_dither_b2b)
 {
 	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true, false };
 	zimg::PixelFormat pixel_out{ zimg::PixelType::BYTE, 1, true, false };
@@ -47,7 +51,7 @@ TEST(DitherAVX2Test, test_ordered_dither_b2b)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_b2w)
+TEST(DitherAVX512Test, test_ordered_dither_b2w)
 {
 
 	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true, false };
@@ -60,7 +64,7 @@ TEST(DitherAVX2Test, test_ordered_dither_b2w)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_w2b)
+TEST(DitherAVX512Test, test_ordered_dither_w2b)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::WORD;
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
@@ -72,7 +76,7 @@ TEST(DitherAVX2Test, test_ordered_dither_w2b)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_w2w)
+TEST(DitherAVX512Test, test_ordered_dither_w2w)
 {
 	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, false, false };
 	zimg::PixelFormat pixel_out{ zimg::PixelType::WORD, 10, false, false };
@@ -84,7 +88,7 @@ TEST(DitherAVX2Test, test_ordered_dither_w2w)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_h2b)
+TEST(DitherAVX512Test, test_ordered_dither_h2b)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
@@ -96,7 +100,7 @@ TEST(DitherAVX2Test, test_ordered_dither_h2b)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_h2w)
+TEST(DitherAVX512Test, test_ordered_dither_h2w)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
@@ -108,7 +112,7 @@ TEST(DitherAVX2Test, test_ordered_dither_h2w)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_f2b)
+TEST(DitherAVX512Test, test_ordered_dither_f2b)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
@@ -120,7 +124,7 @@ TEST(DitherAVX2Test, test_ordered_dither_f2b)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
-TEST(DitherAVX2Test, test_ordered_dither_f2w)
+TEST(DitherAVX512Test, test_ordered_dither_f2w)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
@@ -133,4 +137,4 @@ TEST(DitherAVX2Test, test_ordered_dither_f2w)
 	test_case(pixel_in, pixel_out, expected_sha1, 120.0);
 }
 
-#endif // ZIMG_X86
+#endif // ZIMG_X86_AVX512

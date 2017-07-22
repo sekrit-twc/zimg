@@ -1,3 +1,7 @@
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
@@ -51,6 +55,22 @@ depth_convert_func select_depth_convert_func_avx2(PixelType pixel_in, PixelType 
 		return nullptr;
 }
 
+#ifdef ZIMG_X86_AVX512
+depth_convert_func select_depth_convert_func_avx512(PixelType pixel_in, PixelType pixel_out)
+{
+	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::HALF)
+		return depth_convert_b2h_avx512;
+	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::FLOAT)
+		return depth_convert_b2f_avx512;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::HALF)
+		return depth_convert_w2h_avx512;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::FLOAT)
+		return depth_convert_w2f_avx512;
+	else
+		return nullptr;
+}
+#endif // ZIMG_X86_AVX512
+
 } // namespace
 
 
@@ -59,7 +79,7 @@ left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_o
 	X86Capabilities caps = query_x86_capabilities();
 	left_shift_func func = nullptr;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!func && caps.sse2)
 			func = select_left_shift_func_sse2(pixel_in, pixel_out);
 	} else {
@@ -75,12 +95,20 @@ depth_convert_func select_depth_convert_func_x86(const PixelFormat &format_in, c
 	X86Capabilities caps = query_x86_capabilities();
 	depth_convert_func func = nullptr;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
+#ifdef ZIMG_X86_AVX512
+		if (!func && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
+			func = select_depth_convert_func_avx512(format_in.type, format_out.type);
+#endif
 		if (!func && caps.avx2 && caps.fma)
 			func = select_depth_convert_func_avx2(format_in.type, format_out.type);
 		if (!func && caps.sse2)
 			func = select_depth_convert_func_sse2(format_in.type, format_out.type);
 	} else {
+#ifdef ZIMG_X86_AVX512
+		if (!func && cpu >= CPUClass::X86_AVX512)
+			func = select_depth_convert_func_avx512(format_in.type, format_out.type);
+#endif
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_depth_convert_func_avx2(format_in.type, format_out.type);
 		if (!func && cpu >= CPUClass::X86_SSE2)
@@ -95,7 +123,7 @@ depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu)
 	X86Capabilities caps = query_x86_capabilities();
 	depth_f16c_func func = nullptr;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!func && caps.avx && caps.f16c)
 			func = to_half ? f16c_float_to_half_ivb : f16c_half_to_float_ivb;
 		if (!func && caps.sse2)
@@ -115,7 +143,7 @@ bool needs_depth_f16c_func_x86(const PixelFormat &format_in, const PixelFormat &
 	X86Capabilities caps = query_x86_capabilities();
 	bool value = format_in.type == PixelType::HALF || format_out.type == PixelType::HALF;
 
-	if ((cpu == CPUClass::AUTO && caps.avx2) || cpu >= CPUClass::X86_AVX2)
+	if ((cpu_is_autodetect(cpu) && caps.avx2) || cpu >= CPUClass::X86_AVX2)
 		value = value && pixel_is_float(format_in.type) && pixel_is_float(format_out.type);
 
 	return value;

@@ -190,6 +190,18 @@
     <ClCompile Include="..\..\src\zimg\depth\error_diffusion_avx2.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx512.cpp">
+      <Filter>Source Files\resize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx512.cpp">
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp">
+      <Filter>Source Files\depth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp">

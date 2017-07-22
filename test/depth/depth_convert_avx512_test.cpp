@@ -1,0 +1,88 @@
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
+#ifdef ZIMG_X86_AVX512
+
+#include <cmath>
+#include "common/cpuinfo.h"
+#include "common/pixel.h"
+#include "graph/image_filter.h"
+#include "depth/depth_convert.h"
+
+#include "gtest/gtest.h"
+#include "graph/filter_validator.h"
+
+namespace {
+
+void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel_out, const char * const expected_sha1[3], double expected_snr)
+{
+	const unsigned w = 640;
+	const unsigned h = 480;
+
+	if (!zimg::query_x86_capabilities().avx512f) {
+		SUCCEED() << "avx512 not available, skipping";
+		return;
+	}
+
+	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_avx512 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
+
+	FilterValidator validator{ filter_avx512.get(), w, h, pixel_in };
+	validator.set_sha1(expected_sha1)
+	         .set_ref_filter(filter_c.get(), expected_snr)
+	         .validate();
+}
+
+} // namespace
+
+
+TEST(DepthConvertAVX512Test, test_depth_convert_b2h)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::HALF };
+
+	const char *expected_sha1[3] = {
+		"f0e4a68158eab0ab350c7161498a8eed3196c233"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
+TEST(DepthConvertAVX512Test, test_depth_convert_b2f)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT };
+
+	const char *expected_sha1[3] = {
+		"20c77820ff7d4443a0de7991218e2f8eee551e8d"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
+TEST(DepthConvertAVX512Test, test_depth_convert_w2h)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::HALF };
+
+	const char *expected_sha1[3] = {
+		"07b6aebbfe48004c8acb12a3c76137db57ba9a0b"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
+TEST(DepthConvertAVX512Test, test_depth_convert_w2f)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT };
+
+	const char *expected_sha1[3] = {
+		"7ad2bc4ba1be92699ec22f489ae93a8b0dc89821"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
+#endif // ZIMG_X86_AVX512

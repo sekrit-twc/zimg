@@ -39,6 +39,15 @@ DECLARE_ORDERED_DITHER(h2w, avx2);
 DECLARE_ORDERED_DITHER(f2b, avx2);
 DECLARE_ORDERED_DITHER(f2w, avx2);
 
+DECLARE_ORDERED_DITHER(b2b, avx512);
+DECLARE_ORDERED_DITHER(b2w, avx512);
+DECLARE_ORDERED_DITHER(w2b, avx512);
+DECLARE_ORDERED_DITHER(w2w, avx512);
+DECLARE_ORDERED_DITHER(h2b, avx512);
+DECLARE_ORDERED_DITHER(h2w, avx512);
+DECLARE_ORDERED_DITHER(f2b, avx512);
+DECLARE_ORDERED_DITHER(f2w, avx512);
+
 #undef DECLARE_ORDERED_DITHER
 
 dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);

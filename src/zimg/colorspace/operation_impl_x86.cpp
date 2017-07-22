@@ -1,3 +1,7 @@
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
@@ -13,12 +17,20 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f)
+			ret = create_matrix_operation_avx512(m);
+#endif
 		if (!ret && caps.avx)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && caps.sse)
 			ret = create_matrix_operation_sse(m);
 	} else {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu >= CPUClass::X86_AVX512)
+			ret = create_matrix_operation_avx512(m);
+#endif
 		if (!ret && cpu >= CPUClass::X86_AVX)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && cpu >= CPUClass::X86_SSE)
@@ -33,7 +45,7 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation_x86(TransferCharacte
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_gamma_to_linear_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
@@ -53,7 +65,7 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacte
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<Operation> ret;
 
-	if (cpu == CPUClass::AUTO) {
+	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_linear_to_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)

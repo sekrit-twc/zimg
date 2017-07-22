@@ -153,19 +153,23 @@ void zimg_clear_last_error(void);
  * Constants are not implied to be in any particular order.
  */
 typedef enum zimg_cpu_type_e {
-	ZIMG_CPU_NONE = 0, /**< Portable C-based implementation. */
-	ZIMG_CPU_AUTO = 1, /**< Runtime CPU detection. */
+	ZIMG_CPU_NONE     = 0, /**< Portable C-based implementation. */
+	ZIMG_CPU_AUTO     = 1, /**< Runtime CPU detection. */
+	ZIMG_CPU_AUTO_64B = 2, /**< Allow use of 64-byte (512-bit) instructions. */
 #if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
-	ZIMG_CPU_X86_MMX   = 1000,
-	ZIMG_CPU_X86_SSE   = 1001,
-	ZIMG_CPU_X86_SSE2  = 1002,
-	ZIMG_CPU_X86_SSE3  = 1003,
-	ZIMG_CPU_X86_SSSE3 = 1004,
-	ZIMG_CPU_X86_SSE41 = 1005,
-	ZIMG_CPU_X86_SSE42 = 1006,
-	ZIMG_CPU_X86_AVX   = 1007,
-	ZIMG_CPU_X86_F16C  = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
-	ZIMG_CPU_X86_AVX2  = 1009
+	ZIMG_CPU_X86_MMX        = 1000,
+	ZIMG_CPU_X86_SSE        = 1001,
+	ZIMG_CPU_X86_SSE2       = 1002,
+	ZIMG_CPU_X86_SSE3       = 1003,
+	ZIMG_CPU_X86_SSSE3      = 1004,
+	ZIMG_CPU_X86_SSE41      = 1005,
+	ZIMG_CPU_X86_SSE42      = 1006,
+	ZIMG_CPU_X86_AVX        = 1007,
+	ZIMG_CPU_X86_F16C       = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
+	ZIMG_CPU_X86_AVX2       = 1009,
+	ZIMG_CPU_X86_AVX512F    = 1010,
+	ZIMG_CPU_X86_AVX512_KNL = 1011, /**< AVX-512 {F,CD,ER,PF} (e.g. Knights Landing) */
+	ZIMG_CPU_X86_AVX512_SKL = 1012, /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
 #endif
 } zimg_cpu_type_e;
 
@@ -335,9 +339,10 @@ typedef enum zimg_resample_filter_e {
   * instances will not read or write beyond image bounds, and no padding is
   * necessary.
   *
-  * Generally, the image stride must be a multiple of the alignment
-  * imposed by the host CPU architecture, which is up to 32 bytes on
-  * x86 and AMD64. The stride may be negative.
+  * The image stride must be a multiple of the alignment imposed by the host
+  * CPU architecture. On x86 and AMD64, this is 32 bytes. When operating in
+  * 64-byte mode ({@link ZIMG_CPU_AUTO_64B}), the alignment requirement is
+  * increased to 64 bytes. The stride may be negative.
   */
 typedef struct zimg_image_buffer_const {
 	unsigned version; /**< @see ZIMG_API_VERSION */

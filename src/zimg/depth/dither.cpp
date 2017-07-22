@@ -125,15 +125,16 @@ decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pix
 
 constexpr unsigned BAYER_TABLE_LEN = 8;
 
-constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN] = {
-	 1, 49, 13, 61,  4, 52, 16, 64,
-	33, 17, 45, 29, 36, 20, 48, 32,
-	 9, 57,  5, 53, 12, 60,  8, 56,
-	41, 25, 37, 21, 44, 28, 40, 24,
-	 3, 51, 15, 63,  2, 50, 14, 62,
-	35, 19, 47, 31, 34, 18, 46, 30,
-	11, 59,  7, 55, 10, 58,  6, 54,
-	43, 27, 39, 23, 42, 26, 38, 22
+// Extended to support AVX-512 (16-wide).
+constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2] = {
+	 1, 49, 13, 61,  4, 52, 16, 64,  1, 49, 13, 61,  4, 52, 16, 64,
+	33, 17, 45, 29, 36, 20, 48, 32, 33, 17, 45, 29, 36, 20, 48, 32,
+	 9, 57,  5, 53, 12, 60,  8, 56,  9, 57,  5, 53, 12, 60,  8, 56,
+	41, 25, 37, 21, 44, 28, 40, 24, 41, 25, 37, 21, 44, 28, 40, 24,
+	 3, 51, 15, 63,  2, 50, 14, 62,  3, 51, 15, 63,  2, 50, 14, 62,
+	35, 19, 47, 31, 34, 18, 46, 30, 35, 19, 47, 31, 34, 18, 46, 30,
+	11, 59,  7, 55, 10, 58,  6, 54, 11, 59,  7, 55, 10, 58,  6, 54,
+	43, 27, 39, 23, 42, 26, 38, 22, 43, 27, 39, 23, 42, 26, 38, 22,
 };
 
 constexpr unsigned BAYER_TABLE_SCALE = 65;
@@ -150,12 +151,12 @@ class NoneDitherTable final : public OrderedDitherTable {
 public:
 	NoneDitherTable()
 	{
-		m_table.resize(8);
+		m_table.resize(16);
 	}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
 	{
-		return std::make_tuple(m_table.data(), 0, 7);
+		return std::make_tuple(m_table.data(), 0, 15);
 	}
 };
 
@@ -164,18 +165,18 @@ class BayerDitherTable final : public OrderedDitherTable {
 public:
 	BayerDitherTable()
 	{
-		m_table.resize(BAYER_TABLE_LEN * BAYER_TABLE_LEN);
+		m_table.resize(BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2);
 
-		for (unsigned i = 0; i < BAYER_TABLE_LEN * BAYER_TABLE_LEN; ++i) {
+		for (unsigned i = 0; i < BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2; ++i) {
 			m_table[i] = static_cast<float>(BAYER_TABLE[i]) / BAYER_TABLE_SCALE - 0.5f;
 		}
 	}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
 	{
-		const float *data = m_table.data() + (i % BAYER_TABLE_LEN) * BAYER_TABLE_LEN;
+		const float *data = m_table.data() + (i % BAYER_TABLE_LEN) * BAYER_TABLE_LEN * 2;
 
-		return std::make_tuple(data, left % BAYER_TABLE_LEN, 7);
+		return std::make_tuple(data, left % (BAYER_TABLE_LEN * 2), 15);
 	}
 };
 
@@ -208,7 +209,7 @@ public:
 
 		for (unsigned i = 0; i < height; ++i) {
 			std::mt19937 mt{ i };
-			m_row_offset[i] = floor_n(mt(), 8);
+			m_row_offset[i] = floor_n(mt(), 16);
 		}
 	}
 

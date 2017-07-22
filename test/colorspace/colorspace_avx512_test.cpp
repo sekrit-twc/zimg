@@ -1,4 +1,8 @@
-#ifdef ZIMG_X86
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+  #undef ZIMG_X86_AVX512
+#endif
+
+#ifdef ZIMG_X86_AVX512
 
 #include <cmath>
 #include "common/cpuinfo.h"
@@ -17,8 +21,8 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	if (!zimg::query_x86_capabilities().avx) {
-		SUCCEED() << "avx not available, skipping";
+	if (!zimg::query_x86_capabilities().avx512f) {
+		SUCCEED() << "sse not available, skipping";
 		return;
 	}
 
@@ -28,9 +32,9 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		.set_csp_out(csp_out);
 
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
-	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create();
+	auto filter_avx512 = builder.set_cpu(zimg::CPUClass::X86_AVX512).create();
 
-	FilterValidator validator{ filter_avx.get(), w, h, format };
+	FilterValidator validator{ filter_avx512.get(), w, h, format };
 	validator.set_sha1(expected_sha1)
 	         .set_ref_filter(filter_c.get(), expected_snr)
 	         .set_yuv(csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB)
@@ -40,20 +44,20 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 } // namespace
 
 
-TEST(ColorspaceConversionAVXTest, test_matrix)
+TEST(ColorspaceConversionAVX512Test, test_matrix)
 {
 	using namespace zimg::colorspace;
 
 	const char *expected_sha1[3] = {
-		"0495adab9c82d98e73841e229a9b2041838fc0f2",
-		"ece7edb1118d4b3063ad80f5d8febb6db7e9633a",
-		"73a9ee951c7bde9ae0ada9b90afd1f7ce8b604df"
+		"7b2a05426e2ef61dc6adc16573fca46ea3480256",
+		"9c69bc8fa775a8e877e66e79812e9f4c39cec647",
+		"6010983126eb3f5ca2dd5c01f4753c0e9f36d0bb"
 	};
-	const double expected_snr = INFINITY;
+	const double expected_snr = 120.0;
 
 	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1, expected_snr);
 }
 
-#endif // ZIMG_X86
+#endif // ZIMG_X86_AVX512

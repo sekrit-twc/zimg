@@ -65,13 +65,30 @@ AS_IF([test "x$X86" = "xyes" && test "x$enable_simd" != "xno"],
       [
         AC_DEFINE([ZIMG_X86])
         enable_x86_simd=yes
+
+        AX_CHECK_COMPILE_FLAG(
+          [-mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi],
+          [
+            AC_DEFINE([ZIMG_X86_AVX512])
+            enable_x86_simd_avx512=yes
+          ], [], [],
+          [AC_LANG_SOURCE([
+#include <immintrin.h>
+int main()
+{
+	volatile __m512 x = _mm512_setzero_ps();
+	x = _mm512_add_ps(x, x);
+	return 0;
+}
+          ])])
       ])
 
 
-AM_CONDITIONAL([TESTAPP],   [test "x$enable_testapp" = "xyes"])
-AM_CONDITIONAL([EXAMPLES],  [test "x$enable_example" = "xyes"])
-AM_CONDITIONAL([UNIT_TEST], [test "x$enable_unit_test" = "xyes"])
-AM_CONDITIONAL([X86SIMD],   [test "x$enable_x86_simd" = "xyes"])
+AM_CONDITIONAL([TESTAPP],        [test "x$enable_testapp" = "xyes"])
+AM_CONDITIONAL([EXAMPLES],       [test "x$enable_example" = "xyes"])
+AM_CONDITIONAL([UNIT_TEST],      [test "x$enable_unit_test" = "xyes"])
+AM_CONDITIONAL([X86SIMD],        [test "x$enable_x86_simd" = "xyes"])
+AM_CONDITIONAL([X86SIMD_AVX512], [test "x$enable_x86_simd_avx512" = "xyes"])
 
 AS_CASE([$host_os],
         [cygwin*], [AS_IF([test "x$BITS" = "x32"], [LDFLAGS="-Wl,--kill-at"])],

@@ -86,10 +86,11 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -101,10 +102,11 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -118,9 +120,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,9 +139,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>ZIMG_X86;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZIMG_X86;ZIMG_X86_AVX512;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -213,6 +217,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
@@ -234,6 +244,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -245,6 +261,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -290,6 +312,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx512.cpp">
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
+      <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>

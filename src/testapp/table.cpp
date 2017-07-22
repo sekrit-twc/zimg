@@ -43,15 +43,16 @@ filter_uptr make_null_filter(double, double) { return nullptr; }
 } // namespace
 
 
-const zimg::static_string_map<CPUClass, 7> g_cpu_table{
+const zimg::static_string_map<CPUClass, 8> g_cpu_table{
 	{ "none", CPUClass::NONE },
-	{ "auto", CPUClass::AUTO },
+	{ "auto", CPUClass::AUTO_64B },
 #ifdef ZIMG_X86
-	{ "sse",  CPUClass::X86_SSE },
-	{ "sse2", CPUClass::X86_SSE2 },
-	{ "avx",  CPUClass::X86_AVX },
-	{ "f16c", CPUClass::X86_F16C },
-	{ "avx2", CPUClass::X86_AVX2 },
+	{ "sse",    CPUClass::X86_SSE },
+	{ "sse2",   CPUClass::X86_SSE2 },
+	{ "avx",    CPUClass::X86_AVX },
+	{ "f16c",   CPUClass::X86_F16C },
+	{ "avx2",   CPUClass::X86_AVX2 },
+	{ "avx512", CPUClass::X86_AVX512 },
 #endif
 };
 

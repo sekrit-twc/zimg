@@ -27,8 +27,11 @@ constexpr unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
 constexpr unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
 
 #define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
-#define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
-#define STRIDE_ALIGNMENT_ASSERT(x) zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
+#define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT_RELAXED == 0, "pointer not aligned")
+#define STRIDE_ALIGNMENT_ASSERT(x) zassert_d(!(x) || (x) % zimg::ALIGNMENT_RELAXED == 0, "buffer stride not aligned")
+
+#define POINTER_ALIGNMENT64_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT == 0, "pointer not aligned")
+#define STRIDE_ALIGNMENT64_ASSERT(x) zassert_d(!(x) || (x) % zimg::ALIGNMENT == 0, "buffer stride not aligned")
 
 thread_local zimg_error_code_e g_last_error = ZIMG_ERROR_SUCCESS;
 thread_local std::string g_last_error_msg;
@@ -126,20 +129,24 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 {
 	using zimg::CPUClass;
 
-	static SM_CONSTEXPR_14 const zimg::static_map<zimg_cpu_type_e, CPUClass, 12> map{
-		{ ZIMG_CPU_NONE,      CPUClass::NONE },
-		{ ZIMG_CPU_AUTO,      CPUClass::AUTO },
+	static SM_CONSTEXPR_14 const zimg::static_map<zimg_cpu_type_e, CPUClass, 16> map{
+		{ ZIMG_CPU_NONE,           CPUClass::NONE },
+		{ ZIMG_CPU_AUTO,           CPUClass::AUTO },
+		{ ZIMG_CPU_AUTO_64B,       CPUClass::AUTO_64B },
 #ifdef ZIMG_X86
-		{ ZIMG_CPU_X86_MMX,   CPUClass::NONE },
-		{ ZIMG_CPU_X86_SSE,   CPUClass::X86_SSE },
-		{ ZIMG_CPU_X86_SSE2,  CPUClass::X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE3,  CPUClass::X86_SSE2 },
-		{ ZIMG_CPU_X86_SSSE3, CPUClass::X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE41, CPUClass::X86_SSE2 },
-		{ ZIMG_CPU_X86_SSE42, CPUClass::X86_SSE2 },
-		{ ZIMG_CPU_X86_AVX,   CPUClass::X86_AVX },
-		{ ZIMG_CPU_X86_F16C,  CPUClass::X86_F16C },
-		{ ZIMG_CPU_X86_AVX2,  CPUClass::X86_AVX2 },
+		{ ZIMG_CPU_X86_MMX,        CPUClass::NONE },
+		{ ZIMG_CPU_X86_SSE,        CPUClass::X86_SSE },
+		{ ZIMG_CPU_X86_SSE2,       CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE3,       CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSSE3,      CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE41,      CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_SSE42,      CPUClass::X86_SSE2 },
+		{ ZIMG_CPU_X86_AVX,        CPUClass::X86_AVX },
+		{ ZIMG_CPU_X86_F16C,       CPUClass::X86_F16C },
+		{ ZIMG_CPU_X86_AVX2,       CPUClass::X86_AVX2 },
+		{ ZIMG_CPU_X86_AVX512F,    CPUClass::X86_AVX2 },
+		{ ZIMG_CPU_X86_AVX512_KNL, CPUClass::X86_AVX2 },
+		{ ZIMG_CPU_X86_AVX512_SKL, CPUClass::X86_AVX512 },
 #endif
 	};
 	return search_enum_map(map, cpu, "unrecognized cpu type");
@@ -526,29 +533,49 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	zassert_d(src, "null pointer");
 	zassert_d(dst, "null pointer");
 
-	POINTER_ALIGNMENT_ASSERT(src->plane[0].data);
-	POINTER_ALIGNMENT_ASSERT(src->plane[1].data);
-	POINTER_ALIGNMENT_ASSERT(src->plane[2].data);
+	const zimg::graph::FilterGraph *graph = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr);
 
-	STRIDE_ALIGNMENT_ASSERT(src->plane[0].stride);
-	STRIDE_ALIGNMENT_ASSERT(src->plane[1].stride);
-	STRIDE_ALIGNMENT_ASSERT(src->plane[2].stride);
+	if (graph->requires_64b_alignment()) {
+		POINTER_ALIGNMENT64_ASSERT(src->plane[0].data);
+		POINTER_ALIGNMENT64_ASSERT(src->plane[1].data);
+		POINTER_ALIGNMENT64_ASSERT(src->plane[2].data);
 
-	POINTER_ALIGNMENT_ASSERT(dst->plane[0].data);
-	POINTER_ALIGNMENT_ASSERT(dst->plane[1].data);
-	POINTER_ALIGNMENT_ASSERT(dst->plane[2].data);
+		STRIDE_ALIGNMENT64_ASSERT(src->plane[0].stride);
+		STRIDE_ALIGNMENT64_ASSERT(src->plane[1].stride);
+		STRIDE_ALIGNMENT64_ASSERT(src->plane[2].stride);
 
-	STRIDE_ALIGNMENT_ASSERT(dst->plane[0].stride);
-	STRIDE_ALIGNMENT_ASSERT(dst->plane[1].stride);
-	STRIDE_ALIGNMENT_ASSERT(dst->plane[2].stride);
+		POINTER_ALIGNMENT64_ASSERT(dst->plane[0].data);
+		POINTER_ALIGNMENT64_ASSERT(dst->plane[1].data);
+		POINTER_ALIGNMENT64_ASSERT(dst->plane[2].data);
 
-	POINTER_ALIGNMENT_ASSERT(tmp);
+		STRIDE_ALIGNMENT64_ASSERT(dst->plane[0].stride);
+		STRIDE_ALIGNMENT64_ASSERT(dst->plane[1].stride);
+		STRIDE_ALIGNMENT64_ASSERT(dst->plane[2].stride);
+
+		POINTER_ALIGNMENT64_ASSERT(tmp);
+	} else {
+		POINTER_ALIGNMENT_ASSERT(src->plane[0].data);
+		POINTER_ALIGNMENT_ASSERT(src->plane[1].data);
+		POINTER_ALIGNMENT_ASSERT(src->plane[2].data);
+
+		STRIDE_ALIGNMENT_ASSERT(src->plane[0].stride);
+		STRIDE_ALIGNMENT_ASSERT(src->plane[1].stride);
+		STRIDE_ALIGNMENT_ASSERT(src->plane[2].stride);
+
+		POINTER_ALIGNMENT_ASSERT(dst->plane[0].data);
+		POINTER_ALIGNMENT_ASSERT(dst->plane[1].data);
+		POINTER_ALIGNMENT_ASSERT(dst->plane[2].data);
+
+		STRIDE_ALIGNMENT_ASSERT(dst->plane[0].stride);
+		STRIDE_ALIGNMENT_ASSERT(dst->plane[1].stride);
+		STRIDE_ALIGNMENT_ASSERT(dst->plane[2].stride);
+
+		POINTER_ALIGNMENT_ASSERT(tmp);
+	}
 
 	EX_BEGIN
-	const zimg::graph::FilterGraph *graph = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr);
 	auto src_buf = import_image_buffer(*src);
 	auto dst_buf = import_image_buffer(*dst);
-
 	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
 	EX_END
 }
