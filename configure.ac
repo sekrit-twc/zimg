@@ -78,6 +78,9 @@ int main()
 {
 	volatile __m512 x = _mm512_setzero_ps();
 	x = _mm512_add_ps(x, x);
+#if defined(__GNUC__) && defined(__x86_64__)
+	asm volatile ("" : : : "zmm16", "zmm17", "zmm18", "zmm19");
+#endif
 	return 0;
 }
           ])])
