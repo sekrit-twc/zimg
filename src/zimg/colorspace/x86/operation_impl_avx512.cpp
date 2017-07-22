@@ -9,6 +9,8 @@
 #include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"
 
+#include "common/x86/avx512_util.h"
+
 namespace zimg {
 namespace colorspace {
 
@@ -60,7 +62,7 @@ void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRI
 #define XARGS src, out0, out1, out2, c00, c01, c02, c10, c11, c12, c20, c21, c22
 	if (left != vec_left) {
 		XITER(vec_left - 16, XARGS);
-		__mmask16 mask = 0xFFFFU << (16 - (vec_left - left));
+		__mmask16 mask = mmask16_set_hi(vec_left - left);
 
 		_mm512_mask_store_ps(dst[0] + vec_left - 16, mask, out0);
 		_mm512_mask_store_ps(dst[1] + vec_left - 16, mask, out1);
@@ -77,7 +79,7 @@ void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRI
 
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
-		__mmask16 mask = 0xFFFFU >> (16 - (right - vec_right));
+		__mmask16 mask = mmask16_set_lo(right - vec_right);
 
 		_mm512_mask_store_ps(dst[0] + vec_right, mask, out0);
 		_mm512_mask_store_ps(dst[1] + vec_right, mask, out1);

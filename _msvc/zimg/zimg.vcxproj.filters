@@ -231,6 +231,9 @@
     <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">

@@ -42,7 +42,7 @@ static inline FORCE_INLINE void mm256_store_idxhi_epi16(__m256i *dst, __m256i x,
 	mm256_store_idxhi_epi8(dst, x, idx * 2);
 }
 
-// Transpose in-place the 16x16 matrix stored in [row0]-[row15]
+// Transpose in-place the 16x16 matrix stored in [row0]-[row15].
 static inline FORCE_INLINE void mm256_transpose16_epi16(__m256i &row0, __m256i &row1, __m256i &row2, __m256i &row3,
                                                         __m256i &row4, __m256i &row5, __m256i &row6, __m256i &row7,
                                                         __m256i &row8, __m256i &row9, __m256i &row10, __m256i &row11,

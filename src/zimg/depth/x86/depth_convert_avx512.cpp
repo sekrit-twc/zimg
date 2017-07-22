@@ -8,6 +8,8 @@
 #include "common/ccdep.h"
 #include "depth_convert_x86.h"
 
+#include "common/x86/avx512_util.h"
+
 namespace zimg {
 namespace depth {
 
@@ -65,7 +67,7 @@ inline FORCE_INLINE void depth_convert_avx512_impl(const void *src, void *dst, f
 		__m512 x = Load::load16(src_p + vec_left - 16);
 		x = _mm512_fmadd_ps(scale_ps, x, offset_ps);
 
-		Store::mask_store16(dst_p + vec_left - 16, 0xFFFFU << (16 - (vec_left - left)), x);
+		Store::mask_store16(dst_p + vec_left - 16, mmask16_set_hi(vec_left - left), x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -79,7 +81,7 @@ inline FORCE_INLINE void depth_convert_avx512_impl(const void *src, void *dst, f
 		__m512 x = Load::load16(src_p + vec_right);
 		x = _mm512_fmadd_ps(scale_ps, x, offset_ps);
 
-		Store::mask_store16(dst_p + vec_right, 0xFFFFU >> (16 - (right - vec_right)), x);
+		Store::mask_store16(dst_p + vec_right, mmask16_set_lo(right - vec_right), x);
 	}
 }
 
