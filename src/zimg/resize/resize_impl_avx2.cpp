@@ -622,7 +622,6 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 };
 
 
-
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
                                                          const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
