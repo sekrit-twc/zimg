@@ -8,8 +8,11 @@
 #include "common/zassert.h"
 #include "graph/image_filter.h"
 #include "depth_convert.h"
-#include "depth_convert_x86.h"
 #include "quantize.h"
+
+#ifdef ZIMG_X86
+  #include "x86/depth_convert_x86.h"
+#endif
 
 namespace zimg {
 namespace depth {

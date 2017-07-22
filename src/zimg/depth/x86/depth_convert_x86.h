@@ -2,10 +2,10 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
-#define ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
+#ifndef ZIMG_DEPTH_X86_DEPTH_CONVERT_X86_H_
+#define ZIMG_DEPTH_X86_DEPTH_CONVERT_X86_H_
 
-#include "depth_convert.h"
+#include "depth/depth_convert.h"
 
 namespace zimg {
 namespace depth {
@@ -45,6 +45,6 @@ bool needs_depth_f16c_func_x86(const PixelFormat &format_in, const PixelFormat &
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DEPTH_CONVERT_X86_H_
+#endif // ZIMG_DEPTH_X86_DEPTH_CONVERT_X86_H_
 
 #endif // ZIMG_X86

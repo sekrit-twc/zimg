@@ -4,7 +4,10 @@
 #include "colorspace_param.h"
 #include "operation.h"
 #include "operation_impl.h"
-#include "operation_impl_x86.h"
+
+#ifdef ZIMG_X86
+  #include "x86/operation_impl_x86.h"
+#endif
 
 namespace zimg {
 namespace colorspace {

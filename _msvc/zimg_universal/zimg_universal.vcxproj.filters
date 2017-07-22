@@ -70,25 +70,10 @@
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx2.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_sse2.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_x86.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp">
@@ -109,31 +94,7 @@
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\depth_convert_sse2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\depth_convert_x86.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\dither_avx2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\dither_sse2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\dither_x86.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\f16c_sse2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\f16c_ivb.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp">
@@ -143,18 +104,6 @@
       <Filter>Source Files\resize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_sse2.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_x86.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp">
@@ -175,32 +124,11 @@
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx2.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\quantize.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp">
       <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_sse2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\error_diffusion_avx2.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\resize_impl_avx512.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\operation_impl_avx512.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\depth_convert_avx512.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\dither_avx512.cpp">
-      <Filter>Source Files\depth</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -226,9 +154,6 @@
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\colorspace\operation_impl.h">
-      <Filter>Header Files\colorspace</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\colorspace\operation_impl_x86.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\align.h">
@@ -276,16 +201,7 @@
     <ClInclude Include="..\..\src\zimg\depth\depth_convert.h">
       <Filter>Header Files\depth</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\depth\depth_convert_x86.h">
-      <Filter>Header Files\depth</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\depth\dither.h">
-      <Filter>Header Files\depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\depth\dither_x86.h">
-      <Filter>Header Files\depth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\depth\f16c_x86.h">
       <Filter>Header Files\depth</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\depth\quantize.h">
@@ -298,9 +214,6 @@
       <Filter>Header Files\resize</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\resize\resize_impl.h">
-      <Filter>Header Files\resize</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\resize\resize_impl_x86.h">
       <Filter>Header Files\resize</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\unresize\bilinear.h">

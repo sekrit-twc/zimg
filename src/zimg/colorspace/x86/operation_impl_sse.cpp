@@ -5,11 +5,11 @@
 #include "common/ccdep.h"
 
 #define HAVE_CPU_SSE
-  #include "common/x86util.h"
+  #include "common/x86/x86util.h"
 #undef HAVE_CPU_SSE
 
 #include "common/make_unique.h"
-#include "operation_impl.h"
+#include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"
 
 namespace zimg {

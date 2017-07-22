@@ -10,12 +10,12 @@
 #include "common/except.h"
 
 #define HAVE_CPU_SSE2
-  #include "common/x86util.h"
+  #include "common/x86/x86util.h"
 #undef HAVE_CPU_SSE2
 
 #include "common/make_unique.h"
 #include "common/pixel.h"
-#include "resize_impl.h"
+#include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
 namespace zimg {

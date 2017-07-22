@@ -2,8 +2,8 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_RESIZE_RESIZE_IMPL_X86_H_
-#define ZIMG_RESIZE_RESIZE_IMPL_X86_H_
+#ifndef ZIMG_RESIZE_X86_RESIZE_IMPL_X86_H_
+#define ZIMG_RESIZE_X86_RESIZE_IMPL_X86_H_
 
 #include <memory>
 
@@ -50,6 +50,6 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 } // namespace resize
 } // namespace zimg
 
-#endif // ZIMG_RESIZE_RESIZE_IMPL_X86_H_
+#endif // ZIMG_RESIZE_X86_RESIZE_IMPL_X86_H_
 
 #endif // ZIMG_X86

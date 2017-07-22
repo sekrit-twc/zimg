@@ -8,7 +8,7 @@
 
 #define HAVE_CPU_SSE
 #define HAVE_CPU_SSE2
-  #include "common/x86util.h"
+  #include "common/x86/x86util.h"
 #undef HAVE_CPU_SSE
 #undef HAVE_CPU_SSE2
 

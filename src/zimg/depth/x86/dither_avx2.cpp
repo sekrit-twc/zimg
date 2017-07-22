@@ -6,7 +6,7 @@
 
 #define HAVE_CPU_SSE2
 #define HAVE_CPU_AVX2
-  #include "common/x86util.h"
+  #include "common/x86/x86util.h"
 #undef HAVE_CPU_SSE2
 #undef HAVE_CPU_AVX2
 

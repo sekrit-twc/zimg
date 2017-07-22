@@ -14,14 +14,14 @@
 #include "common/pixel.h"
 
 #define HAVE_CPU_SSE2
-  #include "common/x86util.h"
+  #include "common/x86/x86util.h"
 #undef HAVE_CPU_SSE2
 
 #include "common/zassert.h"
+#include "depth/quantize.h"
 #include "graph/image_buffer.h"
 #include "graph/image_filter.h"
 #include "dither_x86.h"
-#include "quantize.h"
 
 namespace zimg {
 namespace depth {

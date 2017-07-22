@@ -13,9 +13,12 @@
 #include "graph/image_filter.h"
 #include "depth.h"
 #include "dither.h"
-#include "dither_x86.h"
 #include "hexfloat.h"
 #include "quantize.h"
+
+#ifdef ZIMG_X86
+  #include "x86/dither_x86.h"
+#endif
 
 namespace zimg {
 namespace depth {

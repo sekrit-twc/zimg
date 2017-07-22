@@ -122,55 +122,55 @@ if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 
 libzimg_internal_la_SOURCES += \
-	src/zimg/colorspace/operation_impl_x86.cpp \
-	src/zimg/colorspace/operation_impl_x86.h \
-	src/zimg/common/x86util.cpp \
-	src/zimg/common/x86util.h \
-	src/zimg/depth/depth_convert_x86.cpp \
-	src/zimg/depth/depth_convert_x86.h \
-	src/zimg/depth/dither_x86.cpp \
-	src/zimg/depth/dither_x86.h \
-	src/zimg/depth/f16c_x86.h \
-	src/zimg/resize/resize_impl_x86.cpp \
-	src/zimg/resize/resize_impl_x86.h
+	src/zimg/colorspace/x86/operation_impl_x86.cpp \
+	src/zimg/colorspace/x86/operation_impl_x86.h \
+	src/zimg/common/x86/x86util.cpp \
+	src/zimg/common/x86/x86util.h \
+	src/zimg/depth/x86/depth_convert_x86.cpp \
+	src/zimg/depth/x86/depth_convert_x86.h \
+	src/zimg/depth/x86/dither_x86.cpp \
+	src/zimg/depth/x86/dither_x86.h \
+	src/zimg/depth/x86/f16c_x86.h \
+	src/zimg/resize/x86/resize_impl_x86.cpp \
+	src/zimg/resize/x86/resize_impl_x86.h
 
 
 libsse_la_SOURCES = \
-	src/zimg/colorspace/operation_impl_sse.cpp \
-	src/zimg/resize/resize_impl_sse.cpp
+	src/zimg/colorspace/x86/operation_impl_sse.cpp \
+	src/zimg/resize/x86/resize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libsse2_la_SOURCES = \
-	src/zimg/colorspace/operation_impl_sse2.cpp \
-	src/zimg/depth/depth_convert_sse2.cpp \
-	src/zimg/depth/dither_sse2.cpp \
-	src/zimg/depth/error_diffusion_sse2.cpp \
-	src/zimg/depth/f16c_sse2.cpp \
-	src/zimg/resize/resize_impl_sse2.cpp
+	src/zimg/colorspace/x86/operation_impl_sse2.cpp \
+	src/zimg/depth/x86/depth_convert_sse2.cpp \
+	src/zimg/depth/x86/dither_sse2.cpp \
+	src/zimg/depth/x86/error_diffusion_sse2.cpp \
+	src/zimg/depth/x86/f16c_sse2.cpp \
+	src/zimg/resize/x86/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx_la_SOURCES = \
-	src/zimg/colorspace/operation_impl_avx.cpp \
-	src/zimg/resize/resize_impl_avx.cpp
+	src/zimg/colorspace/x86/operation_impl_avx.cpp \
+	src/zimg/resize/x86/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx
 libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
-libf16c_la_SOURCES = src/zimg/depth/f16c_ivb.cpp
+libf16c_la_SOURCES = src/zimg/depth/x86/f16c_ivb.cpp
 
 libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
 libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = \
-	src/zimg/colorspace/operation_impl_avx2.cpp \
-	src/zimg/depth/depth_convert_avx2.cpp \
-	src/zimg/depth/dither_avx2.cpp \
-	src/zimg/depth/error_diffusion_avx2.cpp \
-	src/zimg/resize/resize_impl_avx2.cpp
+	src/zimg/colorspace/x86/operation_impl_avx2.cpp \
+	src/zimg/depth/x86/depth_convert_avx2.cpp \
+	src/zimg/depth/x86/dither_avx2.cpp \
+	src/zimg/depth/x86/error_diffusion_avx2.cpp \
+	src/zimg/resize/x86/resize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
@@ -182,10 +182,10 @@ if X86SIMD_AVX512
 noinst_LTLIBRARIES += libavx512.la
 
 libavx512_la_SOURCES = \
-	src/zimg/colorspace/operation_impl_avx512.cpp \
-	src/zimg/depth/depth_convert_avx512.cpp \
-	src/zimg/depth/dither_avx512.cpp \
-	src/zimg/resize/resize_impl_avx512.cpp
+	src/zimg/colorspace/x86/operation_impl_avx512.cpp \
+	src/zimg/depth/x86/depth_convert_avx512.cpp \
+	src/zimg/depth/x86/dither_avx512.cpp \
+	src/zimg/resize/x86/resize_impl_avx512.cpp
 
 AVX512_SKL_CFLAGS = -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq
 libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) $(AVX512_SKL_CFLAGS)
@@ -302,6 +302,7 @@ test_unit_test_SOURCES = \
 	test/main.cpp \
 	test/api/api_test.cpp \
 	test/colorspace/colorspace_test.cpp \
+	test/colorspace/gamma_test.cpp \
 	test/depth/depth_convert_test.cpp \
 	test/depth/dither_test.cpp \
 	test/extra/sha1/config.h \
@@ -319,31 +320,30 @@ test_unit_test_SOURCES = \
 
 if X86SIMD
 test_unit_test_SOURCES += \
-	test/colorspace/colorspace_avx_test.cpp \
-	test/colorspace/colorspace_avx2_test.cpp \
-	test/colorspace/colorspace_sse_test.cpp \
-	test/colorspace/colorspace_sse2_test.cpp \
-	test/colorspace/gamma_test.cpp \
-	test/depth/depth_convert_avx2_test.cpp \
-	test/depth/depth_convert_sse2_test.cpp \
-	test/depth/dither_avx2_test.cpp \
-	test/depth/dither_sse2_test.cpp \
-	test/depth/error_diffusion_avx2_test.cpp \
-	test/depth/error_diffusion_sse2_test.cpp \
-	test/depth/f16c_ivb_test.cpp \
-	test/depth/f16c_sse2_test.cpp \
-	test/resize/resize_impl_avx_test.cpp \
-	test/resize/resize_impl_avx2_test.cpp \
-	test/resize/resize_impl_sse_test.cpp \
-	test/resize/resize_impl_sse2_test.cpp
+	test/colorspace/x86/colorspace_avx_test.cpp \
+	test/colorspace/x86/colorspace_avx2_test.cpp \
+	test/colorspace/x86/colorspace_sse_test.cpp \
+	test/colorspace/x86/colorspace_sse2_test.cpp \
+	test/depth/x86/depth_convert_avx2_test.cpp \
+	test/depth/x86/depth_convert_sse2_test.cpp \
+	test/depth/x86/dither_avx2_test.cpp \
+	test/depth/x86/dither_sse2_test.cpp \
+	test/depth/x86/error_diffusion_avx2_test.cpp \
+	test/depth/x86/error_diffusion_sse2_test.cpp \
+	test/depth/x86/f16c_ivb_test.cpp \
+	test/depth/x86/f16c_sse2_test.cpp \
+	test/resize/x86/resize_impl_avx_test.cpp \
+	test/resize/x86/resize_impl_avx2_test.cpp \
+	test/resize/x86/resize_impl_sse_test.cpp \
+	test/resize/x86/resize_impl_sse2_test.cpp
 endif #X86SIMD
 
 if X86SIMD_AVX512
 test_unit_test_SOURCES += \
-	test/colorspace/colorspace_avx512_test.cpp \
-	test/depth/depth_convert_avx512_test.cpp \
-	test/depth/dither_avx512_test.cpp \
-	test/resize/resize_impl_avx512_test.cpp
+	test/colorspace/x86/colorspace_avx512_test.cpp \
+	test/depth/x86/depth_convert_avx512_test.cpp \
+	test/depth/x86/dither_avx512_test.cpp \
+	test/resize/x86/resize_impl_avx512_test.cpp
 endif # X86SIMD_AVX512
 
 test_unit_test_LDADD = \

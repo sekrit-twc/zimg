@@ -8,7 +8,7 @@
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/make_unique.h"
-#include "operation_impl.h"
+#include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"
 
 namespace zimg {

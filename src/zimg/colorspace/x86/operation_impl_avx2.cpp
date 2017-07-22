@@ -9,9 +9,9 @@
 #include "common/ccdep.h"
 #include "common/make_unique.h"
 #include "common/zassert.h"
-#include "colorspace.h"
-#include "gamma.h"
-#include "operation.h"
+#include "colorspace/colorspace.h"
+#include "colorspace/gamma.h"
+#include "colorspace/operation.h"
 #include "operation_impl_x86.h"
 
 namespace zimg {

@@ -11,7 +11,7 @@
 #include "resize_impl.h"
 
 #ifdef ZIMG_X86
-  #include "resize_impl_x86.h"
+  #include "x86/resize_impl_x86.h"
 #endif
 
 namespace zimg {

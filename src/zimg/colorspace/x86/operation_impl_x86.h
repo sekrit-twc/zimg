@@ -2,8 +2,8 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_COLORSPACE_OPERATION_IMPL_X86_H_
-#define ZIMG_COLORSPACE_OPERATION_IMPL_X86_H_
+#ifndef ZIMG_COLORSPACE_X86_OPERATION_IMPL_X86_H_
+#define ZIMG_COLORSPACE_X86_OPERATION_IMPL_X86_H_
 
 #include <memory>
 
@@ -37,6 +37,6 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation_x86(TransferCharacte
 } // namespace colorspace
 } // namespace zimg
 
-#endif // ZIMG_COLORSPACE_OPERATION_IMPL_X86_H_
+#endif // ZIMG_COLORSPACE_X86_OPERATION_IMPL_X86_H_
 
 #endif // ZIMG_X86

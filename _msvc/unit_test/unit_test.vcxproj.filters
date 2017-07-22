@@ -49,15 +49,21 @@
     <Filter Include="Source Files\api">
       <UniqueIdentifier>{73ad656b-c64d-4557-a19c-c1cdcc46a900}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\colorspace\x86">
+      <UniqueIdentifier>{b93db372-eee7-435b-bdbd-188f4d360ca6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\depth\x86">
+      <UniqueIdentifier>{daeaaa38-fbcf-44e3-a6bc-0a7154f5115d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\resize\x86">
+      <UniqueIdentifier>{0e97fc53-bca2-441a-a86a-d0680ea837d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\dither_sse2_test.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\depth\dither_test.cpp">
@@ -90,12 +96,6 @@
     <ClCompile Include="..\..\test\extra\sha1\sha1.c">
       <Filter>Source Files\extra\sha1</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\resize\resize_impl_sse_test.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\resize\resize_impl_sse2_test.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\resize\resize_impl_test.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
@@ -114,35 +114,8 @@
     <ClCompile Include="..\..\test\graph\mock_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\colorspace_sse_test.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\graph\basic_filter_test.cpp">
       <Filter>Source Files\graph</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\depth_convert_sse2_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\f16c_sse2_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\resize\resize_impl_avx_test.cpp">
-      <Filter>Source Files\resize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\f16c_ivb_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\dither_avx2_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\colorspace_avx_test.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\depth_convert_avx2_test.cpp">
-      <Filter>Source Files\depth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\resize\resize_impl_avx2_test.cpp">
-      <Filter>Source Files\resize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\api_test.cpp">
       <Filter>Source Files\api</Filter>
@@ -156,29 +129,65 @@
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\colorspace_sse2_test.cpp">
-      <Filter>Source Files\colorspace</Filter>
+    <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\colorspace_avx2_test.cpp">
-      <Filter>Source Files\colorspace</Filter>
+    <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx2_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\depth\error_diffusion_sse2_test.cpp">
-      <Filter>Source Files\depth</Filter>
+    <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx512_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\depth\error_diffusion_avx2_test.cpp">
-      <Filter>Source Files\depth</Filter>
+    <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\resize\resize_impl_avx512_test.cpp">
-      <Filter>Source Files\resize</Filter>
+    <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse2_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\colorspace_avx512_test.cpp">
-      <Filter>Source Files\colorspace</Filter>
+    <ClCompile Include="..\..\test\depth\x86\depth_convert_avx2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\depth\depth_convert_avx512_test.cpp">
-      <Filter>Source Files\depth</Filter>
+    <ClCompile Include="..\..\test\depth\x86\depth_convert_avx512_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\depth\dither_avx512_test.cpp">
-      <Filter>Source Files\depth</Filter>
+    <ClCompile Include="..\..\test\depth\x86\depth_convert_sse2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\dither_avx2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\dither_avx512_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\dither_sse2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\error_diffusion_avx2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\error_diffusion_sse2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\f16c_ivb_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\x86\f16c_sse2_test.cpp">
+      <Filter>Source Files\depth\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_avx_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_avx2_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_sse_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_sse2_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

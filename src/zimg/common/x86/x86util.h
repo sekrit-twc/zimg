@@ -2,11 +2,11 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_X86UTIL_H_
-#define ZIMG_X86UTIL_H_
+#ifndef ZIMG_X86_X86UTIL_H_
+#define ZIMG_X86_X86UTIL_H_
 
 #include <cstdint>
-#include "ccdep.h"
+#include "common/ccdep.h"
 
 namespace zimg {
 
@@ -342,6 +342,6 @@ static inline FORCE_INLINE void mm256_transpose16_epi16(__m256i &row0, __m256i &
 
 } // namespace zimg
 
-#endif // ZIMG_X86UTIL_H_
+#endif // ZIMG_X86_X86UTIL_H_
 
 #endif // ZIMG_X86

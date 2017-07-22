@@ -2,11 +2,11 @@
 
 #ifdef ZIMG_X86
 
-#ifndef ZIMG_DEPTH_DITHER_X86_H_
-#define ZIMG_DEPTH_DITHER_X86_H_
+#ifndef ZIMG_DEPTH_X86_DITHER_X86_H_
+#define ZIMG_DEPTH_X86_DITHER_X86_H_
 
 #include <memory>
-#include "dither.h"
+#include "depth/dither.h"
 
 namespace zimg {
 
@@ -65,6 +65,6 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion_x86(unsigned width, u
 } // namespace depth
 } // namespace zimg
 
-#endif // ZIMG_DEPTH_DITHER_X86_H_
+#endif // ZIMG_DEPTH_X86_DITHER_X86_H_
 
 #endif // ZIMG_X86

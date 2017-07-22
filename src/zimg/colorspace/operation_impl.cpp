@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cfloat>
-
 #include "common/make_unique.h"
 #include "common/zassert.h"
 #include "colorspace.h"
@@ -9,7 +8,10 @@
 #include "matrix3.h"
 #include "operation.h"
 #include "operation_impl.h"
-#include "operation_impl_x86.h"
+
+#ifdef ZIMG_X86
+  #include "x86/operation_impl_x86.h"
+#endif
 
 namespace zimg {
 namespace colorspace {
