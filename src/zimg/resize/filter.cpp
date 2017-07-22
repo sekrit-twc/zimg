@@ -229,17 +229,17 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	double scale = static_cast<double>(dst_dim) / width;
 	double step = std::min(scale, 1.0);
 	double support = static_cast<double>(f.support()) / step;
+	unsigned filter_size = std::max(static_cast<unsigned>(std::ceil(support)) * 2U, 1U);
 
 	if (support > static_cast<unsigned>(UINT_MAX / 2))
 		error::throw_<error::ResamplingNotAvailable>("filter width too great");
-	if (std::abs(shift) >= src_dim || shift + width >= 2 * src_dim)
+	if (std::abs(shift) >= src_dim || shift + width + filter_size >= 2.0 * src_dim)
 		error::throw_<error::ResamplingNotAvailable>("image shift or subwindow too great");
 	if (src_dim <= support || width <= support)
 		error::throw_<error::ResamplingNotAvailable>("filter width too great for image dimensions");
 
 	try {
 		RowMatrix<double> m{ dst_dim, src_dim };
-		unsigned filter_size = std::max(static_cast<unsigned>(std::ceil(support)) * 2U, 1U);
 
 		for (unsigned i = 0; i < dst_dim; ++i) {
 			// Position of output sample on input grid.
