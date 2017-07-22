@@ -213,6 +213,9 @@
     <ClInclude Include="..\..\src\zimg\resize\x86\resize_impl_x86.h">
       <Filter>Header Files\resize\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -361,6 +364,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_x86.cpp">
       <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\x86\cpuinfo_x86.cpp">
+      <Filter>Source Files\common\x86</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

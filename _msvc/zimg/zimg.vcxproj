@@ -173,6 +173,7 @@
     <ClInclude Include="..\..\src\zimg\common\ccdep.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
+    <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\x86util.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp" />
     <ClCompile Include="..\..\src\zimg\common\libm_wrapper.cpp" />
     <ClCompile Include="..\..\src\zimg\common\matrix.cpp" />
+    <ClCompile Include="..\..\src\zimg\common\x86\cpuinfo_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\common\x86\x86util.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />

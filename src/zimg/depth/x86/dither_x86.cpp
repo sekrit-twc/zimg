@@ -6,6 +6,7 @@
 
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "graph/image_filter.h"
 #include "dither_x86.h"
 #include "f16c_x86.h"

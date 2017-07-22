@@ -2,6 +2,7 @@
 
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 

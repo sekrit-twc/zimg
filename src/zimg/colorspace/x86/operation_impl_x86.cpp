@@ -5,6 +5,7 @@
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "colorspace/operation.h"
 #include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"

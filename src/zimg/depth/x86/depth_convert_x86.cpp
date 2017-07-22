@@ -5,6 +5,7 @@
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "common/pixel.h"
 #include "depth_convert_x86.h"
 #include "f16c_x86.h"

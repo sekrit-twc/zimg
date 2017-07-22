@@ -124,6 +124,8 @@ noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 libzimg_internal_la_SOURCES += \
 	src/zimg/colorspace/x86/operation_impl_x86.cpp \
 	src/zimg/colorspace/x86/operation_impl_x86.h \
+	src/zimg/common/x86/cpuinfo_x86.cpp \
+	src/zimg/common/x86/cpuinfo_x86.h \
 	src/zimg/common/x86/x86util.cpp \
 	src/zimg/common/x86/x86util.h \
 	src/zimg/depth/x86/depth_convert_x86.cpp \

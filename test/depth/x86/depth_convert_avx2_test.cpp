@@ -3,6 +3,7 @@
 #include <cmath>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "graph/image_filter.h"
 #include "depth/depth_convert.h"
 
