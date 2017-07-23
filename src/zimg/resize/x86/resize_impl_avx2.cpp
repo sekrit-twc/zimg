@@ -1,6 +1,7 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
+#include <climits>
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>
@@ -34,7 +35,7 @@ struct f16_traits {
 
 	static inline FORCE_INLINE vec8_type load8_raw(const pixel_type *ptr)
 	{
-		return _mm_load_si128((const __m128i *)ptr);
+		return _mm_loadu_si128((const __m128i *)ptr);
 	}
 
 	static inline FORCE_INLINE void store8_raw(pixel_type *ptr, vec8_type x)
@@ -83,7 +84,7 @@ struct f32_traits {
 
 	static inline FORCE_INLINE vec8_type load8_raw(const pixel_type *ptr)
 	{
-		return _mm256_load_ps(ptr);
+		return _mm256_loadu_ps(ptr);
 	}
 
 	static inline FORCE_INLINE void store8_raw(pixel_type *ptr, vec8_type x)
@@ -126,7 +127,7 @@ struct f32_traits {
 };
 
 
-inline FORCE_INLINE __m256i export_i30_u16(__m256i lo, __m256i hi, uint16_t limit)
+inline FORCE_INLINE __m256i export_i30_u16(__m256i lo, __m256i hi)
 {
 	const __m256i round = _mm256_set1_epi32(1 << 13);
 
@@ -366,7 +367,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
 
-	accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+	accum_lo = export_i30_u16(accum_lo, accum_hi);
 	accum_lo = _mm256_min_epi16(accum_lo, lim);
 	accum_lo = _mm256_sub_epi16(accum_lo, i16_min);
 	return accum_lo;
@@ -616,6 +617,261 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 };
 
 
+template <unsigned N>
+void resize_line_h_perm_u16_avx2(const unsigned *permute_left, const unsigned *permute_mask, const int16_t *filter_data, unsigned input_width,
+                                 const uint16_t *src, uint16_t *dst, unsigned left, unsigned right, uint16_t limit)
+{
+	static_assert(N <= 10, "permuted resampler only supports up to 10 taps");
+
+	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
+	const __m256i lim = _mm256_set1_epi16(limit + INT16_MIN);
+
+	unsigned vec_right = floor_n(right, 8);
+	unsigned fallback_idx = vec_right;
+
+	for (unsigned j = floor_n(left, 8); j < vec_right; j += 8) {
+		unsigned left = permute_left[j / 8];
+
+		if (input_width - left < 24) {
+			fallback_idx = j;
+			break;
+		}
+
+		const __m256i mask = _mm256_load_si256((const __m256i *)(permute_mask + j));
+		const int16_t *data = filter_data + j * N;
+
+		__m256i accum0 = _mm256_setzero_si256();
+		__m256i accum1 = _mm256_setzero_si256();
+		__m256i x, x0, x8, coeffs;
+
+		if (N >= 2) {
+			x0 = _mm256_loadu_si256((const __m256i *)(src + left + 0));
+			x0 = _mm256_add_epi16(x0, i16_min);
+
+			x = x0;
+			x = _mm256_permutevar8x32_epi32(x, mask);
+			coeffs = _mm256_load_si256((__m256i *)(data + 0 * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum0 = _mm256_add_epi32(accum0, x);
+		}
+		if (N >= 4) {
+			x8 = _mm256_loadu_si256((const __m256i *)(src + left + 8));
+			x8 = _mm256_add_epi16(x8, i16_min);
+
+			x = _mm256_alignr_epi8(x8, x0, 4);
+			x = _mm256_permutevar8x32_epi32(x, mask);
+			coeffs = _mm256_load_si256((const __m256i *)(data + 2 * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum1 = _mm256_add_epi32(accum1, x);
+		}
+		if (N >= 6) {
+			x = _mm256_alignr_epi8(x8, x0, 8);
+			x = _mm256_permutevar8x32_epi32(x, mask);
+			coeffs = _mm256_load_si256((const __m256i *)(data + 4 * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum0 = _mm256_add_epi32(accum0, x);
+		}
+		if (N >= 8) {
+			x = _mm256_alignr_epi8(x8, x0, 12);
+			x = _mm256_permutevar8x32_epi32(x, mask);
+			coeffs = _mm256_load_si256((const __m256i *)(data + 6 * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum1 = _mm256_add_epi32(accum1, x);
+		}
+		if (N >= 10) {
+			x = x8;
+			x = _mm256_permutevar8x32_epi32(x, mask);
+			coeffs = _mm256_load_si256((const __m256i *)(data + 8 * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum0 = _mm256_add_epi32(accum0, x);
+		}
+
+		accum0 = _mm256_add_epi32(accum0, accum1);
+		accum0 = export_i30_u16(accum0, accum0);
+		accum0 = _mm256_min_epi16(accum0, lim);
+		accum0 = _mm256_sub_epi16(accum0, i16_min);
+		accum0 = _mm256_permute4x64_epi64(accum0, _MM_SHUFFLE(3, 1, 2, 0));
+
+		_mm_store_si128((__m128i *)(dst + j), _mm256_castsi256_si128(accum0));
+	}
+	for (unsigned j = fallback_idx; j < right; j += 8) {
+		unsigned left = permute_left[j / 8];
+		const int16_t *data = filter_data + j * N;
+
+		__m256i accum = _mm256_setzero_si256();
+		__m256i x, coeffs;
+
+		for (unsigned k = 0; k < N; k += 2) {
+			alignas(32) uint16_t tmp[16];
+
+			for (unsigned kk = 0; kk < 8; ++kk) {
+				unsigned idx = left + permute_mask[j + kk] * 2 + k;
+
+				tmp[kk * 2 + 0] = src[idx + 0];
+				tmp[kk * 2 + 1] = src[std::min(idx + 1, input_width)];
+			}
+
+			x = _mm256_loadu_si256((const __m256i *)tmp);
+			x = _mm256_add_epi16(x, i16_min);
+			coeffs = _mm256_load_si256((const __m256i *)(data + k * 8));
+			x = _mm256_madd_epi16(coeffs, x);
+			accum = _mm256_add_epi32(accum, x);
+		}
+
+		accum = export_i30_u16(accum, accum);
+		accum = _mm256_min_epi16(accum, lim);
+		accum = _mm256_sub_epi16(accum, i16_min);
+		accum = _mm256_permute4x64_epi64(accum, _MM_SHUFFLE(3, 1, 2, 0));
+
+		_mm_store_si128((__m128i *)(dst + j), _mm256_castsi256_si128(accum));
+	}
+}
+
+struct resize_line_h_perm_u16_avx2_jt {
+	typedef decltype(&resize_line_h_perm_u16_avx2<2>) func_type;
+	static const func_type table[5];
+};
+
+const typename resize_line_h_perm_u16_avx2_jt::func_type resize_line_h_perm_u16_avx2_jt::table[5] = {
+	resize_line_h_perm_u16_avx2<2>,
+	resize_line_h_perm_u16_avx2<4>,
+	resize_line_h_perm_u16_avx2<6>,
+	resize_line_h_perm_u16_avx2<8>,
+	resize_line_h_perm_u16_avx2<10>,
+};
+
+
+template <class Traits, unsigned N>
+void resize_line_h_perm_fp_avx2(const unsigned *permute_left, const unsigned *permute_mask, const float *filter_data, unsigned input_width,
+                                const typename Traits::pixel_type *src, typename Traits::pixel_type *dst, unsigned left, unsigned right)
+{
+	static_assert(N <= 8, "permuted resampler only supports up to 8 taps");
+
+	unsigned vec_right = floor_n(right, 8);
+	unsigned fallback_idx = vec_right;
+
+#define mm256_alignr_ps(a, b, imm) _mm256_castsi256_ps(_mm256_alignr_epi8(_mm256_castps_si256((a)), _mm256_castps_si256((b)), (imm)))
+	for (unsigned j = floor_n(left, 8); j < vec_right; j += 8) {
+		unsigned left = permute_left[j / 8];
+
+		if (input_width - left < (N >= 6 ? 16 : 12)) {
+			fallback_idx = j;
+			break;
+		}
+
+		const __m256i mask = _mm256_load_si256((const __m256i *)(permute_mask + j));
+		const float *data = filter_data + j * N;
+
+		__m256 accum0 = _mm256_setzero_ps();
+		__m256 accum1 = _mm256_setzero_ps();
+		__m256 x, x0, x4, x8, coeffs;
+
+		if (N >= 1) {
+			x0 = Traits::load8(src + left + 0);
+
+			x = x0;
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 0 * 8);
+			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
+		}
+		if (N >= 2) {
+			x4 = Traits::load8(src + left + 4);
+
+			x = mm256_alignr_ps(x4, x0, 4);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 1 * 8);
+			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
+		}
+		if (N >= 3) {
+			x = mm256_alignr_ps(x4, x0, 8);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 2 * 8);
+			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
+		}
+		if (N >= 4) {
+			x = mm256_alignr_ps(x4, x0, 12);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 3 * 8);
+			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
+		}
+		if (N >= 5) {
+			x = x4;
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 4 * 8);
+			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
+		}
+		if (N >= 6) {
+			x8 = Traits::load8(src + left + 8);
+
+			x = mm256_alignr_ps(x8, x4, 4);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 5 * 8);
+			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
+		}
+		if (N >= 7) {
+			x = mm256_alignr_ps(x8, x4, 8);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 6 * 8);
+			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
+		}
+		if (N >= 8) {
+			x = mm256_alignr_ps(x8, x4, 12);
+			x = _mm256_permutevar8x32_ps(x, mask);
+			coeffs = _mm256_load_ps(data + 7 * 8);
+			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
+		}
+
+		accum0 = _mm256_add_ps(accum0, accum1);
+		Traits::store8(dst + j, accum0);
+	}
+#undef mm256_alignr_ps
+	for (unsigned j = fallback_idx; j < right; j += 8) {
+		unsigned left = permute_left[j / 8];
+		const float *data = filter_data + j * N;
+
+		__m256 accum0 = _mm256_setzero_ps();
+		__m256 accum1 = _mm256_setzero_ps();
+		__m256 x, coeffs;
+
+		for (unsigned k = 0; k < N; ++k) {
+			alignas(32) typename Traits::pixel_type tmp[8];
+
+			for (unsigned kk = 0; kk < 8; ++kk) {
+				tmp[kk] = src[left + permute_mask[j + kk] + k];
+			}
+
+			x = Traits::load8(tmp);
+			coeffs = _mm256_load_ps(data + k * 8);
+
+			if (k % 2)
+				accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
+			else
+				accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
+		}
+		accum0 = _mm256_add_ps(accum0, accum1);
+		Traits::store8(dst + j, accum0);
+	}
+}
+
+template <class Traits>
+struct resize_line_h_perm_fp_avx2_jt {
+	typedef decltype(&resize_line_h_perm_fp_avx2<Traits, 1>) func_type;
+	static const func_type table[8];
+};
+
+template <class Traits>
+const typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type resize_line_h_perm_fp_avx2_jt<Traits>::table[8] = {
+	resize_line_h_perm_fp_avx2<Traits, 1>,
+	resize_line_h_perm_fp_avx2<Traits, 2>,
+	resize_line_h_perm_fp_avx2<Traits, 3>,
+	resize_line_h_perm_fp_avx2<Traits, 4>,
+	resize_line_h_perm_fp_avx2<Traits, 5>,
+	resize_line_h_perm_fp_avx2<Traits, 6>,
+	resize_line_h_perm_fp_avx2<Traits, 7>,
+	resize_line_h_perm_fp_avx2<Traits, 8>,
+};
+
+
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
                                                          const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
@@ -696,7 +952,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 8), accum_hi);
 		return _mm256_setzero_si256();
 	} else {
-		accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+		accum_lo = export_i30_u16(accum_lo, accum_hi);
 		accum_lo = _mm256_min_epi16(accum_lo, lim);
 		accum_lo = _mm256_sub_epi16(accum_lo, i16_min);
 
@@ -1035,6 +1291,230 @@ public:
 	}
 };
 
+class ResizeImplH_Permute_U16_AVX2 final : public graph::ImageFilterBase {
+	typedef typename resize_line_h_perm_u16_avx2_jt::func_type func_type;
+
+	struct PermuteContext {
+		AlignedVector<unsigned> left;
+		AlignedVector<unsigned> permute;
+		AlignedVector<int16_t> data;
+		unsigned filter_rows;
+		unsigned filter_width;
+		unsigned input_width;
+	};
+
+	PermuteContext m_context;
+	unsigned m_height;
+	uint16_t m_pixel_max;
+	bool m_is_sorted;
+
+	func_type m_func;
+
+	ResizeImplH_Permute_U16_AVX2(PermuteContext context, unsigned height, unsigned depth) :
+		m_context(std::move(context)),
+		m_height{ height },
+		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
+		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
+		m_func{ resize_line_h_perm_u16_avx2_jt::table[(m_context.filter_width - 1) / 2] }
+	{}
+public:
+	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height, unsigned depth)
+	{
+		// Transpose is faster for large filters.
+		if (filter.filter_width > 8)
+			return nullptr;
+
+		PermuteContext context{};
+
+		unsigned filter_width = ceil_n(filter.filter_width + 1, 2);
+
+		context.left.resize(ceil_n(filter.filter_rows, 8) / 8);
+		context.permute.resize(ceil_n(filter.filter_rows, 8));
+		context.data.resize(ceil_n(filter.filter_rows, 8) * filter_width);
+		context.filter_rows = filter.filter_rows;
+		context.filter_width = filter_width;
+		context.input_width = filter.input_width;
+
+		for (unsigned i = 0; i < filter.filter_rows; i += 8) {
+			unsigned left_min = UINT_MAX;
+			unsigned left_max = 0U;
+
+			for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
+				left_min = std::min(left_min, filter.left[ii]);
+				left_max = std::max(left_max, filter.left[ii]);
+			}
+			if (floor_n(left_max - left_min, 2) >= 16)
+				return nullptr;
+
+			for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
+				context.permute[ii] = floor_n(filter.left[ii] - left_min, 2) / 2;
+			}
+			context.left[i / 8] = left_min;
+
+			int16_t *data = context.data.data() + i * context.filter_width;
+			for (unsigned k = 0; k < filter.filter_width; k += 2) {
+				for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {					
+					unsigned offset = (filter.left[ii] - context.left[i / 8]) % 2;
+					
+					if (offset) {
+						data[static_cast<size_t>(k / 2) * 16 + (ii - i) * 2 + 1] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 0];
+						data[static_cast<size_t>(k / 2 + 1) * 16 + (ii - i) * 2] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 1];
+					} else {
+						data[static_cast<size_t>(k / 2) * 16 + (ii - i) * 2 + 0] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 0];
+						data[static_cast<size_t>(k / 2) * 16 + (ii - i) * 2 + 1] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 1];
+					}
+				}
+			}
+		}
+
+		std::unique_ptr<graph::ImageFilter> ret{ new ResizeImplH_Permute_U16_AVX2(std::move(context), height, depth) };
+		return ret;
+	}
+
+	filter_flags get_flags() const override
+	{
+		filter_flags flags{};
+
+		flags.same_row = true;
+		flags.entire_row = m_is_sorted;
+
+		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_context.filter_rows, m_height, PixelType::WORD };
+	}
+
+	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
+	{
+		if (m_is_sorted) {
+			unsigned input_width = m_context.input_width;
+			unsigned right_base = m_context.left[(right + 7) / 8 - 1];
+			unsigned iter_width = m_context.filter_width + 16;
+
+			return{ m_context.left[left / 8],  right_base + std::min(input_width - right_base, iter_width) };
+		} else {
+			return{ 0, m_context.input_width };
+		}
+	}
+
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	{
+		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
+
+		m_func(m_context.left.data(), m_context.permute.data(), m_context.data.data(), m_context.input_width, src_buf[i], dst_buf[i], left, right, m_pixel_max);
+	}
+};
+
+template <class Traits>
+class ResizeImplH_Permute_FP_AVX2 final : public graph::ImageFilterBase {
+	typedef typename Traits::pixel_type pixel_type;
+	typedef typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type func_type;
+
+	struct PermuteContext {
+		AlignedVector<unsigned> left;
+		AlignedVector<unsigned> permute;
+		AlignedVector<float> data;
+		unsigned filter_rows;
+		unsigned filter_width;
+		unsigned input_width;
+	};
+
+	PermuteContext m_context;
+	unsigned m_height;
+	bool m_is_sorted;
+
+	func_type m_func;
+
+	ResizeImplH_Permute_FP_AVX2(PermuteContext context, unsigned height) :
+		m_context(std::move(context)),
+		m_height{ height },
+		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
+		m_func{ resize_line_h_perm_fp_avx2_jt<Traits>::table[m_context.filter_width - 1] }
+	{}
+public:
+	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height)
+	{
+		// Transpose is faster for large filters.
+		if (filter.filter_width > 8)
+			return nullptr;
+
+		PermuteContext context{};
+
+		context.left.resize(ceil_n(filter.filter_rows, 8) / 8);
+		context.permute.resize(ceil_n(filter.filter_rows, 8));
+		context.data.resize(ceil_n(filter.filter_rows, 8) * filter.filter_width);
+		context.filter_rows = filter.filter_rows;
+		context.filter_width = filter.filter_width;
+		context.input_width = filter.input_width;
+
+		for (unsigned i = 0; i < filter.filter_rows; i += 8) {
+			unsigned left_min = UINT_MAX;
+			unsigned left_max = 0U;
+
+			for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
+				left_min = std::min(left_min, filter.left[ii]);
+				left_max = std::max(left_max, filter.left[ii]);
+			}
+			if (left_max - left_min >= 8)
+				return nullptr;
+
+			for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
+				context.permute[ii] = filter.left[ii] - left_min;
+			}
+			context.left[i / 8] = left_min;
+
+			float *data = context.data.data() + i * context.filter_width;
+			for (unsigned k = 0; k < context.filter_width; ++k) {
+				for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
+					data[static_cast<size_t>(k) * 8 + (ii - i)] = filter.data[ii * static_cast<ptrdiff_t>(filter.stride) + k];
+				}
+			}
+		}
+
+		std::unique_ptr<graph::ImageFilter> ret{ new ResizeImplH_Permute_FP_AVX2(std::move(context), height) };
+		return ret;
+	}
+
+	filter_flags get_flags() const override
+	{
+		filter_flags flags{};
+
+		flags.same_row = true;
+		flags.entire_row = m_is_sorted;
+
+		return flags;
+	}
+
+	image_attributes get_image_attributes() const override
+	{
+		return{ m_context.filter_rows, m_height, Traits::type_constant };
+	}
+
+	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
+	{
+		if (m_is_sorted) {
+			unsigned input_width = m_context.input_width;
+			unsigned right_base = m_context.left[(right + 7) / 8 - 1];
+			unsigned iter_width = m_context.filter_width + 8;
+			
+			return{ m_context.left[left / 8],  right_base + std::min(input_width - right_base, iter_width) };
+		} else {
+			return{ 0, m_context.input_width };
+		}
+	}
+
+	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	{
+		const auto &src_buf = graph::static_buffer_cast<const pixel_type>(*src);
+		const auto &dst_buf = graph::static_buffer_cast<pixel_type>(*dst);
+
+		m_func(m_context.left.data(), m_context.permute.data(), m_context.data.data(), m_context.input_width, src_buf[i], dst_buf[i], left, right);
+	}
+};
+
 class ResizeImplV_U16_AVX2 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
@@ -1161,12 +1641,23 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx2(const FilterContex
 {
 	std::unique_ptr<graph::ImageFilter> ret;
 
+#ifndef ZIMG_RESIZE_NO_PERMUTE
 	if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplH_U16_AVX2>(context, height, depth);
+		ret = ResizeImplH_Permute_U16_AVX2::create(context, height, depth);
 	else if (type == PixelType::HALF)
-		ret = ztd::make_unique<ResizeImplH_FP_AVX2<f16_traits>>(context, height);
+		ret = ResizeImplH_Permute_FP_AVX2<f16_traits>::create(context, height);
 	else if (type == PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplH_FP_AVX2<f32_traits>>(context, height);
+		ret = ResizeImplH_Permute_FP_AVX2<f32_traits>::create(context, height);
+#endif
+
+	if (!ret) {
+		if (type == PixelType::WORD)
+			ret = ztd::make_unique<ResizeImplH_U16_AVX2>(context, height, depth);
+		else if (type == PixelType::HALF)
+			ret = ztd::make_unique<ResizeImplH_FP_AVX2<f16_traits>>(context, height);
+		else if (type == PixelType::FLOAT)
+			ret = ztd::make_unique<ResizeImplH_FP_AVX2<f32_traits>>(context, height);
+	}
 
 	return ret;
 }

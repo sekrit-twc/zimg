@@ -51,7 +51,7 @@ void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint1
 	}
 }
 
-inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi, uint16_t limit)
+inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi)
 {
 	const __m128i round = _mm_set1_epi32(1 << 13);
 
@@ -210,7 +210,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
 
-	accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+	accum_lo = export_i30_u16(accum_lo, accum_hi);
 	accum_lo = _mm_min_epi16(accum_lo, lim);
 	accum_lo = _mm_sub_epi16(accum_lo, i16_min);
 	return accum_lo;
@@ -374,7 +374,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 4), accum_hi);
 		return _mm_setzero_si128();
 	} else {
-		accum_lo = export_i30_u16(accum_lo, accum_hi, limit);
+		accum_lo = export_i30_u16(accum_lo, accum_hi);
 		accum_lo = _mm_min_epi16(accum_lo, lim);
 		accum_lo = _mm_sub_epi16(accum_lo, i16_min);
 
