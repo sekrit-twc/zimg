@@ -19,7 +19,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext
 
 	if (cpu_is_autodetect(cpu)) {
 #ifdef ZIMG_X86_AVX512
-		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512dq && caps.avx512bw && caps.avx512vl)
 			ret = create_resize_impl_h_avx512(context, height, type, depth);
 #endif
 		if (!ret && caps.avx2)
@@ -55,7 +55,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext
 
 	if (cpu_is_autodetect(cpu)) {
 #ifdef ZIMG_X86_AVX512
-		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512dq && caps.avx512bw && caps.avx512vl)
 			ret = create_resize_impl_v_avx512(context, width, type, depth);
 #endif
 		if (!ret && caps.avx2)
