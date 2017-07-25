@@ -160,7 +160,6 @@
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\googletest\msvc_build\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>gtest.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -177,7 +176,6 @@
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\googletest\msvc_build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>gtest.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -195,7 +193,6 @@
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\googletest\msvc_build\$(Configuration)</AdditionalLibraryDirectories>
@@ -215,7 +212,6 @@
       <UseIntelOptimizedHeaders>true</UseIntelOptimizedHeaders>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\googletest\msvc_build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
