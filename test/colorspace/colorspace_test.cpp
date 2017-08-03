@@ -96,9 +96,9 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"a13696a7a2931b3ba549ef50ed061386f23ee354"
 		},
 		{
-			"4c190cb9ddfef9a6e220c61cb2e480c69a8f0b4d",
-			"17e41c66ddd3eb07a4eee31b9bb6e6c717cbd92f",
-			"19aa1aa5d54b0231bfe7ec03caede636f5dfc429"
+			"147cf697877df6ba4929c18bc430e73e76f46d36",
+			"72c2513ae702891091e3b7f28de6cffc0cc7e73b",
+			"2e5d6d855d4e003529e4d49d9116398e225de9c7"
 		},
 		{
 			"d39fa08fda52893d294c2bf3c6563bc3035392a9",
@@ -111,9 +111,9 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"e2dc601f663ea61899f37a9db1b50b5e4110a38e"
 		},
 		{
-			"e142f8335b67b30acaa562fa84b0fd79aeea86b8",
-			"48459e4fc6b1c93df3cad0642a2dc60232eeac2a",
-			"a61729320be4d2232ea08ca45d1b0cff0e3e5dda"
+			"d69ba2ef35555cb5a9b1e5536e26ea20070ca5b7",
+			"432ed50b06125b14b6114ffa39d3f2a7bf1a420e",
+			"e262b2462d8ba6590c57b72d94a7d151072bf49f"
 		},
 	};
 
@@ -242,9 +242,9 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 			"ccb32c84ad13f87eb0c53927690c8d9a33d046fd"
 		},
 		{
-			"2d59753ba28bfe458841ef135b5a3e9c3f4eaa8a",
-			"4a141fab23c2b427fe3d11dcd53d0576180b16ef",
-			"51ec7fe875c09400577b3b8ae9ac383504751183"
+			"026031c6453566271f6371e300ea8a4a62d568bd",
+			"bdc9a85681f47faf2353671dbaf38e6c53f3240f",
+			"502c047ceb19811eb912c742e14edae4f222d453"
 		},
 		{
 			"935fc4cab59118b382a925464bf61e8d04df3b15",
@@ -252,9 +252,9 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 			"2e4c4ac369cb50618e5501c64aa69ed4bad259a5"
 		},
 		{
-			"fc37fb0136ef19c42e603a6bcea420029c0900f2",
-			"645754227f593b42f1a7bd3fe3df20bfa4e6bfc3",
-			"bd9b5a9511a35dd633d8f8fde8e7da79fe717847"
+			"0b5d16d607e69dd20cb502cc0ed87b8018fe133d",
+			"627e0eb09def7f2cc2b427320f29f9d971e841de",
+			"aba169280cc6e306b3c7bfc6d038c197ec929047"
 		},
 	};
 

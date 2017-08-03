@@ -219,8 +219,8 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::ARIB_B67:
 		func.to_linear = scene_referred ? arib_b67_inverse_oetf : arib_b67_eotf;
 		func.to_gamma = scene_referred ? arib_b67_oetf : arib_b67_inverse_eotf;
-		func.to_linear_scale = 12.0f;
-		func.to_gamma_scale = 1.0f / 12.0f;
+		func.to_linear_scale = scene_referred ? 12.0f : static_cast<float>(1000.0 / peak_luminance);
+		func.to_gamma_scale = scene_referred ? 1.0f / 12.0f : static_cast<float>(peak_luminance / 1000.0);
 		break;
 	default:
 		error::throw_<error::InternalError>("invalid transfer characteristics");
