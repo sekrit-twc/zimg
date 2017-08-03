@@ -37,11 +37,27 @@ constexpr double ILLUMINANT_D65[2] = { 0.3127f, 0.3290f };
 Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix);
 
 /**
- * Obtain 3x3 matrix for converting from RGB toYUV.
+ * Obtain 3x3 matrix for converting from RGB to YUV.
  *
  * @see ncl_yuv_to_rgb_matrix
  */
 Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix);
+
+/**
+ * Derive YUV to RGB conversion function from color primaries.
+ *
+ * @param primaries color primaries
+ * @return conversion function as matrix
+ */
+Matrix3x3 ncl_yuv_to_rgb_matrix_from_primaries(ColorPrimaries primaries);
+
+/**
+ * Derive RGB to YUV conversion function from color primaries.
+ *
+ * @param primaries color primaries
+ * @return conversion function as matrix
+ */
+Matrix3x3 ncl_rgb_to_yuv_matrix_from_primaries(ColorPrimaries primaries);
 
 /**
  * Obtain 3x3 matrix for converting from ICtCp to LMS.

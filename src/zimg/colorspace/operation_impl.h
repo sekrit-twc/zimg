@@ -45,8 +45,7 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
  * Create operation consisting of converting linear light to non-linear ("gamma") encoding.
  *
  * @param transfer transfer characteristics
- * @param peak_luminance nominal peak luminance of SDR signal
- * @param scene_referred whether to use OETF instead of EOTF for conversion
+ * @param params parameters
  * @return concrete operation
  */
 std::unique_ptr<Operation> create_gamma_operation(TransferCharacteristics transfer, const OperationParams &params);
@@ -57,6 +56,24 @@ std::unique_ptr<Operation> create_gamma_operation(TransferCharacteristics transf
  * @see create_gamma_operation
  */
 std::unique_ptr<Operation> create_inverse_gamma_operation(TransferCharacteristics transfer, const OperationParams &params);
+
+/**
+ * Create operation consisting of converting linear light to ARIB STD-B67 using display-referred EOTF.
+ *
+ * @param m RGB to YUV conversion matrix for color primaries
+ * @param params parameters
+ * @return concrete operation
+ */
+std::unique_ptr<Operation> create_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params);
+
+/**
+ * Create operation consisting of converting ARIB STD-B67 to linear light using display-referred EOTF.
+ *
+ * @param m RGB to YUV conversion matrix for color primaries
+ * @param params parameters
+ * @return concrete operation
+ */
+std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params);
 
 } // namespace colorspace
 } // namespace zimg

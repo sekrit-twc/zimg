@@ -134,7 +134,7 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 		if (csp.transfer == TransferCharacteristics::LINEAR) {
 			for (auto transfer : all_transfer()) {
 				if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED)
-					edges.emplace_back(csp.to(transfer), std::bind(create_linear_to_gamma_operation, transfer, _1, _2));
+					edges.emplace_back(csp.to(transfer), std::bind(create_linear_to_gamma_operation, transfer, csp.primaries, _1, _2));
 			}
 			for (auto primaries : all_primaries()) {
 				if (primaries != csp.primaries && primaries != ColorPrimaries::UNSPECIFIED)
@@ -146,7 +146,7 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 				edges.emplace_back(csp.to(MatrixCoefficients::REC_2100_LMS), std::bind(create_ncl_rgb_to_yuv_operation, MatrixCoefficients::REC_2100_LMS, _1, _2));
 		} else if (csp.transfer != TransferCharacteristics::UNSPECIFIED) {
 			// Gamma RGB can be converted to linear RGB.
-			edges.emplace_back(csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, _1, _2));
+			edges.emplace_back(csp.to_linear(), std::bind(create_gamma_to_linear_operation, csp.transfer, csp.primaries, _1, _2));
 		}
 	} else if (csp.matrix == MatrixCoefficients::REC_2020_CL) {
 		edges.emplace_back(csp.to_rgb().to_linear(), create_2020_cl_yuv_to_rgb_operation);
@@ -154,13 +154,13 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 		// LMS with ST_2084 or ARIB_B67 transfer functions can be converted to ICtCp and also to linear transfer function
 		if (csp.transfer == TransferCharacteristics::ST_2084 || csp.transfer == TransferCharacteristics::ARIB_B67) {
 			edges.emplace_back(csp.to(MatrixCoefficients::REC_2100_ICTCP), create_lms_to_ictcp_operation);
-			edges.emplace_back(csp.to(TransferCharacteristics::LINEAR), std::bind(create_gamma_to_linear_operation, csp.transfer, _1, _2));
+			edges.emplace_back(csp.to(TransferCharacteristics::LINEAR), std::bind(create_gamma_to_linear_operation, csp.transfer, csp.primaries, _1, _2));
 		}
 		// LMS with linear transfer function can be converted to RGB matrix and to ARIB_B67 and ST_2084 transfer functions
 		if (csp.transfer == TransferCharacteristics::LINEAR) {
 			edges.emplace_back(csp.to_rgb(), std::bind(create_ncl_yuv_to_rgb_operation, csp.matrix, _1, _2));
-			edges.emplace_back(csp.to(TransferCharacteristics::ST_2084), std::bind(create_linear_to_gamma_operation, TransferCharacteristics::ST_2084, _1, _2));
-			edges.emplace_back(csp.to(TransferCharacteristics::ARIB_B67), std::bind(create_linear_to_gamma_operation, TransferCharacteristics::ARIB_B67, _1, _2));
+			edges.emplace_back(csp.to(TransferCharacteristics::ST_2084), std::bind(create_linear_to_gamma_operation, TransferCharacteristics::ST_2084, csp.primaries, _1, _2));
+			edges.emplace_back(csp.to(TransferCharacteristics::ARIB_B67), std::bind(create_linear_to_gamma_operation, TransferCharacteristics::ARIB_B67, csp.primaries, _1, _2));
 		}
 	} else if (csp.matrix == MatrixCoefficients::REC_2100_ICTCP) {
 		// ICtCp with ST_2084 or ARIB_B67 transfer functions can be converted to LMS

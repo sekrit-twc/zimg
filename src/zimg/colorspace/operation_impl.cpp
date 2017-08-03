@@ -48,7 +48,7 @@ class GammaOperationC final : public Operation {
 	float m_prescale;
 	float m_postscale;
 public:
-	explicit GammaOperationC(gamma_func func, float prescale, float postscale) :
+	GammaOperationC(gamma_func func, float prescale, float postscale) :
 		m_func{ func },
 		m_prescale{ prescale },
 		m_postscale{ postscale }
@@ -65,6 +65,78 @@ public:
 			for (unsigned i = left; i < right; ++i) {
 				dst_p[i] = m_postscale * m_func(src_p[i] * m_prescale);
 			}
+		}
+	}
+};
+
+class AribB67OperationC final : public Operation {
+	float m_kr;
+	float m_kg;
+	float m_kb;
+	float m_scale;
+public:
+	AribB67OperationC(double kr, double kg, double kb, float scale) :
+		m_kr{ static_cast<float>(kr) },
+		m_kg{ static_cast<float>(kg) },
+		m_kb{ static_cast<float>(kb) },
+		m_scale{ scale }
+	{}
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		const float gamma = 1.2f;
+
+		for (unsigned i = left; i < right; ++i) {
+			float r = src[0][i] * m_scale;
+			float g = src[1][i] * m_scale;
+			float b = src[2][i] * m_scale;
+
+			float yd = std::max(m_kr * r + m_kg * g + m_kb * b, FLT_MIN);
+			float ys_inv = zimg_x_powf(yd, (1.0f - gamma) / gamma);
+
+			r = arib_b67_oetf(r * ys_inv);
+			g = arib_b67_oetf(g * ys_inv);
+			b = arib_b67_oetf(b * ys_inv);
+
+			dst[0][i] = r;
+			dst[1][i] = g;
+			dst[2][i] = b;
+		}
+	}
+};
+
+class AribB67InverseOperationC final : public Operation {
+	float m_kr;
+	float m_kg;
+	float m_kb;
+	float m_scale;
+public:
+	AribB67InverseOperationC(double kr, double kg, double kb, float scale) :
+		m_kr{ static_cast<float>(kr) },
+		m_kg{ static_cast<float>(kg) },
+		m_kb{ static_cast<float>(kb) },
+		m_scale{ scale }
+	{}
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		const float gamma = 1.2f;
+
+		for (unsigned i = left; i < right; ++i) {
+			float r = src[0][i];
+			float g = src[1][i];
+			float b = src[2][i];
+
+			float ys = std::max(m_kr * r + m_kg * g + m_kb * b, FLT_MIN);
+			ys = zimg_x_powf(ys, gamma - 1.0f);
+
+			r = arib_b67_inverse_oetf(r * ys);
+			g = arib_b67_inverse_oetf(g * ys);
+			b = arib_b67_inverse_oetf(b * ys);
+
+			dst[0][i] = r * m_scale;
+			dst[1][i] = g * m_scale;
+			dst[2][i] = b * m_scale;
 		}
 	}
 };
@@ -194,6 +266,22 @@ std::unique_ptr<Operation> create_inverse_gamma_operation(TransferCharacteristic
 {
 	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
 	return ztd::make_unique<GammaOperationC>(func.to_linear, 1.0f, func.to_linear_scale);
+}
+
+std::unique_ptr<Operation> create_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params)
+{
+	zassert_d(!params.scene_referred, "must be display-referred");
+
+	TransferFunction func = select_transfer_function(TransferCharacteristics::ARIB_B67, params.peak_luminance, false);
+	return ztd::make_unique<AribB67OperationC>(m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
+}
+
+std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params)
+{
+	zassert_d(!params.scene_referred, "must be display-referred");
+
+	TransferFunction func = select_transfer_function(TransferCharacteristics::ARIB_B67, params.peak_luminance, false);
+	return ztd::make_unique<AribB67InverseOperationC>(m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
 std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu)
