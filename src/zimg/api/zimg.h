@@ -168,8 +168,7 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_F16C       = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
 	ZIMG_CPU_X86_AVX2       = 1009,
 	ZIMG_CPU_X86_AVX512F    = 1010,
-	ZIMG_CPU_X86_AVX512_KNL = 1011, /**< AVX-512 {F,CD,ER,PF} (e.g. Knights Landing) */
-	ZIMG_CPU_X86_AVX512_SKL = 1012, /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
+	ZIMG_CPU_X86_AVX512_SKL = 1011, /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
 #endif
 } zimg_cpu_type_e;
 
