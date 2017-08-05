@@ -196,6 +196,8 @@ float st_2084_inverse_oetf(float x) noexcept
 
 TransferFunction select_transfer_function(TransferCharacteristics transfer, double peak_luminance, bool scene_referred)
 {
+	zassert_d(!std::isnan(peak_luminance), "nan detected");
+
 	TransferFunction func{};
 
 	func.to_linear_scale = 1.0f;

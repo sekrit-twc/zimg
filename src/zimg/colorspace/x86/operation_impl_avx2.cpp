@@ -1,15 +1,12 @@
 #ifdef ZIMG_X86
 
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <vector>
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/make_unique.h"
-#include "common/zassert.h"
-#include "colorspace/colorspace.h"
 #include "colorspace/gamma.h"
 #include "colorspace/operation.h"
 #include "operation_impl_x86.h"
@@ -135,26 +132,20 @@ public:
 } // namespace
 
 
-std::unique_ptr<Operation> create_gamma_to_linear_operation_avx2(TransferCharacteristics transfer, const OperationParams &params)
+std::unique_ptr<Operation> create_gamma_operation_avx2(const TransferFunction &transfer, const OperationParams &params)
 {
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	zassert_d(!std::isnan(params.peak_luminance), "nan detected");
-
-	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
-	return ztd::make_unique<ToLinearLutOperationAVX2>(func.to_linear, LUT_DEPTH, func.to_linear_scale);
+	return ztd::make_unique<ToGammaLutOperationAVX2>(transfer.to_gamma, transfer.to_gamma_scale);
 }
 
-std::unique_ptr<Operation> create_linear_to_gamma_operation_avx2(TransferCharacteristics transfer, const OperationParams &params)
+std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFunction &transfer, const OperationParams &params)
 {
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	zassert_d(!std::isnan(params.peak_luminance), "nan detected");
-
-	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
-	return ztd::make_unique<ToGammaLutOperationAVX2>(func.to_gamma, func.to_gamma_scale);
+	return ztd::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
 } // namespace colorspace

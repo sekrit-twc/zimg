@@ -256,16 +256,30 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 	return ret;
 }
 
-std::unique_ptr<Operation> create_gamma_operation(TransferCharacteristics transfer, const OperationParams &params)
+std::unique_ptr<Operation> create_gamma_operation(const TransferFunction &transfer, const OperationParams &params, CPUClass cpu)
 {
-	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
-	return ztd::make_unique<GammaOperationC>(func.to_gamma, func.to_gamma_scale, 1.0f);
+	std::unique_ptr<Operation> ret;
+
+#ifdef ZIMG_X86
+	ret = create_gamma_operation_x86(transfer, params, cpu);
+#endif
+	if (!ret)
+		ret = ztd::make_unique<GammaOperationC>(transfer.to_gamma, transfer.to_gamma_scale, 1.0f);
+
+	return ret;
 }
 
-std::unique_ptr<Operation> create_inverse_gamma_operation(TransferCharacteristics transfer, const OperationParams &params)
+std::unique_ptr<Operation> create_inverse_gamma_operation(const TransferFunction &transfer, const OperationParams &params, CPUClass cpu)
 {
-	TransferFunction func = select_transfer_function(transfer, params.peak_luminance, params.scene_referred);
-	return ztd::make_unique<GammaOperationC>(func.to_linear, 1.0f, func.to_linear_scale);
+	std::unique_ptr<Operation> ret;
+
+#ifdef ZIMG_X86
+	ret = create_inverse_gamma_operation_x86(transfer, params, cpu);
+#endif
+	if (!ret)
+		ret = ztd::make_unique<GammaOperationC>(transfer.to_linear, 1.0f, transfer.to_linear_scale);
+
+	return ret;
 }
 
 std::unique_ptr<Operation> create_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params)

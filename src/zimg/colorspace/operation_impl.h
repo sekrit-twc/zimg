@@ -13,6 +13,7 @@ enum class CPUClass;
 namespace colorspace {
 
 struct Matrix3x3;
+struct TransferFunction;
 
 /**
  * Base class for matrix operation implementations.
@@ -44,18 +45,19 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 /**
  * Create operation consisting of converting linear light to non-linear ("gamma") encoding.
  *
- * @param transfer transfer characteristics
+ * @param transfer transfer functions
  * @param params parameters
+ * @param cpu create operation optimized for given cpu
  * @return concrete operation
  */
-std::unique_ptr<Operation> create_gamma_operation(TransferCharacteristics transfer, const OperationParams &params);
+std::unique_ptr<Operation> create_gamma_operation(const TransferFunction &func, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create operation consisting of converting non-linear ("gamma") encoding to linear light.
  *
  * @see create_gamma_operation
  */
-std::unique_ptr<Operation> create_inverse_gamma_operation(TransferCharacteristics transfer, const OperationParams &params);
+std::unique_ptr<Operation> create_inverse_gamma_operation(const TransferFunction &func, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create operation consisting of converting linear light to ARIB STD-B67 using display-referred EOTF.

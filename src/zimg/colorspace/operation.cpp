@@ -2,12 +2,9 @@
 #include "common/zassert.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
+#include "gamma.h"
 #include "operation.h"
 #include "operation_impl.h"
-
-#ifdef ZIMG_X86
-  #include "x86/operation_impl_x86.h"
-#endif
 
 namespace zimg {
 namespace colorspace {
@@ -72,12 +69,8 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(const ColorspaceDefi
 
 	if (in.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(in.primaries, params))
 		return create_inverse_arib_b67_operation(ncl_rgb_to_yuv_matrix_from_primaries(in.primaries), params);
-
-#ifdef ZIMG_X86
-	if (std::unique_ptr<Operation> op = create_gamma_to_linear_operation_x86(in.transfer, params, cpu))
-		return op;
-#endif
-	return create_inverse_gamma_operation(in.transfer, params);
+	else
+		return create_inverse_gamma_operation(select_transfer_function(in.transfer, params.peak_luminance, params.scene_referred), params, cpu);
 }
 
 std::unique_ptr<Operation> create_linear_to_gamma_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -88,12 +81,8 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(const ColorspaceDefi
 
 	if (out.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(out.primaries, params))
 		return create_arib_b67_operation(ncl_rgb_to_yuv_matrix_from_primaries(out.primaries), params);
-
-#ifdef ZIMG_X86
-	if (std::unique_ptr<Operation> op = create_linear_to_gamma_operation_x86(out.transfer, params, cpu))
-		return op;
-#endif
-	return create_gamma_operation(out.transfer, params);
+	else
+		return create_gamma_operation(select_transfer_function(out.transfer, params.peak_luminance, params.scene_referred), params, cpu);
 }
 
 std::unique_ptr<Operation> create_gamut_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
