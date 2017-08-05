@@ -26,7 +26,7 @@ constexpr double REC_2020_PRIMARIES[3][2] = { { 0.708, 0.292 }, { 0.170, 0.797 }
 constexpr double DCI_P3_PRIMARIES[3][2] = { { 0.680, 0.320 } , { 0.265, 0.690 }, { 0.150, 0.060 } };
 
 // D65 white point in XY.
-constexpr double ILLUMINANT_D65[2] = { 0.3127f, 0.3290f };
+constexpr double ILLUMINANT_D65[2] = { 0.3127, 0.3290 };
 
 /**
  * Obtain 3x3 matrix for converting from YUV to RGB.
