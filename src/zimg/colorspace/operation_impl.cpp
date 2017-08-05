@@ -284,13 +284,21 @@ std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m,
 	return ztd::make_unique<AribB67InverseOperationC>(m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
-std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const OperationParams &params, CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
+	zassert_d(in.primaries == out.primaries, "primaries mismatch");
+	zassert_d(in.matrix == MatrixCoefficients::REC_2020_CL && in.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
+	zassert_d(out.matrix == MatrixCoefficients::RGB && out.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
+
 	return ztd::make_unique<Rec2020CLToRGBOperationC>();
 }
 
-std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(const OperationParams &params, CPUClass cpu)
+std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
+	zassert_d(in.primaries == out.primaries, "primaries mismatch");
+	zassert_d(in.matrix == MatrixCoefficients::RGB && in.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
+	zassert_d(out.matrix == MatrixCoefficients::REC_2020_CL && out.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
+
 	return ztd::make_unique<Rec2020CLToYUVOperationC>();
 }
 
