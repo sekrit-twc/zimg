@@ -96,11 +96,6 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"a13696a7a2931b3ba549ef50ed061386f23ee354"
 		},
 		{
-			"4c190cb9ddfef9a6e220c61cb2e480c69a8f0b4d",
-			"17e41c66ddd3eb07a4eee31b9bb6e6c717cbd92f",
-			"19aa1aa5d54b0231bfe7ec03caede636f5dfc429"
-		},
-		{
 			"d39fa08fda52893d294c2bf3c6563bc3035392a9",
 			"e99ba9e53c3b43e5babb580c279b2d1558a6ffa0",
 			"790eb9960fd57ff146029a0783b033e2bbdbd836"
@@ -110,11 +105,6 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 			"90eae848b7050edf12ca22f57bda4eeccad8d7ef",
 			"e2dc601f663ea61899f37a9db1b50b5e4110a38e"
 		},
-		{
-			"e142f8335b67b30acaa562fa84b0fd79aeea86b8",
-			"48459e4fc6b1c93df3cad0642a2dc60232eeac2a",
-			"a61729320be4d2232ea08ca45d1b0cff0e3e5dda"
-		},
 	};
 
 	SCOPED_TRACE("gamma->linear");
@@ -123,17 +113,57 @@ TEST(ColorspaceConversionTest, test_transfer_only)
 	SCOPED_TRACE("st2084->linear");
 	test_case(csp_st2084, csp_linear, expected_sha1[1]);
 
-	SCOPED_TRACE("b67->linear");
-	test_case(csp_arib_b67, csp_linear, expected_sha1[2]);
-
 	SCOPED_TRACE("linear->gamma");
-	test_case(csp_linear, csp_gamma, expected_sha1[3]);
+	test_case(csp_linear, csp_gamma, expected_sha1[2]);
 
 	SCOPED_TRACE("linear->st2084");
-	test_case(csp_linear, csp_st2084, expected_sha1[4]);
+	test_case(csp_linear, csp_st2084, expected_sha1[3]);
+}
+
+TEST(ColorspaceConversionTest, test_transfer_only_b67)
+{
+	using namespace zimg::colorspace;
+
+	ColorspaceDefinition csp_linear{ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED };
+	ColorspaceDefinition csp_arib_b67{ MatrixCoefficients::RGB, TransferCharacteristics::ARIB_B67, ColorPrimaries::UNSPECIFIED };
+
+	ColorspaceDefinition csp_linear_2020 = csp_linear.to(ColorPrimaries::REC_2020);
+	ColorspaceDefinition csp_arib_b67_2020 = csp_arib_b67.to(ColorPrimaries::REC_2020);
+
+	const char *expected_sha1[][3] = {
+		{
+			"147cf697877df6ba4929c18bc430e73e76f46d36",
+			"72c2513ae702891091e3b7f28de6cffc0cc7e73b",
+			"2e5d6d855d4e003529e4d49d9116398e225de9c7"
+		},
+		{
+			"6b31d6f5bb423d5c9289a849fb43ca5e32a1916c",
+			"9186cf3703c324e39534d8d4d5a24cc464870137",
+			"4667b9f5ded6dbb459de088f1a40a1085f71a15d"
+		},
+		{
+			"d69ba2ef35555cb5a9b1e5536e26ea20070ca5b7",
+			"432ed50b06125b14b6114ffa39d3f2a7bf1a420e",
+			"e262b2462d8ba6590c57b72d94a7d151072bf49f"
+		},
+		{
+			"77499cd3f5cb4402fd905972774521fa4c23b81a",
+			"90b3ec5d1b7fe4b3995ab7ab0e01e0be09b9861b",
+			"91027220b097ba4c803713849ceec189ff7bdecc"
+		},
+	};
+
+	SCOPED_TRACE("b67->linear");
+	test_case(csp_arib_b67, csp_linear, expected_sha1[0]);
+
+	SCOPED_TRACE("b67->linear (2020)");
+	test_case(csp_arib_b67_2020, csp_linear_2020, expected_sha1[1]);
 
 	SCOPED_TRACE("linear->arib_b67");
-	test_case(csp_linear, csp_arib_b67, expected_sha1[5]);
+	test_case(csp_linear, csp_arib_b67, expected_sha1[2]);
+
+	SCOPED_TRACE("linear->arib_b67 (2020)");
+	test_case(csp_linear_2020, csp_arib_b67_2020, expected_sha1[3]);
 }
 
 TEST(ColorspaceConversionTest, test_matrix_transfer)
@@ -242,9 +272,9 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 			"ccb32c84ad13f87eb0c53927690c8d9a33d046fd"
 		},
 		{
-			"2d59753ba28bfe458841ef135b5a3e9c3f4eaa8a",
-			"4a141fab23c2b427fe3d11dcd53d0576180b16ef",
-			"51ec7fe875c09400577b3b8ae9ac383504751183"
+			"e867c0782ac67d399359991141e05e1c46bf12ac",
+			"dd61307eae96d61e1262fc69880c2ddcdfcd3134",
+			"966f6c1754db33a01e519a11aa6247c55ecae5db"
 		},
 		{
 			"935fc4cab59118b382a925464bf61e8d04df3b15",
@@ -252,9 +282,9 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 			"2e4c4ac369cb50618e5501c64aa69ed4bad259a5"
 		},
 		{
-			"fc37fb0136ef19c42e603a6bcea420029c0900f2",
-			"645754227f593b42f1a7bd3fe3df20bfa4e6bfc3",
-			"bd9b5a9511a35dd633d8f8fde8e7da79fe717847"
+			"da24606b77b98a6253a46b267f0b1964fa8bfbaf",
+			"b9034ba800462f914984b4cee5fd1b8d9b290fe9",
+			"975639d4de6d275972e701b2d56dc5029594911c"
 		},
 	};
 

@@ -139,6 +139,30 @@ Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 	return ret;
 }
 
+Matrix3x3 ncl_yuv_to_rgb_matrix_from_primaries(ColorPrimaries primaries)
+{
+	switch (primaries) {
+	case ColorPrimaries::REC_709:
+		return ncl_yuv_to_rgb_matrix(MatrixCoefficients::REC_709);
+	case ColorPrimaries::REC_2020:
+		return ncl_yuv_to_rgb_matrix(MatrixCoefficients::REC_2020_NCL);
+	default:
+		error::throw_<error::NoColorspaceConversion>("RGB/YUV matrix derivation from primaries not supported");
+	}
+}
+
+Matrix3x3 ncl_rgb_to_yuv_matrix_from_primaries(ColorPrimaries primaries)
+{
+	switch (primaries) {
+	case ColorPrimaries::REC_709:
+		return ncl_rgb_to_yuv_matrix(MatrixCoefficients::REC_709);
+	case ColorPrimaries::REC_2020:
+		return ncl_rgb_to_yuv_matrix(MatrixCoefficients::REC_2020_NCL);
+	default:
+		error::throw_<error::NoColorspaceConversion>("RGB/YUV matrix derivation from primaries not supported");
+	}
+}
+
 Matrix3x3 ictcp_to_lms_matrix()
 {
 	return inverse(lms_to_ictcp_matrix());

@@ -146,9 +146,9 @@ TEST(GammaTest, test_st_2084)
 TEST(GammaTest, test_st_2084_oetf)
 {
 	EXPECT_EQ(0.0f, zimg::colorspace::st_2084_oetf(0.0f));
-	EXPECT_EQ(1.0f, zimg::colorspace::st_2084_oetf(1.0f));
+	EXPECT_NEAR(1.0f, zimg::colorspace::st_2084_oetf(1.0f), 1e-6f);
 	EXPECT_EQ(0.0f, zimg::colorspace::st_2084_inverse_oetf(0.0f));
-	EXPECT_EQ(1.0f, zimg::colorspace::st_2084_inverse_oetf(1.0f));
+	EXPECT_NEAR(1.0f, zimg::colorspace::st_2084_inverse_oetf(1.0f), 1e-6f);
 
 	SCOPED_TRACE("forward");
 	test_monotonic(zimg::colorspace::st_2084_oetf, 0.0f, 1.0f, 1UL << 16);

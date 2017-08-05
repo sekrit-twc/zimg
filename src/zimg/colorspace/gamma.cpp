@@ -29,6 +29,11 @@ constexpr float ARIB_B67_B = 0.28466892f;
 constexpr float ARIB_B67_C = 0.55991073f;
 
 
+// Chosen for compatibility with higher precision REC709_ALPHA/REC709_BETA.
+// See: ITU-R BT.2390-2 5.3.1
+constexpr float ST2084_OOTF_SCALE = 59.49080238715383f;
+
+
 float ootf_1_2(float x) noexcept
 {
 	return x < 0.0f ? x : zimg_x_powf(x, 1.2f);
@@ -37,6 +42,16 @@ float ootf_1_2(float x) noexcept
 float inverse_ootf_1_2(float x) noexcept
 {
 	return x < 0.0f ? x : zimg_x_powf(x, 1.0f / 1.2f);
+}
+
+float ootf_st2084(float x) noexcept
+{
+	return rec_1886_eotf(rec_709_oetf(x * ST2084_OOTF_SCALE)) / 100.0f;
+}
+
+float inverse_ootf_st2084(float x) noexcept
+{
+	return rec_709_inverse_oetf(rec_1886_inverse_eotf(x * 100.0f)) / ST2084_OOTF_SCALE;
 }
 
 } // namespace
@@ -168,15 +183,14 @@ float arib_b67_inverse_eotf(float x) noexcept
 	return arib_b67_oetf(inverse_ootf_1_2(x));
 }
 
-// Applies a 1.2 pure-power OOTF instead of the chained Rec.709/Rec.1886 method described in Rec.2100.
 float st_2084_oetf(float x) noexcept
 {
-	return st_2084_inverse_eotf(ootf_1_2(x));
+	return st_2084_inverse_eotf(ootf_st2084(x));
 }
 
 float st_2084_inverse_oetf(float x) noexcept
 {
-	return inverse_ootf_1_2(st_2084_eotf(x));
+	return inverse_ootf_st2084(st_2084_eotf(x));
 }
 
 
@@ -205,8 +219,8 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::ARIB_B67:
 		func.to_linear = scene_referred ? arib_b67_inverse_oetf : arib_b67_eotf;
 		func.to_gamma = scene_referred ? arib_b67_oetf : arib_b67_inverse_eotf;
-		func.to_linear_scale = 12.0f;
-		func.to_gamma_scale = 1.0f / 12.0f;
+		func.to_linear_scale = scene_referred ? 12.0f : static_cast<float>(1000.0 / peak_luminance);
+		func.to_gamma_scale = scene_referred ? 1.0f / 12.0f : static_cast<float>(peak_luminance / 1000.0);
 		break;
 	default:
 		error::throw_<error::InternalError>("invalid transfer characteristics");

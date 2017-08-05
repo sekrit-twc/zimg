@@ -94,18 +94,19 @@ std::unique_ptr<Operation> create_lms_to_ictcp_operation(const OperationParams &
  * Create an operation inverting an optical transfer function.
  *
  * @param transfer transfer characteristics
+ * @param primaries color primaries for ARIB STD-B67
  * @param params parameters
  * @param cpu create operation optimized for given cpu
  * @return concrete operation
  */
-std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu);
+std::unique_ptr<Operation> create_gamma_to_linear_operation(TransferCharacteristics transfer, ColorPrimaries primaries, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create an operation applying an optical transfer function.
  *
  * @see create_gamma_to_linear_operation
  */
-std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacteristics transfer, const OperationParams &params, CPUClass cpu);
+std::unique_ptr<Operation> create_linear_to_gamma_operation(TransferCharacteristics transfer, ColorPrimaries primaries, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create an operation converting from YUV to RGB via Rec.2020 Constant Luminance method.
