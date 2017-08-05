@@ -409,10 +409,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	ChromaLocationW chroma_location_w = spec.chroma_location_w;
 	ChromaLocationH chroma_location_h = spec.chroma_location_h;
 
-	bool image_shifted = spec.shift_w != 0.0 ||
-	                     spec.shift_h != 0.0 ||
-	                     m_state.width != spec.subwidth ||
-	                     m_state.height != spec.subheight;
+	bool image_shifted = spec.shift_w != 0.0 || spec.shift_h != 0.0 ||  m_state.width != spec.subwidth || m_state.height != spec.subheight;
 
 	if (is_greyscale(m_state)) {
 		subsample_w = 0;

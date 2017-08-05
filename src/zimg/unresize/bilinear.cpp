@@ -109,6 +109,9 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 {
 	BilinearContext ctx;
 
+	if (in > out)
+		error::throw_<error::ResamplingNotAvailable>("unresize can not upscale");
+
 	try {
 		// Map output shift to input shift.
 		RowMatrix<double> m = bilinear_weights(in, out, -shift * in / out);
