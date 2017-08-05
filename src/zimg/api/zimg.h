@@ -262,16 +262,18 @@ typedef enum zimg_chroma_location_e {
  * Negative values are reserved by the library for non-ITU extensions.
  */
 typedef enum zimg_matrix_coefficients_e {
-	ZIMG_MATRIX_INTERNAL    = -1, /**< Not part of the API. */
-	ZIMG_MATRIX_RGB         = 0,
-	ZIMG_MATRIX_709         = 1,
-	ZIMG_MATRIX_UNSPECIFIED = 2,
-	ZIMG_MATRIX_470BG       = 5,
-	ZIMG_MATRIX_170M        = 6,  /* Equivalent to 5. */
-	ZIMG_MATRIX_YCGCO       = 8,
-	ZIMG_MATRIX_2020_NCL    = 9,
-	ZIMG_MATRIX_2020_CL     = 10,
-	ZIMG_MATRIX_ICTCP       = 14
+	ZIMG_MATRIX_INTERNAL                 = -1, /**< Not part of the API. */
+	ZIMG_MATRIX_RGB                      = 0,
+	ZIMG_MATRIX_709                      = 1,
+	ZIMG_MATRIX_UNSPECIFIED              = 2,
+	ZIMG_MATRIX_470BG                    = 5,
+	ZIMG_MATRIX_170M                     = 6,  /* Equivalent to 5. */
+	ZIMG_MATRIX_YCGCO                    = 8,
+	ZIMG_MATRIX_2020_NCL                 = 9,
+	ZIMG_MATRIX_2020_CL                  = 10,
+	ZIMG_MATRIX_CHROMATICITY_DERIVED_NCL = 12, /* Requires primaries to be set. */
+	ZIMG_MATRIX_CHROMATICITY_DERIVED_CL  = 13, /* Requires primaries to be set. */
+	ZIMG_MATRIX_ICTCP                    = 14
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {
