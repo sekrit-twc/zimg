@@ -26,6 +26,7 @@ enum class MatrixCoefficients {
 	YCGCO,
 	REC_2020_NCL,
 	REC_2020_CL,
+	CHROMATICITY_DERIVED_NCL,
 	REC_2100_LMS,
 	REC_2100_ICTCP,
 };

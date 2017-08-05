@@ -55,6 +55,16 @@ Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b) noexcept
 	return ret;
 }
 
+Vector3 cross(const Vector3 &a, const Vector3 &b) noexcept
+{
+	return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+}
+
+double dot(const Vector3 &a, const Vector3 &b) noexcept
+{
+	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
 double determinant(const Matrix3x3 &m) noexcept
 {
 	double det = 0;

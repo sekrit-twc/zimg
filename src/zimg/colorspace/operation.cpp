@@ -31,7 +31,8 @@ std::unique_ptr<Operation> create_ncl_yuv_to_rgb_operation(const ColorspaceDefin
 	zassert_d(in.matrix != MatrixCoefficients::RGB && out.matrix == MatrixCoefficients::RGB, "wrong matrix coefficients");
 	zassert_d(in.matrix != MatrixCoefficients::REC_2020_CL, "wrong matrix coefficients");
 
-	return create_matrix_operation(ncl_yuv_to_rgb_matrix(in.matrix), cpu);
+	Matrix3x3 m = in.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_NCL ? ncl_yuv_to_rgb_matrix_from_primaries(in.primaries) : ncl_yuv_to_rgb_matrix(in.matrix);
+	return create_matrix_operation(m, cpu);
 }
 
 std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -41,7 +42,8 @@ std::unique_ptr<Operation> create_ncl_rgb_to_yuv_operation(const ColorspaceDefin
 	zassert_d(in.matrix == MatrixCoefficients::RGB && out.matrix != MatrixCoefficients::RGB, "wrong matrix coefficients");
 	zassert_d(out.matrix != MatrixCoefficients::REC_2020_CL, "wrong matrix coefficients");
 
-	return create_matrix_operation(ncl_rgb_to_yuv_matrix(out.matrix), cpu);
+	Matrix3x3 m = out.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_NCL ? ncl_rgb_to_yuv_matrix_from_primaries(out.primaries) : ncl_rgb_to_yuv_matrix(out.matrix);
+	return create_matrix_operation(m, cpu);
 }
 
 std::unique_ptr<Operation> create_ictcp_to_lms_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)

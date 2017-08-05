@@ -62,17 +62,46 @@ TEST(ColorspaceConversionTest, test_matrix_only)
 			"46aa18f98fa9ffed9bea83817a76cacaf28ed062",
 			"510cff5b3f97e26874cec2b8a986d0a205742b2a"
 		},
+		{
+			"83e39222105eab15a79601f196d491e993da2cd6",
+			"a5d1b53d1833d59f2a63193005a55bffdebc449c",
+			"96521fc8c82677ab0a74a9fb47e1259ef93fe758"
+		},
+		{
+			"5d452fb5eeb54741e5dcf206295e43aa4f26b44a",
+			"64e60f652a18a8bbbc99ade0f3105ba00a2d2f25",
+			"7eeba07cef9d99bb1876454c0b812dc7df56bdec"
+		},
 	};
 
+	SCOPED_TRACE("rgb->709");
 	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1[0]);
+	SCOPED_TRACE("rgb->709 (derived)");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
+	          { MatrixCoefficients::CHROMATICITY_DERIVED_NCL, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
+	          expected_sha1[0]);
+	SCOPED_TRACE("709->rgb");
 	test_case({ MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          { MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1[1]);
+	SCOPED_TRACE("709->rgb (derived)");
+	test_case({ MatrixCoefficients::CHROMATICITY_DERIVED_NCL, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 },
+	          expected_sha1[1]);
+	SCOPED_TRACE("601->709");
 	test_case({ MatrixCoefficients::REC_601, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1[2]);
+	SCOPED_TRACE("smpte_c->rgb (derived)");
+	test_case({ MatrixCoefficients::CHROMATICITY_DERIVED_NCL, TransferCharacteristics::REC_709, ColorPrimaries::SMPTE_C },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::SMPTE_C },
+	          expected_sha1[3]);
+	SCOPED_TRACE("rgb->smpte_c (derived)");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::SMPTE_C },
+	          { MatrixCoefficients::CHROMATICITY_DERIVED_NCL, TransferCharacteristics::REC_709, ColorPrimaries::SMPTE_C },
+	          expected_sha1[4]);
 }
 
 TEST(ColorspaceConversionTest, test_transfer_only)
