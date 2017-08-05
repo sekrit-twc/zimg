@@ -126,8 +126,8 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 	if (csp.matrix == MatrixCoefficients::RGB) {
 		// RGB can be converted to YUV with exception of REC_2020_CL, REC_2100_ICTCP, REC_2100_LMS, and UNSPECIFIED
 		for (auto coeffs : all_matrix()) {
-			if (coeffs != MatrixCoefficients::RGB && coeffs != MatrixCoefficients::REC_2020_CL && coeffs != MatrixCoefficients::REC_2100_ICTCP &&
-			    coeffs != MatrixCoefficients::REC_2100_LMS && coeffs != MatrixCoefficients::UNSPECIFIED) {
+			if (coeffs != MatrixCoefficients::RGB && coeffs != MatrixCoefficients::REC_2020_CL && coeffs != MatrixCoefficients::CHROMATICITY_DERIVED_CL &&
+			    coeffs != MatrixCoefficients::REC_2100_ICTCP && coeffs != MatrixCoefficients::REC_2100_LMS && coeffs != MatrixCoefficients::UNSPECIFIED) {
 				add_edge(csp.to(coeffs), create_ncl_rgb_to_yuv_operation);
 			}
 		}
@@ -135,23 +135,26 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 		// Linear RGB can be converted to other transfer functions and primaries; also to REC_2020_CL and REC_2100_LMS.
 		if (csp.transfer == TransferCharacteristics::LINEAR) {
 			for (auto transfer : all_transfer()) {
-				if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED)
+				if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED) {
 					add_edge(csp.to(transfer), create_linear_to_gamma_operation);
+					add_edge(csp.to(transfer).to(MatrixCoefficients::CHROMATICITY_DERIVED_CL), create_cl_rgb_to_yuv_operation);
+				}
 			}
 			for (auto primaries : all_primaries()) {
 				if (primaries != csp.primaries && primaries != ColorPrimaries::UNSPECIFIED)
 					add_edge(csp.to(primaries), create_gamut_operation);
 			}
 
-			add_edge(csp.to(MatrixCoefficients::REC_2020_CL).to(TransferCharacteristics::REC_709), create_2020_cl_rgb_to_yuv_operation);
+			add_edge(csp.to(MatrixCoefficients::REC_2020_CL).to(TransferCharacteristics::REC_709), create_cl_rgb_to_yuv_operation);
+
 			if (csp.primaries == ColorPrimaries::REC_2020)
 				add_edge(csp.to(MatrixCoefficients::REC_2100_LMS), create_ncl_rgb_to_yuv_operation);
 		} else if (csp.transfer != TransferCharacteristics::UNSPECIFIED) {
 			// Gamma RGB can be converted to linear RGB.
 			add_edge(csp.to_linear(), create_gamma_to_linear_operation);
 		}
-	} else if (csp.matrix == MatrixCoefficients::REC_2020_CL) {
-		add_edge(csp.to_rgb().to_linear(), create_2020_cl_yuv_to_rgb_operation);
+	} else if (csp.matrix == MatrixCoefficients::REC_2020_CL || csp.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL) {
+		add_edge(csp.to_rgb().to_linear(), create_cl_yuv_to_rgb_operation);
 	} else if (csp.matrix == MatrixCoefficients::REC_2100_LMS) {
 		// LMS with ST_2084 or ARIB_B67 transfer functions can be converted to ICtCp and also to linear transfer function
 		if (csp.transfer == TransferCharacteristics::ST_2084 || csp.transfer == TransferCharacteristics::ARIB_B67) {

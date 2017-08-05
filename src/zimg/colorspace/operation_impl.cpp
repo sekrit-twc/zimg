@@ -141,19 +141,31 @@ public:
 	}
 };
 
-class Rec2020CLToRGBOperationC final : public Operation {
+class CLToRGBOperationC final : public Operation {
+	gamma_func m_func;
+	float m_kr;
+	float m_kg;
+	float m_kb;
+	float m_nb;
+	float m_pb;
+	float m_nr;
+	float m_pr;
+	float m_scale;
 public:
+	CLToRGBOperationC(gamma_func to_gamma, gamma_func to_linear, double kr, double kg, double kb, float scale) :
+		m_func{ to_linear },
+		m_kr{ static_cast<float>(kr) },
+		m_kg{ static_cast<float>(kg) },
+		m_kb{ static_cast<float>(kb) },
+		m_nb{ to_gamma(1.0f - static_cast<float>(kb)) },
+		m_pb{ 1.0f - to_gamma(static_cast<float>(kb)) },
+		m_nr{ to_gamma(1.0f - static_cast<float>(kr)) },
+		m_pr{ 1.0f - to_gamma(static_cast<float>(kr)) },
+		m_scale{ scale }
+	{}
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		constexpr float kr = static_cast<float>(REC_2020_KR);
-		constexpr float kb = static_cast<float>(REC_2020_KB);
-		constexpr float kg = 1.0f - kr - kb;
-
-		constexpr float pb = 0.7909854f;
-		constexpr float nb = -0.9701716f;
-		constexpr float pr = 0.4969147f;
-		constexpr float nr = -0.8591209f;
-
 		EnsureSinglePrecision x87;
 
 		for (unsigned i = left; i < right; ++i) {
@@ -165,63 +177,75 @@ public:
 			float b_minus_y, r_minus_y;
 
 			if (u < 0)
-				b_minus_y = u * 2.0f * -nb;
+				b_minus_y = u * 2.0f * m_nb;
 			else
-				b_minus_y = u * 2.0f * pb;
+				b_minus_y = u * 2.0f * m_pb;
 
 			if (v < 0)
-				r_minus_y = v * 2.0f * -nr;
+				r_minus_y = v * 2.0f * m_nr;
 			else
-				r_minus_y = v * 2.0f * pr;
+				r_minus_y = v * 2.0f * m_pr;
 
-			b = rec_709_inverse_oetf(b_minus_y + y);
-			r = rec_709_inverse_oetf(r_minus_y + y);
+			b = m_func(b_minus_y + y);
+			r = m_func(r_minus_y + y);
 
-			y = rec_709_inverse_oetf(y);
-			g = (y - kr * r - kb * b) / kg;
+			y = m_func(y);
+			g = (y - m_kr * r - m_kb * b) / m_kg;
 
-			dst[0][i] = r;
-			dst[1][i] = g;
-			dst[2][i] = b;
+			dst[0][i] = r * m_scale;
+			dst[1][i] = g * m_scale;
+			dst[2][i] = b * m_scale;
 		}
 	}
 };
 
-class Rec2020CLToYUVOperationC final : public Operation {
+class CLToYUVOperationC final : public Operation {
+	gamma_func m_func;
+	float m_kr;
+	float m_kg;
+	float m_kb;
+	float m_nb;
+	float m_pb;
+	float m_nr;
+	float m_pr;
+	float m_scale;
 public:
+	CLToYUVOperationC(gamma_func func, double kr, double kg, double kb, float scale) :
+		m_func{ func },
+		m_kr{ static_cast<float>(kr) },
+		m_kg{ static_cast<float>(kg) },
+		m_kb{ static_cast<float>(kb) },
+		m_nb{ func(1.0f - static_cast<float>(kb)) },
+		m_pb{ 1.0f - func(static_cast<float>(kb)) },
+		m_nr{ func(1.0f - static_cast<float>(kr)) },
+		m_pr{ 1.0f - func(static_cast<float>(kr)) },
+		m_scale{ scale }
+	{}
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		constexpr float kr = static_cast<float>(REC_2020_KR);
-		constexpr float kb = static_cast<float>(REC_2020_KB);
-		constexpr float kg = 1.0f - kr - kb;
-
-		constexpr float pb = 0.7909854f;
-		constexpr float nb = -0.9701716f;
-		constexpr float pr = 0.4969147f;
-		constexpr float nr = -0.8591209f;
-
 		EnsureSinglePrecision x87;
 
 		for (unsigned i = left; i < right; ++i) {
-			float r = src[0][i];
-			float g = src[1][i];
-			float b = src[2][i];
+			float r = src[0][i] * m_scale;
+			float g = src[1][i] * m_scale;
+			float b = src[2][i] * m_scale;
 
-			float y = rec_709_oetf(kr * r + kg * g + kb * b);
+			float y = m_func(m_kr * r + m_kg * g + m_kb * b);
 			float u, v;
 
-			b = rec_709_oetf(b);
-			r = rec_709_oetf(r);
+			b = m_func(b);
+			r = m_func(r);
 
 			if (b - y < 0.0f)
-				u = (b - y) / (2.0f * -nb);
+				u = (b - y) / (2.0f * m_nb);
 			else
-				u = (b - y) / (2.0f * pb);
+				u = (b - y) / (2.0f * m_pb);
 
 			if (r - y < 0.0f)
-				v = (r - y) / (2.0f * -nr);
+				v = (r - y) / (2.0f * m_nr);
 			else
-				v = (r - y) / (2.0f * pr);
+				v = (r - y) / (2.0f * m_pr);
 
 			dst[0][i] = y;
 			dst[1][i] = u;
@@ -298,22 +322,28 @@ std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m,
 	return ztd::make_unique<AribB67InverseOperationC>(m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
-std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
+std::unique_ptr<Operation> create_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::REC_2020_CL && in.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
 	zassert_d(out.matrix == MatrixCoefficients::RGB && out.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
 
-	return ztd::make_unique<Rec2020CLToRGBOperationC>();
+	// CL is always scene-referred.
+	TransferFunction func = select_transfer_function(in.transfer, params.peak_luminance, true);
+	Matrix3x3 m = in.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL ? ncl_rgb_to_yuv_matrix_from_primaries(in.primaries) : ncl_rgb_to_yuv_matrix(in.matrix);
+	return ztd::make_unique<CLToRGBOperationC>(func.to_gamma, func.to_linear, m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
-std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
+std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::RGB && in.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
 	zassert_d(out.matrix == MatrixCoefficients::REC_2020_CL && out.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
 
-	return ztd::make_unique<Rec2020CLToYUVOperationC>();
+	// CL is always scene-referred.
+	TransferFunction func = select_transfer_function(out.transfer, params.peak_luminance, true);
+	Matrix3x3 m = out.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL ? ncl_rgb_to_yuv_matrix_from_primaries(out.primaries) : ncl_rgb_to_yuv_matrix(out.matrix);
+	return ztd::make_unique<CLToYUVOperationC>(func.to_gamma, m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
 }
 
 } // namespace colorspace

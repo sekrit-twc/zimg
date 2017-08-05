@@ -110,14 +110,14 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(const ColorspaceDefi
  *
  * @see create_ncl_yuv_to_rgb_operation
  */
-std::unique_ptr<Operation> create_2020_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu);
+std::unique_ptr<Operation> create_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create an operation converting from RGB to YUV via Rec.2020 Constant Luminance method.
  *
  * @see create_ncl_yuv_to_rgb_operation
  */
-std::unique_ptr<Operation> create_2020_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu);
+std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu);
 
 /**
  * Create an operation converting between color primaries.
