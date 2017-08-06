@@ -25,7 +25,8 @@ constexpr double REC_709_PRIMARIES[3][2] = { { 0.640, 0.330 }, { 0.300, 0.600 },
 constexpr double REC_2020_PRIMARIES[3][2] = { { 0.708, 0.292 }, { 0.170, 0.797 }, { 0.131, 0.046 } };
 constexpr double DCI_P3_PRIMARIES[3][2] = { { 0.680, 0.320 } , { 0.265, 0.690 }, { 0.150, 0.060 } };
 
-// D65 white point in XY.
+// White points in XY.
+constexpr double ILLUMINANT_DCI[2] = { 0.314, 0.351 };
 constexpr double ILLUMINANT_D65[2] = { 0.3127, 0.3290 };
 
 /**
@@ -87,6 +88,15 @@ Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries);
  * @see gamut_rgb_to_xyz_matrix
  */
 Matrix3x3 gamut_xyz_to_rgb_matrix(ColorPrimaries primaries);
+
+/**
+ * Obtain 3x3 matrix for adapting white point.
+ *
+ * @param in input primaries
+ * @param out output primaries
+ * @return adaptation function as matrix
+ */
+Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out);
 
 } // namespace colorspace
 } // namespace zimg

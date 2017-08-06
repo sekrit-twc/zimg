@@ -44,9 +44,14 @@ Vector3 xy_to_xyz(double x, double y)
 	return ret;
 }
 
-Vector3 get_d65_xyz()
+Vector3 get_white_point(ColorPrimaries primaries)
 {
-	return xy_to_xyz(ILLUMINANT_D65[0], ILLUMINANT_D65[1]);
+	switch (primaries) {
+	case ColorPrimaries::DCI_P3:
+		return xy_to_xyz(ILLUMINANT_DCI[0], ILLUMINANT_DCI[1]);
+	default:
+		return xy_to_xyz(ILLUMINANT_D65[0], ILLUMINANT_D65[1]);
+	}
 }
 
 void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
@@ -61,6 +66,7 @@ void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 	case ColorPrimaries::REC_2020:
 		memcpy(out, REC_2020_PRIMARIES, sizeof(REC_2020_PRIMARIES));
 		break;
+	case ColorPrimaries::DCI_P3:
 	case ColorPrimaries::DCI_P3_D65:
 		memcpy(out, DCI_P3_PRIMARIES, sizeof(DCI_P3_PRIMARIES));
 		break;
@@ -94,7 +100,7 @@ void get_yuv_constants_from_primaries(double *kr, double *kb, ColorPrimaries pri
 	Vector3 r_xyz = xy_to_xyz(primaries_xy[0][0], primaries_xy[0][1]);
 	Vector3 g_xyz = xy_to_xyz(primaries_xy[1][0], primaries_xy[1][1]);
 	Vector3 b_xyz = xy_to_xyz(primaries_xy[2][0], primaries_xy[2][1]);
-	Vector3 white_xyz = get_d65_xyz();
+	Vector3 white_xyz = get_white_point(primaries);
 
 	Vector3 x_rgb = { r_xyz[0], g_xyz[0], b_xyz[0] };
 	Vector3 y_rgb = { r_xyz[1], g_xyz[1], b_xyz[1] };
@@ -205,11 +211,11 @@ Matrix3x3 lms_to_ictcp_matrix()
 	};
 }
 
-// http://www.brucelindbloom.com/Eqn_RGB_XYZ_Matrix.html
+// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries)
 {
 	Matrix3x3 xyz_matrix = get_primaries_xyz(primaries);
-	Vector3 white_xyz = get_d65_xyz();
+	Vector3 white_xyz = get_white_point(primaries);
 
 	Vector3 s = inverse(xyz_matrix) * white_xyz;
 	Matrix3x3 m = { xyz_matrix[0] * s, xyz_matrix[1] * s, xyz_matrix[2] * s };
@@ -220,6 +226,37 @@ Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries)
 Matrix3x3 gamut_xyz_to_rgb_matrix(ColorPrimaries primaries)
 {
 	return inverse(gamut_rgb_to_xyz_matrix(primaries));
+}
+
+// http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html
+Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out)
+{
+	constexpr Matrix3x3 bradford = {
+		{  0.8951,  0.2664, -0.1614 },
+		{ -0.7502,  1.7135,  0.0367 },
+		{  0.0389, -0.0685,  1.0296 },
+	};
+
+	Vector3 white_in = get_white_point(in);
+	Vector3 white_out = get_white_point(out);
+
+	if (white_in == white_out) {
+		return {
+			{ 1.0, 0.0, 0.0 },
+			{ 0.0, 1.0, 0.0 },
+			{ 0.0, 0.0, 1.0 }
+		};
+	}
+
+	Vector3 rgb_in = bradford * white_in;
+	Vector3 rgb_out = bradford * white_out;
+
+	Matrix3x3 m{};
+	m[0][0] = rgb_out[0] / rgb_in[0];
+	m[1][1] = rgb_out[1] / rgb_in[1];
+	m[2][2] = rgb_out[2] / rgb_in[2];
+
+	return inverse(bradford) * m * bradford;
 }
 
 } // namespace colorspace
