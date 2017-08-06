@@ -58,6 +58,24 @@ Vector3 operator*(const Matrix3x3 &m, const Vector3 &v) noexcept;
 Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b) noexcept;
 
 /**
+ * Vector cross product
+  *
+ * @param a lhs
+ * @param b rhs
+ * @return product
+ */
+Vector3 cross(const Vector3 &a, const Vector3 &b) noexcept;
+
+/**
+ * Vector dot product
+ *
+ * @param a lhs
+ * @param b rhs
+ * @return product
+ */
+double dot(const Vector3 &a, const Vector3 &b) noexcept;
+
+/**
  * Determinant of matrix.
  *
  * @param m matrix

@@ -85,6 +85,50 @@ Matrix3x3 get_primaries_xyz(ColorPrimaries primaries)
 	return transpose(ret);
 }
 
+void get_yuv_constants_from_primaries(double *kr, double *kb, ColorPrimaries primaries)
+{
+	// ITU-T H.265 Annex E, Eq (E-22) to (E-27).
+	double primaries_xy[3][2];
+	get_primaries_xy(primaries_xy, primaries);
+
+	Vector3 r_xyz = xy_to_xyz(primaries_xy[0][0], primaries_xy[0][1]);
+	Vector3 g_xyz = xy_to_xyz(primaries_xy[1][0], primaries_xy[1][1]);
+	Vector3 b_xyz = xy_to_xyz(primaries_xy[2][0], primaries_xy[2][1]);
+	Vector3 white_xyz = get_d65_xyz();
+
+	Vector3 x_rgb = { r_xyz[0], g_xyz[0], b_xyz[0] };
+	Vector3 y_rgb = { r_xyz[1], g_xyz[1], b_xyz[1] };
+	Vector3 z_rgb = { r_xyz[2], g_xyz[2], b_xyz[2] };
+
+	*kr = dot(white_xyz, cross(g_xyz, b_xyz)) / dot(x_rgb, cross(y_rgb, z_rgb));
+	*kb = dot(white_xyz, cross(r_xyz, g_xyz)) / dot(x_rgb, cross(y_rgb, z_rgb));
+}
+
+Matrix3x3 ncl_rgb_to_yuv_matrix_from_kr_kb(double kr, double kb)
+{
+	Matrix3x3 ret;
+	double kg = 1.0 - kr - kb;
+	double uscale;
+	double vscale;
+
+	uscale = 1.0 / (2.0 - 2.0 * kb);
+	vscale = 1.0 / (2.0 - 2.0 * kr);
+
+	ret[0][0] = kr;
+	ret[0][1] = kg;
+	ret[0][2] = kb;
+
+	ret[1][0] = -kr * uscale;
+	ret[1][1] = -kg * uscale;
+	ret[1][2] = (1.0 - kb) * uscale;
+
+	ret[2][0] = (1.0 - kr) * vscale;
+	ret[2][1] = -kg * vscale;
+	ret[2][2] = -kb * vscale;
+
+	return ret;
+}
+
 } // namespace
 
 
@@ -95,71 +139,55 @@ Matrix3x3 ncl_yuv_to_rgb_matrix(MatrixCoefficients matrix)
 
 Matrix3x3 ncl_rgb_to_yuv_matrix(MatrixCoefficients matrix)
 {
-	Matrix3x3 ret;
-	double kr, kg, kb;
-	double uscale;
-	double vscale;
+	double kr, kb;
 
 	switch (matrix)
 	{
 	case MatrixCoefficients::YCGCO:
-		ret = {
+		return {
 			{  0.25, 0.5,  0.25 },
 			{ -0.25, 0.5, -0.25 },
 			{  0.5,  0,   -0.5 }
 		};
-		break;
 	case MatrixCoefficients::REC_2100_LMS:
-		ret = {
+		return {
 			{ 1688.0 / 4096.0, 2146.0 / 4096.0,  262.0 / 4096.0 },
 			{  683.0 / 4096.0, 2951.0 / 4096.0,  462.0 / 4096.0 },
 			{   99.0 / 4096.0,  309.0 / 4096.0, 3688.0 / 4096.0 }
 		};
-		break;
 	default:
 		get_yuv_constants(&kr, &kb, matrix);
-		kg = 1.0 - kr - kb;
-		uscale = 1.0 / (2.0 - 2.0 * kb);
-		vscale = 1.0 / (2.0 - 2.0 * kr);
-
-		ret[0][0] = kr;
-		ret[0][1] = kg;
-		ret[0][2] = kb;
-
-		ret[1][0] = -kr * uscale;
-		ret[1][1] = -kg * uscale;
-		ret[1][2] = (1.0 - kb) * uscale;
-
-		ret[2][0] = (1.0 - kr) * vscale;
-		ret[2][1] = -kg * vscale;
-		ret[2][2] = -kb * vscale;
-		break;
+		return ncl_rgb_to_yuv_matrix_from_kr_kb(kr, kb);
 	}
-
-	return ret;
 }
 
 Matrix3x3 ncl_yuv_to_rgb_matrix_from_primaries(ColorPrimaries primaries)
 {
+	double kr, kb;
+
 	switch (primaries) {
 	case ColorPrimaries::REC_709:
 		return ncl_yuv_to_rgb_matrix(MatrixCoefficients::REC_709);
 	case ColorPrimaries::REC_2020:
 		return ncl_yuv_to_rgb_matrix(MatrixCoefficients::REC_2020_NCL);
 	default:
-		error::throw_<error::NoColorspaceConversion>("RGB/YUV matrix derivation from primaries not supported");
+		get_yuv_constants_from_primaries(&kr, &kb, primaries);
+		return inverse(ncl_rgb_to_yuv_matrix_from_kr_kb(kr, kb));
 	}
 }
 
 Matrix3x3 ncl_rgb_to_yuv_matrix_from_primaries(ColorPrimaries primaries)
 {
+	double kr, kb;
+
 	switch (primaries) {
 	case ColorPrimaries::REC_709:
 		return ncl_rgb_to_yuv_matrix(MatrixCoefficients::REC_709);
 	case ColorPrimaries::REC_2020:
 		return ncl_rgb_to_yuv_matrix(MatrixCoefficients::REC_2020_NCL);
 	default:
-		error::throw_<error::NoColorspaceConversion>("RGB/YUV matrix derivation from primaries not supported");
+		get_yuv_constants_from_primaries(&kr, &kb, primaries);
+		return ncl_rgb_to_yuv_matrix_from_kr_kb(kr, kb);
 	}
 }
 
