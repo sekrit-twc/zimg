@@ -750,7 +750,7 @@ void resize_line_h_perm_fp_avx2(const unsigned *permute_left, const unsigned *pe
 	unsigned vec_right = floor_n(right, 8);
 	unsigned fallback_idx = vec_right;
 
-#define mm256_alignr_ps(a, b, imm) _mm256_castsi256_ps(_mm256_alignr_epi8(_mm256_castps_si256((a)), _mm256_castps_si256((b)), (imm)))
+#define mm256_alignr_epi8_ps(a, b, imm) _mm256_castsi256_ps(_mm256_alignr_epi8(_mm256_castps_si256((a)), _mm256_castps_si256((b)), (imm)))
 	for (unsigned j = floor_n(left, 8); j < vec_right; j += 8) {
 		unsigned left = permute_left[j / 8];
 
@@ -777,19 +777,19 @@ void resize_line_h_perm_fp_avx2(const unsigned *permute_left, const unsigned *pe
 		if (N >= 2) {
 			x4 = Traits::load8(src + left + 4);
 
-			x = mm256_alignr_ps(x4, x0, 4);
+			x = mm256_alignr_epi8_ps(x4, x0, 4);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 1 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 3) {
-			x = mm256_alignr_ps(x4, x0, 8);
+			x = mm256_alignr_epi8_ps(x4, x0, 8);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 2 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 4) {
-			x = mm256_alignr_ps(x4, x0, 12);
+			x = mm256_alignr_epi8_ps(x4, x0, 12);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 3 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
@@ -803,19 +803,19 @@ void resize_line_h_perm_fp_avx2(const unsigned *permute_left, const unsigned *pe
 		if (N >= 6) {
 			x8 = Traits::load8(src + left + 8);
 
-			x = mm256_alignr_ps(x8, x4, 4);
+			x = mm256_alignr_epi8_ps(x8, x4, 4);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 5 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 7) {
-			x = mm256_alignr_ps(x8, x4, 8);
+			x = mm256_alignr_epi8_ps(x8, x4, 8);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 6 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 8) {
-			x = mm256_alignr_ps(x8, x4, 12);
+			x = mm256_alignr_epi8_ps(x8, x4, 12);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 7 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
@@ -1353,9 +1353,9 @@ public:
 
 			int16_t *data = context.data.data() + i * context.filter_width;
 			for (unsigned k = 0; k < filter.filter_width; k += 2) {
-				for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {					
+				for (unsigned ii = i; ii < std::min(i + 8, context.filter_rows); ++ii) {
 					unsigned offset = (filter.left[ii] - context.left[i / 8]) % 2;
-					
+
 					if (offset) {
 						data[static_cast<size_t>(k / 2) * 16 + (ii - i) * 2 + 1] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 0];
 						data[static_cast<size_t>(k / 2 + 1) * 16 + (ii - i) * 2] = filter.data_i16[ii * static_cast<ptrdiff_t>(filter.stride_i16) + k + 1];
@@ -1499,7 +1499,7 @@ public:
 			unsigned input_width = m_context.input_width;
 			unsigned right_base = m_context.left[(right + 7) / 8 - 1];
 			unsigned iter_width = m_context.filter_width + 8;
-			
+
 			return{ m_context.left[left / 8],  right_base + std::min(input_width - right_base, iter_width) };
 		} else {
 			return{ 0, m_context.input_width };
@@ -1612,7 +1612,7 @@ public:
 			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-			
+
 			resize_line_v_fp_avx2_jt<Traits>::table_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
 
@@ -1628,7 +1628,7 @@ public:
 			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-			
+
 			resize_line_v_fp_avx2_jt<Traits>::table_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}

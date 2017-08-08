@@ -680,7 +680,7 @@ void resize_line16_h_fp_avx512(const unsigned *filter_left, const float * RESTRI
 			__m512 x = XITER(jj, XARGS);
 			_mm512_store_ps(cache[jj - j], x);
 		}
-		
+
 		x0 = _mm512_load_ps(cache[0]);
 		x1 = _mm512_load_ps(cache[1]);
 		x2 = _mm512_load_ps(cache[2]);
@@ -781,7 +781,7 @@ void resize_line_h_perm_u16_avx512(const unsigned *permute_left, const uint16_t 
 
 		__m512i accum0 = _mm512_setzero_si512();
 		__m512i accum1 = _mm512_setzero_si512();
-		__m512i x, x0, x32, coeffs;
+		__m512i x, x0, x8, x16, coeffs;
 
 		if (N >= 2) {
 			x0 = _mm512_loadu_si512((const __m512i *)(src + left + 0));
@@ -794,52 +794,55 @@ void resize_line_h_perm_u16_avx512(const unsigned *permute_left, const uint16_t 
 			accum0 = _mm512_add_epi32(accum0, x);
 		}
 		if (N >= 4) {
-			x32 = _mm512_loadu_si512((const __m512i *)(src + left + 32));
-			x32 = _mm512_add_epi16(x32, i16_min);
+			x8 = _mm512_loadu_si512((const __m512i *)(src + left + 8));
+			x8 = _mm512_add_epi16(x8, i16_min);
 
-			x = _mm512_alignr_epi32(x32, x0, 1);
+			x = _mm512_alignr_epi8(x8, x0, 4);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 2 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum1 = _mm512_add_epi32(accum1, x);
 		}
 		if (N >= 6) {
-			x = _mm512_alignr_epi32(x32, x0, 2);
+			x = _mm512_alignr_epi8(x8, x0, 8);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 4 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum0 = _mm512_add_epi32(accum0, x);
 		}
 		if (N >= 8) {
-			x = _mm512_alignr_epi32(x32, x0, 3);
+			x = _mm512_alignr_epi8(x8, x0, 12);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 6 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum1 = _mm512_add_epi32(accum1, x);
 		}
 		if (N >= 10) {
-			x = _mm512_alignr_epi32(x32, x0, 4);
+			x = x8;
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 8 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum0 = _mm512_add_epi32(accum0, x);
 		}
 		if (N >= 12) {
-			x = _mm512_alignr_epi32(x32, x0, 5);
+			x16 = _mm512_loadu_si512((const __m512i *)(src + left + 16));
+			x16 = _mm512_add_epi16(x16, i16_min);
+
+			x = _mm512_alignr_epi8(x16, x8, 4);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 10 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum1 = _mm512_add_epi32(accum1, x);
 		}
 		if (N >= 14) {
-			x = _mm512_alignr_epi32(x32, x0, 6);
+			x = _mm512_alignr_epi8(x16, x8, 8);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 12 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
 			accum0 = _mm512_add_epi32(accum0, x);
 		}
 		if (N >= 16) {
-			x = _mm512_alignr_epi32(x32, x0, 7);
+			x = _mm512_alignr_epi8(x16, x8, 12);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512((const __m512i *)(data + 14 * 16));
 			x = _mm512_madd_epi16(coeffs, x);
@@ -847,7 +850,7 @@ void resize_line_h_perm_u16_avx512(const unsigned *permute_left, const uint16_t 
 		}
 
 		accum0 = _mm512_add_epi32(accum0, accum1);
-		
+
 		__m256i out = export_i30_u16(accum0);
 		out = _mm256_min_epi16(out, _mm512_castsi512_si256(lim));
 		out = _mm256_sub_epi16(out, _mm512_castsi512_si256(i16_min));
@@ -907,7 +910,7 @@ void resize_line_h_perm_fp_avx512(const unsigned *permute_left, const unsigned *
 	unsigned vec_right = floor_n(right, 16);
 	unsigned fallback_idx = vec_right;
 
-#define mm512_alignr_ps(a, b, imm) _mm512_castsi512_ps(_mm512_alignr_epi32(_mm512_castps_si512((a)), _mm512_castps_si512((b)), (imm)))
+#define mm512_alignr_epi8_ps(a, b, imm) _mm512_castsi512_ps(_mm512_alignr_epi8(_mm512_castps_si512((a)), _mm512_castps_si512((b)), (imm)))
 	for (unsigned j = floor_n(left, 16); j < vec_right; j += 16) {
 		unsigned left = permute_left[j / 16];
 
@@ -921,7 +924,7 @@ void resize_line_h_perm_fp_avx512(const unsigned *permute_left, const unsigned *
 
 		__m512 accum0 = _mm512_setzero_ps();
 		__m512 accum1 = _mm512_setzero_ps();
-		__m512 x, x0, x16, coeffs;
+		__m512 x, x0, x4, x8, x12, x16, coeffs;
 
 		if (N >= 1) {
 			x0 = Traits::load16(src + left + 0);
@@ -932,93 +935,99 @@ void resize_line_h_perm_fp_avx512(const unsigned *permute_left, const unsigned *
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 2) {
-			x16 = Traits::load16(src + left + 16);
+			x4 = Traits::load16(src + left + 4);
 
-			x = mm512_alignr_ps(x16, x0, 1);
+			x = mm512_alignr_epi8_ps(x4, x0, 4);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 1 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 3) {
-			x = mm512_alignr_ps(x16, x0, 2);
+			x = mm512_alignr_epi8_ps(x4, x0, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 2 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 4) {
-			x = mm512_alignr_ps(x16, x0, 3);
+			x = mm512_alignr_epi8_ps(x4, x0, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 3 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 5) {
-			x = mm512_alignr_ps(x16, x0, 4);
+			x = x4;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 4 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 6) {
-			x = mm512_alignr_ps(x16, x0, 5);
+			x8 = Traits::load16(src + left + 8);
+
+			x = mm512_alignr_epi8_ps(x8, x4, 4);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 5 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 7) {
-			x = mm512_alignr_ps(x16, x0, 6);
+			x = mm512_alignr_epi8_ps(x8, x4, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 6 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 8) {
-			x = mm512_alignr_ps(x16, x0, 7);
+			x = mm512_alignr_epi8_ps(x8, x4, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 7 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 9) {
-			x = mm512_alignr_ps(x16, x0, 8);
+			x = x8;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 8 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 10) {
-			x = mm512_alignr_ps(x16, x0, 9);
+			x12 = Traits::load16(src + left + 12);
+
+			x = mm512_alignr_epi8_ps(x12, x8, 4);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 9 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 11) {
-			x = mm512_alignr_ps(x16, x0, 10);
+			x = mm512_alignr_epi8_ps(x12, x8, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 10 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 12) {
-			x = mm512_alignr_ps(x16, x0, 11);
+			x = mm512_alignr_epi8_ps(x12, x8, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 11 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 13) {
-			x = mm512_alignr_ps(x16, x0, 12);
+			x = x12;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 12 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 14) {
-			x = mm512_alignr_ps(x16, x0, 13);
+			x16 = Traits::load16(src + left + 16);
+
+			x = mm512_alignr_epi8_ps(x16, x12, 4);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 13 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
 		if (N >= 15) {
-			x = mm512_alignr_ps(x16, x0, 14);
+			x = mm512_alignr_epi8_ps(x16, x12, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 14 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
 		if (N >= 16) {
-			x = mm512_alignr_ps(x16, x0, 15);
+			x = mm512_alignr_epi8_ps(x16, x12, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 15 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
@@ -1027,6 +1036,7 @@ void resize_line_h_perm_fp_avx512(const unsigned *permute_left, const unsigned *
 		accum0 = _mm512_add_ps(accum0, accum1);
 		Traits::store16(dst + j, accum0);
 	}
+#undef mm512_alignr_epi8_ps
 	for (unsigned j = fallback_idx; j < right; j += 16) {
 		unsigned left = permute_left[j / 16];
 
@@ -1831,7 +1841,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx512(const FilterCont
 	else if (type == PixelType::FLOAT)
 		ret = ResizeImplH_Permute_FP_AVX512<f32_traits>::create(context, height);
 #endif
-	
+
 	if (!ret) {
 		if (type == PixelType::WORD)
 			ret = ztd::make_unique<ResizeImplH_U16_AVX512>(context, height, depth);
