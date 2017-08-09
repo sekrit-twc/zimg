@@ -1096,7 +1096,7 @@ template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base,
                                                            const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
                                                            const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
-                                                           const uint32_t *accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
+                                                           uint32_t *accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
 {
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
