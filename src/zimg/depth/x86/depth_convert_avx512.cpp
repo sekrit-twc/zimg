@@ -38,7 +38,7 @@ struct StoreF16 {
 
 	static void mask_store16(uint16_t *ptr, __mmask16 mask, __m512 x)
 	{
-		_mm256_mask_storeu_epi16((__m256i *)ptr, mask, _mm512_cvtps_ph(x, 0));
+		_mm256_mask_storeu_epi16(ptr, mask, _mm512_cvtps_ph(x, 0));
 	}
 };
 

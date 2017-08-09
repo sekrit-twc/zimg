@@ -51,7 +51,7 @@ struct StoreU8 {
 
 	static void mask_store16(uint8_t *ptr, __mmask16 mask, __m512i x)
 	{
-		_mm_mask_storeu_epi8((__m128i *)ptr, mask, _mm512_cvtusepi32_epi8(x));
+		_mm_mask_storeu_epi8(ptr, mask, _mm512_cvtusepi32_epi8(x));
 	}
 };
 
@@ -60,7 +60,7 @@ struct StoreU16 {
 
 	static void mask_store16(uint16_t *ptr, __mmask16 mask, __m512i x)
 	{
-		_mm256_mask_storeu_epi16((__m256i *)ptr, mask, _mm512_cvtusepi32_epi16(x));
+		_mm256_mask_storeu_epi16(ptr, mask, _mm512_cvtusepi32_epi16(x));
 	}
 };
 
