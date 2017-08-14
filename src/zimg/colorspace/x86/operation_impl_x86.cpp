@@ -1,5 +1,3 @@
-#include "common/x86/avx512_msvc_compat.h"
-
 #ifdef ZIMG_X86
 
 #include "common/cpuinfo.h"
