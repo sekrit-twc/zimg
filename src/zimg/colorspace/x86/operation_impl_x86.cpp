@@ -1,4 +1,4 @@
-#include "common/x86/disable_avx512_msvc.h"
+#include "common/x86/avx512_msvc_compat.h"
 
 #ifdef ZIMG_X86
 

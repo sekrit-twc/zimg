@@ -216,9 +216,6 @@
     <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\x86\disable_avx512_msvc.h">
-      <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86\sse_util.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
@@ -232,6 +229,9 @@
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h">
+      <Filter>Header Files\common\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\x86\avx512_msvc_compat.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
   </ItemGroup>
