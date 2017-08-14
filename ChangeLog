@@ -1,3 +1,16 @@
+2.6 (API 2.3)
+api: add ZIMG_CPU_AUTO_64B for AVX-512 compatibility
+colorspace: add support for ITU-R BT.2100 ICtCp
+colorspace: add support for constant luminance ITU-R BT.2100 HLG
+colorspace: add support for SMPTE ST.431-2 (traditional DCI-P3)
+colorspace: add support for chromaticity-derived NCL/CL matrices
+colorspace: assume 1000 cd/m^2 peak luminance for HLG
+colorspace: fix crash on bad colorspace definition
+depth: optimized SSE2/AVX2 conversions with 8/16-bit input
+resize: optimized AVX2 horizontal upsampler memory usage
+resize: optimized x86 SIMD function calling
+x86: AVX-512 code paths for key functions
+
 2.5.1
 depth: fix AVX2 conversion from half to byte/word (introduced in 2.1)
 
