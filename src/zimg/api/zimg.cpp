@@ -535,6 +535,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	zassert_d(src, "null pointer");
 	zassert_d(dst, "null pointer");
 
+	EX_BEGIN
 	const zimg::graph::FilterGraph *graph = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr);
 
 	if (graph->requires_64b_alignment()) {
@@ -575,7 +576,6 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 		POINTER_ALIGNMENT_ASSERT(tmp);
 	}
 
-	EX_BEGIN
 	auto src_buf = import_image_buffer(*src);
 	auto dst_buf = import_image_buffer(*dst);
 	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
