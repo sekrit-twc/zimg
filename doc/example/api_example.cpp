@@ -28,6 +28,7 @@ struct Arguments {
 	double shift_h = NAN;
 	double subwidth = NAN;
 	double subheight = NAN;
+	char cpu64 = 0;
 };
 
 const ArgparseOption program_switches[] = {
@@ -37,6 +38,7 @@ const ArgparseOption program_switches[] = {
 	{ OPTION_FLOAT, nullptr, "shift-h",    offsetof(Arguments, shift_h),   nullptr, "shift image to the top by x subpixels" },
 	{ OPTION_FLOAT, nullptr, "sub-width",  offsetof(Arguments, subwidth),  nullptr, "treat image width differently from actual width" },
 	{ OPTION_FLOAT, nullptr, "sub-height", offsetof(Arguments, subheight), nullptr, "treat image height differently from actual height" },
+	{ OPTION_FLAG,  nullptr, "cpu64",      offsetof(Arguments, cpu64),     nullptr, "use 64-byte instruction set" },
 	{ OPTION_NULL }
 };
 
@@ -174,7 +176,7 @@ zimgxx::zimage_format get_image_format(const ImageFile &file)
 	return format;
 }
 
-std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zimgxx::zimage_format &format, unsigned count)
+std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zimgxx::zimage_format &format, unsigned count, size_t alignment)
 {
 	zimgxx::zimage_buffer buffer;
 	std::shared_ptr<void> handle;
@@ -197,14 +199,14 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		unsigned count_plane = p ? count : count >> format.subsample_h;
 		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
 		size_t row_size = format.width * pixel_size;
-		ptrdiff_t stride = row_size % 32 ? row_size - row_size % 32 + 32 : row_size;
+		ptrdiff_t stride = row_size % alignment ? row_size - row_size % alignment + alignment : row_size;
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
 		channel_size[p] = static_cast<size_t>(stride) * count_plane;
 	}
 
-	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], 32), &aligned_free);
+	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], alignment), &aligned_free);
 	ptr = static_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
@@ -215,9 +217,9 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	return{ buffer, handle };
 }
 
-std::shared_ptr<void> allocate_buffer(size_t size)
+std::shared_ptr<void> allocate_buffer(size_t size, size_t alignment)
 {
-	return{ aligned_malloc(size, 32), &aligned_free };
+	return{ aligned_malloc(size, alignment), &aligned_free };
 }
 
 void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, unsigned left, unsigned right)
@@ -364,8 +366,8 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	zimgxx::zimage_format out_format = get_image_format(out_data);
 
 	// Additional fields in API structures do not break binary compatibility.
-	// If relying on the specific semantics of fields not present in earlier versions,
-	// the application should also check the API version at runtime.
+	// If relying on the specific semantics of fields not present in earlier
+	// versions, the application should also check the API version at runtime.
 #if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 1)
 	if (!std::isnan(args.shift_w) || !std::isnan(args.shift_h) || !std::isnan(args.subheight) || !std::isnan(args.subheight)) {
 		if (zimg_get_api_version(nullptr, nullptr) < ZIMG_MAKE_API_VERSION(2, 1))
@@ -378,7 +380,15 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	}
 #endif
 
-	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format) };
+	zimgxx::zfilter_graph_builder_params params;
+	// When using newly defined enum values, checking API version at runtime is
+	// required to prevent failure on older library versions.
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 3)
+	if (zimg_get_api_version(nullptr, nullptr) >= ZIMG_MAKE_API_VERSION(2, 3) && args.cpu64)
+		params.cpu_type = ZIMG_CPU_AUTO_64B;
+#endif
+
+	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format, &params) };
 	unsigned input_buffering = graph.get_input_buffering();
 	unsigned output_buffering = graph.get_output_buffering();
 	size_t tmp_size = graph.get_tmp_size();
@@ -387,9 +397,9 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	std::cout << "output buffering: " << output_buffering << '\n';
 	std::cout << "heap usage: " << tmp_size << '\n';
 
-	auto in_buf = allocate_buffer(in_format, input_buffering);
-	auto out_buf = allocate_buffer(out_format, output_buffering);
-	auto tmp_buf = allocate_buffer(tmp_size);
+	auto in_buf = allocate_buffer(in_format, input_buffering, args.cpu64 ? 64 : 32);
+	auto out_buf = allocate_buffer(out_format, output_buffering, args.cpu64 ? 64 : 32);
+	auto tmp_buf = allocate_buffer(tmp_size, args.cpu64 ? 64 : 32);
 
 	Callback unpack_cb_data = { &in_buf.first, &in_data };
 	Callback pack_cb_data = { &out_buf.first, &out_data };
