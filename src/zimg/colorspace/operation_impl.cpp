@@ -84,6 +84,8 @@ public:
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
+		EnsureSinglePrecision x87;
+
 		const float gamma = 1.2f;
 
 		for (unsigned i = left; i < right; ++i) {
@@ -120,6 +122,8 @@ public:
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
+		EnsureSinglePrecision x87;
+
 		const float gamma = 1.2f;
 
 		for (unsigned i = left; i < right; ++i) {
@@ -157,12 +161,19 @@ public:
 		m_kr{ static_cast<float>(kr) },
 		m_kg{ static_cast<float>(kg) },
 		m_kb{ static_cast<float>(kb) },
-		m_nb{ to_gamma(1.0f - static_cast<float>(kb)) },
-		m_pb{ 1.0f - to_gamma(static_cast<float>(kb)) },
-		m_nr{ to_gamma(1.0f - static_cast<float>(kr)) },
-		m_pr{ 1.0f - to_gamma(static_cast<float>(kr)) },
+		m_nb{},
+		m_pb{},
+		m_nr{},
+		m_pr{},
 		m_scale{ scale }
-	{}
+	{
+		EnsureSinglePrecision x87;
+
+		m_nb = to_gamma(1.0f - static_cast<float>(kb));
+		m_pb = 1.0f - to_gamma(static_cast<float>(kb));
+		m_nr = to_gamma(1.0f - static_cast<float>(kr));
+		m_pr = 1.0f - to_gamma(static_cast<float>(kr));
+	}
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -215,12 +226,19 @@ public:
 		m_kr{ static_cast<float>(kr) },
 		m_kg{ static_cast<float>(kg) },
 		m_kb{ static_cast<float>(kb) },
-		m_nb{ func(1.0f - static_cast<float>(kb)) },
-		m_pb{ 1.0f - func(static_cast<float>(kb)) },
-		m_nr{ func(1.0f - static_cast<float>(kr)) },
-		m_pr{ 1.0f - func(static_cast<float>(kr)) },
+		m_nb{},
+		m_pb{},
+		m_nr{},
+		m_pr{},
 		m_scale{ scale }
-	{}
+	{
+		EnsureSinglePrecision x87;
+
+		m_nb = func(1.0f - static_cast<float>(kb));
+		m_pb = 1.0f - func(static_cast<float>(kb));
+		m_nr = func(1.0f - static_cast<float>(kr));
+		m_pr = 1.0f - func(static_cast<float>(kr));
+	}
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
