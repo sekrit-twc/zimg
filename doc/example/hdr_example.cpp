@@ -238,7 +238,7 @@ void execute(const Arguments &args)
 	params.nominal_peak_luminance = args.luminance;
 	params.allow_approximate_gamma = !!args.fast;
 
-	// HDR-10 specification.
+	// HDR10 specification.
 	zimgxx::zimage_format src_format;
 	src_format.width = args.width;
 	src_format.height = args.height;
@@ -262,7 +262,7 @@ void execute(const Arguments &args)
 	linear_format.transfer_characteristics = ZIMG_TRANSFER_LINEAR;
 	linear_format.color_primaries = ZIMG_PRIMARIES_709;
 
-	// HDR-10 RGB corresponding to above.
+	// HDR10 RGB corresponding to above.
 	zimgxx::zimage_format rgb_format;
 	rgb_format.width = args.width;
 	rgb_format.height = args.height;
@@ -293,7 +293,7 @@ void execute(const Arguments &args)
 	size_t tmp_size = std::max({ tolinear_graph.get_tmp_size(), tohdr_graph.get_tmp_size(), tosdr_graph.get_tmp_size() });
 	std::shared_ptr<void> tmp_buf{ aligned_malloc(tmp_size, 32), aligned_free };
 
-	// Convert from HDR-10 to linear Rec.709.
+	// Convert from HDR10 to linear Rec.709.
 	tolinear_graph.process(in.buffer.as_const(), linear.buffer, tmp_buf.get());
 
 	// Search for out of range pixels and replace with color key.
@@ -302,7 +302,7 @@ void execute(const Arguments &args)
 	// Convert linear image to Rec.709 for export.
 	tosdr_graph.process(linear.buffer.as_const(), sdr.buffer, tmp_buf.get());
 
-	// Convert mask image to HDR-10 RGB for export.
+	// Convert mask image to HDR10 RGB for export.
 	tohdr_graph.process(linear_mask.buffer.as_const(), mask.buffer, tmp_buf.get());
 
 	write_to_bmp(sdr, args.sdrpath, args.width, args.height);
