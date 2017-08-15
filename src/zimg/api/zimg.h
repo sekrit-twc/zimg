@@ -155,7 +155,7 @@ void zimg_clear_last_error(void);
 typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_NONE     = 0, /**< Portable C-based implementation. */
 	ZIMG_CPU_AUTO     = 1, /**< Runtime CPU detection. */
-	ZIMG_CPU_AUTO_64B = 2, /**< Allow use of 64-byte (512-bit) instructions. */
+	ZIMG_CPU_AUTO_64B = 2, /**< Allow use of 64-byte (512-bit) instructions. Since API 2.3. */
 #if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
 	ZIMG_CPU_X86_MMX        = 1000,
 	ZIMG_CPU_X86_SSE        = 1001,
@@ -515,7 +515,7 @@ typedef struct zimg_image_format {
 	zimg_field_parity_e field_parity;                         /**< Field parity (default ZIMG_FIELD_PROGRESSIVE). */
 	zimg_chroma_location_e chroma_location;                   /**< Chroma location (default ZIMG_CHROMA_LEFT). */
 
-	/** Active image subrectangle. Since API 2.1 */
+	/** Active image subrectangle. Since API 2.1. */
 	struct {
 		double left;   /**< Subpixel index of left image boundary (default NAN, treated as 0). */
 		double top;    /**< Subpixel index of top image boundary (default NAN, treated as 0). */
