@@ -1,3 +1,8 @@
+// z.lib example code for HDR API.
+//
+// Example code demonstrates the use of z.lib to operate on HDR images. In the
+// example, an HDR10 image is decomposed into SDR and HDR components.
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -227,6 +232,8 @@ void execute(const Arguments &args)
 	ImageBuffer sdr = allocate_buffer(args.width, args.height, 0, 0, sizeof(uint8_t));
 	ImageBuffer mask = allocate_buffer(args.width, args.height, 0, 0, sizeof(uint16_t));
 
+	// If allow_approximate_gamma is set, out-of-range pixels may be clipped,
+	// which could interfere with further processing of image highlights.
 	zimgxx::zfilter_graph_builder_params params;
 	params.nominal_peak_luminance = args.luminance;
 	params.allow_approximate_gamma = !!args.fast;

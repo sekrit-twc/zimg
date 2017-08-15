@@ -1,3 +1,8 @@
+/* z.lib example code for C API.
+ *
+ * Example code demonstrates the use of z.lib to scale a YV12/I420 image.
+ */
+
 #ifndef _WIN32
   #define _POSIX_C_SOURCE 200112L
 #endif
@@ -36,6 +41,7 @@ static ptrdiff_t width_to_stride(unsigned w)
 	return w % 32 ? w - w % 32 + 32 : w;
 }
 
+/* Allocate an image buffer and initialize plane pointers and strides. */
 static void *init_image(unsigned w, unsigned h, void *data[3], ptrdiff_t stride[3])
 {
 	size_t rowsize = width_to_stride(w);
@@ -171,9 +177,11 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 	unsigned p;
 	int ret = 1;
 
+	/* (1) Initialize structures with default values. */
 	zimg_image_format_default(&src_format, ZIMG_API_VERSION);
 	zimg_image_format_default(&dst_format, ZIMG_API_VERSION);
 
+	/* (2) Fill the format descriptors for the input and output images. */
 	src_format.width = args->in_w;
 	src_format.height = args->in_h;
 	src_format.pixel_type = ZIMG_PIXEL_BYTE;
@@ -192,6 +200,7 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 
 	dst_format.color_family = ZIMG_COLOR_YUV;
 
+	/* (3) Build the processing context. */
 	if (!(graph = zimg_filter_graph_build(&src_format, &dst_format, 0))) {
 		print_zimg_error();
 		goto fail;
@@ -203,9 +212,18 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 
 	printf("heap usage: %lu\n", (unsigned long)tmp_size);
 
+	/* (4) Allocate a temporary buffer for use during processing. If additional
+	 * images need to be processed, the same temporary buffer can be used in
+	 * subsequent calls.
+	 */
 	if (!(tmp = aligned_malloc(tmp_size, 32)))
 		goto fail;
 
+	/* (5) Set the buffer pointers and strides. In this example, the input and
+	 * output images are already in planar format, so the images are used
+	 * directly as the scanline buffers. To indicate this, the buffer mask is
+	 * set to ZIMG_BUFFER_MAX.
+	 */
 	for (p = 0; p < 3; ++p) {
 		src_buf.plane[p].data = src_p[p];
 		src_buf.plane[p].stride = src_stride[p];
@@ -216,6 +234,7 @@ static int process(const struct Arguments *args, const void * const src_p[3], vo
 		dst_buf.plane[p].mask = ZIMG_BUFFER_MAX;
 	}
 
+	/* (6) Perform the image scaling operation. */
 	if ((ret = zimg_filter_graph_process(graph, &src_buf, &dst_buf, tmp, 0, 0, 0, 0))) {
 		print_zimg_error();
 		goto fail;

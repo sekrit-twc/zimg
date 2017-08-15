@@ -1,3 +1,9 @@
+// z.lib example code for interlacing API.
+//
+// Example code demonstrates the use of z.lib to scale an interlaced YV12/I420
+// image. Emphasis is placed on illustrating how this operation can be performed
+// without copying the individual fields into separate buffers.
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -146,6 +152,10 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 	return{ aligned_malloc(size, 32), &aligned_free };
 }
 
+// I/O callback that copies the requested lines between buffers.
+//
+// In this example, the image format is 4:2:0, so the callback must copy data
+// from two scanlinnes in each call.
 int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
@@ -189,14 +199,22 @@ int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 
 void process(const YV12Image &in_data, const YV12Image &out_data)
 {
+	// (1) Fill the format descriptors for the top and bottom fields. The same
+	// context can not be used for both fields, as they are located at opposite
+	// offsets from the image center. If the fields were to be scaled as
+	// progressive-scan images of half height, spatial misalignment of the
+	// output would occur.
 	zimgxx::zimage_format in_format_t = get_image_format(in_data, true);
 	zimgxx::zimage_format in_format_b = get_image_format(in_data, false);
 	zimgxx::zimage_format out_format_t = get_image_format(out_data, true);
 	zimgxx::zimage_format out_format_b = get_image_format(out_data, false);
 
+	// (2) Build the processing contexts.
 	zimgxx::FilterGraph graph_t{ zimgxx::FilterGraph::build(in_format_t, out_format_t) };
 	zimgxx::FilterGraph graph_b{ zimgxx::FilterGraph::build(in_format_b, out_format_b) };
 
+	// (3) Allocate scanline and temporary buffers for input and output data. In
+	// this case, the same buffers can be used for both fields.
 	unsigned input_buffering_t = graph_t.get_input_buffering();
 	unsigned input_buffering_b = graph_b.get_input_buffering();
 	unsigned output_buffering_t = graph_t.get_input_buffering();
@@ -212,15 +230,19 @@ void process(const YV12Image &in_data, const YV12Image &out_data)
 	auto out_buf = allocate_buffer(out_format_t, std::max(output_buffering_t, output_buffering_b));
 	auto tmp_buf = allocate_buffer(std::max(tmp_size_t, tmp_size_b));
 
+	// (4) Store context information required by the I/O callbacks. The
+	// callbacks convert between the on-disk and z.lib alignment requirements.
 	Callback unpack_data = { &in_buf.first, &in_data, false, true };
 	Callback pack_data = { &out_buf.first, &out_data, true, true };
 
+	// (5) Process the top field.
 	graph_t.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 
 	unpack_data.top_field = false;
 	pack_data.top_field = false;
 
+	// (6) Process the bottom field.
 	graph_b.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 }

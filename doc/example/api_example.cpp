@@ -1,3 +1,9 @@
+// z.lib example code for C++ API.
+//
+// Example code demonstrates the use of z.lib to scale a BMP or YUY2 image.
+// Emphasis is placed on illustrating how I/O callbacks and line masks enable
+// the avoidance of unnecessary memory operations.
+
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -176,16 +182,28 @@ zimgxx::zimage_format get_image_format(const ImageFile &file)
 	return format;
 }
 
+// Allocate one of the buffer parameters to zimg_filter_graph_process.
+//
+//     count - the number of scanlinnes required by the graph and obtained by
+//             calling zimg_filter_graph_get_[input|output]_buffering.
+// alignment - buffer alignment, either 32 or 64
 std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zimgxx::zimage_format &format, unsigned count, size_t alignment)
 {
 	zimgxx::zimage_buffer buffer;
 	std::shared_ptr<void> handle;
 	unsigned char *ptr;
 
+	// zimg_filter_graph_get_[input|output]_buffering returns the count of lines
+	// in use simultaneously, but the buffer itself must contain a power-of-two
+	// number of lines. zimg_select_buffer_mask is a convenience function that
+	// computes (ceilLog2(x) - 1).
 	unsigned mask = zimg_select_buffer_mask(count);
 	size_t channel_size[3] = { 0 };
 	size_t pixel_size;
 
+	// The number of lines in the buffer is one more than the mask. Some graphs
+	// are unabled to operate in line-buffered mode and require the entire
+	// image to be allocated.
 	count = (mask == ZIMG_BUFFER_MAX) ? format.height : mask + 1;
 
 	if (format.pixel_type == ZIMG_PIXEL_FLOAT)
@@ -196,8 +214,14 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		pixel_size = sizeof(uint8_t);
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
+		// Buffering requirements for subsampled images are given in units of
+		// luma scanlines. Again, the special case of ZIMG_BUFFER_MAX must be
+		// handled separately.
 		unsigned count_plane = p ? count : count >> format.subsample_h;
 		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
+
+		// Pad each scanline so that its length in bytes is divisible by the
+		// required alignment.
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % alignment ? row_size - row_size % alignment + alignment : row_size;
 
@@ -222,6 +246,7 @@ std::shared_ptr<void> allocate_buffer(size_t size, size_t alignment)
 	return{ aligned_malloc(size, alignment), &aligned_free };
 }
 
+// Input callback to convert BGR24/32 to planar RGB.
 void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, unsigned left, unsigned right)
 {
 	const uint8_t *packed_bgr = static_cast<const uint8_t *>(bgr);
@@ -243,6 +268,7 @@ void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, uns
 	}
 }
 
+// Input callback to convert YUY2 to planar YUV.
 void unpack_yuy2(const void *yuy2, void * const planar[3], unsigned left, unsigned right)
 {
 	const uint8_t *packed_yuy2 = static_cast<const uint8_t *>(yuy2);
@@ -268,6 +294,7 @@ void unpack_yuy2(const void *yuy2, void * const planar[3], unsigned left, unsign
 	}
 }
 
+// Output callback to convert planar RGB to BGR24/32.
 void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsigned left, unsigned right)
 {
 	const uint8_t *planar_r = static_cast<const uint8_t *>(planar[0]);
@@ -289,6 +316,7 @@ void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsig
 	}
 }
 
+// Output callback to convert planar YUV to YUY2.
 void pack_yuy2(const void * const planar[3], void *yuy2, unsigned left, unsigned right)
 {
 	const uint8_t *planar_y = static_cast<const uint8_t *>(planar[0]);
@@ -314,6 +342,12 @@ void pack_yuy2(const void * const planar[3], void *yuy2, unsigned left, unsigned
 	}
 }
 
+// zimg_filter_graph_process input callback.
+//
+// Loads the planar data format expected by z.lib from the packed format stored
+// in the input file. Since both formats in this example code have no vertical
+// subsampling, the callback produces pixels from only one scanline. However, if
+// the image were 4:2:0 subsampled, the callback would need to produce two lines.
 int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
@@ -337,6 +371,10 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 	}
 }
 
+// zimg_filter_graph_process output callback.
+//
+// Stores the planar data format produced by z.lib as the packed format used in
+// the output file.
 int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
@@ -362,13 +400,14 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 
 void process(const Arguments &args, const ImageFile &in_data, const ImageFile &out_data)
 {
+	// (1) Fill the format descriptors for the input and output files.
 	zimgxx::zimage_format in_format = get_image_format(in_data);
 	zimgxx::zimage_format out_format = get_image_format(out_data);
 
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 1)
 	// Additional fields in API structures do not break binary compatibility.
 	// If relying on the specific semantics of fields not present in earlier
 	// versions, the application should also check the API version at runtime.
-#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 1)
 	if (!std::isnan(args.shift_w) || !std::isnan(args.shift_h) || !std::isnan(args.subheight) || !std::isnan(args.subheight)) {
 		if (zimg_get_api_version(nullptr, nullptr) < ZIMG_MAKE_API_VERSION(2, 1))
 			std::cerr << "warning: subpixel operation requires API 2.1\n";
@@ -380,15 +419,24 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	}
 #endif
 
+	// (2) Set any desired optional parameters.
 	zimgxx::zfilter_graph_builder_params params;
+
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 3)
 	// When using newly defined enum values, checking API version at runtime is
 	// required to prevent failure on older library versions.
-#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 3)
-	if (zimg_get_api_version(nullptr, nullptr) >= ZIMG_MAKE_API_VERSION(2, 3) && args.cpu64)
-		params.cpu_type = ZIMG_CPU_AUTO_64B;
+	if (args.cpu64) {
+		if (zimg_get_api_version(nullptr, nullptr) >= ZIMG_MAKE_API_VERSION(2, 3))
+			params.cpu_type = ZIMG_CPU_AUTO_64B;
+		else
+			std::cerr << "warning: 512-bit instructions require API 2.3\n";
+	}
 #endif
 
+	// (3) Build the processing context. It is always valid to pass null
+	// parameters to zimg_filter_graph_build.
 	zimgxx::FilterGraph graph{ zimgxx::FilterGraph::build(in_format, out_format, &params) };
+
 	unsigned input_buffering = graph.get_input_buffering();
 	unsigned output_buffering = graph.get_output_buffering();
 	size_t tmp_size = graph.get_tmp_size();
@@ -397,13 +445,24 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 	std::cout << "output buffering: " << output_buffering << '\n';
 	std::cout << "heap usage: " << tmp_size << '\n';
 
+	// (3) Allocate scanline buffers for input and output data. If the image is
+	// already stored in planar format and suitably aligned, it is possible to
+	// directly use the image as the scanline buffer. In this example, the data
+	// is stored in BMP or YUY2 files, so a scanline buffer is required. The
+	// zimg_filter_graph_get_[input|output]_buffering functions are used to
+	// correctly size the buffers.
 	auto in_buf = allocate_buffer(in_format, input_buffering, args.cpu64 ? 64 : 32);
 	auto out_buf = allocate_buffer(out_format, output_buffering, args.cpu64 ? 64 : 32);
+
+	// (4) Allocate a temporary buffer for use during processing.
 	auto tmp_buf = allocate_buffer(tmp_size, args.cpu64 ? 64 : 32);
 
+	// (5) Store context information required by the I/O callbacks.
 	Callback unpack_cb_data = { &in_buf.first, &in_data };
 	Callback pack_cb_data = { &out_buf.first, &out_data };
 
+	// (6) Perform the image scaling operation. If additional images need to be
+	// processed, the same temporary buffers can be used in subsequent calls.
 	graph.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	              unpack_image, &unpack_cb_data, pack_image, &pack_cb_data);
 }
@@ -413,6 +472,8 @@ void execute(const Arguments &args)
 	auto in_spec = parse_path_specifier(args.inpath);
 	auto out_spec = parse_path_specifier(args.outpath);
 
+	// Open input and output files by memory mapping. The memory map will allow
+	// on-the-fly image loading to occur without calling I/O APIs.
 	ImageFile in_image = open_file(in_spec.first, in_spec.second, args.in_w, args.in_h, false);
 	ImageFile out_image = open_file(out_spec.first, out_spec.second, args.out_w, args.out_h, true);
 
