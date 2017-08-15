@@ -184,7 +184,7 @@ zimgxx::zimage_format get_image_format(const ImageFile &file)
 
 // Allocate one of the buffer parameters to zimg_filter_graph_process.
 //
-//     count - the number of scanlinnes required by the graph and obtained by
+//     count - the number of scanlines required by the graph and obtained by
 //             calling zimg_filter_graph_get_[input|output]_buffering.
 // alignment - buffer alignment, either 32 or 64
 std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zimgxx::zimage_format &format, unsigned count, size_t alignment)
