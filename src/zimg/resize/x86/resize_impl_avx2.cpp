@@ -1326,7 +1326,7 @@ public:
 
 		PermuteContext context{};
 
-		unsigned filter_width = ceil_n(filter.filter_width + 1, 2);
+		unsigned filter_width = ceil_n(filter.filter_width + 2, 2);
 
 		context.left.resize(ceil_n(filter.filter_rows, 8) / 8);
 		context.permute.resize(ceil_n(filter.filter_rows, 8));
