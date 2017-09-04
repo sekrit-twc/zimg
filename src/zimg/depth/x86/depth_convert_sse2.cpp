@@ -169,7 +169,8 @@ void left_shift_b2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 			_mm_store_si128((__m128i *)(dst_p + vec_right), lo);
 			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right % 8);
 		} else {
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right % 8);
+			// Modulo does not handle the case where there are exactly 8 remaining pixels.
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
 		}
 	}
 }
@@ -301,7 +302,8 @@ void depth_convert_b2f_sse2(const void *src, void *dst, float scale, float offse
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			mm_store_idxlo_ps(dst_p + vec_right + 4, lohi, right % 4);
 		} else {
-			mm_store_idxlo_ps(dst_p + vec_right, lolo, right % 4);
+			// Modulo does not handle the case where there are exactly 4 remaining pixels.
+			mm_store_idxlo_ps(dst_p + vec_right, lolo, right - vec_right);
 		}
 	}
 #undef XITER
@@ -348,7 +350,8 @@ void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offse
 			_mm_store_ps(dst_p + vec_right + 0, lo);
 			mm_store_idxlo_ps(dst_p + vec_right + 4, hi, right % 4);
 		} else {
-			mm_store_idxlo_ps(dst_p + vec_right, lo, right % 4);
+			// Modulo does not handle the case where there are exactly 4 remaining pixels.
+			mm_store_idxlo_ps(dst_p + vec_right, lo, right - vec_right);
 		}
 	}
 #undef XITER

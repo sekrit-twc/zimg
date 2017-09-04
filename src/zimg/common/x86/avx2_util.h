@@ -85,7 +85,7 @@ static inline FORCE_INLINE void mm256_store_idxlo_epi16(__m256i *dst, __m256i x,
 	mm256_store_idxlo_epi8(dst, x, idx * 2);
 }
 
-// Store from [x] into [dst] the 16-bit elements with index less than [idx].
+// Store from [x] into [dst] the 16-bit elements with index greater than or equal to [idx].
 static inline FORCE_INLINE void mm256_store_idxhi_epi16(__m256i *dst, __m256i x, unsigned idx)
 {
 	mm256_store_idxhi_epi8(dst, x, idx * 2);

@@ -343,7 +343,8 @@ void ordered_dither_b2w_sse2(const float *dither, unsigned dither_offset, unsign
 			_mm_store_si128((__m128i *)(dst_p + vec_right), lo);
 			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right % 8);
 		} else {
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right % 8);
+			// Modulo does not handle the case where there are exactly 8 remaining pixels.
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
 		}
 	}
 #undef XITER
