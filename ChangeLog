@@ -1,3 +1,7 @@
+2.6.1
+depth: fix SSE2 conversions with mod4 and mod8 widths (introduced in 2.6)
+resize: fix heap corruption in AVX2 horizontal resizer (introduced in 2.6)
+
 2.6 (API 2.3)
 api: add ZIMG_CPU_AUTO_64B for AVX-512 compatibility
 colorspace: add support for ITU-R BT.2100 ICtCp
