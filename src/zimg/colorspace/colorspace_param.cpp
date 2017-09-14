@@ -231,7 +231,7 @@ Matrix3x3 gamut_xyz_to_rgb_matrix(ColorPrimaries primaries)
 // http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html
 Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out)
 {
-	constexpr Matrix3x3 bradford = {
+	const Matrix3x3 bradford = {
 		{  0.8951,  0.2664, -0.1614 },
 		{ -0.7502,  1.7135,  0.0367 },
 		{  0.0389, -0.0685,  1.0296 },

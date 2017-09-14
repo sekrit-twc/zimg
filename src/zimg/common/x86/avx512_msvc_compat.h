@@ -1,4 +1,4 @@
-#if defined(ZIMG_X86_AVX512) && defined(_MSC_VER)
+#if defined(ZIMG_X86_AVX512) && defined(_MSC_VER) && !defined(__INTEL_COMPILER)
   #if _MSC_VER == 1911
     #define _MM_PERM_AAAA _MM_SHUFFLE(0, 0, 0, 0)
     #define _MM_PERM_BBBB _MM_SHUFFLE(1, 1, 1, 1)
