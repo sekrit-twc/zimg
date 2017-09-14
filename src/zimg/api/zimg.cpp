@@ -455,9 +455,9 @@ void zimg_get_version_info(unsigned *major, unsigned *minor, unsigned *micro)
 unsigned zimg_get_api_version(unsigned *major, unsigned *minor)
 {
 	if (major)
-		*major = static_cast<unsigned>((ZIMG_API_VERSION >> 8) & 0xFF);
+		*major = ZIMG_API_VERSION_MAJOR;
 	if (minor)
-		*minor = static_cast<unsigned>(ZIMG_API_VERSION & 0xFF);
+		*minor = ZIMG_API_VERSION_MINOR;
 
 	return ZIMG_API_VERSION;
 }
