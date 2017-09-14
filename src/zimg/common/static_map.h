@@ -55,7 +55,7 @@ public:
 	// ztd::static_map::value_compare
 	//
 	// ztd::static_map::value_compare is a function object that compares objects of type ztd::static_map::value_type
-	// (key-value pairs) by comparing of the first components of the pairs.
+	// (key-value pairs) by comparing the first components of the pairs.
 	class value_compare {
 	protected:
 		// The stored comparator.
