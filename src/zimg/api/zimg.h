@@ -283,6 +283,7 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_601           = 6,  /* Equivalent to 1. */
 	ZIMG_TRANSFER_240M          = 7,
 	ZIMG_TRANSFER_LINEAR        = 8,
+	ZIMG_TRANSFER_LOG_100       = 9,
 	ZIMG_TRANSFER_IEC_61966_2_4 = 11,
 	ZIMG_TRANSFER_IEC_61966_2_1 = 13,
 	ZIMG_TRANSFER_2020_10       = 14, /* Equivalent to 1. */
