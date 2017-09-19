@@ -36,6 +36,7 @@ enum class TransferCharacteristics {
 	UNSPECIFIED,
 	LINEAR,
 	REC_709,
+	XVYCC,
 	SRGB,
 	ST_2084,
 	ARIB_B67,

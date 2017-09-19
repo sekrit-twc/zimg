@@ -134,6 +134,16 @@ float srgb_inverse_eotf(float x) noexcept
 	return x;
 }
 
+float xvycc_eotf(float x) noexcept
+{
+	return copysign(rec_1886_eotf(fabs(x)), x);
+}
+
+float xvycc_inverse_eotf(float x) noexcept
+{
+	return copysign(rec_1886_inverse_eotf(fabs(x)), x);
+}
+
 float st_2084_eotf(float x) noexcept
 {
 	// Filter negative values to avoid NAN.
@@ -207,6 +217,10 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::REC_709:
 		func.to_linear = scene_referred ? rec_709_inverse_oetf : rec_1886_eotf;
 		func.to_gamma = scene_referred ? rec_709_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::XVYCC:
+		func.to_linear = xvycc_eotf;
+		func.to_gamma = xvycc_inverse_eotf;
 		break;
 	case TransferCharacteristics::SRGB:
 		func.to_linear = srgb_eotf;
