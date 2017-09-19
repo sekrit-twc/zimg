@@ -36,6 +36,7 @@ enum class TransferCharacteristics {
 	UNSPECIFIED,
 	LINEAR,
 	LOG_100,
+	LOG_316,
 	REC_709,
 	SMPTE_240M,
 	XVYCC,
