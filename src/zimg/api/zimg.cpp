@@ -250,9 +250,10 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static SM_CONSTEXPR_14 const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 10> map{
+	static SM_CONSTEXPR_14 const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 11> map{
 		{ ZIMG_TRANSFER_709,           TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED,   TransferCharacteristics::UNSPECIFIED },
+		{ ZIMG_TRANSFER_240M,          TransferCharacteristics::SMPTE_240M },
 		{ ZIMG_TRANSFER_601,           TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_IEC_61966_2_4, TransferCharacteristics::XVYCC },
 		{ ZIMG_TRANSFER_IEC_61966_2_1, TransferCharacteristics::SRGB },

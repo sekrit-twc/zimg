@@ -15,6 +15,9 @@ namespace {
 constexpr float REC709_ALPHA = 1.09929682680944f;
 constexpr float REC709_BETA = 0.018053968510807f;
 
+constexpr float SMPTE_240M_ALPHA = 1.1115;
+constexpr float SMPTE_240M_BETA  = 0.0228;
+
 constexpr float SRGB_ALPHA = 1.055f;
 constexpr float SRGB_BETA = 0.0031308f;
 
@@ -112,6 +115,26 @@ float rec_1886_eotf(float x) noexcept
 float rec_1886_inverse_eotf(float x) noexcept
 {
 	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.4f);
+}
+
+float smpte_240m_oetf(float x) noexcept
+{
+	if (x < 4.0f * SMPTE_240M_BETA)
+		x = x / 4.0f;
+	else
+		x = zimg_x_powf((x + (SMPTE_240M_ALPHA - 1.0f)) / SMPTE_240M_ALPHA, 1.0f / 0.45f);
+
+	return x;
+}
+
+float smpte_240m_inverse_oetf(float x) noexcept
+{
+	if (x < SMPTE_240M_BETA)
+		x = x * 4.0f;
+	else
+		x = SMPTE_240M_ALPHA * zimg_x_powf(x, 0.45f) - (SMPTE_240M_ALPHA - 1.0f);
+
+	return x;
 }
 
 float srgb_eotf(float x) noexcept
@@ -217,6 +240,10 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::REC_709:
 		func.to_linear = scene_referred ? rec_709_inverse_oetf : rec_1886_eotf;
 		func.to_gamma = scene_referred ? rec_709_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::SMPTE_240M:
+		func.to_linear =  scene_referred ? smpte_240m_inverse_oetf : rec_1886_eotf;
+		func.to_gamma = scene_referred ? smpte_240m_oetf : rec_1886_inverse_eotf;
 		break;
 	case TransferCharacteristics::XVYCC:
 		func.to_linear = xvycc_eotf;

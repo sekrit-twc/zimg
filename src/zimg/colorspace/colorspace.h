@@ -36,6 +36,7 @@ enum class TransferCharacteristics {
 	UNSPECIFIED,
 	LINEAR,
 	REC_709,
+	SMPTE_240M,
 	XVYCC,
 	SRGB,
 	ST_2084,
