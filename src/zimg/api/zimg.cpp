@@ -230,12 +230,14 @@ zimg::colorspace::MatrixCoefficients translate_matrix(zimg_matrix_coefficients_e
 {
 	using zimg::colorspace::MatrixCoefficients;
 
-	static SM_CONSTEXPR_14 const zimg::static_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 11> map{
+	static SM_CONSTEXPR_14 const zimg::static_map<zimg_matrix_coefficients_e, zimg::colorspace::MatrixCoefficients, 13> map{
 		{ ZIMG_MATRIX_RGB,                      MatrixCoefficients::RGB },
 		{ ZIMG_MATRIX_709,                      MatrixCoefficients::REC_709 },
 		{ ZIMG_MATRIX_UNSPECIFIED,              MatrixCoefficients::UNSPECIFIED },
+		{ ZIMG_MATRIX_FCC,                      MatrixCoefficients::FCC },
 		{ ZIMG_MATRIX_470BG,                    MatrixCoefficients::REC_601 },
 		{ ZIMG_MATRIX_170M,                     MatrixCoefficients::REC_601 },
+		{ ZIMG_MATRIX_240M,                     MatrixCoefficients::SMPTE_240M },
 		{ ZIMG_MATRIX_YCGCO,                    MatrixCoefficients::YCGCO },
 		{ ZIMG_MATRIX_2020_NCL,                 MatrixCoefficients::REC_2020_NCL },
 		{ ZIMG_MATRIX_2020_CL,                  MatrixCoefficients::REC_2020_CL },

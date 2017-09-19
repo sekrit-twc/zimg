@@ -266,8 +266,10 @@ typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_RGB                      = 0,
 	ZIMG_MATRIX_709                      = 1,
 	ZIMG_MATRIX_UNSPECIFIED              = 2,
+	ZIMG_MATRIX_FCC                      = 4,
 	ZIMG_MATRIX_470BG                    = 5,
 	ZIMG_MATRIX_170M                     = 6,  /* Equivalent to 5. */
+	ZIMG_MATRIX_240M                     = 7,
 	ZIMG_MATRIX_YCGCO                    = 8,
 	ZIMG_MATRIX_2020_NCL                 = 9,
 	ZIMG_MATRIX_2020_CL                  = 10,

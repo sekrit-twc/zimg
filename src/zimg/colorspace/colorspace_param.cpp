@@ -15,6 +15,14 @@ void get_yuv_constants(double *kr, double *kb, MatrixCoefficients matrix)
 		*kr = 0;
 		*kb = 0;
 		break;
+	case MatrixCoefficients::FCC:
+		*kr = FCC_KR;
+		*kb = FCC_KB;
+		break;
+	case MatrixCoefficients::SMPTE_240M:
+		*kr = SMPTE_240M_KR;
+		*kb = SMPTE_240M_KB;
+		break;
 	case MatrixCoefficients::REC_601:
 		*kr = REC_601_KR;
 		*kb = REC_601_KB;

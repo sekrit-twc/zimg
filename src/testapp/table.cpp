@@ -63,11 +63,13 @@ const zimg::static_string_map<PixelType, 4> g_pixel_table{
 	{ "float", PixelType::FLOAT },
 };
 
-const zimg::static_string_map<MatrixCoefficients, 10> g_matrix_table{
+const zimg::static_string_map<MatrixCoefficients, 12> g_matrix_table{
 	{ "unspec",     MatrixCoefficients::UNSPECIFIED },
 	{ "rgb",        MatrixCoefficients::RGB },
 	{ "601",        MatrixCoefficients::REC_601 },
 	{ "709",        MatrixCoefficients::REC_709 },
+	{ "fcc",        MatrixCoefficients::FCC },
+	{ "240m",       MatrixCoefficients::SMPTE_240M },
 	{ "ycgco",      MatrixCoefficients::YCGCO },
 	{ "2020_ncl",   MatrixCoefficients::REC_2020_NCL },
 	{ "2020_cl",    MatrixCoefficients::REC_2020_CL },
