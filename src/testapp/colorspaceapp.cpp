@@ -102,7 +102,7 @@ const char help_str[] =
 "Colorspace specifier format: matrix:transfer:primaries\n"
 "matrix:    unspec, rgb, 601, 709, ycgco, 2020_ncl, 2020_cl, chroma_ncl, chroma_cl, ictcp\n"
 "transfer:  unspec, linear, 709, srgb, st_2084, arib_b67\n"
-"primaries: unspec, smpte_c, 709, 2020, dcip3_d65\n"
+"primaries: unspec, 470_m, 470_bg, smpte_c, 709, film, 2020, st_428, dcip3_d65, jedec_p22\n"
 "\n"
 PATH_SPECIFIER_HELP_STR;
 
