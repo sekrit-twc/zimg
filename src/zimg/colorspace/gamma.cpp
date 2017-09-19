@@ -137,6 +137,16 @@ float log316_inverse_oetf(float x) noexcept
 	return x <= 0.0f ? 0.00316227766f : zimg_x_powf(10, 2.5 * (x - 1.0f));
 }
 
+float rec_470m_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.2f);
+}
+
+float rec_470m_inverse_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.2f);
+}
+
 float rec_470bg_eotf(float x) noexcept
 {
 	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.8f);
@@ -278,6 +288,10 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::REC_709:
 		func.to_linear = scene_referred ? rec_709_inverse_oetf : rec_1886_eotf;
 		func.to_gamma = scene_referred ? rec_709_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::REC_470_M:
+		func.to_linear = rec_470m_eotf;
+		func.to_gamma = rec_470m_inverse_eotf;
 		break;
 	case TransferCharacteristics::REC_470_BG:
 		func.to_linear = rec_470bg_eotf;

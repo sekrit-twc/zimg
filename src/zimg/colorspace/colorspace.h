@@ -38,6 +38,7 @@ enum class TransferCharacteristics {
 	LOG_100,
 	LOG_316,
 	REC_709,
+	REC_470_M,
 	REC_470_BG,
 	SMPTE_240M,
 	XVYCC,
