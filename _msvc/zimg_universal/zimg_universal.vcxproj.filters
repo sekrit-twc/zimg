@@ -85,9 +85,6 @@
     <ClCompile Include="..\..\src\zimg\common\matrix.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\common\x86util.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp">
       <Filter>Source Files\depth</Filter>
     </ClCompile>
