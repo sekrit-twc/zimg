@@ -75,7 +75,7 @@ inline FORCE_INLINE __m512i ordered_dither_avx512_xiter(__m512 x, unsigned j, co
 	x = _mm512_add_ps(x, dith);
 	out = _mm512_cvtps_epi32(x);
 	out = _mm512_min_epi32(out, out_max);
-	out = _mm512_max_epi32(out, _mm512_setzero_si512())
+	out = _mm512_max_epi32(out, _mm512_setzero_si512());
 
 	return out;
 }
