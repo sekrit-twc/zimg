@@ -1,3 +1,4 @@
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/zassert.h"
 #include "colorspace.h"
@@ -67,6 +68,9 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(const ColorspaceDefi
 	zassert_d(in.matrix == MatrixCoefficients::RGB && out.matrix == MatrixCoefficients::RGB, "must be RGB");
 	zassert_d(in.transfer != TransferCharacteristics::LINEAR && out.transfer == TransferCharacteristics::LINEAR, "wrong transfer characteristics");
 
+	if (in.transfer == TransferCharacteristics::XVYCC || out.transfer == TransferCharacteristics::XVYCC)
+		cpu = CPUClass::NONE;
+
 	if (in.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(in.primaries, params))
 		return create_inverse_arib_b67_operation(ncl_rgb_to_yuv_matrix_from_primaries(in.primaries), params);
 	else
@@ -78,6 +82,9 @@ std::unique_ptr<Operation> create_linear_to_gamma_operation(const ColorspaceDefi
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::RGB && out.matrix == MatrixCoefficients::RGB, "must be RGB");
 	zassert_d(in.transfer == TransferCharacteristics::LINEAR && out.transfer != TransferCharacteristics::LINEAR, "wrong transfer characteristics");
+
+	if (in.transfer == TransferCharacteristics::XVYCC || out.transfer == TransferCharacteristics::XVYCC)
+		cpu = CPUClass::NONE;
 
 	if (out.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(out.primaries, params))
 		return create_arib_b67_operation(ncl_rgb_to_yuv_matrix_from_primaries(out.primaries), params);
