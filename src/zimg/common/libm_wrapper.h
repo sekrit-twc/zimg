@@ -17,6 +17,7 @@ extern "C" {
 
 extern float (*zimg_x_expf)(float x);
 extern float (*zimg_x_logf)(float x);
+extern float (*zimg_x_log10f)(float x);
 
 extern float (*zimg_x_powf)(float x, float y);
 

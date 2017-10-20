@@ -7,6 +7,7 @@ extern "C" {
 
 float myexpf(float x);
 float mylogf(float x);
+float mylog10f(float x);
 
 float mypowf(float x, float y);
 

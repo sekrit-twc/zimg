@@ -37,7 +37,13 @@ enum class MatrixCoefficients {
 enum class TransferCharacteristics {
 	UNSPECIFIED,
 	LINEAR,
+	LOG_100,
+	LOG_316,
 	REC_709,
+	REC_470_M,
+	REC_470_BG,
+	SMPTE_240M,
+	XVYCC,
 	SRGB,
 	ST_2084,
 	ARIB_B67,
