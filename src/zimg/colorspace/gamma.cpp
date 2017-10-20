@@ -15,6 +15,9 @@ namespace {
 constexpr float REC709_ALPHA = 1.09929682680944f;
 constexpr float REC709_BETA = 0.018053968510807f;
 
+constexpr float SMPTE_240M_ALPHA = 1.1115;
+constexpr float SMPTE_240M_BETA  = 0.0228;
+
 constexpr float SRGB_ALPHA = 1.055f;
 constexpr float SRGB_BETA = 0.0031308f;
 
@@ -114,6 +117,66 @@ float rec_1886_inverse_eotf(float x) noexcept
 	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.4f);
 }
 
+float log100_oetf(float x) noexcept
+{
+	return x <= 0.01f ? 0 : 1.0f + log10f(x) / 2.0f;
+}
+
+float log100_inverse_oetf(float x) noexcept
+{
+	return x <= 0.0f ? 0.01f : zimg_x_powf(10, 2 * (x - 1.0f));
+}
+
+float log316_oetf(float x) noexcept
+{
+	return x <= 0.0316227766f ? 0 : 1.0f + log10f(x) / 2.5f;
+}
+
+float log316_inverse_oetf(float x) noexcept
+{
+	return x <= 0.0f ? 0.00316227766f : zimg_x_powf(10, 2.5 * (x - 1.0f));
+}
+
+float rec_470m_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.2f);
+}
+
+float rec_470m_inverse_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.2f);
+}
+
+float rec_470bg_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.8f);
+}
+
+float rec_470bg_inverse_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.8f);
+}
+
+float smpte_240m_oetf(float x) noexcept
+{
+	if (x < 4.0f * SMPTE_240M_BETA)
+		x = x / 4.0f;
+	else
+		x = zimg_x_powf((x + (SMPTE_240M_ALPHA - 1.0f)) / SMPTE_240M_ALPHA, 1.0f / 0.45f);
+
+	return x;
+}
+
+float smpte_240m_inverse_oetf(float x) noexcept
+{
+	if (x < SMPTE_240M_BETA)
+		x = x * 4.0f;
+	else
+		x = SMPTE_240M_ALPHA * zimg_x_powf(x, 0.45f) - (SMPTE_240M_ALPHA - 1.0f);
+
+	return x;
+}
+
 float srgb_eotf(float x) noexcept
 {
 	if (x < 12.92f * SRGB_BETA)
@@ -132,6 +195,16 @@ float srgb_inverse_eotf(float x) noexcept
 		x = SRGB_ALPHA * zimg_x_powf(x, 1.0f / 2.4f) - (SRGB_ALPHA - 1.0f);
 
 	return x;
+}
+
+float xvycc_eotf(float x) noexcept
+{
+	return copysign(rec_1886_eotf(fabs(x)), x);
+}
+
+float xvycc_inverse_eotf(float x) noexcept
+{
+	return copysign(rec_1886_inverse_eotf(fabs(x)), x);
 }
 
 float st_2084_eotf(float x) noexcept
@@ -204,9 +277,33 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	func.to_gamma_scale = 1.0f;
 
 	switch (transfer) {
+	case TransferCharacteristics::LOG_100:
+		func.to_linear = log100_inverse_oetf;
+		func.to_gamma = log100_oetf;
+		break;
+	case TransferCharacteristics::LOG_316:
+		func.to_linear = log316_inverse_oetf;
+		func.to_gamma = log316_oetf;
+		break;
 	case TransferCharacteristics::REC_709:
 		func.to_linear = scene_referred ? rec_709_inverse_oetf : rec_1886_eotf;
 		func.to_gamma = scene_referred ? rec_709_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::REC_470_M:
+		func.to_linear = rec_470m_eotf;
+		func.to_gamma = rec_470m_inverse_eotf;
+		break;
+	case TransferCharacteristics::REC_470_BG:
+		func.to_linear = rec_470bg_eotf;
+		func.to_gamma = rec_470bg_inverse_eotf;
+		break;
+	case TransferCharacteristics::SMPTE_240M:
+		func.to_linear = scene_referred ? smpte_240m_inverse_oetf : rec_1886_eotf;
+		func.to_gamma = scene_referred ? smpte_240m_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::XVYCC:
+		func.to_linear = xvycc_eotf;
+		func.to_gamma = xvycc_inverse_eotf;
 		break;
 	case TransferCharacteristics::SRGB:
 		func.to_linear = srgb_eotf;

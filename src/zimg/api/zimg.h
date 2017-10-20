@@ -282,8 +282,14 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_INTERNAL      = -1, /**< Not part of the API. */
 	ZIMG_TRANSFER_709           = 1,
 	ZIMG_TRANSFER_UNSPECIFIED   = 2,
+	ZIMG_TRANSFER_470_M         = 4,
+	ZIMG_TRANSFER_470_BG        = 5,
 	ZIMG_TRANSFER_601           = 6,  /* Equivalent to 1. */
+	ZIMG_TRANSFER_240M          = 7,
 	ZIMG_TRANSFER_LINEAR        = 8,
+	ZIMG_TRANSFER_LOG_100       = 9,
+	ZIMG_TRANSFER_LOG_316       = 10,
+	ZIMG_TRANSFER_IEC_61966_2_4 = 11,
 	ZIMG_TRANSFER_IEC_61966_2_1 = 13,
 	ZIMG_TRANSFER_2020_10       = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_2020_12       = 15, /* Equivalent to 1. */
