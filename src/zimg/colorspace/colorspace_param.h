@@ -12,6 +12,10 @@ enum class MatrixCoefficients;
 enum class ColorPrimaries;
 
 // Kr and Kb YUV<-->RGB constants.
+constexpr double FCC_KR = 0.3;
+constexpr double FCC_KB = 0.11;
+constexpr double SMPTE_240M_KR = 0.212;
+constexpr double SMPTE_240M_KB = 0.087;
 constexpr double REC_601_KR = 0.299;
 constexpr double REC_601_KB = 0.114;
 constexpr double REC_709_KR = 0.2126;

@@ -23,6 +23,8 @@ enum class MatrixCoefficients {
 	RGB,
 	REC_601,
 	REC_709,
+	FCC,
+	SMPTE_240M,
 	YCGCO,
 	REC_2020_NCL,
 	REC_2020_CL,
