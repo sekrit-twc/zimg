@@ -72,6 +72,87 @@ TEST(GammaTest, test_rec709)
 	test_monotonic(zimg::colorspace::rec_709_inverse_oetf, -1.0f, 0.0f, 1UL << 16);
 }
 
+TEST(GammaTest, test_log100)
+{
+	EXPECT_EQ(0.0f, zimg::colorspace::log100_oetf(0.01f));
+	EXPECT_GE(zimg::colorspace::log100_oetf(std::nextafter(0.01f, INFINITY)), 0.0f);
+	EXPECT_EQ(1.0f, zimg::colorspace::log100_oetf(1.0f));
+	EXPECT_EQ(0.01f, zimg::colorspace::log100_inverse_oetf(0.0f));
+	EXPECT_GE(zimg::colorspace::log100_inverse_oetf(std::nextafter(0.0f, INFINITY)), 0.01f);
+	EXPECT_EQ(1.0f, zimg::colorspace::log100_inverse_oetf(1.0f));
+
+	SCOPED_TRACE("forward");
+	test_monotonic(zimg::colorspace::log100_inverse_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("reverse");
+	test_monotonic(zimg::colorspace::log100_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("forward->reverse");
+	test_accuracy(zimg::colorspace::log100_oetf, zimg::colorspace::log100_inverse_oetf, 0.01f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("reverse->forward");
+	test_accuracy(zimg::colorspace::log100_inverse_oetf, zimg::colorspace::log100_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+
+	SCOPED_TRACE("wtw");
+	test_monotonic(zimg::colorspace::log100_inverse_oetf, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::log100_oetf, 1.0f, 2.0f, 1UL << 16);
+}
+
+TEST(GammaTest, test_log316)
+{
+	EXPECT_EQ(0.0f, zimg::colorspace::log316_oetf(0.00316227766f));
+	EXPECT_GE(zimg::colorspace::log316_oetf(std::nextafter(0.00316227766f, INFINITY)), 0.0f);
+	EXPECT_EQ(1.0f, zimg::colorspace::log316_oetf(1.0f));
+	EXPECT_EQ(0.00316227766f, zimg::colorspace::log316_inverse_oetf(0.0f));
+	EXPECT_GE(zimg::colorspace::log316_inverse_oetf(std::nextafterf(0.0f, INFINITY)), 0.00316227766f);
+	EXPECT_EQ(1.0f, zimg::colorspace::log316_inverse_oetf(1.0f));
+
+	SCOPED_TRACE("forward");
+	test_monotonic(zimg::colorspace::log316_inverse_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("reverse");
+	test_monotonic(zimg::colorspace::log316_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("forward->reverse");
+	test_accuracy(zimg::colorspace::log316_oetf, zimg::colorspace::log316_inverse_oetf, 0.0316227766f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("reverse->forward");
+	test_accuracy(zimg::colorspace::log316_inverse_oetf, zimg::colorspace::log316_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+
+	SCOPED_TRACE("wtw");
+	test_monotonic(zimg::colorspace::log316_inverse_oetf, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::log316_oetf, 1.0f, 2.0f, 1UL << 16);
+}
+
+TEST(GammaTest, test_rec_470m_470bg)
+{
+	SCOPED_TRACE("470m");
+	test_accuracy(zimg::colorspace::rec_470m_oetf, zimg::colorspace::rec_470m_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	test_accuracy(zimg::colorspace::rec_470m_inverse_oetf, zimg::colorspace::rec_470m_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("470bg");
+	test_accuracy(zimg::colorspace::rec_470bg_oetf, zimg::colorspace::rec_470bg_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	test_accuracy(zimg::colorspace::rec_470bg_inverse_oetf, zimg::colorspace::rec_470bg_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+}
+
+TEST(GammaTest, test_smpte_240m)
+{
+	EXPECT_EQ(0.0f, zimg::colorspace::smpte_240m_oetf(0.0f));
+	EXPECT_EQ(1.0f, zimg::colorspace::smpte_240m_oetf(1.0f));
+	EXPECT_EQ(0.0f, zimg::colorspace::smpte_240m_inverse_oetf(0.0f));
+	EXPECT_EQ(1.0f, zimg::colorspace::smpte_240m_inverse_oetf(1.0f));
+
+	SCOPED_TRACE("forward");
+	test_monotonic(zimg::colorspace::smpte_240m_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("reverse");
+	test_monotonic(zimg::colorspace::smpte_240m_inverse_oetf, 0.0f, 1.0f, 1UL << 16);
+	SCOPED_TRACE("forward->reverse");
+	test_accuracy(zimg::colorspace::smpte_240m_oetf, zimg::colorspace::smpte_240m_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("reverse->forward");
+	test_accuracy(zimg::colorspace::smpte_240m_inverse_oetf, zimg::colorspace::smpte_240m_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+
+	SCOPED_TRACE("wtw");
+	test_monotonic(zimg::colorspace::smpte_240m_oetf, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::smpte_240m_inverse_oetf, 1.0f, 2.0f, 1UL << 16);
+
+	SCOPED_TRACE("btb");
+	test_monotonic(zimg::colorspace::smpte_240m_oetf, -1.0f, 0.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::smpte_240m_inverse_oetf, -1.0f, 0.0f, 1UL << 16);
+}
+
 TEST(GammaTest, test_rec1886)
 {
 	EXPECT_EQ(0.0f, zimg::colorspace::rec_1886_inverse_eotf(0.0f));
@@ -120,6 +201,31 @@ TEST(GammaTest, test_srgb)
 	SCOPED_TRACE("btb");
 	test_monotonic(zimg::colorspace::srgb_inverse_eotf, -1.0f, 0.0f, 1UL << 16);
 	test_monotonic(zimg::colorspace::srgb_eotf, -1.0f, 0.0f, 1UL << 16);
+}
+
+TEST(GammaTest, test_xvycc)
+{
+	SCOPED_TRACE("oetf forward");
+	test_accuracy(zimg::colorspace::xvycc_oetf, zimg::colorspace::rec_709_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("oetf reverse");
+	test_accuracy(zimg::colorspace::xvycc_inverse_oetf, zimg::colorspace::rec_709_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("eotf forward");
+	test_accuracy(zimg::colorspace::xvycc_oetf, zimg::colorspace::rec_709_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("eotf reverse");
+	test_accuracy(zimg::colorspace::xvycc_inverse_oetf, zimg::colorspace::rec_709_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+
+	SCOPED_TRACE("oetf wtw");
+	test_monotonic(zimg::colorspace::xvycc_oetf, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::xvycc_inverse_oetf, 1.0f, 2.0f, 1UL << 16);
+	SCOPED_TRACE("eotf wtw");
+	test_monotonic(zimg::colorspace::xvycc_inverse_eotf, 1.0f, 2.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::xvycc_eotf, 1.0f, 2.0f, 1UL << 16);
+	SCOPED_TRACE("oetf btb");
+	test_monotonic(zimg::colorspace::xvycc_oetf, -1.0f, 0.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::xvycc_inverse_oetf, -1.0f, 0.0f, 1UL << 16);
+	SCOPED_TRACE("eotf btb");
+	test_monotonic(zimg::colorspace::xvycc_inverse_eotf, -1.0f, 0.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::xvycc_eotf, -1.0f, 1.0f, 1UL << 16);
 }
 
 TEST(GammaTest, test_st_2084)
