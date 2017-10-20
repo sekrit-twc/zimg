@@ -92,7 +92,7 @@ float log100_inverse_oetf(float x) noexcept
 
 float log316_oetf(float x) noexcept
 {
-	return x <= 0.0316227766f ? 0.0f : 1.0f + zimg_x_log10f(x) / 2.5f;
+	return x <= 0.00316227766f ? 0.0f : 1.0f + zimg_x_log10f(x) / 2.5f;
 }
 
 float log316_inverse_oetf(float x) noexcept
