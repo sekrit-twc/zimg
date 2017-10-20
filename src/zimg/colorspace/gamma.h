@@ -41,6 +41,9 @@ float arib_b67_inverse_oetf(float x) noexcept;
 float rec_1886_eotf(float x) noexcept;
 float rec_1886_inverse_eotf(float x) noexcept;
 
+float xvycc_oetf(float x) noexcept;
+float xvycc_inverse_oetf(float x) noexcept;
+
 float srgb_eotf(float x) noexcept;
 float srgb_inverse_eotf(float x) noexcept;
 

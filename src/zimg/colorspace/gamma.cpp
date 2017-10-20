@@ -140,6 +140,16 @@ float smpte_240m_inverse_oetf(float x) noexcept
 	return x;
 }
 
+float xvycc_oetf(float x) noexcept
+{
+	return std::copysign(rec_709_oetf(std::fabs(x)), x);
+}
+
+float xvycc_inverse_oetf(float x) noexcept
+{
+	return std::copysign(rec_709_inverse_oetf(std::fabs(x)), x);
+}
+
 float arib_b67_oetf(float x) noexcept
 {
 	// Prevent negative pixels from yielding NAN.
@@ -197,14 +207,21 @@ float srgb_inverse_eotf(float x) noexcept
 	return x;
 }
 
+// Handle values in the range [0.0-1.0] such that they match a legacy CRT.
 float xvycc_eotf(float x) noexcept
 {
-	return copysign(rec_1886_eotf(fabs(x)), x);
+	if (x < 0.0f || x > 1.0f)
+		return std::copysign(rec_709_inverse_oetf(std::fabs(x)), x);
+	else
+		return std::copysign(rec_1886_eotf(std::fabs(x)), x);
 }
 
 float xvycc_inverse_eotf(float x) noexcept
 {
-	return copysign(rec_1886_inverse_eotf(fabs(x)), x);
+	if (x < 0.0f || x > 1.0f)
+		return std::copysign(rec_709_oetf(std::fabs(x)), x);
+	else
+		return std::copysign(rec_1886_inverse_eotf(std::fabs(x)), x);
 }
 
 float st_2084_eotf(float x) noexcept
@@ -302,8 +319,8 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 		func.to_gamma = scene_referred ? smpte_240m_oetf : rec_1886_inverse_eotf;
 		break;
 	case TransferCharacteristics::XVYCC:
-		func.to_linear = xvycc_eotf;
-		func.to_gamma = xvycc_inverse_eotf;
+		func.to_linear = scene_referred ? xvycc_inverse_oetf : xvycc_eotf;
+		func.to_gamma = scene_referred ? xvycc_oetf : xvycc_inverse_eotf;
 		break;
 	case TransferCharacteristics::SRGB:
 		func.to_linear = srgb_eotf;
