@@ -15,11 +15,12 @@ namespace {
 constexpr float REC709_ALPHA = 1.09929682680944f;
 constexpr float REC709_BETA = 0.018053968510807f;
 
-constexpr float SMPTE_240M_ALPHA = 1.1115f;
-constexpr float SMPTE_240M_BETA  = 0.0228f;
+constexpr float SMPTE_240M_ALPHA = 1.111572195921731f;
+constexpr float SMPTE_240M_BETA  = 0.022821585529445f;
 
-constexpr float SRGB_ALPHA = 1.055f;
-constexpr float SRGB_BETA = 0.0031308f;
+// Adjusted for continuity of first derivative.
+constexpr float SRGB_ALPHA = 1.055010718947587f;
+constexpr float SRGB_BETA = 0.003041282560128f;
 
 constexpr float ST2084_M1 = 0.1593017578125f;
 constexpr float ST2084_M2 = 78.84375f;
