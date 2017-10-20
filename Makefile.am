@@ -294,6 +294,7 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/fpu_wrapper.c \
 	test/extra/musl-libm/expf.c \
 	test/extra/musl-libm/libm.h \
+	test/extra/musl-libm/log10f.c \
 	test/extra/musl-libm/logf.c \
 	test/extra/musl-libm/mymath.h \
 	test/extra/musl-libm/powf.c \

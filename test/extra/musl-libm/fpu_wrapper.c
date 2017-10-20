@@ -4,6 +4,7 @@
 
 extern float _myexpf(float x);
 extern float _mylogf(float x);
+extern float _mylog10f(float x);
 
 extern float _mypowf(float x, float y);
 
@@ -38,6 +39,16 @@ float mylogf(float x)
 	float y;
 	fpu_set_single();
 	y = _mylogf(x);
+	fpu_restore(state);
+	return y;
+}
+
+float mylog10f(float x)
+{
+	unsigned state = fpu_save();
+	float y;
+	fpu_set_single();
+	y = _mylog10f(x);
 	fpu_restore(state);
 	return y;
 }
