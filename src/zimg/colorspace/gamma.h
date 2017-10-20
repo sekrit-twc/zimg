@@ -16,6 +16,24 @@ typedef float (*gamma_func)(float);
 float rec_709_oetf(float x) noexcept;
 float rec_709_inverse_oetf(float x) noexcept;
 
+float log100_oetf(float x) noexcept;
+float log100_inverse_oetf(float x) noexcept;
+
+float log316_oetf(float x) noexcept;
+float log316_inverse_oetf(float x) noexcept;
+
+float rec_470m_oetf(float x) noexcept;
+float rec_470m_inverse_oetf(float x) noexcept;
+
+float rec_470bg_oetf(float x) noexcept;
+float rec_470bg_inverse_oetf(float x) noexcept;
+
+float smpte_240m_oetf(float x) noexcept;
+float smpte_240m_inverse_oetf(float x) noexcept;
+
+float xvycc_eotf(float x) noexcept;
+float xvycc_inverse_eotf(float x) noexcept;
+
 float arib_b67_oetf(float x) noexcept;
 float arib_b67_inverse_oetf(float x) noexcept;
 
