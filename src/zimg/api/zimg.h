@@ -295,11 +295,16 @@ typedef enum zimg_color_primaries_e {
 	ZIMG_PRIMARIES_INTERNAL    = -1, /**< Not part of the API. */
 	ZIMG_PRIMARIES_709         = 1,
 	ZIMG_PRIMARIES_UNSPECIFIED = 2,
+	ZIMG_PRIMARIES_470_M       = 4,
+	ZIMG_PRIMARIES_470_BG      = 5,
 	ZIMG_PRIMARIES_170M        = 6,
 	ZIMG_PRIMARIES_240M        = 7,  /* Equivalent to 6. */
+	ZIMG_PRIMARIES_FILM        = 8,
 	ZIMG_PRIMARIES_2020        = 9,
+	ZIMG_PRIMARIES_ST428       = 10,
 	ZIMG_PRIMARIES_ST431_2     = 11,
-	ZIMG_PRIMARIES_ST432_1     = 12
+	ZIMG_PRIMARIES_ST432_1     = 12,
+	ZIMG_PRIMARIES_EBU3213_E   = 22
 } zimg_color_primaries_e;
 
 /**

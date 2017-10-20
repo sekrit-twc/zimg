@@ -45,11 +45,16 @@ enum class TransferCharacteristics {
 
 enum class ColorPrimaries {
 	UNSPECIFIED,
+	REC_470_M,
+	REC_470_BG,
 	SMPTE_C,
 	REC_709,
+	FILM,
 	REC_2020,
+	ST_428,
 	DCI_P3,
 	DCI_P3_D65,
+	JEDEC_P22,
 };
 
 /**

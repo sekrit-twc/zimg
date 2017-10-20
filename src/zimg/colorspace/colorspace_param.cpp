@@ -55,6 +55,11 @@ Vector3 xy_to_xyz(double x, double y)
 Vector3 get_white_point(ColorPrimaries primaries)
 {
 	switch (primaries) {
+	case ColorPrimaries::REC_470_M:
+	case ColorPrimaries::FILM:
+		return xy_to_xyz(ILLUMINANT_C[0], ILLUMINANT_C[1]);
+	case ColorPrimaries::ST_428:
+		return xy_to_xyz(ILLUMINANT_E[0], ILLUMINANT_E[1]);
 	case ColorPrimaries::DCI_P3:
 		return xy_to_xyz(ILLUMINANT_DCI[0], ILLUMINANT_DCI[1]);
 	default:
@@ -65,18 +70,33 @@ Vector3 get_white_point(ColorPrimaries primaries)
 void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 {
 	switch (primaries) {
+	case ColorPrimaries::REC_470_M:
+		memcpy(out, REC_470_M_PRIMARIES, sizeof(REC_470_M_PRIMARIES));
+		break;
+	case ColorPrimaries::REC_470_BG:
+		memcpy(out, REC_470_BG_PRIMARIES, sizeof(REC_470_BG_PRIMARIES));
+		break;
 	case ColorPrimaries::SMPTE_C:
 		memcpy(out, SMPTE_C_PRIMARIES, sizeof(SMPTE_C_PRIMARIES));
 		break;
 	case ColorPrimaries::REC_709:
 		memcpy(out, REC_709_PRIMARIES, sizeof(REC_709_PRIMARIES));
 		break;
+	case ColorPrimaries::FILM:
+		memcpy(out, FILM_PRIMARIES, sizeof(FILM_PRIMARIES));
+		break;
 	case ColorPrimaries::REC_2020:
 		memcpy(out, REC_2020_PRIMARIES, sizeof(REC_2020_PRIMARIES));
+		break;
+	case ColorPrimaries::ST_428:
+		memcpy(out, ST_428_PRIMARIES, sizeof(ST_428_PRIMARIES));
 		break;
 	case ColorPrimaries::DCI_P3:
 	case ColorPrimaries::DCI_P3_D65:
 		memcpy(out, DCI_P3_PRIMARIES, sizeof(DCI_P3_PRIMARIES));
+		break;
+	case ColorPrimaries::JEDEC_P22:
+		memcpy(out, JEDEC_P22_PRIMARIES, sizeof(JEDEC_P22_PRIMARIES));
 		break;
 	default:
 		error::throw_<error::InternalError>("unrecognized primaries");

@@ -24,14 +24,21 @@ constexpr double REC_2020_KR = 0.2627;
 constexpr double REC_2020_KB = 0.0593;
 
 // R, G, B primaries in XY.
+constexpr double REC_470_M_PRIMARIES[3][2] = { { 0.670, 0.330 }, { 0.210, 0.710 }, { 0.140, 0.080 } };
+constexpr double REC_470_BG_PRIMARIES[3][2] = { { 0.640, 0.330 }, { 0.290, 0.600 }, { 0.150, 0.060 } };
 constexpr double SMPTE_C_PRIMARIES[3][2] = { { 0.630, 0.340 }, { 0.310, 0.595 }, { 0.155, 0.070 } };
 constexpr double REC_709_PRIMARIES[3][2] = { { 0.640, 0.330 }, { 0.300, 0.600 }, { 0.150, 0.060 } };
+constexpr double FILM_PRIMARIES[3][2] = { { 0.681, 0.319 }, { 0.243, 0.692 }, { 0.145, 0.049 } };
 constexpr double REC_2020_PRIMARIES[3][2] = { { 0.708, 0.292 }, { 0.170, 0.797 }, { 0.131, 0.046 } };
 constexpr double DCI_P3_PRIMARIES[3][2] = { { 0.680, 0.320 } , { 0.265, 0.690 }, { 0.150, 0.060 } };
+constexpr double ST_428_PRIMARIES[3][2] = { { 0.735, 0.265 }, { 0.274, 0.718 }, { 0.167, 0.009 } };
+constexpr double JEDEC_P22_PRIMARIES[3][2] = { { 0.630, 0.340 }, { 0.295, 0.605 }, { 0.155, 0.077 } };
 
 // White points in XY.
+constexpr double ILLUMINANT_C[2]   = { 0.31, 0.316 };
 constexpr double ILLUMINANT_DCI[2] = { 0.314, 0.351 };
 constexpr double ILLUMINANT_D65[2] = { 0.3127, 0.3290 };
+constexpr double ILLUMINANT_E[2]   = { 1.0 / 3.0, 1.0 / 3.0 };
 
 /**
  * Obtain 3x3 matrix for converting from YUV to RGB.

@@ -87,13 +87,18 @@ const zimg::static_string_map<TransferCharacteristics, 6> g_transfer_table{
 	{ "arib_b67", TransferCharacteristics::ARIB_B67 },
 };
 
-const zimg::static_string_map<ColorPrimaries, 6> g_primaries_table{
+const zimg::static_string_map<ColorPrimaries, 12> g_primaries_table{
 	{ "unspec",    ColorPrimaries::UNSPECIFIED },
+	{ "470_m",     ColorPrimaries::REC_470_M },
+	{ "470_bg",    ColorPrimaries::REC_470_BG },
 	{ "smpte_c",   ColorPrimaries::SMPTE_C },
 	{ "709",       ColorPrimaries::REC_709 },
+	{ "film",      ColorPrimaries::FILM },
 	{ "2020",      ColorPrimaries::REC_2020 },
+	{ "st_428",    ColorPrimaries::ST_428 },
 	{ "dcip3",     ColorPrimaries::DCI_P3 },
-	{ "dcip3_d65", ColorPrimaries::DCI_P3_D65 }
+	{ "dcip3_d65", ColorPrimaries::DCI_P3_D65 },
+	{ "jedec_p22", ColorPrimaries::JEDEC_P22 },
 };
 
 const zimg::static_string_map<DitherType, 4> g_dither_table{
