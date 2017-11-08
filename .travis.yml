@@ -55,7 +55,7 @@ matrix:
         - MY_CXX: clang++-5.0
     # Apple Clang
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode9.1
       compiler: clang
       env:
         - MY_CC: clang
