@@ -39,20 +39,20 @@ matrix:
         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
         #   via the "travis encrypt" command using the project repo's public key
         - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
-    # Clang/LLVM 4.0
+    # Clang/LLVM 5.0
     - compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
+            - llvm-toolchain-trusty-5.0
           packages:
-            - clang-4.0
+            - clang-5.0
             # Needed for updated libstdc++.
             - g++-7
       env:
-        - MY_CC: clang-4.0
-        - MY_CXX: clang++-4.0
+        - MY_CC: clang-5.0
+        - MY_CXX: clang++-5.0
     # Apple Clang
     - os: osx
       osx_image: xcode8
