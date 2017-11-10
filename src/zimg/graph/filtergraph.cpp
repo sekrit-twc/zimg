@@ -73,7 +73,7 @@ public:
 		if (attr.type == PixelType::BYTE)
 			m_value.b = static_cast<uint8_t>(1U << (depth - 1));
 		else if (attr.type == PixelType::WORD)
-			m_value.w = static_cast<uint8_t>(1U << (depth - 1));
+			m_value.w = static_cast<uint16_t>(1U << (depth - 1));
 		else if (attr.type == PixelType::HALF)
 			m_value.w = 0;
 		else if (attr.type == PixelType::FLOAT)
