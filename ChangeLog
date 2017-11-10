@@ -1,3 +1,7 @@
+2.6.2:
+depth: fix AVX-512 clamping of negative pixels
+graph: fix WORD greyscale to YUV conversion
+
 2.6.1
 depth: fix SSE2 conversions with mod4 and mod8 widths (introduced in 2.6)
 resize: fix heap corruption in AVX2 horizontal resizer (introduced in 2.6)
