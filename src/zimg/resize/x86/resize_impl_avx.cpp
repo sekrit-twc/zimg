@@ -445,7 +445,7 @@ public:
 			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-			
+
 			resize_line_v_f32_avx_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
