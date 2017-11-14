@@ -1376,7 +1376,7 @@ public:
 		filter_flags flags{};
 
 		flags.same_row = true;
-		flags.entire_row = m_is_sorted;
+		flags.entire_row = !m_is_sorted;
 
 		return flags;
 	}
@@ -1483,7 +1483,7 @@ public:
 		filter_flags flags{};
 
 		flags.same_row = true;
-		flags.entire_row = m_is_sorted;
+		flags.entire_row = !m_is_sorted;
 
 		return flags;
 	}
