@@ -427,6 +427,8 @@ TEST(FilterGraphTest, test_support)
 		graph.attach_filter(std::move(filter2_uptr));
 		graph.complete();
 
+		graph.set_tile_width(512);
+
 		AuditImage<uint16_t> src_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 		AuditImage<uint16_t> dst_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 		zimg::AlignedVector<char> tmp(graph.get_tmp_size());
@@ -532,6 +534,8 @@ TEST(FilterGraphTest, test_callback)
 				graph.attach_filter(std::move(filter1_uptr));
 				graph.attach_filter_uv(std::move(filter2_uptr));
 				graph.complete();
+
+				graph.set_tile_width(512);
 
 				AuditImage<uint8_t> src_image{ AuditBufferType::COLOR_RGB, w, h, type, sw, sh };
 				AuditImage<uint8_t> tmp_image{ AuditBufferType::COLOR_RGB, w, h, type, sw, sh };

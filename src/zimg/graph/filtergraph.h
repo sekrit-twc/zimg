@@ -148,6 +148,13 @@ public:
 	void set_requires_64b_alignment();
 
 	/**
+	 * Override the tile width used for graph execution.
+	 *
+	 * @param tile_width tile width in output pixels
+	 */
+	void set_tile_width(unsigned tile_width);
+
+	/**
 	 * Finalize graph.
 	 *
 	 * No additional filters may be attached to a finalized graph. Upon calling
@@ -182,6 +189,13 @@ public:
 	 * @return true if 64-byte alignment is required, else false
 	 */
 	bool requires_64b_alignment() const;
+
+	/**
+	 * Get the tile width used for graph execution
+	 *
+	 * @return tile width in output pixels
+	 */
+	unsigned tile_width() const;
 
 	/**
 	 * Process an image frame with filter graph.

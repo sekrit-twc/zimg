@@ -857,13 +857,20 @@ public:
 
 
 class FilterGraph::impl {
+	static constexpr size_t CACHE_TARGET = 512UL * 1024;
+	static constexpr unsigned TILE_WIDTH_MIN = 128;
+
 	std::vector<std::unique_ptr<GraphNode>> m_node_set;
 	GraphNode *m_head;
 	GraphNode *m_node;
 	GraphNode *m_node_uv;
 	unsigned m_id_counter;
+	unsigned m_input_subsample_w;
+	unsigned m_input_subsample_h;
 	unsigned m_subsample_w;
 	unsigned m_subsample_h;
+	unsigned m_tile_width;
+	bool m_color_input;
 	bool m_requires_64b_alignment;
 	bool m_is_complete;
 
@@ -879,10 +886,81 @@ class FilterGraph::impl {
 			error::throw_<error::InternalError>("cannot query properties on incomplete graph");
 	}
 
+	size_t get_tmp_size(unsigned tile_width) const
+	{
+		auto attr = m_node->get_image_attributes(false);
+		unsigned step = tile_width;
+
+		FakeAllocator alloc;
+		size_t tmp_size = 0;
+
+		alloc.allocate(ExecutionState::table_size(m_id_counter));
+
+		for (const auto &node : m_node_set) {
+			alloc.allocate(node->get_context_size());
+		}
+
+		for (unsigned j = 0; j < attr.width; j += step) {
+			unsigned j_end = std::min(j + step, attr.width);
+
+			if (attr.width - j_end < TILE_WIDTH_MIN) {
+				j_end = attr.width;
+				step = attr.width - j;
+			}
+
+			tmp_size = std::max(tmp_size, m_node->get_tmp_size(j, j_end));
+			if (m_node_uv)
+				tmp_size = std::max(tmp_size, m_node_uv->get_tmp_size(j >> m_subsample_w, j_end >> m_subsample_w));
+		}
+		alloc.allocate(tmp_size);
+
+		return alloc.count();
+	}
+
+	size_t get_cache_footprint() const
+	{
+		auto input_attr = m_head->get_image_attributes();
+		auto output_attr = m_node->get_image_attributes();
+
+		unsigned input_buffering = get_input_buffering();
+		unsigned output_buffering = get_output_buffering();
+
+		if (input_buffering == BUFFER_MAX)
+			input_buffering = input_attr.height;
+		if (output_buffering == BUFFER_MAX)
+			output_buffering = output_attr.height;
+
+		checked_size_t tmp = get_tmp_size(output_attr.width);
+
+		tmp += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_buffering;
+		if (m_color_input)
+			tmp += ceil_n(static_cast<checked_size_t>(input_attr.width >> m_input_subsample_w) * pixel_size(input_attr.type), ALIGNMENT) * (input_buffering >> m_input_subsample_h);
+
+		tmp += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_buffering;
+		if (m_node_uv)
+			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width >> m_subsample_w) * pixel_size(output_attr.type), ALIGNMENT) * (output_buffering >> m_subsample_h);
+
+		return tmp.get();
+	}
+
 	unsigned get_tile_width() const
 	{
 		bool entire_row = m_node->entire_row() || (m_node_uv && m_node_uv->entire_row());
-		return entire_row ? m_node->get_image_attributes().width : 512;
+		auto attr = m_node->get_image_attributes();
+
+		if (entire_row)
+			return attr.width;
+		if (m_tile_width)
+			return m_tile_width;
+
+		size_t footprint = get_cache_footprint();
+		if (footprint <= CACHE_TARGET * 2 / 3)
+			return attr.width;
+		if (footprint <= CACHE_TARGET * 5 / 3)
+			return ceil_n(attr.width / 2, ALIGNMENT);
+
+		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * CACHE_TARGET / footprint));
+		return std::max(floor_n(tile_width, ALIGNMENT), TILE_WIDTH_MIN + 0);
 	}
 public:
 	impl(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
@@ -890,8 +968,12 @@ public:
 		m_node{},
 		m_node_uv{},
 		m_id_counter{},
+		m_input_subsample_w{ subsample_w },
+		m_input_subsample_h{ subsample_h },
 		m_subsample_w{},
 		m_subsample_h{},
+		m_tile_width{},
+		m_color_input{ color },
 		m_requires_64b_alignment{},
 		m_is_complete{}
 	{
@@ -997,6 +1079,8 @@ public:
 		m_requires_64b_alignment = true;
 	}
 
+	void set_tile_width(unsigned tile_width) { m_tile_width = tile_width; }
+
 	void complete()
 	{
 		check_incomplete();
@@ -1056,29 +1140,7 @@ public:
 	size_t get_tmp_size() const
 	{
 		check_complete();
-
-		auto attr = m_node->get_image_attributes(false);
-		unsigned step = get_tile_width();
-
-		FakeAllocator alloc;
-		size_t tmp_size = 0;
-
-		alloc.allocate(ExecutionState::table_size(m_id_counter));
-
-		for (const auto &node : m_node_set) {
-			alloc.allocate(node->get_context_size());
-		}
-
-		for (unsigned j = 0; j < attr.width; j += step) {
-			unsigned j_end = std::min(j + step, attr.width);
-
-			tmp_size = std::max(tmp_size, m_node->get_tmp_size(j, j_end));
-			if (m_node_uv)
-				tmp_size = std::max(tmp_size, m_node_uv->get_tmp_size(j >> m_subsample_w, j_end >> m_subsample_w));
-		}
-		alloc.allocate(tmp_size);
-
-		return alloc.count();
+		return get_tmp_size(get_tile_width());
 	}
 
 	unsigned get_input_buffering() const
@@ -1106,6 +1168,12 @@ public:
 	{
 		check_complete();
 		return m_requires_64b_alignment;
+	}
+
+	unsigned tile_width() const
+	{
+		check_complete();
+		return get_tile_width();
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
@@ -1136,6 +1204,11 @@ public:
 
 		for (unsigned j = 0; j < attr.width; j += h_step) {
 			unsigned j_end = std::min(j + h_step, attr.width);
+
+			if (attr.width - j_end < TILE_WIDTH_MIN) {
+				j_end = attr.width;
+				h_step = attr.width - j;
+			}
 
 			for (const auto &node : m_node_set) {
 				node->reset_context(&state);
@@ -1217,6 +1290,11 @@ void FilterGraph::set_requires_64b_alignment()
 	get_impl()->set_requires_64b_alignment();
 }
 
+void FilterGraph::set_tile_width(unsigned tile_width)
+{
+	get_impl()->set_tile_width(tile_width);
+}
+
 void FilterGraph::complete()
 {
 	get_impl()->complete();
@@ -1240,6 +1318,11 @@ unsigned FilterGraph::get_output_buffering() const
 bool FilterGraph::requires_64b_alignment() const
 {
 	return get_impl()->requires_64b_alignment();
+}
+
+unsigned FilterGraph::tile_width() const
+{
+	return get_impl()->tile_width();
 }
 
 void FilterGraph::process(const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *tmp, callback unpack_cb, callback pack_cb) const

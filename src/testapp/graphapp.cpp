@@ -267,16 +267,20 @@ void thread_target(const zimg::graph::FilterGraph *graph,
 	}
 }
 
-void execute(const json::Object &spec, unsigned times, unsigned threads)
+void execute(const json::Object &spec, unsigned times, unsigned threads, unsigned tile_width)
 {
 	zimg::graph::GraphBuilder::state src_state;
 	zimg::graph::GraphBuilder::state dst_state;
 	std::unique_ptr<zimg::graph::FilterGraph> graph = create_graph(spec, &src_state, &dst_state);
 
+	if (tile_width)
+		graph->set_tile_width(tile_width);
+
 	std::cout << '\n';
 	std::cout << "input buffering:  " << graph->get_input_buffering() << '\n';
 	std::cout << "output buffering: " << graph->get_output_buffering() << '\n';
 	std::cout << "heap size:        " << graph->get_tmp_size() << '\n';
+	std::cout << "tile width:       " << graph->tile_width() << '\n';
 
 	if (!threads && !std::thread::hardware_concurrency())
 		throw std::runtime_error{ "could not auto-detect CPU count" };
@@ -318,11 +322,13 @@ struct Arguments {
 	const char *specpath;
 	unsigned times;
 	unsigned threads;
+	unsigned tile_width;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINT, nullptr, "times",   offsetof(Arguments, times),   nullptr, "number of benchmark cycles per thread" },
-	{ OPTION_UINT, nullptr, "threads", offsetof(Arguments, threads), nullptr, "number of threads" },
+	{ OPTION_UINT, nullptr, "times",      offsetof(Arguments, times),      nullptr, "number of benchmark cycles per thread" },
+	{ OPTION_UINT, nullptr, "threads",    offsetof(Arguments, threads),    nullptr, "number of threads" },
+	{ OPTION_UINT, nullptr, "tile-width", offsetof(Arguments, tile_width), nullptr, "graph tile width" },
 	{ OPTION_NULL }
 };
 
@@ -348,7 +354,7 @@ int graph_main(int argc, char **argv)
 
 	try {
 		json::Object spec = read_graph_spec(args.specpath);
-		execute(spec, args.times, args.threads);
+		execute(spec, args.times, args.threads, args.tile_width);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;
