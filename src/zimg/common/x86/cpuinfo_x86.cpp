@@ -33,7 +33,6 @@ void do_cpuid(int regs[4], int eax, int ecx)
 #endif
 }
 
-
 /**
  * Execute the XGETBV instruction.
  *
