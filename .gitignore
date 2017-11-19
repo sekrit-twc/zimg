@@ -10,6 +10,7 @@
 *.sdf
 *.suo
 *.user
+_msvc/.vs
 Debug
 Release
 
@@ -25,7 +26,6 @@ Release
 .libs
 .deps/
 .dirstamp
-_msvc/.vs
 doc/example/alpha_example
 doc/example/api_example
 doc/example/api_example_c
@@ -39,10 +39,7 @@ Makefile.in
 aclocal.m4
 autom4te.cache
 compile
-config.guess
-config.log
-config.status
-config.sub
+config.*
 configure
 depcomp
 install-sh
