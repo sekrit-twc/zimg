@@ -27,6 +27,8 @@ constexpr bool cpu_is_autodetect(CPUClass cpu) noexcept
 	return cpu == CPUClass::AUTO || cpu == CPUClass::AUTO_64B;
 }
 
+unsigned long cpu_cache_size() noexcept;
+
 bool cpu_has_fast_f16(CPUClass cpu) noexcept;
 bool cpu_requires_64b_alignment(CPUClass cpu) noexcept;
 

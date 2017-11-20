@@ -7,6 +7,7 @@
 #include <vector>
 #include "common/align.h"
 #include "common/alloc.h"
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -857,7 +858,6 @@ public:
 
 
 class FilterGraph::impl {
-	static constexpr size_t CACHE_TARGET = 512UL * 1024;
 	static constexpr unsigned TILE_WIDTH_MIN = 128;
 
 	std::vector<std::unique_ptr<GraphNode>> m_node_set;
@@ -953,13 +953,14 @@ class FilterGraph::impl {
 		if (m_tile_width)
 			return m_tile_width;
 
+		size_t processor_cache = cpu_cache_size();
 		size_t footprint = get_cache_footprint();
-		if (footprint <= CACHE_TARGET * 2 / 3)
+		if (footprint <= processor_cache * 2 / 3)
 			return attr.width;
-		if (footprint <= CACHE_TARGET * 5 / 3)
+		if (footprint <= processor_cache * 5 / 3)
 			return ceil_n(attr.width / 2, ALIGNMENT);
 
-		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * CACHE_TARGET / footprint));
+		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * processor_cache / footprint));
 		return std::max(floor_n(tile_width, ALIGNMENT), TILE_WIDTH_MIN + 0);
 	}
 public:
