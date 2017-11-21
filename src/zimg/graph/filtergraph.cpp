@@ -121,6 +121,12 @@ public:
 };
 
 
+enum class ExecutionStrategy {
+	LUMA,
+	CHROMA,
+	COLOR,
+};
+
 class ExecutionState {
 	struct guard_page {
 		static constexpr uint32_t GUARD_VALUE = 0xDEADBEEFUL;
@@ -268,7 +274,7 @@ private:
 	unsigned m_id;
 	unsigned m_cache_id;
 	unsigned m_ref_count;
-	unsigned m_cache_lines;
+	unsigned m_cache_lines[3];
 	bool m_external_buf;
 protected:
 	explicit GraphNode(unsigned id) :
@@ -322,8 +328,8 @@ public:
 	void add_ref() { ++m_ref_count; }
 	unsigned get_ref() const { return m_ref_count; }
 
-	unsigned get_cache_lines() const { return m_cache_lines; }
-	void set_cache_lines(unsigned n) { m_cache_lines = n; }
+	unsigned get_cache_lines(ExecutionStrategy strategy) const { return m_cache_lines[static_cast<int>(strategy)]; }
+	void set_cache_lines(ExecutionStrategy strategy, unsigned n) { m_cache_lines[static_cast<int>(strategy)] = n; }
 
 	bool has_external_buffer() const { return m_external_buf; }
 	void set_external_buffer() { m_external_buf = true; }
@@ -339,11 +345,11 @@ public:
 
 	virtual void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) = 0;
 
-	virtual size_t get_context_size() const = 0;
+	virtual size_t get_context_size(ExecutionStrategy strategy) const = 0;
 
 	virtual size_t get_tmp_size(unsigned left, unsigned right) const = 0;
 
-	virtual void init_context(ExecutionState *state) const = 0;
+	virtual void init_context(ExecutionState *state, ExecutionStrategy strategy) const = 0;
 
 	virtual void reset_context(ExecutionState *state) const = 0;
 
@@ -363,9 +369,9 @@ public:
 	void request_external_cache(unsigned) override {}
 	void complete() override {}
 	void simulate(std::pair<unsigned, unsigned> *, unsigned, unsigned, bool) override {}
-	size_t get_context_size() const override { return 0; }
+	size_t get_context_size(ExecutionStrategy) const override { return 0; }
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
-	void init_context(ExecutionState *) const override {}
+	void init_context(ExecutionState *, ExecutionStrategy) const override {}
 	void reset_context(ExecutionState *) const override {}
 	void set_tile_region(ExecutionState *, unsigned, unsigned, bool) const override {}
 	void generate_line(ExecutionState *, unsigned, bool) const override {}
@@ -420,10 +426,10 @@ public:
 		update_cache_state(cache_state, pos - first);
 	}
 
-	size_t get_context_size() const override { return 0; }
+	size_t get_context_size(ExecutionStrategy) const override { return 0; }
 	size_t get_tmp_size(unsigned left, unsigned right) const override { return 0; }
 
-	void init_context(ExecutionState *state) const override { init_cache_context(state->get_node_state(get_id())); }
+	void init_context(ExecutionState *state, ExecutionStrategy) const override { init_cache_context(state->get_node_state(get_id())); }
 	void reset_context(ExecutionState *state) const override { reset_cache_context(state->get_node_state(get_id())); }
 
 	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
@@ -483,15 +489,15 @@ protected:
 		return ceil_n(get_image_attributes().width * pixel_size(attr.type), ALIGNMENT);
 	}
 
-	unsigned get_real_cache_lines() const
+	unsigned get_real_cache_lines(ExecutionStrategy strategy) const
 	{
-		return get_cache_lines() == BUFFER_MAX ? get_image_attributes().height : get_cache_lines();
+		return get_cache_lines(strategy) == BUFFER_MAX ? get_image_attributes().height : get_cache_lines(strategy);
 	}
 
-	size_t get_cache_size(unsigned num_planes) const
+	size_t get_cache_size(ExecutionStrategy strategy, unsigned num_planes) const
 	{
 		checked_size_t rowsize = get_cache_stride();
-		checked_size_t size = rowsize * get_real_cache_lines() * num_planes;
+		checked_size_t size = rowsize * get_real_cache_lines(strategy) * num_planes;
 		return size.get();
 	}
 public:
@@ -569,24 +575,27 @@ public:
 		FilterNode::simulate(cache_state, first, last, false);
 	}
 
-	size_t get_context_size() const override
+	size_t get_context_size(ExecutionStrategy strategy) const override
 	{
+		if (strategy != ExecutionStrategy::LUMA && strategy != ExecutionStrategy::COLOR)
+			return 0;
+
 		FakeAllocator alloc;
 
 		alloc.allocate(m_filter->get_context_size());
 		if (get_cache_id() == get_id())
-			alloc.allocate(get_cache_size(1));
+			alloc.allocate(get_cache_size(strategy, 1));
 
 		return alloc.count();
 	}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, ExecutionStrategy strategy) const override
 	{
 		std::array<bool, 3> enabled_planes{ { true, false, false } };
 
 		init_cache_context(state->get_node_state(get_id()));
 		if (get_cache_id() == get_id())
-			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(), select_zimg_buffer_mask(get_cache_lines()), enabled_planes);
+			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(strategy), select_zimg_buffer_mask(get_cache_lines(strategy)), enabled_planes);
 
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size());
 		m_filter->init_context(filter_ctx);
@@ -651,25 +660,28 @@ public:
 		FilterNode::simulate(cache_state, first, last, true);
 	}
 
-	size_t get_context_size() const override
+	size_t get_context_size(ExecutionStrategy strategy) const override
 	{
+		if (strategy != ExecutionStrategy::CHROMA && strategy != ExecutionStrategy::COLOR)
+			return 0;
+
 		FakeAllocator alloc;
 
 		alloc.allocate(m_filter->get_context_size());
 		alloc.allocate(m_filter->get_context_size());
 		if (get_cache_id() == get_id())
-			alloc.allocate(get_cache_size(2));
+			alloc.allocate(get_cache_size(strategy, 2));
 
 		return alloc.count();
 	}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, ExecutionStrategy strategy) const override
 	{
 		std::array<bool, 3> enabled_planes{ { false, true, true } };
 
 		init_cache_context(state->get_node_state(get_id()));
 		if (get_cache_id() == get_id())
-			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(), select_zimg_buffer_mask(get_cache_lines()), enabled_planes);
+			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(strategy), select_zimg_buffer_mask(get_cache_lines(strategy)), enabled_planes);
 
 		size_t filter_ctx_size = m_filter->get_context_size();
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size() * 2);
@@ -769,13 +781,15 @@ public:
 		update_cache_state(cache_state, pos - first);
 	}
 
-	size_t get_context_size() const override
+	size_t get_context_size(ExecutionStrategy strategy) const override
 	{
+		zassert_d(strategy == ExecutionStrategy::COLOR, "can not access channels independently in color node");
+
 		FakeAllocator alloc;
 
 		alloc.allocate(m_filter->get_context_size());
 		if (get_cache_id() == get_id())
-			alloc.allocate(get_cache_size(3));
+			alloc.allocate(get_cache_size(strategy, 3));
 
 		return alloc.count();
 	}
@@ -789,13 +803,15 @@ public:
 		return size;
 	}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, ExecutionStrategy strategy) const override
 	{
+		zassert_d(strategy == ExecutionStrategy::COLOR, "can not access channels independently in color node");
+
 		std::array<bool, 3> enabled_planes{ { true, true, true } };
 
 		init_cache_context(state->get_node_state(get_id()));
 		if (get_cache_id() == get_id())
-			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(), select_zimg_buffer_mask(get_cache_lines()), enabled_planes);
+			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(strategy), select_zimg_buffer_mask(get_cache_lines(strategy)), enabled_planes);
 
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size());
 		m_filter->init_context(filter_ctx);
@@ -871,6 +887,7 @@ class FilterGraph::impl {
 	unsigned m_subsample_h;
 	unsigned m_tile_width;
 	bool m_color_input;
+	bool m_color_filter;
 	bool m_requires_64b_alignment;
 	bool m_is_complete;
 
@@ -886,7 +903,7 @@ class FilterGraph::impl {
 			error::throw_<error::InternalError>("cannot query properties on incomplete graph");
 	}
 
-	size_t get_tmp_size(unsigned tile_width) const
+	size_t get_tmp_size(ExecutionStrategy strategy, unsigned tile_width) const
 	{
 		auto attr = m_node->get_image_attributes(false);
 		unsigned step = tile_width;
@@ -897,7 +914,7 @@ class FilterGraph::impl {
 		alloc.allocate(ExecutionState::table_size(m_id_counter));
 
 		for (const auto &node : m_node_set) {
-			alloc.allocate(node->get_context_size());
+			alloc.allocate(node->get_context_size(strategy));
 		}
 
 		for (unsigned j = 0; j < attr.width; j += step) {
@@ -908,8 +925,9 @@ class FilterGraph::impl {
 				step = attr.width - j;
 			}
 
-			tmp_size = std::max(tmp_size, m_node->get_tmp_size(j, j_end));
-			if (m_node_uv)
+			if (strategy == ExecutionStrategy::LUMA || strategy == ExecutionStrategy::COLOR)
+				tmp_size = std::max(tmp_size, m_node->get_tmp_size(j, j_end));
+			if (m_node_uv && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR))
 				tmp_size = std::max(tmp_size, m_node_uv->get_tmp_size(j >> m_subsample_w, j_end >> m_subsample_w));
 		}
 		alloc.allocate(tmp_size);
@@ -917,33 +935,34 @@ class FilterGraph::impl {
 		return alloc.count();
 	}
 
-	size_t get_cache_footprint() const
+	size_t get_cache_footprint(ExecutionStrategy strategy) const
 	{
 		auto input_attr = m_head->get_image_attributes();
 		auto output_attr = m_node->get_image_attributes();
 
-		unsigned input_buffering = get_input_buffering();
-		unsigned output_buffering = get_output_buffering();
+		unsigned input_buffering = get_input_buffering(strategy);
+		unsigned output_buffering = get_output_buffering(strategy);
 
 		if (input_buffering == BUFFER_MAX)
 			input_buffering = input_attr.height;
 		if (output_buffering == BUFFER_MAX)
 			output_buffering = output_attr.height;
 
-		checked_size_t tmp = get_tmp_size(output_attr.width);
+		checked_size_t tmp = get_tmp_size(strategy, output_attr.width);
 
-		tmp += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_buffering;
-		if (m_color_input)
+		if (strategy == ExecutionStrategy::LUMA || strategy == ExecutionStrategy::COLOR) {
+			tmp += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_buffering;
+			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_buffering;
+		}
+		if (m_color_input && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR))
 			tmp += ceil_n(static_cast<checked_size_t>(input_attr.width >> m_input_subsample_w) * pixel_size(input_attr.type), ALIGNMENT) * (input_buffering >> m_input_subsample_h);
-
-		tmp += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_buffering;
-		if (m_node_uv)
+		if (m_node_uv && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR))
 			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width >> m_subsample_w) * pixel_size(output_attr.type), ALIGNMENT) * (output_buffering >> m_subsample_h);
 
 		return tmp.get();
 	}
 
-	unsigned get_tile_width() const
+	unsigned get_tile_width(ExecutionStrategy strategy) const
 	{
 		bool entire_row = m_node->entire_row() || (m_node_uv && m_node_uv->entire_row());
 		auto attr = m_node->get_image_attributes();
@@ -954,7 +973,7 @@ class FilterGraph::impl {
 			return m_tile_width;
 
 		size_t processor_cache = cpu_cache_size();
-		size_t footprint = get_cache_footprint();
+		size_t footprint = get_cache_footprint(strategy);
 
 		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * processor_cache / footprint));
 
@@ -969,6 +988,146 @@ class FilterGraph::impl {
 
 		return tile_width;
 	}
+
+	void process_color(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
+	{
+		ExecutionState state{ m_id_counter, tmp, unpack_cb, pack_cb };
+		auto attr = m_node->get_image_attributes(false);
+		unsigned h_step = get_tile_width(ExecutionStrategy::COLOR);
+		unsigned v_step = 1U << m_subsample_h;
+
+		ColorImageBuffer<void> src_;
+		ColorImageBuffer<void> dst_;
+
+		for (unsigned p = 0; p < 3; ++p) {
+			src_[p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
+			dst_[p] = dst[p];
+		}
+
+		state.set_external_buffer(m_head->get_id(), src_);
+		state.set_external_buffer(m_node->get_id(), dst_);
+		if (m_node_uv && m_node != m_node_uv)
+			state.set_external_buffer(m_node_uv->get_id(), dst_);
+
+		for (const auto &node : m_node_set) {
+			node->init_context(&state, ExecutionStrategy::COLOR);
+		}
+
+		for (unsigned j = 0; j < attr.width; j += h_step) {
+			unsigned j_end = std::min(j + h_step, attr.width);
+
+			if (attr.width - j_end < TILE_WIDTH_MIN) {
+				j_end = attr.width;
+				h_step = attr.width - j;
+			}
+
+			for (const auto &node : m_node_set) {
+				node->reset_context(&state);
+			}
+
+			m_node->set_tile_region(&state, j, j_end, false);
+			if (m_node_uv)
+				m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
+
+			for (unsigned i = 0; i < attr.height; i += v_step) {
+				for (unsigned ii = i; ii < i + v_step; ++ii) {
+					m_node->generate_line(&state, ii, false);
+				}
+				if (m_node_uv)
+					m_node_uv->generate_line(&state, i >> m_subsample_h, true);
+
+				if (state.get_pack_cb())
+					state.get_pack_cb()(i, j, j_end);
+			}
+		}
+	}
+
+	void process_luma(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp) const
+	{
+		ExecutionState state{ m_id_counter, tmp, nullptr, nullptr };
+		auto attr = m_node->get_image_attributes(false);
+		unsigned step = get_tile_width(ExecutionStrategy::LUMA);
+
+		ColorImageBuffer<void> src_;
+		ColorImageBuffer<void> dst_;
+
+		for (unsigned p = 0; p < 3; ++p) {
+			src_[p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
+			dst_[p] = dst[p];
+		}
+
+		state.set_external_buffer(m_head->get_id(), src_);
+		state.set_external_buffer(m_node->get_id(), dst_);
+		if (m_node_uv && m_node != m_node_uv)
+			state.set_external_buffer(m_node_uv->get_id(), dst_);
+
+		for (const auto &node : m_node_set) {
+			node->init_context(&state, ExecutionStrategy::LUMA);
+		}
+
+		for (unsigned j = 0; j < attr.width; j += step) {
+			unsigned j_end = std::min(j + step, attr.width);
+
+			if (attr.width - j_end < TILE_WIDTH_MIN) {
+				j_end = attr.width;
+				step = attr.width - j;
+			}
+
+			for (const auto &node : m_node_set) {
+				node->reset_context(&state);
+			}
+
+			m_node->set_tile_region(&state, j, j_end, false);
+
+			for (unsigned i = 0; i < attr.height; ++i) {
+				m_node->generate_line(&state, i, false);
+			}
+		}
+	}
+
+	void process_chroma(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp) const
+	{
+		ExecutionState state{ m_id_counter, tmp, nullptr, nullptr };
+		auto attr = m_node->get_image_attributes(false);
+		unsigned h_step = get_tile_width(ExecutionStrategy::CHROMA);
+		unsigned v_step = 1U << m_subsample_h;
+
+		ColorImageBuffer<void> src_;
+		ColorImageBuffer<void> dst_;
+
+		for (unsigned p = 0; p < 3; ++p) {
+			src_[p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
+			dst_[p] = dst[p];
+		}
+
+		state.set_external_buffer(m_head->get_id(), src_);
+		state.set_external_buffer(m_node->get_id(), dst_);
+		if (m_node_uv && m_node != m_node_uv)
+			state.set_external_buffer(m_node_uv->get_id(), dst_);
+
+		for (const auto &node : m_node_set) {
+			node->init_context(&state, ExecutionStrategy::CHROMA);
+		}
+
+		for (unsigned j = 0; j < attr.width; j += h_step) {
+			unsigned j_end = std::min(j + h_step, attr.width);
+
+			if (attr.width - j_end < TILE_WIDTH_MIN) {
+				j_end = attr.width;
+				h_step = attr.width - j;
+			}
+
+			for (const auto &node : m_node_set) {
+				node->reset_context(&state);
+			}
+
+			m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
+
+			for (unsigned i = 0; i < attr.height; i += v_step) {
+				m_node_uv->generate_line(&state, i >> m_subsample_h, true);
+			}
+		}
+	}
 public:
 	impl(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
 		m_head{},
@@ -981,6 +1140,7 @@ public:
 		m_subsample_h{},
 		m_tile_width{},
 		m_color_input{ color },
+		m_color_filter{},
 		m_requires_64b_alignment{},
 		m_is_complete{}
 	{
@@ -1025,6 +1185,8 @@ public:
 				ztd::make_unique<ColorNode>(m_id_counter++, std::move(filter), parent, parent_uv));
 			m_node = m_node_set.back().get();
 			m_node_uv = m_node;
+
+			m_color_filter = true;
 		} else {
 			m_node_set.reserve(m_node_set.size() + 1);
 			m_node_set.emplace_back(ztd::make_unique<LumaNode>(m_id_counter++, std::move(filter), parent));
@@ -1136,7 +1298,27 @@ public:
 				m_node_uv->simulate(cache_state.data(), i >> subsample_h, (i >> subsample_h) + 1, true);
 		}
 		for (const auto &node : m_node_set) {
-			node->set_cache_lines(cache_state[node->get_id()].second);
+			node->set_cache_lines(ExecutionStrategy::COLOR, cache_state[node->get_id()].second);
+		}
+
+		// Simulate the alternative strategy.
+		if (!m_color_filter) {
+			cache_state.assign(m_id_counter, {});
+			for (unsigned i = 0; i < node_attr.height; ++i) {
+				m_node->simulate(cache_state.data(), i, i + 1, false);
+			}
+			for (const auto &node : m_node_set) {
+				node->set_cache_lines(ExecutionStrategy::LUMA, cache_state[node->get_id()].second);
+			}
+		}
+		if (m_node_uv && !m_color_filter) {
+			cache_state.assign(m_id_counter, {});
+			for (unsigned i = 0; i < node_attr.height; i += (1U << subsample_h)) {
+				m_node_uv->simulate(cache_state.data(), i >> subsample_h, (i >> subsample_h) + 1, true);
+			}
+			for (const auto &node : m_node_set) {
+				node->set_cache_lines(ExecutionStrategy::CHROMA, cache_state[node->get_id()].second);
+			}
 		}
 
 		m_subsample_w = subsample_w;
@@ -1147,23 +1329,34 @@ public:
 	size_t get_tmp_size() const
 	{
 		check_complete();
-		return get_tmp_size(get_tile_width());
+
+		size_t tmp_size = get_tmp_size(ExecutionStrategy::COLOR, get_tile_width(ExecutionStrategy::COLOR));
+
+		if (!m_color_filter) {
+			tmp_size = std::max(tmp_size, get_tmp_size(ExecutionStrategy::LUMA, get_tile_width(ExecutionStrategy::LUMA)));
+			tmp_size = std::max(tmp_size, get_tmp_size(ExecutionStrategy::CHROMA, get_tile_width(ExecutionStrategy::CHROMA)));
+		}
+
+		return tmp_size;
 	}
 
-	unsigned get_input_buffering() const
+	unsigned get_input_buffering(ExecutionStrategy strategy = ExecutionStrategy::COLOR) const
 	{
 		check_complete();
-		return m_head->get_cache_lines();
+		return m_head->get_cache_lines(strategy);
 	}
 
-	unsigned get_output_buffering() const
+	unsigned get_output_buffering(ExecutionStrategy strategy = ExecutionStrategy::COLOR) const
 	{
 		check_complete();
 
-		unsigned lines = m_node->get_cache_lines();
+		unsigned lines = 0;
 
-		if (m_node_uv) {
-			unsigned lines_uv = m_node_uv->get_cache_lines();
+		if (strategy == ExecutionStrategy::LUMA || strategy == ExecutionStrategy::COLOR)
+			lines = m_node->get_cache_lines(strategy);
+
+		if (m_node_uv && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR)) {
+			unsigned lines_uv = m_node_uv->get_cache_lines(strategy);
 			lines_uv = (lines_uv == BUFFER_MAX) ? lines_uv : lines_uv << m_subsample_h;
 			lines = std::max(lines, lines_uv);
 		}
@@ -1180,61 +1373,19 @@ public:
 	unsigned tile_width() const
 	{
 		check_complete();
-		return get_tile_width();
+		return get_tile_width(ExecutionStrategy::COLOR);
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
 		check_complete();
 
-		ExecutionState state{ m_id_counter, tmp, unpack_cb, pack_cb };
-		auto attr = m_node->get_image_attributes(false);
-		unsigned h_step = get_tile_width();
-		unsigned v_step = 1U << m_subsample_h;
-
-		ColorImageBuffer<void> src_;
-		ColorImageBuffer<void> dst_;
-
-		for (unsigned p = 0; p < 3; ++p) {
-			src_[p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
-			dst_[p] = dst[p];
-		}
-
-		state.set_external_buffer(m_head->get_id(), src_);
-		state.set_external_buffer(m_node->get_id(), dst_);
-		if (m_node_uv && m_node != m_node_uv)
-			state.set_external_buffer(m_node_uv->get_id(), dst_);
-
-		for (const auto &node : m_node_set) {
-			node->init_context(&state);
-		}
-
-		for (unsigned j = 0; j < attr.width; j += h_step) {
-			unsigned j_end = std::min(j + h_step, attr.width);
-
-			if (attr.width - j_end < TILE_WIDTH_MIN) {
-				j_end = attr.width;
-				h_step = attr.width - j;
-			}
-
-			for (const auto &node : m_node_set) {
-				node->reset_context(&state);
-			}
-
-			m_node->set_tile_region(&state, j, j_end, false);
+		if (m_color_filter || unpack_cb || pack_cb) {
+			process_color(src, dst, tmp, unpack_cb, pack_cb);
+		} else {
+			process_luma(src, dst, tmp);
 			if (m_node_uv)
-				m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
-
-			for (unsigned i = 0; i < attr.height; i += v_step) {
-				for (unsigned ii = i; ii < i + v_step; ++ii) {
-					m_node->generate_line(&state, ii, false);
-				}
-				if (m_node_uv)
-					m_node_uv->generate_line(&state, i >> m_subsample_h, true);
-
-				if (state.get_pack_cb())
-					state.get_pack_cb()(i, j, j_end);
-			}
+				process_chroma(src, dst, tmp);
 		}
 	}
 };
