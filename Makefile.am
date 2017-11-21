@@ -93,8 +93,8 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/depth/hexfloat.h \
 	src/zimg/depth/quantize.h \
 	src/zimg/depth/quantize.cpp \
-	src/zimg/graph/basic_filter.cpp \
-	src/zimg/graph/basic_filter.h \
+	src/zimg/graph/copy_filter.cpp \
+	src/zimg/graph/copy_filter.h \
 	src/zimg/graph/filtergraph.h \
 	src/zimg/graph/filtergraph.cpp \
 	src/zimg/graph/graphbuilder.h \
@@ -319,7 +319,7 @@ test_unit_test_SOURCES = \
 	test/extra/sha1/sha1.h \
 	test/graph/audit_buffer.cpp \
 	test/graph/audit_buffer.h \
-	test/graph/basic_filter_test.cpp \
+	test/graph/copy_filter_test.cpp \
 	test/graph/filter_validator.cpp \
 	test/graph/filter_validator.h \
 	test/graph/filtergraph_test.cpp \

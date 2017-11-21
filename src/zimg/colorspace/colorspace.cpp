@@ -5,7 +5,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graph/basic_filter.h"
+#include "graph/copy_filter.h"
 #include "graph/image_filter.h"
 #include "colorspace.h"
 #include "graph.h"
@@ -92,7 +92,7 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 	      .set_scene_referred(scene_referred);
 
 	if (csp_in == csp_out)
-		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
+		return ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT, true);
 	else
 		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {

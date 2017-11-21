@@ -115,14 +115,14 @@ public:
 	 *
 	 * @param filter image filter
 	 */
-	void attach_filter(std::unique_ptr<ImageFilter> &&filter);
+	void attach_filter(std::shared_ptr<ImageFilter> filter);
 
 	/**
 	 * Attach a filter to the graph chroma channels.
 	 *
 	 * @see attach_filter
 	 */
-	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter);
+	void attach_filter_uv(std::shared_ptr<ImageFilter> filter);
 
 	/**
 	 * Discard the chroma channels of the graph.

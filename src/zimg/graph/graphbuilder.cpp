@@ -8,7 +8,7 @@
 #include "common/pixel.h"
 #include "resize/filter.h"
 #include "filtergraph.h"
-#include "basic_filter.h"
+#include "copy_filter.h"
 #include "graphbuilder.h"
 #include "image_filter.h"
 
@@ -272,7 +272,7 @@ GraphBuilder::GraphBuilder() noexcept : m_state{} {}
 
 GraphBuilder::~GraphBuilder() = default;
 
-void GraphBuilder::attach_filter(std::unique_ptr<ImageFilter> &&filter)
+void GraphBuilder::attach_filter(std::shared_ptr<ImageFilter> filter)
 {
 	if (!filter)
 		return;
@@ -280,7 +280,7 @@ void GraphBuilder::attach_filter(std::unique_ptr<ImageFilter> &&filter)
 	m_graph->attach_filter(std::move(filter));
 }
 
-void GraphBuilder::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
+void GraphBuilder::attach_filter_uv(std::shared_ptr<ImageFilter> filter)
 {
 	if (!filter)
 		return;
@@ -371,8 +371,16 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		.set_dither_type(dither_type)
 		.set_cpu(cpu);
 
-	FilterFactory::filter_list filter_list = factory->create_depth(conv);
-	FilterFactory::filter_list filter_list_uv;
+	for (auto &&filter : factory->create_depth(conv)) {
+		std::shared_ptr<ImageFilter> shared_filter{ std::move(filter) };
+
+		if (is_rgb(m_state)) {
+			attach_filter(shared_filter);
+			attach_filter_uv(std::move(shared_filter));
+		} else {
+			attach_filter(std::move(shared_filter));
+		}
+	}
 
 	if (is_yuv(m_state)) {
 		conv.width >>= m_state.subsample_w;
@@ -380,18 +388,9 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 		conv.pixel_in.chroma = true;
 		conv.pixel_out.chroma = true;
 
-		filter_list_uv = factory->create_depth(conv);
-	} else if (is_rgb(m_state)) {
-		for (auto &&filter : filter_list) {
-			filter = ztd::make_unique<MuxFilter>(std::move(filter));
+		for (auto &&filter : factory->create_depth(conv)) {
+			attach_filter_uv(std::move(filter));
 		}
-	}
-
-	for (auto &&filter : filter_list) {
-		attach_filter(std::move(filter));
-	}
-	for (auto &&filter : filter_list_uv) {
-		attach_filter_uv(std::move(filter));
 	}
 
 	m_state.type = format.type;
@@ -442,14 +441,13 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	                        ((m_state.subsample_h || subsample_h) && m_state.chroma_location_h != chroma_location_h) ||
 	                        image_shifted;
 
-	FilterFactory::filter_list filter_list;
-	FilterFactory::filter_list filter_list_uv;
-
 	if (unresize && (spec.subwidth != m_state.width || spec.subheight != m_state.height))
 		error::throw_<error::ResamplingNotAvailable>("unresize not supported for given subregion");
 
 	if (do_resize_luma) {
 		double extra_shift_h = luma_shift_factor(m_state.parity, m_state.height, spec.height);
+
+		FilterFactory::filter_list filter_list;
 
 		if (unresize) {
 			auto conv = unresize::UnresizeConversion{ m_state.width, m_state.height, m_state.type }
@@ -475,9 +473,14 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 			filter_list = factory->create_resize(conv);
 		}
 
-		if (is_rgb(m_state)) {
-			for (auto &&filter : filter_list) {
-				filter = ztd::make_unique<MuxFilter>(std::move(filter));
+		for (auto &&filter : filter_list) {
+			std::shared_ptr<ImageFilter> shared_filter{ std::move(filter) };
+
+			if (is_rgb(m_state)) {
+				attach_filter(shared_filter);
+				attach_filter_uv(std::move(shared_filter));
+			} else {
+				attach_filter(std::move(shared_filter));
 			}
 		}
 	}
@@ -492,6 +495,8 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 		unsigned chroma_height_in = m_state.height >> m_state.subsample_h;
 		unsigned chroma_width_out = spec.width >> subsample_w;
 		unsigned chroma_height_out = spec.height >> subsample_h;
+
+		FilterFactory::filter_list filter_list_uv;
 
 		if (unresize) {
 			auto conv = unresize::UnresizeConversion{ chroma_width_in, chroma_height_in, m_state.type }
@@ -516,13 +521,10 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 
 			filter_list_uv = factory->create_resize(conv);
 		}
-	}
 
-	for (auto &&filter : filter_list) {
-		attach_filter(std::move(filter));
-	}
-	for (auto &&filter : filter_list_uv) {
-		attach_filter_uv(std::move(filter));
+		for (auto &&filter : filter_list_uv) {
+			attach_filter_uv(std::move(filter));
+		}
 	}
 
 	m_state.width = spec.width;

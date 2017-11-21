@@ -12,7 +12,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "basic_filter.h"
+#include "copy_filter.h"
 #include "filtergraph.h"
 #include "image_filter.h"
 
@@ -461,7 +461,7 @@ public:
 
 class FilterNode : public GraphNode {
 protected:
-	std::unique_ptr<ImageFilter> m_filter;
+	std::shared_ptr<ImageFilter> m_filter;
 	ImageFilter::filter_flags m_flags;
 	GraphNode *m_parent;
 	unsigned m_step;
@@ -495,7 +495,7 @@ protected:
 		return size.get();
 	}
 public:
-	FilterNode(unsigned id, std::unique_ptr<ImageFilter> filter, GraphNode *parent) :
+	FilterNode(unsigned id, std::shared_ptr<ImageFilter> filter, GraphNode *parent) :
 		GraphNode(id),
 		m_filter{ std::move(filter) },
 		m_flags(m_filter->get_flags()),
@@ -632,7 +632,7 @@ public:
 class ChromaNode final : public FilterNode {
 	size_t m_filter_ctx_size;
 public:
-	ChromaNode(unsigned id, std::unique_ptr<ImageFilter> filter, GraphNode *parent) :
+	ChromaNode(unsigned id, std::shared_ptr<ImageFilter> filter, GraphNode *parent) :
 		FilterNode(id, std::move(filter), parent),
 		m_filter_ctx_size{}
 	{
@@ -727,7 +727,7 @@ public:
 class ColorNode final : public FilterNode {
 	GraphNode *m_parent_uv;
 public:
-	ColorNode(unsigned id, std::unique_ptr<ImageFilter> filter, GraphNode *parent, GraphNode *parent_uv) :
+	ColorNode(unsigned id, std::shared_ptr<ImageFilter> filter, GraphNode *parent, GraphNode *parent_uv) :
 		FilterNode(id, std::move(filter), parent),
 		m_parent_uv{ parent_uv }
 	{}
@@ -1000,7 +1000,7 @@ public:
 			m_node_uv = m_head;
 	}
 
-	void attach_filter(std::unique_ptr<ImageFilter> &&filter)
+	void attach_filter(std::shared_ptr<ImageFilter> filter)
 	{
 		check_incomplete();
 
@@ -1036,7 +1036,7 @@ public:
 			parent_uv->add_ref();
 	}
 
-	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
+	void attach_filter_uv(std::shared_ptr<ImageFilter> filter)
 	{
 		check_incomplete();
 
@@ -1272,12 +1272,12 @@ FilterGraph::~FilterGraph() = default;
 
 FilterGraph &FilterGraph::operator=(FilterGraph &&other) noexcept = default;
 
-void FilterGraph::attach_filter(std::unique_ptr<ImageFilter> &&filter)
+void FilterGraph::attach_filter(std::shared_ptr<ImageFilter> filter)
 {
 	get_impl()->attach_filter(std::move(filter));
 }
 
-void FilterGraph::attach_filter_uv(std::unique_ptr<ImageFilter> &&filter)
+void FilterGraph::attach_filter_uv(std::shared_ptr<ImageFilter> filter)
 {
 	get_impl()->attach_filter_uv(std::move(filter));
 }

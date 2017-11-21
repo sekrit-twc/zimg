@@ -114,9 +114,6 @@
     <ClCompile Include="..\..\test\graph\mock_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\basic_filter_test.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\api\api_test.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -191,6 +188,9 @@
     </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\log10f.c">
       <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\graph\copy_filter_test.cpp">
+      <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

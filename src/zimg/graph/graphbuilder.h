@@ -152,9 +152,9 @@ private:
 	std::unique_ptr<FilterGraph> m_graph;
 	state m_state;
 
-	void attach_filter(std::unique_ptr<ImageFilter> &&filter);
+	void attach_filter(std::shared_ptr<ImageFilter> filter);
 
-	void attach_filter_uv(std::unique_ptr<ImageFilter> &&filter);
+	void attach_filter_uv(std::shared_ptr<ImageFilter> filter);
 
 	void color_to_grey(colorspace::MatrixCoefficients matrix);
 
