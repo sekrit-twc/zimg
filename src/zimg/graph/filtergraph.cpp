@@ -955,13 +955,19 @@ class FilterGraph::impl {
 
 		size_t processor_cache = cpu_cache_size();
 		size_t footprint = get_cache_footprint();
-		if (footprint <= processor_cache * 2 / 3)
-			return attr.width;
-		if (footprint <= processor_cache * 5 / 3)
-			return ceil_n(attr.width / 2, ALIGNMENT);
 
 		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * processor_cache / footprint));
-		return std::max(floor_n(tile_width, ALIGNMENT), TILE_WIDTH_MIN + 0);
+
+		if (tile_width > attr.width * 5 / 4)
+			tile_width = attr.width;
+		else if (tile_width > attr.width / 2)
+			tile_width = ceil_n(attr.width / 2, ALIGNMENT);
+		else if (tile_width > attr.width / 3)
+			tile_width = ceil_n(attr.width / 3, ALIGNMENT);
+		else
+			tile_width = std::max(floor_n(tile_width, ALIGNMENT), TILE_WIDTH_MIN + 0);
+
+		return tile_width;
 	}
 public:
 	impl(unsigned width, unsigned height, PixelType type, unsigned subsample_w, unsigned subsample_h, bool color) :
