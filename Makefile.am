@@ -165,12 +165,12 @@ libavx_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx.cpp \
 	src/zimg/resize/x86/resize_impl_avx.cpp
 
-libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx
+libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SANDYBRIDGECFLAGS)
 libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libf16c_la_SOURCES = src/zimg/depth/x86/f16c_ivb.cpp
 
-libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c
+libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c $(IVYBRIDGECFLAGS)
 libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = \
@@ -180,7 +180,7 @@ libavx2_la_SOURCES = \
 	src/zimg/depth/x86/error_diffusion_avx2.cpp \
 	src/zimg/resize/x86/resize_impl_avx2.cpp
 
-libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma
+libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HASWELLCFLAGS)
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
@@ -195,8 +195,7 @@ libavx512_la_SOURCES = \
 	src/zimg/depth/x86/dither_avx512.cpp \
 	src/zimg/resize/x86/resize_impl_avx512.cpp
 
-AVX512_SKL_CFLAGS = -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq
-libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) $(AVX512_SKL_CFLAGS)
+libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq $(SKYLAKESPCFLAGS)
 libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libzimg_internal_la_LIBADD += libavx512.la

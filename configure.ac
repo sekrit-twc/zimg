@@ -66,6 +66,11 @@ AS_IF([test "x$X86" = "xyes" && test "x$enable_simd" != "xno"],
         AC_DEFINE([ZIMG_X86])
         enable_x86_simd=yes
 
+        AX_CHECK_COMPILE_FLAG([-mtune=sandybridge], AC_SUBST([SANDYBRIDGECFLAGS], [-mtune=sandybridge]))
+        AX_CHECK_COMPILE_FLAG([-mtune=ivybridge], AC_SUBST([IVYBRIDGECFLAGS], [-mtune=ivybridge]))
+        AX_CHECK_COMPILE_FLAG([-mtune=haswell], AC_SUBST([HASWELLCFLAGS], [-mtune=haswell]))
+        AX_CHECK_COMPILE_FLAG([-mtune=skylake-avx512], AC_SUBST([SKYLAKESPCFLAGS], [-mtune=skylake-avx512]))
+
         AX_CHECK_COMPILE_FLAG(
           [-mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi],
           [
