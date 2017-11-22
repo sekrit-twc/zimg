@@ -1,4 +1,8 @@
-2.6.2:
+2.6.3
+resize: fix crash in AVX-512 resizer with GCC
+resize: improve cache efficiency in AVX-512 horizontal resizers
+
+2.6.2
 depth: fix AVX-512 clamping of negative pixels
 graph: fix WORD greyscale to YUV conversion
 
