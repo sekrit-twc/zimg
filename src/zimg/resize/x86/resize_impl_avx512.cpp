@@ -1399,8 +1399,8 @@ inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrd
 	idx = _mm512_mullo_epi64(idx, _mm512_set1_epi64(stride));
 
 	p = _mm512_add_epi64(p, idx);
-#if defined(_M_X64) || defined(__X86_64__)
-	_mm512_store_si512((__m256i *)dst, p);
+#if defined(_M_X64) || defined(__x86_64__)
+	_mm512_store_si512(dst, p);
 #else
 	_mm256_store_si256((__m256i *)dst, _mm512_cvtepi64_epi32(p));
 #endif
