@@ -247,7 +247,10 @@ unsigned long cpu_cache_size_x86() noexcept
 		return 0;
 
 	// Detect Skylake-SP cache hierarchy and report L2 size instead of L3.
-	if (cache.l3 && cache.l3_inclusive && cache.l2 < 1024 * 1024UL)
+	if (cache.l3 && !cache.l3_inclusive && cache.l2 >= 1024 * 1024U && cache.l2_threads <= 2)
+		return cache.l2 / cache.l2_threads;
+
+	if (cache.l3)
 		return cache.l3 / cache.l3_threads;
 	else if (cache.l2)
 		return cache.l2 / cache.l2_threads;
