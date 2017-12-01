@@ -26,6 +26,7 @@ dist_example_DATA = \
 	doc/example/api_example_c.c \
 	doc/example/hdr_example.cpp \
 	doc/example/interlace_example.cpp \
+	doc/example/tile_example.cpp \
 	doc/example/Makefile
 
 dist_examplemisc_DATA = \
@@ -250,7 +251,8 @@ doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
 
 doc_example_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_tile_example_SOURCES = doc/example/tile_example.cpp
-doc_example_tile_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_tile_example_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
+doc_example_tile_example_LDADD = $(PTHREAD_LIBS) $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 
