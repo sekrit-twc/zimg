@@ -1,11 +1,11 @@
 ZIMG_INCLUDES := $(shell pkg-config --cflags zimg)
 ZIMG_LIBS := $(shell pkg-config --libs zimg)
 
-MY_CFLAGS := -std=c89 $(CFLAGS)
-MY_CXXFLAGS := -std=c++11 $(CXXFLAGS)
+MY_CFLAGS := -std=c89 -pthread $(CFLAGS)
+MY_CXXFLAGS := -std=c++11 -pthread $(CXXFLAGS)
 MY_CPPFLAGS := $(ZIMG_INCLUDES) -Imisc $(CPPFLAGS)
 MY_LDFLAGS := $(LDFLAGS)
-MY_LIBS := $(ZIMG_LIBS) $(LIBS)
+MY_LIBS := -pthread $(ZIMG_LIBS) $(LIBS)
 
 misc_HDRS = \
 	misc/aligned_malloc.h \
@@ -18,7 +18,7 @@ misc_OBJS = \
 	misc/mmap.o \
 	misc/win32_bitmap.o
 
-all: alpha_example api_example api_example_c hdr_example interlace_example
+all: alpha_example api_example api_example_c hdr_example interlace_example tile_example
 
 alpha_example: alpha_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
@@ -39,6 +39,6 @@ tile_example: tile_example.o $(misc_OBJS)
 	$(CXX) -c $(MY_CXXFLAGS) $(MY_CPPFLAGS) $< -o $@
 
 clean:
-	rm -f *.a *.o misc/*.o alpha_example api_example api_example_c interlace_example
+	rm -f *.a *.o misc/*.o alpha_example api_example api_example_c hdr_example interlace_example tile_example
 
 .PHONY: clean
