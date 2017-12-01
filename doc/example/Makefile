@@ -7,6 +7,12 @@ MY_CPPFLAGS := $(ZIMG_INCLUDES) -Imisc $(CPPFLAGS)
 MY_LDFLAGS := $(LDFLAGS)
 MY_LIBS := $(ZIMG_LIBS) $(LIBS)
 
+misc_HDRS = \
+	misc/aligned_malloc.h \
+	misc/argparse.h \
+	misc/mmap.h \
+	misc/win32_bitmap.h
+
 misc_OBJS = \
 	misc/argparse.o \
 	misc/mmap.o \
@@ -27,13 +33,12 @@ interlace_example: interlace_example.o $(misc_OBJS)
 tile_example: tile_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 
-%.o: %.c
+%.o: %.c $(misc_HDRS)
 	$(CC) -c $(MY_CFLAGS) $(MY_CPPFLAGS) $< -o $@
-%.o: %.cpp
+%.o: %.cpp $(misc_HDRS)
 	$(CXX) -c $(MY_CXXFLAGS) $(MY_CPPFLAGS) $< -o $@
 
 clean:
 	rm -f *.a *.o misc/*.o alpha_example api_example api_example_c interlace_example
 
 .PHONY: clean
-
