@@ -127,6 +127,12 @@ enum class ExecutionStrategy {
 	COLOR,
 };
 
+struct SimulationState {
+	unsigned pos;
+	unsigned lines;
+	bool hit;
+};
+
 class ExecutionState {
 	struct guard_page {
 		static constexpr uint32_t GUARD_VALUE = 0xDEADBEEFUL;
@@ -291,16 +297,16 @@ protected:
 		m_cache_id = id;
 	}
 
-	void update_cache_state(std::pair<unsigned, unsigned> *cache_state, unsigned n) const
+	void update_cache_state(SimulationState *state, unsigned n) const
 	{
-		if (n > cache_state[get_cache_id()].second) {
+		if (n > state[get_cache_id()].lines) {
 			unsigned height = get_image_attributes().height;
 			unsigned mask = select_zimg_buffer_mask(n);
 
 			if (n >= height || mask == BUFFER_MAX)
-				cache_state[get_cache_id()].second = BUFFER_MAX;
+				state[get_cache_id()].lines = BUFFER_MAX;
 			else
-				cache_state[get_cache_id()].second = mask + 1;
+				state[get_cache_id()].lines = mask + 1;
 		}
 	}
 
@@ -343,7 +349,7 @@ public:
 
 	virtual void complete() = 0;
 
-	virtual void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) = 0;
+	virtual void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) = 0;
 
 	virtual size_t get_context_size(ExecutionStrategy strategy) const = 0;
 
@@ -368,7 +374,7 @@ public:
 	bool entire_row() const override { return false; }
 	void request_external_cache(unsigned) override {}
 	void complete() override {}
-	void simulate(std::pair<unsigned, unsigned> *, unsigned, unsigned, bool) override {}
+	void simulate(SimulationState *, unsigned, unsigned, bool) override {}
 	size_t get_context_size(ExecutionStrategy) const override { return 0; }
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
 	void init_context(ExecutionState *, ExecutionStrategy) const override {}
@@ -411,10 +417,10 @@ public:
 
 	void complete() override {}
 
-	void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) override
+	void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) override
 	{
 		unsigned step = 1U << m_subsample_h;
-		unsigned pos = cache_state[get_id()].first;
+		unsigned pos = state[get_cache_id()].hit ? state[get_cache_id()].pos : first;
 
 		first <<= uv ? m_subsample_h : 0;
 		last <<= uv ? m_subsample_h : 0;
@@ -422,8 +428,9 @@ public:
 		if (pos < last)
 			pos = floor_n(last - 1, step) + step;
 
-		cache_state[get_id()].first = pos;
-		update_cache_state(cache_state, pos - first);
+		state[get_id()].pos = pos;
+		state[get_id()].hit = true;
+		update_cache_state(state, pos - first);
 	}
 
 	size_t get_context_size(ExecutionStrategy) const override { return 0; }
@@ -528,17 +535,18 @@ public:
 			m_parent->request_external_cache(get_cache_id());
 	}
 
-	void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) override
+	void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) override
 	{
-		unsigned pos = cache_state[get_id()].first;
+		unsigned pos = state[get_id()].hit ? state[get_id()].pos : first;
 
 		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
-			m_parent->simulate(cache_state, range.first, range.second, uv);
+			m_parent->simulate(state, range.first, range.second, uv);
 		}
 
-		cache_state[get_id()].first = pos;
-		update_cache_state(cache_state, pos - first);
+		state[get_id()].pos = pos;
+		state[get_id()].hit = true;
+		update_cache_state(state, pos - first);
 	}
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
@@ -569,10 +577,10 @@ public:
 		return FilterNode::get_image_attributes(false);
 	}
 
-	void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) override
+	void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) override
 	{
 		zassert_d(!uv, "request for chroma plane on luma node");
-		FilterNode::simulate(cache_state, first, last, false);
+		FilterNode::simulate(state, first, last, false);
 	}
 
 	size_t get_context_size(ExecutionStrategy strategy) const override
@@ -654,10 +662,10 @@ public:
 		return FilterNode::get_image_attributes(true);
 	}
 
-	void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) override
+	void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) override
 	{
 		zassert_d(uv, "request for luma plane on chroma node");
-		FilterNode::simulate(cache_state, first, last, true);
+		FilterNode::simulate(state, first, last, true);
 	}
 
 	size_t get_context_size(ExecutionStrategy strategy) const override
@@ -767,18 +775,19 @@ public:
 		}
 	}
 
-	void simulate(std::pair<unsigned, unsigned> *cache_state, unsigned first, unsigned last, bool uv) override
+	void simulate(SimulationState *state, unsigned first, unsigned last, bool uv) override
 	{
-		unsigned pos = cache_state[get_id()].first;
+		unsigned pos = state[get_id()].hit ? state[get_id()].pos : first;
 
 		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
-			m_parent->simulate(cache_state, range.first, range.second, false);
-			m_parent_uv->simulate(cache_state, range.first, range.second, true);
+			m_parent->simulate(state, range.first, range.second, false);
+			m_parent_uv->simulate(state, range.first, range.second, true);
 		}
 
-		cache_state[get_id()].first = pos;
-		update_cache_state(cache_state, pos - first);
+		state[get_id()].hit = true;
+		state[get_id()].pos = pos;
+		update_cache_state(state, pos - first);
 	}
 
 	size_t get_context_size(ExecutionStrategy strategy) const override
@@ -1291,14 +1300,14 @@ public:
 		}
 
 		// Simulate execution.
-		std::vector<std::pair<unsigned, unsigned>> cache_state(m_id_counter);
+		std::vector<SimulationState> cache_state(m_id_counter);
 		for (unsigned i = 0; i < node_attr.height; i += (1U << subsample_h)) {
 			m_node->simulate(cache_state.data(), i, i + (1U << subsample_h), false);
 			if (m_node_uv)
 				m_node_uv->simulate(cache_state.data(), i >> subsample_h, (i >> subsample_h) + 1, true);
 		}
 		for (const auto &node : m_node_set) {
-			node->set_cache_lines(ExecutionStrategy::COLOR, cache_state[node->get_id()].second);
+			node->set_cache_lines(ExecutionStrategy::COLOR, cache_state[node->get_id()].lines);
 		}
 
 		// Simulate the alternative strategy.
@@ -1308,7 +1317,7 @@ public:
 				m_node->simulate(cache_state.data(), i, i + 1, false);
 			}
 			for (const auto &node : m_node_set) {
-				node->set_cache_lines(ExecutionStrategy::LUMA, cache_state[node->get_id()].second);
+				node->set_cache_lines(ExecutionStrategy::LUMA, cache_state[node->get_id()].lines);
 			}
 		}
 		if (m_node_uv && !m_color_filter) {
@@ -1317,7 +1326,7 @@ public:
 				m_node_uv->simulate(cache_state.data(), i >> subsample_h, (i >> subsample_h) + 1, true);
 			}
 			for (const auto &node : m_node_set) {
-				node->set_cache_lines(ExecutionStrategy::CHROMA, cache_state[node->get_id()].second);
+				node->set_cache_lines(ExecutionStrategy::CHROMA, cache_state[node->get_id()].lines);
 			}
 		}
 
