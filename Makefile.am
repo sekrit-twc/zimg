@@ -221,7 +221,8 @@ noinst_PROGRAMS += \
 	doc/example/api_example \
 	doc/example/api_example_c \
 	doc/example/hdr_example \
-	doc/example/interlace_example
+	doc/example/interlace_example \
+	doc/example/tile_example
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
@@ -246,6 +247,10 @@ doc_example_hdr_example_LDADD = $(EXAMPLE_LDADD)
 doc_example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_interlace_example_SOURCES = doc/example/interlace_example.cpp
 doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
+
+doc_example_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_tile_example_SOURCES = doc/example/tile_example.cpp
+doc_example_tile_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 

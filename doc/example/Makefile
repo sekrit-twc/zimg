@@ -24,6 +24,8 @@ hdr_example: hdr_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 interlace_example: interlace_example.o $(misc_OBJS)
 	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
+tile_example: tile_example.o $(misc_OBJS)
+	$(CXX) $(MY_LDFLAGS) $^ $(MY_LIBS) -o $@
 
 %.o: %.c
 	$(CC) -c $(MY_CFLAGS) $(MY_CPPFLAGS) $< -o $@
