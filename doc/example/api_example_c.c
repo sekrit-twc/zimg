@@ -25,8 +25,8 @@ struct Arguments {
 };
 
 static const ArgparseOption program_positional[] = {
-	{ OPTION_STRING, 0, "inpath",     offsetof(struct Arguments, inpath),  0, "input path specifier" },
-	{ OPTION_STRING, 0, "outpath",    offsetof(struct Arguments, outpath), 0, "output path specifier" },
+	{ OPTION_STRING, 0, "inpath",     offsetof(struct Arguments, inpath),  0, "input path" },
+	{ OPTION_STRING, 0, "outpath",    offsetof(struct Arguments, outpath), 0, "output path" },
 	{ OPTION_UINT,   0, "in_width",   offsetof(struct Arguments, in_w),    0, "input width" },
 	{ OPTION_UINT,   0, "in_height",  offsetof(struct Arguments, in_h),    0, "input height" },
 	{ OPTION_UINT,   0, "out_width",  offsetof(struct Arguments, out_w),   0, "output width" },

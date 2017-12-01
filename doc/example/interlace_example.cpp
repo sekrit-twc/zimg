@@ -31,8 +31,8 @@ struct Arguments {
 };
 
 const ArgparseOption program_positional[] = {
-	{ OPTION_STRING, nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path specifier" },
-	{ OPTION_STRING, nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path specifier" },
+	{ OPTION_STRING, nullptr, "inpath",     offsetof(struct Arguments, inpath),  nullptr, "input path" },
+	{ OPTION_STRING, nullptr, "outpath",    offsetof(struct Arguments, outpath), nullptr, "output path" },
 	{ OPTION_UINT,   nullptr, "in_width",   offsetof(struct Arguments, in_w),    nullptr, "input width" },
 	{ OPTION_UINT,   nullptr, "in_height",  offsetof(struct Arguments, in_h),    nullptr, "input height" },
 	{ OPTION_UINT,   nullptr, "out_width",  offsetof(struct Arguments, out_w),   nullptr, "output width" },
