@@ -4,7 +4,7 @@
 // dividing the output into tiles. For processing multiple images, it is
 // recommended to use frame-based threading for higher efficiency.
 
-#include <chrono>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -200,6 +200,13 @@ void execute(const Arguments &args)
 	// the active_region field, unlike the output tile.
 	double scale_w = static_cast<double>(in_bmp.width()) / args.out_w;
 	double scale_h = static_cast<double>(in_bmp.height()) / args.out_h;
+
+	// The destination buffer passed to zimg_filter_graph_process will point to
+	// the upper-left corner of the tile. As a result, when not using a pack
+	// callback, incrementing the output image by tile_width pixels must
+	// maintain alignment.
+	if (args.tile_width % 32)
+		std::cout << "warning: tile width results in unaligned image\n";
 
 	for (unsigned i = 0; i < args.out_h; i += args.tile_height) {
 		for (unsigned j = 0; j < args.out_w; j += args.tile_width) {
