@@ -112,7 +112,7 @@
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp">
       <Filter>Source Files\unresize</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
+    <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
@@ -222,7 +222,7 @@
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
+    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">

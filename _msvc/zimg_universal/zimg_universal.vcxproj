@@ -34,7 +34,7 @@
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\quantize.cpp" />
-    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />
@@ -73,7 +73,7 @@
     <ClInclude Include="..\..\src\zimg\depth\dither.h" />
     <ClInclude Include="..\..\src\zimg\depth\hexfloat.h" />
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
-    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h" />
+    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
     <ClInclude Include="..\..\src\zimg\graph\image_buffer.h" />
