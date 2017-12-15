@@ -90,6 +90,7 @@ typedef enum zimg_error_code_e {
 	ZIMG_ERROR_COLOR_FAMILY_MISMATCH = ZIMG_ERROR_LOGIC + 2, /**< Illegal combination of color family and matrix coefficients. */
 	ZIMG_ERROR_IMAGE_NOT_DIVISIBLE   = ZIMG_ERROR_LOGIC + 3, /**< Image dimension does not fit a modulo constraint. */
 	ZIMG_ERROR_BIT_DEPTH_OVERFLOW    = ZIMG_ERROR_LOGIC + 4, /**< Bit depth greater than underlying storage format. */
+	ZIMG_ERROR_COLOR_SPACE_DEFINITION= ZIMG_ERROR_LOGIC + 5, /**< Invalid combination of matrix_coefficients, color_primaries, and/or transfer_characteristics values */
 
 	/**
 	 * A function parameter was passed an illegal value.
@@ -609,6 +610,14 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version);
  */
 ZIMG_VISIBILITY
 void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned version);
+
+/*
+ * Validate whether image format structure can be safely processed.
+ *
+ * @param[out] ptr structure to be initialized
+ */
+ZIMG_VISIBILITY
+zimg_error_code_e zimg_validate_image_format(zimg_image_format *ptr);
 
 /**
  * Create a graph converting the specified formats.
