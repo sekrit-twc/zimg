@@ -598,6 +598,23 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 #undef EX_BEGIN
 #undef EX_END
 
+zimg_error_code_e zimg_validate_image_format(zimg_image_format *ptr)
+{
+	using namespace zimg::colorspace;
+
+	zassert_d(ptr, "null pointer");
+
+	if (ptr->width == 0 || ptr->height == 0 || ptr->pixel_type == static_cast<zimg_pixel_type_e>(-1))
+		return ZIMG_ERROR_LOGIC;
+
+	ColorspaceDefinition csp = zimg::colorspace::ColorspaceDefinition{};
+	csp.matrix = translate_matrix(ptr->matrix_coefficients);
+	csp.transfer = translate_transfer(ptr->transfer_characteristics);
+	csp.primaries = translate_primaries(ptr->color_primaries);
+
+	return zimg::colorspace::is_valid_csp(*(const_cast<const decltype(&csp)>(&csp))) ? ZIMG_ERROR_SUCCESS : ZIMG_ERROR_COLOR_SPACE_DEFINITION;
+}
+
 void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 {
 	zassert_d(ptr, "null pointer");
