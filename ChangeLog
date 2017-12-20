@@ -1,3 +1,10 @@
+2.7
+colorspace: add support for additional matrix/transfer/primaries
+graph: reduce buffer copies when performing colorspace conversion
+graph: process input planes separately when possible
+graph: optimize calculation of tile width
+x86: automatic cache size detection for Intel processors
+
 2.6.3
 resize: fix crash in AVX-512 resizer with GCC
 resize: improve cache efficiency in AVX-512 horizontal resizers
