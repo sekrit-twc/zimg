@@ -128,20 +128,32 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 	};
 
 	if (csp.matrix == MatrixCoefficients::RGB) {
-		// RGB can be converted to YUV with exception of REC_2020_CL, REC_2100_ICTCP, REC_2100_LMS, and UNSPECIFIED
-		for (auto coeffs : all_matrix()) {
-			if (coeffs != MatrixCoefficients::RGB && coeffs != MatrixCoefficients::REC_2020_CL && coeffs != MatrixCoefficients::CHROMATICITY_DERIVED_CL &&
-			    coeffs != MatrixCoefficients::REC_2100_ICTCP && coeffs != MatrixCoefficients::REC_2100_LMS && coeffs != MatrixCoefficients::UNSPECIFIED) {
-				add_edge(csp.to(coeffs), create_ncl_rgb_to_yuv_operation);
+		constexpr MatrixCoefficients special_matrices[] = {
+			MatrixCoefficients::UNSPECIFIED,
+			MatrixCoefficients::RGB,
+			MatrixCoefficients::REC_2020_CL,
+			MatrixCoefficients::CHROMATICITY_DERIVED_NCL,
+			MatrixCoefficients::CHROMATICITY_DERIVED_CL,
+			MatrixCoefficients::REC_2100_LMS,
+			MatrixCoefficients::REC_2100_ICTCP,
+		};
+
+		// RGB can be converted to conventional YUV.
+		for (auto matrix : all_matrix()) {
+			if (std::find(std::begin(special_matrices), std::end(special_matrices), matrix) == std::end(special_matrices)) {
+				add_edge(csp.to(matrix), create_ncl_rgb_to_yuv_operation);
 			}
 		}
+		if (csp.primaries != ColorPrimaries::UNSPECIFIED)
+			add_edge(csp.to(MatrixCoefficients::CHROMATICITY_DERIVED_NCL), create_ncl_rgb_to_yuv_operation);
 
-		// Linear RGB can be converted to other transfer functions and primaries; also to REC_2020_CL and REC_2100_LMS.
+		// Linear RGB can be converted to other transfer functions and primaries; also to combined matrix-transfer systems.
 		if (csp.transfer == TransferCharacteristics::LINEAR) {
 			for (auto transfer : all_transfer()) {
 				if (transfer != csp.transfer && transfer != TransferCharacteristics::UNSPECIFIED) {
 					add_edge(csp.to(transfer), create_linear_to_gamma_operation);
-					add_edge(csp.to(transfer).to(MatrixCoefficients::CHROMATICITY_DERIVED_CL), create_cl_rgb_to_yuv_operation);
+					if (csp.primaries != ColorPrimaries::UNSPECIFIED)
+						add_edge(csp.to(transfer).to(MatrixCoefficients::CHROMATICITY_DERIVED_CL), create_cl_rgb_to_yuv_operation);
 				}
 			}
 			for (auto primaries : all_primaries()) {
