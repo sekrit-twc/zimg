@@ -1,5 +1,6 @@
 2.7
 colorspace: add support for additional matrix/transfer/primaries
+graph: reduce buffer copies when converting from grey to color
 graph: reduce buffer copies when performing colorspace conversion
 graph: process input planes separately when possible
 graph: optimize calculation of tile width
