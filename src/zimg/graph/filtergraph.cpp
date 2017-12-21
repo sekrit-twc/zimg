@@ -1110,9 +1110,7 @@ class FilterGraph::impl {
 		}
 
 		state.set_external_buffer(m_head->get_id(), src_);
-		state.set_external_buffer(m_node->get_id(), dst_);
-		if (m_node_uv && m_node != m_node_uv)
-			state.set_external_buffer(m_node_uv->get_id(), dst_);
+		state.set_external_buffer(m_node_uv->get_id(), dst_);
 
 		for (const auto &node : m_node_set) {
 			node->init_context(&state, ExecutionStrategy::CHROMA);
