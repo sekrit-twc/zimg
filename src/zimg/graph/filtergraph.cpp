@@ -129,6 +129,7 @@ struct SimulationState {
 
 class ExecutionState {
 	struct guard_page {
+#ifndef NDEBUG
 		static constexpr uint32_t GUARD_VALUE = 0xDEADBEEFUL;
 
 		uint32_t x[AlignmentOf<uint32_t>::value];
@@ -143,9 +144,14 @@ class ExecutionState {
 		void check() const
 		{
 			for (uint32_t v : x) {
-				zassert_d(v == GUARD_VALUE, "buffer overflow detected");
+				zassert(v == GUARD_VALUE, "buffer overflow detected");
 			}
 		}
+#else
+		char unused[ALIGNMENT];
+
+		void check() const {}
+#endif
 	};
 public:
 	struct cache_state {
