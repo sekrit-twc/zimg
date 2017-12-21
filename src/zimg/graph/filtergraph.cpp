@@ -18,42 +18,32 @@
 
 namespace zimg {
 namespace graph {
+
 namespace {
 
-class ColorExtendFilter : public CopyFilter {
-	bool m_rgb;
+// Extends a greyscale image to a RGB image.
+class RGBCopyFilter final : public CopyFilter {
 public:
-	ColorExtendFilter(const image_attributes &attr, bool rgb) :
-		CopyFilter{ attr.width, attr.height, attr.type },
-		m_rgb{ rgb }
-	{}
+	explicit RGBCopyFilter(const image_attributes &attr) : CopyFilter{ attr.width, attr.height, attr.type } {}
 
 	filter_flags get_flags() const override
 	{
 		filter_flags flags = CopyFilter::get_flags();
-
-		flags.in_place = false;
 		flags.color = true;
-
 		return flags;
 	}
 
 	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		CopyFilter::process(nullptr, src, dst + 0, nullptr, i, left, right);
-
-		if (m_rgb) {
-			CopyFilter::process(nullptr, src, dst + 1, nullptr, i, left, right);
-			CopyFilter::process(nullptr, src, dst + 2, nullptr, i, left, right);
-		}
+		CopyFilter::process(nullptr, src, dst + 1, nullptr, i, left, right);
+		CopyFilter::process(nullptr, src, dst + 2, nullptr, i, left, right);
 	}
 };
 
-class ChromaInitializeFilter : public ImageFilterBase {
+// Produces a grey chroma plane.
+class ChromaInitializeFilter final : public ImageFilterBase {
 	image_attributes m_attr;
-	unsigned m_subsample_w;
-	unsigned m_subsample_h;
-
 	union {
 		uint8_t b;
 		uint16_t w;
@@ -66,20 +56,26 @@ class ChromaInitializeFilter : public ImageFilterBase {
 		std::fill(ptr + left, ptr + right, val);
 	}
 public:
-	ChromaInitializeFilter(image_attributes attr, unsigned subsample_w, unsigned subsample_h, unsigned depth) :
-		m_attr{ attr.width >> subsample_w, attr.height >> subsample_h, attr.type },
-		m_subsample_w{ subsample_w },
-		m_subsample_h{ subsample_h },
+	ChromaInitializeFilter(image_attributes attr, unsigned depth) :
+		m_attr(attr),
 		m_value{}
 	{
-		if (attr.type == PixelType::BYTE)
+		switch (m_attr.type) {
+		case PixelType::BYTE:
 			m_value.b = static_cast<uint8_t>(1U << (depth - 1));
-		else if (attr.type == PixelType::WORD)
+			break;
+		case PixelType::WORD:
 			m_value.w = static_cast<uint16_t>(1U << (depth - 1));
-		else if (attr.type == PixelType::HALF)
+			break;
+		case PixelType::HALF:
 			m_value.w = 0;
-		else if (attr.type == PixelType::FLOAT)
+			break;
+		case PixelType::FLOAT:
 			m_value.f = 0.0f;
+			break;
+		default:
+			break;
+		}
 	}
 
 	filter_flags get_flags() const override
@@ -97,26 +93,24 @@ public:
 		return m_attr;
 	}
 
-	pair_unsigned get_required_row_range(unsigned i) const override
-	{
-		return{ i << m_subsample_h, (i + 1) << m_subsample_h };
-	}
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
-	{
-		return{ left << m_subsample_w, right << m_subsample_w };
-	}
-
 	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override
 	{
 		void *dst_p = (*dst)[i];
 
-		if (m_attr.type == PixelType::BYTE)
+		switch (m_attr.type) {
+		case PixelType::BYTE:
 			fill(static_cast<uint8_t *>(dst_p), m_value.b, left, right);
-		else if (m_attr.type == PixelType::WORD || m_attr.type == PixelType::HALF)
+			break;
+		case PixelType::WORD:
+		case PixelType::HALF:
 			fill(static_cast<uint16_t *>(dst_p), m_value.w, left, right);
-		else if (m_attr.type == PixelType::FLOAT)
+			break;
+		case PixelType::FLOAT:
 			fill(static_cast<float *>(dst_p), m_value.f, left, right);
+			break;
+		default:
+			break;
+		}
 	}
 };
 
@@ -1237,6 +1231,8 @@ public:
 	{
 		check_incomplete();
 
+		if (!yuv && (subsample_w || subsample_h))
+			error::throw_<error::InternalError>("cannot create subsampled RGB");
 		if (m_node_uv)
 			error::throw_<error::InternalError>("cannot add chroma to color image");
 
@@ -1244,9 +1240,12 @@ public:
 		m_node_set.emplace_back(ztd::make_unique<NullNode>(m_id_counter++, attr));
 		m_node_uv = m_node_set.back().get();
 
-		attach_filter(ztd::make_unique<ColorExtendFilter>(attr, !yuv));
-		if (yuv)
-			attach_filter_uv(ztd::make_unique<ChromaInitializeFilter>(attr, subsample_w, subsample_h, depth));
+		if (yuv) {
+			ImageFilter::image_attributes chroma_attr{ attr.width >> subsample_w, attr.height >> subsample_h, attr.type };
+			attach_filter_uv(ztd::make_unique<ChromaInitializeFilter>(chroma_attr, depth));
+		} else {
+			attach_filter(ztd::make_unique<RGBCopyFilter>(attr));
+		}
 	}
 
 	void set_requires_64b_alignment()
