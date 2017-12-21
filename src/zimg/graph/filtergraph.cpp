@@ -1230,8 +1230,8 @@ public:
 		if (!m_node_uv)
 			error::throw_<error::InternalError>("cannot remove chroma from greyscale image");
 
-		auto attr = m_node->get_image_attributes();
-		attach_filter(ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type));
+		// Add a false reference to break any in-place chains.
+		m_node->add_ref();
 		m_node_uv = nullptr;
 	}
 
