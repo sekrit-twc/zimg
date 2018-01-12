@@ -141,7 +141,6 @@ struct zfilter_graph_builder_params : zimg_graph_builder_params {
 };
 
 class FilterGraph {
-private:
 	zimg_filter_graph *m_graph;
 
 	FilterGraph(const FilterGraph &);
@@ -164,6 +163,10 @@ public:
 	}
 
 #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+	FilterGraph() : m_graph()
+	{
+	}
+
 	FilterGraph(FilterGraph &&other) : m_graph(other.m_graph)
 	{
 		other.m_graph = 0;
@@ -178,6 +181,11 @@ public:
 		}
 
 		return *this;
+	}
+
+	explicit operator bool() const
+	{
+		return m_graph != 0;
 	}
 #endif
 
@@ -209,6 +217,17 @@ public:
 		check(zimg_filter_graph_process(m_graph, &src, &dst, tmp, unpack_cb, unpack_user, pack_cb, pack_user));
 	}
 
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+	static FilterGraph build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_graph_builder_params *params = 0)
+	{
+		zimg_filter_graph *graph;
+
+		if (!(graph = zimg_filter_graph_build(&src_format, &dst_format, params)))
+			throw zerror();
+
+		return FilterGraph(graph);
+	}
+#else
 	static zimg_filter_graph *build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_graph_builder_params *params = 0)
 	{
 		zimg_filter_graph *graph;
@@ -218,6 +237,7 @@ public:
 
 		return graph;
 	}
+#endif
 };
 
 } // namespace zimgxx
