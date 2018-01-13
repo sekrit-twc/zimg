@@ -348,6 +348,7 @@ typedef enum zimg_resample_filter_e {
   * The circular array holds a power-of-2 number of image scanlines,
   * where the beginning of the i-th row of the p-th plane is stored at
   * (plane[p].data + (ptrdiff_t)(i & plane[p].mask) * plane[p].stride).
+  * The plane order is R-G-B, Y-U-V, or X-Y-Z.
   *
   * The row index mask can be set to the special value of
   * {@link ZIMG_BUFFER_MAX} to indicate a fully allocated image plane. Filter
