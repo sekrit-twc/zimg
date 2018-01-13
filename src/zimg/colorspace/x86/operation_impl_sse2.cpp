@@ -18,23 +18,24 @@ namespace colorspace {
 
 namespace {
 
-constexpr unsigned LUT_DEPTH = 15;
+constexpr unsigned LUT_DEPTH = 16;
 
 void lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, float prescale, const float *src, float *dst, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	const int lut_limit = 1 << lut_depth;
+	const int32_t lut_limit = static_cast<int32_t>(1) << lut_depth;
 
-	const __m128 scale = _mm_set_ps1(prescale * lut_limit);
-	const __m128i limit = _mm_set1_epi16(lut_limit + INT16_MIN);
+	const __m128 scale = _mm_set_ps1(0.5f * prescale * lut_limit);
+	const __m128 offset = _mm_set_ps1(0.25f * lut_limit);
+	const __m128i limit = _mm_set1_epi16(std::min(lut_limit + INT16_MIN, static_cast<int32_t>(INT16_MAX)));
 	const __m128i bias_epi16 = _mm_set1_epi16(INT16_MIN);
 	const __m128i bias_epi32 = _mm_set1_epi32(INT16_MIN);
 
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = _mm_load_ss(src + j);
-		int idx = _mm_cvt_ss2si(_mm_mul_ss(x, scale));
+		int idx = _mm_cvt_ss2si(_mm_add_ss(_mm_mul_ss(x, scale), offset));
 		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
 	}
 	for (ptrdiff_t j = vec_left; j < static_cast<ptrdiff_t>(vec_right); j += 4) {
@@ -43,20 +44,21 @@ void lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, float presca
 
 		x = _mm_load_ps(src + j);
 		x = _mm_mul_ps(x, scale);
+		x = _mm_add_ps(x, offset);
 		xi = _mm_cvtps_epi32(x);
 		xi = _mm_add_epi32(xi, bias_epi32);
 		xi = _mm_packs_epi32(xi, xi);
 		xi = _mm_min_epi16(xi, limit);
 		xi = _mm_sub_epi16(xi, bias_epi16);
 
-		dst[j + 0] = lut[_mm_extract_epi16(xi, 0)];
-		dst[j + 1] = lut[_mm_extract_epi16(xi, 1)];
-		dst[j + 2] = lut[_mm_extract_epi16(xi, 2)];
-		dst[j + 3] = lut[_mm_extract_epi16(xi, 3)];
+		dst[j + 0] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 0))];
+		dst[j + 1] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 1))];
+		dst[j + 2] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 2))];
+		dst[j + 3] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 3))];
 	}
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = _mm_load_ss(src + j);
-		int idx = _mm_cvt_ss2si(_mm_mul_ss(x, scale));
+		int idx = _mm_cvt_ss2si(_mm_add_ss(_mm_mul_ss(x, scale), offset));
 		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
 	}
 }
@@ -68,15 +70,15 @@ class LutOperationSSE2 final : public Operation {
 	float m_prescale;
 public:
 	LutOperationSSE2(gamma_func func, unsigned lut_depth, float prescale, float postscale) :
-		m_lut((1 << lut_depth) + 1),
+		m_lut((1UL << lut_depth) + 1),
 		m_lut_depth{ lut_depth },
 		m_prescale{ static_cast<float>(prescale) }
 	{
 		EnsureSinglePrecision x87;
 
 		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
-		for (unsigned i = 0; i < m_lut.size(); ++i) {
-			float x = static_cast<float>(i) / (1 << lut_depth);
+		for (size_t i = 0; i < m_lut.size(); ++i) {
+			float x = static_cast<float>(i) / (1 << lut_depth) * 2.0f - 0.5f;
 			m_lut[i] = func(x) * postscale;
 		}
 	}

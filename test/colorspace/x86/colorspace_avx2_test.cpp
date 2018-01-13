@@ -48,7 +48,7 @@ TEST(ColorspaceConversionAVX2Test, test_transfer_lut)
 
 	const char *expected_sha1[][3] = {
 		{
-			"3c7196b6a704e2f3d88c2a02143d77dbdefdb234",
+			"910ce7272eb8fac2e82424e9307eadffefbdb445",
 			"fa7ab9deaee4790fa49a1d9d8249e5d323674ec2",
 			"162687e701627cdc17283a32c36ea711d28a953e"
 		},
@@ -58,7 +58,7 @@ TEST(ColorspaceConversionAVX2Test, test_transfer_lut)
 			"f7763076e0226260bb46890dff425756bb83b978"
 		},
 		{
-			"48c1ec7de50653817c678ea87ee6e1c84ef014d5",
+			"4c0b5ffe768a7812d1ef102b4d8d52614838bc8e",
 			"58eb1dde0eb88fff043364836e1844aa766b64c5",
 			"85a277a80dfca2e21789cedd76aaee307dbc4562"
 		},

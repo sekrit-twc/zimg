@@ -48,24 +48,24 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 
 	const char *expected_sha1[][3] = {
 		{
-			"3c7196b6a704e2f3d88c2a02143d77dbdefdb234",
+			"910ce7272eb8fac2e82424e9307eadffefbdb445",
 			"fa7ab9deaee4790fa49a1d9d8249e5d323674ec2",
 			"162687e701627cdc17283a32c36ea711d28a953e"
 		},
 		{
-			"ac27dc26b2cef34cc017155052ffb071d1d9e9d6",
+			"492587e7ed75b7e3ab868bead6ade7a4137c6ea1",
 			"3b0694e9fbce61466cb5a575f300d784089b6cad",
 			"b68f103f52ccafae867d664d7f27fe56ae9208af"
 		},
 		{
-			"48c1ec7de50653817c678ea87ee6e1c84ef014d5",
+			"4c0b5ffe768a7812d1ef102b4d8d52614838bc8e",
 			"58eb1dde0eb88fff043364836e1844aa766b64c5",
 			"85a277a80dfca2e21789cedd76aaee307dbc4562"
 		},
 		{
-			"098e8372af7b8c64c3d0fb34ad8dd2165ec3ca3d",
-			"b4b84f60f3c6f1141a9e910cf8deda704a20e2ab",
-			"8192c78230f86f2ea5d39904ad84d51ea4b9cfe2"
+			"df546ce0ad6f859499a96d2d697d896067e60e38",
+			"f0041b8a008ab45f0ea1319090ac7e8be0990d92",
+			"06880efb598e41f96fa79e04dbdfcccd50d6dc6f"
 		},
 	};
 	const double expected_tolinear_snr = 80.0;
