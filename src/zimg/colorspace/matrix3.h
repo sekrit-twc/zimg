@@ -28,6 +28,15 @@ struct Matrix3x3 : public std::array<Vector3, 3> {
 	constexpr Matrix3x3(const Vector3 &a, const Vector3 &b, const Vector3 &c) :
 		std::array<Vector3, 3>{ { a, b, c } }
 	{}
+
+	static constexpr Matrix3x3 identity()
+	{
+		return{
+			{ 1.0, 0.0, 0.0 },
+			{ 0.0, 1.0, 0.0 },
+			{ 0.0, 0.0, 1.0 }
+		};
+	}
 };
 
 /**

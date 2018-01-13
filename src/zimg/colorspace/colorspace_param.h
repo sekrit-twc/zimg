@@ -31,7 +31,6 @@ constexpr double REC_709_PRIMARIES[3][2] = { { 0.640, 0.330 }, { 0.300, 0.600 },
 constexpr double FILM_PRIMARIES[3][2] = { { 0.681, 0.319 }, { 0.243, 0.692 }, { 0.145, 0.049 } };
 constexpr double REC_2020_PRIMARIES[3][2] = { { 0.708, 0.292 }, { 0.170, 0.797 }, { 0.131, 0.046 } };
 constexpr double DCI_P3_PRIMARIES[3][2] = { { 0.680, 0.320 } , { 0.265, 0.690 }, { 0.150, 0.060 } };
-constexpr double ST_428_PRIMARIES[3][2] = { { 0.735, 0.265 }, { 0.274, 0.718 }, { 0.167, 0.009 } };
 constexpr double JEDEC_P22_PRIMARIES[3][2] = { { 0.630, 0.340 }, { 0.295, 0.605 }, { 0.155, 0.077 } };
 
 // White points in XY.

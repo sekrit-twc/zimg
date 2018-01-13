@@ -285,7 +285,7 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 		{ ZIMG_PRIMARIES_240M,        ColorPrimaries::SMPTE_C },
 		{ ZIMG_PRIMARIES_FILM,        ColorPrimaries::FILM },
 		{ ZIMG_PRIMARIES_2020,        ColorPrimaries::REC_2020 },
-		{ ZIMG_PRIMARIES_ST428,       ColorPrimaries::ST_428 },
+		{ ZIMG_PRIMARIES_ST428,       ColorPrimaries::XYZ },
 		{ ZIMG_PRIMARIES_ST431_2,     ColorPrimaries::DCI_P3 },
 		{ ZIMG_PRIMARIES_ST432_1,     ColorPrimaries::DCI_P3_D65 },
 		{ ZIMG_PRIMARIES_EBU3213_E,   ColorPrimaries::JEDEC_P22 },

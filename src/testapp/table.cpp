@@ -101,7 +101,7 @@ const zimg::static_string_map<ColorPrimaries, 12> g_primaries_table{
 	{ "709",       ColorPrimaries::REC_709 },
 	{ "film",      ColorPrimaries::FILM },
 	{ "2020",      ColorPrimaries::REC_2020 },
-	{ "st_428",    ColorPrimaries::ST_428 },
+	{ "xyz",       ColorPrimaries::XYZ },
 	{ "dcip3",     ColorPrimaries::DCI_P3 },
 	{ "dcip3_d65", ColorPrimaries::DCI_P3_D65 },
 	{ "jedec_p22", ColorPrimaries::JEDEC_P22 },

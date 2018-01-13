@@ -2,6 +2,7 @@
 #include "common/except.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
+#include "matrix3.h"
 
 namespace zimg {
 namespace colorspace {
@@ -58,7 +59,7 @@ Vector3 get_white_point(ColorPrimaries primaries)
 	case ColorPrimaries::REC_470_M:
 	case ColorPrimaries::FILM:
 		return xy_to_xyz(ILLUMINANT_C[0], ILLUMINANT_C[1]);
-	case ColorPrimaries::ST_428:
+	case ColorPrimaries::XYZ:
 		return xy_to_xyz(ILLUMINANT_E[0], ILLUMINANT_E[1]);
 	case ColorPrimaries::DCI_P3:
 		return xy_to_xyz(ILLUMINANT_DCI[0], ILLUMINANT_DCI[1]);
@@ -87,9 +88,6 @@ void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 		break;
 	case ColorPrimaries::REC_2020:
 		memcpy(out, REC_2020_PRIMARIES, sizeof(REC_2020_PRIMARIES));
-		break;
-	case ColorPrimaries::ST_428:
-		memcpy(out, ST_428_PRIMARIES, sizeof(ST_428_PRIMARIES));
 		break;
 	case ColorPrimaries::DCI_P3:
 	case ColorPrimaries::DCI_P3_D65:
@@ -242,6 +240,9 @@ Matrix3x3 lms_to_ictcp_matrix()
 // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries)
 {
+	if (primaries == ColorPrimaries::XYZ)
+		return Matrix3x3::identity();
+
 	Matrix3x3 xyz_matrix = get_primaries_xyz(primaries);
 	Vector3 white_xyz = get_white_point(primaries);
 
@@ -253,6 +254,9 @@ Matrix3x3 gamut_rgb_to_xyz_matrix(ColorPrimaries primaries)
 
 Matrix3x3 gamut_xyz_to_rgb_matrix(ColorPrimaries primaries)
 {
+	if (primaries == ColorPrimaries::XYZ)
+		return Matrix3x3::identity();
+
 	return inverse(gamut_rgb_to_xyz_matrix(primaries));
 }
 
@@ -268,13 +272,8 @@ Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out)
 	Vector3 white_in = get_white_point(in);
 	Vector3 white_out = get_white_point(out);
 
-	if (white_in == white_out) {
-		return {
-			{ 1.0, 0.0, 0.0 },
-			{ 0.0, 1.0, 0.0 },
-			{ 0.0, 0.0, 1.0 }
-		};
-	}
+	if (white_in == white_out)
+		return Matrix3x3::identity();
 
 	Vector3 rgb_in = bradford * white_in;
 	Vector3 rgb_out = bradford * white_out;
