@@ -1,3 +1,8 @@
+2.7.1
+colorspace: fix incorrect ST.428 primaries (introduced in 2.7)
+colorspace: preserve BTB/WTW when approximate_gamma is set
+colorspace: optimize handling of IEC 61966-2-4 transfer characteristics
+
 2.7
 colorspace: add support for additional matrix/transfer/primaries
 graph: reduce buffer copies when converting from grey to color
