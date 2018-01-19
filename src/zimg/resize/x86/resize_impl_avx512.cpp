@@ -462,8 +462,8 @@ template <bool DoLoop, unsigned Tail>
 void resize_line16_h_u16_avx512(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                 const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
-	unsigned vec_left = ceil_n(left, 16);
-	unsigned vec_right = floor_n(right, 16);
+	unsigned vec_left = ceil_n(left, 32);
+	unsigned vec_right = floor_n(right, 32);
 
 #define XITER resize_line16_h_u16_avx512_xiter<DoLoop, Tail>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
