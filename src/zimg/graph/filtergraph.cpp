@@ -123,6 +123,7 @@ enum class ExecutionStrategy {
 
 struct SimulationState {
 	unsigned pos;
+	unsigned cache_pos;
 	unsigned lines;
 	bool hit;
 };
@@ -297,8 +298,10 @@ protected:
 		m_cache_id = id;
 	}
 
-	void update_cache_state(SimulationState *state, unsigned n) const
+	void update_cache_state(SimulationState *state, unsigned first, unsigned last) const
 	{
+		unsigned n = std::max(state[get_cache_id()].cache_pos, last) - first;
+
 		if (n > state[get_cache_id()].lines) {
 			unsigned height = get_image_attributes().height;
 			unsigned mask = select_zimg_buffer_mask(n);
@@ -308,6 +311,8 @@ protected:
 			else
 				state[get_cache_id()].lines = mask + 1;
 		}
+
+		state[get_cache_id()].cache_pos = std::max(state[get_cache_id()].cache_pos, last);
 	}
 
 	void init_cache_context(ExecutionState::node_cache_state *ctx) const
@@ -430,7 +435,7 @@ public:
 
 		state[get_id()].pos = pos;
 		state[get_id()].hit = true;
-		update_cache_state(state, pos - first);
+		update_cache_state(state, first, pos);
 	}
 
 	size_t get_context_size(ExecutionStrategy) const override { return 0; }
@@ -546,7 +551,7 @@ public:
 
 		state[get_id()].pos = pos;
 		state[get_id()].hit = true;
-		update_cache_state(state, pos - first);
+		update_cache_state(state, first, pos);
 	}
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
@@ -787,7 +792,7 @@ public:
 
 		state[get_id()].hit = true;
 		state[get_id()].pos = pos;
-		update_cache_state(state, pos - first);
+		update_cache_state(state, first, pos);
 	}
 
 	size_t get_context_size(ExecutionStrategy strategy) const override
