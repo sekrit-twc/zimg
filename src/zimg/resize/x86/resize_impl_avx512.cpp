@@ -1555,7 +1555,7 @@ public:
 		context.left.resize(ceil_n(filter.filter_rows, 16) / 16);
 		context.permute.resize(ceil_n(filter.filter_rows, 16) * 2);
 		context.data.resize(ceil_n(filter.filter_rows, 16) * filter_width);
-		context.filter_rows = ceil_n(filter.filter_rows, 2);
+		context.filter_rows = filter.filter_rows;
 		context.filter_width = filter_width;
 		context.input_width = filter.input_width;
 
