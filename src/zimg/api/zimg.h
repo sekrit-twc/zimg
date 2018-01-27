@@ -264,53 +264,72 @@ typedef enum zimg_chroma_location_e {
 typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_INTERNAL                 = -1, /**< Not part of the API. */
 	ZIMG_MATRIX_RGB                      = 0,
-	ZIMG_MATRIX_709                      = 1,
+	ZIMG_MATRIX_BT709                    = 1,
 	ZIMG_MATRIX_UNSPECIFIED              = 2,
 	ZIMG_MATRIX_FCC                      = 4,
-	ZIMG_MATRIX_470BG                    = 5,
-	ZIMG_MATRIX_170M                     = 6,  /* Equivalent to 5. */
-	ZIMG_MATRIX_240M                     = 7,
+	ZIMG_MATRIX_BT470_BG                 = 5,
+	ZIMG_MATRIX_ST170_M                  = 6,  /* Equivalent to 5. */
+	ZIMG_MATRIX_ST240_M                  = 7,
 	ZIMG_MATRIX_YCGCO                    = 8,
-	ZIMG_MATRIX_2020_NCL                 = 9,
-	ZIMG_MATRIX_2020_CL                  = 10,
+	ZIMG_MATRIX_BT2020_NCL               = 9,
+	ZIMG_MATRIX_BT2020_CL                = 10,
 	ZIMG_MATRIX_CHROMATICITY_DERIVED_NCL = 12, /* Requires primaries to be set. */
 	ZIMG_MATRIX_CHROMATICITY_DERIVED_CL  = 13, /* Requires primaries to be set. */
 	ZIMG_MATRIX_ICTCP                    = 14
+#define ZIMG_MATRIX_709      ZIMG_MATRIX_BT709      /**< Deprecated. */
+#define ZIMG_MATRIX_470BG    ZIMG_MATRIX_BT470_BG   /**< Deprecated. */
+#define ZIMG_MATRIX_170M     ZIMG_MATRIX_ST170_M    /**< Deprecated. */
+#define ZIMG_MATRIX_240M     ZIMG_MATRIX_ST240_M    /**< Deprecated. */
+#define ZIMG_MATRIX_2020_NCL ZIMG_MATRIX_BT2020_NCL /**< Deprecated. */
+#define ZIMG_MATRIX_2020_CL  ZIMG_MATRIX_BT2020_CL  /**< Deprecated. */
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_INTERNAL      = -1, /**< Not part of the API. */
-	ZIMG_TRANSFER_709           = 1,
+	ZIMG_TRANSFER_BT709         = 1,
 	ZIMG_TRANSFER_UNSPECIFIED   = 2,
-	ZIMG_TRANSFER_470_M         = 4,
-	ZIMG_TRANSFER_470_BG        = 5,
-	ZIMG_TRANSFER_601           = 6,  /* Equivalent to 1. */
-	ZIMG_TRANSFER_240M          = 7,
+	ZIMG_TRANSFER_BT470_M       = 4,
+	ZIMG_TRANSFER_BT470_BG      = 5,
+	ZIMG_TRANSFER_BT601         = 6,  /* Equivalent to 1. */
+	ZIMG_TRANSFER_ST240_M       = 7,
 	ZIMG_TRANSFER_LINEAR        = 8,
 	ZIMG_TRANSFER_LOG_100       = 9,
 	ZIMG_TRANSFER_LOG_316       = 10,
 	ZIMG_TRANSFER_IEC_61966_2_4 = 11,
 	ZIMG_TRANSFER_IEC_61966_2_1 = 13,
-	ZIMG_TRANSFER_2020_10       = 14, /* Equivalent to 1. */
-	ZIMG_TRANSFER_2020_12       = 15, /* Equivalent to 1. */
+	ZIMG_TRANSFER_BT2020_10     = 14, /* Equivalent to 1. */
+	ZIMG_TRANSFER_BT2020_12     = 15, /* Equivalent to 1. */
 	ZIMG_TRANSFER_ST2084        = 16,
 	ZIMG_TRANSFER_ARIB_B67      = 18
+#define ZIMG_TRANSFER_709     ZIMG_TRANSFER_BT709     /**< Deprecated. */
+#define ZIMG_TRANSFER_470_M   ZIMG_TRANSFER_BT470_M   /**< Deprecated. */
+#define ZIMG_TRANSFER_470_BG  ZIMG_TRANSFER_BT470_BG  /**< Deprecated. */
+#define ZIMG_TRANSFER_601     ZIMG_TRANSFER_BT601     /**< Deprecated. */
+#define ZIMG_TRANSFER_240M    ZIMG_TRANSFER_ST240_M   /**< Deprecated. */
+#define ZIMG_TRANSFER_2020_10 ZIMG_TRANSFER_BT2020_10 /**< Deprecated. */
+#define ZIMG_TRANSFER_2020_12 ZIMG_TRANSFER_BT2020_12 /**< Deprecated. */
 } zimg_transfer_characteristics_e;
 
 typedef enum zimg_color_primaries_e {
 	ZIMG_PRIMARIES_INTERNAL    = -1, /**< Not part of the API. */
-	ZIMG_PRIMARIES_709         = 1,
+	ZIMG_PRIMARIES_BT709       = 1,
 	ZIMG_PRIMARIES_UNSPECIFIED = 2,
-	ZIMG_PRIMARIES_470_M       = 4,
-	ZIMG_PRIMARIES_470_BG      = 5,
-	ZIMG_PRIMARIES_170M        = 6,
-	ZIMG_PRIMARIES_240M        = 7,  /* Equivalent to 6. */
+	ZIMG_PRIMARIES_BT470_M     = 4,
+	ZIMG_PRIMARIES_BT470_BG    = 5,
+	ZIMG_PRIMARIES_ST170_M     = 6,
+	ZIMG_PRIMARIES_ST240_M     = 7,  /* Equivalent to 6. */
 	ZIMG_PRIMARIES_FILM        = 8,
-	ZIMG_PRIMARIES_2020        = 9,
+	ZIMG_PRIMARIES_BT2020      = 9,
 	ZIMG_PRIMARIES_ST428       = 10,
 	ZIMG_PRIMARIES_ST431_2     = 11,
 	ZIMG_PRIMARIES_ST432_1     = 12,
 	ZIMG_PRIMARIES_EBU3213_E   = 22
+#define ZIMG_PRIMARIES_709    ZIMG_PRIMARIES_BT709    /**< Deprecated. */
+#define ZIMG_PRIMARIES_470_M  ZIMG_PRIMARIES_BT470_M  /**< Deprecated. */
+#define ZIMG_PRIMARIES_470_BG ZIMG_PRIMARIES_BT470_BG /**< Deprecated. */
+#define ZIMG_PRIMARIES_170M   ZIMG_PRIMARIES_ST170_M  /**< Deprecated. */
+#define ZIMG_PRIMARIES_240M   ZIMG_PRIMARIES_ST240_M  /**< Deprecated. */
+#define ZIMG_PRIMARIES_2020   ZIMG_PRIMARIES_BT2020   /**< Deprecated. */
 } zimg_color_primaries_e;
 
 /**
