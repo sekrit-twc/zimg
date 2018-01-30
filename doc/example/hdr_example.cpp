@@ -246,9 +246,9 @@ void execute(const Arguments &args)
 	src_format.subsample_w = 1;
 	src_format.subsample_h = 1;
 	src_format.color_family = ZIMG_COLOR_YUV;
-	src_format.matrix_coefficients = ZIMG_MATRIX_2020_NCL;
+	src_format.matrix_coefficients = ZIMG_MATRIX_BT2020_NCL;
 	src_format.transfer_characteristics = ZIMG_TRANSFER_ST2084;
-	src_format.color_primaries = ZIMG_PRIMARIES_2020;
+	src_format.color_primaries = ZIMG_PRIMARIES_BT2020;
 	src_format.depth = 10;
 	src_format.pixel_range = ZIMG_RANGE_LIMITED;
 
@@ -260,7 +260,7 @@ void execute(const Arguments &args)
 	linear_format.color_family = ZIMG_COLOR_RGB;
 	linear_format.matrix_coefficients = ZIMG_MATRIX_RGB;
 	linear_format.transfer_characteristics = ZIMG_TRANSFER_LINEAR;
-	linear_format.color_primaries = ZIMG_PRIMARIES_709;
+	linear_format.color_primaries = ZIMG_PRIMARIES_BT709;
 
 	// HDR10 RGB corresponding to above.
 	zimgxx::zimage_format rgb_format;
@@ -270,7 +270,7 @@ void execute(const Arguments &args)
 	rgb_format.color_family = ZIMG_COLOR_RGB;
 	rgb_format.matrix_coefficients = ZIMG_MATRIX_RGB;
 	rgb_format.transfer_characteristics = ZIMG_TRANSFER_ST2084;
-	rgb_format.color_primaries = ZIMG_PRIMARIES_2020;
+	rgb_format.color_primaries = ZIMG_PRIMARIES_BT2020;
 	rgb_format.depth = 10;
 	rgb_format.pixel_range = ZIMG_RANGE_FULL;
 
@@ -281,8 +281,8 @@ void execute(const Arguments &args)
 	sdr_format.pixel_type = ZIMG_PIXEL_BYTE;
 	sdr_format.color_family = ZIMG_COLOR_RGB;
 	sdr_format.matrix_coefficients = ZIMG_MATRIX_RGB;
-	sdr_format.transfer_characteristics = ZIMG_TRANSFER_709;
-	sdr_format.color_primaries = ZIMG_PRIMARIES_709;
+	sdr_format.transfer_characteristics = ZIMG_TRANSFER_BT709;
+	sdr_format.color_primaries = ZIMG_PRIMARIES_BT709;
 	sdr_format.depth = 8;
 	sdr_format.pixel_range = ZIMG_RANGE_FULL;
 

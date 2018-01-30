@@ -239,10 +239,10 @@ void process(const YV12Image &in_data, const YV12Image &out_data)
 	graph_t.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 
+	// (6) Process the bottom field.
 	unpack_data.top_field = false;
 	pack_data.top_field = false;
 
-	// (6) Process the bottom field.
 	graph_b.process(in_buf.first.as_const(), out_buf.first, tmp_buf.get(),
 	                yv12_bitblt_callback, &unpack_data, yv12_bitblt_callback, &pack_data);
 }
