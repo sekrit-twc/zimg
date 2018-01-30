@@ -100,7 +100,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		pixel_size = sizeof(uint8_t);
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
-		unsigned count_plane = p ? count : count >> format.subsample_h;
+		unsigned count_plane = p ? count >> format.subsample_h : count;
 		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
 		size_t row_size = format.width * pixel_size;
 		ptrdiff_t stride = row_size % 32 ? row_size - row_size % 32 + 32 : row_size;

@@ -217,7 +217,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		// Buffering requirements for subsampled images are given in units of
 		// luma scanlines. Again, the special case of ZIMG_BUFFER_MAX must be
 		// handled separately.
-		unsigned count_plane = p ? count : count >> format.subsample_h;
+		unsigned count_plane = p ? count >> format.subsample_h : count;
 		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
 
 		// Pad each scanline so that its length in bytes is divisible by the
