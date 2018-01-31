@@ -1,3 +1,6 @@
+2.7.3
+resize: fix performance drop in certain resampling ratios
+
 2.7.2
 graph: fix image corruption in certain conversions (introduced in 2.7)
 resize: fix AVX-512 horizontal resize with certain widths (introduced in 2.6)
