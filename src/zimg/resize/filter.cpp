@@ -252,6 +252,8 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 				total += f((xpos - pos) * step);
 			}
 
+			size_t left = SIZE_MAX;
+
 			for (unsigned j = 0; j < filter_size; ++j) {
 				double xpos = begin_pos + j;
 				double real_pos;
@@ -266,6 +268,13 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 
 				size_t idx = static_cast<size_t>(std::floor(real_pos));
 				m[i][idx] += f((xpos - pos) * step) / total;
+				left = std::min(left, idx);
+			}
+
+			// Force allocating an entry to keep the left offset table sorted.
+			if (m[i][left] == 0.0) {
+				m[i][left] = DBL_EPSILON;
+				m[i][left] = 0.0;
 			}
 		}
 
