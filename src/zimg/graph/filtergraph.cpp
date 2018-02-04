@@ -366,7 +366,7 @@ public:
 
 	virtual void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const = 0;
 
-	virtual void generate_line(ExecutionState *state, unsigned i, bool uv) const = 0;
+	virtual void generate_until(ExecutionState *state, unsigned last, bool uv) const = 0;
 };
 
 class NullNode final : public GraphNode {
@@ -385,7 +385,7 @@ public:
 	void init_context(ExecutionState *, ExecutionStrategy) const override {}
 	void reset_context(ExecutionState *) const override {}
 	void set_tile_region(ExecutionState *, unsigned, unsigned, bool) const override {}
-	void generate_line(ExecutionState *, unsigned, bool) const override {}
+	void generate_until(ExecutionState *, unsigned, bool) const override {}
 };
 
 class SourceNode final : public GraphNode {
@@ -455,25 +455,21 @@ public:
 		context->source_right = std::max(context->source_right, right);
 	}
 
-	void generate_line(ExecutionState *state, unsigned i, bool uv) const override
+	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
 	{
+		if (!state->get_unpack_cb())
+			return;
+
 		auto *context = state->get_node_state(get_id());
-
-		unsigned step = 1U << m_subsample_h;
-		unsigned line = i << (uv ? m_subsample_h : 0);
 		unsigned pos = context->cache_pos;
+		unsigned step = 1U << m_subsample_h;
 
-		if (line >= pos) {
-			if (state->get_unpack_cb()) {
-				for (; pos <= line; pos += step) {
-					state->get_unpack_cb()(pos, context->source_left, context->source_right);
-				}
-			} else {
-				pos = floor_n(line, step) + step;
-			}
+		last <<= uv ? m_subsample_h : 0;
 
-			context->cache_pos = pos;
+		for (; pos < last; pos += step) {
+			state->get_unpack_cb()(pos, context->source_left, context->source_right);
 		}
+		context->cache_pos = pos;
 	}
 };
 
@@ -626,7 +622,7 @@ public:
 		FilterNode::set_tile_region(state, left, right, false);
 	}
 
-	void generate_line(ExecutionState *state, unsigned i, bool uv) const override
+	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
 	{
 		zassert_d(!uv, "request for chroma plane on luma node");
 
@@ -636,13 +632,11 @@ public:
 		const ColorImageBuffer<const void> &input_buffer = static_buffer_cast<const void>(state->get_cache(m_parent->get_cache_id())->buffer);
 		const ColorImageBuffer<void> &output_buffer = state->get_cache(get_cache_id())->buffer;
 
-		for (; pos <= i; pos += m_step) {
+		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
 			zassert_d(range.first < range.second, "bad row range");
 
-			for (unsigned ii = range.first; ii < range.second; ++ii) {
-				m_parent->generate_line(state, ii, false);
-			}
+			m_parent->generate_until(state, range.second, false);
 
 			m_filter->process(state->get_context(get_id()), input_buffer, output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
 			state->check_guard();
@@ -719,7 +713,7 @@ public:
 		FilterNode::set_tile_region(state, left, right, true);
 	}
 
-	void generate_line(ExecutionState *state, unsigned i, bool uv) const
+	void generate_until(ExecutionState *state, unsigned last, bool uv) const
 	{
 		zassert_d(uv, "request for luma plane on chroma node");
 
@@ -732,13 +726,11 @@ public:
 		void *filter_ctx_u = state->get_context(get_id());
 		void *filter_ctx_v = static_cast<unsigned char *>(filter_ctx_u) + m_filter_ctx_size;
 
-		for (; pos <= i; pos += m_step) {
+		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
 			zassert_d(range.first < range.second, "bad row range");
 
-			for (unsigned ii = range.first; ii < range.second; ++ii) {
-				m_parent->generate_line(state, ii, true);
-			}
+			m_parent->generate_until(state, range.second, true);
 
 			m_filter->process(filter_ctx_u, input_buffer + 1, output_buffer + 1, state->get_tmp(), pos, context->source_left, context->source_right);
 			state->check_guard();
@@ -849,7 +841,7 @@ public:
 		m_parent_uv->set_tile_region(state, range.first, range.second, true);
 	}
 
-	void generate_line(ExecutionState *state, unsigned i, bool uv) const override
+	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
 	{
 		auto *context = state->get_node_state(get_id());
 		unsigned pos = context->cache_pos;
@@ -868,14 +860,12 @@ public:
 			real_input_buffer = &xbuffer;
 		}
 
-		for (; pos <= i; pos += m_step) {
+		for (; pos < last; pos += m_step) {
 			auto range = m_filter->get_required_row_range(pos);
 			zassert_d(range.first < range.second, "bad row range");
 
-			for (unsigned ii = range.first; ii < range.second; ++ii) {
-				m_parent->generate_line(state, ii, false);
-				m_parent_uv->generate_line(state, ii, true);
-			}
+			m_parent->generate_until(state, range.second, false);
+			m_parent_uv->generate_until(state, range.second, true);
 
 			m_filter->process(state->get_context(get_id()), *real_input_buffer, output_buffer, state->get_tmp(), pos, context->source_left, context->source_right);
 			state->check_guard();
@@ -1044,11 +1034,9 @@ class FilterGraph::impl {
 				m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
 
 			for (unsigned i = 0; i < attr.height; i += v_step) {
-				for (unsigned ii = i; ii < i + v_step; ++ii) {
-					m_node->generate_line(&state, ii, false);
-				}
+				m_node->generate_until(&state, i + v_step, false);
 				if (m_node_uv)
-					m_node_uv->generate_line(&state, i >> m_subsample_h, true);
+					m_node_uv->generate_until(&state, (i >> m_subsample_h) + 1, true);
 
 				if (state.get_pack_cb())
 					state.get_pack_cb()(i, j, j_end);
@@ -1092,10 +1080,7 @@ class FilterGraph::impl {
 			}
 
 			m_node->set_tile_region(&state, j, j_end, false);
-
-			for (unsigned i = 0; i < attr.height; ++i) {
-				m_node->generate_line(&state, i, false);
-			}
+			m_node->generate_until(&state, attr.height, false);
 		}
 	}
 
@@ -1104,7 +1089,6 @@ class FilterGraph::impl {
 		ExecutionState state{ m_id_counter, tmp, nullptr, nullptr };
 		auto attr = m_node->get_image_attributes(false);
 		unsigned h_step = get_tile_width(ExecutionStrategy::CHROMA);
-		unsigned v_step = 1U << m_subsample_h;
 
 		ColorImageBuffer<void> src_;
 		ColorImageBuffer<void> dst_;
@@ -1134,10 +1118,7 @@ class FilterGraph::impl {
 			}
 
 			m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
-
-			for (unsigned i = 0; i < attr.height; i += v_step) {
-				m_node_uv->generate_line(&state, i >> m_subsample_h, true);
-			}
+			m_node_uv->generate_until(&state, attr.height >> m_subsample_h, true);
 		}
 	}
 public:
