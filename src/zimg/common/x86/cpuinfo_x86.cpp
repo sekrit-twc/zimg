@@ -174,9 +174,9 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 
 	// Detect logical processor count on x2APIC systems.
 	if (max_feature >= 0x0B) {
-		unsigned l1d_threads = 0;
-		unsigned l2_threads = 0;
-		unsigned l3_threads = 0;
+		unsigned l1d_threads = cache.l1d_threads;
+		unsigned l2_threads = cache.l2_threads;
+		unsigned l3_threads = cache.l3_threads;
 
 		for (int i = 0; i < 8; ++i) {
 			unsigned logical_processors;
@@ -200,7 +200,7 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 		cache.l3_threads = l3_threads;
 	}
 
-	cache.valid = true;
+	cache.valid = cache.l1d && cache.l1d_threads && !(cache.l2 && !cache.l2_threads) && !(cache.l3 && !cache.l3_threads);
 	return cache;
 }
 
