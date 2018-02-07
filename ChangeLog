@@ -1,3 +1,6 @@
+2.7.4:
+x86: fix crash on Yorkfield (Core 2 Quad) processors (introduced in 2.7)
+
 2.7.3
 resize: fix performance drop in certain resampling ratios
 
