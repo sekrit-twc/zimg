@@ -138,19 +138,7 @@ public:
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = static_cast<const char *>((*src)[i]);
-		char *dst_line = static_cast<char *>((*dst)[i]);
-
-		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-		unsigned line_base = left & ~(pixel_align - 1); // floor_n(left, pixel_align);
-
-		src_line += pixel_size(m_pixel_in) * line_base;
-		dst_line += pixel_size(m_pixel_out) * line_base;
-
-		left -= line_base;
-		right -= line_base;
-
-		m_func(src_line, dst_line, m_shift, left, right);
+		m_func((*src)[i], (*dst)[i], m_shift, left, right);
 	}
 };
 
@@ -212,45 +200,23 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		checked_size_t size = 0;
-
-		try {
-			if (m_func && m_f16c) {
-				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-
-				left = floor_n(left, pixel_align);
-				right = ceil_n(right, pixel_align);
-
-				size += static_cast<checked_size_t>(right - left) * sizeof(float);
-			}
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-
-		return size.get();
+		return m_func && m_f16c ? (static_cast<checked_size_t>(m_width) * sizeof(float)).get() : 0;
 	}
 
 	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = static_cast<const char *>((*src)[i]);
-		char *dst_line = static_cast<char *>((*dst)[i]);
+		const void *src_line = (*src)[i];
+		void *dst_line = (*dst)[i];
 
-		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-		unsigned line_base = left & ~(pixel_align - 1); // floor_n(left, pixel_align);
-
-		src_line += pixel_size(m_pixel_in) * line_base;
-		dst_line += pixel_size(m_pixel_out) * line_base;
-
-		left -= line_base;
-		right -= line_base;
-
-		if (m_func && m_f16c) {
-			m_func(src_line, tmp, m_scale, m_offset, left, right);
-			m_f16c(tmp, dst_line, left, right);
-		} else if (m_func) {
-			m_func(src_line, dst_line, m_scale, m_offset, left, right);
+		if (m_f16c) {
+			if (m_func) {
+				m_func(src_line, tmp, m_scale, m_offset, left, right);
+				m_f16c(tmp, dst_line, left, right);
+			} else {
+				m_f16c(src_line, dst_line, left, right);
+			}
 		} else {
-			m_f16c(src_line, dst_line, left, right);
+			m_func(src_line, dst_line, m_scale, m_offset, left, right);
 		}
 	}
 };

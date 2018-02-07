@@ -128,16 +128,15 @@ decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pix
 
 constexpr unsigned BAYER_TABLE_LEN = 8;
 
-// Extended to support AVX-512 (16-wide).
-constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2] = {
-	 1, 49, 13, 61,  4, 52, 16, 64,  1, 49, 13, 61,  4, 52, 16, 64,
-	33, 17, 45, 29, 36, 20, 48, 32, 33, 17, 45, 29, 36, 20, 48, 32,
-	 9, 57,  5, 53, 12, 60,  8, 56,  9, 57,  5, 53, 12, 60,  8, 56,
-	41, 25, 37, 21, 44, 28, 40, 24, 41, 25, 37, 21, 44, 28, 40, 24,
-	 3, 51, 15, 63,  2, 50, 14, 62,  3, 51, 15, 63,  2, 50, 14, 62,
-	35, 19, 47, 31, 34, 18, 46, 30, 35, 19, 47, 31, 34, 18, 46, 30,
-	11, 59,  7, 55, 10, 58,  6, 54, 11, 59,  7, 55, 10, 58,  6, 54,
-	43, 27, 39, 23, 42, 26, 38, 22, 43, 27, 39, 23, 42, 26, 38, 22,
+constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN][BAYER_TABLE_LEN] = {
+	{  1, 49, 13, 61,  4, 52, 16, 64 },
+	{ 33, 17, 45, 29, 36, 20, 48, 32 },
+	{  9, 57,  5, 53, 12, 60,  8, 56 },
+	{ 41, 25, 37, 21, 44, 28, 40, 24 },
+	{  3, 51, 15, 63,  2, 50, 14, 62 },
+	{ 35, 19, 47, 31, 34, 18, 46, 30 },
+	{ 11, 59,  7, 55, 10, 58,  6, 54 },
+	{ 43, 27, 39, 23, 42, 26, 38, 22 },
 };
 
 constexpr unsigned BAYER_TABLE_SCALE = 65;
@@ -146,20 +145,15 @@ class OrderedDitherTable {
 public:
 	virtual ~OrderedDitherTable() = default;
 
-	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const = 0;
+	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const = 0;
 };
 
 class NoneDitherTable final : public OrderedDitherTable {
-	AlignedVector<float> m_table;
 public:
-	NoneDitherTable()
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
-		m_table.resize(16);
-	}
-
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
-	{
-		return std::make_tuple(m_table.data(), 0, 15);
+		static constexpr float table alignas(ALIGNMENT)[AlignmentOf<float>::value] = {};
+		return std::make_tuple(table, 0, AlignmentOf<float>::value - 1);
 	}
 };
 
@@ -168,23 +162,27 @@ class BayerDitherTable final : public OrderedDitherTable {
 public:
 	BayerDitherTable()
 	{
+		// Extended to support AVX-512 (16-wide).
 		m_table.resize(BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2);
 
-		for (unsigned i = 0; i < BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2; ++i) {
-			m_table[i] = static_cast<float>(BAYER_TABLE[i]) / BAYER_TABLE_SCALE - 0.5f;
+		for (unsigned i = 0; i < BAYER_TABLE_LEN; ++i) {
+			for (unsigned j = 0; j < BAYER_TABLE_LEN; ++j) {
+				float val = static_cast<float>(BAYER_TABLE[i][j]) / BAYER_TABLE_SCALE - 0.5f;
+				m_table[i * BAYER_TABLE_LEN * 2 + j] = val;
+				m_table[i * BAYER_TABLE_LEN * 2 + j + BAYER_TABLE_LEN] = val;
+			}
 		}
 	}
 
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
 		const float *data = m_table.data() + (i % BAYER_TABLE_LEN) * BAYER_TABLE_LEN * 2;
-
-		return std::make_tuple(data, left % (BAYER_TABLE_LEN * 2), 15);
+		return std::make_tuple(data, 0, 15);
 	}
 };
 
 class RandomDitherTable final : public OrderedDitherTable {
-	static constexpr size_t RAND_NUM = 1 << 14;
+	static constexpr unsigned RAND_NUM = 1 << 14;
 
 	AlignedVector<float> m_table;
 	std::vector<unsigned> m_row_offset;
@@ -216,12 +214,9 @@ public:
 		}
 	}
 
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned left) const override
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
-		unsigned offset = (m_row_offset[i] + left) % RAND_NUM;
-		unsigned mask = RAND_NUM - 1;
-
-		return std::make_tuple(m_table.data(), offset, mask);
+		return std::make_tuple(m_table.data(), m_row_offset[i] % RAND_NUM, RAND_NUM - 1);
 	}
 };
 
@@ -279,50 +274,22 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		checked_size_t size = 0;
-
-		try {
-			if (m_f16c) {
-				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-
-				left = floor_n(left, pixel_align);
-				right = ceil_n(right, pixel_align);
-
-				size += static_cast<checked_size_t>(right - left) * sizeof(float);
-			}
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-
-		return size.get();
+		return m_f16c ? (static_cast<checked_size_t>(m_width) * sizeof(float)).get() : 0;
 	}
 
 	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		const char *src_line = static_cast<const char *>((*src)[i]);
-		char *dst_line = static_cast<char *>((*dst)[i]);
+		auto dither = m_dither_table->get_dither_coeffs(i);
 
-		unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
-		unsigned line_base = left & ~(pixel_align - 1); // floor_n(left, pixel_align);
-
-		const float *dither_table;
-		unsigned dither_offset;
-		unsigned dither_mask;
-
-		src_line += pixel_size(m_pixel_in) * line_base;
-		dst_line += pixel_size(m_pixel_out) * line_base;
-
-		std::tie(dither_table, dither_offset, dither_mask) = m_dither_table->get_dither_coeffs(i, line_base);
-
-		left -= line_base;
-		right -= line_base;
+		const void *src_line = (*src)[i];
+		void *dst_line = (*dst)[i];
 
 		if (m_f16c) {
 			m_f16c(src_line, tmp, left, right);
-			src_line = static_cast<char *>(tmp);
+			src_line = tmp;
 		}
 
-		m_func(dither_table, dither_offset, dither_mask, src_line, dst_line, m_scale, m_offset, m_depth, left, right);
+		m_func(std::get<0>(dither), std::get<1>(dither), std::get<2>(dither), src_line, dst_line, m_scale, m_offset, m_depth, left, right);
 	}
 };
 
