@@ -106,6 +106,63 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	return caps;
 }
 
+// Query leaf 4h (Intel) or leaf 8000001Dh (AMD).
+void do_query_x86_deterministic_cache_parameters(X86CacheHierarchy &cache, int leaf) noexcept
+{
+	int regs[4];
+
+	for (int i = 0; i < 8; ++i) {
+		unsigned threads;
+		unsigned long line_size;
+		unsigned long partitions;
+		unsigned long ways;
+		unsigned long sets;
+		unsigned long cache_size;
+		int cache_type;
+		bool inclusive;
+
+		do_cpuid(regs, leaf, i);
+		cache_type = regs[0] & 0x1FU;
+
+		// No more caches.
+		if (cache_type == 0)
+			break;
+
+		// Not data or unified cache.
+		if (cache_type != 1 && cache_type != 3)
+			continue;
+
+		threads    = ((static_cast<unsigned>(regs[0]) >> 14) & 0x0FFFU) + 1;
+		line_size  = ((static_cast<unsigned>(regs[1]) >> 0) & 0x0FFFU) + 1;
+		partitions = ((static_cast<unsigned>(regs[1]) >> 12) & 0x03FFU) + 1;
+		ways       = ((static_cast<unsigned>(regs[1]) >> 22) & 0x03FFU) + 1;
+		sets       = static_cast<unsigned>(regs[2]) + 1;
+
+		cache_size = line_size * partitions * ways * sets;
+		inclusive = regs[3] & (1U << 1);
+
+		// Cache level.
+		switch ((static_cast<unsigned>(regs[0]) >> 5) & 0x07U) {
+		case 1:
+			cache.l1d = cache_size;
+			cache.l1d_threads = threads;
+			break;
+		case 2:
+			cache.l2 = cache_size;
+			cache.l2_threads = threads;
+			cache.l2_inclusive = inclusive;
+			break;
+		case 3:
+			cache.l3 = cache_size;
+			cache.l3_threads = threads;
+			cache.l3_inclusive = inclusive;
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 {
 	X86CacheHierarchy cache = { 0 };
@@ -119,58 +176,8 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 		return cache;
 
 	// Detect cache hierarchy.
-	if (max_feature >= 4) {
-		for (int i = 0; i < 8; ++i) {
-			unsigned threads;
-			unsigned long line_size;
-			unsigned long partitions;
-			unsigned long ways;
-			unsigned long sets;
-			unsigned long cache_size;
-			int cache_type;
-			bool inclusive;
-
-			do_cpuid(regs, 4, i);
-			cache_type = regs[0] & 0x1FU;
-
-			// No more caches.
-			if (cache_type == 0)
-				break;
-
-			// Not data or unified cache.
-			if (cache_type != 1 && cache_type != 3)
-				continue;
-
-			threads    = ((static_cast<unsigned>(regs[0]) >> 14) & 0x0FFFU) + 1;
-			line_size  = ((static_cast<unsigned>(regs[1]) >> 0) & 0x0FFFU) + 1;
-			partitions = ((static_cast<unsigned>(regs[1]) >> 12) & 0x03FFU) + 1;
-			ways       = ((static_cast<unsigned>(regs[1]) >> 22) & 0x03FFU) + 1;
-			sets       = static_cast<unsigned>(regs[2]) + 1;
-
-			cache_size = line_size * partitions * ways * sets;
-			inclusive = regs[3] & (1U << 1);
-
-			// Cache level.
-			switch ((static_cast<unsigned>(regs[0]) >> 5) & 0x07U) {
-			case 1:
-				cache.l1d = cache_size;
-				cache.l1d_threads = threads;
-				break;
-			case 2:
-				cache.l2 = cache_size;
-				cache.l2_threads = threads;
-				cache.l2_inclusive = inclusive;
-				break;
-			case 3:
-				cache.l3 = cache_size;
-				cache.l3_threads = threads;
-				cache.l3_inclusive = inclusive;
-				break;
-			default:
-				break;
-			}
-		}
-	}
+	if (max_feature >= 4)
+		do_query_x86_deterministic_cache_parameters(cache, 4);
 
 	// Detect logical processor count on x2APIC systems.
 	if (max_feature >= 0x0B) {
@@ -183,16 +190,14 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 
 			do_cpuid(regs, 0x0B, i);
 
-			if (((regs[2] >> 8) & 0xFF) == 0)
+			if (((regs[2] >> 8) & 0xFFU) == 0)
 				break;
 
 			logical_processors = regs[1] & 0xFFFFU;
-			if (logical_processors <= cache.l1d_threads)
-				l1d_threads = logical_processors;
-			if (logical_processors <= cache.l2_threads)
-				l2_threads = logical_processors;
-			if (logical_processors <= cache.l3_threads)
-				l3_threads = logical_processors;
+
+			l1d_threads = logical_processors <= cache.l1d_threads ? logical_processors : l1d_threads;
+			l2_threads = logical_processors <= cache.l2_threads ? logical_processors : l2_threads;
+			l3_threads = logical_processors <= cache.l3_threads ? logical_processors : l3_threads;
 		}
 
 		cache.l1d_threads = l1d_threads;
@@ -200,7 +205,52 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 		cache.l3_threads = l3_threads;
 	}
 
-	cache.valid = cache.l1d && cache.l1d_threads && !(cache.l2 && !cache.l2_threads) && !(cache.l3 && !cache.l3_threads);
+	return cache;
+}
+
+X86CacheHierarchy do_query_x86_cache_hierarchy_amd(int max_feature) noexcept
+{
+	X86CacheHierarchy cache = { 0 };
+	int regs[4];
+	unsigned max_extended_feature;
+
+	do_cpuid(regs, 0x80000000U, 0);
+	max_extended_feature = static_cast<unsigned>(regs[0]);
+
+	if (max_extended_feature >= 0x80000005U) {
+		do_cpuid(regs, 0x80000005U, 0);
+		cache.l1d = ((static_cast<unsigned>(regs[2]) >> 24) & 0xFFU) * 1024U;
+		cache.l1d_threads = cache.l1d ? 1 : cache.l1d_threads;
+	}
+
+	if (max_extended_feature >= 0x80000006U) {
+		do_cpuid(regs, 0x80000006U, 0);
+		cache.l2 = ((static_cast<unsigned>(regs[2]) >> 16) & 0xFFFFU) * 1024U;
+		cache.l3 = ((static_cast<unsigned>(regs[3]) >> 18) & 0x3FFFU) * 512U * 1024U;
+		cache.l2_threads = cache.l2 ? 1 : cache.l2_threads;
+		cache.l3_threads = cache.l3 ? 1 : cache.l3_threads;
+	}
+
+	if (max_extended_feature >= 0x80000008U) {
+		unsigned threads;
+		unsigned family;
+
+		do_cpuid(regs, 0x80000008U, 0);
+		threads = (regs[2] & 0xFFU) + 1;
+		cache.l3_threads = cache.l3 ? threads : cache.l3_threads;
+
+		do_cpuid(regs, 1, 0);
+		family = ((static_cast<unsigned>(regs[0]) >> 20) & 0xFFU) + ((static_cast<unsigned>(regs[0]) >> 8) & 0x0FU);
+
+		if (family == 0x15)
+			cache.l2_threads = 2; // Bulldozer shared L2 cache.
+		else if (family == 0x16)
+			cache.l2_threads = threads; // Jaguar L2 LLC.
+	}
+
+	if (max_extended_feature >= 0x8000001DU)
+		do_query_x86_deterministic_cache_parameters(cache, 0x8000001DU);
+
 	return cache;
 }
 
@@ -223,11 +273,12 @@ X86CacheHierarchy do_query_x86_cache_hierarchy() noexcept
 		vendor = OTHER;
 
 	if (vendor == GENUINEINTEL)
-		return do_query_x86_cache_hierarchy_intel(max_feature);
+		cache = do_query_x86_cache_hierarchy_intel(max_feature);
 	else if (vendor == AUTHENTICAMD)
-		return cache;
-	else
-		return cache;
+		cache = do_query_x86_cache_hierarchy_amd(max_feature);
+
+	cache.valid = cache.l1d && cache.l1d_threads && !(cache.l2 && !cache.l2_threads) && !(cache.l3 && !cache.l3_threads);
+	return cache;
 }
 
 } // namespace
