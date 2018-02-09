@@ -264,6 +264,7 @@ testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommo
 testapp_SOURCES = \
 	src/testapp/apps.h \
 	src/testapp/colorspaceapp.cpp \
+	src/testapp/cpuinfoapp.cpp \
 	src/testapp/depthapp.cpp \
 	src/testapp/frame.cpp \
 	src/testapp/frame.h \

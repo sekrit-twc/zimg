@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\testapp\colorspaceapp.cpp" />
+    <ClCompile Include="..\..\src\testapp\cpuinfoapp.cpp" />
     <ClCompile Include="..\..\src\testapp\depthapp.cpp" />
     <ClCompile Include="..\..\src\testapp\frame.cpp" />
     <ClCompile Include="..\..\src\testapp\graphapp.cpp" />

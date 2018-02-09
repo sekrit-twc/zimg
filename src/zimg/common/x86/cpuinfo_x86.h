@@ -31,11 +31,37 @@ struct X86Capabilities {
 };
 
 /**
+ * Representation of processor cache topology.
+ */
+struct X86CacheHierarchy {
+	unsigned long l1d;
+	unsigned long l1d_threads;
+	unsigned long l2;
+	unsigned long l2_threads;
+	unsigned long l3;
+	unsigned long l3_threads;
+	bool l2_inclusive;
+	bool l3_inclusive;
+	bool valid;
+};
+
+/**
  * Get the x86 feature flags on the current CPU.
  *
  * @return capabilities
  */
 X86Capabilities query_x86_capabilities() noexcept;
+
+/**
+ * Get the cache topology of the current CPU.
+ *
+ * On a multi-processor system, the returned topology corresponds to the first
+ * processor package on which the function is called. The behaviour is
+ * undefined if the platform contains non-identical processors.
+ *
+ * @return cache hierarchy
+ */
+X86CacheHierarchy query_x86_cache_hierarchy() noexcept;
 
 unsigned long cpu_cache_size_x86() noexcept;
 
