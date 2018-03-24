@@ -713,7 +713,7 @@ public:
 		FilterNode::set_tile_region(state, left, right, true);
 	}
 
-	void generate_until(ExecutionState *state, unsigned last, bool uv) const
+	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
 	{
 		zassert_d(uv, "request for luma plane on chroma node");
 
