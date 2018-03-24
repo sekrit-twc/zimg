@@ -107,20 +107,23 @@ void MockFilter::process(void *ctx, const zimg::graph::ImageBuffer<const void> *
 	ASSERT_LE(left, right);
 	ASSERT_LE(right, m_attr.width);
 
-	if (flags.has_state && (left == audit_ctx->last_left && right == audit_ctx->last_right))
+	if (flags.has_state && (left == audit_ctx->last_left && right == audit_ctx->last_right)) {
 		ASSERT_EQ(audit_ctx->last_line + get_simultaneous_lines(), i);
+	}
 
 	if (flags.entire_row) {
 		ASSERT_EQ(0U, left);
 		ASSERT_EQ(m_attr.width, right);
 	}
 
-	if (flags.entire_plane)
+	if (flags.entire_plane) {
 		ASSERT_EQ(0U, i);
+	}
 
 	for (unsigned p = 0; p < (flags.color ? 3U : 1U); ++p) {
-		if (!flags.in_place)
+		if (!flags.in_place) {
 			ASSERT_NE(src[p].data(), dst[p].data());
+		}
 
 		if (flags.entire_plane) {
 			ASSERT_EQ(zimg::graph::BUFFER_MAX, src[p].mask());
