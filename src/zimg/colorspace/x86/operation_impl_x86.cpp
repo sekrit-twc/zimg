@@ -43,11 +43,19 @@ std::unique_ptr<Operation> create_gamma_operation_x86(const TransferFunction &tr
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512dq)
+			ret = create_gamma_operation_avx512(transfer, params);
+#endif
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
 			ret = create_gamma_operation_sse2(transfer, params);
 	} else {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu >= CPUClass::X86_AVX512)
+			ret = create_gamma_operation_avx512(transfer, params);
+#endif
 		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_gamma_operation_avx2(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
@@ -63,11 +71,19 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_x86(const TransferFunc
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512dq)
+			ret = create_inverse_gamma_operation_avx512(transfer, params);
+#endif
 		if (!ret && caps.avx2 && caps.f16c)
 			ret = create_inverse_gamma_operation_avx2(transfer, params);
 		if (!ret && caps.sse2)
 			ret = create_inverse_gamma_operation_sse2(transfer, params);
 	} else {
+#ifdef ZIMG_X86_AVX512
+		if (!ret && cpu >= CPUClass::X86_AVX512)
+			ret = create_inverse_gamma_operation_avx512(transfer, params);
+#endif
 		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_inverse_gamma_operation_avx2(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_SSE2)

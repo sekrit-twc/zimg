@@ -4,7 +4,9 @@
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/make_unique.h"
+#include "colorspace/gamma.h"
 #include "colorspace/operation_impl.h"
+#include "gamma_constants_avx512.h"
 #include "operation_impl_x86.h"
 
 #include "common/x86/avx512_util.h"
@@ -96,6 +98,31 @@ void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRI
 }
 
 
+template <class Op>
+void gamma_filter_line_avx512(const float *src, float *dst, float scale, unsigned left, unsigned right)
+{
+	unsigned vec_left = ceil_n(left, 16);
+	unsigned vec_right = floor_n(right, 16);
+
+	if (left != vec_left) {
+		__m512 x = Op::func(_mm512_load_ps(src + vec_left - 16), _mm512_set1_ps(scale));
+		__mmask16 mask = mmask16_set_hi(vec_left - left);
+		_mm512_mask_store_ps(dst + vec_left - 16, mask, x);
+	}
+
+	for (unsigned j = vec_left; j < vec_right; j += 16) {
+		__m512 x = Op::func(_mm512_load_ps(src + j), _mm512_set1_ps(scale));
+		_mm512_store_ps(dst + j, x);
+	}
+
+	if (right != vec_right) {
+		__m512 x = Op::func(_mm512_load_ps(src + vec_right), _mm512_set1_ps(scale));
+		__mmask16 mask = mmask16_set_lo(right - vec_right);
+		_mm512_mask_store_ps(dst + vec_right, mask, x);
+	}
+}
+
+
 class MatrixOperationAVX512 final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationAVX512(const Matrix3x3 &m) :
@@ -109,12 +136,42 @@ public:
 	}
 };
 
+template <class Op>
+class GammaOperationAVX512 final : public Operation {
+	float m_scale;
+public:
+	explicit GammaOperationAVX512(float scale) : m_scale{ scale } {}
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		gamma_filter_line_avx512<Op>(src[0], dst[0], m_scale, left, right);
+		gamma_filter_line_avx512<Op>(src[1], dst[1], m_scale, left, right);
+		gamma_filter_line_avx512<Op>(src[2], dst[2], m_scale, left, right);
+	}
+};
+
 } // namespace
 
 
 std::unique_ptr<Operation> create_matrix_operation_avx512(const Matrix3x3 &m)
 {
 	return ztd::make_unique<MatrixOperationAVX512>(m);
+}
+
+std::unique_ptr<Operation> create_gamma_operation_avx512(const TransferFunction &transfer, const OperationParams &params)
+{
+	if (!params.approximate_gamma)
+		return nullptr;
+
+	return nullptr;
+}
+
+std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferFunction &transfer, const OperationParams &params)
+{
+	if (!params.approximate_gamma)
+		return nullptr;
+
+	return nullptr;
 }
 
 } // namespace colorspace

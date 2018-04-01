@@ -156,6 +156,7 @@
     <ClInclude Include="..\..\src\zimg\colorspace\matrix3.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\operation.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\operation_impl.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\x86\operation_impl_x86.h" />
     <ClInclude Include="..\..\src\zimg\common\align.h" />
     <ClInclude Include="..\..\src\zimg\common\alloc.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\operation_impl.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_avx.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>

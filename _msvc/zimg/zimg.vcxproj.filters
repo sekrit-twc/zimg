@@ -231,6 +231,9 @@
     <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.h">
+      <Filter>Header Files\colorspace\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -382,6 +385,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp">
       <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
