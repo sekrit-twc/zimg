@@ -148,8 +148,54 @@ struct PowerFunction {
 	}
 };
 
+template <class T, bool Log, bool Prescale>
+struct SegmentedPolynomial {
+	static inline FORCE_INLINE __m512 func(__m512 x, __m512 scale)
+	{
+		__m512 result;
+		__m512i idx;
+
+		if (Prescale)
+			x = _mm512_mul_ps(x, scale);
+
+		if (Log) {
+			// Classify the argument into one of 32 segments by its exponent.
+			const __m512i exponent_min = _mm512_set1_epi32(127 - 32);
+			const __m512i exponent_max = _mm512_set1_epi32(127 - 1);
+			idx = _mm512_srli_epi32(_mm512_castps_si512(x), 23);
+			idx = _mm512_max_epi32(idx, exponent_min);
+			idx = _mm512_min_epi32(idx, exponent_max);
+		} else {
+			// Classify the argument into one of 32 uniform segments on [0, 1].
+			const __m512 one_minus_eps = _mm512_set1_ps(0.999999940f);
+			__m512 tmp = x;
+			tmp = _mm512_max_ps(tmp, _mm512_setzero_ps());
+			tmp = _mm512_min_ps(tmp, one_minus_eps);
+			tmp = _mm512_mul_ps(tmp, _mm512_set1_ps(32.0f));
+			idx = _mm512_cvttps_epi32(tmp);
+		}
+
+		// Apply the polynomial approximation for the segment.
+		result = _mm512_permutex2var_ps(_mm512_load_ps(T::horner0), idx, _mm512_load_ps(T::horner0 + 16));
+		result = _mm512_fmadd_ps(result, x, _mm512_permutex2var_ps(_mm512_load_ps(T::horner1), idx, _mm512_load_ps(T::horner1 + 16)));
+		result = _mm512_fmadd_ps(result, x, _mm512_permutex2var_ps(_mm512_load_ps(T::horner2), idx, _mm512_load_ps(T::horner2 + 16)));
+		result = _mm512_fmadd_ps(result, x, _mm512_permutex2var_ps(_mm512_load_ps(T::horner3), idx, _mm512_load_ps(T::horner3 + 16)));
+		result = _mm512_fmadd_ps(result, x, _mm512_permutex2var_ps(_mm512_load_ps(T::horner4), idx, _mm512_load_ps(T::horner4 + 16)));
+
+		if (!Log)
+			result = _mm512_max_ps(result, _mm512_setzero_ps());
+
+		if (!Prescale)
+			result = _mm512_mul_ps(result, scale);
+
+		return result;
+	}
+};
+
 typedef PowerFunction<avx512constants::Rec1886EOTF, false> FuncRec1886EOTF;
 typedef PowerFunction<avx512constants::Rec1886InverseEOTF, true> FuncRec1886InverseEOTF;
+typedef SegmentedPolynomial<avx512constants::ST2084EOTF, false, false> FuncST2084EOTF;
+typedef SegmentedPolynomial<avx512constants::ST2084InverseEOTF, true, true> FuncST2084InverseEOTF;
 
 template <class Op>
 void gamma_filter_line_avx512(const float *src, float *dst, float scale, unsigned left, unsigned right)
@@ -218,6 +264,8 @@ std::unique_ptr<Operation> create_gamma_operation_avx512(const TransferFunction 
 
 	if (transfer.to_gamma == rec_1886_inverse_eotf)
 		return ztd::make_unique<GammaOperationAVX512<FuncRec1886InverseEOTF>>(transfer.to_gamma_scale);
+	else if (transfer.to_gamma == st_2084_inverse_eotf)
+		return ztd::make_unique<GammaOperationAVX512<FuncST2084InverseEOTF>>(transfer.to_gamma_scale);
 
 	return nullptr;
 }
@@ -229,6 +277,8 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferF
 
 	if (transfer.to_linear == rec_1886_eotf)
 		return ztd::make_unique<GammaOperationAVX512<FuncRec1886EOTF>>(transfer.to_linear_scale);
+	else if (transfer.to_linear == st_2084_eotf)
+		return ztd::make_unique<GammaOperationAVX512<FuncST2084EOTF>>(transfer.to_linear_scale);
 
 	return nullptr;
 }
