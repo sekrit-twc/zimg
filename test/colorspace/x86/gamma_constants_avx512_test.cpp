@@ -71,4 +71,15 @@ void test_linear_to_gamma(float (*f)(float), float (*g)(float), float min, float
 
 } // namespace
 
+
+TEST(GammaConstantsAVX512Test, test_rec1886)
+{
+	using namespace zimg::colorspace;
+
+	SCOPED_TRACE("forward");
+	test_gamma_to_linear(rec_1886_eotf, avx512constants::rec_1886_eotf, ldexpf(1.0f, -14), 2.0f, 1e-6f, 1e-7f);
+	SCOPED_TRACE("reverse");
+	test_linear_to_gamma(rec_1886_inverse_eotf, avx512constants::rec_1886_inverse_eotf, -30, 1, 1e-6f, 1e-7f);
+}
+
 #endif // ZIMG_X86_AVX512
