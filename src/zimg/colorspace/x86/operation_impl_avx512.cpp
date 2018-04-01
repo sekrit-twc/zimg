@@ -98,6 +98,59 @@ void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRI
 }
 
 
+template <class T, bool Prescale>
+struct PowerFunction {
+	static inline FORCE_INLINE __m512 func(__m512 x, __m512 scale)
+	{
+		constexpr bool ExtendedExponent = sizeof(T::table) / sizeof(T::table[0]) == 32;
+
+		const __m512i exponent_min = _mm512_set1_epi32(127 - (ExtendedExponent ? 31 : 15));
+		const __m512 two_minus_eps = _mm512_set1_ps(1.99999988f);
+		const __m512i sign = _mm512_set1_epi32(0x80000000U);
+
+		__m512 orig, mant, mantpart, exppart;
+		__m512i exp;
+
+		if (Prescale)
+			x = _mm512_mul_ps(x, scale);
+
+		orig = x;
+		x = _mm512_range_ps(x, two_minus_eps, 0x08); // fabs(min(x, 2.0))
+
+		// Decompose into mantissa and exponent.
+		mant = _mm512_getmant_ps(x, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_nan);
+		exp = _mm512_srli_epi32(_mm512_castps_si512(x), 23);
+		exp = _mm512_max_epi32(exp, exponent_min);
+
+		// Apply polynomial approximation to mantissa.
+		mantpart = _mm512_set1_ps(T::horner[0]);
+		mantpart = _mm512_fmadd_ps(mantpart, mant, _mm512_set1_ps(T::horner[1]));
+		mantpart = _mm512_fmadd_ps(mantpart, mant, _mm512_set1_ps(T::horner[2]));
+		mantpart = _mm512_fmadd_ps(mantpart, mant, _mm512_set1_ps(T::horner[3]));
+		mantpart = _mm512_fmadd_ps(mantpart, mant, _mm512_set1_ps(T::horner[4]));
+		mantpart = _mm512_fmadd_ps(mantpart, mant, _mm512_set1_ps(T::horner[5]));
+
+		// Read f(2^e) from a 16 or 32-element LUT.
+		if (ExtendedExponent)
+			exppart = _mm512_permutex2var_ps(_mm512_load_ps(T::table), exp, _mm512_load_ps(T::table + 16));
+		else
+			exppart = _mm512_permutexvar_ps(exp, _mm512_load_ps(T::table));
+
+		// f(m * 2^e) == f(m) * f(2^e)
+		x = _mm512_mul_ps(mantpart, exppart);
+
+		if (!Prescale)
+			x = _mm512_mul_ps(x, scale);
+
+		// copysign(x, orig)
+		x = _mm512_castsi512_ps(_mm512_ternarylogic_epi32(sign, _mm512_castps_si512(orig), _mm512_castps_si512(x), 0xCA));
+		return x;
+	}
+};
+
+typedef PowerFunction<avx512constants::Rec1886EOTF, false> FuncRec1886EOTF;
+typedef PowerFunction<avx512constants::Rec1886InverseEOTF, true> FuncRec1886InverseEOTF;
+
 template <class Op>
 void gamma_filter_line_avx512(const float *src, float *dst, float scale, unsigned left, unsigned right)
 {
@@ -163,6 +216,9 @@ std::unique_ptr<Operation> create_gamma_operation_avx512(const TransferFunction 
 	if (!params.approximate_gamma)
 		return nullptr;
 
+	if (transfer.to_gamma == rec_1886_inverse_eotf)
+		return ztd::make_unique<GammaOperationAVX512<FuncRec1886InverseEOTF>>(transfer.to_gamma_scale);
+
 	return nullptr;
 }
 
@@ -170,6 +226,9 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferF
 {
 	if (!params.approximate_gamma)
 		return nullptr;
+
+	if (transfer.to_linear == rec_1886_eotf)
+		return ztd::make_unique<GammaOperationAVX512<FuncRec1886EOTF>>(transfer.to_linear_scale);
 
 	return nullptr;
 }

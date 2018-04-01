@@ -58,4 +58,33 @@ TEST(ColorspaceConversionAVX512Test, test_matrix)
 	          expected_sha1, expected_snr);
 }
 
+TEST(ColorspaceConversionAVX512Test, test_transfer_rec_1886)
+{
+	using namespace zimg::colorspace;
+
+	const char *expected_sha1[][3] = {
+		{
+			"08d5b0c5299a03d6ca7a477dcf2853ece6f31a96",
+			"569c05244a3bbe88602ddc6df2cf5848426d7954",
+			"53df70976518ef6e8bb453358d92ac3aeb1607c2"
+		},
+		{
+			"739bebe894129fad33141416ddfda4e3a1574b68",
+			"2b3d375fb00359230b1be106b5fa6771fdad4a33",
+			"6dd4ed07c0cee8be2fa939a06f794088234b91c9"
+		},
+	};
+	const double expected_tolinear_snr = 120.0;
+	const double expected_togamma_snr = 120.0;
+
+	SCOPED_TRACE("tolinear");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED },
+	          expected_sha1[0], expected_tolinear_snr);
+	SCOPED_TRACE("togamma");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::UNSPECIFIED },
+	          expected_sha1[1], expected_togamma_snr);
+}
+
 #endif // ZIMG_X86_AVX512
