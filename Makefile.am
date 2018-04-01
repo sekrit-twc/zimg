@@ -190,6 +190,8 @@ if X86SIMD_AVX512
 noinst_LTLIBRARIES += libavx512.la
 
 libavx512_la_SOURCES = \
+	src/zimg/colorspace/x86/gamma_constants_avx512.cpp \
+	src/zimg/colorspace/x86/gamma_constants_avx512.h \
 	src/zimg/colorspace/x86/operation_impl_avx512.cpp \
 	src/zimg/depth/x86/depth_convert_avx512.cpp \
 	src/zimg/depth/x86/dither_avx512.cpp \
@@ -356,6 +358,7 @@ endif #X86SIMD
 if X86SIMD_AVX512
 test_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
+	test/colorspace/x86/gamma_constants_avx512_test.cpp \
 	test/depth/x86/depth_convert_avx512_test.cpp \
 	test/depth/x86/dither_avx512_test.cpp \
 	test/resize/x86/resize_impl_avx512_test.cpp

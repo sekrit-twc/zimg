@@ -192,6 +192,9 @@
     <ClCompile Include="..\..\test\graph\copy_filter_test.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp">
+      <Filter>Source Files\colorspace\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

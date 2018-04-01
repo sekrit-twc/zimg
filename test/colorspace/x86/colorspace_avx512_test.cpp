@@ -19,14 +19,15 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned h = 480;
 
 	if (!zimg::query_x86_capabilities().avx512f) {
-		SUCCEED() << "sse not available, skipping";
+		SUCCEED() << "avx512 not available, skipping";
 		return;
 	}
 
 	zimg::PixelFormat format = zimg::PixelType::FLOAT;
 	auto builder = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)
-		.set_csp_out(csp_out);
+		.set_csp_out(csp_out)
+		.set_approximate_gamma(true);
 
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_avx512 = builder.set_cpu(zimg::CPUClass::X86_AVX512).create();
