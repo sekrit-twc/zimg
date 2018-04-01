@@ -82,4 +82,15 @@ TEST(GammaConstantsAVX512Test, test_rec1886)
 	test_linear_to_gamma(rec_1886_inverse_eotf, avx512constants::rec_1886_inverse_eotf, -30, 1, 1e-6f, 1e-7f);
 }
 
+TEST(GammaConstantsAVX512Test, test_st_2084)
+{
+	using namespace zimg::colorspace;
+
+	SCOPED_TRACE("forward");
+	test_gamma_to_linear(st_2084_eotf, avx512constants::st_2084_eotf, 1.0f / 4096.0f, 1.0f / 32.0f, 0.15f, 1e-9f);
+	test_gamma_to_linear(st_2084_eotf, avx512constants::st_2084_eotf, 1.0f / 32.0f, 1.0f, 1e-4f, 1e-6f);
+	SCOPED_TRACE("reverse");
+	test_linear_to_gamma(st_2084_inverse_eotf, avx512constants::st_2084_inverse_eotf, -31, 0, 1e-5f, 1e-7f);
+}
+
 #endif // ZIMG_X86_AVX512
