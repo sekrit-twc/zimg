@@ -1,5 +1,5 @@
+#include <array>
 #include <memory>
-#include <vector>
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -17,7 +17,7 @@ namespace colorspace {
 namespace {
 
 class ColorspaceConversionImpl final : public graph::ImageFilterBase {
-	std::vector<std::unique_ptr<Operation>> m_operations;
+	std::array<std::unique_ptr<Operation>, 6> m_operations;
 	unsigned m_width;
 	unsigned m_height;
 public:
@@ -30,9 +30,10 @@ public:
 
 		auto path = get_operation_path(in, out);
 		zassert(!path.empty(), "empty path");
+		zassert(path.size() <= 6, "too many operations");
 
-		for (const auto &func : path) {
-			m_operations.emplace_back(func(params, cpu));
+		for (size_t i = 0; i < path.size(); ++i) {
+			m_operations[i] = path[i](params, cpu);
 		}
 	}
 
@@ -64,9 +65,25 @@ public:
 
 		m_operations[0]->process(src_ptr, dst_ptr, left, right);
 
-		for (size_t i = 1; i < m_operations.size(); ++i) {
-			m_operations[i]->process(dst_ptr, dst_ptr, left, right);
-		}
+		if (!m_operations[1])
+			return;
+		m_operations[1]->process(dst_ptr, dst_ptr, left, right);
+
+		if (!m_operations[2])
+			return;
+		m_operations[2]->process(dst_ptr, dst_ptr, left, right);
+
+		if (!m_operations[3])
+			return;
+		m_operations[3]->process(dst_ptr, dst_ptr, left, right);
+
+		if (!m_operations[4])
+			return;
+		m_operations[4]->process(dst_ptr, dst_ptr, left, right);
+
+		if (!m_operations[5])
+			return;
+		m_operations[5]->process(dst_ptr, dst_ptr, left, right);
 	}
 };
 
