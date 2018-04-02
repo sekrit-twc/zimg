@@ -16,14 +16,15 @@ namespace colorspace {
 
 namespace {
 
-inline FORCE_INLINE void matrix_filter_line_avx512_xiter(unsigned j, const float * RESTRICT const * RESTRICT src, __m512 &out0, __m512 &out1, __m512 &out2,
+inline FORCE_INLINE void matrix_filter_line_avx512_xiter(unsigned j, const float *src0, const float *src1, const float *src2,
                                                          const __m512 &c00, const __m512 &c01, const __m512 &c02,
                                                          const __m512 &c10, const __m512 &c11, const __m512 &c12,
-                                                         const __m512 &c20, const __m512 &c21, const __m512 &c22)
+                                                         const __m512 &c20, const __m512 &c21, const __m512 &c22,
+                                                         __m512 &out0, __m512 &out1, __m512 &out2)
 {
-	__m512 a = _mm512_load_ps(src[0] + j);
-	__m512 b = _mm512_load_ps(src[1] + j);
-	__m512 c = _mm512_load_ps(src[2] + j);
+	__m512 a = _mm512_load_ps(src0 + j);
+	__m512 b = _mm512_load_ps(src1 + j);
+	__m512 c = _mm512_load_ps(src2 + j);
 	__m512 x, y, z;
 
 	x = _mm512_mul_ps(c00, a);
@@ -44,6 +45,13 @@ inline FORCE_INLINE void matrix_filter_line_avx512_xiter(unsigned j, const float
 
 void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRICT src, float * const * RESTRICT dst, unsigned left, unsigned right)
 {
+	const float *src0 = src[0];
+	const float *src1 = src[1];
+	const float *src2 = src[2];
+	float *dst0 = dst[0];
+	float *dst1 = dst[1];
+	float *dst2 = dst[2];
+
 	const __m512 c00 = _mm512_broadcastss_ps(_mm_load_ss(matrix + 0));
 	const __m512 c01 = _mm512_broadcastss_ps(_mm_load_ss(matrix + 1));
 	const __m512 c02 = _mm512_broadcastss_ps(_mm_load_ss(matrix + 2));
@@ -59,31 +67,31 @@ void matrix_filter_line_avx512(const float *matrix, const float * const * RESTRI
 	unsigned vec_right = floor_n(right, 16);
 
 #define XITER matrix_filter_line_avx512_xiter
-#define XARGS src, out0, out1, out2, c00, c01, c02, c10, c11, c12, c20, c21, c22
+#define XARGS src0, src1, src2, c00, c01, c02, c10, c11, c12, c20, c21, c22, out0, out1, out2
 	if (left != vec_left) {
 		XITER(vec_left - 16, XARGS);
 		__mmask16 mask = mmask16_set_hi(vec_left - left);
 
-		_mm512_mask_store_ps(dst[0] + vec_left - 16, mask, out0);
-		_mm512_mask_store_ps(dst[1] + vec_left - 16, mask, out1);
-		_mm512_mask_store_ps(dst[2] + vec_left - 16, mask, out2);
+		_mm512_mask_store_ps(dst0 + vec_left - 16, mask, out0);
+		_mm512_mask_store_ps(dst1 + vec_left - 16, mask, out1);
+		_mm512_mask_store_ps(dst2 + vec_left - 16, mask, out2);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
 		XITER(j, XARGS);
 
-		_mm512_store_ps(dst[0] + j, out0);
-		_mm512_store_ps(dst[1] + j, out1);
-		_mm512_store_ps(dst[2] + j, out2);
+		_mm512_store_ps(dst0 + j, out0);
+		_mm512_store_ps(dst1 + j, out1);
+		_mm512_store_ps(dst2 + j, out2);
 	}
 
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 		__mmask16 mask = mmask16_set_lo(right - vec_right);
 
-		_mm512_mask_store_ps(dst[0] + vec_right, mask, out0);
-		_mm512_mask_store_ps(dst[1] + vec_right, mask, out1);
-		_mm512_mask_store_ps(dst[2] + vec_right, mask, out2);
+		_mm512_mask_store_ps(dst0 + vec_right, mask, out0);
+		_mm512_mask_store_ps(dst1 + vec_right, mask, out1);
+		_mm512_mask_store_ps(dst2 + vec_right, mask, out2);
 	}
 #undef XITER
 #undef XARGS
