@@ -233,10 +233,6 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 
 	if (support > static_cast<unsigned>(UINT_MAX / 2))
 		error::throw_<error::ResamplingNotAvailable>("filter width too great");
-	if (std::abs(shift) >= src_dim || shift + width + filter_size >= 2.0 * src_dim)
-		error::throw_<error::ResamplingNotAvailable>("image shift or subwindow too great");
-	if (src_dim <= support || width <= support)
-		error::throw_<error::ResamplingNotAvailable>("filter width too great for image dimensions");
 
 	try {
 		RowMatrix<double> m{ dst_dim, src_dim };
@@ -262,9 +258,12 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 				if (xpos < 0.0)
 					real_pos = -xpos;
 				else if (xpos >= src_dim)
-					real_pos = std::min(2.0 * src_dim - xpos, src_dim - 0.5);
+					real_pos = 2.0 * src_dim - xpos;
 				else
 					real_pos = xpos;
+
+				// Clamp the position if it is still out of bounds.
+				real_pos = std::min(std::max(real_pos, 0.0), std::nextafter(src_dim, -INFINITY));
 
 				size_t idx = static_cast<size_t>(std::floor(real_pos));
 				m[i][idx] += f((xpos - pos) * step) / total;
