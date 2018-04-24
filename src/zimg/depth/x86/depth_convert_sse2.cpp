@@ -165,12 +165,11 @@ void left_shift_b2w_sse2(const void *src, void *dst, unsigned shift, unsigned le
 		lo = _mm_sll_epi16(lo, count);
 		hi = _mm_sll_epi16(hi, count);
 
-		if (right - vec_right > 8) {
+		if (right - vec_right >= 8) {
 			_mm_store_si128((__m128i *)(dst_p + vec_right), lo);
 			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right + 8), hi, right % 8);
 		} else {
-			// Modulo does not handle the case where there are exactly 8 remaining pixels.
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right - vec_right);
+			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), lo, right % 8);
 		}
 	}
 }
@@ -289,21 +288,20 @@ void depth_convert_b2f_sse2(const void *src, void *dst, float scale, float offse
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 
-		if (right - vec_right > 12) {
+		if (right - vec_right >= 12) {
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			_mm_store_ps(dst_p + vec_right + 4, lohi);
 			_mm_store_ps(dst_p + vec_right + 8, hilo);
 			mm_store_idxlo_ps(dst_p + vec_right + 12, hihi, right % 4);
-		} else if (right - vec_right > 8) {
+		} else if (right - vec_right >= 8) {
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			_mm_store_ps(dst_p + vec_right + 4, lohi);
 			mm_store_idxlo_ps(dst_p + vec_right + 8, hilo, right % 4);
-		} else if (right - vec_right > 4) {
+		} else if (right - vec_right >= 4) {
 			_mm_store_ps(dst_p + vec_right + 0, lolo);
 			mm_store_idxlo_ps(dst_p + vec_right + 4, lohi, right % 4);
 		} else {
-			// Modulo does not handle the case where there are exactly 4 remaining pixels.
-			mm_store_idxlo_ps(dst_p + vec_right, lolo, right - vec_right);
+			mm_store_idxlo_ps(dst_p + vec_right, lolo, right % 4);
 		}
 	}
 #undef XITER
@@ -346,12 +344,11 @@ void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offse
 	if (right != vec_right) {
 		XITER(vec_right, XARGS);
 
-		if (right - vec_right > 4) {
+		if (right - vec_right >= 4) {
 			_mm_store_ps(dst_p + vec_right + 0, lo);
 			mm_store_idxlo_ps(dst_p + vec_right + 4, hi, right % 4);
 		} else {
-			// Modulo does not handle the case where there are exactly 4 remaining pixels.
-			mm_store_idxlo_ps(dst_p + vec_right, lo, right - vec_right);
+			mm_store_idxlo_ps(dst_p + vec_right, lo, right % 4);
 		}
 	}
 #undef XITER
