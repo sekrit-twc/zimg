@@ -228,9 +228,6 @@
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\x86\avx512_msvc_compat.h">
-      <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>

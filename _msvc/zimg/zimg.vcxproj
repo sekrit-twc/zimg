@@ -170,7 +170,6 @@
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h" />
-    <ClInclude Include="..\..\src\zimg\common\x86\avx512_msvc_compat.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h" />

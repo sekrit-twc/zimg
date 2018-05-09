@@ -128,7 +128,6 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/common/x86/avx_util.h \
 	src/zimg/common/x86/avx2_util.h \
 	src/zimg/common/x86/avx512_util.h \
-	src/zimg/common/x86/avx512_msvc_compat.h \
 	src/zimg/common/x86/cpuinfo_x86.cpp \
 	src/zimg/common/x86/cpuinfo_x86.h \
 	src/zimg/common/x86/sse_util.h \
