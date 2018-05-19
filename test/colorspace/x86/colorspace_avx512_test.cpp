@@ -87,6 +87,35 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_rec_1886)
 	          expected_sha1[1], expected_togamma_snr);
 }
 
+TEST(ColorspaceConversionAVX512Test, test_transfer_srgb)
+{
+	using namespace zimg::colorspace;
+
+	const char *expected_sha1[][3] = {
+		{
+			"43c2d947ab229997b225ac5ba9d96010048fa895",
+			"ba37606303f4f31c93f0c23dffaa72ad44d6b437",
+			"8b0338c0175ec424a35c1324f59d1e9c0a309051"
+		},
+		{
+			"c77c34e6bef590d4998160c4d37a466eed692f06",
+			"6fd7d47c84a6467e179530b0290315967bddd36c",
+			"ef8e4d1e24ad8c9765fead779c7e2b4aa9df33f7"
+		},
+	};
+	const double expected_tolinear_snr = 120.0;
+	const double expected_togamma_snr = 120.0;
+
+	SCOPED_TRACE("tolinear");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::SRGB, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED },
+	          expected_sha1[0], expected_tolinear_snr);
+	SCOPED_TRACE("togamma");
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::LINEAR, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::RGB, TransferCharacteristics::SRGB, ColorPrimaries::UNSPECIFIED },
+	          expected_sha1[1], expected_togamma_snr);
+}
+
 TEST(ColorspaceConversionAVX512Test, test_transfer_st_2084)
 {
 	using namespace zimg::colorspace;

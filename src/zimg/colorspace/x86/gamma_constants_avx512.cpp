@@ -234,6 +234,26 @@ float power_function(float x)
 	return std::copysign(mantpart * exppart, orig);
 }
 
+template <class T, bool Eotf>
+float srgb_power_function(float x)
+{
+	float orig = std::fabs(x);
+
+	if (std::fabs(x) > T::knee) {
+		if (Eotf)
+			x = std::fma(x, T::power_scale, T::power_offset);
+
+		x = power_function<T>(x);
+
+		if (!Eotf)
+			x = std::fma(x, T::power_scale, T::power_offset);
+	} else {
+		x = T::linear_scale * x;
+	}
+
+	return std::copysign(x, orig);
+}
+
 template <class T, bool Log>
 float segmented_polynomial(float x)
 {
@@ -270,6 +290,16 @@ float rec_1886_eotf(float x)
 float rec_1886_inverse_eotf(float x)
 {
 	return power_function<Rec1886InverseEOTF>(x);
+}
+
+float srgb_eotf(float x)
+{
+	return srgb_power_function<SRGBEOTF, true>(x);
+}
+
+float srgb_inverse_eotf(float x)
+{
+	return srgb_power_function<SRGBInverseEOTF, false>(x);
 }
 
 float st_2084_eotf(float x)
