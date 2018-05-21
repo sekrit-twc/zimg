@@ -18,17 +18,14 @@
 
 namespace {
 
+bool is_null_device(const std::string &s) noexcept
+{
 #ifdef _WIN32
-bool is_null_device(const std::string &s) noexcept
-{
 	return s == "NUL";
-}
 #else
-bool is_null_device(const std::string &s) noexcept
-{
 	return s == "/dev/null";
-}
 #endif
+}
 
 enum class PackingFormat {
 	PACK_PLANAR,
