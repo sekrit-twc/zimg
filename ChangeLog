@@ -1,3 +1,7 @@
+2.7.5:
+depth: fix SSE2 byte->float when width+4 is mod16
+resize: allow downsampling to very low resolutions
+
 2.7.4:
 x86: fix crash on Yorkfield (Core 2 Quad) processors (introduced in 2.7)
 
