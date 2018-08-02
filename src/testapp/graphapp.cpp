@@ -198,7 +198,8 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 
 std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
                                                        zimg::graph::GraphBuilder::state *src_state_out,
-                                                       zimg::graph::GraphBuilder::state *dst_state_out)
+                                                       zimg::graph::GraphBuilder::state *dst_state_out,
+                                                       zimg::CPUClass cpu)
 {
 	zimg::graph::GraphBuilder::state src_state{};
 	zimg::graph::GraphBuilder::state dst_state{};
@@ -216,6 +217,9 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 			read_graph_params(&params, val.object());
 			has_params = true;
 		}
+
+		if (cpu >= static_cast<zimg::CPUClass>(0))
+			params.cpu = cpu;
 	} catch (const std::invalid_argument &e) {
 		throw std::runtime_error{ e.what() };
 	} catch (const std::out_of_range &e) {
@@ -267,11 +271,11 @@ void thread_target(const zimg::graph::FilterGraph *graph,
 	}
 }
 
-void execute(const json::Object &spec, unsigned times, unsigned threads, unsigned tile_width)
+void execute(const json::Object &spec, unsigned times, unsigned threads, unsigned tile_width, zimg::CPUClass cpu)
 {
 	zimg::graph::GraphBuilder::state src_state;
 	zimg::graph::GraphBuilder::state dst_state;
-	std::unique_ptr<zimg::graph::FilterGraph> graph = create_graph(spec, &src_state, &dst_state);
+	std::unique_ptr<zimg::graph::FilterGraph> graph = create_graph(spec, &src_state, &dst_state, cpu);
 
 	if (tile_width)
 		graph->set_tile_width(tile_width);
@@ -323,12 +327,14 @@ struct Arguments {
 	unsigned times;
 	unsigned threads;
 	unsigned tile_width;
+	zimg::CPUClass cpu;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINT, nullptr, "times",      offsetof(Arguments, times),      nullptr, "number of benchmark cycles per thread" },
-	{ OPTION_UINT, nullptr, "threads",    offsetof(Arguments, threads),    nullptr, "number of threads" },
-	{ OPTION_UINT, nullptr, "tile-width", offsetof(Arguments, tile_width), nullptr, "graph tile width" },
+	{ OPTION_UINT,  nullptr, "times",      offsetof(Arguments, times),      nullptr, "number of benchmark cycles per thread" },
+	{ OPTION_UINT,  nullptr, "threads",    offsetof(Arguments, threads),    nullptr, "number of threads" },
+	{ OPTION_UINT,  nullptr, "tile-width", offsetof(Arguments, tile_width), nullptr, "graph tile width" },
+	{ OPTION_USER1, nullptr, "cpu",        offsetof(Arguments, cpu),        arg_decode_cpu, "select CPU type" },
 	{ OPTION_NULL }
 };
 
@@ -348,13 +354,14 @@ int graph_main(int argc, char **argv)
 	int ret;
 
 	args.times = 100;
+	args.cpu = static_cast<zimg::CPUClass>(-1);
 
 	if ((ret = argparse_parse(&program_def, &args, argc, argv)) < 0)
 		return ret == ARGPARSE_HELP_MESSAGE ? 0 : ret;
 
 	try {
 		json::Object spec = read_graph_spec(args.specpath);
-		execute(spec, args.times, args.threads, args.tile_width);
+		execute(spec, args.times, args.threads, args.tile_width, args.cpu);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;
