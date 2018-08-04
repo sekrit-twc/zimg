@@ -51,10 +51,20 @@ void lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, float presca
 		xi = _mm_min_epi16(xi, limit);
 		xi = _mm_sub_epi16(xi, bias_epi16);
 
-		dst[j + 0] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 0))];
-		dst[j + 1] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 1))];
-		dst[j + 2] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 2))];
-		dst[j + 3] = lut[static_cast<unsigned>(_mm_extract_epi16(xi, 3))];
+#if SIZE_MAX >= UINT64_MAX
+		uint64_t tmp = _mm_cvtsi128_si64(xi);
+		dst[j + 0] = lut[tmp & 0xFFFFU];
+		dst[j + 1] = lut[(tmp >> 16) & 0xFFFFU];
+		dst[j + 2] = lut[(tmp >> 32) & 0xFFFFU];
+		dst[j + 3] = lut[tmp >> 48];
+#else
+		uint32_t tmp0 = _mm_cvtsi128_si32(xi);
+		uint32_t tmp1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(xi, _MM_SHUFFLE(3, 2, 0, 1)));
+		dst[j + 0] = lut[tmp0 & 0xFFFFU];
+		dst[j + 1] = lut[tmp0 >> 16];
+		dst[j + 2] = lut[tmp1 & 0xFFFFU];
+		dst[j + 3] = lut[tmp1 >> 16];
+#endif
 	}
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = _mm_load_ss(src + j);
