@@ -16,7 +16,7 @@ namespace {
 struct LoadU8 {
 	typedef uint8_t src_type;
 
-	static __m512 load16(const uint8_t *ptr)
+	static inline FORCE_INLINE __m512 load16(const uint8_t *ptr)
 	{
 		return _mm512_cvtepi32_ps(_mm512_cvtepu8_epi32(_mm_load_si128((const __m128i *)ptr)));
 	}
@@ -25,7 +25,7 @@ struct LoadU8 {
 struct LoadU16 {
 	typedef uint16_t src_type;
 
-	static __m512 load16(const uint16_t *ptr)
+	static inline FORCE_INLINE __m512 load16(const uint16_t *ptr)
 	{
 		return _mm512_cvtepi32_ps(_mm512_cvtepu16_epi32(_mm256_load_si256((const __m256i *)ptr)));
 	}
@@ -34,7 +34,7 @@ struct LoadU16 {
 struct StoreF16 {
 	typedef uint16_t dst_type;
 
-	static void mask_store16(uint16_t *ptr, __mmask16 mask, __m512 x)
+	static inline FORCE_INLINE void mask_store16(uint16_t *ptr, __mmask16 mask, __m512 x)
 	{
 		_mm256_mask_storeu_epi16(ptr, mask, _mm512_cvtps_ph(x, 0));
 	}
@@ -43,7 +43,7 @@ struct StoreF16 {
 struct StoreF32 {
 	typedef float dst_type;
 
-	static void mask_store16(float *ptr, __mmask16 mask, __m512 x)
+	static inline FORCE_INLINE void mask_store16(float *ptr, __mmask16 mask, __m512 x)
 	{
 		_mm512_mask_store_ps(ptr, mask, x);
 	}

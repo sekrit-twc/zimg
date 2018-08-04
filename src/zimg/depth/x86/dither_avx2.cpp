@@ -26,7 +26,7 @@ static inline FORCE_INLINE __m128i mm256_cvtusepi16_epi8(__m256i x)
 struct LoadU8 {
 	typedef uint8_t type;
 
-	static __m256 load8(const uint8_t *ptr)
+	static inline FORCE_INLINE __m256 load8(const uint8_t *ptr)
 	{
 		return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)ptr)));
 	}
@@ -35,7 +35,7 @@ struct LoadU8 {
 struct LoadU16 {
 	typedef uint16_t type;
 
-	static __m256 load8(const uint16_t *ptr)
+	static inline FORCE_INLINE __m256 load8(const uint16_t *ptr)
 	{
 		return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)ptr)));
 	}
@@ -44,29 +44,35 @@ struct LoadU16 {
 struct LoadF16 {
 	typedef uint16_t type;
 
-	static __m256 load8(const uint16_t *ptr) { return _mm256_cvtph_ps(_mm_load_si128((const __m128i *)ptr)); }
+	static inline FORCE_INLINE __m256 load8(const uint16_t *ptr)
+	{
+		return _mm256_cvtph_ps(_mm_load_si128((const __m128i *)ptr));
+	}
 };
 
 struct LoadF32 {
 	typedef float type;
 
-	static __m256 load8(const float *ptr) { return _mm256_load_ps(ptr); }
+	static inline FORCE_INLINE __m256 load8(const float *ptr)
+	{
+		return _mm256_load_ps(ptr);
+	}
 };
 
 struct StoreU8 {
 	typedef uint8_t type;
 
-	static void store16(uint8_t *ptr, __m256i x)
+	static inline FORCE_INLINE void store16(uint8_t *ptr, __m256i x)
 	{
 		_mm_store_si128((__m128i *)ptr, mm256_cvtusepi16_epi8(x));
 	}
 
-	static void store16_idxlo(uint8_t *ptr, __m256i x, unsigned idx)
+	static inline FORCE_INLINE void store16_idxlo(uint8_t *ptr, __m256i x, unsigned idx)
 	{
 		mm_store_idxlo_epi8((__m128i *)ptr, mm256_cvtusepi16_epi8(x), idx);
 	}
 
-	static void store16_idxhi(uint8_t *ptr, __m256i x, unsigned idx)
+	static inline FORCE_INLINE void store16_idxhi(uint8_t *ptr, __m256i x, unsigned idx)
 	{
 		mm_store_idxhi_epi8((__m128i *)ptr, mm256_cvtusepi16_epi8(x), idx);
 	}
@@ -75,11 +81,11 @@ struct StoreU8 {
 struct StoreU16 {
 	typedef uint16_t type;
 
-	static void store16(uint16_t *ptr, __m256i x) { _mm256_store_si256((__m256i *)ptr, x); }
+	static inline FORCE_INLINE void store16(uint16_t *ptr, __m256i x) { _mm256_store_si256((__m256i *)ptr, x); }
 
-	static void store16_idxlo(uint16_t *ptr, __m256i x, unsigned idx) { mm256_store_idxlo_epi16((__m256i *)ptr, x, idx); }
+	static inline FORCE_INLINE void store16_idxlo(uint16_t *ptr, __m256i x, unsigned idx) { mm256_store_idxlo_epi16((__m256i *)ptr, x, idx); }
 
-	static void store16_idxhi(uint16_t *ptr, __m256i x, unsigned idx) { mm256_store_idxhi_epi16((__m256i *)ptr, x, idx); }
+	static inline FORCE_INLINE void store16_idxhi(uint16_t *ptr, __m256i x, unsigned idx) { mm256_store_idxhi_epi16((__m256i *)ptr, x, idx); }
 };
 
 

@@ -19,7 +19,7 @@ namespace {
 struct LoadU8 {
 	typedef uint8_t src_type;
 
-	static __m256 load8(const uint8_t *ptr)
+	static inline FORCE_INLINE  __m256 load8(const uint8_t *ptr)
 	{
 		return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64((const __m128i *)ptr)));
 	}
@@ -28,7 +28,7 @@ struct LoadU8 {
 struct LoadU16 {
 	typedef uint16_t src_type;
 
-	static __m256 load8(const uint16_t *ptr)
+	static inline FORCE_INLINE __m256 load8(const uint16_t *ptr)
 	{
 		return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)ptr)));
 	}
@@ -37,17 +37,17 @@ struct LoadU16 {
 struct StoreF16 {
 	typedef uint16_t dst_type;
 
-	static void store8(uint16_t *ptr, __m256 x)
+	static inline FORCE_INLINE void store8(uint16_t *ptr, __m256 x)
 	{
 		_mm_store_si128((__m128i *)ptr, _mm256_cvtps_ph(x, 0));
 	}
 
-	static void store8_idxlo(uint16_t *ptr, __m256 x, unsigned idx)
+	static inline FORCE_INLINE void store8_idxlo(uint16_t *ptr, __m256 x, unsigned idx)
 	{
 		mm_store_idxlo_epi16((__m128i *)ptr, _mm256_cvtps_ph(x, 0), idx);
 	}
 
-	static void store8_idxhi(uint16_t *ptr, __m256 x, unsigned idx)
+	static inline FORCE_INLINE void store8_idxhi(uint16_t *ptr, __m256 x, unsigned idx)
 	{
 		mm_store_idxhi_epi16((__m128i *)ptr, _mm256_cvtps_ph(x, 0), idx);
 	}
@@ -56,11 +56,20 @@ struct StoreF16 {
 struct StoreF32 {
 	typedef float dst_type;
 
-	static void store8(float *ptr, __m256 x) { _mm256_store_ps(ptr, x); }
+	static inline FORCE_INLINE void store8(float *ptr, __m256 x)
+	{
+		_mm256_store_ps(ptr, x);
+	}
 
-	static void store8_idxlo(float *ptr, __m256 x, unsigned idx) { mm256_store_idxlo_ps(ptr, x, idx); }
+	static inline FORCE_INLINE void store8_idxlo(float *ptr, __m256 x, unsigned idx)
+	{
+		mm256_store_idxlo_ps(ptr, x, idx);
+	}
 
-	static void store8_idxhi(float *ptr, __m256 x, unsigned idx) { mm256_store_idxhi_ps(ptr, x, idx); }
+	static inline FORCE_INLINE void store8_idxhi(float *ptr, __m256 x, unsigned idx)
+	{
+		mm256_store_idxhi_ps(ptr, x, idx);
+	}
 };
 
 template <class Load, class Store>
