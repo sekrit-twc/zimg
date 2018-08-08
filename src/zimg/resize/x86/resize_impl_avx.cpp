@@ -73,49 +73,51 @@ inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j,
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm256_load_ps(src_p + (k + 0) * 8);
+		x = _mm256_load_ps(src_p + 0);
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm256_load_ps(src_p + (k + 1) * 8);
+		x = _mm256_load_ps(src_p + 8);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm256_load_ps(src_p + (k + 2) * 8);
+		x = _mm256_load_ps(src_p + 16);
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm256_load_ps(src_p + (k + 3) * 8);
+		x = _mm256_load_ps(src_p + 24);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
+
+		src_p += 32;
 	}
 
 	if (Tail >= 1) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k_end));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm256_load_ps(src_p + (k_end + 0) * 8);
+		x = _mm256_load_ps(src_p + 0);
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 	}
 	if (Tail >= 2) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm256_load_ps(src_p + (k_end + 1) * 8);
+		x = _mm256_load_ps(src_p + 8);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
 	}
 	if (Tail >= 3) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm256_load_ps(src_p + (k_end + 2) * 8);
+		x = _mm256_load_ps(src_p + 16);
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 	}
 	if (Tail >= 4) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm256_load_ps(src_p + (k_end + 3) * 8);
+		x = _mm256_load_ps(src_p + 24);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
 	}

@@ -245,8 +245,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		coeffs = _mm256_broadcastsi128_si256(_mm_load_si128((const __m128i *)(filter_coeffs + k)));
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k + 0) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k + 1) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 0));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 16));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -259,8 +259,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k + 2) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k + 3) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 32));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 48));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -273,8 +273,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k + 4) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k + 5) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 64));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 80));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -287,8 +287,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k + 6) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k + 7) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 96));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 112));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -299,14 +299,16 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 		accum_lo = _mm256_add_epi32(accum_lo, xl);
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
+
+		src_p += 128;
 	}
 
 	if (Tail >= 2) {
 		coeffs = _mm256_broadcastsi128_si256(_mm_load_si128((const __m128i *)(filter_coeffs + k_end)));
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 0) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 1) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 0));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 16));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -321,8 +323,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 	if (Tail >= 4) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 2) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 3) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 32));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 48));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -337,8 +339,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 	if (Tail >= 6) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 4) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 5) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 64));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 80));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -353,8 +355,8 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 	if (Tail >= 8) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 6) * 16));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + (k_end + 7) * 16));
+		x0 = _mm256_load_si256((const __m256i *)(src_p + 96));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + 112));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
@@ -487,42 +489,44 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = Traits::load8(src_p + (k + 0) * 8);
+		x = Traits::load8(src_p + 0);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = Traits::load8(src_p + (k + 1) * 8);
+		x = Traits::load8(src_p + 8);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = Traits::load8(src_p + (k + 2) * 8);
+		x = Traits::load8(src_p + 16);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = Traits::load8(src_p + (k + 3) * 8);
+		x = Traits::load8(src_p + 24);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
+
+		src_p += 32;
 	}
 
 	if (Tail >= 1) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k_end));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = Traits::load8(src_p + (k_end + 0) * 8);
+		x = Traits::load8(src_p + 0);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 	}
 	if (Tail >= 2) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = Traits::load8(src_p + (k_end + 1) * 8);
+		x = Traits::load8(src_p + 8);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
 	}
 	if (Tail >= 3) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = Traits::load8(src_p + (k_end + 2) * 8);
+		x = Traits::load8(src_p + 16);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 	}
 	if (Tail >= 4) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = Traits::load8(src_p + (k_end + 3) * 8);
+		x = Traits::load8(src_p + 24);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
 	}
 

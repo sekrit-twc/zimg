@@ -88,8 +88,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k));
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 0) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 1) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 0));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 8));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -102,8 +102,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 2) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 3) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 16));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 24));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -116,8 +116,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 4) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 5) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 32));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 40));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -130,8 +130,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k + 6) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k + 7) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 48));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 56));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -142,14 +142,16 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 		accum_lo = _mm_add_epi32(accum_lo, xl);
 		accum_hi = _mm_add_epi32(accum_hi, xh);
+
+		src_p += 64;
 	}
 
 	if (Tail >= 2) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k_end));
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 0) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 1) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 0));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 8));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -164,8 +166,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 	if (Tail >= 4) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 2) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 3) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 16));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 24));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -180,8 +182,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 	if (Tail >= 6) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 4) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 5) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 32));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 40));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
@@ -196,8 +198,8 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 	if (Tail >= 8) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm_load_si128((const __m128i *)(src_p + (k_end + 6) * 8));
-		x1 = _mm_load_si128((const __m128i *)(src_p + (k_end + 7) * 8));
+		x0 = _mm_load_si128((const __m128i *)(src_p + 48));
+		x1 = _mm_load_si128((const __m128i *)(src_p + 56));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 

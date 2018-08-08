@@ -328,8 +328,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 		coeffs = _mm512_broadcast_i32x4(_mm_load_si128((const __m128i *)(filter_coeffs + k)));
 
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_AAAA);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k + 0) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k + 1) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 0));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 32));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -342,8 +342,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 		accum_hi = _mm512_add_epi32(accum_hi, xh);
 
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_BBBB);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k + 2) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k + 3) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 64));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 96));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -356,8 +356,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 		accum_hi = _mm512_add_epi32(accum_hi, xh);
 
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_CCCC);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k + 4) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k + 5) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 128));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 160));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -370,8 +370,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 		accum_hi = _mm512_add_epi32(accum_hi, xh);
 
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_DDDD);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k + 6) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k + 7) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 192));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 224));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -382,14 +382,16 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 
 		accum_lo = _mm512_add_epi32(accum_lo, xl);
 		accum_hi = _mm512_add_epi32(accum_hi, xh);
+
+		src_p += 256;
 	}
 
 	if (Tail >= 2) {
 		coeffs = _mm512_broadcast_i32x4(_mm_load_si128((const __m128i *)(filter_coeffs + k_end)));
 
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_AAAA);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 0) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 1) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 0));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 32));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -404,8 +406,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 
 	if (Tail >= 4) {
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_BBBB);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 2) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 3) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 64));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 96));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -420,8 +422,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 
 	if (Tail >= 6) {
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_CCCC);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 4) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 5) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 128));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 160));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -436,8 +438,8 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 
 	if (Tail >= 8) {
 		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_DDDD);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 6) * 32));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + (k_end + 7) * 32));
+		x0 = _mm512_load_si512((const __m256i *)(src_p + 192));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + 224));
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
@@ -610,42 +612,44 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 		coeffs = _mm512_broadcast_f32x4(_mm_load_ps(filter_coeffs + k));
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_AAAA);
-		x = Traits::load16(src_p + (k + 0) * 16);
+		x = Traits::load16(src_p + 0);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_BBBB);
-		x = Traits::load16(src_p + (k + 1) * 16);
+		x = Traits::load16(src_p + 16);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_CCCC);
-		x = Traits::load16(src_p + (k + 2) * 16);
+		x = Traits::load16(src_p + 32);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_DDDD);
-		x = Traits::load16(src_p + (k + 3) * 16);
+		x = Traits::load16(src_p + 48);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
+
+		src_p += 64;
 	}
 
 	if (Tail >= 1) {
 		coeffs = _mm512_broadcast_f32x4(_mm_load_ps(filter_coeffs + k_end));
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_AAAA);
-		x = Traits::load16(src_p + (k_end + 0) * 16);
+		x = Traits::load16(src_p + 0);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 	}
 	if (Tail >= 2) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_BBBB);
-		x = Traits::load16(src_p + (k_end + 1) * 16);
+		x = Traits::load16(src_p + 16);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
 	if (Tail >= 3) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_CCCC);
-		x = Traits::load16(src_p + (k_end + 2) * 16);
+		x = Traits::load16(src_p + 32);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 	}
 	if (Tail >= 4) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_DDDD);
-		x = Traits::load16(src_p + (k_end + 3) * 16);
+		x = Traits::load16(src_p + 48);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
 

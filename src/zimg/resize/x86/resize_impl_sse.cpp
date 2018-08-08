@@ -61,49 +61,51 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 		coeffs = _mm_load_ps(filter_coeffs + k);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm_load_ps(src_p + (k + 0) * 4);
+		x = _mm_load_ps(src_p + 0);
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm_load_ps(src_p + (k + 1) * 4);
+		x = _mm_load_ps(src_p + 4);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm_load_ps(src_p + (k + 2) * 4);
+		x = _mm_load_ps(src_p + 8);
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm_load_ps(src_p + (k + 3) * 4);
+		x = _mm_load_ps(src_p + 12);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
+
+		src_p += 16;
 	}
 
 	if (Tail >= 1) {
 		coeffs = _mm_load_ps(filter_coeffs + k_end);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm_load_ps(src_p + (k_end + 0) * 4);
+		x = _mm_load_ps(src_p + 0);
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 	}
 	if (Tail >= 2) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm_load_ps(src_p + (k_end + 1) * 4);
+		x = _mm_load_ps(src_p + 4);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
 	}
 	if (Tail >= 3) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm_load_ps(src_p + (k_end + 2) * 4);
+		x = _mm_load_ps(src_p + 8);
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 	}
 	if (Tail >= 4) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm_load_ps(src_p + (k_end + 3) * 4);
+		x = _mm_load_ps(src_p + 12);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
 	}
@@ -358,7 +360,7 @@ public:
 			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
 			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
 			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
-			
+
 			resize_line_v_f32_sse_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
