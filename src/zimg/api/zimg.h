@@ -155,9 +155,9 @@ void zimg_clear_last_error(void);
 typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_NONE     = 0, /**< Portable C-based implementation. */
 	ZIMG_CPU_AUTO     = 1, /**< Runtime CPU detection. */
-	ZIMG_CPU_AUTO_64B = 2, /**< Allow use of 64-byte (512-bit) instructions. Since API 2.3. */
+	ZIMG_CPU_AUTO_64B = 2  /**< Allow use of 64-byte (512-bit) instructions. Since API 2.3. */
 #if defined(__i386) || defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
-	ZIMG_CPU_X86_MMX        = 1000,
+	,ZIMG_CPU_X86_MMX       = 1000,
 	ZIMG_CPU_X86_SSE        = 1001,
 	ZIMG_CPU_X86_SSE2       = 1002,
 	ZIMG_CPU_X86_SSE3       = 1003,
@@ -168,7 +168,7 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_F16C       = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
 	ZIMG_CPU_X86_AVX2       = 1009,
 	ZIMG_CPU_X86_AVX512F    = 1010,
-	ZIMG_CPU_X86_AVX512_SKL = 1011, /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
+	ZIMG_CPU_X86_AVX512_SKL = 1011  /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
 #endif
 } zimg_cpu_type_e;
 
