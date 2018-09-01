@@ -13,21 +13,16 @@ namespace zimg {
 // Store from [x] into [dst] the 32-bit elements with index less than [idx].
 static inline FORCE_INLINE void mm256_store_idxlo_ps(float *dst, __m256 x, unsigned idx)
 {
-	__m256 orig = _mm256_load_ps(dst);
-	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[idx * 4]));
-
-	x = _mm256_blendv_ps(orig, x, mask);
-	_mm256_store_ps(dst, x);
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[idx * 4]));
+	_mm256_maskstore_ps(dst, mask, x);
 }
 
 // Store from [x] into [dst] the 32-bit elements with index greater than or equal to [idx].
 static inline FORCE_INLINE void mm256_store_idxhi_ps(float *dst, __m256 x, unsigned idx)
 {
-	__m256 orig = _mm256_load_ps(dst);
-	__m256 mask = _mm256_load_ps((const float *)(&ymm_mask_table[idx * 4]));
-
-	x = _mm256_blendv_ps(x, orig, mask);
-	_mm256_store_ps(dst, x);
+	__m256i mask = _mm256_load_si256((const __m256i *)(&ymm_mask_table[idx * 4]));
+	mask = _mm256_castps_si256(_mm256_xor_ps(_mm256_castsi256_ps(mask), _mm256_castsi256_ps(_mm256_set1_epi32(-1))));
+	_mm256_maskstore_ps(dst, mask, x);
 }
 
 // Transpose in-place the 8x8 matrix stored in [row0]-[row7]
@@ -69,4 +64,3 @@ static inline FORCE_INLINE void mm256_transpose8_ps(__m256 &row0, __m256 &row1, 
 #endif // ZIMG_X86_AVX_UTIL_H_
 
 #endif // ZIMG_X86
-
