@@ -132,7 +132,7 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_st_2084)
 			"6d70abd6fcf589ceb01d0e9b26f9314af146a06a"
 		},
 	};
-	const double expected_tolinear_snr = INFINITY;
+	const double expected_tolinear_snr = 70.0;
 	const double expected_togamma_snr = 80.0;
 
 	SCOPED_TRACE("tolinear");
