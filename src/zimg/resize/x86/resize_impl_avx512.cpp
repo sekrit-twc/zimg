@@ -51,7 +51,7 @@ struct f16_traits {
 
 	static inline FORCE_INLINE __m512 maskz_load16(__mmask16 mask, const pixel_type *ptr)
 	{
-		return _mm512_maskz_cvtph_ps(mask, _mm256_maskz_loadu_epi16(mask, ptr));
+		return _mm512_cvtph_ps(_mm256_maskz_loadu_epi16(mask, ptr));
 	}
 
 	static inline FORCE_INLINE void store16(pixel_type *ptr, __m512 x)
