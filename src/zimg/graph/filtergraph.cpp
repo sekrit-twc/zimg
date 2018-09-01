@@ -1422,8 +1422,8 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 		ret = m_func(m_user, i, left, right);
 	} catch (...) {
 		ret = 1;
-		// VS 15.7 triggers an ICE here.
-#if !(_MSC_VER == 1914 && _M_IX86)
+		// VS 15.7+ triggers an ICE here.
+#if !(_MSC_VER >= 1914 && _M_IX86)
 		zassert_d(false, "user callback must not throw");
 #endif
 	}
