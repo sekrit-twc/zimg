@@ -165,10 +165,10 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_SSE41      = 1005,
 	ZIMG_CPU_X86_SSE42      = 1006,
 	ZIMG_CPU_X86_AVX        = 1007,
-	ZIMG_CPU_X86_F16C       = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge) */
+	ZIMG_CPU_X86_F16C       = 1008, /**< AVX with F16C extension (e.g. Ivy Bridge). */
 	ZIMG_CPU_X86_AVX2       = 1009,
 	ZIMG_CPU_X86_AVX512F    = 1010,
-	ZIMG_CPU_X86_AVX512_SKL = 1011  /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP) */
+	ZIMG_CPU_X86_AVX512_SKL = 1011  /**< AVX-512 {F,CD,VL,BW,DQ} (e.g. Skylake-X/SP). */
 #endif
 } zimg_cpu_type_e;
 
@@ -383,9 +383,9 @@ typedef struct zimg_image_buffer_const {
 	unsigned version; /**< @see ZIMG_API_VERSION */
 
 	struct {
-		const void *data; /**< plane data buffer */
-		ptrdiff_t stride; /**< plane stride in bytes */
-		unsigned mask;    /**< plane row index mask */
+		const void *data; /**< Plane data buffer */
+		ptrdiff_t stride; /**< Plane stride in bytes */
+		unsigned mask;    /**< Plane row index mask */
 	} plane[3];
 } zimg_image_buffer_const;
 
@@ -398,9 +398,9 @@ typedef struct zimg_image_buffer {
 	unsigned version; /**< @see ZIMG_API_VERSION */
 
 	struct {
-		void *data;       /**< plane data buffer */
-		ptrdiff_t stride; /**< plane stride in bytes */
-		unsigned mask;    /**< plane row index mask */
+		void *data;       /**< Plane data buffer */
+		ptrdiff_t stride; /**< Plane stride in bytes */
+		unsigned mask;    /**< Plane row index mask */
 	} plane[3];
 } zimg_image_buffer;
 
@@ -569,7 +569,7 @@ typedef struct zimg_graph_builder_params {
 	/**
 	 * Parameters for resampling filter.
 	 *
-	 * The meaning of this value depends on the filter selected.
+	 * The meaning of this field depends on the filter selected.
 	 *
 	 * For ZIMG_RESIZE_BICUBIC, {@p filter_param_a} and {@p filter_param_b} are
 	 * the "b" and "c" parameters. If one parameter is specified, the other must
