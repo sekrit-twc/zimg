@@ -2,7 +2,7 @@
 #define ZIMG_DEPTH_HEXFLOAT_H_
 
 // ICL is not able to parse the constexpr implementation.
-#ifdef __INTEL_COMPILER
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
 #define HEX_LF_C(num) num
 #else
 #include <limits>
