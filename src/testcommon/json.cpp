@@ -54,46 +54,44 @@ public:
 };
 
 template <class ForwardIt>
-class TracingIterator : private ForwardIt {
+class TracingIterator {
 public:
-	using typename ForwardIt::difference_type;
-	using typename ForwardIt::value_type;
-	using typename ForwardIt::reference;
-	using typename ForwardIt::pointer;
+	typedef typename ForwardIt::difference_type difference_type;
+	typedef typename ForwardIt::value_type value_type;
+	typedef typename ForwardIt::reference reference;
+	typedef typename ForwardIt::pointer pointer;
 	typedef std::forward_iterator_tag iterator_category;
 private:
 	static constexpr int SPACES_PER_TAB = 4;
 
+	ForwardIt m_it;
 	int m_line;
 	int m_col;
 
-	ForwardIt &base() { return *this; }
-	const ForwardIt &base() const { return *this; }
-
 	void next()
 	{
-		if (*base() == '\n') {
+		if (*m_it == '\n') {
 			++m_line;
 			m_col = 0;
-		} else if (*base() == '\t') {
+		} else if (*m_it == '\t') {
 			m_col = m_col + SPACES_PER_TAB - m_col % SPACES_PER_TAB;
 		} else {
 			++m_col;
 		}
 
-		++base();
+		++m_it;
 	}
 public:
-	explicit TracingIterator(ForwardIt it) : ForwardIt{ it }, m_line{}, m_col{}
+	explicit TracingIterator(ForwardIt it) : m_it(it), m_line{}, m_col{}
 	{}
 
-	ForwardIt base_iterator() const { return *this; }
+	ForwardIt base_iterator() const { return m_it; }
 
 	int line() const noexcept { return m_line; }
 	int col() const noexcept { return m_col; }
 
-	reference operator*() const { return *base(); }
-	pointer operator->() const { return &(*base()); }
+	reference operator*() const { return *m_it; }
+	pointer operator->() const { return &*m_it; }
 
 	TracingIterator &operator++()
 	{
@@ -108,8 +106,8 @@ public:
 		return ret;
 	}
 
-	bool operator==(const TracingIterator &other) const { return base() == other.base(); }
-	bool operator!=(const TracingIterator &other) const { return base() != other.base(); }
+	bool operator==(const TracingIterator &other) const { return m_it == other.m_it; }
+	bool operator!=(const TracingIterator &other) const { return m_it != other.m_it; }
 };
 
 template <class ForwardIt, class Pred>
@@ -233,8 +231,8 @@ std::pair<Token, TracingIterator<ForwardIt>> match_keyword(TracingIterator<Forwa
 	ForwardIt base_last = last.base_iterator();
 
 #define MATCH(s, tag) do { \
-    if (prefix_match(s.begin(), s.end(), base_first, base_last)) \
-      return{ { tag, line, col }, skip_n(first, s.size()) }; \
+  if (prefix_match(s.begin(), s.end(), base_first, base_last)) \
+    return{ { tag, line, col }, skip_n(first, s.size()) }; \
   } while (0)
 
 	MATCH(keyword_infinity, Token::INFINITY_);
