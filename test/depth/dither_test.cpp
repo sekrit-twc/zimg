@@ -125,14 +125,14 @@ TEST(DitherTest, test_bayer_dither)
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
 		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "c4cccb53ec3d5ada8707ba52131b8a155e77f44a" },
+		{ "49bb64a45e15aa87f7f85e6f9b4940ef97308c1b" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "b1bc4729f8d7b8768137062ad08457f36f8c730d" },
-		{ "c4a1ed5e7c7c2b6c7b4fd88348c19abd4fd904c5" },
+		{ "708482e7450ab5b770bc820b08810b98df2f4b98" },
+		{ "8db2cf8d8ffa46eb351e5615bd6d684801431bf9" },
 
-		{ "1ca1d6db60eea9d6cc1c125e3add1d7951968f9e" },
-		{ "31da13a60b8c73c58f808d406a0f2e6066ab8b8b" },
+		{ "3bee9485fd5258fbd5e6ba1a361660bf9aaeaa3f" },
+		{ "5312234ac7d6198f138b2cded18b5bf48b6af568" },
 	};
 
 	test_case(zimg::depth::DitherType::ORDERED, false, false, expected_sha1);
