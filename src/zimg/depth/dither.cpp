@@ -356,7 +356,7 @@ public:
 		}
 	}
 
-	void init_context(void *ctx) const override
+	void init_context(void *ctx, unsigned seq) const override
 	{
 		std::fill_n(static_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
 	}

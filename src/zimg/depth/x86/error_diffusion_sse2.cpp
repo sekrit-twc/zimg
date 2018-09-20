@@ -454,7 +454,7 @@ public:
 		}
 	}
 
-	void init_context(void *ctx) const override
+	void init_context(void *ctx, unsigned seq) const override
 	{
 		std::fill_n(static_cast<unsigned char *>(ctx), get_context_size(), 0);
 	}

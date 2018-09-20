@@ -139,8 +139,9 @@ public:
 	 * Initialize per-frame filter context.
 	 *
 	 * @param ctx context
+	 * @param seq sequence counter
 	 */
-	virtual void init_context(void *ctx) const = 0;
+	virtual void init_context(void *ctx, unsigned seq) const = 0;
 
 	/**
 	 * Produce a range of output pixels.
@@ -179,7 +180,7 @@ public:
 	size_t get_context_size() const override { return 0; }
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
 
-	void init_context(void *ctx) const override {}
+	void init_context(void *ctx, unsigned seq) const override {}
 };
 
 inline ImageFilter::~ImageFilter() = default;

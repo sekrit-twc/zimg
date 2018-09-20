@@ -19,7 +19,7 @@ void FilterExecutor::exec_grey(const zimg::graph::ImageFilter *filter, unsigned 
 	auto attr = filter->get_image_attributes();
 	unsigned step = filter->get_simultaneous_lines();
 
-	filter->init_context(m_data->ctx.data());
+	filter->init_context(m_data->ctx.data(), plane);
 
 	for (unsigned i = 0; i < attr.height; i += step) {
 		filter->process(m_data->ctx.data(), &src_buffer, &dst_buffer, m_data->tmp.data(), i, 0, attr.width);
@@ -31,7 +31,7 @@ void FilterExecutor::exec_color()
 	auto attr = m_filter->get_image_attributes();
 	unsigned step = m_filter->get_simultaneous_lines();
 
-	m_filter->init_context(m_data->ctx.data());
+	m_filter->init_context(m_data->ctx.data(), 0);
 
 	for (unsigned i = 0; i < attr.height; i += step) {
 		m_filter->process(m_data->ctx.data(), m_src_frame->as_read_buffer(), m_dst_frame->as_write_buffer(), m_data->tmp.data(), i, 0, attr.width);

@@ -539,7 +539,7 @@ public:
 
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
 
-	void init_context(void *ctx) const override
+	void init_context(void *ctx, unsigned seq) const override
 	{
 		std::fill_n(static_cast<unsigned char *>(ctx), get_context_size(), 0);
 	}

@@ -178,7 +178,7 @@ void validate_filter_plane(const zimg::graph::ImageFilter *filter, AuditBuffer<T
 	zimg::AlignedVector<char> ctx(filter->get_context_size());
 	zimg::AlignedVector<char> tmp(filter->get_tmp_size(0, attr.width));
 
-	filter->init_context(ctx.data());
+	filter->init_context(ctx.data(), 0);
 
 	for (unsigned i = 0; i < attr.height; i += step) {
 		filter->process(ctx.data(), src_buffer->as_read_buffer(), dst_buffer->as_write_buffer(), tmp.data(), i, 0, attr.width);
@@ -220,7 +220,7 @@ void validate_filter_buffered(const zimg::graph::ImageFilter *filter, unsigned s
 
 	auto col_range = filter->get_required_col_range(left, right);
 
-	filter->init_context(ctx.data());
+	filter->init_context(ctx.data(), 0);
 
 	for (unsigned i = init; i < attr.height; i += step) {
 		auto row_range = filter->get_required_row_range(i);

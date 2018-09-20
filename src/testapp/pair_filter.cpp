@@ -158,7 +158,7 @@ size_t PairFilter::get_tmp_size(unsigned left, unsigned right) const
 	return std::max(first_tmp_size, second_tmp_size);
 }
 
-void PairFilter::init_context(void *ctx) const
+void PairFilter::init_context(void *ctx, unsigned seq) const
 {
 	zimg::LinearAllocator alloc{ ctx };
 
@@ -172,8 +172,8 @@ void PairFilter::init_context(void *ctx) const
 	cache->first_ctx = alloc.allocate(first_context_size);
 	cache->second_ctx = alloc.allocate(second_context_size);
 
-	m_first->init_context(cache->first_ctx);
-	m_second->init_context(cache->second_ctx);
+	m_first->init_context(cache->first_ctx, seq);
+	m_second->init_context(cache->second_ctx, seq);
 
 	for (unsigned p = 0; p < get_num_planes(); ++p) {
 		cache->cache_buf[p] = zimg::graph::ImageBuffer<void>{ alloc.allocate(cache_size_one_plane), get_cache_stride(), mask };

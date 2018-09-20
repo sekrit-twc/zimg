@@ -54,7 +54,7 @@ public:
 
 	size_t get_tmp_size(unsigned left, unsigned right) const override;
 
-	void init_context(void *ctx) const override;
+	void init_context(void *ctx, unsigned seq) const override;
 
 	void process(void *ctx, const zimg::graph::ImageBuffer<const void> src[], const zimg::graph::ImageBuffer<void> dst[], void *tmp, unsigned i, unsigned left, unsigned right) const override;
 };

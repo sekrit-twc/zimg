@@ -607,13 +607,13 @@ public:
 			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(strategy), select_zimg_buffer_mask(get_cache_lines(strategy)), enabled_planes);
 
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size());
-		m_filter->init_context(filter_ctx);
+		m_filter->init_context(filter_ctx, 0);
 	}
 
 	void reset_context(ExecutionState *state) const override
 	{
 		reset_cache_context(state->get_node_state(get_id()));
-		m_filter->init_context(state->get_context(get_id()));
+		m_filter->init_context(state->get_context(get_id()), 0);
 	}
 
 	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
@@ -693,8 +693,8 @@ public:
 		size_t filter_ctx_size = m_filter->get_context_size();
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size() * 2);
 
-		m_filter->init_context(filter_ctx);
-		m_filter->init_context(static_cast<unsigned char *>(filter_ctx) + filter_ctx_size);
+		m_filter->init_context(filter_ctx, 1);
+		m_filter->init_context(static_cast<unsigned char *>(filter_ctx) + filter_ctx_size, 2);
 	}
 
 	void reset_context(ExecutionState *state) const override
@@ -703,8 +703,8 @@ public:
 		void *filter_ctx = state->get_context(get_id());
 
 		reset_cache_context(state->get_node_state(get_id()));
-		m_filter->init_context(filter_ctx);
-		m_filter->init_context(static_cast<unsigned char *>(filter_ctx) + filter_ctx_size);
+		m_filter->init_context(filter_ctx, 1);
+		m_filter->init_context(static_cast<unsigned char *>(filter_ctx) + filter_ctx_size, 2);
 	}
 
 	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
@@ -820,13 +820,13 @@ public:
 			state->alloc_cache(get_cache_id(), get_cache_stride(), get_real_cache_lines(strategy), select_zimg_buffer_mask(get_cache_lines(strategy)), enabled_planes);
 
 		void *filter_ctx = state->alloc_context(get_id(), m_filter->get_context_size());
-		m_filter->init_context(filter_ctx);
+		m_filter->init_context(filter_ctx, 0);
 	}
 
 	void reset_context(ExecutionState *state) const override
 	{
 		reset_cache_context(state->get_node_state(get_id()));
-		m_filter->init_context(state->get_context(get_id()));
+		m_filter->init_context(state->get_context(get_id()), 0);
 	}
 
 	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool) const override
