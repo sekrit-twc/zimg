@@ -128,6 +128,7 @@ decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pix
 
 
 constexpr unsigned BAYER_TABLE_LEN = 16;
+constexpr unsigned BAYER_TABLE_SCALE = 255;
 
 constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN][BAYER_TABLE_LEN] = {
 	{   0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255, },
@@ -148,7 +149,18 @@ constexpr uint8_t BAYER_TABLE[BAYER_TABLE_LEN][BAYER_TABLE_LEN] = {
 	{ 170, 106, 154,  90, 166, 102, 150,  86, 169, 105, 153,  89, 165, 101, 149,  85, },
 };
 
-constexpr unsigned BAYER_TABLE_SCALE = 255;
+AlignedVector<float> load_dither_table(const uint8_t *data, unsigned len, unsigned scale)
+{
+	zassert_d(len >= 16 && len % 16 == 0, "table length must be multiple of 16");
+
+	AlignedVector<float> table(len * len);
+
+	for (unsigned i = 0; i < len * len; ++i) {
+		table[i] = static_cast<float>(data[i] + 1) / (scale + 2) - 0.5f;
+	}
+
+	return table;
+}
 
 class OrderedDitherTable {
 public:
@@ -169,14 +181,8 @@ public:
 class BayerDitherTable final : public OrderedDitherTable {
 	AlignedVector<float> m_table;
 public:
-	BayerDitherTable()
-	{
-		m_table.resize(BAYER_TABLE_LEN * BAYER_TABLE_LEN);
-
-		for (unsigned i = 0; i < BAYER_TABLE_LEN * BAYER_TABLE_LEN; ++i) {
-			m_table[i] = static_cast<float>((&BAYER_TABLE[0][0])[i] + 1) / (BAYER_TABLE_SCALE + 2) - 0.5f;
-		}
-	}
+	BayerDitherTable() : m_table(load_dither_table(&BAYER_TABLE[0][0], BAYER_TABLE_LEN, BAYER_TABLE_SCALE))
+	{}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
@@ -188,18 +194,13 @@ public:
 class RandomDitherTable final : public OrderedDitherTable {
 	AlignedVector<float> m_table;
 public:
-	RandomDitherTable()
-	{
-		m_table.resize(BLUE_NOISE_LEN * BLUE_NOISE_LEN);
-
-		for (unsigned i = 0; i < BLUE_NOISE_LEN * BLUE_NOISE_LEN; ++i) {
-			m_table[i] = static_cast<float>((&blue_noise_table[0][0])[i] + 1) / (BLUE_NOISE_SCALE + 2) - 0.5f;
-		}
-	}
+	RandomDitherTable() : m_table(load_dither_table(&blue_noise_table[0][0], BLUE_NOISE_LEN, BLUE_NOISE_SCALE))
+	{}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
-		return std::make_tuple(m_table.data() + (i % BLUE_NOISE_LEN) * BLUE_NOISE_LEN, 0, BLUE_NOISE_LEN - 1);
+		const float *data = m_table.data() + (i % BLUE_NOISE_LEN) * BLUE_NOISE_LEN;
+		return std::make_tuple(data, 0, BLUE_NOISE_LEN - 1);
 	}
 };
 
