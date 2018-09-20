@@ -234,6 +234,9 @@
     <ClInclude Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.h">
       <Filter>Header Files\colorspace\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\blue.h">
+      <Filter>Header Files\depth</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -388,6 +391,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\blue.cpp">
+      <Filter>Source Files\depth</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

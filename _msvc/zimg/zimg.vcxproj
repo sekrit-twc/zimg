@@ -178,6 +178,7 @@
     <ClInclude Include="..\..\src\zimg\common\x86\sse_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\x86util.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
+    <ClInclude Include="..\..\src\zimg\depth\blue.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth_convert.h" />
     <ClInclude Include="..\..\src\zimg\depth\dither.h" />
@@ -242,6 +243,7 @@
     <ClCompile Include="..\..\src\zimg\common\matrix.cpp" />
     <ClCompile Include="..\..\src\zimg\common\x86\cpuinfo_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\common\x86\x86util.cpp" />
+    <ClCompile Include="..\..\src\zimg\depth\blue.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\dither.cpp" />

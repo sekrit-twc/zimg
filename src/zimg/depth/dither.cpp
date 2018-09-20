@@ -1,6 +1,6 @@
 #include <algorithm>
+#include <cmath>
 #include <memory>
-#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -11,6 +11,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/image_filter.h"
+#include "blue.h"
 #include "depth.h"
 #include "dither.h"
 #include "hexfloat.h"
@@ -185,41 +186,20 @@ public:
 };
 
 class RandomDitherTable final : public OrderedDitherTable {
-	static constexpr unsigned RAND_NUM = 1 << 14;
-
 	AlignedVector<float> m_table;
-	std::vector<unsigned> m_row_offset;
 public:
-	RandomDitherTable(unsigned, unsigned height)
+	RandomDitherTable()
 	{
-		// The greatest value such that rint(65535.0f + x) yields 65535.0f unchanged.
-		float safe_min = HEX_LF_C(-0x1.fdfffep-2);
-		float safe_max = HEX_LF_C(0x1.fdfffep-2);
+		m_table.resize(BLUE_NOISE_LEN * BLUE_NOISE_LEN);
 
-		std::mt19937 mt;
-		double mt_min = std::mt19937::min();
-		double mt_max = std::mt19937::max();
-
-		m_table.resize(RAND_NUM);
-
-		std::generate(m_table.begin(), m_table.end(), [&]()
-		{
-			double x = mt();
-			float f = static_cast<float>((x - mt_min) / (mt_max - mt_min) - 0.5);
-			return std::min(std::max(f, safe_min), safe_max);
-		});
-
-		m_row_offset.resize(height);
-
-		for (unsigned i = 0; i < height; ++i) {
-			std::mt19937 mt{ i };
-			m_row_offset[i] = floor_n(mt(), 16);
+		for (unsigned i = 0; i < BLUE_NOISE_LEN * BLUE_NOISE_LEN; ++i) {
+			m_table[i] = static_cast<float>((&blue_noise_table[0][0])[i] + 1) / (BLUE_NOISE_SCALE + 2) - 0.5f;
 		}
 	}
 
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
-		return std::make_tuple(m_table.data(), m_row_offset[i] % RAND_NUM, RAND_NUM - 1);
+		return std::make_tuple(m_table.data() + (i % BLUE_NOISE_LEN) * BLUE_NOISE_LEN, 0, BLUE_NOISE_LEN - 1);
 	}
 };
 
@@ -409,7 +389,7 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 	case DitherType::ORDERED:
 		return ztd::make_unique<BayerDitherTable>();
 	case DitherType::RANDOM:
-		return ztd::make_unique<RandomDitherTable>(width, height);
+		return ztd::make_unique<RandomDitherTable>();
 	default:
 		error::throw_<error::InternalError>("unrecognized dither type");
 	}

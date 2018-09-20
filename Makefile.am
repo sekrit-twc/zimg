@@ -85,6 +85,8 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/common/pixel.h \
 	src/zimg/common/static_map.h \
 	src/zimg/common/zassert.h \
+	src/zimg/depth/blue.cpp \
+	src/zimg/depth/blue.h \
 	src/zimg/depth/depth_convert.cpp \
 	src/zimg/depth/depth_convert.h \
 	src/zimg/depth/depth.cpp \

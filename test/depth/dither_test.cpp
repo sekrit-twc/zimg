@@ -144,14 +144,14 @@ TEST(DitherTest, test_random_dither)
 		{ "02c0adca6d301444ac4bf717fa691fe2758752a5" },
 		{ "d5794ead078fee72fd10fc396aef511c96f8279c" },
 
-		{ "6da260ba1fec3eda99d83739ad3ae9eaeba15df2" },
+		{ "7a388da9cc97b0748e2812c4edab19e21bae300b" },
 		{ "8ba35ed1784cb6d7903a9092abefb3d9afd7a683" },
 
-		{ "30ef22fa882d6f4bc0dbb7224a1dffdedf108734" },
-		{ "661fad247819b453a77fffb32aa4da95c0e7024e" },
+		{ "6f482ba413b32561fac63a0da77becb3e2ac86bf" },
+		{ "906c2eb4ed28a1da9c047d527f1e3c1dc45c7b16" },
 
-		{ "6bf40dea8fb17f035be0e4fa14a303b3cde45dc5" },
-		{ "04df32587f1e6222c1a3979ccf77e0c1862db4bf" },
+		{ "e804612a72f64fc48a75966ea305aa96c6fd0b24" },
+		{ "6107cc8e8bb48dce752bca7bc032cf240f48174e" },
 	};
 
 	test_case(zimg::depth::DitherType::RANDOM, false, false, expected_sha1);
