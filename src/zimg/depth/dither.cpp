@@ -166,12 +166,12 @@ class OrderedDitherTable {
 public:
 	virtual ~OrderedDitherTable() = default;
 
-	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const = 0;
+	virtual std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned seq) const = 0;
 };
 
 class NoneDitherTable final : public OrderedDitherTable {
 public:
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned seq) const override
 	{
 		static constexpr float table alignas(ALIGNMENT)[AlignmentOf<float>::value] = {};
 		return std::make_tuple(table, 0, AlignmentOf<float>::value - 1);
@@ -182,11 +182,28 @@ class BayerDitherTable final : public OrderedDitherTable {
 	AlignedVector<float> m_table;
 public:
 	BayerDitherTable() : m_table(load_dither_table(&BAYER_TABLE[0][0], BAYER_TABLE_LEN, BAYER_TABLE_SCALE))
-	{}
-
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
 	{
-		const float *data = m_table.data() + (i % BAYER_TABLE_LEN) * BAYER_TABLE_LEN;
+		m_table.resize(m_table.size() * 4);
+
+		float *alternate1 = m_table.data() + BAYER_TABLE_LEN * BAYER_TABLE_LEN * 1;
+		float *alternate2 = m_table.data() + BAYER_TABLE_LEN * BAYER_TABLE_LEN * 2;
+		float *alternate3 = m_table.data() + BAYER_TABLE_LEN * BAYER_TABLE_LEN * 3;
+
+		for (unsigned i = 0; i < BAYER_TABLE_LEN; ++i) {
+			for (unsigned j = 0; j < BAYER_TABLE_LEN; ++j) {
+				// Horizontal flip.
+				alternate1[i * BAYER_TABLE_LEN + j] = m_table[i * BAYER_TABLE_LEN + (BAYER_TABLE_LEN - j - 1)];
+				// Vertical flip.
+				alternate2[i * BAYER_TABLE_LEN + j] = m_table[(BAYER_TABLE_LEN - i - 1) * BAYER_TABLE_LEN + j];
+				// Transposed.
+				alternate3[i * BAYER_TABLE_LEN + j] = m_table[j * BAYER_TABLE_LEN + i];
+			}
+		}
+	}
+
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned seq) const override
+	{
+		const float *data = m_table.data() + BAYER_TABLE_LEN * BAYER_TABLE_LEN * (seq % 4) + (i % BAYER_TABLE_LEN) * BAYER_TABLE_LEN;
 		return std::make_tuple(data, 0, BAYER_TABLE_LEN - 1);
 	}
 };
@@ -197,10 +214,14 @@ public:
 	RandomDitherTable() : m_table(load_dither_table(&blue_noise_table[0][0], BLUE_NOISE_LEN, BLUE_NOISE_SCALE))
 	{}
 
-	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i) const override
+	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned seq) const override
 	{
-		const float *data = m_table.data() + (i % BLUE_NOISE_LEN) * BLUE_NOISE_LEN;
-		return std::make_tuple(data, 0, BLUE_NOISE_LEN - 1);
+		const unsigned offset[] = { (0 << 8) | 0, (32 << 8) | 12, (16 << 8) | 55, (48 << 8) | 26 };
+		unsigned hoff = offset[seq % 4] >> 8;
+		unsigned voff = offset[seq % 4] & 0xFF;
+
+		const float *data = m_table.data() + ((i + voff) % BLUE_NOISE_LEN) * BLUE_NOISE_LEN;
+		return std::make_tuple(data, hoff, BLUE_NOISE_LEN - 1);
 	}
 };
 
@@ -261,9 +282,14 @@ public:
 		return m_f16c ? (static_cast<checked_size_t>(m_width) * sizeof(float)).get() : 0;
 	}
 
+	size_t get_context_size() const override { return sizeof(unsigned); }
+
+	void init_context(void *ctx, unsigned seq) const override { *static_cast<unsigned *>(ctx) = seq; }
+
 	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
 	{
-		auto dither = m_dither_table->get_dither_coeffs(i);
+		unsigned seq = *static_cast<unsigned *>(ctx);
+		auto dither = m_dither_table->get_dither_coeffs(i, seq);
 
 		const void *src_line = (*src)[i];
 		void *dst_line = (*dst)[i];
