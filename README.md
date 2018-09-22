@@ -13,7 +13,7 @@ Requirements
 - Byte-addressable architecture
 - Two's complement integer encoding
 - 32-bit or greater machine word
-- C++11 compliant compiler
+- C++11 compiler
 - Platforms: Microsoft Windows, POSIX
 
 Building
@@ -57,3 +57,27 @@ popular Bicubic and Lanczos filters. Resampling ratios of up to 100x are
 supported for upsampling and downsampling. Full support is provided for
 various coordinate systems, including the various chroma siting conventions
 (e.g. JPEG and MPEG2) as well as interlaced images.
+
+Performance
+-----
+"z" is optimized for Intel(R) Architecture and features faster processing times
+than industry standard swscale software.
+
+Time (ms) to resize FHD image to UHD with Lanczos filter.
+
+|                                | z.lib 2.8 | swscale 4.0.2* |
+|--------------------------------|-----------|----------------|
+| Intel(R) Core(TM) i7-8565U     |       7.7 |           15.2 |
+| Intel(R) Xeon(R) Platinum 8176 |      10.8 |           22.2 |
+
+Time (ms) to convert FHD BT.709 (YUV) to FHD BT.2020.
+
+|                                | z.lib 2.8 | swscale 4.0.2** |
+|--------------------------------|-----------|-----------------|
+| Intel(R) Core(TM) i7-8565U     |       8.3 |            17.5 |
+| Intel(R) Xeon(R) Platinum 8176 |      11.5 |            25.6 |
+
+\* `scale=3840:2160:sws_flags=lanczos+accurate_rnd:sws_dither=none`
+
+\** `colorspace=all=bt2020:iall=bt709:format=yuv420p10`
+
