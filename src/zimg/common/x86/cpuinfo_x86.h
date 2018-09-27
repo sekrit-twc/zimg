@@ -28,6 +28,7 @@ struct X86Capabilities {
 	unsigned avx512cd : 1;
 	unsigned avx512bw : 1;
 	unsigned avx512vl : 1;
+	unsigned xop      : 1;
 };
 
 /**

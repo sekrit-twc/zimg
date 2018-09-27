@@ -33,6 +33,7 @@ void show_x86_info()
 	std::cout << "AVX-512 CD: " << yes_no(caps.avx512dq) << '\n';
 	std::cout << "AVX-512 BW: " << yes_no(caps.avx512bw) << '\n';
 	std::cout << "AVX-512 VL: " << yes_no(caps.avx512vl) << '\n';
+	std::cout << "XOP:    " << yes_no(caps.xop) << '\n';
 	std::cout << '\n';
 
 	const zimg::X86CacheHierarchy cache = zimg::query_x86_cache_hierarchy();

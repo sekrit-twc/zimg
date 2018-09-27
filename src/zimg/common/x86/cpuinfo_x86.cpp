@@ -79,24 +79,28 @@ X86Capabilities do_query_x86_capabilities() noexcept
 		xcr0 = do_xgetbv(0);
 
 	// XMM and YMM state.
-	if ((xcr0 & 0x06) != 0x06)
-		return caps;
-
-	caps.avx      = !!(regs[2] & (1U << 28));
-	caps.f16c     = !!(regs[2] & (1U << 29));
+	if ((xcr0 & 0x06) == 0x06) {
+		caps.avx  = !!(regs[2] & (1U << 28));
+		caps.f16c = !!(regs[2] & (1U << 29));
+	}
 
 	do_cpuid(regs, 7, 0);
-	caps.avx2     = !!(regs[1] & (1U << 5));
+	if ((xcr0 & 0x06) == 0x06) {
+		caps.avx2 = !!(regs[1] & (1U << 5));
+	}
 
 	// ZMM state.
-	if ((xcr0 & 0xE0) != 0xE0)
-		return caps;
+	if ((xcr0 & 0xE0) == 0xE0) {
+		caps.avx512f  = !!(regs[1] & (1U << 16));
+		caps.avx512dq = !!(regs[1] & (1U << 17));
+		caps.avx512cd = !!(regs[1] & (1U << 28));
+		caps.avx512bw = !!(regs[1] & (1U << 30));
+		caps.avx512vl = !!(regs[1] & (1U << 31));
+	}
 
-	caps.avx512f  = !!(regs[1] & (1U << 16));
-	caps.avx512dq = !!(regs[1] & (1U << 17));
-	caps.avx512cd = !!(regs[1] & (1U << 28));
-	caps.avx512bw = !!(regs[1] & (1U << 30));
-	caps.avx512vl = !!(regs[1] & (1U << 31));
+	// Extended processor info.
+	do_cpuid(regs, 0x80000001U, 0);
+	caps.xop = !!(regs[2] & (1U << 11));
 
 	return caps;
 }
@@ -331,10 +335,11 @@ unsigned long cpu_cache_size_x86() noexcept
 
 bool cpu_has_fast_f16_x86(CPUClass cpu) noexcept
 {
-	// Although F16C is supported on Ivy Bridge, the latency penalty is too great before Haswell.
 	if (cpu_is_autodetect(cpu)) {
+		// Transparent F16C support is only implemented in AVX2+FMA code paths.
+		// Excavator (XOP) is explicitly excluded due to slow implementation.
 		X86Capabilities caps = query_x86_capabilities();
-		return caps.fma && caps.f16c && caps.avx2;
+		return caps.fma && caps.f16c && caps.avx2 && !caps.xop;
 	} else {
 		return cpu >= CPUClass::X86_AVX2;
 	}
