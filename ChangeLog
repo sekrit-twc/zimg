@@ -1,3 +1,15 @@
+2.8:
+api: rename colorspace enum values
+colorspace: AVX-512 code paths for commonly used transfer functions
+colorspace: optimize SSE2 LUT-based transfer functions
+common: reduce execution overhead
+depth: increase ordered dither pattern from 8x8 to 16x16
+depth: use blue noise instead of white for random dither
+depth: use different dither pattern on each color component
+resize: optimize x86 SIMD horizontal downsampling with >8 taps
+x86: cache detection on AMD processors
+x86: optimizations for AMD Excavator processors
+
 2.7.5:
 depth: fix SSE2 byte->float when width+4 is mod16
 resize: allow downsampling to very low resolutions
