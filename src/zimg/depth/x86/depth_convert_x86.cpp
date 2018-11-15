@@ -25,6 +25,20 @@ left_shift_func select_left_shift_func_sse2(PixelType pixel_in, PixelType pixel_
 		return nullptr;
 }
 
+left_shift_func select_left_shift_func_avx2(PixelType pixel_in, PixelType pixel_out)
+{
+	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
+		return left_shift_b2b_avx2;
+	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::WORD)
+		return left_shift_b2w_avx2;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::BYTE)
+		return left_shift_w2b_avx2;
+	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
+		return left_shift_w2w_avx2;
+	else
+		return nullptr;
+}
+
 depth_convert_func select_depth_convert_func_sse2(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_out == PixelType::HALF)
@@ -77,9 +91,13 @@ left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_o
 	left_shift_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
+		if (!func && caps.avx2)
+			func = select_left_shift_func_avx2(pixel_in, pixel_out);
 		if (!func && caps.sse2)
 			func = select_left_shift_func_sse2(pixel_in, pixel_out);
 	} else {
+		if (!func && cpu >= CPUClass::X86_AVX2)
+			func = select_left_shift_func_avx2(pixel_in, pixel_out);
 		if (!func && cpu >= CPUClass::X86_SSE2)
 			func = select_left_shift_func_sse2(pixel_in, pixel_out);
 	}
