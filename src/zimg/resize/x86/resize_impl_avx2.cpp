@@ -12,6 +12,7 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/make_unique.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
@@ -1646,7 +1647,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx2(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 #ifndef ZIMG_RESIZE_NO_PERMUTE
-	if (type == PixelType::WORD)
+	if (query_x86_capabilities().zen1)
+		ret = nullptr;
+	else if (type == PixelType::WORD)
 		ret = ResizeImplH_Permute_U16_AVX2::create(context, height, depth);
 	else if (type == PixelType::HALF)
 		ret = ResizeImplH_Permute_FP_AVX2<f16_traits>::create(context, height);

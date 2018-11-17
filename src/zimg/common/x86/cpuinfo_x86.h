@@ -29,7 +29,10 @@ struct X86Capabilities {
 	unsigned avx512bw : 1;
 	unsigned avx512vl : 1;
 	unsigned xop      : 1;
+	unsigned zen1     : 1;
 };
+
+constexpr bool slow_avx2(const X86Capabilities &caps) { return caps.xop || caps.zen1; }
 
 /**
  * Representation of processor cache topology.

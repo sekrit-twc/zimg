@@ -102,6 +102,26 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	do_cpuid(regs, 0x80000001U, 0);
 	caps.xop = !!(regs[2] & (1U << 11));
 
+	// Zen1 vs Zen2.
+	do_cpuid(regs, 0, 1);
+	if (regs[1] == 0x68747541U && regs[3] == 0x69746E65U && regs[2] == 0x444D4163U /* AuthenticAMD */) {
+		unsigned model;
+		unsigned family;
+
+		do_cpuid(regs, 1, 0);
+		model  = (regs[0] >> 4) & 0x0FU;
+		family = (regs[0] >> 8) & 0x0FU;
+
+		if (family == 6) {
+			family += ((regs[0] >> 20) & 0x0FU);
+		} else if (family == 15) {
+			family += ((regs[0] >> 20) & 0x0FU);
+			model  += ((regs[0] >> 16) & 0x0FU) << 4;
+		}
+
+		caps.zen1 = family == 0x17 && model <= 0x1FU;
+	}
+
 	return caps;
 }
 
@@ -337,9 +357,8 @@ bool cpu_has_fast_f16_x86(CPUClass cpu) noexcept
 {
 	if (cpu_is_autodetect(cpu)) {
 		// Transparent F16C support is only implemented in AVX2+FMA code paths.
-		// Excavator (XOP) is explicitly excluded due to slow implementation.
 		X86Capabilities caps = query_x86_capabilities();
-		return caps.fma && caps.f16c && caps.avx2 && !caps.xop;
+		return caps.fma && caps.f16c && caps.avx2 && !slow_avx2(caps);
 	} else {
 		return cpu >= CPUClass::X86_AVX2;
 	}
