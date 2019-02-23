@@ -83,9 +83,9 @@ void matrix_filter_line_sse(const float *matrix, const float * const * RESTRICT 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
 		XITER(j, XARGS);
 
-		_mm_store_ps(dst[0] + j, out0);
-		_mm_store_ps(dst[1] + j, out1);
-		_mm_store_ps(dst[2] + j, out2);
+		_mm_store_ps(dst0 + j, out0);
+		_mm_store_ps(dst1 + j, out1);
+		_mm_store_ps(dst2 + j, out2);
 	}
 
 	if (right != vec_right) {
