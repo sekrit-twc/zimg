@@ -1098,7 +1098,7 @@ template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base,
                                                            const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
                                                            const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
-                                                           uint32_t *accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
+                                                           uint32_t * RESTRICT accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
 {
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
@@ -1183,7 +1183,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t *dst, uint32_t *accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
 	const uint16_t * RESTRICT src_p0 = src_lines[0];
 	const uint16_t * RESTRICT src_p1 = src_lines[1];
@@ -1193,8 +1193,6 @@ void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const
 	const uint16_t * RESTRICT src_p5 = src_lines[5];
 	const uint16_t * RESTRICT src_p6 = src_lines[6];
 	const uint16_t * RESTRICT src_p7 = src_lines[7];
-	uint16_t * RESTRICT dst_p = dst;
-	uint32_t * RESTRICT accum_p = accum;
 
 	unsigned vec_left = ceil_n(left, 32);
 	unsigned vec_right = floor_n(right, 32);
@@ -1208,7 +1206,7 @@ void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const
 	__m512i out;
 
 #define XITER resize_line_v_u16_avx512_xiter<N, ReadAccum, WriteToAccum>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
+#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
 	if (left != vec_left) {
 		out = XITER(vec_left - 32, XARGS);
 
@@ -1220,7 +1218,7 @@ void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const
 		out = XITER(j, XARGS);
 
 		if (!WriteToAccum)
-			_mm512_store_si512(dst_p + j, out);
+			_mm512_store_si512(dst + j, out);
 	}
 
 	if (right != vec_right) {
@@ -1261,7 +1259,7 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
                                                          const T * RESTRICT src_p0, const T * RESTRICT src_p1,
                                                          const T * RESTRICT src_p2, const T * RESTRICT src_p3,
                                                          const T * RESTRICT src_p4, const T * RESTRICT src_p5,
-                                                         const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT dst_p,
+                                                         const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT accum_p,
                                                          const __m512 &c0, const __m512 &c1, const __m512 &c2, const __m512 &c3,
                                                          const __m512 &c4, const __m512 &c5, const __m512 &c6, const __m512 &c7)
 {
@@ -1274,7 +1272,7 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 
 	if (N >= 0) {
 		x = Traits::load16(src_p0 + j);
-		accum0 = UpdateAccum ? _mm512_fmadd_ps(c0, x, Traits::load16(dst_p + j)) : _mm512_mul_ps(c0, x);
+		accum0 = UpdateAccum ? _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j)) : _mm512_mul_ps(c0, x);
 	}
 	if (N >= 1) {
 		x = Traits::load16(src_p1 + j);
@@ -1310,7 +1308,7 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 }
 
 template <class Traits, unsigned N, bool UpdateAccum>
-void resize_line_v_fp_avx512(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type *dst, unsigned left, unsigned right)
+void resize_line_v_fp_avx512(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
@@ -1322,7 +1320,6 @@ void resize_line_v_fp_avx512(const float *filter_data, const typename Traits::pi
 	const pixel_type * RESTRICT src_p5 = src_lines[5];
 	const pixel_type * RESTRICT src_p6 = src_lines[6];
 	const pixel_type * RESTRICT src_p7 = src_lines[7];
-	pixel_type * RESTRICT dst_p = dst;
 
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
@@ -1339,7 +1336,7 @@ void resize_line_v_fp_avx512(const float *filter_data, const typename Traits::pi
 	__m512 accum;
 
 #define XITER resize_line_v_fp_avx512_xiter<Traits, N, UpdateAccum>
-#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst_p, c0, c1, c2, c3, c4, c5, c6, c7
+#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 16, XARGS);
 		Traits::mask_store16(dst + vec_left - 16, mmask16_set_hi(vec_left - left), accum);

@@ -208,7 +208,7 @@ inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j,
                                                        const float * RESTRICT src_p0, const float * RESTRICT src_p1,
                                                        const float * RESTRICT src_p2, const float * RESTRICT src_p3,
                                                        const float * RESTRICT src_p4, const float * RESTRICT src_p5,
-                                                       const float * RESTRICT src_p6, const float * RESTRICT src_p7, const float * RESTRICT dst_p,
+                                                       const float * RESTRICT src_p6, const float * RESTRICT src_p7, const float * RESTRICT accum_p,
                                                        const __m256 &c0, const __m256 &c1, const __m256 &c2, const __m256 &c3,
                                                        const __m256 &c4, const __m256 &c5, const __m256 &c6, const __m256 &c7)
 {
@@ -221,7 +221,7 @@ inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j,
 	if (N >= 0) {
 		x = _mm256_load_ps(src_p0 + j);
 		x = _mm256_mul_ps(c0, x);
-		accum0 = UpdateAccum ? _mm256_add_ps(_mm256_load_ps(dst_p + j), x) : x;
+		accum0 = UpdateAccum ? _mm256_add_ps(_mm256_load_ps(accum_p + j), x) : x;
 	}
 	if (N >= 1) {
 		x = _mm256_load_ps(src_p1 + j);
@@ -267,7 +267,7 @@ inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j,
 }
 
 template <unsigned N, bool UpdateAccum>
-void resize_line_v_f32_avx(const float *filter_data, const float * const *src_lines, float *dst, unsigned left, unsigned right)
+void resize_line_v_f32_avx(const float *filter_data, const float * const *src_lines, float * RESTRICT dst, unsigned left, unsigned right)
 {
 	const float * RESTRICT src_p0 = src_lines[0];
 	const float * RESTRICT src_p1 = src_lines[1];
@@ -277,7 +277,6 @@ void resize_line_v_f32_avx(const float *filter_data, const float * const *src_li
 	const float * RESTRICT src_p5 = src_lines[5];
 	const float * RESTRICT src_p6 = src_lines[6];
 	const float * RESTRICT src_p7 = src_lines[7];
-	float * RESTRICT dst_p = dst;
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -294,20 +293,20 @@ void resize_line_v_f32_avx(const float *filter_data, const float * const *src_li
 	__m256 accum;
 
 #define XITER resize_line_v_f32_avx_xiter<N, UpdateAccum>
-#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst_p, c0, c1, c2, c3, c4, c5, c6, c7
+#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 8, XARGS);
-		mm256_store_idxhi_ps(dst_p + vec_left - 8, accum, left % 8);
+		mm256_store_idxhi_ps(dst + vec_left - 8, accum, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		accum = XITER(j, XARGS);
-		_mm256_store_ps(dst_p + j, accum);
+		_mm256_store_ps(dst + j, accum);
 	}
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		mm256_store_idxlo_ps(dst_p + vec_right, accum, right % 8);
+		mm256_store_idxlo_ps(dst + vec_right, accum, right % 8);
 	}
 #undef XITER
 #undef XARGS

@@ -300,7 +300,7 @@ template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned accum_base,
                                                          const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
                                                          const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
-                                                         uint32_t *accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
+                                                         uint32_t * RESTRICT accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
 	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
@@ -385,7 +385,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t *dst, uint32_t *accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
 	const uint16_t * RESTRICT src_p0 = src_lines[0];
 	const uint16_t * RESTRICT src_p1 = src_lines[1];
@@ -395,8 +395,6 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 	const uint16_t * RESTRICT src_p5 = src_lines[5];
 	const uint16_t * RESTRICT src_p6 = src_lines[6];
 	const uint16_t * RESTRICT src_p7 = src_lines[7];
-	uint16_t * RESTRICT dst_p = dst;
-	uint32_t * RESTRICT accum_p = accum;
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -410,26 +408,26 @@ void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *
 	__m128i out;
 
 #define XITER resize_line_v_u16_sse2_xiter<N, ReadAccum, WriteToAccum>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
+#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
 	if (left != vec_left) {
 		out = XITER(vec_left - 8, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_idxhi_epi16((__m128i *)(dst_p + vec_left - 8), out, left % 8);
+			mm_store_idxhi_epi16((__m128i *)(dst + vec_left - 8), out, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		out = XITER(j, XARGS);
 
 		if (!WriteToAccum)
-			_mm_store_si128((__m128i *)(dst_p + j), out);
+			_mm_store_si128((__m128i *)(dst + j), out);
 	}
 
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm_store_idxlo_epi16((__m128i *)(dst_p + vec_right), out, right % 8);
+			mm_store_idxlo_epi16((__m128i *)(dst + vec_right), out, right % 8);
 	}
 #undef XITER
 #undef XARGS

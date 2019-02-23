@@ -881,7 +881,7 @@ template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
                                                          const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
                                                          const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
-                                                         uint32_t *accum_p, const __m256i &c01, const __m256i &c23, const __m256i &c45, const __m256i &c67, uint16_t limit)
+                                                         uint32_t * RESTRICT accum_p, const __m256i &c01, const __m256i &c23, const __m256i &c45, const __m256i &c67, uint16_t limit)
 {
 	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
 	const __m256i lim = _mm256_set1_epi16(limit + INT16_MIN);
@@ -966,7 +966,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t *dst, uint32_t *accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
 	const uint16_t * RESTRICT src_p0 = src_lines[0];
 	const uint16_t * RESTRICT src_p1 = src_lines[1];
@@ -976,8 +976,6 @@ void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *
 	const uint16_t * RESTRICT src_p5 = src_lines[5];
 	const uint16_t * RESTRICT src_p6 = src_lines[6];
 	const uint16_t * RESTRICT src_p7 = src_lines[7];
-	uint16_t * RESTRICT dst_p = dst;
-	uint32_t * RESTRICT accum_p = accum;
 
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
@@ -991,26 +989,26 @@ void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *
 	__m256i out;
 
 #define XITER resize_line_v_u16_avx2_xiter<N, ReadAccum, WriteToAccum>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum_p, c01, c23, c45, c67, limit
+#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
 	if (left != vec_left) {
 		out = XITER(vec_left - 16, XARGS);
 
 		if (!WriteToAccum)
-			mm256_store_idxhi_epi16((__m256i *)(dst_p + vec_left - 16), out, left % 16);
+			mm256_store_idxhi_epi16((__m256i *)(dst + vec_left - 16), out, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
 		out = XITER(j, XARGS);
 
 		if (!WriteToAccum)
-			_mm256_store_si256((__m256i *)(dst_p + j), out);
+			_mm256_store_si256((__m256i *)(dst + j), out);
 	}
 
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
 		if (!WriteToAccum)
-			mm256_store_idxlo_epi16((__m256i *)(dst_p + vec_right), out, right % 16);
+			mm256_store_idxlo_epi16((__m256i *)(dst + vec_right), out, right % 16);
 	}
 #undef XITER
 #undef XARGS
@@ -1043,7 +1041,7 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
                                                        const T * RESTRICT src_p0, const T * RESTRICT src_p1,
                                                        const T * RESTRICT src_p2, const T * RESTRICT src_p3,
                                                        const T * RESTRICT src_p4, const T * RESTRICT src_p5,
-                                                       const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT dst_p,
+                                                       const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT accum_p,
                                                        const __m256 &c0, const __m256 &c1, const __m256 &c2, const __m256 &c3,
                                                        const __m256 &c4, const __m256 &c5, const __m256 &c6, const __m256 &c7)
 {
@@ -1056,7 +1054,7 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 
 	if (N >= 0) {
 		x = Traits::load8(src_p0 + j);
-		accum0 = UpdateAccum ? _mm256_fmadd_ps(c0, x, Traits::load8(dst_p + j)) : _mm256_mul_ps(c0, x);
+		accum0 = UpdateAccum ? _mm256_fmadd_ps(c0, x, Traits::load8(accum_p + j)) : _mm256_mul_ps(c0, x);
 	}
 	if (N >= 1) {
 		x = Traits::load8(src_p1 + j);
@@ -1092,7 +1090,7 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 }
 
 template <class Traits, unsigned N, bool UpdateAccum>
-void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type *dst, unsigned left, unsigned right)
+void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
@@ -1104,7 +1102,6 @@ void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixe
 	const pixel_type * RESTRICT src_p5 = src_lines[5];
 	const pixel_type * RESTRICT src_p6 = src_lines[6];
 	const pixel_type * RESTRICT src_p7 = src_lines[7];
-	pixel_type * RESTRICT dst_p = dst;
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -1121,20 +1118,20 @@ void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixe
 	__m256 accum;
 
 #define XITER resize_line_v_fp_avx2_xiter<Traits, N, UpdateAccum>
-#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst_p, c0, c1, c2, c3, c4, c5, c6, c7
+#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 8, XARGS);
-		Traits::store_idxhi(dst_p + vec_left - 8, accum, left % 8);
+		Traits::store_idxhi(dst + vec_left - 8, accum, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		accum = XITER(j, XARGS);
-		Traits::store8(dst_p + j, accum);
+		Traits::store8(dst + j, accum);
 	}
 
 	if (right != vec_right) {
 		accum = XITER(vec_right, XARGS);
-		Traits::store_idxlo(dst_p + vec_right, accum, right % 8);
+		Traits::store_idxlo(dst + vec_right, accum, right % 8);
 	}
 #undef XITER
 #undef XARGS
