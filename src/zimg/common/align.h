@@ -18,17 +18,17 @@ constexpr int ALIGNMENT_RELAXED = sizeof(long double);
 
 /**
  * Round up the argument x to the nearest multiple of n.
- * x must be non-negative and n must be positive.
+ * x must be non-negative and n must be positive and power-of-2.
  */
-template <class T, class U>
-constexpr T ceil_n(T x, U n) { return x % n ? x + n - (x % n) : x; }
+template <class T>
+constexpr T ceil_n(T x, unsigned n) { return (x + (n - 1)) & ~static_cast<T>(n - 1); }
 
 /**
  * Round down the argument x to the nearest multiple of n.
- * x must be non-negative and n must be positive.
+ * x must be non-negative and n must be positive and power-of-2.
  */
-template <class T, class U>
-constexpr T floor_n(T x, U n) { return x - (x % n); }
+template <class T>
+constexpr T floor_n(T x, unsigned n) { return x & ~static_cast<T>(n - 1); }
 
 /**
  * Helper struct that computes alignment in units of object count.
