@@ -163,46 +163,29 @@ inline FORCE_INLINE __m512i export2_i30_u16(__m512i lo, __m512i hi)
 
 
 template <class Traits, class T>
-void transpose_line_16x16(T *dst, const T *src_p[16], unsigned left, unsigned right)
+void transpose_line_16x16(T * RESTRICT dst, const T * const * RESTRICT src, unsigned left, unsigned right)
 {
 	typedef typename Traits::vec16_type vec16_type;
-
-	const T *src_p0 = src_p[0];
-	const T *src_p1 = src_p[1];
-	const T *src_p2 = src_p[2];
-	const T *src_p3 = src_p[3];
-	const T *src_p4 = src_p[4];
-	const T *src_p5 = src_p[5];
-	const T *src_p6 = src_p[6];
-	const T *src_p7 = src_p[7];
-	const T *src_p8 = src_p[8];
-	const T *src_p9 = src_p[9];
-	const T *src_p10 = src_p[10];
-	const T *src_p11 = src_p[11];
-	const T *src_p12 = src_p[12];
-	const T *src_p13 = src_p[13];
-	const T *src_p14 = src_p[14];
-	const T *src_p15 = src_p[15];
 
 	for (unsigned j = left; j < right; j += 16) {
 		vec16_type x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
 
-		x0 = Traits::load16_raw(src_p0 + j);
-		x1 = Traits::load16_raw(src_p1 + j);
-		x2 = Traits::load16_raw(src_p2 + j);
-		x3 = Traits::load16_raw(src_p3 + j);
-		x4 = Traits::load16_raw(src_p4 + j);
-		x5 = Traits::load16_raw(src_p5 + j);
-		x6 = Traits::load16_raw(src_p6 + j);
-		x7 = Traits::load16_raw(src_p7 + j);
-		x8 = Traits::load16_raw(src_p8 + j);
-		x9 = Traits::load16_raw(src_p9 + j);
-		x10 = Traits::load16_raw(src_p10 + j);
-		x11 = Traits::load16_raw(src_p11 + j);
-		x12 = Traits::load16_raw(src_p12 + j);
-		x13 = Traits::load16_raw(src_p13 + j);
-		x14 = Traits::load16_raw(src_p14 + j);
-		x15 = Traits::load16_raw(src_p15 + j);
+		x0 = Traits::load16_raw(src[0] + j);
+		x1 = Traits::load16_raw(src[1] + j);
+		x2 = Traits::load16_raw(src[2] + j);
+		x3 = Traits::load16_raw(src[3] + j);
+		x4 = Traits::load16_raw(src[4] + j);
+		x5 = Traits::load16_raw(src[5] + j);
+		x6 = Traits::load16_raw(src[6] + j);
+		x7 = Traits::load16_raw(src[7] + j);
+		x8 = Traits::load16_raw(src[8] + j);
+		x9 = Traits::load16_raw(src[9] + j);
+		x10 = Traits::load16_raw(src[10] + j);
+		x11 = Traits::load16_raw(src[11] + j);
+		x12 = Traits::load16_raw(src[12] + j);
+		x13 = Traits::load16_raw(src[13] + j);
+		x14 = Traits::load16_raw(src[14] + j);
+		x15 = Traits::load16_raw(src[15] + j);
 
 		Traits::transpose16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
 
@@ -227,7 +210,7 @@ void transpose_line_16x16(T *dst, const T *src_p[16], unsigned left, unsigned ri
 	}
 }
 
-void transpose_line_32x32_epi16(uint16_t *dst, const uint16_t * const *src, unsigned left, unsigned right)
+void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const * RESTRICT src, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 32) {
 		__m512i x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
@@ -309,14 +292,14 @@ void transpose_line_32x32_epi16(uint16_t *dst, const uint16_t * const *src, unsi
 
 template <bool DoLoop, unsigned Tail>
 inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
-                                                             const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                             const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
+                                                             const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                             const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
 
 	const int16_t *filter_coeffs = filter_data + j * filter_stride;
-	const uint16_t *src_p = src_ptr + (filter_left[j] - src_base) * 32;
+	const uint16_t *src_p = src + (filter_left[j] - src_base) * 32;
 
 	__m512i accum_lo = _mm512_setzero_si512();
 	__m512i accum_hi = _mm512_setzero_si512();
@@ -459,21 +442,21 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 }
 
 template <bool DoLoop, unsigned Tail>
-void resize_line16_h_u16_avx512(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
+void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 32);
 	unsigned vec_right = floor_n(right, 32);
 
 #define XITER resize_line16_h_u16_avx512_xiter<DoLoop, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m512i x = XITER(j, XARGS);
 
-		mm_scatter_epi16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j, _mm512_castsi512_si128(x));
-		mm_scatter_epi16(dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, _mm512_extracti32x4_epi32(x, 1));
-		mm_scatter_epi16(dst_ptr[16] + j, dst_ptr[17] + j, dst_ptr[18] + j, dst_ptr[19] + j, dst_ptr[20] + j, dst_ptr[21] + j, dst_ptr[22] + j, dst_ptr[23] + j, _mm512_extracti32x4_epi32(x, 2));
-		mm_scatter_epi16(dst_ptr[24] + j, dst_ptr[25] + j, dst_ptr[26] + j, dst_ptr[27] + j, dst_ptr[28] + j, dst_ptr[29] + j, dst_ptr[30] + j, dst_ptr[31] + j, _mm512_extracti32x4_epi32(x, 3));
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm512_castsi512_si128(x));
+		mm_scatter_epi16(dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, _mm512_extracti32x4_epi32(x, 1));
+		mm_scatter_epi16(dst[16] + j, dst[17] + j, dst[18] + j, dst[19] + j, dst[20] + j, dst[21] + j, dst[22] + j, dst[23] + j, _mm512_extracti32x4_epi32(x, 2));
+		mm_scatter_epi16(dst[24] + j, dst[25] + j, dst[26] + j, dst[27] + j, dst[28] + j, dst[29] + j, dst[30] + j, dst[31] + j, _mm512_extracti32x4_epi32(x, 3));
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 32) {
@@ -522,47 +505,47 @@ void resize_line16_h_u16_avx512(const unsigned *filter_left, const int16_t * RES
 		mm512_transpose32_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 		                        x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31);
 
-		_mm512_store_si512(dst_ptr[0] + j, x0);
-		_mm512_store_si512(dst_ptr[1] + j, x1);
-		_mm512_store_si512(dst_ptr[2] + j, x2);
-		_mm512_store_si512(dst_ptr[3] + j, x3);
-		_mm512_store_si512(dst_ptr[4] + j, x4);
-		_mm512_store_si512(dst_ptr[5] + j, x5);
-		_mm512_store_si512(dst_ptr[6] + j, x6);
-		_mm512_store_si512(dst_ptr[7] + j, x7);
-		_mm512_store_si512(dst_ptr[8] + j, x8);
-		_mm512_store_si512(dst_ptr[9] + j, x9);
-		_mm512_store_si512(dst_ptr[10] + j, x10);
-		_mm512_store_si512(dst_ptr[11] + j, x11);
-		_mm512_store_si512(dst_ptr[12] + j, x12);
-		_mm512_store_si512(dst_ptr[13] + j, x13);
-		_mm512_store_si512(dst_ptr[14] + j, x14);
-		_mm512_store_si512(dst_ptr[15] + j, x15);
-		_mm512_store_si512(dst_ptr[16] + j, x16);
-		_mm512_store_si512(dst_ptr[17] + j, x17);
-		_mm512_store_si512(dst_ptr[18] + j, x18);
-		_mm512_store_si512(dst_ptr[19] + j, x19);
-		_mm512_store_si512(dst_ptr[20] + j, x20);
-		_mm512_store_si512(dst_ptr[21] + j, x21);
-		_mm512_store_si512(dst_ptr[22] + j, x22);
-		_mm512_store_si512(dst_ptr[23] + j, x23);
-		_mm512_store_si512(dst_ptr[24] + j, x24);
-		_mm512_store_si512(dst_ptr[25] + j, x25);
-		_mm512_store_si512(dst_ptr[26] + j, x26);
-		_mm512_store_si512(dst_ptr[27] + j, x27);
-		_mm512_store_si512(dst_ptr[28] + j, x28);
-		_mm512_store_si512(dst_ptr[29] + j, x29);
-		_mm512_store_si512(dst_ptr[30] + j, x30);
-		_mm512_store_si512(dst_ptr[31] + j, x31);
+		_mm512_store_si512(dst[0] + j, x0);
+		_mm512_store_si512(dst[1] + j, x1);
+		_mm512_store_si512(dst[2] + j, x2);
+		_mm512_store_si512(dst[3] + j, x3);
+		_mm512_store_si512(dst[4] + j, x4);
+		_mm512_store_si512(dst[5] + j, x5);
+		_mm512_store_si512(dst[6] + j, x6);
+		_mm512_store_si512(dst[7] + j, x7);
+		_mm512_store_si512(dst[8] + j, x8);
+		_mm512_store_si512(dst[9] + j, x9);
+		_mm512_store_si512(dst[10] + j, x10);
+		_mm512_store_si512(dst[11] + j, x11);
+		_mm512_store_si512(dst[12] + j, x12);
+		_mm512_store_si512(dst[13] + j, x13);
+		_mm512_store_si512(dst[14] + j, x14);
+		_mm512_store_si512(dst[15] + j, x15);
+		_mm512_store_si512(dst[16] + j, x16);
+		_mm512_store_si512(dst[17] + j, x17);
+		_mm512_store_si512(dst[18] + j, x18);
+		_mm512_store_si512(dst[19] + j, x19);
+		_mm512_store_si512(dst[20] + j, x20);
+		_mm512_store_si512(dst[21] + j, x21);
+		_mm512_store_si512(dst[22] + j, x22);
+		_mm512_store_si512(dst[23] + j, x23);
+		_mm512_store_si512(dst[24] + j, x24);
+		_mm512_store_si512(dst[25] + j, x25);
+		_mm512_store_si512(dst[26] + j, x26);
+		_mm512_store_si512(dst[27] + j, x27);
+		_mm512_store_si512(dst[28] + j, x28);
+		_mm512_store_si512(dst[29] + j, x29);
+		_mm512_store_si512(dst[30] + j, x30);
+		_mm512_store_si512(dst[31] + j, x31);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m512i x = XITER(j, XARGS);
 
-		mm_scatter_epi16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j, _mm512_castsi512_si128(x));
-		mm_scatter_epi16(dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, _mm512_extracti32x4_epi32(x, 1));
-		mm_scatter_epi16(dst_ptr[16] + j, dst_ptr[17] + j, dst_ptr[18] + j, dst_ptr[19] + j, dst_ptr[20] + j, dst_ptr[21] + j, dst_ptr[22] + j, dst_ptr[23] + j, _mm512_extracti32x4_epi32(x, 2));
-		mm_scatter_epi16(dst_ptr[24] + j, dst_ptr[25] + j, dst_ptr[26] + j, dst_ptr[27] + j, dst_ptr[28] + j, dst_ptr[29] + j, dst_ptr[30] + j, dst_ptr[31] + j, _mm512_extracti32x4_epi32(x, 3));
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm512_castsi512_si128(x));
+		mm_scatter_epi16(dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, _mm512_extracti32x4_epi32(x, 1));
+		mm_scatter_epi16(dst[16] + j, dst[17] + j, dst[18] + j, dst[19] + j, dst[20] + j, dst[21] + j, dst[22] + j, dst[23] + j, _mm512_extracti32x4_epi32(x, 2));
+		mm_scatter_epi16(dst[24] + j, dst[25] + j, dst[26] + j, dst[27] + j, dst[28] + j, dst[29] + j, dst[30] + j, dst[31] + j, _mm512_extracti32x4_epi32(x, 3));
 	}
 #undef XITER
 #undef XARGS
@@ -594,13 +577,13 @@ const decltype(&resize_line16_h_u16_avx512<false, 0>) resize_line16_h_u16_avx512
 
 template <class Traits, unsigned FWidth, unsigned Tail>
 inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
-                                                           const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                           const typename Traits::pixel_type * RESTRICT src_ptr, unsigned src_base)
+                                                           const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                           const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
 	const float *filter_coeffs = filter_data + j * filter_stride;
-	const pixel_type *src_p = src_ptr + (filter_left[j] - src_base) * 16;
+	const pixel_type *src_p = src + (filter_left[j] - src_base) * 16;
 
 	__m512 accum0 = _mm512_setzero_ps();
 	__m512 accum1 = _mm512_setzero_ps();
@@ -660,18 +643,18 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 }
 
 template <class Traits, unsigned FWidth, unsigned Tail>
-void resize_line16_h_fp_avx512(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                               const typename Traits::pixel_type *src_ptr, typename Traits::pixel_type * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
+void resize_line16_h_fp_avx512(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                               const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
 
 #define XITER resize_line16_h_fp_avx512_xiter<Traits, FWidth, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m512 x = XITER(j, XARGS);
-		Traits::scatter16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j,
-		                  dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, x);
+		Traits::scatter16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j,
+		                  dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -702,28 +685,28 @@ void resize_line16_h_fp_avx512(const unsigned *filter_left, const float * RESTRI
 
 		mm512_transpose16_ps(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
 
-		Traits::store16(dst_ptr[0] + j, x0);
-		Traits::store16(dst_ptr[1] + j, x1);
-		Traits::store16(dst_ptr[2] + j, x2);
-		Traits::store16(dst_ptr[3] + j, x3);
-		Traits::store16(dst_ptr[4] + j, x4);
-		Traits::store16(dst_ptr[5] + j, x5);
-		Traits::store16(dst_ptr[6] + j, x6);
-		Traits::store16(dst_ptr[7] + j, x7);
-		Traits::store16(dst_ptr[8] + j, x8);
-		Traits::store16(dst_ptr[9] + j, x9);
-		Traits::store16(dst_ptr[10] + j, x10);
-		Traits::store16(dst_ptr[11] + j, x11);
-		Traits::store16(dst_ptr[12] + j, x12);
-		Traits::store16(dst_ptr[13] + j, x13);
-		Traits::store16(dst_ptr[14] + j, x14);
-		Traits::store16(dst_ptr[15] + j, x15);
+		Traits::store16(dst[0] + j, x0);
+		Traits::store16(dst[1] + j, x1);
+		Traits::store16(dst[2] + j, x2);
+		Traits::store16(dst[3] + j, x3);
+		Traits::store16(dst[4] + j, x4);
+		Traits::store16(dst[5] + j, x5);
+		Traits::store16(dst[6] + j, x6);
+		Traits::store16(dst[7] + j, x7);
+		Traits::store16(dst[8] + j, x8);
+		Traits::store16(dst[9] + j, x9);
+		Traits::store16(dst[10] + j, x10);
+		Traits::store16(dst[11] + j, x11);
+		Traits::store16(dst[12] + j, x12);
+		Traits::store16(dst[13] + j, x13);
+		Traits::store16(dst[14] + j, x14);
+		Traits::store16(dst[15] + j, x15);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m512 x = XITER(j, XARGS);
-		Traits::scatter16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j,
-		                  dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, x);
+		Traits::scatter16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j,
+		                  dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, x);
 	}
 #undef XITER
 #undef XARGS
@@ -759,8 +742,8 @@ const typename resize_line16_h_fp_avx512_jt<Traits>::func_type resize_line16_h_f
 
 
 template <unsigned N>
-void resize_line_h_perm_u16_avx512(const unsigned *permute_left, const uint16_t *permute_mask, const int16_t *filter_data, unsigned input_width,
-                                 const uint16_t *src, uint16_t *dst, unsigned left, unsigned right, uint16_t limit)
+void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const uint16_t * RESTRICT permute_mask, const int16_t * RESTRICT filter_data, unsigned input_width,
+                                   const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, unsigned left, unsigned right, uint16_t limit)
 {
 	static_assert(N <= 16, "permuted resampler only supports up to 16 taps");
 
@@ -904,8 +887,8 @@ const typename resize_line_h_perm_u16_avx512_jt::func_type resize_line_h_perm_u1
 
 
 template <class Traits, unsigned N>
-void resize_line_h_perm_fp_avx512(const unsigned *permute_left, const unsigned *permute_mask, const float *filter_data, unsigned input_width,
-                                  const typename Traits::pixel_type *src, typename Traits::pixel_type *dst, unsigned left, unsigned right)
+void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const unsigned * RESTRICT permute_mask, const float * RESTRICT filter_data, unsigned input_width,
+                                  const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
 	static_assert(N <= 16, "permuted resampler only supports up to 16 taps");
 
@@ -1096,8 +1079,8 @@ const typename resize_line_h_perm_fp_avx512_jt<Traits>::func_type resize_line_h_
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base,
-                                                           const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
-                                                           const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
+                                                           const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
+                                                           const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                                                            uint32_t * RESTRICT accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
 {
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
@@ -1183,16 +1166,17 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_avx512(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_avx512(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum,
+                              unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t * RESTRICT src_p0 = src_lines[0];
-	const uint16_t * RESTRICT src_p1 = src_lines[1];
-	const uint16_t * RESTRICT src_p2 = src_lines[2];
-	const uint16_t * RESTRICT src_p3 = src_lines[3];
-	const uint16_t * RESTRICT src_p4 = src_lines[4];
-	const uint16_t * RESTRICT src_p5 = src_lines[5];
-	const uint16_t * RESTRICT src_p6 = src_lines[6];
-	const uint16_t * RESTRICT src_p7 = src_lines[7];
+	const uint16_t *src_p0 = src[0];
+	const uint16_t *src_p1 = src[1];
+	const uint16_t *src_p2 = src[2];
+	const uint16_t *src_p3 = src[3];
+	const uint16_t *src_p4 = src[4];
+	const uint16_t *src_p5 = src[5];
+	const uint16_t *src_p6 = src[6];
+	const uint16_t *src_p7 = src[7];
 
 	unsigned vec_left = ceil_n(left, 32);
 	unsigned vec_right = floor_n(right, 32);
@@ -1256,10 +1240,8 @@ const decltype(&resize_line_v_u16_avx512<0, false, false>) resize_line_v_u16_avx
 
 template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
 inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
-                                                         const T * RESTRICT src_p0, const T * RESTRICT src_p1,
-                                                         const T * RESTRICT src_p2, const T * RESTRICT src_p3,
-                                                         const T * RESTRICT src_p4, const T * RESTRICT src_p5,
-                                                         const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT accum_p,
+                                                         const T *src_p0, const T *src_p1, const T *src_p2, const T *src_p3,
+                                                         const T *src_p4, const T *src_p5, const T *src_p6, const T *src_p7, T * RESTRICT accum_p,
                                                          const __m512 &c0, const __m512 &c1, const __m512 &c2, const __m512 &c3,
                                                          const __m512 &c4, const __m512 &c5, const __m512 &c6, const __m512 &c7)
 {
@@ -1308,18 +1290,19 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 }
 
 template <class Traits, unsigned N, bool UpdateAccum>
-void resize_line_v_fp_avx512(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
+void resize_line_v_fp_avx512(const float * RESTRICT filter_data, const typename Traits::pixel_type * const * RESTRICT src, typename Traits::pixel_type * RESTRICT dst,
+                             unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
-	const pixel_type * RESTRICT src_p0 = src_lines[0];
-	const pixel_type * RESTRICT src_p1 = src_lines[1];
-	const pixel_type * RESTRICT src_p2 = src_lines[2];
-	const pixel_type * RESTRICT src_p3 = src_lines[3];
-	const pixel_type * RESTRICT src_p4 = src_lines[4];
-	const pixel_type * RESTRICT src_p5 = src_lines[5];
-	const pixel_type * RESTRICT src_p6 = src_lines[6];
-	const pixel_type * RESTRICT src_p7 = src_lines[7];
+	const pixel_type *src_p0 = src[0];
+	const pixel_type *src_p1 = src[1];
+	const pixel_type *src_p2 = src[2];
+	const pixel_type *src_p3 = src[3];
+	const pixel_type *src_p4 = src[4];
+	const pixel_type *src_p5 = src[5];
+	const pixel_type *src_p6 = src[6];
+	const pixel_type *src_p7 = src[7];
 
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);

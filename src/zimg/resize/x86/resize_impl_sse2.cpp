@@ -20,21 +20,19 @@ namespace resize {
 
 namespace {
 
-void transpose_line_8x8_epi16(uint16_t *dst, const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
-                              const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
-                              unsigned left, unsigned right)
+void transpose_line_8x8_epi16(uint16_t * RESTRICT dst, const uint16_t * const * RESTRICT src, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 8) {
 		__m128i x0, x1, x2, x3, x4, x5, x6, x7;
 
-		x0 = _mm_load_si128((const __m128i *)(src_p0 + j));
-		x1 = _mm_load_si128((const __m128i *)(src_p1 + j));
-		x2 = _mm_load_si128((const __m128i *)(src_p2 + j));
-		x3 = _mm_load_si128((const __m128i *)(src_p3 + j));
-		x4 = _mm_load_si128((const __m128i *)(src_p4 + j));
-		x5 = _mm_load_si128((const __m128i *)(src_p5 + j));
-		x6 = _mm_load_si128((const __m128i *)(src_p6 + j));
-		x7 = _mm_load_si128((const __m128i *)(src_p7 + j));
+		x0 = _mm_load_si128((const __m128i *)(src[0] + j));
+		x1 = _mm_load_si128((const __m128i *)(src[1] + j));
+		x2 = _mm_load_si128((const __m128i *)(src[2] + j));
+		x3 = _mm_load_si128((const __m128i *)(src[3] + j));
+		x4 = _mm_load_si128((const __m128i *)(src[4] + j));
+		x5 = _mm_load_si128((const __m128i *)(src[5] + j));
+		x6 = _mm_load_si128((const __m128i *)(src[6] + j));
+		x7 = _mm_load_si128((const __m128i *)(src[7] + j));
 
 		mm_transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
 
@@ -69,14 +67,14 @@ inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi)
 
 template <bool DoLoop, unsigned Tail>
 inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
-                                                          const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                          const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
+                                                          const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                          const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
 	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
 	const int16_t *filter_coeffs = filter_data + j * filter_stride;
-	const uint16_t *src_p = src_ptr + (filter_left[j] - src_base) * 8;
+	const uint16_t *src_p = src + (filter_left[j] - src_base) * 8;
 
 	__m128i accum_lo = _mm_setzero_si128();
 	__m128i accum_hi = _mm_setzero_si128();
@@ -219,23 +217,23 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 }
 
 template <bool DoLoop, unsigned Tail>
-void resize_line8_h_u16_sse2(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                             const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
+void resize_line8_h_u16_sse2(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                             const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
-	uint16_t * RESTRICT dst_p0 = dst_ptr[0];
-	uint16_t * RESTRICT dst_p1 = dst_ptr[1];
-	uint16_t * RESTRICT dst_p2 = dst_ptr[2];
-	uint16_t * RESTRICT dst_p3 = dst_ptr[3];
-	uint16_t * RESTRICT dst_p4 = dst_ptr[4];
-	uint16_t * RESTRICT dst_p5 = dst_ptr[5];
-	uint16_t * RESTRICT dst_p6 = dst_ptr[6];
-	uint16_t * RESTRICT dst_p7 = dst_ptr[7];
+	uint16_t *dst_p0 = dst[0];
+	uint16_t *dst_p1 = dst[1];
+	uint16_t *dst_p2 = dst[2];
+	uint16_t *dst_p3 = dst[3];
+	uint16_t *dst_p4 = dst[4];
+	uint16_t *dst_p5 = dst[5];
+	uint16_t *dst_p6 = dst[6];
+	uint16_t *dst_p7 = dst[7];
 
 #define XITER resize_line8_h_u16_sse2_xiter<DoLoop, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128i x = XITER(j, XARGS);
 		mm_scatter_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
@@ -298,8 +296,8 @@ const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_la
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned accum_base,
-                                                         const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
-                                                         const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
+                                                         const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
+                                                         const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                                                          uint32_t * RESTRICT accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
 {
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
@@ -385,16 +383,16 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_sse2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_sse2(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t * RESTRICT src_p0 = src_lines[0];
-	const uint16_t * RESTRICT src_p1 = src_lines[1];
-	const uint16_t * RESTRICT src_p2 = src_lines[2];
-	const uint16_t * RESTRICT src_p3 = src_lines[3];
-	const uint16_t * RESTRICT src_p4 = src_lines[4];
-	const uint16_t * RESTRICT src_p5 = src_lines[5];
-	const uint16_t * RESTRICT src_p6 = src_lines[6];
-	const uint16_t * RESTRICT src_p7 = src_lines[7];
+	const uint16_t * RESTRICT src_p0 = src[0];
+	const uint16_t * RESTRICT src_p1 = src[1];
+	const uint16_t * RESTRICT src_p2 = src[2];
+	const uint16_t * RESTRICT src_p3 = src[3];
+	const uint16_t * RESTRICT src_p4 = src[4];
+	const uint16_t * RESTRICT src_p5 = src[5];
+	const uint16_t * RESTRICT src_p6 = src[6];
+	const uint16_t * RESTRICT src_p7 = src[7];
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -500,8 +498,7 @@ public:
 			src_ptr[n] = src_buf[std::min(i + n, height - 1)];
 		}
 
-		transpose_line_8x8_epi16(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], src_ptr[4], src_ptr[5], src_ptr[6], src_ptr[7],
-		                         floor_n(range.first, 8), ceil_n(range.second, 8));
+		transpose_line_8x8_epi16(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		for (unsigned n = 0; n < 8; ++n) {
 			dst_ptr[n] = dst_buf[std::min(i + n, height - 1)];

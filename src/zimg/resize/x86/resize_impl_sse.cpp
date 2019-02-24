@@ -21,7 +21,7 @@ namespace resize {
 
 namespace {
 
-void transpose_line_4x4_ps(float *dst, const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, unsigned left, unsigned right)
+void transpose_line_4x4_ps(float * RESTRICT dst, const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 4) {
 		__m128 x0, x1, x2, x3;
@@ -45,11 +45,11 @@ void transpose_line_4x4_ps(float *dst, const float *src_p0, const float *src_p1,
 
 template <unsigned FWidth, unsigned Tail>
 inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
-                                                        const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                        const float * RESTRICT src_ptr, unsigned src_base)
+                                                        const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const float * RESTRICT src, unsigned src_base)
 {
 	const float *filter_coeffs = filter_data + j * filter_stride;
-	const float *src_p = src_ptr + (filter_left[j] - src_base) * 4;
+	const float *src_p = src + (filter_left[j] - src_base) * 4;
 
 	__m128 accum0 = _mm_setzero_ps();
 	__m128 accum1 = _mm_setzero_ps();
@@ -117,18 +117,19 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 }
 
 template <unsigned FWidth, unsigned Tail>
-void resize_line4_h_f32_sse(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                            const float * RESTRICT src_ptr, float * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
+void resize_line4_h_f32_sse(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                            const float * RESTRICT src, float * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	float * RESTRICT dst_p0 = dst_ptr[0];
-	float * RESTRICT dst_p1 = dst_ptr[1];
-	float * RESTRICT dst_p2 = dst_ptr[2];
-	float * RESTRICT dst_p3 = dst_ptr[3];
+	float *dst_p0 = dst[0];
+	float *dst_p1 = dst[1];
+	float *dst_p2 = dst[2];
+	float *dst_p3 = dst[3];
+
 #define XITER resize_line4_h_f32_sse_xiter<FWidth, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = XITER(j, XARGS);
 		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
@@ -179,8 +180,7 @@ const decltype(&resize_line4_h_f32_sse<0, 0>) resize_line4_h_f32_sse_jt_large[] 
 
 template <unsigned N, bool UpdateAccum>
 inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j,
-                                                       const float * RESTRICT src_p0, const float * RESTRICT src_p1,
-                                                       const float * RESTRICT src_p2, const float * RESTRICT src_p3, const float * RESTRICT accum_p,
+                                                       const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, const float * RESTRICT accum_p,
                                                        const __m128 &c0, const __m128 &c1, const __m128 &c2, const __m128 &c3)
 {
 	__m128 accum0 = _mm_setzero_ps();
@@ -213,12 +213,12 @@ inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j,
 }
 
 template <unsigned N, bool UpdateAccum>
-void resize_line_v_f32_sse(const float *filter_data, const float * const *src_lines, float * RESTRICT dst, unsigned left, unsigned right)
+void resize_line_v_f32_sse(const float * RESTRICT filter_data, const float * const * RESTRICT src, float * RESTRICT dst, unsigned left, unsigned right)
 {
-	const float * RESTRICT src_p0 = src_lines[0];
-	const float * RESTRICT src_p1 = src_lines[1];
-	const float * RESTRICT src_p2 = src_lines[2];
-	const float * RESTRICT src_p3 = src_lines[3];
+	const float *src_p0 = src[0];
+	const float *src_p1 = src[1];
+	const float *src_p2 = src[2];
+	const float *src_p3 = src[3];
 
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);

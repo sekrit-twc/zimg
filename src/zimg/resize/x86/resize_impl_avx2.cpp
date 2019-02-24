@@ -145,24 +145,21 @@ inline FORCE_INLINE __m256i export_i30_u16(__m256i lo, __m256i hi)
 
 
 template <class Traits, class T>
-void transpose_line_8x8(T *dst,
-                        const T *src_p0, const T *src_p1, const T *src_p2, const T *src_p3,
-                        const T *src_p4, const T *src_p5, const T *src_p6, const T *src_p7,
-                        unsigned left, unsigned right)
+void transpose_line_8x8(T * RESTRICT dst, const T * const * RESTRICT src, unsigned left, unsigned right)
 {
 	typedef typename Traits::vec8_type vec8_type;
 
 	for (unsigned j = left; j < right; j += 8) {
 		vec8_type x0, x1, x2, x3, x4, x5, x6, x7;
 
-		x0 = Traits::load8_raw(src_p0 + j);
-		x1 = Traits::load8_raw(src_p1 + j);
-		x2 = Traits::load8_raw(src_p2 + j);
-		x3 = Traits::load8_raw(src_p3 + j);
-		x4 = Traits::load8_raw(src_p4 + j);
-		x5 = Traits::load8_raw(src_p5 + j);
-		x6 = Traits::load8_raw(src_p6 + j);
-		x7 = Traits::load8_raw(src_p7 + j);
+		x0 = Traits::load8_raw(src[0] + j);
+		x1 = Traits::load8_raw(src[1] + j);
+		x2 = Traits::load8_raw(src[2] + j);
+		x3 = Traits::load8_raw(src[3] + j);
+		x4 = Traits::load8_raw(src[4] + j);
+		x5 = Traits::load8_raw(src[5] + j);
+		x6 = Traits::load8_raw(src[6] + j);
+		x7 = Traits::load8_raw(src[7] + j);
 
 		Traits::transpose8(x0, x1, x2, x3, x4, x5, x6, x7);
 
@@ -179,7 +176,7 @@ void transpose_line_8x8(T *dst,
 	}
 }
 
-void transpose_line_16x16_epi16(uint16_t *dst, const uint16_t * const *src, unsigned left, unsigned right)
+void transpose_line_16x16_epi16(uint16_t * RESTRICT dst, const uint16_t * const * RESTRICT src, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 16) {
 		__m256i x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
@@ -227,14 +224,14 @@ void transpose_line_16x16_epi16(uint16_t *dst, const uint16_t * const *src, unsi
 
 template <bool DoLoop, unsigned Tail>
 inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
-                                                          const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                          const uint16_t * RESTRICT src_ptr, unsigned src_base, uint16_t limit)
+                                                          const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                          const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
 	const __m256i lim = _mm256_set1_epi16(limit + INT16_MIN);
 
 	const int16_t *filter_coeffs = filter_data + j * filter_stride;
-	const uint16_t *src_p = src_ptr + (filter_left[j] - src_base) * 16;
+	const uint16_t *src_p = src + (filter_left[j] - src_base) * 16;
 
 	__m256i accum_lo = _mm256_setzero_si256();
 	__m256i accum_hi = _mm256_setzero_si256();
@@ -377,19 +374,19 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 }
 
 template <bool DoLoop, unsigned Tail>
-void resize_line8_h_u16_avx2(const unsigned *filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                             const uint16_t * RESTRICT src_ptr, uint16_t * const *dst_ptr, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
+void resize_line8_h_u16_avx2(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                             const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
 
 #define XITER resize_line8_h_u16_avx2_xiter<DoLoop, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base, limit
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256i x = XITER(j, XARGS);
 
-		mm_scatter_epi16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j, _mm256_castsi256_si128(x));
-		mm_scatter_epi16(dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, _mm256_extractf128_si256(x, 1));
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm256_castsi256_si128(x));
+		mm_scatter_epi16(dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, _mm256_extractf128_si256(x, 1));
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
@@ -420,29 +417,29 @@ void resize_line8_h_u16_avx2(const unsigned *filter_left, const int16_t * RESTRI
 
 		mm256_transpose16_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
 
-		_mm256_store_si256((__m256i *)(dst_ptr[0] + j), x0);
-		_mm256_store_si256((__m256i *)(dst_ptr[1] + j), x1);
-		_mm256_store_si256((__m256i *)(dst_ptr[2] + j), x2);
-		_mm256_store_si256((__m256i *)(dst_ptr[3] + j), x3);
-		_mm256_store_si256((__m256i *)(dst_ptr[4] + j), x4);
-		_mm256_store_si256((__m256i *)(dst_ptr[5] + j), x5);
-		_mm256_store_si256((__m256i *)(dst_ptr[6] + j), x6);
-		_mm256_store_si256((__m256i *)(dst_ptr[7] + j), x7);
-		_mm256_store_si256((__m256i *)(dst_ptr[8] + j), x8);
-		_mm256_store_si256((__m256i *)(dst_ptr[9] + j), x9);
-		_mm256_store_si256((__m256i *)(dst_ptr[10] + j), x10);
-		_mm256_store_si256((__m256i *)(dst_ptr[11] + j), x11);
-		_mm256_store_si256((__m256i *)(dst_ptr[12] + j), x12);
-		_mm256_store_si256((__m256i *)(dst_ptr[13] + j), x13);
-		_mm256_store_si256((__m256i *)(dst_ptr[14] + j), x14);
-		_mm256_store_si256((__m256i *)(dst_ptr[15] + j), x15);
+		_mm256_store_si256((__m256i *)(dst[0] + j), x0);
+		_mm256_store_si256((__m256i *)(dst[1] + j), x1);
+		_mm256_store_si256((__m256i *)(dst[2] + j), x2);
+		_mm256_store_si256((__m256i *)(dst[3] + j), x3);
+		_mm256_store_si256((__m256i *)(dst[4] + j), x4);
+		_mm256_store_si256((__m256i *)(dst[5] + j), x5);
+		_mm256_store_si256((__m256i *)(dst[6] + j), x6);
+		_mm256_store_si256((__m256i *)(dst[7] + j), x7);
+		_mm256_store_si256((__m256i *)(dst[8] + j), x8);
+		_mm256_store_si256((__m256i *)(dst[9] + j), x9);
+		_mm256_store_si256((__m256i *)(dst[10] + j), x10);
+		_mm256_store_si256((__m256i *)(dst[11] + j), x11);
+		_mm256_store_si256((__m256i *)(dst[12] + j), x12);
+		_mm256_store_si256((__m256i *)(dst[13] + j), x13);
+		_mm256_store_si256((__m256i *)(dst[14] + j), x14);
+		_mm256_store_si256((__m256i *)(dst[15] + j), x15);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m256i x = XITER(j, XARGS);
 
-		mm_scatter_epi16(dst_ptr[0] + j, dst_ptr[1] + j, dst_ptr[2] + j, dst_ptr[3] + j, dst_ptr[4] + j, dst_ptr[5] + j, dst_ptr[6] + j, dst_ptr[7] + j, _mm256_castsi256_si128(x));
-		mm_scatter_epi16(dst_ptr[8] + j, dst_ptr[9] + j, dst_ptr[10] + j, dst_ptr[11] + j, dst_ptr[12] + j, dst_ptr[13] + j, dst_ptr[14] + j, dst_ptr[15] + j, _mm256_extractf128_si256(x, 1));
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm256_castsi256_si128(x));
+		mm_scatter_epi16(dst[8] + j, dst[9] + j, dst[10] + j, dst[11] + j, dst[12] + j, dst[13] + j, dst[14] + j, dst[15] + j, _mm256_extractf128_si256(x, 1));
 	}
 #undef XITER
 #undef XARGS
@@ -472,13 +469,13 @@ const decltype(&resize_line8_h_u16_avx2<false, 0>) resize_line8_h_u16_avx2_jt_la
 
 template <class Traits, unsigned FWidth, unsigned Tail>
 inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
-                                                        const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                        const typename Traits::pixel_type * RESTRICT src_ptr, unsigned src_base)
+                                                        const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
 	const float *filter_coeffs = filter_data + j * filter_stride;
-	const pixel_type *src_p = src_ptr + (filter_left[j] - src_base) * 8;
+	const pixel_type *src_p = src + (filter_left[j] - src_base) * 8;
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
@@ -538,24 +535,25 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
 }
 
 template <class Traits, unsigned FWidth, unsigned Tail>
-void resize_line8_h_fp_avx2(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                            const typename Traits::pixel_type *src_ptr, typename Traits::pixel_type * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
+void resize_line8_h_fp_avx2(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                            const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
-	pixel_type * RESTRICT dst_p0 = dst_ptr[0];
-	pixel_type * RESTRICT dst_p1 = dst_ptr[1];
-	pixel_type * RESTRICT dst_p2 = dst_ptr[2];
-	pixel_type * RESTRICT dst_p3 = dst_ptr[3];
-	pixel_type * RESTRICT dst_p4 = dst_ptr[4];
-	pixel_type * RESTRICT dst_p5 = dst_ptr[5];
-	pixel_type * RESTRICT dst_p6 = dst_ptr[6];
-	pixel_type * RESTRICT dst_p7 = dst_ptr[7];
+	pixel_type *dst_p0 = dst[0];
+	pixel_type *dst_p1 = dst[1];
+	pixel_type *dst_p2 = dst[2];
+	pixel_type *dst_p3 = dst[3];
+	pixel_type *dst_p4 = dst[4];
+	pixel_type *dst_p5 = dst[5];
+	pixel_type *dst_p6 = dst[6];
+	pixel_type *dst_p7 = dst[7];
+
 #define XITER resize_line8_h_fp_avx2_xiter<Traits, FWidth, Tail>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256 x = XITER(j, XARGS);
 		Traits::scatter8(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
@@ -623,8 +621,8 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 
 
 template <unsigned N>
-void resize_line_h_perm_u16_avx2(const unsigned *permute_left, const unsigned *permute_mask, const int16_t *filter_data, unsigned input_width,
-                                 const uint16_t *src, uint16_t *dst, unsigned left, unsigned right, uint16_t limit)
+void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const unsigned * RESTRICT permute_mask, const int16_t * RESTRICT filter_data, unsigned input_width,
+                                 const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, unsigned left, unsigned right, uint16_t limit)
 {
 	static_assert(N <= 10, "permuted resampler only supports up to 10 taps");
 
@@ -747,8 +745,8 @@ const typename resize_line_h_perm_u16_avx2_jt::func_type resize_line_h_perm_u16_
 
 
 template <class Traits, unsigned N>
-void resize_line_h_perm_fp_avx2(const unsigned *permute_left, const unsigned *permute_mask, const float *filter_data, unsigned input_width,
-                                const typename Traits::pixel_type *src, typename Traits::pixel_type *dst, unsigned left, unsigned right)
+void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const unsigned * RESTRICT permute_mask, const float * RESTRICT filter_data, unsigned input_width,
+                                const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
 	static_assert(N <= 8, "permuted resampler only supports up to 8 taps");
 
@@ -879,8 +877,8 @@ const typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type resize_line_h_pe
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
 inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
-                                                         const uint16_t * RESTRICT src_p0, const uint16_t * RESTRICT src_p1, const uint16_t * RESTRICT src_p2, const uint16_t * RESTRICT src_p3,
-                                                         const uint16_t * RESTRICT src_p4, const uint16_t * RESTRICT src_p5, const uint16_t * RESTRICT src_p6, const uint16_t * RESTRICT src_p7,
+                                                         const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
+                                                         const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                                                          uint32_t * RESTRICT accum_p, const __m256i &c01, const __m256i &c23, const __m256i &c45, const __m256i &c67, uint16_t limit)
 {
 	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
@@ -966,16 +964,16 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 }
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
-void resize_line_v_u16_avx2(const int16_t *filter_data, const uint16_t * const *src_lines, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
+void resize_line_v_u16_avx2(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t * RESTRICT src_p0 = src_lines[0];
-	const uint16_t * RESTRICT src_p1 = src_lines[1];
-	const uint16_t * RESTRICT src_p2 = src_lines[2];
-	const uint16_t * RESTRICT src_p3 = src_lines[3];
-	const uint16_t * RESTRICT src_p4 = src_lines[4];
-	const uint16_t * RESTRICT src_p5 = src_lines[5];
-	const uint16_t * RESTRICT src_p6 = src_lines[6];
-	const uint16_t * RESTRICT src_p7 = src_lines[7];
+	const uint16_t *src_p0 = src[0];
+	const uint16_t *src_p1 = src[1];
+	const uint16_t *src_p2 = src[2];
+	const uint16_t *src_p3 = src[3];
+	const uint16_t *src_p4 = src[4];
+	const uint16_t *src_p5 = src[5];
+	const uint16_t *src_p6 = src[6];
+	const uint16_t *src_p7 = src[7];
 
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
@@ -1038,10 +1036,8 @@ const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_
 
 template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
 inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
-                                                       const T * RESTRICT src_p0, const T * RESTRICT src_p1,
-                                                       const T * RESTRICT src_p2, const T * RESTRICT src_p3,
-                                                       const T * RESTRICT src_p4, const T * RESTRICT src_p5,
-                                                       const T * RESTRICT src_p6, const T * RESTRICT src_p7, T * RESTRICT accum_p,
+                                                       const T *src_p0, const T *src_p1, const T *src_p2, const T *src_p3,
+                                                       const T *src_p4, const T *src_p5, const T *src_p6, const T *src_p7, T * RESTRICT accum_p,
                                                        const __m256 &c0, const __m256 &c1, const __m256 &c2, const __m256 &c3,
                                                        const __m256 &c4, const __m256 &c5, const __m256 &c6, const __m256 &c7)
 {
@@ -1090,18 +1086,18 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 }
 
 template <class Traits, unsigned N, bool UpdateAccum>
-void resize_line_v_fp_avx2(const float *filter_data, const typename Traits::pixel_type * const *src_lines, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
+void resize_line_v_fp_avx2(const float * RESTRICT filter_data, const typename Traits::pixel_type * const * RESTRICT src, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
 	typedef typename Traits::pixel_type pixel_type;
 
-	const pixel_type * RESTRICT src_p0 = src_lines[0];
-	const pixel_type * RESTRICT src_p1 = src_lines[1];
-	const pixel_type * RESTRICT src_p2 = src_lines[2];
-	const pixel_type * RESTRICT src_p3 = src_lines[3];
-	const pixel_type * RESTRICT src_p4 = src_lines[4];
-	const pixel_type * RESTRICT src_p5 = src_lines[5];
-	const pixel_type * RESTRICT src_p6 = src_lines[6];
-	const pixel_type * RESTRICT src_p7 = src_lines[7];
+	const pixel_type *src_p0 = src[0];
+	const pixel_type *src_p1 = src[1];
+	const pixel_type *src_p2 = src[2];
+	const pixel_type *src_p3 = src[3];
+	const pixel_type *src_p4 = src[4];
+	const pixel_type *src_p5 = src[5];
+	const pixel_type *src_p6 = src[6];
+	const pixel_type *src_p7 = src[7];
 
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -1276,8 +1272,7 @@ public:
 		src_ptr[6] = src_buf[std::min(i + 6, height - 1)];
 		src_ptr[7] = src_buf[std::min(i + 7, height - 1)];
 
-		transpose_line_8x8<Traits>(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], src_ptr[4], src_ptr[5], src_ptr[6], src_ptr[7],
-		                           floor_n(range.first, 8), ceil_n(range.second, 8));
+		transpose_line_8x8<Traits>(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		dst_ptr[0] = dst_buf[std::min(i + 0, height - 1)];
 		dst_ptr[1] = dst_buf[std::min(i + 1, height - 1)];

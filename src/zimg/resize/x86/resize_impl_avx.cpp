@@ -22,22 +22,19 @@ namespace resize {
 
 namespace {
 
-void transpose_line_8x8_ps(float *dst,
-                           const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3,
-                           const float *src_p4, const float *src_p5, const float *src_p6, const float *src_p7,
-                           unsigned left, unsigned right)
+void transpose_line_8x8_ps(float * RESTRICT dst, const float * const * RESTRICT src, unsigned left, unsigned right)
 {
 	for (unsigned j = left; j < right; j += 8) {
 		__m256 x0, x1, x2, x3, x4, x5, x6, x7;
 
-		x0 = _mm256_load_ps(src_p0 + j);
-		x1 = _mm256_load_ps(src_p1 + j);
-		x2 = _mm256_load_ps(src_p2 + j);
-		x3 = _mm256_load_ps(src_p3 + j);
-		x4 = _mm256_load_ps(src_p4 + j);
-		x5 = _mm256_load_ps(src_p5 + j);
-		x6 = _mm256_load_ps(src_p6 + j);
-		x7 = _mm256_load_ps(src_p7 + j);
+		x0 = _mm256_load_ps(src[0] + j);
+		x1 = _mm256_load_ps(src[1] + j);
+		x2 = _mm256_load_ps(src[2] + j);
+		x3 = _mm256_load_ps(src[3] + j);
+		x4 = _mm256_load_ps(src[4] + j);
+		x5 = _mm256_load_ps(src[5] + j);
+		x6 = _mm256_load_ps(src[6] + j);
+		x7 = _mm256_load_ps(src[7] + j);
 
 		mm256_transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
@@ -57,7 +54,7 @@ void transpose_line_8x8_ps(float *dst,
 
 template <unsigned FWidth, unsigned Tail>
 inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j,
-                                                        const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                         const float * RESTRICT src_ptr, unsigned src_base)
 {
 	const float *filter_coeffs = filter_data + j * filter_stride;
@@ -382,8 +379,7 @@ public:
 		src_ptr[6] = src_buf[std::min(i + 6, height - 1)];
 		src_ptr[7] = src_buf[std::min(i + 7, height - 1)];
 
-		transpose_line_8x8_ps(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], src_ptr[4], src_ptr[5], src_ptr[6], src_ptr[7],
-		                      floor_n(range.first, 8), ceil_n(range.second, 8));
+		transpose_line_8x8_ps(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		dst_ptr[0] = dst_buf[std::min(i + 0, height - 1)];
 		dst_ptr[1] = dst_buf[std::min(i + 1, height - 1)];
