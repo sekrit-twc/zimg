@@ -375,7 +375,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 template <bool DoLoop, unsigned Tail>
 void resize_line8_h_u16_avx2(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                             const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
+                             const uint16_t * RESTRICT src, uint16_t * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
