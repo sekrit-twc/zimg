@@ -130,7 +130,7 @@ struct f32_traits {
 	                                          pixel_type *dst8, pixel_type *dst9, pixel_type *dst10, pixel_type *dst11,
 	                                          pixel_type *dst12, pixel_type *dst13, pixel_type *dst14, pixel_type *dst15, __m512 x)
 	{
-		mm_scatter_ps(dst0, dst1, dst2, dst3, _mm512_extractf32x4_ps(x, 0));
+		mm_scatter_ps(dst0, dst1, dst2, dst3, _mm512_castps512_ps128(x));
 		mm_scatter_ps(dst4, dst5, dst6, dst7, _mm512_extractf32x4_ps(x, 1));
 		mm_scatter_ps(dst8, dst9, dst10, dst11, _mm512_extractf32x4_ps(x, 2));
 		mm_scatter_ps(dst12, dst13, dst14, dst15, _mm512_extractf32x4_ps(x, 3));
