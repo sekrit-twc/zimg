@@ -171,7 +171,6 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 			dst_p[vec_right + j] = static_cast<uint16_t>(f16qw >> (16 * j));
 		}
 	}
-
 }
 
 } // namespace depth
