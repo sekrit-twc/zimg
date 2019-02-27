@@ -447,7 +447,7 @@ public:
 	size_t get_tmp_size(unsigned, unsigned) const override
 	{
 		try {
-			checked_ptrdiff_t size = m_f16c ? ceil_n(static_cast<checked_ptrdiff_t>(m_width) * sizeof(float), ALIGNMENT) * 4 : 0;
+			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) * 4 : 0;
 			return size.get();
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
