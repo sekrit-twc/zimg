@@ -237,9 +237,10 @@ float power_function(float x)
 template <class T, bool Eotf>
 float srgb_power_function(float x)
 {
-	float orig = std::fabs(x);
+	float orig = x;
+	x = std::fabs(x);
 
-	if (std::fabs(x) > T::knee) {
+	if (x > T::knee) {
 		if (Eotf)
 			x = std::fma(x, T::power_scale, T::power_offset);
 
