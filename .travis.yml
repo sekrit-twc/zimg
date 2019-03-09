@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 sudo: false
 language: cpp
 
@@ -34,8 +34,8 @@ matrix:
           build_command: make
           branch_pattern: coverity_scan
       env: 
-        - MY_CC: gcc-7
-        - MY_CXX: g++-7
+        - MY_CC: gcc-8
+        - MY_CXX: g++-8
         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
         #   via the "travis encrypt" command using the project repo's public key
         - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
@@ -45,17 +45,17 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-xenial-8
           packages:
-            - clang-5.0
+            - clang-8
             # Needed for updated libstdc++.
-            - g++-7
+            - g++-8
       env:
-        - MY_CC: clang-5.0
-        - MY_CXX: clang++-5.0
+        - MY_CC: clang-8
+        - MY_CXX: clang++-8
     # Apple Clang
     - os: osx
-      osx_image: xcode9.1
+      osx_image: xcode10.1
       compiler: clang
       env:
         - MY_CC: clang
