@@ -16,15 +16,15 @@ matrix:
       env: 
         - MY_CC: gcc-4.9
         - MY_CXX: g++-4.9
-    # GCC 7.
+    # GCC 8.
     - compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-7
-            - g++-7
+            - gcc-8
+            - g++-8
         coverity_scan:
           project:
             name: "sekrit-twc/zimg"
