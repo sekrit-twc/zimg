@@ -981,7 +981,7 @@ class FilterGraph::impl {
 
 		unsigned tile_width = static_cast<unsigned>(std::lrint(static_cast<double>(attr.width) * processor_cache / footprint));
 
-		if (tile_width > attr.width * 5 / 4)
+		if (tile_width > (attr.width / 5) * 4)
 			tile_width = attr.width;
 		else if (tile_width > attr.width / 2)
 			tile_width = ceil_n(attr.width / 2, ALIGNMENT);
