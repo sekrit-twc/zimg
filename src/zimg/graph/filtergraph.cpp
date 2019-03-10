@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 #include "common/align.h"
 #include "common/alloc.h"
@@ -851,13 +852,12 @@ public:
 		const ColorImageBuffer<void> &output_buffer = state->get_cache(get_cache_id())->buffer;
 
 		const ColorImageBuffer<const void> *real_input_buffer = &input_buffer;
-		ColorImageBuffer<const void> xbuffer;
+		std::aligned_storage<sizeof(ColorImageBuffer<const void>)>::type xbuffer;
 
 		if (m_parent->get_cache_id() != m_parent_uv->get_cache_id()) {
-			xbuffer[0] = input_buffer[0];
-			xbuffer[1] = input_buffer_uv[1];
-			xbuffer[2] = input_buffer_uv[2];
-			real_input_buffer = &xbuffer;
+			real_input_buffer = new (&xbuffer) ColorImageBuffer<const void>{
+				input_buffer[0], input_buffer_uv[1], input_buffer_uv[2]
+			};
 		}
 
 		for (; pos < last; pos += m_step) {
