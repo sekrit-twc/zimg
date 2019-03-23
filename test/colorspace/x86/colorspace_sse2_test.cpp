@@ -53,9 +53,9 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 			"162687e701627cdc17283a32c36ea711d28a953e"
 		},
 		{
-			"492587e7ed75b7e3ab868bead6ade7a4137c6ea1",
-			"3b0694e9fbce61466cb5a575f300d784089b6cad",
-			"b68f103f52ccafae867d664d7f27fe56ae9208af"
+			"95f2715bd0d417028bebd5c5377180fcd5b01119",
+			"76f7c88b198f1ab08167f8162c1237b54f22007a",
+			"1099c3ae187c0a9f79acb9445761b6056218c779"
 		},
 		{
 			"4c0b5ffe768a7812d1ef102b4d8d52614838bc8e",
@@ -63,13 +63,13 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 			"85a277a80dfca2e21789cedd76aaee307dbc4562"
 		},
 		{
-			"df546ce0ad6f859499a96d2d697d896067e60e38",
-			"f0041b8a008ab45f0ea1319090ac7e8be0990d92",
-			"06880efb598e41f96fa79e04dbdfcccd50d6dc6f"
+			"5e35786d313e936566d9873ba7a08a8d6005b2ee",
+			"829fa88acfbbb26801871bf3cadf5cc2eb6830c9",
+			"f82fcad18a19b548d419a1952b6a7a423a684b62"
 		},
 	};
 	const double expected_tolinear_snr = 80.0;
-	const double expected_togamma_snr = 40.0;
+	const double expected_togamma_snr = 60.0;
 
 	SCOPED_TRACE("tolinear 709");
 	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::UNSPECIFIED },
