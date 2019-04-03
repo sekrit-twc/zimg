@@ -202,20 +202,17 @@ std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder:
 	typedef zimg::graph::GraphBuilder::ChromaLocationW ChromaLocationW;
 	typedef zimg::graph::GraphBuilder::ChromaLocationH ChromaLocationH;
 
-	// VS 2017 miscompiles this.
-#ifdef _MSC_VER
-	static const zimg::static_map<zimg_chroma_location_e, std::pair<ChromaLocationW, ChromaLocationH>, 6> map{
-#else
 	// Workaround for std::pair assignment operator missing constexpr.
 	struct chroma_pair {
 		ChromaLocationW first;
 		ChromaLocationH second;
-
+#ifdef _MSC_VER
+		char _[16 - sizeof(ChromaLocationW) - sizeof(ChromaLocationH) - sizeof(zimg_chroma_location_e)];
+#endif
 		operator std::pair<ChromaLocationW, ChromaLocationH>() const { return{ first, second }; }
 	};
 
 	static SM_CONSTEXPR_14 const zimg::static_map<zimg_chroma_location_e, chroma_pair, 6> map{
-#endif
 		{ ZIMG_CHROMA_LEFT,        { ChromaLocationW::LEFT,   ChromaLocationH::CENTER } },
 		{ ZIMG_CHROMA_CENTER,      { ChromaLocationW::CENTER, ChromaLocationH::CENTER } },
 		{ ZIMG_CHROMA_TOP_LEFT,    { ChromaLocationW::LEFT,   ChromaLocationH::TOP } },
