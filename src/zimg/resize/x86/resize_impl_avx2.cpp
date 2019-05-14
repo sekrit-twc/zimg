@@ -1639,7 +1639,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx2(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 #ifndef ZIMG_RESIZE_NO_PERMUTE
-	if (query_x86_capabilities().zen1)
+	if (cpu_has_slow_permute(query_x86_capabilities()))
 		ret = nullptr;
 	else if (type == PixelType::WORD)
 		ret = ResizeImplH_Permute_U16_AVX2::create(context, height, depth);

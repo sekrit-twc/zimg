@@ -32,7 +32,10 @@ struct X86Capabilities {
 	unsigned zen1     : 1;
 };
 
-constexpr bool slow_avx2(const X86Capabilities &caps) { return caps.xop || caps.zen1; }
+/* 2+ cycles per value on AMD. */
+constexpr bool cpu_has_slow_gather(const X86Capabilities &caps) { return caps.xop || caps.zen1; }
+/* 4 cycles per vpermd on Zen1. */
+constexpr bool cpu_has_slow_permute(const X86Capabilities &caps) { return caps.zen1; }
 
 /**
  * Representation of processor cache topology.

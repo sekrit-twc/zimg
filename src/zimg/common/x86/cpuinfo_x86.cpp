@@ -357,8 +357,9 @@ bool cpu_has_fast_f16_x86(CPUClass cpu) noexcept
 {
 	if (cpu_is_autodetect(cpu)) {
 		// Transparent F16C support is only implemented in AVX2+FMA code paths.
+		// Excavator and Zen1 are also excluded, because of long instruction latency.
 		X86Capabilities caps = query_x86_capabilities();
-		return caps.fma && caps.f16c && caps.avx2 && !slow_avx2(caps);
+		return caps.fma && caps.f16c && caps.avx2 && !caps.xop && !caps.zen1;
 	} else {
 		return cpu >= CPUClass::X86_AVX2;
 	}
