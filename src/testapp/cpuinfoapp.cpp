@@ -34,6 +34,7 @@ void show_x86_info()
 	std::cout << "AVX-512 BW: " << yes_no(caps.avx512bw) << '\n';
 	std::cout << "AVX-512 VL: " << yes_no(caps.avx512vl) << '\n';
 	std::cout << "XOP:    " << yes_no(caps.xop) << '\n';
+	std::cout << "Piledriver: " << yes_no(caps.piledriver) << '\n';
 	std::cout << "Zen1:   " << yes_no(caps.zen1) << '\n';
 	std::cout << '\n';
 

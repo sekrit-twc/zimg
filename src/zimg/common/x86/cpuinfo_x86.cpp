@@ -119,6 +119,7 @@ X86Capabilities do_query_x86_capabilities() noexcept
 			model  += ((regs[0] >> 16) & 0x0FU) << 4;
 		}
 
+		caps.piledriver = family == 0x15 && model == 0x02;
 		caps.zen1 = family == 0x17 && model <= 0x1FU;
 	}
 

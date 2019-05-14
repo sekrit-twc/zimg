@@ -28,10 +28,14 @@ struct X86Capabilities {
 	unsigned avx512cd : 1;
 	unsigned avx512bw : 1;
 	unsigned avx512vl : 1;
-	unsigned xop      : 1;
-	unsigned zen1     : 1;
+	/* AMD architectures needing workarounds. */
+	unsigned xop : 1;
+	unsigned piledriver : 1;
+	unsigned zen1 : 1;
 };
 
+/* 17 cycles per store on Piledriver. */
+constexpr bool cpu_has_slow_avx(const X86Capabilities &caps) { return caps.piledriver; }
 /* 2+ cycles per value on AMD. */
 constexpr bool cpu_has_slow_gather(const X86Capabilities &caps) { return caps.xop || caps.zen1; }
 /* 4 cycles per vpermd on Zen1. */
