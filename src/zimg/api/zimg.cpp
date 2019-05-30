@@ -145,7 +145,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_X86_F16C,       CPUClass::X86_F16C },
 		{ ZIMG_CPU_X86_AVX2,       CPUClass::X86_AVX2 },
 		{ ZIMG_CPU_X86_AVX512F,    CPUClass::X86_AVX2 },
-		{ ZIMG_CPU_X86_AVX512_SKL, CPUClass::X86_AVX512 },
+		{ ZIMG_CPU_X86_AVX512_SKX, CPUClass::X86_AVX512 },
 #endif
 	};
 	return search_enum_map(map, cpu, "unrecognized cpu type");
