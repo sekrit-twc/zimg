@@ -400,7 +400,7 @@ void GraphBuilder::convert_depth(const PixelFormat &format, const params *params
 
 void GraphBuilder::convert_resize(const resize_spec &spec, const params *params, FilterFactory *factory)
 {
-	resize::BicubicFilter bicubic_filter{ 1.0 / 3.0, 1.0 / 3.0 };
+	resize::BicubicFilter bicubic_filter;
 	resize::BilinearFilter bilinear_filter;
 
 	unsigned subsample_w = spec.subsample_w;

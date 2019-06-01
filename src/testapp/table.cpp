@@ -26,8 +26,8 @@ filter_uptr make_filter(double, double)
 
 filter_uptr make_bicubic_filter(double b, double c)
 {
-	b = std::isnan(b) ? 1.0 / 3.0 : b;
-	c = std::isnan(c) ? 1.0 / 3.0 : c;
+	b = std::isnan(b) ? zimg::resize::BicubicFilter::DEFAULT_B : b;
+	c = std::isnan(c) ? zimg::resize::BicubicFilter::DEFAULT_C : c;
 
 	return filter_uptr{ new zimg::resize::BicubicFilter{ b, c } };
 }

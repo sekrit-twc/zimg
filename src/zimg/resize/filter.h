@@ -52,9 +52,14 @@ public:
 };
 
 /**
- * Bicubic (a.k.a. Mitchell-Netravali) filter.
+ * Bicubic filter.
  */
 class BicubicFilter : public Filter {
+public:
+	// Catmull-Rom.
+	static constexpr double DEFAULT_B = 0.0;
+	static constexpr double DEFAULT_C = 0.5;
+private:
 	double p0, p2, p3;
 	double q0, q1, q2, q3;
 public:
@@ -64,7 +69,7 @@ public:
 	 * @param b "b" parameter to bicubic filter
 	 * @param c "c" parameter to bicubic filter
 	 */
-	BicubicFilter(double b, double c);
+	BicubicFilter(double b = DEFAULT_B, double c = DEFAULT_C);
 
 	unsigned support() const override;
 

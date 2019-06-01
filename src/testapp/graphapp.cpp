@@ -173,7 +173,7 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 		params->filter = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
 		params->unresize = filter_obj["name"].string() == "unresize";
 	} else {
-		params->filter.reset(new zimg::resize::BicubicFilter{ 1.0 / 3.0, 1.0 / 3.0 });
+		params->filter.reset(new zimg::resize::BicubicFilter{});
 	}
 
 	if (const auto &val = obj["filter_uv"]) {

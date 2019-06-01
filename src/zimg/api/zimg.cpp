@@ -315,8 +315,8 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 		case ZIMG_RESIZE_BILINEAR:
 			return ztd::make_unique<zimg::resize::BilinearFilter>();
 		case ZIMG_RESIZE_BICUBIC:
-			param_a = std::isnan(param_a) ? 1.0 / 3.0 : param_a;
-			param_b = std::isnan(param_b) ? 1.0 / 3.0 : param_b;
+			param_a = std::isnan(param_a) ? zimg::resize::BicubicFilter::DEFAULT_B : param_a;
+			param_b = std::isnan(param_b) ? zimg::resize::BicubicFilter::DEFAULT_C : param_b;
 			return ztd::make_unique<zimg::resize::BicubicFilter>(param_a, param_b);
 		case ZIMG_RESIZE_SPLINE16:
 			return ztd::make_unique<zimg::resize::Spline16Filter>();
