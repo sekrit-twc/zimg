@@ -312,17 +312,14 @@ int main(int argc, char **argv)
 		return 2;
 	}
 
-	// Prior to z.lib 2.7, using horizontal tiling in combination with an unpack
-	// callback results in redundant loading of scanlines above the first row in
-	// the tile.
+	// Prior to z.lib 2.9, using horizontal tiling results in redundant loading
+	// of scanlines above the first row in the tile.
 	if (args.tile_height < args.out_h) {
 		unsigned version[3];
 		zimg_get_version_info(version, version + 1, version + 2);
 
-		if (version[0] < 2 || (version[0] == 2 && version[1] < 7)) {
-			std::cerr << "warning: horizontal tiling may be slow in z.lib versions prior to 2.7\n";
-			args.tile_height = args.out_h;
-		}
+		if (version[0] < 2 || (version[0] == 2 && version[1] < 9))
+			std::cerr << "warning: horizontal tiling may be slow in z.lib versions prior to 2.9\n";
 	}
 
 	try {
