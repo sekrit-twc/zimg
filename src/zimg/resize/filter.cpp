@@ -25,9 +25,10 @@ double sinc(double x) noexcept
 	return x == 0.0 ? 1.0 : zimg_x_sin(x * PI) / (x * PI);
 }
 
-double sq(double x) noexcept { return x * x; }
-
-double cube(double x) noexcept { return x * x * x; }
+double poly3(double x, double c0, double c1, double c2, double c3) noexcept
+{
+	return c0 + x * (c1 + x * (c2 + x * c3));
+}
 
 double round_halfup(double x) noexcept
 {
@@ -164,9 +165,9 @@ double BicubicFilter::operator()(double x) const
 	x = std::abs(x);
 
 	if (x < 1.0)
-		return p0 +          p2 * sq(x) + p3 * cube(x);
+		return poly3(x, p0, 0.0, p2, p3);
 	else if (x < 2.0)
-		return q0 + q1 * x + q2 * sq(x) + q3 * cube(x);
+		return poly3(x, q0, q1, q2, q3);
 	else
 		return 0.0;
 }
@@ -179,10 +180,10 @@ double Spline16Filter::operator()(double x) const
 	x = std::abs(x);
 
 	if (x < 1.0) {
-		return 1.0 - (1.0 / 5.0 * x)   - (9.0 / 5.0 * sq(x)) + cube(x);
+		return poly3(x, 1.0,  -1.0 / 5.0, -9.0 / 5.0, 1.0);
 	} else if (x < 2.0) {
 		x -= 1.0;
-		return       (-7.0 / 15.0 * x) + (4.0 / 5.0 * sq(x)) - (1.0 / 3.0 * cube(x));
+		return poly3(x, 0.0, -7.0 / 15.0,  4.0 / 5.0, -1.0 / 3.0);
 	} else {
 		return 0.0;
 	}
@@ -196,13 +197,13 @@ double Spline36Filter::operator()(double x) const
 	x = std::abs(x);
 
 	if (x < 1.0) {
-		return 1.0 - (3.0 / 209.0 * x)    - (453.0 / 209.0 * sq(x)) + (13.0 / 11.0 * cube(x));
+		return poly3(x, 1.0,   -3.0 / 209.0, -453.0 / 209.0, 13.0 / 11.0);
 	} else if (x < 2.0) {
 		x -= 1.0;
-		return       (-156.0 / 209.0 * x) + (270.0 / 209.0 * sq(x)) - (6.0 / 11.0 * cube(x));
+		return poly3(x, 0.0, -156.0 / 209.0,  270.0 / 290.0, -6.0 / 11.0);
 	} else if (x < 3.0) {
 		x -= 2.0;
-		return       (26.0 / 209.0 * x)   - (45.0 / 209.0 * sq(x))  + (1.0 / 11.0 * cube(x));
+		return poly3(x, 0.0,   26.0 / 209.0,  -45.0 / 209.0,  1.0 / 11.0);
 	} else {
 		return 0.0;
 	}
