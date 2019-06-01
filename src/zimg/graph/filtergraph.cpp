@@ -327,7 +327,7 @@ protected:
 	{
 		auto attr = get_image_attributes();
 
-		ctx->cache_pos = 0;
+		ctx->cache_pos = attr.height;
 		ctx->source_left = attr.width;
 		ctx->source_right = 0;
 	}
@@ -365,7 +365,7 @@ public:
 
 	virtual void reset_context(ExecutionState *state) const = 0;
 
-	virtual void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const = 0;
+	virtual void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool uv) const = 0;
 
 	virtual void generate_until(ExecutionState *state, unsigned last, bool uv) const = 0;
 };
@@ -385,7 +385,7 @@ public:
 	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
 	void init_context(ExecutionState *, ExecutionStrategy) const override {}
 	void reset_context(ExecutionState *) const override {}
-	void set_tile_region(ExecutionState *, unsigned, unsigned, bool) const override {}
+	void set_tile_region(ExecutionState *, unsigned, unsigned, unsigned, bool) const override {}
 	void generate_until(ExecutionState *, unsigned, bool) const override {}
 };
 
@@ -445,13 +445,14 @@ public:
 	void init_context(ExecutionState *state, ExecutionStrategy) const override { init_cache_context(state->get_node_state(get_id())); }
 	void reset_context(ExecutionState *state) const override { reset_cache_context(state->get_node_state(get_id())); }
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool uv) const override
 	{
 		auto *context = state->get_node_state(get_id());
 
 		left <<= uv ? m_subsample_w : 0;
 		right <<= uv ? m_subsample_w : 0;
 
+		context->cache_pos = std::min(context->cache_pos, top);
 		context->source_left = std::min(context->source_left, left);
 		context->source_right = std::max(context->source_right, right);
 	}
@@ -557,15 +558,17 @@ public:
 		return std::max(m_filter->get_tmp_size(left, right), m_parent->get_tmp_size(range.first, range.second));
 	}
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool uv) const override
 	{
 		auto *context = state->get_node_state(get_id());
 		auto range = m_filter->get_required_col_range(left, right);
 
+		context->cache_pos = std::min(context->cache_pos, top);
 		context->source_left = std::min(context->source_left, left);
 		context->source_right = std::max(context->source_right, right);
 
-		m_parent->set_tile_region(state, range.first, range.second, uv);
+		unsigned parent_top = m_filter->get_required_row_range(top).first;
+		m_parent->set_tile_region(state, parent_top, range.first, range.second, uv);
 	}
 };
 
@@ -617,10 +620,10 @@ public:
 		m_filter->init_context(state->get_context(get_id()), 0);
 	}
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool uv) const override
 	{
 		zassert_d(!uv, "request for chroma plane on luma node");
-		FilterNode::set_tile_region(state, left, right, false);
+		FilterNode::set_tile_region(state, top, left, right, false);
 	}
 
 	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
@@ -708,10 +711,10 @@ public:
 		m_filter->init_context(static_cast<unsigned char *>(filter_ctx) + filter_ctx_size, 2);
 	}
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool uv) const override
+	void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool uv) const override
 	{
 		zassert_d(uv, "request for luma plane on chroma node");
-		FilterNode::set_tile_region(state, left, right, true);
+		FilterNode::set_tile_region(state, top, left, right, true);
 	}
 
 	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
@@ -830,16 +833,18 @@ public:
 		m_filter->init_context(state->get_context(get_id()), 0);
 	}
 
-	void set_tile_region(ExecutionState *state, unsigned left, unsigned right, bool) const override
+	void set_tile_region(ExecutionState *state, unsigned top, unsigned left, unsigned right, bool) const override
 	{
 		auto *context = state->get_node_state(get_id());
 		auto range = m_filter->get_required_col_range(left, right);
 
+		context->cache_pos = std::min(context->cache_pos, top);
 		context->source_left = std::min(context->source_left, left);
 		context->source_right = std::max(context->source_right, right);
 
-		m_parent->set_tile_region(state, range.first, range.second, false);
-		m_parent_uv->set_tile_region(state, range.first, range.second, true);
+		unsigned parent_top = m_filter->get_required_row_range(top).first;
+		m_parent->set_tile_region(state, parent_top, range.first, range.second, false);
+		m_parent_uv->set_tile_region(state, parent_top, range.first, range.second, true);
 	}
 
 	void generate_until(ExecutionState *state, unsigned last, bool uv) const override
@@ -1029,9 +1034,9 @@ class FilterGraph::impl {
 				node->reset_context(&state);
 			}
 
-			m_node->set_tile_region(&state, j, j_end, false);
+			m_node->set_tile_region(&state, 0, j, j_end, false);
 			if (m_node_uv)
-				m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
+				m_node_uv->set_tile_region(&state, 0, j >> m_subsample_w, j_end >> m_subsample_w, true);
 
 			for (unsigned i = 0; i < attr.height; i += v_step) {
 				m_node->generate_until(&state, i + v_step, false);
@@ -1079,7 +1084,7 @@ class FilterGraph::impl {
 				node->reset_context(&state);
 			}
 
-			m_node->set_tile_region(&state, j, j_end, false);
+			m_node->set_tile_region(&state, 0, j, j_end, false);
 			m_node->generate_until(&state, attr.height, false);
 		}
 	}
@@ -1117,7 +1122,7 @@ class FilterGraph::impl {
 				node->reset_context(&state);
 			}
 
-			m_node_uv->set_tile_region(&state, j >> m_subsample_w, j_end >> m_subsample_w, true);
+			m_node_uv->set_tile_region(&state, 0, j >> m_subsample_w, j_end >> m_subsample_w, true);
 			m_node_uv->generate_until(&state, attr.height >> m_subsample_h, true);
 		}
 	}
