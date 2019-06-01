@@ -88,6 +88,7 @@
     <ClCompile Include="..\..\test\graph\filter_validator.cpp" />
     <ClCompile Include="..\..\test\graph\mock_filter.cpp" />
     <ClCompile Include="..\..\test\main.cpp" />
+    <ClCompile Include="..\..\test\resize\filter_test.cpp" />
     <ClCompile Include="..\..\test\resize\resize_impl_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx2_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_test.cpp" />
