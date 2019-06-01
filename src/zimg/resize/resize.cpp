@@ -69,7 +69,7 @@ auto ResizeConversion::create() const -> filter_pair try
 		                   .set_subwidth(subwidth)
 		                   .create();
 	} else {
-		bool h_first = resize_h_first(static_cast<double>(dst_width) / src_width, static_cast<double>(dst_height) / src_height);
+		bool h_first = resize_h_first(static_cast<double>(dst_width) / subwidth, static_cast<double>(dst_height) / subheight);
 
 		if (h_first) {
 			ret.first = builder.set_horizontal(true)
