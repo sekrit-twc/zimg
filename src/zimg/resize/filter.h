@@ -100,6 +100,9 @@ public:
  * Lanczos filter.
  */
 class LanczosFilter : public Filter {
+public:
+	static constexpr unsigned DEFAULT_TAPS = 3;
+private:
 	unsigned taps;
 public:
 	/**
