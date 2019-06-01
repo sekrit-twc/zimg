@@ -155,7 +155,7 @@ std::shared_ptr<void> allocate_buffer(size_t size)
 // I/O callback that copies the requested lines between buffers.
 //
 // In this example, the image format is 4:2:0, so the callback must copy data
-// from two scanlinnes in each call.
+// from two scanlines in each call.
 int yv12_bitblt_callback(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
