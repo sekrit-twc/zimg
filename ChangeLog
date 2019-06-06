@@ -1,3 +1,13 @@
+2.9:
+colorspace: improve accuracy of SSE2 LUT-based transfer functions
+depth: AVX2 and AVX-512 code paths for limited range upsampling
+graph: optimize tile width calculation
+graph: reduce execution overhead
+graph: skip processing pixels outside of active window
+resize: change default bicubic from Mitchell-Netravali to Catmull-Rom
+resize: make output bit-exact regardless of active window dimensions
+x86: optimizations for AMD Piledriver and Zen1 processors
+
 2.8:
 api: rename colorspace enum values
 colorspace: AVX-512 code paths for commonly used transfer functions
