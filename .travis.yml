@@ -16,15 +16,15 @@ matrix:
       env: 
         - MY_CC: gcc-4.9
         - MY_CXX: g++-4.9
-    # GCC 8.
+    # GCC 9.
     - compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-8
-            - g++-8
+            - gcc-9
+            - g++-9
         coverity_scan:
           project:
             name: "sekrit-twc/zimg"
@@ -34,8 +34,8 @@ matrix:
           build_command: make
           branch_pattern: coverity_scan
       env: 
-        - MY_CC: gcc-8
-        - MY_CXX: g++-8
+        - MY_CC: gcc-9
+        - MY_CXX: g++-9
         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
         #   via the "travis encrypt" command using the project repo's public key
         - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
