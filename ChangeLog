@@ -1,3 +1,6 @@
+2.9.1:
+resize: fix incorrect spline36 coefficients (introduced in 2.9)
+
 2.9:
 colorspace: improve accuracy of SSE2 LUT-based transfer functions
 depth: AVX2 and AVX-512 code paths for limited range upsampling
