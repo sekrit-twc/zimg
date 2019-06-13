@@ -200,7 +200,7 @@ double Spline36Filter::operator()(double x) const
 		return poly3(x, 1.0,   -3.0 / 209.0, -453.0 / 209.0, 13.0 / 11.0);
 	} else if (x < 2.0) {
 		x -= 1.0;
-		return poly3(x, 0.0, -156.0 / 209.0,  270.0 / 290.0, -6.0 / 11.0);
+		return poly3(x, 0.0, -156.0 / 209.0,  270.0 / 209.0, -6.0 / 11.0);
 	} else if (x < 3.0) {
 		x -= 2.0;
 		return poly3(x, 0.0,   26.0 / 209.0,  -45.0 / 209.0,  1.0 / 11.0);
