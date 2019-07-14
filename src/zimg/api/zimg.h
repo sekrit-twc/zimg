@@ -374,10 +374,10 @@ typedef enum zimg_resample_filter_e {
   * instances will not read or write beyond image bounds, and no padding is
   * necessary.
   *
-  * The image stride must be a multiple of the alignment imposed by the host
-  * CPU architecture. On x86 and AMD64, this is 32 bytes. When operating in
-  * 64-byte mode ({@link ZIMG_CPU_AUTO_64B}), the alignment requirement is
-  * increased to 64 bytes. The stride may be negative.
+  * The image address and stride must be a multiple of the alignment imposed
+  * by the host CPU architecture. On x86 and AMD64, this is 32 bytes. When
+  * operating in 64-byte mode ({@link ZIMG_CPU_AUTO_64B}), the alignment
+  * requirement is increased to 64 bytes. The stride may be negative.
   */
 typedef struct zimg_image_buffer_const {
 	unsigned version; /**< @see ZIMG_API_VERSION */
