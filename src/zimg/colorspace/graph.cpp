@@ -156,9 +156,11 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 						add_edge(csp.to(transfer).to(MatrixCoefficients::CHROMATICITY_DERIVED_CL), create_cl_rgb_to_yuv_operation);
 				}
 			}
-			for (auto primaries : all_primaries()) {
-				if (primaries != csp.primaries && primaries != ColorPrimaries::UNSPECIFIED)
-					add_edge(csp.to(primaries), create_gamut_operation);
+			if (csp.primaries != ColorPrimaries::UNSPECIFIED) {
+				for (auto primaries : all_primaries()) {
+					if (primaries != csp.primaries && primaries != ColorPrimaries::UNSPECIFIED)
+						add_edge(csp.to(primaries), create_gamut_operation);
+				}
 			}
 
 			add_edge(csp.to(MatrixCoefficients::REC_2020_CL).to(TransferCharacteristics::REC_709), create_cl_rgb_to_yuv_operation);
