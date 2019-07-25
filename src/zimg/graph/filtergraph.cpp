@@ -418,7 +418,7 @@ public:
 
 	void request_external_cache(unsigned id) override
 	{
-		zassert_d(false, "attempt to set external cache on source node");
+		zassert_dfatal("attempt to set external cache on source node");
 	}
 
 	void complete() override {}
@@ -1409,9 +1409,7 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 	} catch (...) {
 		ret = 1;
 		// VS 15.7+ triggers an ICE here.
-#if !(_MSC_VER >= 1914 && _M_IX86)
-		zassert_d(false, "user callback must not throw");
-#endif
+		zassert_dfatal("user callback must not throw");
 	}
 
 	if (ret)
