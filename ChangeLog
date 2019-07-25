@@ -1,3 +1,8 @@
+2.9.2
+colorspace: fix crash on invalid conversion from unspec to real primaries
+x86: additional optimizations for AMD Piledriver
+x86: optimizations for AMD Zen2 processors
+
 2.9.1:
 resize: fix incorrect spline36 coefficients (introduced in 2.9)
 
