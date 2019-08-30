@@ -237,6 +237,9 @@
     <ClInclude Include="..\..\src\zimg\depth\blue.h">
       <Filter>Header Files\depth</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\resize\x86\resize_impl_avx512_common.h">
+      <Filter>Header Files\resize\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -394,6 +397,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\blue.cpp">
       <Filter>Source Files\depth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx512_vnni.cpp">
+      <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@ class Filter;
 } // namespace zimg
 
 
-extern const zimg::static_string_map<zimg::CPUClass, 8> g_cpu_table;
+extern const zimg::static_string_map<zimg::CPUClass, 9> g_cpu_table;
 extern const zimg::static_string_map<zimg::PixelType, 4> g_pixel_table;
 extern const zimg::static_string_map<zimg::colorspace::MatrixCoefficients, 12> g_matrix_table;
 extern const zimg::static_string_map<zimg::colorspace::TransferCharacteristics, 12> g_transfer_table;

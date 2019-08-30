@@ -198,6 +198,9 @@
     <ClCompile Include="..\..\test\resize\filter_test.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_vnni_test.cpp">
+      <Filter>Source Files\resize\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

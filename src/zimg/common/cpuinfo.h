@@ -19,6 +19,7 @@ enum class CPUClass {
 	X86_F16C,
 	X86_AVX2,
 	X86_AVX512, // F, CD, BW, DQ, VL
+	X86_AVX512_CLX, // VNNI
 #endif // ZIMG_X86
 };
 

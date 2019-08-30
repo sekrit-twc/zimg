@@ -91,11 +91,17 @@ X86Capabilities do_query_x86_capabilities() noexcept
 
 	// ZMM state.
 	if ((xcr0 & 0xE0) == 0xE0) {
-		caps.avx512f  = !!(regs[1] & (1U << 16));
-		caps.avx512dq = !!(regs[1] & (1U << 17));
-		caps.avx512cd = !!(regs[1] & (1U << 28));
-		caps.avx512bw = !!(regs[1] & (1U << 30));
-		caps.avx512vl = !!(regs[1] & (1U << 31));
+		caps.avx512f         = !!(regs[1] & (1U << 16));
+		caps.avx512dq        = !!(regs[1] & (1U << 17));
+		caps.avx512vnni      = !!(regs[1] & (1U << 21));
+		caps.avx512cd        = !!(regs[1] & (1U << 28));
+		caps.avx512bw        = !!(regs[1] & (1U << 30));
+		caps.avx512vl        = !!(regs[1] & (1U << 31));
+		caps.avx512vbmi      = !!(regs[2] & (1U << 1));
+		caps.avx512vbmi2     = !!(regs[2] & (1U << 6));
+		caps.avx512vnni      = !!(regs[2] & (1U << 11));
+		caps.avx512bitalg    = !!(regs[2] & (1U << 12));
+		caps.avx512vpopcntdq = !!(regs[2] & (1U << 14));
 	}
 
 	// Extended processor info.

@@ -13,21 +13,27 @@ enum class CPUClass;
  * Bitfield of selected x86 feature flags.
  */
 struct X86Capabilities {
-	unsigned sse      : 1;
-	unsigned sse2     : 1;
-	unsigned sse3     : 1;
-	unsigned ssse3    : 1;
-	unsigned fma      : 1;
-	unsigned sse41    : 1;
-	unsigned sse42    : 1;
-	unsigned avx      : 1;
-	unsigned f16c     : 1;
-	unsigned avx2     : 1;
-	unsigned avx512f  : 1;
-	unsigned avx512dq : 1;
-	unsigned avx512cd : 1;
-	unsigned avx512bw : 1;
-	unsigned avx512vl : 1;
+	unsigned sse             : 1;
+	unsigned sse2            : 1;
+	unsigned sse3            : 1;
+	unsigned ssse3           : 1;
+	unsigned fma             : 1;
+	unsigned sse41           : 1;
+	unsigned sse42           : 1;
+	unsigned avx             : 1;
+	unsigned f16c            : 1;
+	unsigned avx2            : 1;
+	unsigned avx512f         : 1;
+	unsigned avx512dq        : 1;
+	unsigned avx512ifma      : 1;
+	unsigned avx512cd        : 1;
+	unsigned avx512bw        : 1;
+	unsigned avx512vl        : 1;
+	unsigned avx512vbmi      : 1;
+	unsigned avx512vbmi2     : 1;
+	unsigned avx512vnni      : 1;
+	unsigned avx512bitalg    : 1;
+	unsigned avx512vpopcntdq : 1;
 	/* AMD architectures needing workarounds. */
 	unsigned xop : 1;
 	unsigned piledriver : 1;
@@ -41,6 +47,8 @@ constexpr bool cpu_has_slow_avx(const X86Capabilities &caps) { return caps.piled
 constexpr bool cpu_has_slow_gather(const X86Capabilities &caps) { return caps.xop || caps.zen1 || caps.zen2; }
 /* 4 cycles per vpermd on Zen. */
 constexpr bool cpu_has_slow_permute(const X86Capabilities &caps) { return caps.zen1 || caps.zen2; }
+
+constexpr bool cpu_has_avx512_f_dq_bw_vl(const X86Capabilities &caps) { return caps.avx512f && caps.avx512dq && caps.avx512bw && caps.avx512vl; }
 
 /**
  * Representation of processor cache topology.

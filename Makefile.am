@@ -167,12 +167,12 @@ libavx_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx.cpp \
 	src/zimg/resize/x86/resize_impl_avx.cpp
 
-libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SANDYBRIDGECFLAGS)
+libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SNB_CFLAGS)
 libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libf16c_la_SOURCES = src/zimg/depth/x86/f16c_ivb.cpp
 
-libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c $(IVYBRIDGECFLAGS)
+libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c $(IVB_CFLAGS)
 libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libavx2_la_SOURCES = \
@@ -182,14 +182,14 @@ libavx2_la_SOURCES = \
 	src/zimg/depth/x86/error_diffusion_avx2.cpp \
 	src/zimg/resize/x86/resize_impl_avx2.cpp
 
-libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HASWELLCFLAGS)
+libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HSW_CFLAGS)
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
 libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 endif # X86SIMD
 
 if X86SIMD_AVX512
-noinst_LTLIBRARIES += libavx512.la
+noinst_LTLIBRARIES += libavx512.la libavx512_vnni.la
 
 libavx512_la_SOURCES = \
 	src/zimg/colorspace/x86/gamma_constants_avx512.cpp \
@@ -197,12 +197,17 @@ libavx512_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx512.cpp \
 	src/zimg/depth/x86/depth_convert_avx512.cpp \
 	src/zimg/depth/x86/dither_avx512.cpp \
-	src/zimg/resize/x86/resize_impl_avx512.cpp
+	src/zimg/resize/x86/resize_impl_avx512.cpp \
+	src/zimg/resize/x86/resize_impl_avx512_common.h
 
-libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq $(SKYLAKESPCFLAGS)
+libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq $(SKX_CFLAGS)
 libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 
-libzimg_internal_la_LIBADD += libavx512.la
+libavx512_vnni_la_SOURCES = src/zimg/resize/x86/resize_impl_avx512_vnni.cpp
+libavx512_vnni_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512vnni $(CLX_CFLAGS)
+libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+
+libzimg_internal_la_LIBADD += libavx512.la libavx512_vnni.la
 endif # X86SIMD_AVX512
 
 
@@ -364,7 +369,8 @@ test_unit_test_SOURCES += \
 	test/colorspace/x86/gamma_constants_avx512_test.cpp \
 	test/depth/x86/depth_convert_avx512_test.cpp \
 	test/depth/x86/dither_avx512_test.cpp \
-	test/resize/x86/resize_impl_avx512_test.cpp
+	test/resize/x86/resize_impl_avx512_test.cpp \
+	test/resize/x86/resize_impl_avx512_vnni_test.cpp
 endif # X86SIMD_AVX512
 
 test_unit_test_LDADD = \
