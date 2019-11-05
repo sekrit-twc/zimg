@@ -209,9 +209,7 @@ std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder:
 	struct chroma_pair {
 		ChromaLocationW first;
 		ChromaLocationH second;
-#ifdef _MSC_VER
-		char _[16 - sizeof(ChromaLocationW) - sizeof(ChromaLocationH) - sizeof(zimg_chroma_location_e)];
-#endif
+
 		operator std::pair<ChromaLocationW, ChromaLocationH>() const { return{ first, second }; }
 	};
 
