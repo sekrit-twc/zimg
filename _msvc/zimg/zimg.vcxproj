@@ -327,9 +327,12 @@
     <ClInclude Include="..\..\src\zimg\depth\x86\depth_convert_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\f16c_x86.h" />
+    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\copy_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
+    <ClInclude Include="..\..\src\zimg\graph\graphbuilder2.h" />
     <ClInclude Include="..\..\src\zimg\graph\image_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\image_buffer.h" />
     <ClInclude Include="..\..\src\zimg\resize\filter.h" />
@@ -449,9 +452,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph2.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />
+    <ClCompile Include="..\..\src\zimg\graph\graphbuilder2.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\resize_impl.cpp" />
@@ -480,7 +486,7 @@
       <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CORE512</UseProcessorExtensions>
       <UseProcessorExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CORE512</UseProcessorExtensions>
       <AdditionalOptions Condition="!$(PlatformToolset.Contains('Intel C++ Compiler')) And ('$(Platform)' == 'Win32' Or '$(Platform)' == 'x64')">/arch:AVX512</AdditionalOptions>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
