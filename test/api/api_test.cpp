@@ -54,3 +54,19 @@ TEST(APITest, test_api_2_1_compat)
 		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&params) + i));
 	}
 }
+
+TEST(APITest, test_api_2_3_compat)
+{
+	const unsigned API_2_3 = ZIMG_MAKE_API_VERSION(2, 3);
+	const size_t extra_off = offsetof(zimg_image_format, alpha);
+	const size_t extra_len = sizeof(zimg_image_format) - extra_off;
+
+	zimg_image_format format;
+	std::memset(reinterpret_cast<unsigned char *>(&format) + extra_off, 0xCC, extra_len);
+
+	zimg_image_format_default(&format, API_2_3);
+	EXPECT_EQ(API_2_3, format.version);
+	for (size_t i = extra_off; i < extra_len; ++i) {
+		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&format) + i));
+	}
+}

@@ -25,6 +25,7 @@ namespace {
 constexpr unsigned API_VERSION_2_0 = ZIMG_MAKE_API_VERSION(2, 0);
 constexpr unsigned API_VERSION_2_1 = ZIMG_MAKE_API_VERSION(2, 1);
 constexpr unsigned API_VERSION_2_2 = ZIMG_MAKE_API_VERSION(2, 2);
+constexpr unsigned API_VERSION_2_4 = ZIMG_MAKE_API_VERSION(2, 4);
 
 #define API_VERSION_ASSERT(x) zassert_d((x) >= API_VERSION_2_0, "API version invalid")
 #define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % zimg::ALIGNMENT_RELAXED == 0, "pointer not aligned")
@@ -341,7 +342,9 @@ zimg::graph::ColorImageBuffer<void> import_image_buffer(const zimg_image_buffer 
 	API_VERSION_ASSERT(src.version);
 
 	if (src.version >= API_VERSION_2_0) {
-		for (unsigned p = 0; p < 3; ++p) {
+		unsigned num_planes = src.version >= API_VERSION_2_4 ? 4 : 3;
+
+		for (unsigned p = 0; p < num_planes; ++p) {
 			dst[p] = zimg::graph::ImageBuffer<void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
 	}
@@ -355,7 +358,9 @@ zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_b
 	API_VERSION_ASSERT(src.version);
 
 	if (src.version >= API_VERSION_2_0) {
-		for (unsigned p = 0; p < 3; ++p) {
+		unsigned num_planes = src.version >= API_VERSION_2_4 ? 4 : 3;
+
+		for (unsigned p = 0; p < num_planes; ++p) {
 			dst[p] = zimg::graph::ImageBuffer<const void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
 		}
 	}
@@ -566,6 +571,15 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 		STRIDE_ALIGNMENT64_ASSERT(dst->plane[1].stride);
 		STRIDE_ALIGNMENT64_ASSERT(dst->plane[2].stride);
 
+		if (src->version >= API_VERSION_2_4) {
+			POINTER_ALIGNMENT64_ASSERT(src->plane[3].data);
+			STRIDE_ALIGNMENT64_ASSERT(src->plane[3].stride);
+		}
+		if (dst->version >= API_VERSION_2_4) {
+			POINTER_ALIGNMENT64_ASSERT(dst->plane[3].data);
+			STRIDE_ALIGNMENT64_ASSERT(dst->plane[3].stride);
+		}
+
 		POINTER_ALIGNMENT64_ASSERT(tmp);
 	} else {
 		POINTER_ALIGNMENT_ASSERT(src->plane[0].data);
@@ -583,6 +597,15 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 		STRIDE_ALIGNMENT_ASSERT(dst->plane[0].stride);
 		STRIDE_ALIGNMENT_ASSERT(dst->plane[1].stride);
 		STRIDE_ALIGNMENT_ASSERT(dst->plane[2].stride);
+
+		if (src->version >= API_VERSION_2_4) {
+			POINTER_ALIGNMENT_ASSERT(src->plane[3].data);
+			STRIDE_ALIGNMENT_ASSERT(src->plane[3].stride);
+		}
+		if (dst->version >= API_VERSION_2_4) {
+			POINTER_ALIGNMENT_ASSERT(dst->plane[3].data);
+			STRIDE_ALIGNMENT_ASSERT(dst->plane[3].stride);
+		}
 
 		POINTER_ALIGNMENT_ASSERT(tmp);
 	}
@@ -627,6 +650,9 @@ void zimg_image_format_default(zimg_image_format *ptr, unsigned version)
 		ptr->active_region.top = NAN;
 		ptr->active_region.width = NAN;
 		ptr->active_region.height = NAN;
+	}
+	if (version >= API_VERSION_2_4) {
+		ptr->alpha = ZIMG_ALPHA_NONE;
 	}
 }
 
