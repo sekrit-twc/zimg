@@ -117,13 +117,13 @@ public:
 };
 
 /**
- * Wrapper around array of three {@link ImageBuffer}.
+ * Wrapper around array of four {@link ImageBuffer}.
  *
  * @tparam T buffer held type
  */
 template <class T>
 class ColorImageBuffer {
-	ImageBuffer<T> m_buffer[3];
+	ImageBuffer<T> m_buffer[4];
 public:
 	/**
 	 * Default construct ColorImageBuffer, creating an array of null buffers.
@@ -142,6 +142,18 @@ public:
 	{}
 
 	/**
+	 * Construct a ColorImageBuffer from individual buffers.
+	 *
+	 * @param buf1 first channel
+	 * @param buf2 second channel
+	 * @param buf3 third channel
+	 * @param buf4 fourth channel
+	 */
+	constexpr ColorImageBuffer(const ImageBuffer<T> &buf1, const ImageBuffer<T> &buf2, const ImageBuffer<T> &buf3, const ImageBuffer<T> &buf4) noexcept :
+		m_buffer{ buf1, buf2, buf3, buf4 }
+	{}
+
+	/**
 	 * Construct a ColorImageBuffer from an implicitly convertible type.
 	 *
 	 * @tparam U type convertible to T
@@ -150,7 +162,7 @@ public:
 	template <class U>
 	constexpr ColorImageBuffer(const ColorImageBuffer<U> &other,
 	                           typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) noexcept :
-		ColorImageBuffer{ other[0], other[1], other[2] }
+		ColorImageBuffer{ other[0], other[1], other[2], other[3] }
 	{}
 
 	/**
