@@ -7,6 +7,14 @@
 #include <memory>
 #include "image_filter.h"
 
+// Base class in global namespace for API export.
+struct zimg_filter_graph {
+	virtual inline ~zimg_filter_graph() = 0;
+};
+
+zimg_filter_graph::~zimg_filter_graph() = default;
+
+
 namespace zimg {
 
 enum class PixelType;
@@ -25,7 +33,7 @@ constexpr int PLANE_U = 1;
 constexpr int PLANE_V = 2;
 constexpr int PLANE_A = 3;
 
-class FilterGraph2 {
+class FilterGraph2 : public zimg_filter_graph {
 	class impl;
 public:
 	/**
