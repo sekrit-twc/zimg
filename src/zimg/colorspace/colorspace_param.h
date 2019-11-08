@@ -75,14 +75,14 @@ Matrix3x3 ncl_rgb_to_yuv_matrix_from_primaries(ColorPrimaries primaries);
  *
  * @return conversion function as matrix
  */
-Matrix3x3 ictcp_to_lms_matrix();
+Matrix3x3 ictcp_to_lms_matrix(TransferCharacteristics transfer);
 
 /**
  * Obtain 3x3 matrix for converting from LMS to ICtCp.
  *
  * @see ictcp_to_lms_matrix
  */
-Matrix3x3 lms_to_ictcp_matrix();
+Matrix3x3 lms_to_ictcp_matrix(TransferCharacteristics transfer);
 
 /**
  * Obtain 3x3 matrix for converting from RGB to XYZ.

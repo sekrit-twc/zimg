@@ -50,7 +50,7 @@ std::unique_ptr<Operation> create_ictcp_to_lms_operation(const ColorspaceDefinit
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::REC_2100_ICTCP && out.matrix == MatrixCoefficients::REC_2100_LMS, "wrong matrix coefficients");
 
-	return create_matrix_operation(ictcp_to_lms_matrix(), cpu);
+	return create_matrix_operation(ictcp_to_lms_matrix(in.transfer), cpu);
 }
 
 std::unique_ptr<Operation> create_lms_to_ictcp_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -59,7 +59,7 @@ std::unique_ptr<Operation> create_lms_to_ictcp_operation(const ColorspaceDefinit
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::REC_2100_LMS && out.matrix == MatrixCoefficients::REC_2100_ICTCP, "wrong matrix coefficients");
 
-	return create_matrix_operation(lms_to_ictcp_matrix(), cpu);
+	return create_matrix_operation(lms_to_ictcp_matrix(in.transfer), cpu);
 }
 
 std::unique_ptr<Operation> create_gamma_to_linear_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)

@@ -337,8 +337,8 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 		},
 		{
 			"e867c0782ac67d399359991141e05e1c46bf12ac",
-			"dd61307eae96d61e1262fc69880c2ddcdfcd3134",
-			"966f6c1754db33a01e519a11aa6247c55ecae5db"
+			"3892a2de6fcadf247c96f0e4a9b84abd6b4f8e82",
+			"e63aaf9f6766ed6df84f8b426a86507f737f4a89"
 		},
 		{
 			"935fc4cab59118b382a925464bf61e8d04df3b15",
@@ -346,9 +346,9 @@ TEST(ColorspaceConversionTest, test_rec2100_ictcp)
 			"2e4c4ac369cb50618e5501c64aa69ed4bad259a5"
 		},
 		{
-			"da24606b77b98a6253a46b267f0b1964fa8bfbaf",
-			"b9034ba800462f914984b4cee5fd1b8d9b290fe9",
-			"975639d4de6d275972e701b2d56dc5029594911c"
+			"2552b0fbffafc258284dbb1294637cc4c1a66e5a",
+			"1141e4b078d62d8bf2402ba9ff53170b65c71b0c",
+			"6a8c96483f31b8e5f39e06816fb69cbb14339c3a"
 		},
 	};
 

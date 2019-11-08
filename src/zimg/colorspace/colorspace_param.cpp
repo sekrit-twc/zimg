@@ -223,18 +223,26 @@ Matrix3x3 ncl_rgb_to_yuv_matrix_from_primaries(ColorPrimaries primaries)
 	}
 }
 
-Matrix3x3 ictcp_to_lms_matrix()
+Matrix3x3 ictcp_to_lms_matrix(TransferCharacteristics transfer)
 {
-	return inverse(lms_to_ictcp_matrix());
+	return inverse(lms_to_ictcp_matrix(transfer));
 }
 
-Matrix3x3 lms_to_ictcp_matrix()
+Matrix3x3 lms_to_ictcp_matrix(TransferCharacteristics transfer)
 {
-	return {
-		{              0.5,               0.5,             0.0 },
-		{  6610.0 / 4096.0, -13613.0 / 4096.0, 7003.0 / 4096.0 },
-		{ 17933.0 / 4096.0, -17390.0 / 4096.0, -543.0 / 4096.0 }
-	};
+	if (transfer == TransferCharacteristics::ARIB_B67) {
+		return{
+			{              0.5,               0.5,             0.0 },
+			{  3625.0 / 4096.0,  -7465.0 / 4096.0, 3840.0 / 4096.0 },
+			{  9500.0 / 4096.0,  -9212.0 / 4096.0, -288.0 / 4096.0 }
+		};
+	} else {
+		return {
+			{              0.5,               0.5,             0.0 },
+			{  6610.0 / 4096.0, -13613.0 / 4096.0, 7003.0 / 4096.0 },
+			{ 17933.0 / 4096.0, -17390.0 / 4096.0, -543.0 / 4096.0 }
+		};
+	}
 }
 
 // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
