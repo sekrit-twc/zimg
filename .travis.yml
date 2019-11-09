@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 sudo: false
 language: cpp
 
@@ -6,10 +6,12 @@ matrix:
   include:
     # GCC 4.9.
     - compiler: gcc
+      # GCC 4.9 no longer available in Bionic
+      dist: xenial
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - gcc-4.9
             - g++-4.9
@@ -21,7 +23,7 @@ matrix:
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - gcc-9
             - g++-9
@@ -39,23 +41,24 @@ matrix:
         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
         #   via the "travis encrypt" command using the project repo's public key
         - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
-    # Clang/LLVM 8.0
+    # Clang/LLVM 9.0
     - compiler: clang
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-8
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
-            - clang-8
+            - clang-9
             # Needed for updated libstdc++.
-            - g++-8
+            - g++-9
       env:
-        - MY_CC: clang-8
-        - MY_CXX: clang++-8
+        - MY_CC: clang-9
+        - MY_CXX: clang++-9
     # Apple Clang
     - os: osx
-      osx_image: xcode10.1
+      osx_image: xcode11.2
       compiler: clang
       env:
         - MY_CC: clang
