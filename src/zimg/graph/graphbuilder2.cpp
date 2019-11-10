@@ -135,9 +135,6 @@ void validate_state(const GraphBuilder2::state &state)
 		error::throw_<error::InvalidImageSize>("active window must be finite");
 	if (state.active_width <= 0 || state.active_height <= 0)
 		error::throw_<error::InvalidImageSize>("active window must be positive");
-
-	if (state.alpha == GraphBuilder2::AlphaType::STRAIGHT)
-		error::throw_<error::UnsupportedOperation>("only premultiplied alpha supported");
 }
 
 bool needs_colorspace(const GraphBuilder2::state &source, const GraphBuilder2::state &target)
@@ -258,6 +255,17 @@ struct GraphBuilder2::resize_spec {
 GraphBuilder2::GraphBuilder2() noexcept : m_state{}, m_plane_ids{ -1, -1, -1, -1 } {}
 
 GraphBuilder2::~GraphBuilder2() = default;
+
+GraphBuilder2::state GraphBuilder2::make_alpha_state(const state &s)
+{
+	state result = s;
+	result.color = ColorFamily::GREY;
+	result.colorspace = { colorspace::MatrixCoefficients::UNSPECIFIED, colorspace::TransferCharacteristics::UNSPECIFIED, colorspace::ColorPrimaries::UNSPECIFIED };
+	result.fullrange = true;
+	result.alpha = AlphaType::NONE;
+
+	return result;
+}
 
 void GraphBuilder2::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep)
 {
@@ -585,6 +593,74 @@ void GraphBuilder2::grey_to_color(ColorFamily color, unsigned subsample_w, unsig
 	m_state.chroma_location_h = chroma_loc_h;
 }
 
+void GraphBuilder2::premultiply(const params *params, FilterFactory2 *factory)
+{
+	zassert_d(m_state.alpha == AlphaType::STRAIGHT, "must be straight alpha");
+
+	state alpha_state = make_alpha_state(m_state);
+	convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
+	convert_depth(&alpha_state, PixelType::FLOAT, params, factory, true);
+
+	resize_spec resize{ m_state };
+	resize.subsample_w = 0;
+	resize.subsample_h = 0;
+	convert_resize(&m_state, resize, params, factory, false);
+
+	auto filter = std::make_shared<PremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
+
+	FilterGraph2::id_map deps{ -1, -1, -1, -1 };
+	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
+	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
+	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
+	deps[PLANE_A] = m_plane_ids[PLANE_A];
+
+	FilterGraph2::plane_mask mask{ false, false, false, false };
+	mask[PLANE_Y] = true;
+	mask[PLANE_U] = is_color(m_state);
+	mask[PLANE_V] = is_color(m_state);
+
+	FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+	m_plane_ids[PLANE_Y] = id;
+	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
+	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
+
+	m_state.alpha = AlphaType::PREMULTIPLED;
+}
+
+void GraphBuilder2::unpremultiply(const params *params, FilterFactory2 *factory)
+{
+	zassert_d(m_state.alpha == AlphaType::PREMULTIPLED, "must be premultiplied");
+
+	state alpha_state = make_alpha_state(m_state);
+	convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
+	convert_depth(&alpha_state, PixelType::FLOAT, params, factory, true);
+
+	resize_spec resize{ m_state };
+	resize.subsample_w = 0;
+	resize.subsample_h = 0;
+	convert_resize(&m_state, resize, params, factory, false);
+
+	auto filter = std::make_shared<UnpremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
+
+	FilterGraph2::id_map deps{ -1, -1, -1, -1 };
+	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
+	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
+	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
+	deps[PLANE_A] = m_plane_ids[PLANE_A];
+
+	FilterGraph2::plane_mask mask{ false, false, false, false };
+	mask[PLANE_Y] = true;
+	mask[PLANE_U] = is_color(m_state);
+	mask[PLANE_V] = is_color(m_state);
+
+	FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+	m_plane_ids[PLANE_Y] = id;
+	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
+	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
+
+	m_state.alpha = AlphaType::STRAIGHT;
+}
+
 void GraphBuilder2::connect_color_channels(const state &target, const params *params, FilterFactory2 *factory)
 {
 	// (1) Convert to target colorspace.
@@ -646,33 +722,10 @@ void GraphBuilder2::connect_color_channels(const state &target, const params *pa
 
 void GraphBuilder2::connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory2 *factory)
 {
-	if (!has_alpha(m_state) && !has_alpha(target))
-		return;
+	zassert_d(has_alpha(m_state) && has_alpha(target), "alpha channel missing");
 
-	if (has_alpha(m_state) && !has_alpha(target)) {
-		m_plane_ids[PLANE_A] = -1;
-		m_state.alpha = AlphaType::NONE;
-		return;
-	}
-
-	if (!has_alpha(m_state) && has_alpha(target)) {
-		add_opaque_alpha();
-		m_state.alpha = target.alpha;
-		return;
-	}
-
-	// Create proxy states corresponding to greyscale full-range planes.
-	state source_alpha = orig;
-	source_alpha.color = ColorFamily::GREY;
-	source_alpha.colorspace = { colorspace::MatrixCoefficients::UNSPECIFIED, colorspace::TransferCharacteristics::UNSPECIFIED, colorspace::ColorPrimaries::UNSPECIFIED };
-	source_alpha.fullrange = true;
-	source_alpha.alpha = AlphaType::NONE;
-
-	state target_alpha = target;
-	target_alpha.color = ColorFamily::GREY;
-	target_alpha.colorspace = { colorspace::MatrixCoefficients::UNSPECIFIED, colorspace::TransferCharacteristics::UNSPECIFIED, colorspace::ColorPrimaries::UNSPECIFIED };
-	target_alpha.fullrange = true;
-	target_alpha.alpha = AlphaType::NONE;
+	state source_alpha = make_alpha_state(orig);
+	state target_alpha = make_alpha_state(target);
 
 	// (1) Resize plane to target dimensions.
 	if (needs_resize(source_alpha, target_alpha)) {
@@ -738,10 +791,40 @@ GraphBuilder2 &GraphBuilder2::connect_graph(const state &target, const params *p
 	if (!factory)
 		factory = &default_factory;
 
-	state orig = m_state;
+	if (m_state.alpha == AlphaType::STRAIGHT && (needs_colorspace(m_state, target) || needs_resize(m_state, target) || !has_alpha(target)))
+		premultiply(params, factory);
 
-	connect_color_channels(target, params, factory);
-	connect_alpha_channel(orig, target, params, factory);
+	if (!has_alpha(target)) {
+		m_plane_ids[PLANE_A] = -1;
+		m_state.alpha = AlphaType::NONE;
+	}
+
+	if (m_state.alpha == AlphaType::PREMULTIPLED && target.alpha == AlphaType::STRAIGHT) {
+		state tmp = target;
+		tmp.type = PixelType::FLOAT;
+		tmp.subsample_w = 0;
+		tmp.subsample_h = 0;
+		tmp.alpha = AlphaType::PREMULTIPLED;
+
+		state orig = m_state;
+		connect_color_channels(tmp, params, factory);
+		connect_alpha_channel(orig, tmp, params, factory);
+		unpremultiply(params, factory);
+
+		orig = m_state;
+		connect_color_channels(target, params, factory);
+		connect_alpha_channel(orig, target, params, factory);
+	} else {
+		state orig = m_state;
+		connect_color_channels(target, params, factory);
+		if (has_alpha(m_state))
+			connect_alpha_channel(orig, target, params, factory);
+	}
+
+	if (!has_alpha(m_state) && has_alpha(target)) {
+		add_opaque_alpha();
+		m_state.alpha = target.alpha;
+	}
 
 	return *this;
 } catch (const std::bad_alloc &) {
