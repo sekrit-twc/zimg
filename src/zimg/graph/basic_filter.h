@@ -54,6 +54,36 @@ public:
 	void process(void *, const ImageBuffer<const void> *, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override;
 };
 
+// Premultiplies an image.
+class PremultiplyFilter : public ImageFilterBase {
+	unsigned m_width;
+	unsigned m_height;
+	bool m_color;
+public:
+	PremultiplyFilter(unsigned width, unsigned height, bool color);
+
+	filter_flags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
+
+	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override;
+};
+
+// Unpremultiplies an image.
+class UnpremultiplyFilter : public ImageFilterBase {
+	unsigned m_width;
+	unsigned m_height;
+	bool m_color;
+public:
+	UnpremultiplyFilter(unsigned width, unsigned height, bool color);
+
+	filter_flags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
+
+	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override;
+};
+
 } // namespace graph
 } // namespace zimg
 

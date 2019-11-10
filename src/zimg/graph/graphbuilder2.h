@@ -161,6 +161,8 @@ private:
 	state m_state;
 	int m_plane_ids[4];
 
+	static state make_alpha_state(const state &s);
+
 	void attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep = true);
 
 	void attach_color_filter(std::shared_ptr<ImageFilter> filter);
@@ -180,6 +182,10 @@ private:
 	void discard_chroma();
 
 	void grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h);
+
+	void premultiply(const params *params, FilterFactory2 *factory);
+
+	void unpremultiply(const params *params, FilterFactory2 *factory);
 public:
 	/**
 	 * Default construct GraphBuilder, creating an empty graph.
