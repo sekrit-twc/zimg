@@ -39,6 +39,49 @@ void validate_plane_mask(const plane_mask &planes)
 }
 
 
+class SimulationState {
+	struct state {
+		unsigned pos;
+		unsigned history;
+		bool initialized;
+	};
+
+	std::vector<state> m_state;
+public:
+	explicit SimulationState(size_t num_nodes) : m_state(num_nodes) {}
+
+	void update(node_id id, unsigned first, unsigned last)
+	{
+		zassert_d(id >= 0, "invalid id");
+		state &s = m_state[id];
+
+		if (s.initialized) {
+			s.pos = std::max(s.pos, last);
+			s.history = std::max(s.history, s.pos - first);
+		} else {
+			s.pos = last;
+			s.history = last - first;
+		}
+
+		s.initialized = true;
+	}
+
+	unsigned get_cursor(node_id id, unsigned initial_pos) const
+	{
+		zassert_d(id >= 0, "invalid id");
+		return m_state[id].initialized ? m_state[id].pos : initial_pos;
+	}
+
+	std::pair<unsigned, unsigned> suggest_mask(node_id id, unsigned height) const
+	{
+		zassert_d(id >= 0, "invalid id");
+		unsigned n = m_state[id].history;
+		unsigned mask = n >= height ? BUFFER_MAX : select_zimg_buffer_mask(n);
+		return{ mask == BUFFER_MAX ? height : mask + 1, mask };
+	}
+};
+
+
 class ExecutionState {
 	ImageBuffer<const void> m_src[PLANE_NUM];
 	ImageBuffer<void> m_dst[PLANE_NUM];
@@ -81,7 +124,7 @@ public:
 	unsigned get_cursor(node_id id) const { return m_cursor[id]; }
 	void set_cursor(node_id id, unsigned pos) { m_cursor[id] = pos; }
 
-	void alloc_buffer(node_id id, const image_attributes attr[PLANE_NUM], const plane_mask &planes)
+	void alloc_buffer(node_id id, const size_t rowsize[PLANE_NUM], const unsigned lines[PLANE_NUM], const unsigned mask[PLANE_NUM], const plane_mask &planes)
 	{
 		std::array<ImageBuffer<void>, PLANE_NUM> buffer = {};
 		size_t sz = 0;
@@ -90,8 +133,7 @@ public:
 			if (!planes[p])
 				continue;
 
-			size_t rowsize = ceil_n(static_cast<size_t>(attr[p].width) * pixel_size(attr[p].type), ALIGNMENT);
-			sz += rowsize * attr[p].height;
+			sz += rowsize[p] * lines[p];
 		}
 
 		m_buffer_allocs[id] = alloc(sz);
@@ -101,9 +143,8 @@ public:
 			if (!planes[p])
 				continue;
 
-			size_t rowsize = ceil_n(static_cast<size_t>(attr[p].width) * pixel_size(attr[p].type), ALIGNMENT);
-			buffer[p] = { base, static_cast<ptrdiff_t>(rowsize), BUFFER_MAX };
-			base += rowsize * attr[p].height;
+			buffer[p] = { base, static_cast<ptrdiff_t>(rowsize[p]), mask[p] };
+			base += rowsize[p] * lines[p];
 		}
 
 		m_buffers[id] = buffer;
@@ -128,7 +169,15 @@ public:
 
 	node_id id() const { return m_id; }
 
+	virtual unsigned get_subsample_w() const = 0;
+
+	virtual unsigned get_subsample_h() const = 0;
+
+	virtual plane_mask get_plane_mask() const = 0;
+
 	virtual image_attributes get_image_attributes(int plane) const = 0;
+
+	virtual void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const = 0;
 
 	virtual void init_context(ExecutionState *state) const = 0;
 
@@ -151,9 +200,9 @@ public:
 		validate_plane_mask(m_planes);
 	}
 
-	unsigned subsample_w() const { return m_subsample_w; }
-	unsigned subsample_h() const { return m_subsample_h; }
-	const plane_mask &planes() const { return m_planes; }
+	unsigned get_subsample_w() const override { return m_subsample_w; }
+	unsigned get_subsample_h() const override { return m_subsample_h; }
+	plane_mask get_plane_mask() const override { return m_planes; }
 
 	image_attributes get_image_attributes(int plane) const override
 	{
@@ -174,8 +223,24 @@ public:
 				attr[p] = get_image_attributes(p);
 		}
 
-		state->alloc_buffer(id(), attr, m_planes);
 		state->set_cursor(id(), 0);
+	}
+
+	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
+	{
+		zassert_d(m_planes[plane], "plane not present");
+		if (plane == PLANE_U || plane == PLANE_V) {
+			first <<= m_subsample_h;
+			last <<= m_subsample_h;
+		}
+
+		unsigned cursor = state->get_cursor(id(), 0);
+		if (cursor >= last) {
+			state->update(id(), first, last);
+		} else {
+			unsigned step = 1U << m_subsample_h;
+			state->update(id(), floor_n(first, step), ceil_n(last, step));
+		}
 	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
@@ -228,7 +293,7 @@ public:
 		m_subsample_w{},
 		m_subsample_h{}
 	{
-		validate_plane_mask(planes());
+		validate_plane_mask(SinkNode::get_plane_mask());
 
 		auto attr_y = m_parents[PLANE_Y]->get_image_attributes(PLANE_Y);
 
@@ -256,9 +321,9 @@ public:
 		}
 	}
 
-	unsigned subsample_w() const { return m_subsample_w; }
-	unsigned subsample_h() const { return m_subsample_h; }
-	plane_mask planes() const { return nodes_to_mask(m_parents); }
+	unsigned get_subsample_w() const override { return m_subsample_w; }
+	unsigned get_subsample_h() const override { return m_subsample_h; }
+	plane_mask get_plane_mask() const override { return nodes_to_mask(m_parents); }
 
 	image_attributes get_image_attributes(int plane) const override
 	{
@@ -269,6 +334,39 @@ public:
 	void init_context(ExecutionState *state) const override
 	{
 		state->set_cursor(id(), 0);
+	}
+
+	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
+	{
+		zassert_d(m_parents[plane], "plane not present");
+		if (plane == PLANE_U || plane == PLANE_V) {
+			first <<= m_subsample_h;
+			last <<= m_subsample_h;
+		}
+
+		unsigned cursor = state->get_cursor(id(), 0);
+		if (cursor >= last) {
+			state->update(id(), first, last);
+			return;
+		}
+
+		for (; cursor < last; cursor += (1U << m_subsample_h)) {
+			if (m_parents[PLANE_Y]) {
+				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
+					m_parents[PLANE_Y]->simulate(state, i, i + 1, PLANE_Y);
+				}
+			}
+			if (m_parents[PLANE_U] && m_parents[PLANE_V]) {
+				m_parents[PLANE_U]->simulate(state, cursor >> m_subsample_h, (cursor >> m_subsample_h) + 1, PLANE_U);
+				m_parents[PLANE_V]->simulate(state, cursor >> m_subsample_h, (cursor >> m_subsample_h) + 1, PLANE_V);
+			}
+			if (m_parents[PLANE_A]) {
+				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
+					m_parents[PLANE_A]->simulate(state, i, i + 1, PLANE_A);
+				}
+			}
+		}
+		state->update(id(), first, cursor);
 	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
@@ -333,6 +431,10 @@ public:
 		m_output_planes(output_planes)
 	{}
 
+	unsigned get_subsample_w() const override { return 0; }
+	unsigned get_subsample_h() const override { return 0; }
+	plane_mask get_plane_mask() const override { return m_output_planes; }
+
 	image_attributes get_image_attributes(int plane) const override
 	{
 		zassert_d(m_output_planes[plane], "plane not present");
@@ -344,12 +446,33 @@ public:
 		image_attributes attr[PLANE_NUM] = {};
 		std::fill_n(attr, PLANE_NUM, m_filter->get_image_attributes());
 
-		state->alloc_buffer(id(), attr, m_output_planes);
 		state->alloc_context(id(), m_filter->get_context_size());
 		state->alloc_shared_tmp(m_filter->get_tmp_size(0, m_filter->get_image_attributes().width));
 
 		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
 		m_filter->init_context(state->get_context(id()), seq);
+	}
+
+	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
+	{
+		zassert_d(m_output_planes[plane], "plane not present");
+		unsigned cursor = state->get_cursor(id(), 0);
+		if (cursor >= last) {
+			state->update(id(), first, last);
+			return;
+		}
+
+		unsigned step = m_filter->get_simultaneous_lines();
+
+		for (; cursor < last; cursor += step) {
+			auto range = m_filter->get_required_row_range(cursor);
+
+			for (int p = 0; p < PLANE_NUM; ++p) {
+				if (m_parents[p])
+					m_parents[p]->simulate(state, range.first, range.second, p);
+			}
+		}
+		state->update(id(), first, cursor);
 	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
@@ -399,6 +522,7 @@ public:
 
 class FilterGraph2::impl {
 	std::vector<std::unique_ptr<GraphNode>> m_nodes;
+	SimulationState m_simulation;
 	SourceNode *m_source;
 	SinkNode *m_sink;
 
@@ -419,7 +543,7 @@ class FilterGraph2::impl {
 		return nodes;
 	}
 public:
-	impl() : m_source{}, m_sink{} {}
+	impl() : m_simulation{ 0 }, m_source {}, m_sink{} {}
 
 	node_id add_source(const image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
 	{
@@ -440,6 +564,10 @@ public:
 		zassert_d(!m_sink, "sink already defined");
 		m_nodes.emplace_back(ztd::make_unique<SinkNode>(next_id(), id_to_node(deps)));
 		m_sink = static_cast<SinkNode *>(m_nodes.back().get());
+
+		SimulationState sim{ m_nodes.size() };
+		m_sink->simulate(&sim, 0, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+		m_simulation = std::move(sim);
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
@@ -447,6 +575,32 @@ public:
 		ExecutionState state{ m_nodes.size(), src, dst, unpack_cb, pack_cb };
 
 		for (const auto &node : m_nodes) {
+			if (node.get() == m_sink)
+				continue;
+
+			plane_mask planes = node->get_plane_mask();
+			size_t rowsize[PLANE_NUM] = {};
+			unsigned lines[PLANE_NUM] = {};
+			unsigned mask[PLANE_NUM] = {};
+
+			for (int p = 0; p < PLANE_NUM; ++p) {
+				if (!planes[p])
+					continue;
+
+				auto attr = node->get_image_attributes(p);
+				auto tmp = m_simulation.suggest_mask(node->id(), attr.height);
+
+				if (p == PLANE_U || p == PLANE_V) {
+					tmp.first >>= node->get_subsample_h();
+					tmp.second = tmp.second == BUFFER_MAX ? BUFFER_MAX : tmp.second >> node->get_subsample_h();
+				}
+
+				rowsize[p] = ceil_n(static_cast<size_t>(attr.width) * pixel_size(attr.type), ALIGNMENT);
+				lines[p] = tmp.first;
+				mask[p] = tmp.second;
+			}
+
+			state.alloc_buffer(node->id(), rowsize, lines, mask, planes);
 			node->init_context(&state);
 		}
 
