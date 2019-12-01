@@ -27,7 +27,6 @@ template <class T>
 class ImageBuffer;
 
 constexpr int PLANE_NUM = 4;
-constexpr int PLANE_INTERLEAVED = -1;
 constexpr int PLANE_Y = 0;
 constexpr int PLANE_U = 1;
 constexpr int PLANE_V = 2;
@@ -99,6 +98,12 @@ public:
 	node_id attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes);
 
 	void set_output(const id_map &deps);
+
+	size_t get_tmp_size() const;
+
+	unsigned get_input_buffering() const;
+
+	unsigned get_output_buffering() const;
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const;
 };
