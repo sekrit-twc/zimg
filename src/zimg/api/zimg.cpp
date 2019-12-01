@@ -533,7 +533,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = 0; //assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_tmp_size();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_tmp_size();
 	EX_END
 }
 
@@ -543,7 +543,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = 0; //assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_input_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_input_buffering();
 	EX_END
 }
 
@@ -553,7 +553,7 @@ zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = 0; //assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_output_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_output_buffering();
 	EX_END
 }
 

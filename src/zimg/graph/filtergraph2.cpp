@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 #include "common/align.h"
@@ -39,6 +40,41 @@ void validate_plane_mask(const plane_mask &planes)
 }
 
 
+class SimulationState;
+class ExecutionState;
+
+class GraphNode {
+	node_id m_id;
+	int m_ref_count;
+protected:
+	explicit GraphNode(node_id id) : m_id{ id }, m_ref_count{} {}
+public:
+	virtual ~GraphNode() = default;
+
+	node_id id() const { return m_id; }
+
+	int ref_count() const { return m_ref_count; }
+
+	void add_ref() { ++m_ref_count; }
+
+	virtual unsigned get_subsample_w() const = 0;
+
+	virtual unsigned get_subsample_h() const = 0;
+
+	virtual plane_mask get_plane_mask() const = 0;
+
+	virtual image_attributes get_image_attributes(int plane) const = 0;
+
+	virtual void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const = 0;
+
+	virtual void simulate_alloc(SimulationState *state) const = 0;
+
+	virtual void init_context(ExecutionState *state) const = 0;
+
+	virtual void generate(ExecutionState *state, unsigned last, int plane) const = 0;
+};
+
+
 class SimulationState {
 	struct state {
 		unsigned pos;
@@ -47,8 +83,10 @@ class SimulationState {
 	};
 
 	std::vector<state> m_state;
+	std::vector<size_t> m_context;
+	size_t m_tmp;
 public:
-	explicit SimulationState(size_t num_nodes) : m_state(num_nodes) {}
+	explicit SimulationState(size_t num_nodes) : m_state(num_nodes), m_context(num_nodes), m_tmp{} {}
 
 	void update(node_id id, unsigned first, unsigned last)
 	{
@@ -79,40 +117,117 @@ public:
 		unsigned mask = n >= height ? BUFFER_MAX : select_zimg_buffer_mask(n);
 		return{ mask == BUFFER_MAX ? height : mask + 1, mask };
 	}
+
+	void alloc_context(node_id id, size_t sz)
+	{
+		zassert_d(id >= 0, "invalid id");
+		m_context[id] = std::max(m_context[id], sz);
+	}
+
+	void alloc_tmp(size_t sz)
+	{
+		m_tmp = std::max(m_tmp, sz);
+	}
+
+	size_t get_context_size(node_id id) const { return m_context[id]; }
+
+	size_t get_tmp() const { return m_tmp; }
 };
 
 
 class ExecutionState {
-	ImageBuffer<const void> m_src[PLANE_NUM];
-	ImageBuffer<void> m_dst[PLANE_NUM];
+	const ImageBuffer<const void> *m_src;
+	const ImageBuffer<void> *m_dst;
 
 	FilterGraph2::callback m_unpack_cb;
 	FilterGraph2::callback m_pack_cb;
 
-	std::vector<std::array<ImageBuffer<void>, PLANE_NUM>> m_buffers;
-	std::vector<unsigned> m_cursor;
-	std::vector<std::shared_ptr<void>> m_contexts;
-	std::vector<std::shared_ptr<void>> m_buffer_allocs;
-	std::pair<std::shared_ptr<void>, size_t> m_tmp;
-
-	std::shared_ptr<void> alloc(size_t size)
-	{
-		return { zimg_x_aligned_malloc(size, ALIGNMENT), zimg_x_aligned_free };
-	}
+	ColorImageBuffer<void> *m_buffers;
+	unsigned *m_cursors;
+	void **m_contexts;
+	void *m_tmp;
 public:
-	ExecutionState(size_t num_nodes, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb) :
-		m_src{},
-		m_dst{},
+	static size_t calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, const GraphNode *sink)
+	{
+		FakeAllocator alloc;
+
+		alloc.allocate_n<ColorImageBuffer<void>>(nodes.size()); // m_buffers
+		alloc.allocate_n<unsigned>(nodes.size()); // m_cursors
+		alloc.allocate_n<void *>(nodes.size()); // m_contexts
+
+		for (const auto &node : nodes) {
+			if (node.get() == sink)
+				continue;
+
+			plane_mask planes = node->get_plane_mask();
+			auto attr = node->get_image_attributes(static_cast<int>(std::find(planes.begin(), planes.end(), true) - planes.begin()));
+			unsigned cache_lines = sim.suggest_mask(node->id(), attr.height).first;
+
+			for (int p = 0; p < PLANE_NUM; ++p) {
+				if (!planes[p])
+					continue;
+
+				auto attr = node->get_image_attributes(p);
+				unsigned shift_h = p == PLANE_U || p == PLANE_V ? node->get_subsample_h() : 0;
+
+				checked_size_t stride = ceil_n(checked_size_t{ attr.width } * pixel_size(attr.type), ALIGNMENT);
+				unsigned plane_lines = cache_lines >> shift_h;
+				alloc.allocate(stride * plane_lines);
+			}
+		}
+
+		for (const auto &node : nodes) {
+			alloc.allocate(sim.get_context_size(node->id()));
+		}
+
+		alloc.allocate(sim.get_tmp());
+		return alloc.count();
+	}
+
+	ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, const GraphNode *sink, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
+		m_src{ src },
+		m_dst{ dst },
 		m_unpack_cb{ unpack_cb },
 		m_pack_cb{ pack_cb },
-		m_buffers(num_nodes),
-		m_cursor(num_nodes),
-		m_contexts(num_nodes),
-		m_buffer_allocs(num_nodes),
-		m_tmp{ nullptr, 0 }
+		m_buffers{},
+		m_cursors{},
+		m_contexts{},
+		m_tmp{}
 	{
-		std::copy_n(src, PLANE_NUM, m_src);
-		std::copy_n(dst, PLANE_NUM, m_dst);
+		LinearAllocator alloc{ buf };
+		m_buffers = alloc.allocate_n<ColorImageBuffer<void>>(nodes.size());
+		m_cursors = alloc.allocate_n<unsigned>(nodes.size());
+		m_contexts = alloc.allocate_n<void *>(nodes.size());
+
+		for (const auto &node : nodes) {
+			if (node.get() == sink)
+				continue;
+
+			plane_mask planes = node->get_plane_mask();
+			auto attr = node->get_image_attributes(static_cast<int>(std::find(planes.begin(), planes.end(), true) - planes.begin()));
+			auto suggestion = sim.suggest_mask(node->id(), attr.height);
+
+			ColorImageBuffer<void> &buffer = m_buffers[node->id()];
+
+			for (int p = 0; p < PLANE_NUM; ++p) {
+				if (!planes[p])
+					continue;
+
+				auto attr = node->get_image_attributes(p);
+				unsigned shift_h = p == PLANE_U || p == PLANE_V ? node->get_subsample_h() : 0;
+
+				size_t stride = ceil_n(static_cast<size_t>(attr.width) * pixel_size(attr.type), ALIGNMENT);
+				unsigned plane_lines = suggestion.first >> shift_h;
+				unsigned mask = suggestion.second == BUFFER_MAX ? BUFFER_MAX : suggestion.second >> shift_h;
+				buffer[p] = { alloc.allocate(stride * plane_lines), static_cast<ptrdiff_t>(stride), mask };
+			}
+		}
+
+		for (const auto &node : nodes) {
+			m_contexts[node->id()] = alloc.allocate(sim.get_context_size(node->id()));
+		}
+
+		m_tmp = alloc.allocate(sim.get_tmp());
 	}
 
 	const ImageBuffer<const void> *src() const { return m_src; }
@@ -121,68 +236,14 @@ public:
 	const FilterGraph2::callback &unpack_cb() const { return m_unpack_cb; }
 	const FilterGraph2::callback &pack_cb() const { return m_pack_cb; }
 
-	unsigned get_cursor(node_id id) const { return m_cursor[id]; }
-	void set_cursor(node_id id, unsigned pos) { m_cursor[id] = pos; }
+	unsigned get_cursor(node_id id) const { return m_cursors[id]; }
+	void set_cursor(node_id id, unsigned pos) { m_cursors[id] = pos; }
 
-	void alloc_buffer(node_id id, const size_t rowsize[PLANE_NUM], const unsigned lines[PLANE_NUM], const unsigned mask[PLANE_NUM], const plane_mask &planes)
-	{
-		std::array<ImageBuffer<void>, PLANE_NUM> buffer = {};
-		size_t sz = 0;
-
-		for (int p = 0; p < PLANE_NUM; ++p) {
-			if (!planes[p])
-				continue;
-
-			sz += rowsize[p] * lines[p];
-		}
-
-		m_buffer_allocs[id] = alloc(sz);
-		unsigned char *base = static_cast<unsigned char *>(m_buffer_allocs[id].get());
-
-		for (int p = 0; p < PLANE_NUM; ++p) {
-			if (!planes[p])
-				continue;
-
-			buffer[p] = { base, static_cast<ptrdiff_t>(rowsize[p]), mask[p] };
-			base += rowsize[p] * lines[p];
-		}
-
-		m_buffers[id] = buffer;
-	}
-
-	const ImageBuffer<void> *get_buffer(node_id id) { return m_buffers[id].data(); }
-
-	void alloc_context(node_id id, size_t size) { m_contexts[id] = alloc(size); }
-	void *get_context(node_id id) const { return m_contexts[id].get(); }
-
-	void alloc_shared_tmp(size_t size) { if (size > m_tmp.second) m_tmp = { alloc(size), size }; }
-	void *get_shared_tmp() const { return m_tmp.first.get(); }
+	const ColorImageBuffer<void> &get_buffer(node_id id) { return m_buffers[id]; }
+	void *get_context(node_id id) const { return m_contexts[id]; }
+	void *get_shared_tmp() const { return m_tmp; }
 };
 
-
-class GraphNode {
-	node_id m_id;
-protected:
-	explicit GraphNode(node_id id) : m_id{ id } {}
-public:
-	virtual ~GraphNode() = default;
-
-	node_id id() const { return m_id; }
-
-	virtual unsigned get_subsample_w() const = 0;
-
-	virtual unsigned get_subsample_h() const = 0;
-
-	virtual plane_mask get_plane_mask() const = 0;
-
-	virtual image_attributes get_image_attributes(int plane) const = 0;
-
-	virtual void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const = 0;
-
-	virtual void init_context(ExecutionState *state) const = 0;
-
-	virtual void generate(ExecutionState *state, unsigned last, int plane) const = 0;
-};
 
 class SourceNode : public GraphNode {
 	image_attributes m_attr;
@@ -214,18 +275,6 @@ public:
 			return{ m_attr.width >> m_subsample_w, m_attr.height >> m_subsample_h, m_attr.type };
 	}
 
-	void init_context(ExecutionState *state) const override
-	{
-		image_attributes attr[PLANE_NUM];
-
-		for (int p = 0; p < PLANE_NUM; ++p) {
-			if (m_planes[p])
-				attr[p] = get_image_attributes(p);
-		}
-
-		state->set_cursor(id(), 0);
-	}
-
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
 		zassert_d(m_planes[plane], "plane not present");
@@ -242,6 +291,10 @@ public:
 			state->update(id(), floor_n(first, step), ceil_n(last, step));
 		}
 	}
+
+	void simulate_alloc(SimulationState *) const override {}
+
+	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
@@ -331,11 +384,6 @@ public:
 		return m_parents[plane]->get_image_attributes(plane);
 	}
 
-	void init_context(ExecutionState *state) const override
-	{
-		state->set_cursor(id(), 0);
-	}
-
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
 		zassert_d(m_parents[plane], "plane not present");
@@ -368,6 +416,16 @@ public:
 		}
 		state->update(id(), first, cursor);
 	}
+
+	void simulate_alloc(SimulationState *state) const override
+	{
+		for (const GraphNode *node : m_parents) {
+			if (node)
+				node->simulate_alloc(state);
+		}
+	}
+
+	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
@@ -441,18 +499,6 @@ public:
 		return m_filter->get_image_attributes();
 	}
 
-	void init_context(ExecutionState *state) const override
-	{
-		image_attributes attr[PLANE_NUM] = {};
-		std::fill_n(attr, PLANE_NUM, m_filter->get_image_attributes());
-
-		state->alloc_context(id(), m_filter->get_context_size());
-		state->alloc_shared_tmp(m_filter->get_tmp_size(0, m_filter->get_image_attributes().width));
-
-		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
-		m_filter->init_context(state->get_context(id()), seq);
-	}
-
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
 		zassert_d(m_output_planes[plane], "plane not present");
@@ -473,6 +519,27 @@ public:
 			}
 		}
 		state->update(id(), first, cursor);
+	}
+
+	void simulate_alloc(SimulationState *state) const override
+	{
+		auto attr = m_filter->get_image_attributes();
+
+		state->alloc_context(id(), m_filter->get_context_size());
+		state->alloc_tmp(m_filter->get_tmp_size(0, attr.width));
+
+		for (const GraphNode *node : m_parents) {
+			if (node)
+				node->simulate_alloc(state);
+		}
+	}
+
+	void init_context(ExecutionState *state) const override
+	{
+		state->set_cursor(id(), 0);
+
+		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
+		m_filter->init_context(state->get_context(id()), seq);
 	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
@@ -525,12 +592,13 @@ class FilterGraph2::impl {
 	SimulationState m_simulation;
 	SourceNode *m_source;
 	SinkNode *m_sink;
+	size_t m_tmp_size;
 
 	node_id next_id() const { return static_cast<node_id>(m_nodes.size()); }
 
 	node_map id_to_node(const id_map &ids) const
 	{
-		node_map nodes = {};
+		node_map nodes{};
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (ids[p] < 0)
@@ -542,8 +610,18 @@ class FilterGraph2::impl {
 
 		return nodes;
 	}
+
+	void add_ref(const node_map &nodes)
+	{
+		std::unordered_set<GraphNode *> unique{ nodes.begin(), nodes.end() };
+
+		for (GraphNode *node : unique) {
+			if (node)
+				node->add_ref();
+		}
+	}
 public:
-	impl() : m_simulation{ 0 }, m_source {}, m_sink{} {}
+	impl() : m_simulation{ 0 }, m_source{}, m_sink{}, m_tmp_size{} {}
 
 	node_id add_source(const image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
 	{
@@ -555,6 +633,9 @@ public:
 
 	node_id attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes)
 	{
+		node_map parents = id_to_node(deps);
+		add_ref(parents);
+
 		m_nodes.emplace_back(ztd::make_unique<FilterNode>(next_id(), std::move(filter), id_to_node(deps), output_planes));
 		return m_nodes.back()->id();
 	}
@@ -562,45 +643,37 @@ public:
 	void set_output(const id_map &deps)
 	{
 		zassert_d(!m_sink, "sink already defined");
-		m_nodes.emplace_back(ztd::make_unique<SinkNode>(next_id(), id_to_node(deps)));
+		node_map parents = id_to_node(deps);
+		add_ref(parents);
+
+		m_nodes.emplace_back(ztd::make_unique<SinkNode>(next_id(), parents));
 		m_sink = static_cast<SinkNode *>(m_nodes.back().get());
+		m_sink->add_ref();
 
 		SimulationState sim{ m_nodes.size() };
 		m_sink->simulate(&sim, 0, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+		m_sink->simulate_alloc(&sim);
+		m_tmp_size = ExecutionState::calculate_tmp_size(sim, m_nodes, m_sink);
 		m_simulation = std::move(sim);
+	}
+
+	size_t get_tmp_size() const { return m_tmp_size; }
+
+	unsigned get_input_buffering() const
+	{
+		return 1U << m_source->get_subsample_h();
+	}
+
+	unsigned get_output_buffering() const
+	{
+		return 1U << m_sink->get_subsample_h();
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
-		ExecutionState state{ m_nodes.size(), src, dst, unpack_cb, pack_cb };
+		ExecutionState state{ m_simulation, m_nodes, m_sink, src, dst, unpack_cb, pack_cb, tmp };
 
 		for (const auto &node : m_nodes) {
-			if (node.get() == m_sink)
-				continue;
-
-			plane_mask planes = node->get_plane_mask();
-			size_t rowsize[PLANE_NUM] = {};
-			unsigned lines[PLANE_NUM] = {};
-			unsigned mask[PLANE_NUM] = {};
-
-			for (int p = 0; p < PLANE_NUM; ++p) {
-				if (!planes[p])
-					continue;
-
-				auto attr = node->get_image_attributes(p);
-				auto tmp = m_simulation.suggest_mask(node->id(), attr.height);
-
-				if (p == PLANE_U || p == PLANE_V) {
-					tmp.first >>= node->get_subsample_h();
-					tmp.second = tmp.second == BUFFER_MAX ? BUFFER_MAX : tmp.second >> node->get_subsample_h();
-				}
-
-				rowsize[p] = ceil_n(static_cast<size_t>(attr.width) * pixel_size(attr.type), ALIGNMENT);
-				lines[p] = tmp.first;
-				mask[p] = tmp.second;
-			}
-
-			state.alloc_buffer(node->id(), rowsize, lines, mask, planes);
 			node->init_context(&state);
 		}
 
@@ -652,6 +725,21 @@ node_id FilterGraph2::attach_filter(std::shared_ptr<ImageFilter> filter, const i
 void FilterGraph2::set_output(const id_map &deps)
 {
 	get_impl()->set_output(deps);
+}
+
+size_t FilterGraph2::get_tmp_size() const
+{
+	return get_impl()->get_tmp_size();
+}
+
+unsigned FilterGraph2::get_input_buffering() const
+{
+	return get_impl()->get_input_buffering();
+}
+
+unsigned FilterGraph2::get_output_buffering() const
+{
+	return get_impl()->get_output_buffering();
 }
 
 void FilterGraph2::process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
