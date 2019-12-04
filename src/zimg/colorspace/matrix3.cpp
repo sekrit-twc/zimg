@@ -1,3 +1,5 @@
+#include <cstddef>
+
 #include "matrix3.h"
 
 namespace zimg {
