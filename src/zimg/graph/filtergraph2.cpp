@@ -45,17 +45,24 @@ class ExecutionState;
 
 class GraphNode {
 	node_id m_id;
+	node_id m_cache_id;
 	int m_ref_count;
 protected:
-	explicit GraphNode(node_id id) : m_id{ id }, m_ref_count{} {}
+	explicit GraphNode(node_id id) : m_id{ id }, m_cache_id{ id }, m_ref_count{} {}
+
+	void set_cache_id(node_id id) { m_cache_id = id; }
 public:
 	virtual ~GraphNode() = default;
 
 	node_id id() const { return m_id; }
 
+	node_id cache_id() const { return m_cache_id; }
+
 	int ref_count() const { return m_ref_count; }
 
 	void add_ref() { ++m_ref_count; }
+
+	virtual bool is_sourcesink() const = 0;
 
 	virtual unsigned get_subsample_w() const = 0;
 
@@ -69,6 +76,10 @@ public:
 
 	virtual void simulate_alloc(SimulationState *state) const = 0;
 
+	virtual void try_inplace() = 0;
+
+	virtual void request_external_cache(node_id id) = 0;
+
 	virtual void init_context(ExecutionState *state) const = 0;
 
 	virtual void generate(ExecutionState *state, unsigned last, int plane) const = 0;
@@ -77,43 +88,41 @@ public:
 
 class SimulationState {
 	struct state {
-		unsigned pos;
-		unsigned history;
-		bool initialized;
+		size_t context_size;
+		unsigned cache_pos;
+		unsigned cache_history;
+		unsigned cursor;
+		bool cursor_initialized;
 	};
 
 	std::vector<state> m_state;
-	std::vector<size_t> m_context;
 	size_t m_tmp;
 public:
-	explicit SimulationState(size_t num_nodes) : m_state(num_nodes), m_context(num_nodes), m_tmp{} {}
+	explicit SimulationState(size_t num_nodes) : m_state(num_nodes), m_tmp{} {}
 
-	void update(node_id id, unsigned first, unsigned last)
+	void update(node_id id, node_id cache_id, unsigned first, unsigned last)
 	{
 		zassert_d(id >= 0, "invalid id");
 		state &s = m_state[id];
+		state &cache = m_state[cache_id];
 
-		if (s.initialized) {
-			s.pos = std::max(s.pos, last);
-			s.history = std::max(s.history, s.pos - first);
-		} else {
-			s.pos = last;
-			s.history = last - first;
-		}
+		s.cursor = s.cursor_initialized ? std::max(s.cursor, last) : last;
+		s.cursor_initialized = true;
 
-		s.initialized = true;
+		cache.cache_pos = std::max(cache.cache_pos, s.cursor);
+		cache.cache_history = std::max(cache.cache_history, s.cursor - first);
 	}
 
 	unsigned get_cursor(node_id id, unsigned initial_pos) const
 	{
 		zassert_d(id >= 0, "invalid id");
-		return m_state[id].initialized ? m_state[id].pos : initial_pos;
+		return m_state[id].cursor_initialized ? m_state[id].cursor : initial_pos;
 	}
 
 	std::pair<unsigned, unsigned> suggest_mask(node_id id, unsigned height) const
 	{
 		zassert_d(id >= 0, "invalid id");
-		unsigned n = m_state[id].history;
+		unsigned n = m_state[id].cache_history;
 		unsigned mask = n >= height ? BUFFER_MAX : select_zimg_buffer_mask(n);
 		return{ mask == BUFFER_MAX ? height : mask + 1, mask };
 	}
@@ -121,7 +130,7 @@ public:
 	void alloc_context(node_id id, size_t sz)
 	{
 		zassert_d(id >= 0, "invalid id");
-		m_context[id] = std::max(m_context[id], sz);
+		m_state[id].context_size = std::max(m_state[id].context_size, sz);
 	}
 
 	void alloc_tmp(size_t sz)
@@ -129,7 +138,7 @@ public:
 		m_tmp = std::max(m_tmp, sz);
 	}
 
-	size_t get_context_size(node_id id) const { return m_context[id]; }
+	size_t get_context_size(node_id id) const { return m_state[id].context_size; }
 
 	size_t get_tmp() const { return m_tmp; }
 };
@@ -261,6 +270,7 @@ public:
 		validate_plane_mask(m_planes);
 	}
 
+	bool is_sourcesink() const override { return true; }
 	unsigned get_subsample_w() const override { return m_subsample_w; }
 	unsigned get_subsample_h() const override { return m_subsample_h; }
 	plane_mask get_plane_mask() const override { return m_planes; }
@@ -285,14 +295,18 @@ public:
 
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), first, last);
+			state->update(id(), cache_id(), first, last);
 		} else {
 			unsigned step = 1U << m_subsample_h;
-			state->update(id(), floor_n(first, step), ceil_n(last, step));
+			state->update(id(), cache_id(), floor_n(first, step), ceil_n(last, step));
 		}
 	}
 
 	void simulate_alloc(SimulationState *) const override {}
+
+	void try_inplace() override {}
+
+	void request_external_cache(node_id) override {}
 
 	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
 
@@ -307,7 +321,7 @@ public:
 			return;
 
 		const ImageBuffer<const void> *src = state->src();
-		const ImageBuffer<void> *dst = state->get_buffer(id());
+		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
 
 		size_t sz = static_cast<size_t>(m_attr.width) * pixel_size(m_attr.type);
 
@@ -374,6 +388,7 @@ public:
 		}
 	}
 
+	bool is_sourcesink() const override { return true; }
 	unsigned get_subsample_w() const override { return m_subsample_w; }
 	unsigned get_subsample_h() const override { return m_subsample_h; }
 	plane_mask get_plane_mask() const override { return nodes_to_mask(m_parents); }
@@ -383,6 +398,10 @@ public:
 		zassert_d(m_parents[plane], "plane not present");
 		return m_parents[plane]->get_image_attributes(plane);
 	}
+
+	void try_inplace() override {}
+
+	void request_external_cache(node_id) override {}
 
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
@@ -394,7 +413,7 @@ public:
 
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), first, last);
+			state->update(id(), cache_id(), first, last);
 			return;
 		}
 
@@ -414,7 +433,7 @@ public:
 				}
 			}
 		}
-		state->update(id(), first, cursor);
+		state->update(id(), cache_id(), first, cursor);
 	}
 
 	void simulate_alloc(SimulationState *state) const override
@@ -445,7 +464,7 @@ public:
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (m_parents[p])
-				src[p] = state->get_buffer(m_parents[p]->id())[p];
+				src[p] = state->get_buffer(m_parents[p]->cache_id())[p];
 		}
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
@@ -489,6 +508,7 @@ public:
 		m_output_planes(output_planes)
 	{}
 
+	bool is_sourcesink() const override { return false; }
 	unsigned get_subsample_w() const override { return 0; }
 	unsigned get_subsample_h() const override { return 0; }
 	plane_mask get_plane_mask() const override { return m_output_planes; }
@@ -504,7 +524,7 @@ public:
 		zassert_d(m_output_planes[plane], "plane not present");
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), first, last);
+			state->update(id(), cache_id(), first, last);
 			return;
 		}
 
@@ -518,7 +538,7 @@ public:
 					m_parents[p]->simulate(state, range.first, range.second, p);
 			}
 		}
-		state->update(id(), first, cursor);
+		state->update(id(), cache_id(), first, cursor);
 	}
 
 	void simulate_alloc(SimulationState *state) const override
@@ -532,6 +552,52 @@ public:
 			if (node)
 				node->simulate_alloc(state);
 		}
+	}
+
+	void try_inplace() override
+	{
+		if (!m_filter->get_flags().in_place)
+			return;
+
+		auto attr = m_filter->get_image_attributes();
+
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			if (!m_output_planes[p])
+				continue;
+
+			GraphNode *node = m_parents[p];
+			if (!node || node->is_sourcesink() || node->ref_count() > 1)
+				continue;
+
+			plane_mask self_mask = get_plane_mask();
+			plane_mask mask = node->get_plane_mask();
+			bool ineligible = false;
+
+			auto self_attr = get_image_attributes(p);
+			auto attr = node->get_image_attributes(p);
+			if (self_attr.width != attr.width || pixel_size(self_attr.type) != pixel_size(attr.type))
+				continue;
+
+			for (int q = 0; q < PLANE_NUM; ++q) {
+				ineligible = ineligible || (mask[q] && !self_mask[q]);
+			}
+			if (ineligible)
+				continue;
+
+			node->request_external_cache(cache_id());
+		}
+	}
+
+	void request_external_cache(node_id id) override
+	{
+		for (GraphNode *node : m_parents) {
+			if (!node)
+				continue;
+			if (node->cache_id() == cache_id())
+				node->request_external_cache(id);
+		}
+
+		set_cache_id(id);
 	}
 
 	void init_context(ExecutionState *state) const override
@@ -550,11 +616,11 @@ public:
 			return;
 
 		ImageBuffer<const void> src[PLANE_NUM];
-		const ImageBuffer<void> *dst = state->get_buffer(id());
+		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (m_parents[p])
-				src[p] = state->get_buffer(m_parents[p]->id())[p];
+				src[p] = state->get_buffer(m_parents[p]->cache_id())[p];
 		}
 
 		auto flags = m_filter->get_flags();
@@ -649,6 +715,10 @@ public:
 		m_nodes.emplace_back(ztd::make_unique<SinkNode>(next_id(), parents));
 		m_sink = static_cast<SinkNode *>(m_nodes.back().get());
 		m_sink->add_ref();
+
+		for (const auto &node : m_nodes) {
+			node->try_inplace();
+		}
 
 		SimulationState sim{ m_nodes.size() };
 		m_sink->simulate(&sim, 0, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
