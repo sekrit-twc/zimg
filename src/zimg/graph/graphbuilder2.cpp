@@ -252,7 +252,7 @@ struct GraphBuilder2::resize_spec {
 	{}
 };
 
-GraphBuilder2::GraphBuilder2() noexcept : m_state{}, m_plane_ids{ -1, -1, -1, -1 } {}
+GraphBuilder2::GraphBuilder2() noexcept : m_state{}, m_plane_ids(null_ids) {}
 
 GraphBuilder2::~GraphBuilder2() = default;
 
@@ -269,8 +269,8 @@ GraphBuilder2::state GraphBuilder2::make_alpha_state(const state &s)
 
 void GraphBuilder2::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep)
 {
-	FilterGraph2::id_map deps{ { -1, -1, -1, -1 } };
-	FilterGraph2::plane_mask mask{ { false, false, false, false } };
+	id_map deps = null_ids;
+	plane_mask mask{};
 
 	deps[plane] = dep ? m_plane_ids[plane] : -1;
 	mask[plane] = true;
@@ -280,8 +280,8 @@ void GraphBuilder2::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter,
 
 void GraphBuilder2::attach_color_filter(std::shared_ptr<ImageFilter> filter)
 {
-	FilterGraph2::id_map deps{ { -1, -1, -1, -1 } };
-	FilterGraph2::plane_mask mask{ { false, false, false, false } };
+	id_map deps = null_ids;
+	plane_mask mask{};
 
 	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
 	deps[PLANE_U] = m_plane_ids[PLANE_U];
@@ -291,7 +291,7 @@ void GraphBuilder2::attach_color_filter(std::shared_ptr<ImageFilter> filter)
 	mask[PLANE_U] = true;
 	mask[PLANE_V] = true;
 
-	FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 	m_plane_ids[PLANE_Y] = id;
 	m_plane_ids[PLANE_U] = id;
 	m_plane_ids[PLANE_V] = id;
@@ -552,15 +552,15 @@ void GraphBuilder2::grey_to_color(ColorFamily color, unsigned subsample_w, unsig
 	if (color == ColorFamily::RGB) {
 		zassert_d(!subsample_w && !subsample_h, "RGB can not be subsampled");
 
-		FilterGraph2::id_map deps{ -1, -1, -1, -1 };
-		FilterGraph2::plane_mask mask{ false, false, false, false };
+		id_map deps = null_ids;
+		plane_mask mask{};
 
 		deps[PLANE_Y] = m_plane_ids[PLANE_Y];
 		mask[PLANE_U] = true;
 		mask[PLANE_V] = true;
 
 		auto filter = std::make_shared<RGBExtendFilter>(m_state.width, m_state.height, m_state.type);
-		FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+		node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 		m_plane_ids[PLANE_U] = id;
 		m_plane_ids[PLANE_V] = id;
 	} else {
@@ -608,18 +608,18 @@ void GraphBuilder2::premultiply(const params *params, FilterFactory2 *factory)
 
 	auto filter = std::make_shared<PremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
 
-	FilterGraph2::id_map deps{ -1, -1, -1, -1 };
+	id_map deps = null_ids;
 	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
 	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
 	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
 	deps[PLANE_A] = m_plane_ids[PLANE_A];
 
-	FilterGraph2::plane_mask mask{ false, false, false, false };
+	plane_mask mask{};
 	mask[PLANE_Y] = true;
 	mask[PLANE_U] = is_color(m_state);
 	mask[PLANE_V] = is_color(m_state);
 
-	FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 	m_plane_ids[PLANE_Y] = id;
 	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
 	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
@@ -642,18 +642,18 @@ void GraphBuilder2::unpremultiply(const params *params, FilterFactory2 *factory)
 
 	auto filter = std::make_shared<UnpremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
 
-	FilterGraph2::id_map deps{ -1, -1, -1, -1 };
+	id_map deps = null_ids;
 	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
 	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
 	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
 	deps[PLANE_A] = m_plane_ids[PLANE_A];
 
-	FilterGraph2::plane_mask mask{ false, false, false, false };
+	plane_mask mask{};
 	mask[PLANE_Y] = true;
 	mask[PLANE_U] = is_color(m_state);
 	mask[PLANE_V] = is_color(m_state);
 
-	FilterGraph2::node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
+	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 	m_plane_ids[PLANE_Y] = id;
 	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
 	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
@@ -761,10 +761,10 @@ GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
 	m_graph = ztd::make_unique<FilterGraph2>();
 	m_state = source;
 
-	FilterGraph2::image_attributes attr{ source.width, source.height, source.type };
-	FilterGraph2::plane_mask mask{ { true, is_color(source), is_color(source), has_alpha(source) } };
+	ImageFilter::image_attributes attr{ source.width, source.height, source.type };
+	plane_mask mask{ { true, is_color(source), is_color(source), has_alpha(source) } };
 
-	FilterGraph2::node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
+	node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
 	m_plane_ids[PLANE_Y] = id;
 	m_plane_ids[PLANE_U] = is_color(source) ? id : -1;
 	m_plane_ids[PLANE_V] = is_color(source) ? id : -1;
@@ -836,7 +836,7 @@ std::unique_ptr<FilterGraph2> GraphBuilder2::complete_graph() try
 	if (!m_graph)
 		error::throw_<error::InternalError>("graph not initialized");
 
-	FilterGraph2::id_map map;
+	id_map map;
 	std::copy(std::begin(m_plane_ids), std::end(m_plane_ids), map.begin());
 
 	m_graph->set_output(map);

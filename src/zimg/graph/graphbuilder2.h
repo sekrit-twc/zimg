@@ -10,6 +10,7 @@
 #include "depth/depth.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
+#include "filtergraph2.h"
 
 namespace zimg {
 
@@ -17,7 +18,6 @@ enum class CPUClass;
 
 namespace graph {
 
-class FilterGraph2;
 class ImageFilter;
 
 /**
@@ -159,7 +159,7 @@ private:
 
 	std::unique_ptr<FilterGraph2> m_graph;
 	state m_state;
-	int m_plane_ids[4];
+	id_map m_plane_ids;
 
 	static state make_alpha_state(const state &s);
 

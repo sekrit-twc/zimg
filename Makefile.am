@@ -108,6 +108,8 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/graph/graphbuilder.cpp \
 	src/zimg/graph/graphbuilder2.h \
 	src/zimg/graph/graphbuilder2.cpp \
+	src/zimg/graph/graphnode.h \
+	src/zimg/graph/graphnode.cpp \
 	src/zimg/graph/image_buffer.h \
 	src/zimg/graph/image_filter.h \
 	src/zimg/resize/filter.cpp \

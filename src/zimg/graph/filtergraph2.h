@@ -32,6 +32,15 @@ constexpr int PLANE_U = 1;
 constexpr int PLANE_V = 2;
 constexpr int PLANE_A = 3;
 
+
+typedef int node_id;
+
+typedef std::array<bool, PLANE_NUM> plane_mask;
+typedef std::array<node_id, PLANE_NUM> id_map;
+
+constexpr id_map null_ids{ { -1, -1, -1, -1 } };
+
+
 class FilterGraph2 : public zimg_filter_graph {
 	class impl;
 public:
@@ -79,12 +88,6 @@ private:
 	impl *get_impl() noexcept { return m_impl.get(); }
 	const impl *get_impl() const noexcept { return m_impl.get(); }
 public:
-	typedef int node_id;
-
-	typedef ImageFilter::image_attributes image_attributes;
-	typedef std::array<bool, PLANE_NUM> plane_mask;
-	typedef std::array<node_id, PLANE_NUM> id_map;
-
 	FilterGraph2();
 
 	FilterGraph2(FilterGraph2 &&other) noexcept;
@@ -93,7 +96,7 @@ public:
 
 	FilterGraph2 &operator=(FilterGraph2 &&other) noexcept;
 
-	node_id add_source(const image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes);
+	node_id add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes);
 
 	node_id attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes);
 
