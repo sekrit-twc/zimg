@@ -249,6 +249,9 @@
     <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\graphnode.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -417,6 +420,9 @@
       <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\graphnode.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>

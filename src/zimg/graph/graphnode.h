@@ -1,0 +1,131 @@
+#pragma once
+
+#ifndef ZIMG_GRAPH_GRAPHNODE_H_
+#define ZIMG_GRAPH_GRAPHNODE_H_
+
+#include <array>
+#include <memory>
+#include <utility>
+#include <vector>
+#include "filtergraph2.h"
+#include "image_filter.h"
+
+namespace zimg {
+namespace graph {
+
+class GraphNode;
+
+class SimulationState {
+	struct state {
+		size_t context_size;
+		unsigned cache_pos;
+		unsigned cache_history;
+		unsigned cursor;
+		bool cursor_initialized;
+	};
+
+	std::vector<state> m_state;
+	size_t m_tmp;
+public:
+	explicit SimulationState(size_t num_nodes);
+
+	void update(node_id id, node_id cache_id, unsigned first, unsigned last);
+
+	unsigned get_cursor(node_id id, unsigned initial_pos) const;
+
+	std::pair<unsigned, unsigned> suggest_mask(node_id id, unsigned height) const;
+
+	void alloc_context(node_id id, size_t sz);
+
+	void alloc_tmp(size_t sz);
+
+	size_t get_context_size(node_id id) const;
+
+	size_t get_tmp() const;
+};
+
+
+class ExecutionState {
+	FilterGraph2::callback m_unpack_cb;
+	FilterGraph2::callback m_pack_cb;
+
+	ColorImageBuffer<void> *m_buffers;
+	unsigned *m_cursors;
+	void **m_contexts;
+	void *m_tmp;
+public:
+	static size_t calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes);
+
+	ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf);
+
+	const FilterGraph2::callback &unpack_cb() const { return m_unpack_cb; }
+	const FilterGraph2::callback &pack_cb() const { return m_pack_cb; }
+
+	unsigned get_cursor(node_id id) const { return m_cursors[id]; }
+	void set_cursor(node_id id, unsigned pos) { m_cursors[id] = pos; }
+
+	const ColorImageBuffer<void> &get_buffer(node_id id) { return m_buffers[id]; }
+	void *get_context(node_id id) const { return m_contexts[id]; }
+	void *get_shared_tmp() const { return m_tmp; }
+};
+
+
+class GraphNode {
+protected:
+	typedef ImageFilter::image_attributes image_attributes;
+private:
+	node_id m_id;
+	node_id m_cache_id;
+	int m_ref_count;
+protected:
+	explicit GraphNode(node_id id) : m_id{ id }, m_cache_id{ id }, m_ref_count{} {}
+
+	void set_cache_id(node_id id) { m_cache_id = id; }
+public:
+	virtual ~GraphNode() = 0;
+
+	node_id id() const { return m_id; }
+
+	node_id cache_id() const { return m_cache_id; }
+
+	int ref_count() const { return m_ref_count; }
+
+	void add_ref() { ++m_ref_count; }
+
+	virtual bool is_sourcesink() const = 0;
+
+	virtual unsigned get_subsample_w() const = 0;
+
+	virtual unsigned get_subsample_h() const = 0;
+
+	virtual plane_mask get_plane_mask() const = 0;
+
+	virtual image_attributes get_image_attributes(int plane) const = 0;
+
+	virtual void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const = 0;
+
+	virtual void simulate_alloc(SimulationState *state) const = 0;
+
+	virtual void try_inplace() = 0;
+
+	virtual void request_external_cache(node_id id) = 0;
+
+	virtual void init_context(ExecutionState *state) const = 0;
+
+	virtual void generate(ExecutionState *state, unsigned last, int plane) const = 0;
+};
+
+
+
+typedef std::array<GraphNode *, PLANE_NUM> node_map;
+
+std::unique_ptr<GraphNode> make_source_node(node_id id, const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes);
+
+std::unique_ptr<GraphNode> make_sink_node(node_id id, const node_map &parents);
+
+std::unique_ptr<GraphNode> make_filter_node(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes);
+
+} // namespace graph
+} // namespace zimg
+
+#endif // ZIMG_GRAPH_GRAPHNODE_H_
