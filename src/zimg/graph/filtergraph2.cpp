@@ -10,6 +10,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
+#include "copy_filter.h"
 #include "filtergraph2.h"
 
 namespace zimg {
@@ -145,9 +146,6 @@ public:
 
 
 class ExecutionState {
-	const ImageBuffer<const void> *m_src;
-	const ImageBuffer<void> *m_dst;
-
 	FilterGraph2::callback m_unpack_cb;
 	FilterGraph2::callback m_pack_cb;
 
@@ -156,7 +154,7 @@ class ExecutionState {
 	void **m_contexts;
 	void *m_tmp;
 public:
-	static size_t calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, const GraphNode *sink)
+	static size_t calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes)
 	{
 		FakeAllocator alloc;
 
@@ -165,7 +163,7 @@ public:
 		alloc.allocate_n<void *>(nodes.size()); // m_contexts
 
 		for (const auto &node : nodes) {
-			if (node.get() == sink)
+			if (node->is_sourcesink())
 				continue;
 
 			plane_mask planes = node->get_plane_mask();
@@ -193,9 +191,7 @@ public:
 		return alloc.count();
 	}
 
-	ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, const GraphNode *sink, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
-		m_src{ src },
-		m_dst{ dst },
+	ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
 		m_unpack_cb{ unpack_cb },
 		m_pack_cb{ pack_cb },
 		m_buffers{},
@@ -209,7 +205,7 @@ public:
 		m_contexts = alloc.allocate_n<void *>(nodes.size());
 
 		for (const auto &node : nodes) {
-			if (node.get() == sink)
+			if (node->is_sourcesink())
 				continue;
 
 			plane_mask planes = node->get_plane_mask();
@@ -236,11 +232,13 @@ public:
 			m_contexts[node->id()] = alloc.allocate(sim.get_context_size(node->id()));
 		}
 
+		for (unsigned p = 0; p < PLANE_NUM; ++p) {
+			m_buffers[src_id][p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
+		}
+		m_buffers[dst_id] = { dst[0], dst[1], dst[2], dst[3] };
+
 		m_tmp = alloc.allocate(sim.get_tmp());
 	}
-
-	const ImageBuffer<const void> *src() const { return m_src; }
-	const ImageBuffer<void> *dst() const { return m_dst; }
 
 	const FilterGraph2::callback &unpack_cb() const { return m_unpack_cb; }
 	const FilterGraph2::callback &pack_cb() const { return m_pack_cb; }
@@ -306,7 +304,7 @@ public:
 
 	void try_inplace() override {}
 
-	void request_external_cache(node_id) override {}
+	void request_external_cache(node_id cache_id) override {}
 
 	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
 
@@ -320,29 +318,11 @@ public:
 		if (cursor >= last)
 			return;
 
-		const ImageBuffer<const void> *src = state->src();
-		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
-
 		size_t sz = static_cast<size_t>(m_attr.width) * pixel_size(m_attr.type);
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
 			if (state->unpack_cb())
 				state->unpack_cb()(cursor, 0, m_attr.width);
-
-			if (m_planes[PLANE_Y]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					memcpy(dst[PLANE_Y][i], src[PLANE_Y][i], sz);
-				}
-			}
-			if (m_planes[PLANE_U] && m_planes[PLANE_V]) {
-				memcpy(dst[PLANE_U][cursor >> m_subsample_h], src[PLANE_U][cursor >> m_subsample_h], sz >> m_subsample_w);
-				memcpy(dst[PLANE_V][cursor >> m_subsample_h], src[PLANE_V][cursor >> m_subsample_h], sz >> m_subsample_w);
-			}
-			if (m_planes[PLANE_A]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					memcpy(dst[PLANE_A][i], src[PLANE_A][i], sz);
-				}
-			}
 		}
 
 		state->set_cursor(id(), cursor);
@@ -399,7 +379,13 @@ public:
 		return m_parents[plane]->get_image_attributes(plane);
 	}
 
-	void try_inplace() override {}
+	void try_inplace() override
+	{
+		for (GraphNode *node : m_parents) {
+			if (node)
+				node->request_external_cache(cache_id());
+		}
+	}
 
 	void request_external_cache(node_id) override {}
 
@@ -456,35 +442,22 @@ public:
 		if (cursor >= last)
 			return;
 
-		ImageBuffer<const void> src[PLANE_NUM];
-		const ImageBuffer<void> *dst = state->dst();
-
 		auto attr = get_image_attributes(PLANE_Y);
 		size_t sz = static_cast<size_t>(attr.width) * pixel_size(attr.type);
-
-		for (int p = 0; p < PLANE_NUM; ++p) {
-			if (m_parents[p])
-				src[p] = state->get_buffer(m_parents[p]->cache_id())[p];
-		}
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
 			if (m_parents[PLANE_Y]) {
 				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
 					m_parents[PLANE_Y]->generate(state, i + 1, PLANE_Y);
-					memcpy(dst[PLANE_Y][i], src[PLANE_Y][i], sz);
 				}
 			}
 			if (m_parents[PLANE_U] && m_parents[PLANE_V]) {
 				m_parents[PLANE_U]->generate(state, (cursor >> m_subsample_h) + 1, PLANE_U);
-				memcpy(dst[PLANE_U][cursor >> m_subsample_h], src[PLANE_U][cursor >> m_subsample_h], sz >> m_subsample_w);
-
 				m_parents[PLANE_V]->generate(state, (cursor >> m_subsample_h) + 1, PLANE_V);
-				memcpy(dst[PLANE_V][cursor >> m_subsample_h], src[PLANE_V][cursor >> m_subsample_h], sz >> m_subsample_w);
 			}
 			if (m_parents[PLANE_A]) {
 				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
 					m_parents[PLANE_A]->generate(state, i + 1, PLANE_A);
-					memcpy(dst[PLANE_A][i], src[PLANE_A][i], sz);
 				}
 			}
 
@@ -710,6 +683,42 @@ public:
 	{
 		zassert_d(!m_sink, "sink already defined");
 		node_map parents = id_to_node(deps);
+
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			GraphNode *node = parents[p];
+			if (!node)
+				continue;
+
+			bool need_copy = false;
+
+			// If the node is the source, then a copy is needed, because the source buffer is external.
+			// If the node is not a terminal, then a copy is also needed.
+			if (node->is_sourcesink() || node->ref_count() > 0) {
+				need_copy = true;
+			} else {
+				// If the node produces planes that do not contribute to the output, then a copy is needed.
+				plane_mask mask = node->get_plane_mask();
+
+				for (int q = 0; q < PLANE_NUM; ++q) {
+					if (mask[q] && parents[q] != node) {
+						need_copy = true;
+						break;
+					}
+				}
+			}
+
+			if (need_copy) {
+				id_map deps{ -1, -1, -1, -1 };
+				deps[p] = node->id();
+
+				plane_mask mask{};
+				mask[p] = true;
+
+				auto attr = node->get_image_attributes(p);
+				node_id id = attach_filter(ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type), deps, mask);
+				parents[p] = m_nodes[id].get();
+			}
+		}
 		add_ref(parents);
 
 		m_nodes.emplace_back(ztd::make_unique<SinkNode>(next_id(), parents));
@@ -721,9 +730,11 @@ public:
 		}
 
 		SimulationState sim{ m_nodes.size() };
-		m_sink->simulate(&sim, 0, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+		for (unsigned cursor = 0; cursor < m_sink->get_image_attributes(PLANE_Y).height; cursor += 1U << m_sink->get_subsample_h()) {
+			m_sink->simulate(&sim, cursor, cursor + (1U << m_sink->get_subsample_h()), PLANE_Y);
+		}
 		m_sink->simulate_alloc(&sim);
-		m_tmp_size = ExecutionState::calculate_tmp_size(sim, m_nodes, m_sink);
+		m_tmp_size = ExecutionState::calculate_tmp_size(sim, m_nodes);
 		m_simulation = std::move(sim);
 	}
 
@@ -731,17 +742,17 @@ public:
 
 	unsigned get_input_buffering() const
 	{
-		return 1U << m_source->get_subsample_h();
+		return m_simulation.suggest_mask(m_source->id(), m_source->get_image_attributes(PLANE_Y).height).first;
 	}
 
 	unsigned get_output_buffering() const
 	{
-		return 1U << m_sink->get_subsample_h();
+		return m_simulation.suggest_mask(m_sink->id(), m_sink->get_image_attributes(PLANE_Y).height).first;
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
-		ExecutionState state{ m_simulation, m_nodes, m_sink, src, dst, unpack_cb, pack_cb, tmp };
+		ExecutionState state{ m_simulation, m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, unpack_cb, pack_cb, tmp };
 
 		for (const auto &node : m_nodes) {
 			node->init_context(&state);
