@@ -663,19 +663,30 @@ void GraphBuilder2::unpremultiply(const params *params, FilterFactory2 *factory)
 
 void GraphBuilder2::connect_color_channels(const state &target, const params *params, FilterFactory2 *factory)
 {
+	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
+
 	// (1) Convert to target colorspace.
 	if (needs_colorspace(m_state, target)) {
+		// Determine whether resampling is needed.
+		resize_spec spec{ m_state };
+		spec.subsample_w = 0;
+		spec.subsample_h = 0;
+
+		if ((m_state.subsample_w || m_state.subsample_h) &&
+			(!target.subsample_w && !target.subsample_h)) {
+			spec.width = target.width;
+			spec.height = target.height;
+		} else {
+			spec.width = std::min(m_state.width, target.width);
+			spec.height = std::min(m_state.height, target.height);
+		}
+
 		// (1.1) Convert to float.
 		if (m_state.type != PixelType::FLOAT)
 			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
 
-		// (1.2) Upsample to 4:4:4.
-		if (m_state.subsample_w || m_state.subsample_h) {
-			resize_spec spec{ m_state };
-			spec.subsample_w = 0;
-			spec.subsample_h = 0;
-			convert_resize(&m_state, spec, params, factory, false);
-		}
+		// (1.2) Resize to optimal dimensions. Chroma subsampling is also handled here.
+		convert_resize(&m_state, spec, params, factory, false);
 
 		// (1.3) Add fake chroma planes if needed.
 		if (is_greyscale(m_state)) {
@@ -694,8 +705,20 @@ void GraphBuilder2::connect_color_channels(const state &target, const params *pa
 
 	// (3) Resize to target dimensions.
 	if (needs_resize(m_state, target)) {
-		// (3.1) Convert to compatible pixel type.
-		if (m_state.type != PixelType::FLOAT)
+		// (3.1) Convert to compatible pixel type, attempting to minimize total conversions.
+		// If neither the source nor target pixel format is directly supported, select a different format.
+		// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
+		if (params && params->unresize)
+			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
+		else if (target.type == PixelType::WORD)
+			convert_depth(&m_state, PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params, factory, false);
+		else if (target.type == PixelType::HALF && fast_f16)
+			convert_depth(&m_state, PixelType::HALF, params, factory, false);
+		else if (target.type == PixelType::FLOAT)
+			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
+		else if (m_state.type == PixelType::BYTE)
+			convert_depth(&m_state, PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params, factory, false);
+		else if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
 			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
 
 		// (3.2) Resize image.
@@ -704,6 +727,8 @@ void GraphBuilder2::connect_color_channels(const state &target, const params *pa
 		spec.shift_h = m_state.active_top;
 		spec.subwidth = m_state.active_width;
 		spec.subheight = m_state.active_height;
+		spec.chroma_location_w = target.chroma_location_w;
+		spec.chroma_location_h = target.chroma_location_h;
 
 		convert_resize(&m_state, spec, params, factory, false);
 		zassert_d(!needs_resize(m_state, target), "conversion did not apply");
@@ -727,10 +752,28 @@ void GraphBuilder2::connect_alpha_channel(const state &orig, const state &target
 	state source_alpha = make_alpha_state(orig);
 	state target_alpha = make_alpha_state(target);
 
+	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
+
 	// (1) Resize plane to target dimensions.
 	if (needs_resize(source_alpha, target_alpha)) {
 		// (1.1) Convert to compatible pixel type.
 		if (source_alpha.type != PixelType::FLOAT)
+			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
+
+		// (1.1) Convert to compatible pixel type, attempting to minimize total conversions.
+		// If neither the source nor target pixel format is directly supported, select a different format.
+		// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
+		if (params && params->unresize)
+			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
+		else if (target_alpha.type == PixelType::WORD)
+			convert_depth(&source_alpha, PixelFormat{ target_alpha.type, target_alpha.depth, target_alpha.fullrange }, params, factory, true);
+		else if (target_alpha.type == PixelType::HALF && fast_f16)
+			convert_depth(&source_alpha, PixelType::HALF, params, factory, true);
+		else if (target_alpha.type == PixelType::FLOAT)
+			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
+		else if (source_alpha.type == PixelType::BYTE)
+			convert_depth(&source_alpha, PixelFormat{ PixelType::WORD, 16, false }, params, factory, true);
+		else if (source_alpha.type == PixelType::HALF && (target_alpha.type != PixelType::HALF || !fast_f16))
 			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
 
 		// (1.2) Resize plane.
