@@ -285,6 +285,7 @@ testapp_SOURCES = \
 	src/testapp/frame.cpp \
 	src/testapp/frame.h \
 	src/testapp/graphapp.cpp \
+	src/testapp/graphapp2.cpp \
 	src/testapp/main.cpp \
 	src/testapp/pair_filter.cpp \
 	src/testapp/pair_filter.h \

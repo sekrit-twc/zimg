@@ -21,8 +21,8 @@ enum class PixelType;
 
 
 class ImageFrame {
-	zimg::AlignedVector<char> m_vector[3];
-	ptrdiff_t m_offset[3];
+	zimg::AlignedVector<char> m_vector[4];
+	ptrdiff_t m_offset[4];
 	unsigned m_width;
 	unsigned m_height;
 	zimg::PixelType m_pixel;

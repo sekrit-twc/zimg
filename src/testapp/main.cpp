@@ -24,11 +24,12 @@ void usage()
 
 main_func lookup_app(const char *name)
 {
-	static const zimg::static_string_map<main_func, 6> map{
+	static const zimg::static_string_map<main_func, 7> map{
 		{ "colorspace", colorspace_main },
 		{ "cpuinfo",    cpuinfo_main },
 		{ "depth",      depth_main },
 		{ "graph",      graph_main },
+		{ "graph2",     graph2_main },
 		{ "resize",     resize_main },
 		{ "unresize",   unresize_main }
 	};
