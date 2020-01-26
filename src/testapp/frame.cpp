@@ -128,7 +128,7 @@ constexpr ptrdiff_t width_to_stride(unsigned width, zimg::PixelType pixel) noexc
 
 ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
                        bool yuv, unsigned subsample_w, unsigned subsample_h) :
-	m_offset{ 0, 832, 2368 },
+	m_offset{ 0, 832, 2368, 320 },
 	m_width{ width },
 	m_height{ height },
 	m_pixel{ pixel },
@@ -171,7 +171,7 @@ zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const noe
 {
 	zimg::graph::ColorImageBuffer<const void> ret{};
 
-	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
+	for (unsigned p = 0; p < std::min(m_planes, 4U); ++p) {
 		ret[p] = as_read_buffer(p);
 	}
 	return ret;
@@ -187,7 +187,7 @@ zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer() noexcept
 {
 	zimg::graph::ColorImageBuffer<void> ret{};
 
-	for (unsigned p = 0; p < std::min(m_planes, 3U); ++p) {
+	for (unsigned p = 0; p < std::min(m_planes, 4U); ++p) {
 		ret[p] = as_write_buffer(p);
 	}
 	return ret;
