@@ -85,14 +85,13 @@ public:
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
 		zassert_d(m_planes[plane], "plane not present");
+		if (!state->unpack_cb())
+			return;
+
 		if (plane == PLANE_U || plane == PLANE_V)
 			last <<= m_subsample_h;
 
 		unsigned cursor = state->get_cursor(id());
-		if (cursor >= last)
-			return;
-
-		size_t sz = static_cast<size_t>(m_attr.width) * pixel_size(m_attr.type);
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
 			if (state->unpack_cb())
@@ -108,16 +107,19 @@ class SinkNode final : public GraphNode {
 	node_map m_parents;
 	unsigned m_subsample_w;
 	unsigned m_subsample_h;
+	image_attributes m_attr;
 public:
 	explicit SinkNode(node_id id, const node_map &parents) :
 		GraphNode(id),
 		m_parents(parents),
 		m_subsample_w{},
-		m_subsample_h{}
+		m_subsample_h{},
+		m_attr{}
 	{
 		validate_plane_mask(SinkNode::get_plane_mask());
 
 		auto attr_y = m_parents[PLANE_Y]->get_image_attributes(PLANE_Y);
+		m_attr = attr_y;
 
 		if (m_parents[PLANE_U] && m_parents[PLANE_V]) {
 			auto attr_u = m_parents[PLANE_U]->get_image_attributes(PLANE_U);
@@ -179,19 +181,15 @@ public:
 		}
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
-			if (m_parents[PLANE_Y]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					m_parents[PLANE_Y]->simulate(state, i, i + 1, PLANE_Y);
-				}
-			}
+			if (m_parents[PLANE_Y])
+				m_parents[PLANE_Y]->simulate(state, cursor, cursor + (1U << m_subsample_h), PLANE_Y);
+
 			if (m_parents[PLANE_U] && m_parents[PLANE_V]) {
 				m_parents[PLANE_U]->simulate(state, cursor >> m_subsample_h, (cursor >> m_subsample_h) + 1, PLANE_U);
 				m_parents[PLANE_V]->simulate(state, cursor >> m_subsample_h, (cursor >> m_subsample_h) + 1, PLANE_V);
 			}
 			if (m_parents[PLANE_A]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					m_parents[PLANE_A]->simulate(state, i, i + 1, PLANE_A);
-				}
+				m_parents[PLANE_A]->simulate(state, cursor, cursor + (1U << m_subsample_h), PLANE_A);
 			}
 		}
 		state->update(id(), cache_id(), first, cursor);
@@ -214,30 +212,26 @@ public:
 			last <<= m_subsample_h;
 
 		unsigned cursor = state->get_cursor(id());
-		if (cursor >= last)
-			return;
+		unsigned subsample_h = m_subsample_h;
 
-		auto attr = get_image_attributes(PLANE_Y);
-		size_t sz = static_cast<size_t>(attr.width) * pixel_size(attr.type);
+		for (; cursor < last; cursor += (1U << subsample_h)) {
+			unsigned next = cursor + (1U << subsample_h);
 
-		for (; cursor < last; cursor += (1U << m_subsample_h)) {
-			if (m_parents[PLANE_Y]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					m_parents[PLANE_Y]->generate(state, i + 1, PLANE_Y);
-				}
+			m_parents[PLANE_Y]->generate(state, next, PLANE_Y);
+
+			if (m_parents[PLANE_U]) {
+				unsigned next_uv = next >> subsample_h;
+
+				m_parents[PLANE_U]->generate(state, next_uv, PLANE_U);
+				m_parents[PLANE_V]->generate(state, next_uv, PLANE_V);
 			}
-			if (m_parents[PLANE_U] && m_parents[PLANE_V]) {
-				m_parents[PLANE_U]->generate(state, (cursor >> m_subsample_h) + 1, PLANE_U);
-				m_parents[PLANE_V]->generate(state, (cursor >> m_subsample_h) + 1, PLANE_V);
-			}
-			if (m_parents[PLANE_A]) {
-				for (unsigned i = cursor; i < cursor + (1U << m_subsample_h); ++i) {
-					m_parents[PLANE_A]->generate(state, i + 1, PLANE_A);
-				}
-			}
+
+			if (m_parents[PLANE_A])
+				m_parents[PLANE_A]->generate(state, next, PLANE_A);
 
 			if (state->pack_cb())
-				state->pack_cb()(cursor, 0, attr.width);
+				state->pack_cb()(cursor, 0, m_attr.width);
+
 		}
 
 		state->set_cursor(id(), cursor);
@@ -245,16 +239,21 @@ public:
 };
 
 
-class FilterNode final : public GraphNode {
+class FilterNodeBase : public GraphNode {
+protected:
 	std::shared_ptr<ImageFilter> m_filter;
 	node_map m_parents;
 	plane_mask m_output_planes;
+	unsigned m_step;
+	image_attributes m_attr;
 public:
-	explicit FilterNode(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes) :
+	FilterNodeBase(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes) :
 		GraphNode(id),
 		m_filter{ std::move(filter) },
 		m_parents(parents),
-		m_output_planes(output_planes)
+		m_output_planes(output_planes),
+		m_step{ m_filter->get_simultaneous_lines() },
+		m_attr(m_filter->get_image_attributes())
 	{}
 
 	bool is_sourcesink() const override { return false; }
@@ -265,7 +264,7 @@ public:
 	image_attributes get_image_attributes(int plane) const override
 	{
 		zassert_d(m_output_planes[plane], "plane not present");
-		return m_filter->get_image_attributes();
+		return m_attr;
 	}
 
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
@@ -277,10 +276,9 @@ public:
 			return;
 		}
 
-		unsigned step = m_filter->get_simultaneous_lines();
-
-		for (; cursor < last; cursor += step) {
+		for (; cursor < last; cursor += m_step) {
 			auto range = m_filter->get_required_row_range(cursor);
+			zassert_d(range.first < range.second, "bad row range");
 
 			for (int p = 0; p < PLANE_NUM; ++p) {
 				if (m_parents[p])
@@ -292,10 +290,8 @@ public:
 
 	void simulate_alloc(SimulationState *state) const override
 	{
-		auto attr = m_filter->get_image_attributes();
-
 		state->alloc_context(id(), m_filter->get_context_size());
-		state->alloc_tmp(m_filter->get_tmp_size(0, attr.width));
+		state->alloc_tmp(m_filter->get_tmp_size(0, m_attr.width));
 
 		for (const GraphNode *node : m_parents) {
 			if (node)
@@ -307,8 +303,6 @@ public:
 	{
 		if (!m_filter->get_flags().in_place)
 			return;
-
-		auto attr = m_filter->get_image_attributes();
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (!m_output_planes[p])
@@ -356,6 +350,12 @@ public:
 		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
 		m_filter->init_context(state->get_context(id()), seq);
 	}
+};
+
+template <int P0, int P1, int P2, int P3>
+class FilterNodeColor final : public FilterNodeBase {
+public:
+	using FilterNodeBase::FilterNodeBase;
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
@@ -364,35 +364,64 @@ public:
 		if (cursor >= last)
 			return;
 
-		ImageBuffer<const void> src[PLANE_NUM];
+		std::aligned_storage<sizeof(ImageBuffer<const void>), alignof(ImageBuffer<const void>)>::type src[PLANE_NUM];
 		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
+		void *ctx = state->get_context(id());
+		void *tmp = state->get_shared_tmp();
 
-		for (int p = 0; p < PLANE_NUM; ++p) {
-			if (m_parents[p])
-				src[p] = state->get_buffer(m_parents[p]->cache_id())[p];
+		if (P0 == 1 || (P0 == -1 && m_parents[0]))
+			new (src + 0) ImageBuffer<const void>(state->get_buffer(m_parents[0]->cache_id())[0]);
+		if (P1 == 1 || (P1 == -1 && m_parents[1]))
+			new (src + 1) ImageBuffer<const void>(state->get_buffer(m_parents[1]->cache_id())[1]);
+		if (P2 == 1 || (P2 == -1 && m_parents[2]))
+			new (src + 2) ImageBuffer<const void>(state->get_buffer(m_parents[2]->cache_id())[2]);
+		if (P3 == 1 || (P3 == -1 && m_parents[3]))
+			new (src + 3) ImageBuffer<const void>(state->get_buffer(m_parents[3]->cache_id())[3]);
+
+		for (; cursor < last; cursor += m_step) {
+			auto range = m_filter->get_required_row_range(cursor);
+			zassert_d(range.first < range.second, "bad row range");
+
+			if (P0 == 1 || (P0 == -1 && m_parents[0]))
+				m_parents[0]->generate(state, range.second, 0);
+			if (P1 == 1 || (P1 == -1 && m_parents[1]))
+				m_parents[1]->generate(state, range.second, 1);
+			if (P2 == 1 || (P2 == -1 && m_parents[2]))
+				m_parents[2]->generate(state, range.second, 2);
+			if (P3 == 1 || (P3 == -1 && m_parents[3]))
+				m_parents[3]->generate(state, range.second, 3);
+
+			m_filter->process(ctx, reinterpret_cast<ImageBuffer<const void> *>(src), dst, tmp, cursor, 0, m_attr.width);
 		}
 
-		auto flags = m_filter->get_flags();
-		unsigned step = m_filter->get_simultaneous_lines();
+		state->set_cursor(id(), cursor);
+	}
+};
 
-		for (; cursor < last; cursor += step) {
+template <int Plane, bool Parent>
+class FilterNodeGrey final : public FilterNodeBase {
+public:
+	using FilterNodeBase::FilterNodeBase;
+
+	void generate(ExecutionState *state, unsigned last, int plane) const override
+	{
+		zassert_d(m_output_planes[plane], "plane not present");
+		unsigned cursor = state->get_cursor(id());
+		if (cursor >= last)
+			return;
+
+		const ImageBuffer<const void> *src = Parent ? static_buffer_cast<const void>(state->get_buffer(m_parents[Plane]->cache_id()) + Plane) : nullptr;
+		const ImageBuffer<void> *dst = state->get_buffer(cache_id()) + Plane;
+		void *ctx = state->get_context(id());
+		void *tmp = state->get_shared_tmp();
+
+		for (; cursor < last; cursor += m_step) {
 			auto range = m_filter->get_required_row_range(cursor);
+			zassert_d(range.first < range.second, "bad row range");
 
-			if (flags.color) {
-				for (int p = 0; p < PLANE_NUM; ++p) {
-					if (m_parents[p])
-						m_parents[p]->generate(state, range.second, p);
-				}
-				m_filter->process(state->get_context(id()), src, dst, state->get_shared_tmp(), cursor, 0, m_filter->get_image_attributes().width);
-			} else {
-				for (int p = 0; p < PLANE_NUM; ++p) {
-					if (m_output_planes[p]) {
-						if (m_parents[p])
-							m_parents[p]->generate(state, range.second, p);
-						m_filter->process(state->get_context(id()), src + p, dst + p, state->get_shared_tmp(), cursor, 0, m_filter->get_image_attributes().width);
-					}
-				}
-			}
+			if (Parent)
+				m_parents[Plane]->generate(state, range.second, Plane);
+			m_filter->process(node_state->context, src, dst, tmp, cursor, 0, m_attr.width);
 		}
 
 		state->set_cursor(id(), cursor);
@@ -427,6 +456,9 @@ std::pair<unsigned, unsigned> SimulationState::suggest_mask(node_id id, unsigned
 {
 	zassert_d(id >= 0, "invalid id");
 	unsigned n = m_state[id].cache_history;
+	if (!n)
+		return{};
+
 	unsigned mask = n >= height ? BUFFER_MAX : select_zimg_buffer_mask(n);
 	return{ mask == BUFFER_MAX ? height : mask + 1, mask };
 }
@@ -549,7 +581,31 @@ std::unique_ptr<GraphNode> make_sink_node(node_id id, const node_map &parents)
 
 std::unique_ptr<GraphNode> make_filter_node(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes)
 {
-	return ztd::make_unique<FilterNode>(id, filter, parents, output_planes);
+	if (filter->get_flags().color) {
+		if (parents[0] && parents[1] && parents[2] && !parents[3])
+			return ztd::make_unique<FilterNodeColor<1, 1, 1, 0>>(id, filter, parents, output_planes);
+		else
+			return ztd::make_unique<FilterNodeColor<-1, -1, -1, -1>>(id, filter, parents, output_planes);
+	} else {
+		if (parents[0] && output_planes[0])
+			return ztd::make_unique<FilterNodeGrey<0, true>>(id, filter, parents, output_planes);
+		else if (parents[1] && output_planes[1])
+			return ztd::make_unique<FilterNodeGrey<1, true>>(id, filter, parents, output_planes);
+		else if (parents[2] && output_planes[2])
+			return ztd::make_unique<FilterNodeGrey<2, true>>(id, filter, parents, output_planes);
+		else if (parents[3] && output_planes[3])
+			return ztd::make_unique<FilterNodeGrey<3, true>>(id, filter, parents, output_planes);
+		else if (!parents[0] && output_planes[0])
+			return ztd::make_unique<FilterNodeGrey<0, false>>(id, filter, parents, output_planes);
+		else if (!parents[1] && output_planes[1])
+			return ztd::make_unique<FilterNodeGrey<1, false>>(id, filter, parents, output_planes);
+		else if (!parents[2] && output_planes[2])
+			return ztd::make_unique<FilterNodeGrey<2, false>>(id, filter, parents, output_planes);
+		else if (!parents[3] && output_planes[3])
+			return ztd::make_unique<FilterNodeGrey<3, false>>(id, filter, parents, output_planes);
+		else
+			error::throw_<error::InternalError>("must produce output plane");
+	}
 }
 
 } // namespace graph
