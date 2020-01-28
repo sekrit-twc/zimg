@@ -16,6 +16,18 @@ namespace graph {
 class GraphNode;
 
 class SimulationState {
+public:
+	struct result {
+		struct s {
+			unsigned cache_lines;
+			unsigned mask;
+			size_t context_size;
+		};
+
+		std::vector<s> node_result;
+		size_t shared_tmp;
+	};
+private:
 	struct state {
 		size_t context_size;
 		unsigned cache_pos;
@@ -29,19 +41,15 @@ class SimulationState {
 public:
 	explicit SimulationState(size_t num_nodes);
 
+	result get_result(const std::vector<std::unique_ptr<GraphNode>> &nodes) const;
+
 	void update(node_id id, node_id cache_id, unsigned first, unsigned last);
 
 	unsigned get_cursor(node_id id, unsigned initial_pos) const;
 
-	std::pair<unsigned, unsigned> suggest_mask(node_id id, unsigned height) const;
-
 	void alloc_context(node_id id, size_t sz);
 
 	void alloc_tmp(size_t sz);
-
-	size_t get_context_size(node_id id) const;
-
-	size_t get_tmp() const;
 };
 
 
@@ -52,11 +60,12 @@ class ExecutionState {
 	ColorImageBuffer<void> *m_buffers;
 	unsigned *m_cursors;
 	void **m_contexts;
+	unsigned char *m_init_bitset;
 	void *m_tmp;
 public:
-	static size_t calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes);
+	static size_t calculate_tmp_size(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes);
 
-	ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf);
+	ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf);
 
 	const FilterGraph2::callback &unpack_cb() const { return m_unpack_cb; }
 	const FilterGraph2::callback &pack_cb() const { return m_pack_cb; }
@@ -67,6 +76,9 @@ public:
 	const ColorImageBuffer<void> &get_buffer(node_id id) { return m_buffers[id]; }
 	void *get_context(node_id id) const { return m_contexts[id]; }
 	void *get_shared_tmp() const { return m_tmp; }
+
+	bool is_initialized(node_id id) const { return !!(m_init_bitset[id / CHAR_BIT] & (1U << (id % CHAR_BIT))); }
+	void set_initialized(node_id id) { m_init_bitset[id / CHAR_BIT] |= 1U << (id % CHAR_BIT); }
 };
 
 

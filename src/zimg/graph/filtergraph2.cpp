@@ -17,10 +17,13 @@ namespace graph {
 
 class FilterGraph2::impl {
 	std::vector<std::unique_ptr<GraphNode>> m_nodes;
-	SimulationState m_simulation;
+	SimulationState::result m_interleaved_sim;
+	SimulationState::result m_planar_sim[PLANE_NUM];
 	GraphNode *m_source;
 	GraphNode *m_sink;
+	node_map m_output_nodes;
 	size_t m_tmp_size;
+	bool m_planar;
 
 	node_id next_id() const { return static_cast<node_id>(m_nodes.size()); }
 
@@ -48,8 +51,73 @@ class FilterGraph2::impl {
 				node->add_ref();
 		}
 	}
+
+	void simulate_interleaved()
+	{
+		SimulationState sim{ m_nodes.size() };
+		unsigned height = m_sink->get_image_attributes(PLANE_Y).height;
+		unsigned step = 1U << m_sink->get_subsample_h();
+
+		for (unsigned cursor = 0; cursor < height; cursor += step) {
+			m_sink->simulate(&sim, cursor, cursor + step, PLANE_Y);
+		}
+		m_sink->simulate_alloc(&sim);
+
+		m_interleaved_sim = sim.get_result(m_nodes);
+		m_tmp_size = std::max(m_tmp_size, ExecutionState::calculate_tmp_size(m_interleaved_sim, m_nodes));
+	}
+
+	void simulate_planar()
+	{
+		if (!m_planar)
+			return;
+
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			if (!m_output_nodes[p])
+				continue;
+
+			SimulationState sim{ m_nodes.size() };
+			unsigned height = m_output_nodes[p]->get_image_attributes(p).height;
+
+			for (unsigned i = 0; i < height; ++i) {
+				m_output_nodes[p]->simulate(&sim, i, i + 1, p);
+			}
+			m_output_nodes[p]->simulate_alloc(&sim);
+
+			m_planar_sim[p] = sim.get_result(m_nodes);
+			m_tmp_size = std::max(m_tmp_size, ExecutionState::calculate_tmp_size(m_planar_sim[p], m_nodes));
+		}
+	}
+
+	void process_interleaved(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
+	{
+		ExecutionState state{ m_interleaved_sim, m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, unpack_cb, pack_cb, tmp };
+
+		m_sink->init_context(&state);
+		m_sink->generate(&state, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+	}
+
+	void process_planar(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp) const
+	{
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			if (!m_output_nodes[p])
+				continue;
+
+			ExecutionState state{ m_planar_sim[p], m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, nullptr, nullptr, tmp };
+			m_output_nodes[p]->init_context(&state);
+			m_output_nodes[p]->generate(&state, m_output_nodes[p]->get_image_attributes(p).height, p);
+		}
+	}
 public:
-	impl() : m_simulation{ 0 }, m_source{}, m_sink{}, m_tmp_size{} {}
+	impl() :
+		m_interleaved_sim{},
+		m_planar_sim{},
+		m_source{},
+		m_sink{},
+		m_output_nodes{},
+		m_tmp_size{},
+		m_planar{ true }
+	{}
 
 	node_id add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
 	{
@@ -63,6 +131,17 @@ public:
 	{
 		node_map parents = id_to_node(deps);
 		add_ref(parents);
+
+		plane_mask input_planes{};
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			input_planes[p] = !!parents[p];
+		}
+
+		size_t input_plane_count = std::count(input_planes.begin(), input_planes.end(), true);
+		size_t output_plane_count = std::count(output_planes.begin(), output_planes.end(), true);
+
+		if (output_plane_count > 1 || input_plane_count > 1 || (input_plane_count > 0 && input_planes != output_planes))
+			m_planar = false;
 
 		m_nodes.emplace_back(make_filter_node(next_id(), std::move(filter), id_to_node(deps), output_planes));
 		return m_nodes.back()->id();
@@ -110,7 +189,8 @@ public:
 		}
 		add_ref(parents);
 
-		m_nodes.emplace_back(make_sink_node(next_id(), parents));
+		m_output_nodes = parents;
+		m_nodes.emplace_back(make_sink_node(next_id(), m_output_nodes));
 		m_sink = m_nodes.back().get();
 		m_sink->add_ref();
 
@@ -118,36 +198,28 @@ public:
 			node->try_inplace();
 		}
 
-		SimulationState sim{ m_nodes.size() };
-		for (unsigned cursor = 0; cursor < m_sink->get_image_attributes(PLANE_Y).height; cursor += 1U << m_sink->get_subsample_h()) {
-			m_sink->simulate(&sim, cursor, cursor + (1U << m_sink->get_subsample_h()), PLANE_Y);
-		}
-		m_sink->simulate_alloc(&sim);
-		m_tmp_size = ExecutionState::calculate_tmp_size(sim, m_nodes);
-		m_simulation = std::move(sim);
+		simulate_interleaved();
+		simulate_planar();
 	}
 
 	size_t get_tmp_size() const { return m_tmp_size; }
 
 	unsigned get_input_buffering() const
 	{
-		return m_simulation.suggest_mask(m_source->id(), m_source->get_image_attributes(PLANE_Y).height).first;
+		return m_interleaved_sim.node_result[m_source->id()].cache_lines;
 	}
 
 	unsigned get_output_buffering() const
 	{
-		return m_simulation.suggest_mask(m_sink->id(), m_sink->get_image_attributes(PLANE_Y).height).first;
+		return m_interleaved_sim.node_result[m_sink->id()].cache_lines;
 	}
 
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
-		ExecutionState state{ m_simulation, m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, unpack_cb, pack_cb, tmp };
-
-		for (const auto &node : m_nodes) {
-			node->init_context(&state);
-		}
-
-		m_sink->generate(&state, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+		if (!m_planar || unpack_cb || pack_cb)
+			process_interleaved(src, dst, tmp, unpack_cb, pack_cb);
+		else
+			process_planar(src, dst, tmp);
 	}
 };
 
