@@ -80,7 +80,11 @@ public:
 
 	void request_external_cache(node_id cache_id) override {}
 
-	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
+	void init_context(ExecutionState *state) const override
+	{
+		state->set_cursor(id(), 0);
+		state->set_initialized(id());
+	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
@@ -203,7 +207,19 @@ public:
 		}
 	}
 
-	void init_context(ExecutionState *state) const override { state->set_cursor(id(), 0); }
+	void init_context(ExecutionState *state) const override
+	{
+		if (state->is_initialized(id()))
+			return;
+
+		for (const GraphNode *node : m_parents) {
+			if (node)
+				node->init_context(state);
+		}
+
+		state->set_cursor(id(), 0);
+		state->set_initialized(id());
+	}
 
 	void generate(ExecutionState *state, unsigned last, int plane) const override
 	{
@@ -345,10 +361,20 @@ public:
 
 	void init_context(ExecutionState *state) const override
 	{
+		if (state->is_initialized(id()))
+			return;
+
+		for (const GraphNode *node: m_parents) {
+			if (node)
+				node->init_context(state);
+		}
+
 		state->set_cursor(id(), 0);
 
 		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
 		m_filter->init_context(state->get_context(id()), seq);
+
+		state->set_initialized(id());
 	}
 };
 
@@ -433,6 +459,32 @@ public:
 
 SimulationState::SimulationState(size_t num_nodes) : m_state(num_nodes), m_tmp{} {}
 
+SimulationState::result SimulationState::get_result(const std::vector<std::unique_ptr<GraphNode>> &nodes) const
+{
+	zassert_d(nodes.size() == m_state.size(), "incorrect number of nodes");
+	result res{ std::vector<result::s>(m_state.size()), m_tmp };
+
+	for (node_id id = 0; id < m_state.size(); ++id) {
+		const GraphNode *node = nodes[id].get();
+		unsigned history = m_state[id].cache_history;
+
+		if (history > 0) {
+			plane_mask planes = node->get_plane_mask();
+			auto attr = node->get_image_attributes(static_cast<int>(std::find(planes.begin(), planes.end(), true) - planes.begin()));
+
+			unsigned mask = select_zimg_buffer_mask(history);
+			unsigned lines = mask == BUFFER_MAX ? BUFFER_MAX : mask + 1;
+
+			res.node_result[id].cache_lines = std::min(lines, attr.height);
+			res.node_result[id].mask = lines >= attr.height ? BUFFER_MAX : mask;
+		}
+
+		res.node_result[id].context_size = m_state[id].context_size;
+	}
+
+	return res;
+}
+
 void SimulationState::update(node_id id, node_id cache_id, unsigned first, unsigned last)
 {
 	zassert_d(id >= 0, "invalid id");
@@ -452,17 +504,6 @@ unsigned SimulationState::get_cursor(node_id id, unsigned initial_pos) const
 	return m_state[id].cursor_initialized ? m_state[id].cursor : initial_pos;
 }
 
-std::pair<unsigned, unsigned> SimulationState::suggest_mask(node_id id, unsigned height) const
-{
-	zassert_d(id >= 0, "invalid id");
-	unsigned n = m_state[id].cache_history;
-	if (!n)
-		return{};
-
-	unsigned mask = n >= height ? BUFFER_MAX : select_zimg_buffer_mask(n);
-	return{ mask == BUFFER_MAX ? height : mask + 1, mask };
-}
-
 void SimulationState::alloc_context(node_id id, size_t sz)
 {
 	zassert_d(id >= 0, "invalid id");
@@ -474,26 +515,22 @@ void SimulationState::alloc_tmp(size_t sz)
 	m_tmp = std::max(m_tmp, sz);
 }
 
-size_t SimulationState::get_context_size(node_id id) const { return m_state[id].context_size; }
-
-size_t SimulationState::get_tmp() const { return m_tmp; }
-
-
-size_t ExecutionState::calculate_tmp_size(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes)
+size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes)
 {
+	zassert_d(nodes.size() == sim.node_result.size(), "incorrect number of nodes");
 	FakeAllocator alloc;
 
-	alloc.allocate_n<ColorImageBuffer<void>>(nodes.size()); // m_buffers
+	alloc.allocate_n<ColorImageBuffer<void>>(sim.node_result.size()); // m_buffers
 	alloc.allocate_n<unsigned>(nodes.size()); // m_cursors
 	alloc.allocate_n<void *>(nodes.size()); // m_contexts
+	alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT); // m_init_bitset
 
 	for (const auto &node : nodes) {
 		if (node->is_sourcesink())
 			continue;
 
 		plane_mask planes = node->get_plane_mask();
-		auto attr = node->get_image_attributes(static_cast<int>(std::find(planes.begin(), planes.end(), true) - planes.begin()));
-		unsigned cache_lines = sim.suggest_mask(node->id(), attr.height).first;
+		unsigned cache_lines = sim.node_result[node->id()].cache_lines;
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (!planes[p])
@@ -509,35 +546,39 @@ size_t ExecutionState::calculate_tmp_size(const SimulationState &sim, const std:
 	}
 
 	for (const auto &node : nodes) {
-		alloc.allocate(sim.get_context_size(node->id()));
+		alloc.allocate(sim.node_result[node->id()].context_size);
 	}
 
-	alloc.allocate(sim.get_tmp());
+	alloc.allocate(sim.shared_tmp);
 	return alloc.count();
 }
 
-ExecutionState::ExecutionState(const SimulationState &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
+ExecutionState::ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
 	m_unpack_cb{ unpack_cb },
 	m_pack_cb{ pack_cb },
 	m_buffers{},
 	m_cursors{},
 	m_contexts{},
+	m_init_bitset{},
 	m_tmp{}
 {
+	zassert_d(nodes.size() == sim.node_result.size(), "incorrect number of nodes");
+
 	LinearAllocator alloc{ buf };
 	m_buffers = alloc.allocate_n<ColorImageBuffer<void>>(nodes.size());
 	m_cursors = alloc.allocate_n<unsigned>(nodes.size());
 	m_contexts = alloc.allocate_n<void *>(nodes.size());
+	m_init_bitset = alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT);
+
+	std::fill_n(m_init_bitset, ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT, 0);
 
 	for (const auto &node : nodes) {
 		if (node->is_sourcesink())
 			continue;
 
 		plane_mask planes = node->get_plane_mask();
-		auto attr = node->get_image_attributes(static_cast<int>(std::find(planes.begin(), planes.end(), true) - planes.begin()));
-		auto suggestion = sim.suggest_mask(node->id(), attr.height);
-
 		ColorImageBuffer<void> &buffer = m_buffers[node->id()];
+		const auto &node_sim = sim.node_result[node->id()];
 
 		for (int p = 0; p < PLANE_NUM; ++p) {
 			if (!planes[p])
@@ -547,14 +588,14 @@ ExecutionState::ExecutionState(const SimulationState &sim, const std::vector<std
 			unsigned shift_h = p == PLANE_U || p == PLANE_V ? node->get_subsample_h() : 0;
 
 			size_t stride = ceil_n(static_cast<size_t>(attr.width) * pixel_size(attr.type), ALIGNMENT);
-			unsigned plane_lines = suggestion.first >> shift_h;
-			unsigned mask = suggestion.second == BUFFER_MAX ? BUFFER_MAX : suggestion.second >> shift_h;
+			unsigned plane_lines = node_sim.cache_lines >> shift_h;
+			unsigned mask = node_sim.mask == BUFFER_MAX ? BUFFER_MAX : node_sim.mask >> shift_h;
 			buffer[p] = { alloc.allocate(stride * plane_lines), static_cast<ptrdiff_t>(stride), mask };
 		}
 	}
 
 	for (const auto &node : nodes) {
-		m_contexts[node->id()] = alloc.allocate(sim.get_context_size(node->id()));
+		m_contexts[node->id()] = alloc.allocate(sim.node_result[node->id()].context_size);
 	}
 
 	for (unsigned p = 0; p < PLANE_NUM; ++p) {
@@ -562,7 +603,7 @@ ExecutionState::ExecutionState(const SimulationState &sim, const std::vector<std
 	}
 	m_buffers[dst_id] = { dst[0], dst[1], dst[2], dst[3] };
 
-	m_tmp = alloc.allocate(sim.get_tmp());
+	m_tmp = alloc.allocate(sim.shared_tmp);
 }
 
 
