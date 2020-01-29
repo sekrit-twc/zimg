@@ -78,11 +78,22 @@ public:
 
 	void try_inplace() override {}
 
-	void request_external_cache(node_id cache_id) override {}
+	void request_external_cache(node_id) override {}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, unsigned top, unsigned left, unsigned right, int plane) const override
 	{
-		state->set_cursor(id(), 0);
+		if (!state->is_initialized(id()))
+			state->reset_tile_bounds(id());
+
+		left <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_w : 0;
+		right <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_w : 0;
+		top <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_h : 0;
+
+		ExecutionState::node_state *s = state->get_node_state(id());
+		s->left = std::min(s->left, left);
+		s->right = std::max(s->right, right);
+
+		state->set_cursor(id(), std::min(top, state->get_cursor(id())));
 		state->set_initialized(id());
 	}
 
@@ -95,11 +106,12 @@ public:
 		if (plane == PLANE_U || plane == PLANE_V)
 			last <<= m_subsample_h;
 
+		ExecutionState::node_state *s = state->get_node_state(id());
 		unsigned cursor = state->get_cursor(id());
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
 			if (state->unpack_cb())
-				state->unpack_cb()(cursor, 0, m_attr.width);
+				state->unpack_cb()(cursor, s->left, s->right);
 		}
 
 		state->set_cursor(id(), cursor);
@@ -207,17 +219,33 @@ public:
 		}
 	}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, unsigned top, unsigned left, unsigned right, int plane) const override
 	{
-		if (state->is_initialized(id()))
-			return;
+		if (!state->is_initialized(id()))
+			state->reset_tile_bounds(id());
 
-		for (const GraphNode *node : m_parents) {
-			if (node)
-				node->init_context(state);
+		if (plane == PLANE_U || plane == PLANE_V) {
+			top <<= m_subsample_h;
+			left <<= m_subsample_w;
+			right <<= m_subsample_w;
 		}
 
-		state->set_cursor(id(), 0);
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			const GraphNode *node = m_parents[p];
+			if (!node)
+				continue;
+
+			unsigned plane_top = top >> (p == PLANE_U || p == PLANE_V ? m_subsample_h : 0);
+			unsigned plane_left = left >> (p == PLANE_U || p == PLANE_V ? m_subsample_w : 0);
+			unsigned plane_right = right >> (p == PLANE_U || p == PLANE_V ? m_subsample_w : 0);
+			node->init_context(state, plane_top, plane_left, plane_right, p);
+		}
+
+		ExecutionState::node_state *s = state->get_node_state(id());
+		s->left = std::min(s->left, left);
+		s->right = std::max(s->right, right);
+
+		state->set_cursor(id(), std::min(state->get_cursor(id()), top));
 		state->set_initialized(id());
 	}
 
@@ -227,6 +255,7 @@ public:
 		if (plane == PLANE_U || plane == PLANE_V)
 			last <<= m_subsample_h;
 
+		ExecutionState::node_state *s = state->get_node_state(id());
 		unsigned cursor = state->get_cursor(id());
 		unsigned subsample_h = m_subsample_h;
 
@@ -246,7 +275,7 @@ public:
 				m_parents[PLANE_A]->generate(state, next, PLANE_A);
 
 			if (state->pack_cb())
-				state->pack_cb()(cursor, 0, m_attr.width);
+				state->pack_cb()(cursor, s->left, s->right);
 
 		}
 
@@ -359,20 +388,29 @@ public:
 		set_cache_id(id);
 	}
 
-	void init_context(ExecutionState *state) const override
+	void init_context(ExecutionState *state, unsigned top, unsigned left, unsigned right, int plane) const override
 	{
-		if (state->is_initialized(id()))
-			return;
+		if (!state->is_initialized(id()))
+			state->reset_tile_bounds(id());
 
-		for (const GraphNode *node: m_parents) {
+		auto row_range = m_filter->get_required_row_range(top);
+		auto col_range = m_filter->get_required_col_range(left, right);
+
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			const GraphNode *node = m_parents[p];
 			if (node)
-				node->init_context(state);
+				node->init_context(state, row_range.first, col_range.first, col_range.second, p);
 		}
 
-		state->set_cursor(id(), 0);
+		ExecutionState::node_state *s = state->get_node_state(id());
+		s->left = std::min(s->left, left);
+		s->right = std::max(s->right, right);
+		state->set_cursor(id(), std::min(state->get_cursor(id()), top));
 
-		unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
-		m_filter->init_context(state->get_context(id()), seq);
+		if (!state->is_initialized(id())) {
+			unsigned seq = static_cast<unsigned>(std::find(m_output_planes.begin(), m_output_planes.end(), true) - m_output_planes.begin());
+			m_filter->init_context(state->get_node_state(id())->context, seq);
+		}
 
 		state->set_initialized(id());
 	}
@@ -392,7 +430,7 @@ public:
 
 		std::aligned_storage<sizeof(ImageBuffer<const void>), alignof(ImageBuffer<const void>)>::type src[PLANE_NUM];
 		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
-		void *ctx = state->get_context(id());
+		ExecutionState::node_state *node_state = state->get_node_state(id());
 		void *tmp = state->get_shared_tmp();
 
 		if (P0 == 1 || (P0 == -1 && m_parents[0]))
@@ -417,7 +455,7 @@ public:
 			if (P3 == 1 || (P3 == -1 && m_parents[3]))
 				m_parents[3]->generate(state, range.second, 3);
 
-			m_filter->process(ctx, reinterpret_cast<ImageBuffer<const void> *>(src), dst, tmp, cursor, 0, m_attr.width);
+			m_filter->process(node_state->context, reinterpret_cast<ImageBuffer<const void> *>(src), dst, tmp, cursor, node_state->left, node_state->right);
 		}
 
 		state->set_cursor(id(), cursor);
@@ -438,7 +476,7 @@ public:
 
 		const ImageBuffer<const void> *src = Parent ? static_buffer_cast<const void>(state->get_buffer(m_parents[Plane]->cache_id()) + Plane) : nullptr;
 		const ImageBuffer<void> *dst = state->get_buffer(cache_id()) + Plane;
-		void *ctx = state->get_context(id());
+		ExecutionState::node_state *node_state = state->get_node_state(id());
 		void *tmp = state->get_shared_tmp();
 
 		for (; cursor < last; cursor += m_step) {
@@ -447,7 +485,7 @@ public:
 
 			if (Parent)
 				m_parents[Plane]->generate(state, range.second, Plane);
-			m_filter->process(node_state->context, src, dst, tmp, cursor, 0, m_attr.width);
+			m_filter->process(node_state->context, src, dst, tmp, cursor, node_state->left, node_state->right);
 		}
 
 		state->set_cursor(id(), cursor);
@@ -522,7 +560,7 @@ size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, co
 
 	alloc.allocate_n<ColorImageBuffer<void>>(sim.node_result.size()); // m_buffers
 	alloc.allocate_n<unsigned>(nodes.size()); // m_cursors
-	alloc.allocate_n<void *>(nodes.size()); // m_contexts
+	alloc.allocate_n<node_state>(nodes.size()); // m_state
 	alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT); // m_init_bitset
 
 	for (const auto &node : nodes) {
@@ -558,7 +596,7 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	m_pack_cb{ pack_cb },
 	m_buffers{},
 	m_cursors{},
-	m_contexts{},
+	m_state{},
 	m_init_bitset{},
 	m_tmp{}
 {
@@ -567,10 +605,8 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	LinearAllocator alloc{ buf };
 	m_buffers = alloc.allocate_n<ColorImageBuffer<void>>(nodes.size());
 	m_cursors = alloc.allocate_n<unsigned>(nodes.size());
-	m_contexts = alloc.allocate_n<void *>(nodes.size());
+	m_state = alloc.allocate_n<node_state>(nodes.size());
 	m_init_bitset = alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT);
-
-	std::fill_n(m_init_bitset, ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT, 0);
 
 	for (const auto &node : nodes) {
 		if (node->is_sourcesink())
@@ -595,7 +631,7 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	}
 
 	for (const auto &node : nodes) {
-		m_contexts[node->id()] = alloc.allocate(sim.node_result[node->id()].context_size);
+		m_state[node->id()].context = alloc.allocate(sim.node_result[node->id()].context_size);
 	}
 
 	for (unsigned p = 0; p < PLANE_NUM; ++p) {
@@ -604,6 +640,11 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	m_buffers[dst_id] = { dst[0], dst[1], dst[2], dst[3] };
 
 	m_tmp = alloc.allocate(sim.shared_tmp);
+}
+
+void ExecutionState::reset_initialized(size_t max_id)
+{
+	std::fill_n(m_init_bitset, ceil_n(max_id, CHAR_BIT) / CHAR_BIT, 0);
 }
 
 

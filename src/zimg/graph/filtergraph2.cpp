@@ -1,8 +1,12 @@
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include "common/align.h"
+#include "common/checked_int.h"
+#include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -14,6 +18,26 @@
 namespace zimg {
 namespace graph {
 
+namespace {
+
+constexpr unsigned TILE_WIDTH_MIN = 128;
+
+unsigned calculate_tile_width(size_t cpu_cache, size_t footprint, unsigned width)
+{
+	unsigned tile = static_cast<unsigned>(std::lrint(width * std::min(static_cast<double>(cpu_cache) / footprint, 1.0)));
+
+	if (tile > (width / 5) * 4)
+		return width;
+	else if (tile > width / 2)
+		return ceil_n(width / 2, ALIGNMENT);
+	else if (tile > width / 3)
+		return ceil_n(width / 3, ALIGNMENT);
+	else
+		return std::max(floor_n(tile, ALIGNMENT), TILE_WIDTH_MIN);
+}
+
+} // namespace
+
 
 class FilterGraph2::impl {
 	std::vector<std::unique_ptr<GraphNode>> m_nodes;
@@ -22,7 +46,10 @@ class FilterGraph2::impl {
 	GraphNode *m_source;
 	GraphNode *m_sink;
 	node_map m_output_nodes;
+	unsigned m_interleaved_tile_width;
+	unsigned m_planar_tile_width[PLANE_NUM];
 	size_t m_tmp_size;
+	bool m_entire_row;
 	bool m_planar;
 
 	node_id next_id() const { return static_cast<node_id>(m_nodes.size()); }
@@ -52,6 +79,45 @@ class FilterGraph2::impl {
 		}
 	}
 
+	size_t calculate_cache_footprint(SimulationState::result &sim, int plane) const
+	{
+		const GraphNode *out = plane < 0 ? m_sink : m_output_nodes[plane];
+		unsigned input_lines = sim.node_result[m_source->id()].cache_lines;
+		unsigned output_lines = sim.node_result[out->id()].cache_lines;
+
+		checked_size_t footprint = ExecutionState::calculate_tmp_size(sim, m_nodes);
+
+		if (plane < 0) {
+			auto input_attr = m_source->get_image_attributes(PLANE_Y);
+			auto output_attr = out->get_image_attributes(PLANE_Y);
+			plane_mask input_planes = m_source->get_plane_mask();
+			plane_mask output_planes = out->get_plane_mask();
+
+			for (int p = 0; p < PLANE_NUM; ++p) {
+				if (input_planes[p]) {
+					unsigned width = input_attr.width >> (p == PLANE_U || p == PLANE_V ? m_source->get_subsample_w() : 0);
+					unsigned lines = input_lines >> (p == PLANE_U || p == PLANE_V ? m_source->get_subsample_h() : 0);
+
+					footprint += ceil_n(static_cast<checked_size_t>(width) * pixel_size(input_attr.type), ALIGNMENT) * lines;
+				}
+				if (output_planes[p]) {
+					unsigned width = output_attr.width >> (p == PLANE_U || p == PLANE_V ? out->get_subsample_w() : 0);
+					unsigned lines = output_lines >> (p == PLANE_U || p == PLANE_V ? out->get_subsample_h() : 0);
+
+					footprint += ceil_n(static_cast<checked_size_t>(width) * pixel_size(output_attr.type), ALIGNMENT) * lines;
+				}
+			}
+		} else {
+			auto input_attr = m_source->get_image_attributes(plane);
+			auto output_attr = out->get_image_attributes(plane);
+
+			footprint += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_lines;
+			footprint += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_lines;
+		}
+
+		return footprint.get();
+	}
+
 	void simulate_interleaved()
 	{
 		SimulationState sim{ m_nodes.size() };
@@ -65,6 +131,16 @@ class FilterGraph2::impl {
 
 		m_interleaved_sim = sim.get_result(m_nodes);
 		m_tmp_size = std::max(m_tmp_size, ExecutionState::calculate_tmp_size(m_interleaved_sim, m_nodes));
+
+		if (!m_interleaved_tile_width) {
+			if (!m_entire_row) {
+				size_t cpu_cache = cpu_cache_size();
+				size_t footprint = calculate_cache_footprint(m_interleaved_sim, -1);
+				m_interleaved_tile_width = calculate_tile_width(cpu_cache, footprint, m_sink->get_image_attributes(PLANE_Y).width);
+			} else {
+				m_interleaved_tile_width = m_sink->get_image_attributes(PLANE_Y).width;
+			}
+		}
 	}
 
 	void simulate_planar()
@@ -86,15 +162,35 @@ class FilterGraph2::impl {
 
 			m_planar_sim[p] = sim.get_result(m_nodes);
 			m_tmp_size = std::max(m_tmp_size, ExecutionState::calculate_tmp_size(m_planar_sim[p], m_nodes));
+
+			if (!m_planar_tile_width[p]) {
+				if (!m_entire_row) {
+					size_t cpu_cache = cpu_cache_size();
+					size_t footprint = calculate_cache_footprint(m_planar_sim[p], p);
+					m_planar_tile_width[p] = calculate_tile_width(cpu_cache, footprint, m_output_nodes[p]->get_image_attributes(p).width);
+				} else {
+					m_planar_tile_width[p] = m_output_nodes[p]->get_image_attributes(p).width;
+				}
+			}
 		}
 	}
 
 	void process_interleaved(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
 		ExecutionState state{ m_interleaved_sim, m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, unpack_cb, pack_cb, tmp };
+		auto attr = m_sink->get_image_attributes(PLANE_Y);
 
-		m_sink->init_context(&state);
-		m_sink->generate(&state, m_sink->get_image_attributes(PLANE_Y).height, PLANE_Y);
+		for (unsigned j = 0; j < attr.width;) {
+			unsigned j_end = j + std::min(m_interleaved_tile_width, attr.width - j);
+			if (attr.width - j_end < TILE_WIDTH_MIN)
+				j_end = attr.width;
+
+			state.reset_initialized(m_nodes.size());
+			m_sink->init_context(&state, 0, j, j_end, PLANE_Y);
+			m_sink->generate(&state, attr.height, PLANE_Y);
+
+			j = j_end;
+		}
 	}
 
 	void process_planar(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp) const
@@ -104,8 +200,19 @@ class FilterGraph2::impl {
 				continue;
 
 			ExecutionState state{ m_planar_sim[p], m_nodes, m_source->cache_id(), m_sink->cache_id(), src, dst, nullptr, nullptr, tmp };
-			m_output_nodes[p]->init_context(&state);
-			m_output_nodes[p]->generate(&state, m_output_nodes[p]->get_image_attributes(p).height, p);
+			auto attr = m_output_nodes[p]->get_image_attributes(p);
+
+			for (unsigned j = 0; j < attr.width;) {
+				unsigned j_end = j + std::min(m_planar_tile_width[p], attr.width - j);
+				if (attr.width - j_end < TILE_WIDTH_MIN)
+					j_end = attr.width;
+
+				state.reset_initialized(m_nodes.size());
+				m_output_nodes[p]->init_context(&state, 0, j, j_end, p);
+				m_output_nodes[p]->generate(&state, attr.height, p);
+
+				j = j_end;
+			}
 		}
 	}
 public:
@@ -115,7 +222,10 @@ public:
 		m_source{},
 		m_sink{},
 		m_output_nodes{},
+		m_interleaved_tile_width{},
+		m_planar_tile_width{},
 		m_tmp_size{},
+		m_entire_row{},
 		m_planar{ true }
 	{}
 
@@ -142,6 +252,8 @@ public:
 
 		if (output_plane_count > 1 || input_plane_count > 1 || (input_plane_count > 0 && input_planes != output_planes))
 			m_planar = false;
+		if (filter->get_flags().entire_row)
+			m_entire_row = true;
 
 		m_nodes.emplace_back(make_filter_node(next_id(), std::move(filter), id_to_node(deps), output_planes));
 		return m_nodes.back()->id();
