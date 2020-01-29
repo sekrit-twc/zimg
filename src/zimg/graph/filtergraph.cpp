@@ -964,9 +964,9 @@ class FilterGraph::impl {
 			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_buffering;
 		}
 		if (m_color_input && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR))
-			tmp += ceil_n(static_cast<checked_size_t>(input_attr.width >> m_input_subsample_w) * pixel_size(input_attr.type), ALIGNMENT) * (input_buffering >> m_input_subsample_h);
+			tmp += ceil_n(static_cast<checked_size_t>(input_attr.width >> m_input_subsample_w) * pixel_size(input_attr.type), ALIGNMENT) * (input_buffering >> m_input_subsample_h) * 2;
 		if (m_node_uv && (strategy == ExecutionStrategy::CHROMA || strategy == ExecutionStrategy::COLOR))
-			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width >> m_subsample_w) * pixel_size(output_attr.type), ALIGNMENT) * (output_buffering >> m_subsample_h);
+			tmp += ceil_n(static_cast<checked_size_t>(output_attr.width >> m_subsample_w) * pixel_size(output_attr.type), ALIGNMENT) * (output_buffering >> m_subsample_h) * 2;
 
 		return tmp.get();
 	}
