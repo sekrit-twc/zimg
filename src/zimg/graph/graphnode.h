@@ -3,6 +3,7 @@
 #ifndef ZIMG_GRAPH_GRAPHNODE_H_
 #define ZIMG_GRAPH_GRAPHNODE_H_
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <utility>
@@ -54,12 +55,19 @@ public:
 
 
 class ExecutionState {
+public:
+	struct node_state {
+		void *context;
+		unsigned left;
+		unsigned right;
+	};
+private:
 	FilterGraph2::callback m_unpack_cb;
 	FilterGraph2::callback m_pack_cb;
 
 	ColorImageBuffer<void> *m_buffers;
 	unsigned *m_cursors;
-	void **m_contexts;
+	node_state *m_state;
 	unsigned char *m_init_bitset;
 	void *m_tmp;
 public:
@@ -74,11 +82,20 @@ public:
 	void set_cursor(node_id id, unsigned pos) { m_cursors[id] = pos; }
 
 	const ColorImageBuffer<void> &get_buffer(node_id id) { return m_buffers[id]; }
-	void *get_context(node_id id) const { return m_contexts[id]; }
+	node_state *get_node_state(node_id id) { return m_state + id; }
 	void *get_shared_tmp() const { return m_tmp; }
 
 	bool is_initialized(node_id id) const { return !!(m_init_bitset[id / CHAR_BIT] & (1U << (id % CHAR_BIT))); }
 	void set_initialized(node_id id) { m_init_bitset[id / CHAR_BIT] |= 1U << (id % CHAR_BIT); }
+
+	void reset_tile_bounds(node_id id)
+	{
+		get_node_state(id)->left = UINT_MAX;
+		get_node_state(id)->right = 0;
+		set_cursor(id, UINT_MAX);
+	}
+
+	void reset_initialized(size_t max_id);
 };
 
 
@@ -122,7 +139,7 @@ public:
 
 	virtual void request_external_cache(node_id id) = 0;
 
-	virtual void init_context(ExecutionState *state) const = 0;
+	virtual void init_context(ExecutionState *state, unsigned top, unsigned left, unsigned right, int plane) const = 0;
 
 	virtual void generate(ExecutionState *state, unsigned last, int plane) const = 0;
 };
