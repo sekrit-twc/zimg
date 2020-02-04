@@ -434,13 +434,13 @@ public:
 		void *tmp = state->get_shared_tmp();
 
 		if (P0 == 1 || (P0 == -1 && m_parents[0]))
-			new (src + 0) ImageBuffer<const void>(state->get_buffer(m_parents[0]->cache_id())[0]);
+			new (&src[0]) ImageBuffer<const void>(state->get_buffer(m_parents[0]->cache_id())[0]);
 		if (P1 == 1 || (P1 == -1 && m_parents[1]))
-			new (src + 1) ImageBuffer<const void>(state->get_buffer(m_parents[1]->cache_id())[1]);
+			new (&src[1]) ImageBuffer<const void>(state->get_buffer(m_parents[1]->cache_id())[1]);
 		if (P2 == 1 || (P2 == -1 && m_parents[2]))
-			new (src + 2) ImageBuffer<const void>(state->get_buffer(m_parents[2]->cache_id())[2]);
+			new (&src[2]) ImageBuffer<const void>(state->get_buffer(m_parents[2]->cache_id())[2]);
 		if (P3 == 1 || (P3 == -1 && m_parents[3]))
-			new (src + 3) ImageBuffer<const void>(state->get_buffer(m_parents[3]->cache_id())[3]);
+			new (&src[3]) ImageBuffer<const void>(state->get_buffer(m_parents[3]->cache_id())[3]);
 
 		for (; cursor < last; cursor += m_step) {
 			auto range = m_filter->get_required_row_range(cursor);
@@ -502,9 +502,8 @@ SimulationState::result SimulationState::get_result(const std::vector<std::uniqu
 	zassert_d(nodes.size() == m_state.size(), "incorrect number of nodes");
 	result res{ std::vector<result::s>(m_state.size()), m_tmp };
 
-	for (node_id id = 0; id < m_state.size(); ++id) {
-		const GraphNode *node = nodes[id].get();
-		unsigned history = m_state[id].cache_history;
+	for (const auto &node : nodes) {
+		unsigned history = m_state[node->id()].cache_history;
 
 		if (history > 0) {
 			plane_mask planes = node->get_plane_mask();
@@ -513,11 +512,11 @@ SimulationState::result SimulationState::get_result(const std::vector<std::uniqu
 			unsigned mask = select_zimg_buffer_mask(history);
 			unsigned lines = mask == BUFFER_MAX ? BUFFER_MAX : mask + 1;
 
-			res.node_result[id].cache_lines = std::min(lines, attr.height);
-			res.node_result[id].mask = lines >= attr.height ? BUFFER_MAX : mask;
+			res.node_result[node->id()].cache_lines = std::min(lines, attr.height);
+			res.node_result[node->id()].mask = lines >= attr.height ? BUFFER_MAX : mask;
 		}
 
-		res.node_result[id].context_size = m_state[id].context_size;
+		res.node_result[node->id()].context_size = m_state[node->id()].context_size;
 	}
 
 	return res;
@@ -664,7 +663,9 @@ std::unique_ptr<GraphNode> make_sink_node(node_id id, const node_map &parents)
 std::unique_ptr<GraphNode> make_filter_node(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes)
 {
 	if (filter->get_flags().color) {
-		if (parents[0] && parents[1] && parents[2] && !parents[3])
+		if (parents[0] && parents[1] && parents[2] && parents[3])
+			return ztd::make_unique<FilterNodeColor<1, 1, 1, 1>>(id, filter, parents, output_planes);
+		else if (parents[0] && parents[1] && parents[2] && !parents[3])
 			return ztd::make_unique<FilterNodeColor<1, 1, 1, 0>>(id, filter, parents, output_planes);
 		else
 			return ztd::make_unique<FilterNodeColor<-1, -1, -1, -1>>(id, filter, parents, output_planes);

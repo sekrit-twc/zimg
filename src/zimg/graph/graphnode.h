@@ -3,8 +3,8 @@
 #ifndef ZIMG_GRAPH_GRAPHNODE_H_
 #define ZIMG_GRAPH_GRAPHNODE_H_
 
-#include <algorithm>
 #include <array>
+#include <climits>
 #include <memory>
 #include <utility>
 #include <vector>
