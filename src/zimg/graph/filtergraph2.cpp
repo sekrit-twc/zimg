@@ -51,6 +51,7 @@ class FilterGraph2::impl {
 	size_t m_tmp_size;
 	bool m_entire_row;
 	bool m_planar;
+	bool m_requires_64b_alignment;
 
 	node_id next_id() const { return static_cast<node_id>(m_nodes.size()); }
 
@@ -226,7 +227,8 @@ public:
 		m_planar_tile_width{},
 		m_tmp_size{},
 		m_entire_row{},
-		m_planar{ true }
+		m_planar{ true },
+		m_requires_64b_alignment{}
 	{}
 
 	node_id add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
@@ -318,16 +320,45 @@ public:
 
 	unsigned get_input_buffering() const
 	{
+		zassert_d(m_sink, "complete graph required");
 		return m_interleaved_sim.node_result[m_source->id()].cache_lines;
 	}
 
 	unsigned get_output_buffering() const
 	{
+		zassert_d(m_sink, "complete graph required");
 		return m_interleaved_sim.node_result[m_sink->id()].cache_lines;
 	}
 
+	unsigned get_tile_width() const
+	{
+		zassert_d(m_sink, "complete graph required");
+		return m_planar ? m_planar_tile_width[PLANE_Y] : m_interleaved_tile_width;
+	}
+
+	void set_tile_width(unsigned tile_width)
+	{
+		zassert_d(m_sink, "complete graph required");
+		if (m_entire_row)
+			return;
+
+		m_interleaved_tile_width = tile_width;
+
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			if (!m_output_nodes[p])
+				continue;
+			m_planar_tile_width[p] = tile_width >> (p == PLANE_U || p == PLANE_V ? m_sink->get_subsample_w() : 0);
+		}
+	}
+
+	bool requires_64b_alignment() const { return m_requires_64b_alignment; }
+
+	void set_requires_64b_alignment() { m_requires_64b_alignment = true; }
+
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 	{
+		zassert_d(m_sink, "complete graph required");
+
 		if (!m_planar || unpack_cb || pack_cb)
 			process_interleaved(src, dst, tmp, unpack_cb, pack_cb);
 		else
@@ -394,6 +425,26 @@ unsigned FilterGraph2::get_input_buffering() const
 unsigned FilterGraph2::get_output_buffering() const
 {
 	return get_impl()->get_output_buffering();
+}
+
+unsigned FilterGraph2::get_tile_width() const
+{
+	return m_impl->get_tile_width();
+}
+
+void FilterGraph2::set_tile_width(unsigned tile_width)
+{
+	m_impl->set_tile_width(tile_width);
+}
+
+bool FilterGraph2::requires_64b_alignment() const
+{
+	return m_impl->requires_64b_alignment();
+}
+
+void FilterGraph2::set_requires_64b_alignment()
+{
+	m_impl->set_requires_64b_alignment();
 }
 
 void FilterGraph2::process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const

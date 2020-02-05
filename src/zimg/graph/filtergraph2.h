@@ -88,26 +88,113 @@ private:
 	impl *get_impl() noexcept { return m_impl.get(); }
 	const impl *get_impl() const noexcept { return m_impl.get(); }
 public:
+	/**
+	 * Construct a blank graph.
+	 */
 	FilterGraph2();
 
+	/**
+	 * Move construct a FilterGraph.
+	 *
+	 * @param other rvalue
+	 */
 	FilterGraph2(FilterGraph2 &&other) noexcept;
 
+	/**
+	 * Destroy graph.
+	 */
 	~FilterGraph2();
 
+	/**
+	 * Move assignment
+	 *
+	 * @param other rvalue
+	 * @return this
+	 */
 	FilterGraph2 &operator=(FilterGraph2 &&other) noexcept;
 
+	/**
+	 * Add a source node with specified format.
+	 *
+	 * @param attr image format
+	 * @param subsample_w log2 horizontal subsampling
+	 * @param subsample_h log2 vertical subsampling
+	 * @param planes color components present
+	 */
 	node_id add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes);
 
+	/**
+	 * Add a filter node.
+	 *
+	 * @param filter image filter
+	 * @param deps source nodes for each color component
+	 * @param output_planes color components produced
+	 */
 	node_id attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes);
 
+	/**
+	 * Add a sink node.
+	 *
+	 * @param deps source nodes for each color component
+	 */
 	void set_output(const id_map &deps);
 
+	/**
+	 * Get size of temporary buffer required to execute graph.
+	 *
+	 * @return size in bytes
+	 */
 	size_t get_tmp_size() const;
 
+	/**
+	 * Get number of lines required in input buffer.
+	 *
+	 * @return number of lines
+	 */
 	unsigned get_input_buffering() const;
 
+	/**
+	 * Get number of lines required in output buffer.
+	 *
+	 * @return number of lines
+	 */
 	unsigned get_output_buffering() const;
 
+	/**
+	 * Get the optimal tile width used for graph execution.
+	 *
+	 * @return tile width in output pixels
+	 */
+	unsigned get_tile_width() const;
+
+	/**
+	 * Override the tile width used for graph execution.
+	 *
+	 * @param tile_width tile width in output pixels
+	 */
+	void set_tile_width(unsigned tile_width);
+
+	/**
+	 * Check if the graph requires 64-byte data alignment.
+	 *
+	 * @return true if 64-byte alignment is required, else false
+	 */
+	bool requires_64b_alignment() const;
+
+	/**
+	 * Set the graph as requiring 64-byte data alignment.
+	 */
+	void set_requires_64b_alignment();
+
+	/**
+	 * Process an image frame with filter graph.
+	 *
+	 * @param src pointer to input buffers
+	 * @param dst pointer to output buffers
+	 * @param tmp temporary buffer
+	 * @param unpack_cb user-defined input callback
+	 * @param pack_cb user-defined output callback
+	 */
 	void process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const;
 };
 

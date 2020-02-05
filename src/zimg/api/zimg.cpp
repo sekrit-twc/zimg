@@ -568,7 +568,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	EX_BEGIN
 	const zimg::graph::FilterGraph2 *graph = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr);
 
-	if (false /*graph->requires_64b_alignment()*/) {
+	if (graph->requires_64b_alignment()) {
 		POINTER_ALIGNMENT64_ASSERT(src->plane[0].data);
 		POINTER_ALIGNMENT64_ASSERT(src->plane[1].data);
 		POINTER_ALIGNMENT64_ASSERT(src->plane[2].data);
