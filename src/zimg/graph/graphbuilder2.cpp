@@ -834,6 +834,9 @@ GraphBuilder2 &GraphBuilder2::connect_graph(const state &target, const params *p
 	if (!factory)
 		factory = &default_factory;
 
+	if (params && cpu_requires_64b_alignment(params->cpu))
+		m_graph->set_requires_64b_alignment();
+
 	if (m_state.alpha == AlphaType::STRAIGHT && (needs_colorspace(m_state, target) || needs_resize(m_state, target) || !has_alpha(target)))
 		premultiply(params, factory);
 

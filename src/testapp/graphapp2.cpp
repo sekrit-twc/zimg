@@ -285,14 +285,14 @@ void execute(const json::Object &spec, unsigned times, unsigned threads, unsigne
 	zimg::graph::GraphBuilder2::state dst_state;
 	std::unique_ptr<zimg::graph::FilterGraph2> graph = create_graph(spec, &src_state, &dst_state, cpu);
 
-	//if (tile_width)
-		//graph->set_tile_width(tile_width);
+	if (tile_width)
+		graph->set_tile_width(tile_width);
 
 	std::cout << '\n';
 	std::cout << "input buffering:  " << graph->get_input_buffering() << '\n';
 	std::cout << "output buffering: " << graph->get_output_buffering() << '\n';
 	std::cout << "heap size:        " << graph->get_tmp_size() << '\n';
-	//std::cout << "tile width:       " << graph->tile_width() << '\n';
+	std::cout << "tile width:       " << graph->get_tile_width() << '\n';
 
 	if (!threads && !std::thread::hardware_concurrency())
 		throw std::runtime_error{ "could not auto-detect CPU count" };
