@@ -9,8 +9,8 @@
 #include "common/make_unique.h"
 #include "resize/filter.h"
 #include "basic_filter.h"
-#include "filtergraph2.h"
-#include "graphbuilder2.h"
+#include "filtergraph.h"
+#include "graphbuilder.h"
 
 namespace zimg {
 namespace graph {
@@ -24,35 +24,35 @@ constexpr size_t IMAGE_DIMENSION_MAX = static_cast<size_t>(1U) << (std::numeric_
 constexpr size_t IMAGE_DIMENSION_MAX = ~static_cast<size_t>(0);
 #endif // ZIMG_UNSAFE_IMAGE_SIZE
 
-double chroma_shift_raw(GraphBuilder2::ChromaLocationW loc, GraphBuilder2::FieldParity)
+double chroma_shift_raw(GraphBuilder::ChromaLocationW loc, GraphBuilder::FieldParity)
 {
-	if (loc == GraphBuilder2::ChromaLocationW::LEFT)
+	if (loc == GraphBuilder::ChromaLocationW::LEFT)
 		return -0.5;
 	else
 		return 0.0;
 }
 
-double chroma_shift_raw(GraphBuilder2::ChromaLocationH loc, GraphBuilder2::FieldParity parity)
+double chroma_shift_raw(GraphBuilder::ChromaLocationH loc, GraphBuilder::FieldParity parity)
 {
 	double shift;
 
-	if (loc == GraphBuilder2::ChromaLocationH::TOP)
+	if (loc == GraphBuilder::ChromaLocationH::TOP)
 		shift = -0.5;
-	else if (loc == GraphBuilder2::ChromaLocationH::BOTTOM)
+	else if (loc == GraphBuilder::ChromaLocationH::BOTTOM)
 		shift = 0.5;
 	else
 		shift = 0;
 
-	if (parity == GraphBuilder2::FieldParity::TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		shift = (shift - 0.5) / 2.0;
-	else if (parity == GraphBuilder2::FieldParity::BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		shift = (shift + 0.5) / 2.0;
 
 	return shift;
 }
 
 template <class T>
-double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned subsample_out, GraphBuilder2::FieldParity parity, unsigned src_dim, unsigned dst_dim)
+double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned subsample_out, GraphBuilder::FieldParity parity, unsigned src_dim, unsigned dst_dim)
 {
 	double shift = 0.0;
 	double sub_scale = 1.0 / (1 << subsample_in);
@@ -65,32 +65,32 @@ double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned 
 	return shift;
 }
 
-double luma_shift_factor(GraphBuilder2::FieldParity parity, unsigned src_height, unsigned dst_height)
+double luma_shift_factor(GraphBuilder::FieldParity parity, unsigned src_height, unsigned dst_height)
 {
 	double shift = 0.0;
 
-	if (parity == GraphBuilder2::FieldParity::TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		shift = -0.25;
-	else if (parity == GraphBuilder2::FieldParity::BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		shift = 0.25;
 
 	return shift * src_height / dst_height - shift;
 }
 
 
-bool is_greyscale(const GraphBuilder2::state &state) { return state.color == GraphBuilder2::ColorFamily::GREY; }
+bool is_greyscale(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::GREY; }
 
-bool is_rgb(const GraphBuilder2::state &state) { return state.color == GraphBuilder2::ColorFamily::RGB; }
+bool is_rgb(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::RGB; }
 
-bool is_yuv(const GraphBuilder2::state &state) { return state.color == GraphBuilder2::ColorFamily::YUV; }
+bool is_yuv(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::YUV; }
 
-bool is_color(const GraphBuilder2::state &state) { return !is_greyscale(state); }
+bool is_color(const GraphBuilder::state &state) { return !is_greyscale(state); }
 
-bool is_ycgco(const GraphBuilder2::state &state) { return state.colorspace.matrix == colorspace::MatrixCoefficients::YCGCO; }
+bool is_ycgco(const GraphBuilder::state &state) { return state.colorspace.matrix == colorspace::MatrixCoefficients::YCGCO; }
 
-bool has_alpha(const GraphBuilder2::state &state) { return state.alpha != GraphBuilder2::AlphaType::NONE; }
+bool has_alpha(const GraphBuilder::state &state) { return state.alpha != GraphBuilder::AlphaType::NONE; }
 
-void validate_state(const GraphBuilder2::state &state)
+void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
 		error::throw_<error::InvalidImageSize>("image dimensions must be non-zero");
@@ -118,7 +118,7 @@ void validate_state(const GraphBuilder2::state &state)
 			error::throw_<error::ColorFamilyMismatch>("YUV color family cannot have RGB matrix coefficients");
 	}
 
-	if (state.subsample_h > 1 && state.parity != GraphBuilder2::FieldParity::PROGRESSIVE)
+	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::PROGRESSIVE)
 		error::throw_<error::UnsupportedSubsampling>("interlaced vertical subsampling greater than 2x is not supported");
 	if (state.subsample_w > 2 || state.subsample_h > 2)
 		error::throw_<error::UnsupportedSubsampling>("subsampling greater than 4x is not supported");
@@ -137,7 +137,7 @@ void validate_state(const GraphBuilder2::state &state)
 		error::throw_<error::InvalidImageSize>("active window must be positive");
 }
 
-bool needs_colorspace(const GraphBuilder2::state &source, const GraphBuilder2::state &target)
+bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
 	auto csp_in = source.colorspace;
 	auto csp_out = target.colorspace;
@@ -148,12 +148,12 @@ bool needs_colorspace(const GraphBuilder2::state &source, const GraphBuilder2::s
 	return csp_in != csp_out;
 }
 
-bool needs_depth(const GraphBuilder2::state &source, const GraphBuilder2::state &target)
+bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
 	return PixelFormat{ source.type, source.depth, source.fullrange } != PixelFormat{ target.type, target.depth, target.fullrange };
 }
 
-bool needs_resize(const GraphBuilder2::state &source, const GraphBuilder2::state &target)
+bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &target)
 {
 	bool result = source.width != target.width ||
 		          source.height != target.height ||
@@ -176,19 +176,19 @@ bool needs_resize(const GraphBuilder2::state &source, const GraphBuilder2::state
 } // namespace
 
 
-auto DefaultFilterFactory2::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
+auto DefaultFilterFactory::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
 {
 	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
 	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
 }
 
-auto DefaultFilterFactory2::create_depth(const depth::DepthConversion &conv) -> filter_list
+auto DefaultFilterFactory::create_depth(const depth::DepthConversion &conv) -> filter_list
 {
 	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
 	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
 }
 
-auto DefaultFilterFactory2::create_resize(const resize::ResizeConversion &conv) -> filter_list
+auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -> filter_list
 {
 	auto filter_pair = conv.create();
 	filter_list list;
@@ -201,7 +201,7 @@ auto DefaultFilterFactory2::create_resize(const resize::ResizeConversion &conv) 
 	return list;
 }
 
-auto DefaultFilterFactory2::create_unresize(const unresize::UnresizeConversion &conv) -> filter_list
+auto DefaultFilterFactory::create_unresize(const unresize::UnresizeConversion &conv) -> filter_list
 {
 	auto filter_pair = conv.create();
 	filter_list list;
@@ -215,7 +215,7 @@ auto DefaultFilterFactory2::create_unresize(const unresize::UnresizeConversion &
 }
 
 
-GraphBuilder2::params::params() noexcept :
+GraphBuilder::params::params() noexcept :
 	unresize{},
 	dither_type{},
 	peak_luminance{ NAN },
@@ -224,7 +224,7 @@ GraphBuilder2::params::params() noexcept :
 	cpu{}
 {}
 
-struct GraphBuilder2::resize_spec {
+struct GraphBuilder::resize_spec {
 	unsigned width;
 	unsigned height;
 	unsigned subsample_w;
@@ -252,11 +252,11 @@ struct GraphBuilder2::resize_spec {
 	{}
 };
 
-GraphBuilder2::GraphBuilder2() noexcept : m_state{}, m_plane_ids(null_ids) {}
+GraphBuilder::GraphBuilder() noexcept : m_state{}, m_plane_ids(null_ids) {}
 
-GraphBuilder2::~GraphBuilder2() = default;
+GraphBuilder::~GraphBuilder() = default;
 
-GraphBuilder2::state GraphBuilder2::make_alpha_state(const state &s)
+GraphBuilder::state GraphBuilder::make_alpha_state(const state &s)
 {
 	state result = s;
 	result.color = ColorFamily::GREY;
@@ -267,7 +267,7 @@ GraphBuilder2::state GraphBuilder2::make_alpha_state(const state &s)
 	return result;
 }
 
-void GraphBuilder2::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep)
+void GraphBuilder::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep)
 {
 	id_map deps = null_ids;
 	plane_mask mask{};
@@ -278,7 +278,7 @@ void GraphBuilder2::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter,
 	m_plane_ids[plane] = m_graph->attach_filter(std::move(filter), deps, mask);
 }
 
-void GraphBuilder2::attach_color_filter(std::shared_ptr<ImageFilter> filter)
+void GraphBuilder::attach_color_filter(std::shared_ptr<ImageFilter> filter)
 {
 	id_map deps = null_ids;
 	plane_mask mask{};
@@ -297,7 +297,7 @@ void GraphBuilder2::attach_color_filter(std::shared_ptr<ImageFilter> filter)
 	m_plane_ids[PLANE_V] = id;
 }
 
-void GraphBuilder2::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory2 *factory)
+void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory)
 {
 	zassert_d(!is_greyscale(m_state), "expected color image");
 
@@ -326,7 +326,7 @@ void GraphBuilder2::convert_colorspace(const colorspace::ColorspaceDefinition &c
 	m_state.colorspace = colorspace;
 }
 
-void GraphBuilder2::convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory2 *factory, bool alpha)
+void GraphBuilder::convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory *factory, bool alpha)
 {
 	PixelFormat basic_format{ state->type, state->depth, state->fullrange };
 
@@ -384,7 +384,7 @@ void GraphBuilder2::convert_depth(state *state, const PixelFormat &format, const
 	state->fullrange = format.fullrange;
 }
 
-void GraphBuilder2::convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory2 *factory, bool alpha)
+void GraphBuilder::convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory *factory, bool alpha)
 {
 	unsigned subsample_w = is_color(*state) ? spec.subsample_w : 0;
 	unsigned subsample_h = is_color(*state) ? spec.subsample_h : 0;
@@ -419,7 +419,7 @@ void GraphBuilder2::convert_resize(state *state, const resize_spec &spec, const 
 	if (state->width != spec.width || state->height != spec.height || image_shifted) {
 		double extra_shift_h = luma_shift_factor(state->parity, state->height, spec.height);
 
-		FilterFactory2::filter_list filters;
+		FilterFactory::filter_list filters;
 		if (unresize) {
 			unresize::UnresizeConversion conv{ state->width, state->height, state->type };
 			conv.set_orig_width(spec.width)
@@ -472,7 +472,7 @@ void GraphBuilder2::convert_resize(state *state, const resize_spec &spec, const 
 		double extra_shift_h = chroma_shift_factor(
 			state->chroma_location_h, chroma_loc_h, state->subsample_h, subsample_h, state->parity, state->height, spec.height);
 
-		FilterFactory2::filter_list filters;
+		FilterFactory::filter_list filters;
 		if (unresize) {
 			unresize::UnresizeConversion conv{ width_in, height_in, state->type };
 			conv.set_orig_width(width_out)
@@ -514,7 +514,7 @@ void GraphBuilder2::convert_resize(state *state, const resize_spec &spec, const 
 	state->active_height = spec.height;
 }
 
-void GraphBuilder2::add_opaque_alpha()
+void GraphBuilder::add_opaque_alpha()
 {
 	ValueInitializeFilter::value_type val;
 
@@ -537,7 +537,7 @@ void GraphBuilder2::add_opaque_alpha()
 	attach_greyscale_filter(std::move(filter), PLANE_A, false);
 }
 
-void GraphBuilder2::discard_chroma()
+void GraphBuilder::discard_chroma()
 {
 	zassert_d(is_yuv(m_state), "can not drop chroma planes from RGB image");
 	m_plane_ids[PLANE_U] = -1;
@@ -547,7 +547,7 @@ void GraphBuilder2::discard_chroma()
 	m_state.subsample_h = 0;
 }
 
-void GraphBuilder2::grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h)
+void GraphBuilder::grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h)
 {
 	if (color == ColorFamily::RGB) {
 		zassert_d(!subsample_w && !subsample_h, "RGB can not be subsampled");
@@ -593,7 +593,7 @@ void GraphBuilder2::grey_to_color(ColorFamily color, unsigned subsample_w, unsig
 	m_state.chroma_location_h = chroma_loc_h;
 }
 
-void GraphBuilder2::premultiply(const params *params, FilterFactory2 *factory)
+void GraphBuilder::premultiply(const params *params, FilterFactory *factory)
 {
 	zassert_d(m_state.alpha == AlphaType::STRAIGHT, "must be straight alpha");
 
@@ -627,7 +627,7 @@ void GraphBuilder2::premultiply(const params *params, FilterFactory2 *factory)
 	m_state.alpha = AlphaType::PREMULTIPLED;
 }
 
-void GraphBuilder2::unpremultiply(const params *params, FilterFactory2 *factory)
+void GraphBuilder::unpremultiply(const params *params, FilterFactory *factory)
 {
 	zassert_d(m_state.alpha == AlphaType::PREMULTIPLED, "must be premultiplied");
 
@@ -661,7 +661,7 @@ void GraphBuilder2::unpremultiply(const params *params, FilterFactory2 *factory)
 	m_state.alpha = AlphaType::STRAIGHT;
 }
 
-void GraphBuilder2::connect_color_channels(const state &target, const params *params, FilterFactory2 *factory)
+void GraphBuilder::connect_color_channels(const state &target, const params *params, FilterFactory *factory)
 {
 	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
 
@@ -745,7 +745,7 @@ void GraphBuilder2::connect_color_channels(const state &target, const params *pa
 		grey_to_color(target.color, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
 }
 
-void GraphBuilder2::connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory2 *factory)
+void GraphBuilder::connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory *factory)
 {
 	zassert_d(has_alpha(m_state) && has_alpha(target), "alpha channel missing");
 
@@ -794,14 +794,14 @@ void GraphBuilder2::connect_alpha_channel(const state &orig, const state &target
 	}
 }
 
-GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
+GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	if (m_graph)
 		error::throw_<error::InternalError>("graph already initialized");
 
 	validate_state(source);
 
-	m_graph = ztd::make_unique<FilterGraph2>();
+	m_graph = ztd::make_unique<FilterGraph>();
 	m_state = source;
 
 	ImageFilter::image_attributes attr{ source.width, source.height, source.type };
@@ -818,7 +818,7 @@ GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
 	error::throw_<error::OutOfMemory>();
 }
 
-GraphBuilder2 &GraphBuilder2::connect_graph(const state &target, const params *params, FilterFactory2 *factory) try
+GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) try
 {
 	if (!m_graph)
 		error::throw_<error::InternalError>("graph not initialized");
@@ -830,7 +830,7 @@ GraphBuilder2 &GraphBuilder2::connect_graph(const state &target, const params *p
 	if (m_state.parity != target.parity)
 		error::throw_<error::NoFieldParityConversion>("conversion between field parity not supported");
 
-	DefaultFilterFactory2 default_factory;
+	DefaultFilterFactory default_factory;
 	if (!factory)
 		factory = &default_factory;
 
@@ -877,7 +877,7 @@ GraphBuilder2 &GraphBuilder2::connect_graph(const state &target, const params *p
 	error::throw_<error::OutOfMemory>();
 }
 
-std::unique_ptr<FilterGraph2> GraphBuilder2::complete_graph() try
+std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
 {
 	if (!m_graph)
 		error::throw_<error::InternalError>("graph not initialized");

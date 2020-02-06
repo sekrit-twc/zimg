@@ -590,7 +590,7 @@ size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, co
 	return alloc.count();
 }
 
-ExecutionState::ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf) :
+ExecutionState::ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph::callback unpack_cb, FilterGraph::callback pack_cb, void *buf) :
 	m_unpack_cb{ unpack_cb },
 	m_pack_cb{ pack_cb },
 	m_buffers{},

@@ -41,7 +41,7 @@ typedef std::array<node_id, PLANE_NUM> id_map;
 constexpr id_map null_ids{ { -1, -1, -1, -1 } };
 
 
-class FilterGraph2 : public zimg_filter_graph {
+class FilterGraph : public zimg_filter_graph {
 	class impl;
 public:
 	/**
@@ -91,19 +91,19 @@ public:
 	/**
 	 * Construct a blank graph.
 	 */
-	FilterGraph2();
+	FilterGraph();
 
 	/**
 	 * Move construct a FilterGraph.
 	 *
 	 * @param other rvalue
 	 */
-	FilterGraph2(FilterGraph2 &&other) noexcept;
+	FilterGraph(FilterGraph &&other) noexcept;
 
 	/**
 	 * Destroy graph.
 	 */
-	~FilterGraph2();
+	~FilterGraph();
 
 	/**
 	 * Move assignment
@@ -111,7 +111,7 @@ public:
 	 * @param other rvalue
 	 * @return this
 	 */
-	FilterGraph2 &operator=(FilterGraph2 &&other) noexcept;
+	FilterGraph &operator=(FilterGraph &&other) noexcept;
 
 	/**
 	 * Add a source node with specified format.

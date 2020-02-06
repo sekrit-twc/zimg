@@ -10,7 +10,7 @@
 #include "depth/depth.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
-#include "filtergraph2.h"
+#include "filtergraph.h"
 
 namespace zimg {
 
@@ -23,14 +23,14 @@ class ImageFilter;
 /**
  * Factory interface for filter instantiation.
  */
-class FilterFactory2 {
+class FilterFactory {
 public:
 	typedef std::vector<std::unique_ptr<ImageFilter>> filter_list;
 
 	/**
 	 * Destroy factory.
 	 */
-	virtual ~FilterFactory2() = default;
+	virtual ~FilterFactory() = default;
 
 	/**
 	 * Create filters implementing colorspace conversion.
@@ -65,7 +65,7 @@ public:
 /**
  * Default implementation of factory interface.
  */
-class DefaultFilterFactory2 : public FilterFactory2 {
+class DefaultFilterFactory : public FilterFactory {
 public:
 	filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) override;
 
@@ -80,7 +80,7 @@ public:
 /**
  * Manages initialization of filter graphs.
  */
-class GraphBuilder2 {
+class GraphBuilder {
 public:
 	enum class ColorFamily {
 		GREY,
@@ -157,7 +157,7 @@ public:
 private:
 	struct resize_spec;
 
-	std::unique_ptr<FilterGraph2> m_graph;
+	std::unique_ptr<FilterGraph> m_graph;
 	state m_state;
 	id_map m_plane_ids;
 
@@ -167,15 +167,15 @@ private:
 
 	void attach_color_filter(std::shared_ptr<ImageFilter> filter);
 
-	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory2 *factory);
+	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory);
 
-	void convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory2 *factory, bool alpha);
+	void convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory *factory, bool alpha);
 
-	void convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory2 *factory, bool alpha);
+	void convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory *factory, bool alpha);
 
-	void connect_color_channels(const state &target, const params *params, FilterFactory2 *factory);
+	void connect_color_channels(const state &target, const params *params, FilterFactory *factory);
 
-	void connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory2 *factory);
+	void connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory *factory);
 
 	void add_opaque_alpha();
 
@@ -183,19 +183,19 @@ private:
 
 	void grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h);
 
-	void premultiply(const params *params, FilterFactory2 *factory);
+	void premultiply(const params *params, FilterFactory *factory);
 
-	void unpremultiply(const params *params, FilterFactory2 *factory);
+	void unpremultiply(const params *params, FilterFactory *factory);
 public:
 	/**
 	 * Default construct GraphBuilder, creating an empty graph.
 	 */
-	GraphBuilder2() noexcept;
+	GraphBuilder() noexcept;
 
 	/**
 	 * Destroy builder.
 	 */
-	~GraphBuilder2();
+	~GraphBuilder();
 
 	/**
 	 * Set image format of graph input.
@@ -203,7 +203,7 @@ public:
 	 * @param source image format
 	 * @return reference to self
 	 */
-	GraphBuilder2 &set_source(const state &source);
+	GraphBuilder &set_source(const state &source);
 
 	/**
 	 * Connect graph to target image format.
@@ -212,14 +212,14 @@ public:
 	 * @param params filter creation parameters
 	 * @return reference to self
 	 */
-	GraphBuilder2 &connect_graph(const state &target, const params *params, FilterFactory2 *factory = nullptr);
+	GraphBuilder &connect_graph(const state &target, const params *params, FilterFactory *factory = nullptr);
 
 	/**
 	 * Finalize and return managed graph.
 	 *
 	 * @return graph
 	 */
-	std::unique_ptr<FilterGraph2> complete_graph();
+	std::unique_ptr<FilterGraph> complete_graph();
 };
 
 

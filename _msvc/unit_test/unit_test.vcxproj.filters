@@ -195,7 +195,7 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_vnni_test.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\filtergraph2_test.cpp">
+    <ClCompile Include="..\..\test\graph\filtergraph_test.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>

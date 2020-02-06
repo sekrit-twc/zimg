@@ -5,12 +5,12 @@
 namespace zimg {
 namespace graph {
 
-CopyFilter2::CopyFilter2(unsigned width, unsigned height, PixelType type, bool color) :
+CopyFilter::CopyFilter(unsigned width, unsigned height, PixelType type, bool color) :
 	m_attr{ width, height, type },
 	m_color{ color }
 {}
 
-auto CopyFilter2::get_flags() const -> filter_flags
+auto CopyFilter::get_flags() const -> filter_flags
 {
 	filter_flags flags{};
 	flags.color = m_color;
@@ -19,9 +19,9 @@ auto CopyFilter2::get_flags() const -> filter_flags
 	return flags;
 }
 
-auto CopyFilter2::get_image_attributes() const -> image_attributes { return m_attr; }
+auto CopyFilter::get_image_attributes() const -> image_attributes { return m_attr; }
 
-void CopyFilter2::process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const
+void CopyFilter::process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const
 {
 	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
 		const unsigned char *src_p = static_cast<const unsigned char *>(src[p][i]);

@@ -8,7 +8,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "filtergraph2.h"
+#include "filtergraph.h"
 #include "image_filter.h"
 
 namespace zimg {
@@ -62,8 +62,8 @@ public:
 		unsigned right;
 	};
 private:
-	FilterGraph2::callback m_unpack_cb;
-	FilterGraph2::callback m_pack_cb;
+	FilterGraph::callback m_unpack_cb;
+	FilterGraph::callback m_pack_cb;
 
 	ColorImageBuffer<void> *m_buffers;
 	unsigned *m_cursors;
@@ -73,10 +73,10 @@ private:
 public:
 	static size_t calculate_tmp_size(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes);
 
-	ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph2::callback unpack_cb, FilterGraph2::callback pack_cb, void *buf);
+	ExecutionState(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes, node_id src_id, node_id dst_id, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], FilterGraph::callback unpack_cb, FilterGraph::callback pack_cb, void *buf);
 
-	const FilterGraph2::callback &unpack_cb() const { return m_unpack_cb; }
-	const FilterGraph2::callback &pack_cb() const { return m_pack_cb; }
+	const FilterGraph::callback &unpack_cb() const { return m_unpack_cb; }
+	const FilterGraph::callback &pack_cb() const { return m_pack_cb; }
 
 	unsigned get_cursor(node_id id) const { return m_cursors[id]; }
 	void set_cursor(node_id id, unsigned pos) { m_cursors[id] = pos; }

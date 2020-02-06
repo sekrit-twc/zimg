@@ -12,7 +12,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "basic_filter.h"
-#include "filtergraph2.h"
+#include "filtergraph.h"
 #include "graphnode.h"
 
 namespace zimg {
@@ -39,7 +39,7 @@ unsigned calculate_tile_width(size_t cpu_cache, size_t footprint, unsigned width
 } // namespace
 
 
-class FilterGraph2::impl {
+class FilterGraph::impl {
 	std::vector<std::unique_ptr<GraphNode>> m_nodes;
 	SimulationState::result m_interleaved_sim;
 	SimulationState::result m_planar_sim[PLANE_NUM];
@@ -297,7 +297,7 @@ public:
 				mask[p] = true;
 
 				auto attr = node->get_image_attributes(p);
-				node_id id = attach_filter(ztd::make_unique<CopyFilter2>(attr.width, attr.height, attr.type), deps, mask);
+				node_id id = attach_filter(ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type), deps, mask);
 				parents[p] = m_nodes[id].get();
 			}
 		}
@@ -367,13 +367,13 @@ public:
 };
 
 
-FilterGraph2::callback::callback(std::nullptr_t) : m_func{}, m_user{} {}
+FilterGraph::callback::callback(std::nullptr_t) : m_func{}, m_user{} {}
 
-FilterGraph2::callback::callback(func_type func, void *user) : m_func{ func }, m_user{ user } {}
+FilterGraph::callback::callback(func_type func, void *user) : m_func{ func }, m_user{ user } {}
 
-FilterGraph2::callback::operator bool() const { return m_func != nullptr; }
+FilterGraph::callback::operator bool() const { return m_func != nullptr; }
 
-void FilterGraph2::callback::operator()(unsigned i, unsigned left, unsigned right) const
+void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right) const
 {
 	int ret;
 
@@ -389,65 +389,65 @@ void FilterGraph2::callback::operator()(unsigned i, unsigned left, unsigned righ
 }
 
 
-FilterGraph2::FilterGraph2() : m_impl(ztd::make_unique<impl>()) {}
+FilterGraph::FilterGraph() : m_impl(ztd::make_unique<impl>()) {}
 
-FilterGraph2::FilterGraph2(FilterGraph2 &&other) noexcept = default;
+FilterGraph::FilterGraph(FilterGraph &&other) noexcept = default;
 
-FilterGraph2::~FilterGraph2() = default;
+FilterGraph::~FilterGraph() = default;
 
-FilterGraph2 &FilterGraph2::operator=(FilterGraph2 &&other) noexcept = default;
+FilterGraph &FilterGraph::operator=(FilterGraph &&other) noexcept = default;
 
-node_id FilterGraph2::add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
+node_id FilterGraph::add_source(const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
 {
 	return get_impl()->add_source(attr, subsample_w, subsample_h, planes);
 }
 
-node_id FilterGraph2::attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes)
+node_id FilterGraph::attach_filter(std::shared_ptr<ImageFilter> filter, const id_map &deps, const plane_mask &output_planes)
 {
 	return get_impl()->attach_filter(std::move(filter), deps, output_planes);
 }
 
-void FilterGraph2::set_output(const id_map &deps)
+void FilterGraph::set_output(const id_map &deps)
 {
 	get_impl()->set_output(deps);
 }
 
-size_t FilterGraph2::get_tmp_size() const
+size_t FilterGraph::get_tmp_size() const
 {
 	return get_impl()->get_tmp_size();
 }
 
-unsigned FilterGraph2::get_input_buffering() const
+unsigned FilterGraph::get_input_buffering() const
 {
 	return get_impl()->get_input_buffering();
 }
 
-unsigned FilterGraph2::get_output_buffering() const
+unsigned FilterGraph::get_output_buffering() const
 {
 	return get_impl()->get_output_buffering();
 }
 
-unsigned FilterGraph2::get_tile_width() const
+unsigned FilterGraph::get_tile_width() const
 {
 	return m_impl->get_tile_width();
 }
 
-void FilterGraph2::set_tile_width(unsigned tile_width)
+void FilterGraph::set_tile_width(unsigned tile_width)
 {
 	m_impl->set_tile_width(tile_width);
 }
 
-bool FilterGraph2::requires_64b_alignment() const
+bool FilterGraph::requires_64b_alignment() const
 {
 	return m_impl->requires_64b_alignment();
 }
 
-void FilterGraph2::set_requires_64b_alignment()
+void FilterGraph::set_requires_64b_alignment()
 {
 	m_impl->set_requires_64b_alignment();
 }
 
-void FilterGraph2::process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
+void FilterGraph::process(const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *tmp, callback unpack_cb, callback pack_cb) const
 {
 	get_impl()->process(src, dst, tmp, unpack_cb, pack_cb);
 }

@@ -98,10 +98,10 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/depth/quantize.cpp \
 	src/zimg/graph/basic_filter.cpp \
 	src/zimg/graph/basic_filter.h \
-	src/zimg/graph/filtergraph2.h \
-	src/zimg/graph/filtergraph2.cpp \
-	src/zimg/graph/graphbuilder2.h \
-	src/zimg/graph/graphbuilder2.cpp \
+	src/zimg/graph/filtergraph.h \
+	src/zimg/graph/filtergraph.cpp \
+	src/zimg/graph/graphbuilder.h \
+	src/zimg/graph/graphbuilder.cpp \
 	src/zimg/graph/graphnode.h \
 	src/zimg/graph/graphnode.cpp \
 	src/zimg/graph/image_buffer.h \
@@ -278,7 +278,7 @@ testapp_SOURCES = \
 	src/testapp/depthapp.cpp \
 	src/testapp/frame.cpp \
 	src/testapp/frame.h \
-	src/testapp/graphapp2.cpp \
+	src/testapp/graphapp.cpp \
 	src/testapp/main.cpp \
 	src/testapp/pair_filter.cpp \
 	src/testapp/pair_filter.h \
@@ -338,7 +338,7 @@ test_unit_test_SOURCES = \
 	test/graph/audit_buffer.h \
 	test/graph/filter_validator.cpp \
 	test/graph/filter_validator.h \
-	test/graph/filtergraph2_test.cpp \
+	test/graph/filtergraph_test.cpp \
 	test/graph/mock_filter.cpp \
 	test/graph/mock_filter.h \
 	test/resize/filter_test.cpp \
