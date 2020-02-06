@@ -5,7 +5,8 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
-#include "graph/filtergraph.h"
+#include "graph/basic_filter.h"
+#include "graph/filtergraph2.h"
 #include "graph/image_filter.h"
 
 #include "gtest/gtest.h"
@@ -13,6 +14,29 @@
 #include "mock_filter.h"
 
 namespace {
+
+using zimg::graph::node_id;
+using zimg::graph::plane_mask;
+using zimg::graph::id_map;
+
+plane_mask enabled_planes(bool color)
+{
+	plane_mask mask{};
+	mask[zimg::graph::PLANE_Y] = true;
+	mask[zimg::graph::PLANE_U] = color;
+	mask[zimg::graph::PLANE_V] = color;
+	return mask;
+}
+
+id_map id_to_map(node_id id, bool color)
+{
+	id_map map = zimg::graph::null_ids;
+	map[zimg::graph::PLANE_Y] = id;
+	map[zimg::graph::PLANE_U] = color ? id : -1;
+	map[zimg::graph::PLANE_V] = color ? id : -1;
+	return map;
+}
+
 
 template <class T>
 class AuditImage : public AuditBuffer<T> {
@@ -36,7 +60,7 @@ public:
 }
 
 
-TEST(FilterGraphTest, test_noop)
+TEST(FilterGraphTest2, test_noop)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -48,8 +72,9 @@ TEST(FilterGraphTest, test_noop)
 		bool color = !!x;
 		AuditBufferType buffer_type = color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
 
-		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, color };
-		graph.complete();
+		zimg::graph::FilterGraph2 graph;
+		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(color));
+		graph.set_output(id_to_map(id, color));
 
 		AuditImage<uint8_t> src_image{ buffer_type, w, h, type, 0, 0 };
 		AuditImage<uint8_t> dst_image{ buffer_type, w, h, type, 0, 0 };
@@ -65,7 +90,7 @@ TEST(FilterGraphTest, test_noop)
 	}
 }
 
-TEST(FilterGraphTest, test_noop_subsampling)
+TEST(FilterGraphTest2, test_noop_subsampling)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -76,8 +101,9 @@ TEST(FilterGraphTest, test_noop_subsampling)
 			SCOPED_TRACE(sw);
 			SCOPED_TRACE(sh);
 
-			zimg::graph::FilterGraph graph{ w, h, type, sw, sh, true };
-			graph.complete();
+			zimg::graph::FilterGraph2 graph;
+			node_id id = graph.add_source({ w, h, type }, sw, sh, enabled_planes(true));
+			graph.set_output(id_to_map(id, true));
 
 			AuditImage<uint8_t> src_image{ AuditBufferType::COLOR_YUV, w, h, type, sw, sh };
 			AuditImage<uint8_t> dst_image{ AuditBufferType::COLOR_YUV, w, h, type, sw, sh };
@@ -94,7 +120,7 @@ TEST(FilterGraphTest, test_noop_subsampling)
 	}
 }
 
-TEST(FilterGraphTest, test_basic)
+TEST(FilterGraphTest2, test_basic)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -122,10 +148,8 @@ TEST(FilterGraphTest, test_basic)
 		flags2.entire_plane = false;
 		flags2.color = !!x;
 
-		auto filter1_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type, flags1);
-		auto filter2_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type, flags2);
-		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
-		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
+		auto filter1 = std::make_shared<SplatFilter<uint16_t>>(w, h, type, flags1);
+		auto filter2 = std::make_shared<SplatFilter<uint16_t>>(w, h, type, flags2);
 
 		filter1->set_input_val(test_byte1);
 		filter1->set_output_val(test_byte2);
@@ -133,11 +157,12 @@ TEST(FilterGraphTest, test_basic)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, color };
+		zimg::graph::FilterGraph2 graph;
+		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(color));
 
-		graph.attach_filter(std::move(filter1_uptr));
-		graph.attach_filter(std::move(filter2_uptr));
-		graph.complete();
+		id = graph.attach_filter(filter1, id_to_map(id, color), enabled_planes(color));
+		id = graph.attach_filter(filter2, id_to_map(id, color), enabled_planes(color));
+		graph.set_output(id_to_map(id, color));
 
 		AuditImage<uint16_t> src_image{ buffer_type, w, h, type, 0, 0 };
 		AuditImage<uint16_t> dst_image{ buffer_type, w, h, type, 0, 0 };
@@ -158,7 +183,7 @@ TEST(FilterGraphTest, test_basic)
 	}
 }
 
-TEST(FilterGraphTest, test_skip_plane)
+TEST(FilterGraphTest2, test_skip_plane)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -181,10 +206,8 @@ TEST(FilterGraphTest, test_skip_plane)
 		flags2.entire_row = true;
 		flags2.color = false;
 
-		auto filter1_uptr = ztd::make_unique<SplatFilter<float>>(w, h, type, flags1);
-		auto filter2_uptr = ztd::make_unique<SplatFilter<float>>(w, h, type, flags2);
-		SplatFilter<float> *filter1 = filter1_uptr.get();
-		SplatFilter<float> *filter2 = filter2_uptr.get();
+		auto filter1 = std::make_shared<SplatFilter<float>>(w, h, type, flags1);
+		auto filter2 = std::make_shared<SplatFilter<float>>(w, h, type, flags2);
 
 		filter1->set_input_val(test_byte1);
 		filter1->set_output_val(test_byte2);
@@ -192,16 +215,21 @@ TEST(FilterGraphTest, test_skip_plane)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
+		zimg::graph::FilterGraph2 graph;
+		node_id id_y = graph.add_source({ w, h, type }, 0, 0, enabled_planes(true));
+		id_y = graph.attach_filter(filter1, id_to_map(id_y, true), enabled_planes(true));
 
-		graph.attach_filter(std::move(filter1_uptr));
+		node_id id_u = id_y;
+		node_id id_v = id_y;
 
-		if (x)
-			graph.attach_filter(std::move(filter2_uptr));
-		else
-			graph.attach_filter_uv(std::move(filter2_uptr));
+		if (x) {
+			id_y = graph.attach_filter(filter2, id_to_map(id_y, false), enabled_planes(false));
+		} else {
+			id_u = graph.attach_filter(filter2, { -1, id_u, -1, -1 }, { false, true, false, false });
+			id_v = graph.attach_filter(filter2, { -1, -1, id_v, -1 }, { false, false, true, false });
+		}
 
-		graph.complete();
+		graph.set_output({ id_y, id_u, id_v, -1 });
 
 		AuditImage<float> src_image{ AuditBufferType::COLOR_YUV, w, h, type, 0, 0 };
 		AuditImage<float> dst_image{ AuditBufferType::COLOR_YUV, w, h, type, 0, 0 };
@@ -232,7 +260,7 @@ TEST(FilterGraphTest, test_skip_plane)
 	}
 }
 
-TEST(FilterGraphTest, test_color_to_grey)
+TEST(FilterGraphTest2, test_color_to_grey)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -246,17 +274,15 @@ TEST(FilterGraphTest, test_color_to_grey)
 	flags.entire_row = true;
 	flags.color = true;
 
-	auto filter_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
-	SplatFilter<uint8_t> *filter = filter_uptr.get();
-
+	auto filter = std::make_shared<SplatFilter<uint8_t>>(w, h, type, flags);
 	filter->set_input_val(test_byte1);
 	filter->set_output_val(test_byte2);
 
-	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, true };
+	zimg::graph::FilterGraph2 graph;
+	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(true));
 
-	graph.attach_filter(std::move(filter_uptr));
-	graph.color_to_grey();
-	graph.complete();
+	id = graph.attach_filter(filter, id_to_map(id, true), enabled_planes(true));
+	graph.set_output(id_to_map(id, false));
 
 	AuditImage<uint8_t> src_image{ AuditBufferType::COLOR_YUV, w, h, type, 0, 0 };
 	AuditImage<uint8_t> dst_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
@@ -277,7 +303,7 @@ TEST(FilterGraphTest, test_color_to_grey)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest, test_grey_to_color_rgb)
+TEST(FilterGraphTest2, test_grey_to_color_rgb)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -297,10 +323,8 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 	flags2.entire_row = true;
 	flags2.color = true;
 
-	auto filter1_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags1);
-	auto filter2_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags2);
-	SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
-	SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
+	auto filter1 = std::make_shared<SplatFilter<uint8_t>>(w, h, type, flags1);
+	auto filter2 = std::make_shared<SplatFilter<uint8_t>>(w, h, type, flags2);
 
 	filter1->set_input_val(test_byte1);
 	filter1->set_output_val(test_byte2);
@@ -308,12 +332,16 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 	filter2->set_input_val(test_byte2);
 	filter2->set_output_val(test_byte3);
 
-	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
+	zimg::graph::FilterGraph2 graph;
+	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 
-	graph.attach_filter(std::move(filter1_uptr));
-	graph.grey_to_color(false, 0, 0, 8);
-	graph.attach_filter(std::move(filter2_uptr));
-	graph.complete();
+	id = graph.attach_filter(filter1, id_to_map(id, false), enabled_planes(false));
+
+	auto rgbextend = ztd::make_unique<zimg::graph::RGBExtendFilter>(w, h, type);
+	id = graph.attach_filter(std::move(rgbextend), id_to_map(id, false), enabled_planes(true));
+
+	id = graph.attach_filter(filter2, id_to_map(id, true), enabled_planes(true));
+	graph.set_output(id_to_map(id, true));
 
 	AuditImage<uint8_t> src_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 	AuditImage<uint8_t> dst_image{ AuditBufferType::COLOR_RGB, w, h, type, 0, 0 };
@@ -335,7 +363,7 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest, test_grey_to_color_yuv)
+TEST(FilterGraphTest2, test_grey_to_color_yuv)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -350,17 +378,24 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 	flags.entire_row = true;
 	flags.color = false;
 
-	auto filter_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
-	SplatFilter<uint8_t> *filter = filter_uptr.get();
-
+	auto filter = std::make_shared<SplatFilter<uint8_t>>(w, h, type, flags);
 	filter->set_input_val(test_byte1);
 	filter->set_output_val(test_byte2);
 
-	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
+	zimg::graph::FilterGraph2 graph;
+	node_id id_y = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
+	node_id id_u = id_y;
+	node_id id_v = id_y;
 
-	graph.attach_filter(std::move(filter_uptr));
-	graph.grey_to_color(true, 1, 1, 8);
-	graph.complete();
+	id_y = graph.attach_filter(filter, id_to_map(id_y, false), enabled_planes(false));
+
+	zimg::graph::ValueInitializeFilter::value_type init_val{};
+	init_val.b = test_byte2_uv;
+	auto chroma_init = std::make_shared<zimg::graph::ValueInitializeFilter>(w >> 1, h >> 1, type, init_val);
+	id_u = graph.attach_filter(chroma_init, zimg::graph::null_ids, { false, true, false, false });
+	id_v = graph.attach_filter(chroma_init, zimg::graph::null_ids, { false, false, true, false });
+
+	graph.set_output({ id_y, id_u, id_v, -1 });
 
 	AuditImage<uint8_t> src_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 	AuditImage<uint8_t> dst_image{ AuditBufferType::COLOR_YUV, w, h, type, 1, 1 };
@@ -383,7 +418,7 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest, test_support)
+TEST(FilterGraphTest2, test_support)
 {
 	const unsigned w = 1024;
 	const unsigned h = 576;
@@ -396,10 +431,8 @@ TEST(FilterGraphTest, test_support)
 	for (unsigned x = 0; x < 2; ++x) {
 		SCOPED_TRACE(!!x);
 
-		auto filter1_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type);
-		auto filter2_uptr = ztd::make_unique<SplatFilter<uint16_t>>(w, h, type);
-		SplatFilter<uint16_t> *filter1 = filter1_uptr.get();
-		SplatFilter<uint16_t> *filter2 = filter2_uptr.get();
+		auto filter1 = std::make_shared<SplatFilter<uint16_t>>(w, h, type);
+		auto filter2 = std::make_shared<SplatFilter<uint16_t>>(w, h, type);
 
 		filter1->set_input_val(test_byte1);
 		filter1->set_output_val(test_byte2);
@@ -421,11 +454,12 @@ TEST(FilterGraphTest, test_support)
 			filter2->set_simultaneous_lines(5);
 		}
 
-		zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
+		zimg::graph::FilterGraph2 graph;
+		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 
-		graph.attach_filter(std::move(filter1_uptr));
-		graph.attach_filter(std::move(filter2_uptr));
-		graph.complete();
+		id = graph.attach_filter(filter1, id_to_map(id, false), enabled_planes(false));
+		id = graph.attach_filter(filter2, id_to_map(id, false), enabled_planes(false));
+		graph.set_output(id_to_map(id, false));
 
 		graph.set_tile_width(512);
 
@@ -462,7 +496,7 @@ TEST(FilterGraphTest, test_support)
 	}
 }
 
-TEST(FilterGraphTest, test_callback)
+TEST(FilterGraphTest2, test_callback)
 {
 	static const unsigned w = 1024;
 	static const unsigned h = 576;
@@ -518,10 +552,8 @@ TEST(FilterGraphTest, test_callback)
 				flags.entire_row = !!x;
 				flags.color = false;
 
-				auto filter1_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w, h, type, flags);
-				auto filter2_uptr = ztd::make_unique<SplatFilter<uint8_t>>(w >> sw, h >> sh, type, flags);
-				SplatFilter<uint8_t> *filter1 = filter1_uptr.get();
-				SplatFilter<uint8_t> *filter2 = filter2_uptr.get();
+				auto filter1 = std::make_shared<SplatFilter<uint8_t>>(w, h, type, flags);
+				auto filter2 = std::make_shared<SplatFilter<uint8_t>>(w >> sw, h >> sh, type, flags);
 
 				filter1->set_input_val(test_byte1);
 				filter1->set_output_val(test_byte2);
@@ -529,11 +561,15 @@ TEST(FilterGraphTest, test_callback)
 				filter2->set_input_val(test_byte1);
 				filter2->set_output_val(test_byte2);
 
-				zimg::graph::FilterGraph graph{ w, h, type, sw, sh, true };
+				zimg::graph::FilterGraph2 graph;
+				node_id id_y = graph.add_source({ w, h, type }, sw, sh, enabled_planes(true));
+				node_id id_u = id_y;
+				node_id id_v = id_y;
 
-				graph.attach_filter(std::move(filter1_uptr));
-				graph.attach_filter_uv(std::move(filter2_uptr));
-				graph.complete();
+				id_y = graph.attach_filter(filter1, id_to_map(id_y, false), enabled_planes(false));
+				id_u = graph.attach_filter(filter2, { -1, id_u, -1, -1 }, { false, true, false, false });
+				id_v = graph.attach_filter(filter2, { -1, -1, id_v, -1 }, { false, false, true, false });
+				graph.set_output({ id_y, id_u, id_v, -1 });
 
 				graph.set_tile_width(512);
 
@@ -565,7 +601,7 @@ TEST(FilterGraphTest, test_callback)
 	}
 }
 
-TEST(FilterGraphTest, test_callback_failed)
+TEST(FilterGraphTest2, test_callback_failed)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -576,8 +612,9 @@ TEST(FilterGraphTest, test_callback_failed)
 		return 1;
 	};
 
-	zimg::graph::FilterGraph graph{ w, h, type, 0, 0, false };
-	graph.complete();
+	zimg::graph::FilterGraph2 graph;
+	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
+	graph.set_output(id_to_map(id, false));
 
 	AuditImage<uint8_t> src_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 	AuditImage<uint8_t> dst_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
