@@ -328,11 +328,8 @@
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\f16c_x86.h" />
     <ClInclude Include="..\..\src\zimg\graph\basic_filter.h" />
-    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h" />
-    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphnode.h" />
-    <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder2.h" />
     <ClInclude Include="..\..\src\zimg\graph\image_filter.h" />
     <ClInclude Include="..\..\src\zimg\graph\image_buffer.h" />
@@ -454,10 +451,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp" />
-    <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp" />
-    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph2.cpp" />
-    <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder2.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphnode.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\filter.cpp" />

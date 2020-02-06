@@ -8,7 +8,7 @@
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "graph/filtergraph.h"
+#include "graph/filtergraph2.h"
 #include "graph/image_filter.h"
 #include "depth/depth.h"
 
@@ -254,11 +254,14 @@ public:
 	}
 };
 
-std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph2>();
+	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
+	zimg::graph::node_id id_u = color ? id_y : -1;
+	zimg::graph::node_id id_v = color ? id_y : -1;
 
 	if (type != spec.type) {
 		zimg::PixelFormat src_format{ spec.type };
@@ -270,7 +273,7 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 			.set_pixel_in(src_format)
 			.set_pixel_out(dst_format);
 
-		graph->attach_filter(conv.create());
+		id_y = graph->attach_filter(conv.create(), { id_y, -1, -1, -1 }, { true, false, false, false });
 
 		if (color) {
 			src_format.chroma = spec.is_yuv;
@@ -279,12 +282,14 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
 				.set_pixel_in(src_format)
 				.set_pixel_out(dst_format);
+			std::shared_ptr<zimg::graph::ImageFilter> f{ conv.create() };
 
-			graph->attach_filter_uv(conv.create());
+			id_u = graph->attach_filter(f, { -1, id_u, -1, -1 }, { false, true, false, false });
+			id_v = graph->attach_filter(f, { -1, -1, id_v, -1 }, { false, false, true, false });
 		}
 	}
 
-	graph->complete();
+	graph->set_output({ id_y, id_u, id_v, -1 });
 	return graph;
 }
 
@@ -423,12 +428,15 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
+std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
                                                             unsigned depth_in, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph>(width, height, type, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, color);
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph2>();
+	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
+	zimg::graph::node_id id_u = color ? id_y : -1;
+	zimg::graph::node_id id_v = color ? id_y : -1;
 
 	if (type != spec.type || depth_in != zimg::pixel_depth(type)) {
 		zimg::PixelFormat src_format{ type, depth_in };
@@ -438,10 +446,9 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 
 		auto conv = zimg::depth::DepthConversion{ width, height }
 			.set_pixel_in(src_format)
-			.set_pixel_out(dst_format)
-			.create();
+			.set_pixel_out(dst_format);
 
-		graph->attach_filter(std::move(conv));
+		id_y = graph->attach_filter(conv.create(), { id_y, -1, -1, -1 }, { true, false, false, false });
 
 		if (color) {
 			src_format.chroma = spec.is_yuv;
@@ -449,14 +456,15 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 
 			auto conv_uv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
 				.set_pixel_in(src_format)
-				.set_pixel_out(dst_format)
-				.create();
+				.set_pixel_out(dst_format);
+			std::shared_ptr<zimg::graph::ImageFilter> f{ conv_uv.create() };
 
-			graph->attach_filter_uv(std::move(conv_uv));
+			id_u = graph->attach_filter(f, { -1, id_u, -1, -1 }, { false, true, false, false });
+			id_v = graph->attach_filter(f, { -1, -1, id_v, -1 }, { false, false, true, false });
 		}
 	}
 
-	graph->complete();
+	graph->set_output({ id_y, id_u, id_v, -1 });
 	return graph;
 }
 

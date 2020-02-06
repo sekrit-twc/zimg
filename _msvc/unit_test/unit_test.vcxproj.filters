@@ -108,9 +108,6 @@
     <ClCompile Include="..\..\test\graph\filter_validator.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\filtergraph_test.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\graph\mock_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
@@ -188,9 +185,6 @@
     </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\log10f.c">
       <Filter>Source Files\extra\musl-libm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\graph\copy_filter_test.cpp">
-      <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
