@@ -2,7 +2,7 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
-#include "graph/copy_filter.h"
+#include "graph/basic_filter.h"
 #include "graph/image_filter.h"
 #include "depth.h"
 #include "depth_convert.h"
@@ -41,7 +41,7 @@ std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 		error::throw_<error::OutOfMemory>();
 
 	if (pixel_in == pixel_out)
-		return ztd::make_unique<graph::CopyFilter>(width, height, pixel_in.type);
+		return ztd::make_unique<graph::CopyFilter2>(width, height, pixel_in.type);
 	else if (is_lossless_conversion(pixel_in, pixel_out))
 		return create_left_shift(width, height, pixel_in, pixel_out, cpu);
 	else if (pixel_is_float(pixel_out.type))

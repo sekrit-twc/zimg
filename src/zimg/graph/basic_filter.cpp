@@ -5,11 +5,15 @@
 namespace zimg {
 namespace graph {
 
-CopyFilter2::CopyFilter2(unsigned width, unsigned height, PixelType type) : m_attr{ width, height, type } {}
+CopyFilter2::CopyFilter2(unsigned width, unsigned height, PixelType type, bool color) :
+	m_attr{ width, height, type },
+	m_color{ color }
+{}
 
 auto CopyFilter2::get_flags() const -> filter_flags
 {
 	filter_flags flags{};
+	flags.color = m_color;
 	flags.same_row = true;
 	flags.in_place = true;
 	return flags;
@@ -19,12 +23,14 @@ auto CopyFilter2::get_image_attributes() const -> image_attributes { return m_at
 
 void CopyFilter2::process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const
 {
-	const unsigned char *src_p = static_cast<const unsigned char *>((*src)[i]);
-	unsigned char *dst_p = static_cast<unsigned char *>((*dst)[i]);
-	size_t left_byte = static_cast<size_t>(left) * pixel_size(m_attr.type);
-	size_t right_byte = static_cast<size_t>(right) * pixel_size(m_attr.type);
+	for (unsigned p = 0; p < (m_color ? 3U : 1U); ++p) {
+		const unsigned char *src_p = static_cast<const unsigned char *>(src[p][i]);
+		unsigned char *dst_p = static_cast<unsigned char *>(dst[p][i]);
+		size_t left_byte = static_cast<size_t>(left) * pixel_size(m_attr.type);
+		size_t right_byte = static_cast<size_t>(right) * pixel_size(m_attr.type);
 
-	std::copy_n(src_p + left_byte, right_byte - left_byte, dst_p + left_byte);
+		std::copy_n(src_p + left_byte, right_byte - left_byte, dst_p + left_byte);
+	}
 }
 
 RGBExtendFilter::RGBExtendFilter(unsigned width, unsigned height, PixelType type) : m_attr{ width, height, type } {}

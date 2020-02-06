@@ -162,12 +162,6 @@
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h">
       <Filter>Header Files\unresize</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\ccdep.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -227,9 +221,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h">
       <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\copy_filter.h">
-      <Filter>Header Files\graph</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.h">
       <Filter>Header Files\colorspace\x86</Filter>
@@ -304,12 +295,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp">
       <Filter>Source Files\unresize</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
-      <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\cpuinfo.cpp">
       <Filter>Source Files\common</Filter>
@@ -400,9 +385,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\x86\cpuinfo_x86.cpp">
       <Filter>Source Files\common\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\copy_filter.cpp">
-      <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\gamma_constants_avx512.cpp">
       <Filter>Source Files\colorspace\x86</Filter>

@@ -3,7 +3,7 @@
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
-#include "graph/copy_filter.h"
+#include "graph/basic_filter.h"
 #include "graph/image_filter.h"
 #include "resize.h"
 #include "resize_impl.h"
@@ -48,7 +48,7 @@ auto ResizeConversion::create() const -> filter_pair try
 	bool skip_v = (src_height == dst_height && shift_h == 0 && subheight == src_height);
 
 	if (skip_h && skip_v)
-		return{ ztd::make_unique<graph::CopyFilter>(src_width, src_height, type), nullptr };
+		return{ ztd::make_unique<graph::CopyFilter2>(src_width, src_height, type), nullptr };
 
 	auto builder = ResizeImplBuilder{ src_width, src_height, type }
 		.set_depth(depth)

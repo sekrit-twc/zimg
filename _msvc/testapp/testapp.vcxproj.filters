@@ -59,9 +59,6 @@
     <ClCompile Include="..\..\src\testapp\table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\testapp\graphapp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\testapp\cpuinfoapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
