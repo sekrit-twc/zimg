@@ -11,7 +11,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "copy_filter.h"
+#include "basic_filter.h"
 #include "filtergraph2.h"
 #include "graphnode.h"
 
@@ -297,7 +297,7 @@ public:
 				mask[p] = true;
 
 				auto attr = node->get_image_attributes(p);
-				node_id id = attach_filter(ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type), deps, mask);
+				node_id id = attach_filter(ztd::make_unique<CopyFilter2>(attr.width, attr.height, attr.type), deps, mask);
 				parents[p] = m_nodes[id].get();
 			}
 		}

@@ -12,6 +12,18 @@ enum class PixelType;
 
 namespace graph {
 
+class CopyFilter2 : public ImageFilterBase {
+	image_attributes m_attr;
+public:
+	CopyFilter2(unsigned width, unsigned height, PixelType type);
+
+	filter_flags get_flags() const override;
+
+	image_attributes get_image_attributes() const override;
+
+	void process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override;
+};
+
 // Converts greyscale to RGB image by replicating the luma plane.
 //
 // For any YUV system, a greyscale image is encoded by U=0 and V=0, which also
