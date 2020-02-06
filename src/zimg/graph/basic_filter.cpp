@@ -5,6 +5,28 @@
 namespace zimg {
 namespace graph {
 
+CopyFilter2::CopyFilter2(unsigned width, unsigned height, PixelType type) : m_attr{ width, height, type } {}
+
+auto CopyFilter2::get_flags() const -> filter_flags
+{
+	filter_flags flags{};
+	flags.same_row = true;
+	flags.in_place = true;
+	return flags;
+}
+
+auto CopyFilter2::get_image_attributes() const -> image_attributes { return m_attr; }
+
+void CopyFilter2::process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const
+{
+	const unsigned char *src_p = static_cast<const unsigned char *>((*src)[i]);
+	unsigned char *dst_p = static_cast<unsigned char *>((*dst)[i]);
+	size_t left_byte = static_cast<size_t>(left) * pixel_size(m_attr.type);
+	size_t right_byte = static_cast<size_t>(right) * pixel_size(m_attr.type);
+
+	std::copy_n(src_p + left_byte, right_byte - left_byte, dst_p + left_byte);
+}
+
 RGBExtendFilter::RGBExtendFilter(unsigned width, unsigned height, PixelType type) : m_attr{ width, height, type } {}
 
 auto RGBExtendFilter::get_flags() const -> filter_flags
