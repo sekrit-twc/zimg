@@ -8,7 +8,7 @@
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "graph/filtergraph2.h"
+#include "graph/filtergraph.h"
 #include "graph/image_filter.h"
 #include "depth/depth.h"
 
@@ -254,11 +254,11 @@ public:
 	}
 };
 
-std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph2>();
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph>();
 	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
 	zimg::graph::node_id id_u = color ? id_y : -1;
 	zimg::graph::node_id id_v = color ? id_y : -1;
@@ -428,12 +428,12 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
+std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
                                                             unsigned depth_in, bool fullrange)
 {
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph2>();
+	auto graph = ztd::make_unique<zimg::graph::FilterGraph>();
 	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
 	zimg::graph::node_id id_u = color ? id_y : -1;
 	zimg::graph::node_id id_v = color ? id_y : -1;

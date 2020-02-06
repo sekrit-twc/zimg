@@ -13,11 +13,11 @@ enum class PixelType;
 namespace graph {
 
 // Copies an image buffer.
-class CopyFilter2 : public ImageFilterBase {
+class CopyFilter : public ImageFilterBase {
 	image_attributes m_attr;
 	bool m_color;
 public:
-	CopyFilter2(unsigned width, unsigned height, PixelType type, bool color = false);
+	CopyFilter(unsigned width, unsigned height, PixelType type, bool color = false);
 
 	filter_flags get_flags() const override;
 

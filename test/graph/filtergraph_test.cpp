@@ -6,7 +6,7 @@
 #include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/basic_filter.h"
-#include "graph/filtergraph2.h"
+#include "graph/filtergraph.h"
 #include "graph/image_filter.h"
 
 #include "gtest/gtest.h"
@@ -60,7 +60,7 @@ public:
 }
 
 
-TEST(FilterGraphTest2, test_noop)
+TEST(FilterGraphTest, test_noop)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -72,7 +72,7 @@ TEST(FilterGraphTest2, test_noop)
 		bool color = !!x;
 		AuditBufferType buffer_type = color ? AuditBufferType::COLOR_RGB : AuditBufferType::PLANE;
 
-		zimg::graph::FilterGraph2 graph;
+		zimg::graph::FilterGraph graph;
 		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(color));
 		graph.set_output(id_to_map(id, color));
 
@@ -90,7 +90,7 @@ TEST(FilterGraphTest2, test_noop)
 	}
 }
 
-TEST(FilterGraphTest2, test_noop_subsampling)
+TEST(FilterGraphTest, test_noop_subsampling)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -101,7 +101,7 @@ TEST(FilterGraphTest2, test_noop_subsampling)
 			SCOPED_TRACE(sw);
 			SCOPED_TRACE(sh);
 
-			zimg::graph::FilterGraph2 graph;
+			zimg::graph::FilterGraph graph;
 			node_id id = graph.add_source({ w, h, type }, sw, sh, enabled_planes(true));
 			graph.set_output(id_to_map(id, true));
 
@@ -120,7 +120,7 @@ TEST(FilterGraphTest2, test_noop_subsampling)
 	}
 }
 
-TEST(FilterGraphTest2, test_basic)
+TEST(FilterGraphTest, test_basic)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -157,7 +157,7 @@ TEST(FilterGraphTest2, test_basic)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::graph::FilterGraph2 graph;
+		zimg::graph::FilterGraph graph;
 		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(color));
 
 		id = graph.attach_filter(filter1, id_to_map(id, color), enabled_planes(color));
@@ -183,7 +183,7 @@ TEST(FilterGraphTest2, test_basic)
 	}
 }
 
-TEST(FilterGraphTest2, test_skip_plane)
+TEST(FilterGraphTest, test_skip_plane)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -215,7 +215,7 @@ TEST(FilterGraphTest2, test_skip_plane)
 		filter2->set_input_val(test_byte2);
 		filter2->set_output_val(test_byte3);
 
-		zimg::graph::FilterGraph2 graph;
+		zimg::graph::FilterGraph graph;
 		node_id id_y = graph.add_source({ w, h, type }, 0, 0, enabled_planes(true));
 		id_y = graph.attach_filter(filter1, id_to_map(id_y, true), enabled_planes(true));
 
@@ -260,7 +260,7 @@ TEST(FilterGraphTest2, test_skip_plane)
 	}
 }
 
-TEST(FilterGraphTest2, test_color_to_grey)
+TEST(FilterGraphTest, test_color_to_grey)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -278,7 +278,7 @@ TEST(FilterGraphTest2, test_color_to_grey)
 	filter->set_input_val(test_byte1);
 	filter->set_output_val(test_byte2);
 
-	zimg::graph::FilterGraph2 graph;
+	zimg::graph::FilterGraph graph;
 	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(true));
 
 	id = graph.attach_filter(filter, id_to_map(id, true), enabled_planes(true));
@@ -303,7 +303,7 @@ TEST(FilterGraphTest2, test_color_to_grey)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest2, test_grey_to_color_rgb)
+TEST(FilterGraphTest, test_grey_to_color_rgb)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -332,7 +332,7 @@ TEST(FilterGraphTest2, test_grey_to_color_rgb)
 	filter2->set_input_val(test_byte2);
 	filter2->set_output_val(test_byte3);
 
-	zimg::graph::FilterGraph2 graph;
+	zimg::graph::FilterGraph graph;
 	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 
 	id = graph.attach_filter(filter1, id_to_map(id, false), enabled_planes(false));
@@ -363,7 +363,7 @@ TEST(FilterGraphTest2, test_grey_to_color_rgb)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest2, test_grey_to_color_yuv)
+TEST(FilterGraphTest, test_grey_to_color_yuv)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -382,7 +382,7 @@ TEST(FilterGraphTest2, test_grey_to_color_yuv)
 	filter->set_input_val(test_byte1);
 	filter->set_output_val(test_byte2);
 
-	zimg::graph::FilterGraph2 graph;
+	zimg::graph::FilterGraph graph;
 	node_id id_y = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 	node_id id_u = id_y;
 	node_id id_v = id_y;
@@ -418,7 +418,7 @@ TEST(FilterGraphTest2, test_grey_to_color_yuv)
 	dst_image.validate();
 }
 
-TEST(FilterGraphTest2, test_support)
+TEST(FilterGraphTest, test_support)
 {
 	const unsigned w = 1024;
 	const unsigned h = 576;
@@ -454,7 +454,7 @@ TEST(FilterGraphTest2, test_support)
 			filter2->set_simultaneous_lines(5);
 		}
 
-		zimg::graph::FilterGraph2 graph;
+		zimg::graph::FilterGraph graph;
 		node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 
 		id = graph.attach_filter(filter1, id_to_map(id, false), enabled_planes(false));
@@ -496,7 +496,7 @@ TEST(FilterGraphTest2, test_support)
 	}
 }
 
-TEST(FilterGraphTest2, test_callback)
+TEST(FilterGraphTest, test_callback)
 {
 	static const unsigned w = 1024;
 	static const unsigned h = 576;
@@ -561,7 +561,7 @@ TEST(FilterGraphTest2, test_callback)
 				filter2->set_input_val(test_byte1);
 				filter2->set_output_val(test_byte2);
 
-				zimg::graph::FilterGraph2 graph;
+				zimg::graph::FilterGraph graph;
 				node_id id_y = graph.add_source({ w, h, type }, sw, sh, enabled_planes(true));
 				node_id id_u = id_y;
 				node_id id_v = id_y;
@@ -601,7 +601,7 @@ TEST(FilterGraphTest2, test_callback)
 	}
 }
 
-TEST(FilterGraphTest2, test_callback_failed)
+TEST(FilterGraphTest, test_callback_failed)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -612,7 +612,7 @@ TEST(FilterGraphTest2, test_callback_failed)
 		return 1;
 	};
 
-	zimg::graph::FilterGraph2 graph;
+	zimg::graph::FilterGraph graph;
 	node_id id = graph.add_source({ w, h, type }, 0, 0, enabled_planes(false));
 	graph.set_output(id_to_map(id, false));
 

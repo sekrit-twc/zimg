@@ -21,7 +21,7 @@ int arg_decode_pixfmt(const struct ArgparseOption *opt, void *out, const char *p
 int colorspace_main(int argc, char **argv);
 int cpuinfo_main(int argc, char **argv);
 int depth_main(int argc, char **argv);
-int graph2_main(int argc, char **argv);
+int graph_main(int argc, char **argv);
 int resize_main(int argc, char **argv);
 int unresize_main(int argc, char **argv);
 

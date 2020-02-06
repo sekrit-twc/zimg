@@ -109,7 +109,7 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 	      .set_scene_referred(scene_referred);
 
 	if (csp_in == csp_out)
-		return ztd::make_unique<graph::CopyFilter2>(width, height, PixelType::FLOAT, true);
+		return ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT, true);
 	else
 		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {
