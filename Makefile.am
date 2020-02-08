@@ -21,7 +21,6 @@ examplemiscdir = $(exampledir)/misc
 dist_doc_DATA = ChangeLog COPYING README.md
 
 dist_example_DATA = \
-	doc/example/alpha_example.cpp \
 	doc/example/api_example.cpp \
 	doc/example/api_example_c.c \
 	doc/example/hdr_example.cpp \
@@ -228,7 +227,6 @@ libtestcommon_la_SOURCES = \
 
 if EXAMPLES
 noinst_PROGRAMS += \
-	doc/example/alpha_example \
 	doc/example/api_example \
 	doc/example/api_example_c \
 	doc/example/hdr_example \
@@ -238,10 +236,6 @@ noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
 EXAMPLE_LDADD = libtestcommon.la libzimg.la
-
-doc_example_alpha_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_alpha_example_SOURCES = doc/example/alpha_example.cpp
-doc_example_alpha_example_LDADD = $(EXAMPLE_LDADD)
 
 doc_example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_api_example_SOURCES = doc/example/api_example.cpp
