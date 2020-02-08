@@ -343,7 +343,7 @@ std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m,
 std::unique_ptr<Operation> create_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
-	zassert_d(in.matrix == MatrixCoefficients::REC_2020_CL && in.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
+	zassert_d((in.matrix == MatrixCoefficients::REC_2020_CL || in.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL) && in.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
 	zassert_d(out.matrix == MatrixCoefficients::RGB && out.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
 
 	// CL is always scene-referred.
@@ -356,7 +356,7 @@ std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefini
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
 	zassert_d(in.matrix == MatrixCoefficients::RGB && in.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
-	zassert_d(out.matrix == MatrixCoefficients::REC_2020_CL && out.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
+	zassert_d((out.matrix == MatrixCoefficients::REC_2020_CL || out.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL) && out.transfer == TransferCharacteristics::REC_709, "must be 2020 CL");
 
 	// CL is always scene-referred.
 	TransferFunction func = select_transfer_function(out.transfer, params.peak_luminance, true);
