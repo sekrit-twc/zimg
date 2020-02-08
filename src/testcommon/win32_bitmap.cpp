@@ -37,6 +37,19 @@ typedef struct tagBITMAPINFOHEADER {
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 #pragma pack(pop)
 
+typedef enum {
+	BI_RGB = 0x0000,
+	BI_RLE8 = 0x0001,
+	BI_RLE4 = 0x0002,
+	BI_BITFIELDS = 0x0003,
+	BI_JPEG = 0x0004,
+	BI_PNG = 0x0005,
+	BI_CMYK = 0x000B,
+	BI_CMYKRLE8 = 0x000C,
+	BI_CMYKRLE4 = 0x000D
+} Compression;
+
+
 size_t bitmap_row_size(int width, int bit_count) noexcept
 {
 	size_t row_size;
@@ -57,8 +70,7 @@ struct BitmapFileData {
 	BITMAPINFOHEADER *biHeader;
 	void *image_data;
 
-	BitmapFileData() noexcept : bfHeader{}, biHeader{}, image_data{}
-	{}
+	BitmapFileData() noexcept : bfHeader{}, biHeader{}, image_data{} {}
 
 	BitmapFileData(size_t file_size, void *file_base, bool new_image)
 	{
@@ -108,10 +120,21 @@ struct BitmapFileData {
 			throw BitmapDataError{ "invalid bitmap dimensions" };
 		if (biHeader->biBitCount != 24 && biHeader->biBitCount != 32)
 			throw BitmapDataError{ "unsupported biBitCount" };
-		if (biHeader->biCompression)
+		if (biHeader->biCompression != BI_RGB && biHeader->biCompression != BI_BITFIELDS)
 			throw BitmapDataError{ "unsupported biCompression" };
 		if (bfHeader->bfOffBits + bitmap_data_size(biHeader->biWidth, biHeader->biHeight, biHeader->biBitCount) > file_size)
 			throw BitmapDataError{ "file too short" };
+
+		if (biHeader->biCompression == BI_BITFIELDS) {
+			if (biHeader->biBitCount != 32)
+				throw BitmapDataError{ "BI_BITFIELDS only supported with 32 bpp" };
+			if (bfHeader->bfOffBits < sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + sizeof(DWORD) * 4)
+				throw BitmapDataError{ "BI_BITFIELDS mask missing" };
+
+			DWORD alpha_mask = reinterpret_cast<const DWORD *>(reinterpret_cast<const unsigned char *>(biHeader) + sizeof(BITMAPINFOHEADER))[3];
+			if (alpha_mask != 0xFF000000U)
+				throw BitmapDataError{ "BI_BITFIELDS only supported with alpha in MSB" };
+		}
 	}
 };
 

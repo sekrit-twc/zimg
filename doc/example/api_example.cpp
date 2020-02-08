@@ -34,6 +34,8 @@ struct Arguments {
 	double shift_h = NAN;
 	double subwidth = NAN;
 	double subheight = NAN;
+	char alpha = 0;
+	char premul = 0;
 	char cpu64 = 0;
 };
 
@@ -44,6 +46,8 @@ const ArgparseOption program_switches[] = {
 	{ OPTION_FLOAT, nullptr, "shift-h",    offsetof(Arguments, shift_h),   nullptr, "shift image to the top by x subpixels" },
 	{ OPTION_FLOAT, nullptr, "sub-width",  offsetof(Arguments, subwidth),  nullptr, "treat image width differently from actual width" },
 	{ OPTION_FLOAT, nullptr, "sub-height", offsetof(Arguments, subheight), nullptr, "treat image height differently from actual height" },
+	{ OPTION_FLAG,  nullptr, "alpha",      offsetof(Arguments, alpha),     nullptr, "interpret 32-bit BMP as BGRA" },
+	{ OPTION_FLAG,  nullptr, "premul",     offsetof(Arguments, premul),    nullptr, "interpret alpha as premultiplied" },
 	{ OPTION_FLAG,  nullptr, "cpu64",      offsetof(Arguments, cpu64),     nullptr, "use 64-byte instruction set" },
 	{ OPTION_NULL }
 };
@@ -111,7 +115,7 @@ ImageFile open_file(FileFormat fmt, const char *path, unsigned w, unsigned h, bo
 		std::shared_ptr<WindowsBitmap> bmp;
 
 		if (write) {
-			bmp = std::make_shared<WindowsBitmap>(path, w, h, 24);
+			bmp = std::make_shared<WindowsBitmap>(path, w, h, 32);
 			file.image_base = bmp->write_ptr();
 		} else {
 			bmp = std::make_shared<WindowsBitmap>(path, WindowsBitmap::READ_TAG);
@@ -142,7 +146,7 @@ ImageFile open_file(FileFormat fmt, const char *path, unsigned w, unsigned h, bo
 
 		file.width = w;
 		file.height = h;
-		file.stride = w * 2;
+		file.stride = static_cast<size_t>(w) * 2;
 
 		file.handle = std::move(mmap);
 	} else {
@@ -198,7 +202,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 	// number of lines. zimg_select_buffer_mask is a convenience function that
 	// computes (ceilLog2(x) - 1).
 	unsigned mask = zimg_select_buffer_mask(count);
-	size_t channel_size[3] = { 0 };
+	size_t channel_size[4] = { 0 };
 	size_t pixel_size;
 
 	// The number of lines in the buffer is one more than the mask. Some graphs
@@ -217,26 +221,41 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		// Buffering requirements for subsampled images are given in units of
 		// luma scanlines. Again, the special case of ZIMG_BUFFER_MAX must be
 		// handled separately.
-		unsigned count_plane = p ? count >> format.subsample_h : count;
-		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
+		unsigned count_plane = count >> (p ? format.subsample_h : 0);
+		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> (p ? format.subsample_h : 0);
 
 		// Pad each scanline so that its length in bytes is divisible by the
 		// required alignment.
-		size_t row_size = format.width * pixel_size;
-		ptrdiff_t stride = row_size % alignment ? row_size - row_size % alignment + alignment : row_size;
+		size_t row_size = (format.width >> (p ? format.subsample_w : 0)) * pixel_size;
+		ptrdiff_t stride = (row_size + (alignment - 1)) & ~(alignment - 1);
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
 		channel_size[p] = static_cast<size_t>(stride) * count_plane;
 	}
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 4)
+	if (format.alpha != ZIMG_ALPHA_NONE) {
+		size_t row_size = format.width * pixel_size;
+		ptrdiff_t stride = (row_size + (alignment - 1)) & ~(alignment - 1);
 
-	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2], alignment), &aligned_free);
+		// Alpha is always plane 3, even for greyscale images.
+		buffer.mask(3) = mask;
+		buffer.stride(3) = stride;
+		channel_size[3] = static_cast<size_t>(stride) * count;
+	}
+#endif
+
+	handle.reset(aligned_malloc(channel_size[0] + channel_size[1] + channel_size[2] + channel_size[3], alignment), &aligned_free);
 	ptr = static_cast<unsigned char *>(handle.get());
 
 	for (unsigned p = 0; p < (format.color_family == ZIMG_COLOR_GREY ? 1U : 3U); ++p) {
 		buffer.data(p) = ptr;
 		ptr += channel_size[p];
 	}
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 4)
+	if (format.alpha != ZIMG_ALPHA_NONE)
+		buffer.data(3) = ptr;
+#endif
 
 	return{ buffer, handle };
 }
@@ -247,12 +266,13 @@ std::shared_ptr<void> allocate_buffer(size_t size, size_t alignment)
 }
 
 // Input callback to convert BGR24/32 to planar RGB.
-void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, unsigned left, unsigned right)
+void unpack_bgr(const void *bgr, void * const planar[4], unsigned bit_depth, unsigned left, unsigned right)
 {
 	const uint8_t *packed_bgr = static_cast<const uint8_t *>(bgr);
 	uint8_t *planar_r = static_cast<uint8_t *>(planar[0]);
 	uint8_t *planar_g = static_cast<uint8_t *>(planar[1]);
 	uint8_t *planar_b = static_cast<uint8_t *>(planar[2]);
+	uint8_t *planar_a = static_cast<uint8_t *>(planar[3]);
 	unsigned step = bit_depth / 8;
 
 	for (unsigned j = left; j < right; ++j) {
@@ -265,6 +285,9 @@ void unpack_bgr(const void *bgr, void * const planar[3], unsigned bit_depth, uns
 		planar_r[j] = r;
 		planar_g[j] = g;
 		planar_b[j] = b;
+
+		if (planar[3] && step == 4)
+			planar_a[j] = packed_bgr[j * step + 3];
 	}
 }
 
@@ -295,11 +318,12 @@ void unpack_yuy2(const void *yuy2, void * const planar[3], unsigned left, unsign
 }
 
 // Output callback to convert planar RGB to BGR24/32.
-void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsigned left, unsigned right)
+void pack_bgr(const void * const planar[4], void *bgr, unsigned bit_depth, unsigned left, unsigned right)
 {
 	const uint8_t *planar_r = static_cast<const uint8_t *>(planar[0]);
 	const uint8_t *planar_g = static_cast<const uint8_t *>(planar[1]);
 	const uint8_t *planar_b = static_cast<const uint8_t *>(planar[2]);
+	const uint8_t *planar_a = static_cast<const uint8_t *>(planar[3]);
 	uint8_t *packed_bgr = static_cast<uint8_t *>(bgr);
 	unsigned step = bit_depth / 8;
 
@@ -313,6 +337,9 @@ void pack_bgr(const void * const planar[3], void *bgr, unsigned bit_depth, unsig
 		packed_bgr[j * step + 0] = b;
 		packed_bgr[j * step + 1] = g;
 		packed_bgr[j * step + 2] = r;
+
+		if (planar[3] && step == 4)
+			packed_bgr[j * step + 3] = planar_a[j];
 	}
 }
 
@@ -354,11 +381,15 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 	const void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
-	void *buf_data[3];
+	void *buf_data[4] = { 0 };
 
 	for (unsigned p = 0; p < 3; ++p) {
 		buf_data[p] = static_cast<char *>(buf.line_at(i, p));
 	}
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 4)
+	if (buf.data(3))
+		buf_data[3] = static_cast<char *>(buf.line_at(i, 3));
+#endif
 
 	if (fmt == FileFormat::FILE_BMP) {
 		unpack_bgr(img, buf_data, cb->file->bmp_bit_count, left, right);
@@ -381,11 +412,15 @@ int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 	void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
-	const void *buf_data[3];
+	const void *buf_data[4] = { 0 };
 
 	for (unsigned p = 0; p < 3; ++p) {
 		buf_data[p] = static_cast<const char *>(buf.line_at(i, p));
 	}
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 4)
+	if (buf.data(3))
+		buf_data[3] = static_cast<char *>(buf.line_at(i, 3));
+#endif
 
 	if (fmt == FileFormat::FILE_BMP) {
 		pack_bgr(buf_data, img, cb->file->bmp_bit_count, left, right);
@@ -416,6 +451,16 @@ void process(const Arguments &args, const ImageFile &in_data, const ImageFile &o
 		in_format.active_region.top = args.shift_h;
 		in_format.active_region.width = args.subwidth;
 		in_format.active_region.height = args.subheight;
+	}
+#endif
+
+#if ZIMG_API_VERSION >= ZIMG_MAKE_API_VERSION(2, 4)
+	if (args.alpha) {
+		if (zimg_get_api_version(nullptr, nullptr) < ZIMG_MAKE_API_VERSION(2, 4))
+			std::cerr << "warning: alpha channel requires API 2.4\n";
+
+		in_format.alpha = args.premul ? ZIMG_ALPHA_PREMULTIPLIED : ZIMG_ALPHA_STRAIGHT;
+		out_format.alpha = in_format.alpha;
 	}
 #endif
 
