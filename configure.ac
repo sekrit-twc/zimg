@@ -43,8 +43,12 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
                 [i?86],   [CFLAGS="$CFLAGS -mfpmath=sse -msse2" CXXFLAGS="$CXXFLAGS -mfpmath=sse -msse2"],
                 [x86_64], [],
                 [AC_MSG_WARN([Could not determine how to enable IEEE-754 compliance on host. Tests may fail.])])
-        AC_CONFIG_SUBDIRS(test/extra/googletest/googletest)
-        AC_SUBST([CONFIG_SUBDIRS], [test/extra/googletest/googletest])
+
+        AC_CHECK_PROG([CMAKE], [cmake], [cmake])
+        AS_MKDIR_P([test/extra/googletest/build])
+        AS_IF([(cd "test/extra/googletest/build" && $CMAKE -Dgtest_disable_pthreads=ON "$ac_abs_confdir/test/extra/googletest")],
+              [], [AC_MSG_ERROR([CMake error])])
+        AS_UNSET(MYDIR)
       ])
 
 

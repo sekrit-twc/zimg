@@ -368,8 +368,19 @@ test_unit_test_SOURCES += \
 	test/resize/x86/resize_impl_avx512_vnni_test.cpp
 endif # X86SIMD_AVX512
 
+test/extra/googletest/build/lib/libgtest.a: .FAKE
+	-$(MAKE) -C test/extra/googletest/build gtest
+
+.FAKE:
+
 test_unit_test_LDADD = \
-	test/extra/googletest/googletest/lib/libgtest.la \
+	test/extra/googletest/build/lib/libgtest.a \
 	test/libmusl_m.la \
 	libzimg_internal.la
 endif # UNIT_TEST
+
+clean-local:
+	-cd test/extra/googletest/build && make clean
+
+distclean-local:
+	-rm -rf test/extra/googletest/build
