@@ -4,7 +4,6 @@
 #define ZIMG_GRAPH_GRAPHNODE_H_
 
 #include <array>
-#include <climits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -62,6 +61,8 @@ public:
 		unsigned right;
 	};
 private:
+	class guard_page;
+
 	FilterGraph::callback m_unpack_cb;
 	FilterGraph::callback m_pack_cb;
 
@@ -70,6 +71,8 @@ private:
 	node_state *m_state;
 	unsigned char *m_init_bitset;
 	void *m_tmp;
+
+	guard_page **m_guard_pages;
 public:
 	static size_t calculate_tmp_size(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes);
 
@@ -85,17 +88,14 @@ public:
 	node_state *get_node_state(node_id id) { return m_state + id; }
 	void *get_shared_tmp() const { return m_tmp; }
 
-	bool is_initialized(node_id id) const { return !!(m_init_bitset[id / CHAR_BIT] & (1U << (id % CHAR_BIT))); }
-	void set_initialized(node_id id) { m_init_bitset[id / CHAR_BIT] |= 1U << (id % CHAR_BIT); }
+	bool is_initialized(node_id id) const;
+	void set_initialized(node_id id);
 
-	void reset_tile_bounds(node_id id)
-	{
-		get_node_state(id)->left = UINT_MAX;
-		get_node_state(id)->right = 0;
-		set_cursor(id, UINT_MAX);
-	}
+	void reset_tile_bounds(node_id id);
 
 	void reset_initialized(size_t max_id);
+
+	void check_guard_pages() const;
 };
 
 

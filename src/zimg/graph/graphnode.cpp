@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <climits>
 #include <type_traits>
 #include "common/alloc.h"
 #include "common/make_unique.h"
@@ -110,8 +111,10 @@ public:
 		unsigned cursor = state->get_cursor(id());
 
 		for (; cursor < last; cursor += (1U << m_subsample_h)) {
-			if (state->unpack_cb())
+			if (state->unpack_cb()) {
 				state->unpack_cb()(cursor, s->left, s->right);
+				state->check_guard_pages();
+			}
 		}
 
 		state->set_cursor(id(), cursor);
@@ -274,9 +277,10 @@ public:
 			if (m_parents[PLANE_A])
 				m_parents[PLANE_A]->generate(state, next, PLANE_A);
 
-			if (state->pack_cb())
+			if (state->pack_cb()) {
 				state->pack_cb()(cursor, s->left, s->right);
-
+				state->check_guard_pages();
+			}
 		}
 
 		state->set_cursor(id(), cursor);
@@ -456,6 +460,7 @@ public:
 				m_parents[3]->generate(state, range.second, 3);
 
 			m_filter->process(node_state->context, reinterpret_cast<ImageBuffer<const void> *>(src), dst, tmp, cursor, node_state->left, node_state->right);
+			state->check_guard_pages();
 		}
 
 		state->set_cursor(id(), cursor);
@@ -486,6 +491,7 @@ public:
 			if (Parent)
 				m_parents[Plane]->generate(state, range.second, Plane);
 			m_filter->process(node_state->context, src, dst, tmp, cursor, node_state->left, node_state->right);
+			state->check_guard_pages();
 		}
 
 		state->set_cursor(id(), cursor);
@@ -552,6 +558,37 @@ void SimulationState::alloc_tmp(size_t sz)
 	m_tmp = std::max(m_tmp, sz);
 }
 
+
+#ifndef NDEBUG
+class ExecutionState::guard_page {
+	static constexpr uint32_t pattern = 0xDEADBEEF;
+
+	uint32_t page[4096 / sizeof(uint32_t)];
+public:
+	template <class Alloc>
+	static void allocate(Alloc &alloc) { alloc.allocate_n<guard_page>(1); }
+
+	template <class Alloc>
+	static void allocate(guard_page **&p, Alloc &alloc) { *p++ = new (alloc.allocate_n<guard_page>(1)) guard_page{}; }
+
+	guard_page() { std::fill(std::begin(page), std::end(page), pattern); }
+
+	void assert_page() const
+	{
+		for (uint32_t x : page) {
+			zassert(x == pattern, "buffer overflow detected");
+		}
+	}
+};
+#else
+class ExecutionState::guard_page {
+public:
+	template <class Alloc> static void allocate(Alloc &) {}
+	template <class Alloc> static void allocate(guard_page **&, Alloc&) {}
+	void assert_page() const {}
+};
+#endif
+
 size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, const std::vector<std::unique_ptr<GraphNode>> &nodes)
 {
 	zassert_d(nodes.size() == sim.node_result.size(), "incorrect number of nodes");
@@ -561,8 +598,13 @@ size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, co
 	alloc.allocate_n<unsigned>(nodes.size()); // m_cursors
 	alloc.allocate_n<node_state>(nodes.size()); // m_state
 	alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT); // m_init_bitset
+#ifndef NDEBUG
+	alloc.allocate_n<guard_page *>(nodes.size() * 2 + 2 + 1); // m_guard_pages
+#endif
 
 	for (const auto &node : nodes) {
+		guard_page::allocate(alloc);
+
 		if (node->is_sourcesink())
 			continue;
 
@@ -583,10 +625,14 @@ size_t ExecutionState::calculate_tmp_size(const SimulationState::result &sim, co
 	}
 
 	for (const auto &node : nodes) {
+		guard_page::allocate(alloc);
 		alloc.allocate(sim.node_result[node->id()].context_size);
 	}
 
+	guard_page::allocate(alloc);
 	alloc.allocate(sim.shared_tmp);
+	guard_page::allocate(alloc);
+
 	return alloc.count();
 }
 
@@ -597,7 +643,8 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	m_cursors{},
 	m_state{},
 	m_init_bitset{},
-	m_tmp{}
+	m_tmp{},
+	m_guard_pages{}
 {
 	zassert_d(nodes.size() == sim.node_result.size(), "incorrect number of nodes");
 
@@ -606,8 +653,16 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	m_cursors = alloc.allocate_n<unsigned>(nodes.size());
 	m_state = alloc.allocate_n<node_state>(nodes.size());
 	m_init_bitset = alloc.allocate_n<unsigned char>(ceil_n(nodes.size(), CHAR_BIT) / CHAR_BIT);
+#ifndef NDEBUG
+	m_guard_pages = alloc.allocate_n<guard_page *>(nodes.size() * 2 + 2 + 1);
+	std::fill_n(m_guard_pages, nodes.size() * 2 + 2 + 1, nullptr);
+#endif
+
+	guard_page **guard_pages = m_guard_pages;
 
 	for (const auto &node : nodes) {
+		guard_page::allocate(guard_pages, alloc);
+
 		if (node->is_sourcesink())
 			continue;
 
@@ -630,20 +685,49 @@ ExecutionState::ExecutionState(const SimulationState::result &sim, const std::ve
 	}
 
 	for (const auto &node : nodes) {
+		guard_page::allocate(guard_pages, alloc);
 		m_state[node->id()].context = alloc.allocate(sim.node_result[node->id()].context_size);
 	}
 
-	for (unsigned p = 0; p < PLANE_NUM; ++p) {
+	for (int p = 0; p < PLANE_NUM; ++p) {
 		m_buffers[src_id][p] = { const_cast<void *>(src[p].data()), src[p].stride(), src[p].mask() };
 	}
 	m_buffers[dst_id] = { dst[0], dst[1], dst[2], dst[3] };
 
+	guard_page::allocate(guard_pages, alloc);
 	m_tmp = alloc.allocate(sim.shared_tmp);
+	guard_page::allocate(guard_pages, alloc);
 }
 
 void ExecutionState::reset_initialized(size_t max_id)
 {
 	std::fill_n(m_init_bitset, ceil_n(max_id, CHAR_BIT) / CHAR_BIT, 0);
+}
+
+bool ExecutionState::is_initialized(node_id id) const
+{
+	return !!(m_init_bitset[id / CHAR_BIT] & (1U << (id % CHAR_BIT)));
+}
+
+void ExecutionState::reset_tile_bounds(node_id id)
+{
+	get_node_state(id)->left = UINT_MAX;
+	get_node_state(id)->right = 0;
+	set_cursor(id, UINT_MAX);
+}
+
+void ExecutionState::set_initialized(node_id id)
+{
+	m_init_bitset[id / CHAR_BIT] |= 1U << (id % CHAR_BIT);
+}
+
+void ExecutionState::check_guard_pages() const
+{
+#ifndef NDEBUG
+	for (guard_page **p = m_guard_pages; *p; ++p) {
+		(*p)->assert_page();
+	}
+#endif
 }
 
 
