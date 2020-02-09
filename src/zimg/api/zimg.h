@@ -351,6 +351,7 @@ typedef enum zimg_resample_filter_e {
 	ZIMG_RESIZE_BICUBIC  = 2, /**< Bicubic convolution (separable) filter. */
 	ZIMG_RESIZE_SPLINE16 = 3, /**< "Spline16" filter from AviSynth. */
 	ZIMG_RESIZE_SPLINE36 = 4, /**< "Spline36" filter from AviSynth. */
+	ZIMG_RESIZE_SPLINE64 = 6, /**< "Spline64" filter from AviSynth. */
 	ZIMG_RESIZE_LANCZOS  = 5  /**< Lanczos resampling filter with variable number of taps. */
 } zimg_resample_filter_e;
 

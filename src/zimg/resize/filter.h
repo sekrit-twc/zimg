@@ -97,6 +97,16 @@ public:
 };
 
 /**
+ * Spline64 filter from Avisynth.
+ */
+class Spline64Filter : public Filter {
+public:
+	unsigned support() const override;
+
+	double operator()(double x) const override;
+};
+
+/**
  * Lanczos filter.
  */
 class LanczosFilter : public Filter {
