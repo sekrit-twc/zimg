@@ -80,6 +80,21 @@ TEST(FilterTest, test_spline36)
 	EXPECT_NEAR(0.0197368, f(-2.5), 1e-6);
 }
 
+TEST(FilterTest, test_spline64)
+{
+	zimg::resize::Spline64Filter f;
+	EXPECT_EQ(4U, f.support());
+	check_interpolating(f);
+	EXPECT_NEAR(0.600352, f(0.5), 1e-6);
+	EXPECT_NEAR(0.600352, f(-0.5), 1e-6);
+	EXPECT_NEAR(-0.126760, f(1.5), 1e-6);
+	EXPECT_NEAR(-0.126760, f(-1.5), 1e-6);
+	EXPECT_NEAR(0.0316901, f(2.5), 1e-7);
+	EXPECT_NEAR(0.0316901, f(-2.5), 1e-7);
+	EXPECT_NEAR(-0.00528169, f(3.5), 1e-8);
+	EXPECT_NEAR(-0.00528169, f(-3.5), 1e-8);
+}
+
 TEST(FilterTest, test_lanczos)
 {
 	for (unsigned i = 1; i < 4; ++i) {

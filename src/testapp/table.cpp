@@ -115,12 +115,13 @@ const zimg::static_string_map<DitherType, 4> g_dither_table{
 	{ "error_diffusion", DitherType::ERROR_DIFFUSION },
 };
 
-const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 7> g_resize_table{
+const zimg::static_string_map<std::unique_ptr<zimg::resize::Filter>(*)(double, double), 8> g_resize_table{
 	{ "point",    make_filter<zimg::resize::PointFilter> },
 	{ "bilinear", make_filter<zimg::resize::BilinearFilter> },
 	{ "bicubic",  make_bicubic_filter },
 	{ "spline16", make_filter<zimg::resize::Spline16Filter> },
 	{ "spline36", make_filter<zimg::resize::Spline36Filter> },
+	{ "spline64", make_filter<zimg::resize::Spline64Filter> },
 	{ "lanczos",  make_lanczos_filter },
 	{ "unresize", make_null_filter },
 };

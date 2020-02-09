@@ -210,6 +210,29 @@ double Spline36Filter::operator()(double x) const
 }
 
 
+unsigned Spline64Filter::support() const { return 4; }
+
+double Spline64Filter::operator()(double x) const
+{
+	x = std::abs(x);
+
+	if (x < 1.0) {
+		return poly3(x, 1.0,    -3.0 / 2911.0, -6387.0 / 2911.0,  49.0 / 41.0);
+	} else if (x < 2.0) {
+		x -= 1.0;
+		return poly3(x, 0.0, -2328.0 / 2911.0,  4032.0 / 2911.0, -24.0 / 41.0);
+	} else if (x < 3.0) {
+		x -= 2.0;
+		return poly3(x, 0.0,   582.0 / 2911.0, -1008.0 / 2911.0,   6.0 / 41.0);
+	} else if (x < 4.0) {
+		x -= 3.0;
+		return poly3(x, 0.0,   -97.0 / 2911.0,   168.0 / 2911.0,  -1.0 / 41.0);
+	} else {
+		return 0.0;
+	}
+}
+
+
 LanczosFilter::LanczosFilter(unsigned taps) : taps{ taps }
 {
 	if (taps <= 0)
