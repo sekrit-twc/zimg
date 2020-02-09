@@ -48,7 +48,6 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
         AS_MKDIR_P([test/extra/googletest/build])
         AS_IF([(cd "test/extra/googletest/build" && $CMAKE -Dgtest_disable_pthreads=ON "$ac_abs_confdir/test/extra/googletest")],
               [], [AC_MSG_ERROR([CMake error])])
-        AS_UNSET(MYDIR)
       ])
 
 
