@@ -286,7 +286,7 @@ void unpack_bgr(const void *bgr, void * const planar[4], unsigned bit_depth, uns
 		planar_g[j] = g;
 		planar_b[j] = b;
 
-		if (planar[3] && step == 4)
+		if (planar_a && step == 4)
 			planar_a[j] = packed_bgr[j * step + 3];
 	}
 }
@@ -338,7 +338,7 @@ void pack_bgr(const void * const planar[4], void *bgr, unsigned bit_depth, unsig
 		packed_bgr[j * step + 1] = g;
 		packed_bgr[j * step + 2] = r;
 
-		if (planar[3] && step == 4)
+		if (planar_a && step == 4)
 			packed_bgr[j * step + 3] = planar_a[j];
 	}
 }
