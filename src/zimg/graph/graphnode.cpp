@@ -566,10 +566,10 @@ class ExecutionState::guard_page {
 	uint32_t page[4096 / sizeof(uint32_t)];
 public:
 	template <class Alloc>
-	static void allocate(Alloc &alloc) { alloc.allocate_n<guard_page>(1); }
+	static void allocate(Alloc &alloc) { alloc.template allocate_n<guard_page>(1); }
 
 	template <class Alloc>
-	static void allocate(guard_page **&p, Alloc &alloc) { *p++ = new (alloc.allocate_n<guard_page>(1)) guard_page{}; }
+	static void allocate(guard_page **&p, Alloc &alloc) { *p++ = new (alloc.template allocate_n<guard_page>(1)) guard_page{}; }
 
 	guard_page() { std::fill(std::begin(page), std::end(page), pattern); }
 
@@ -580,6 +580,8 @@ public:
 		}
 	}
 };
+
+constexpr uint32_t ExecutionState::guard_page::pattern;
 #else
 class ExecutionState::guard_page {
 public:
