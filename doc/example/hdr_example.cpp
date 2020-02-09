@@ -92,7 +92,7 @@ struct ImageBuffer {
 
 size_t align(size_t n)
 {
-	return n % 32 ? n + 32 - n % 32 : n;
+	return (n + 31) & ~31;
 }
 
 ImageBuffer allocate_buffer(unsigned width, unsigned height, unsigned subsample_w, unsigned subsample_h, size_t bytes_per_pel)

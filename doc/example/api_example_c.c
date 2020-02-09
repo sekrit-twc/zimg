@@ -38,7 +38,7 @@ static const ArgparseCommandLine program_def = { 0, program_positional, "api_exa
 
 static ptrdiff_t width_to_stride(unsigned w)
 {
-	return w % 32 ? w - w % 32 + 32 : w;
+	return ((size_t)w + 31) & ~31;
 }
 
 /* Allocate an image buffer and initialize plane pointers and strides. */

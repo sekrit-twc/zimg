@@ -96,7 +96,7 @@ std::pair<zimgxx::zimage_buffer, std::shared_ptr<void>> allocate_buffer(const zi
 		unsigned count_plane = p ? count >> format.subsample_h : count;
 		unsigned mask_plane = (mask == ZIMG_BUFFER_MAX) ? mask : mask >> format.subsample_h;
 		size_t row_size = format.width * pixel_size;
-		ptrdiff_t stride = row_size % 32 ? row_size - row_size % 32 + 32 : row_size;
+		ptrdiff_t stride = (row_size + 31) & ~31;
 
 		buffer.mask(p) = mask_plane;
 		buffer.stride(p) = stride;
