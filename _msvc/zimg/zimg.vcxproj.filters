@@ -79,6 +79,12 @@
     <Filter Include="Source Files\resize\x86">
       <UniqueIdentifier>{d46245f7-a709-4c69-a9db-6a379026784e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\common\arm">
+      <UniqueIdentifier>{778dfa1b-4283-4845-b9e3-29e811cf1bcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common\arm">
+      <UniqueIdentifier>{2835f602-f5fe-4b9f-a7d9-5f10ce4b59e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -239,6 +245,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
       <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\arm\cpuinfo_arm.h">
+      <Filter>Header Files\common\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -403,6 +412,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\common\arm\cpuinfo_arm.cpp">
+      <Filter>Source Files\common\arm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

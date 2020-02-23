@@ -1,8 +1,10 @@
 #include <iostream>
 #include "common/cpuinfo.h"
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
   #include "common/x86/cpuinfo_x86.h"
+#elif defined(ZIMG_ARM)
+  #include "common/arm/cpuinfo_arm.h"
 #endif
 
 #include "apps.h"
@@ -66,7 +68,19 @@ void show_x86_info()
 		return;
 	}
 }
-#endif
+#endif // ZIMG_X86
+
+#ifdef ZIMG_ARM
+void show_arm_info()
+{
+	const zimg::ARMCapabilities caps = zimg::query_arm_capabilities();
+
+	std::cout << "Supported instruction set extensions:\n";
+	std::cout << "NEON:  " << yes_no(caps.neon) << '\n';
+	std::cout << "VFPv4: " << yes_no(caps.vfpv4) << '\n';
+	std::cout << '\n';
+}
+#endif // ZIMG_ARM
 
 void show_generic_info()
 {
@@ -80,8 +94,10 @@ void show_generic_info()
 
 int cpuinfo_main(int, char **)
 {
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	show_x86_info();
+#elif defined(ZIMG_ARM)
+	show_arm_info();
 #endif
 
 	show_generic_info();

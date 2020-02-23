@@ -12,7 +12,7 @@ enum class CPUClass {
 	NONE,
 	AUTO,
 	AUTO_64B,
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	X86_SSE,
 	X86_SSE2,
 	X86_AVX,
@@ -20,7 +20,9 @@ enum class CPUClass {
 	X86_AVX2,
 	X86_AVX512, // F, CD, BW, DQ, VL
 	X86_AVX512_CLX, // VNNI
-#endif // ZIMG_X86
+#elif defined(ZIMG_ARM)
+	ARM_NEON,
+#endif
 };
 
 constexpr bool cpu_is_autodetect(CPUClass cpu) noexcept
