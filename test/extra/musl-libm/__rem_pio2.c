@@ -38,6 +38,10 @@ static double get_0x1p24(void)
 #define EPS LDBL_EPSILON
 #endif
 
+#ifdef _MSC_VER
+#pragma fenv_access (off)
+#endif
+
 /*
  * invpio2:  53 bits of 2/pi
  * pio2_1:   first  33 bit of pi/2
