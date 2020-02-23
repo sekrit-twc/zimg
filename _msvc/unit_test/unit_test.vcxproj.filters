@@ -58,6 +58,9 @@
     <Filter Include="Source Files\resize\x86">
       <UniqueIdentifier>{0e97fc53-bca2-441a-a86a-d0680ea837d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\depth\arm">
+      <UniqueIdentifier>{c0c88691-a6dd-4aee-bf3b-b68ffa205576}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
@@ -224,6 +227,9 @@
     </ClCompile>
     <ClCompile Include="..\..\test\graph\graphbuilder_test.cpp">
       <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\depth\arm\depth_convert_neon_test.cpp">
+      <Filter>Source Files\depth\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

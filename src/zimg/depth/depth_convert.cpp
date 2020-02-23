@@ -10,8 +10,10 @@
 #include "depth_convert.h"
 #include "quantize.h"
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
   #include "x86/depth_convert_x86.h"
+#elif defined(ZIMG_ARM)
+  #include "arm/depth_convert_arm.h"
 #endif
 
 namespace zimg {
@@ -228,8 +230,10 @@ std::unique_ptr<graph::ImageFilter> create_left_shift(unsigned width, unsigned h
 {
 	left_shift_func func = nullptr;
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	func = select_left_shift_func_x86(pixel_in.type, pixel_out.type, cpu);
+#elif defined(ZIMG_ARM)
+	func = select_left_shift_func_arm(pixel_in.type, pixel_out.type, cpu);
 #endif
 	if (!func)
 		func = select_left_shift_func(pixel_in.type, pixel_out.type);
