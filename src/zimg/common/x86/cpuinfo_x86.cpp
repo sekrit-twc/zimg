@@ -17,6 +17,7 @@
 #include "cpuinfo_x86.h"
 
 namespace zimg {
+
 namespace {
 
 /**
