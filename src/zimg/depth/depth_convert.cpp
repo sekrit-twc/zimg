@@ -248,12 +248,14 @@ std::unique_ptr<graph::ImageFilter> create_convert_to_float(unsigned width, unsi
 	depth_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF || pixel_out.type == PixelType::HALF);
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	func = select_depth_convert_func_x86(pixel_in, pixel_out, cpu);
 	needs_f16c = needs_f16c && needs_depth_f16c_func_x86(pixel_in, pixel_out, cpu);
 
 	if (needs_f16c)
 		f16c = select_depth_f16c_func_x86(pixel_out.type == PixelType::HALF, cpu);
+#elif defined(ZIMG_ARM)
+	func = select_depth_convert_func_arm(pixel_in, pixel_out, cpu);
 #endif
 	if (!func)
 		func = select_depth_convert_func(pixel_in.type, pixel_out.type);
