@@ -180,8 +180,12 @@ void AuditBuffer<T>::assert_eq(const AuditBuffer &other, unsigned i, unsigned le
 		unsigned left_plane = left >> (p ? m_subsample_w : 0);
 		unsigned right_plane = right >> (p ? m_subsample_h : 0);
 
-		ASSERT_TRUE(std::equal(m_buffer[p][i] + left_plane, m_buffer[p][i] + right_plane, other.m_buffer[p][i] + left_plane)) <<
-			"mismatch at line: " << i;
+		if (std::equal(m_buffer[p][i] + left_plane, m_buffer[p][i] + right_plane, other.m_buffer[p][i] + left_plane))
+			continue;
+
+		for (unsigned j = left_plane; j < right_plane; ++j) {
+			ASSERT_EQ(other.m_buffer[p][i][j], m_buffer[p][i][j]) << "mismatch at plane " << p << " (" << i << ", " << j << ")";
+		}
 	}
 }
 
