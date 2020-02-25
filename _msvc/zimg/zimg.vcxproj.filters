@@ -261,6 +261,9 @@
     <ClInclude Include="..\..\src\zimg\common\arm\neon_util.h">
       <Filter>Header Files\common\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\depth\arm\dither_arm.h">
+      <Filter>Header Files\depth\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -436,6 +439,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\common\arm\neon_util.cpp">
       <Filter>Source Files\common\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\arm\dither_arm.cpp">
+      <Filter>Source Files\depth\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\arm\dither_neon.cpp">
+      <Filter>Source Files\depth\arm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
