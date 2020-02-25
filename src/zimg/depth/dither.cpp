@@ -16,8 +16,10 @@
 #include "dither.h"
 #include "quantize.h"
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
   #include "x86/dither_x86.h"
+#elif defined(ZIMG_ARM)
+  #include "arm/dither_arm.h"
 #endif
 
 namespace zimg {
@@ -453,12 +455,14 @@ std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned widt
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
 	needs_f16c = needs_f16c && needs_dither_f16c_func_x86(cpu);
 
 	if (needs_f16c)
 		f16c = select_dither_f16c_func_x86(cpu);
+#elif defined(ZIMG_ARM)
+	func = select_ordered_dither_func_arm(pixel_in, pixel_out, cpu);
 #endif
 
 	if (!func)

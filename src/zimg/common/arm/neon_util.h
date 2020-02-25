@@ -10,6 +10,7 @@
   #define vmovl_high_u8(x) vmovl_u8(vget_high_u8(x))
   #define vmovl_high_u16(x) vmovl_u16(vget_high_u16(x))
   #define vmovn_high_u16(r, a) vcombine_u8(r, vmovn_u16(a))
+  #define vqmovn_high_u32(r, a) vcombine_u16(r, vqmovn_u32(a))
   #define vfmaq_f32(a, b, c) vmlaq_f32(a, b, c)
 #endif
 
