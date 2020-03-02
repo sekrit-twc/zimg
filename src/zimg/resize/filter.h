@@ -97,7 +97,7 @@ public:
 };
 
 /**
- * Spline36 filter from Avisynth.
+ * Spline64 filter from Avisynth.
  */
 class Spline64Filter : public Filter {
 public:
