@@ -1,4 +1,4 @@
-AC_INIT([zimg], [2.9.2], [https://github.com/sekrit-twc/zimg/pulls], [zimg], [https://github.com/sekrit-twc/zimg])
+AC_INIT([zimg], [2.9.3], [https://github.com/sekrit-twc/zimg/pulls], [zimg], [https://github.com/sekrit-twc/zimg])
 AC_CONFIG_MACRO_DIR([m4])
 
 : ${CFLAGS=""}
