@@ -10,8 +10,10 @@
 #include "filter.h"
 #include "resize_impl.h"
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
   #include "x86/resize_impl_x86.h"
+#elif defined(ZIMG_ARM)
+  #include "arm/resize_impl_arm.h"
 #endif
 
 namespace zimg {
@@ -271,10 +273,14 @@ std::unique_ptr<graph::ImageFilter> ResizeImplBuilder::create() const
 	unsigned src_dim = horizontal ? src_width : src_height;
 	FilterContext filter_ctx = compute_filter(*filter, src_dim, dst_dim, shift, subwidth);
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	ret = horizontal ?
 		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
 		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu);
+#elif defined(ZIMG_ARM)
+	ret = horizontal ?
+		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu);
 #endif
 	if (!ret && horizontal)
 		ret = ztd::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);

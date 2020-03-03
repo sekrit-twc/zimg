@@ -61,6 +61,9 @@
     <Filter Include="Source Files\depth\arm">
       <UniqueIdentifier>{c0c88691-a6dd-4aee-bf3b-b68ffa205576}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\resize\arm">
+      <UniqueIdentifier>{e97edbd5-dc25-41c5-947b-8264d96270ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
@@ -236,6 +239,9 @@
     </ClCompile>
     <ClCompile Include="..\..\test\depth\arm\f16c_neon_test.cpp">
       <Filter>Source Files\depth\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\resize\arm\resize_impl_neon_test.cpp">
+      <Filter>Source Files\resize\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
