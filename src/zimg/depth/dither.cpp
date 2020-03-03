@@ -458,18 +458,22 @@ std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned widt
 #if defined(ZIMG_X86)
 	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
 	needs_f16c = needs_f16c && needs_dither_f16c_func_x86(cpu);
-
-	if (needs_f16c)
-		f16c = select_dither_f16c_func_x86(cpu);
 #elif defined(ZIMG_ARM)
 	func = select_ordered_dither_func_arm(pixel_in, pixel_out, cpu);
+	needs_f16c = needs_f16c && needs_dither_f16c_func_arm(cpu);
 #endif
-
 	if (!func)
 		func = select_ordered_dither_func(pixel_in.type, pixel_out.type);
 
-	if (needs_f16c && !f16c)
-		f16c = half_to_float_n;
+	if (needs_f16c) {
+#if defined(ZIMG_X86)
+		f16c = select_dither_f16c_func_x86(cpu);
+#elif defined(ZIMG_ARM)
+		f16c = select_dither_f16c_func_arm(cpu);
+#endif
+		if (!f16c)
+			f16c = half_to_float_n;
+	}
 
 	return ztd::make_unique<OrderedDither>(std::move(table), func, f16c, width, height, pixel_in, pixel_out);
 }

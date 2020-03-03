@@ -234,6 +234,9 @@
     <ClCompile Include="..\..\test\depth\arm\dither_neon_test.cpp">
       <Filter>Source Files\depth\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\depth\arm\f16c_neon_test.cpp">
+      <Filter>Source Files\depth\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">

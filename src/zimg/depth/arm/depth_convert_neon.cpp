@@ -210,6 +210,60 @@ void left_shift_w2w_neon(const void *src, void *dst, unsigned shift, unsigned le
 	}
 }
 
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+void depth_convert_b2h_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
+{
+	const uint8_t *src_p = static_cast<const uint8_t *>(src);
+	__fp16 *dst_p = static_cast<__fp16 *>(dst);
+
+	unsigned vec_left = ceil_n(left, 16);
+	unsigned vec_right = floor_n(right, 16);
+
+	const float32x4_t scale_x4 = vdupq_n_f32(scale);
+	const float32x4_t offset_x4 = vdupq_n_f32(offset);
+
+	float32x4_t lolo, lohi, hilo, hihi;
+
+#define XITER depth_convert_b2f_neon_xiter
+#define XARGS src_p, scale_x4, offset_x4, lolo, lohi, hilo, hihi
+	if (left != vec_left) {
+		XITER(vec_left - 16, XARGS);
+		float16x8_t lo = vcvt_high_f16_f32(vcvt_f16_f32(lolo), lohi);
+		float16x8_t hi = vcvt_high_f16_f32(vcvt_f16_f32(hilo), hihi);
+
+		if (vec_left - left > 8) {
+			neon_store_idxhi_f16(dst_p + vec_left - 16, lo, left % 8);
+			vst1q_f16(dst_p + vec_left - 8, hi);
+		} else {
+			neon_store_idxhi_f16(dst_p + vec_left - 8, hi, left % 8);
+		}
+	}
+
+	for (unsigned j = vec_left; j < vec_right; j += 16) {
+		XITER(j, XARGS);
+		float16x8_t lo = vcvt_high_f16_f32(vcvt_f16_f32(lolo), lohi);
+		float16x8_t hi = vcvt_high_f16_f32(vcvt_f16_f32(hilo), hihi);
+		vst1q_f16(dst_p + j + 0, lo);
+		vst1q_f16(dst_p + j + 8, hi);
+	}
+
+	if (right != vec_right) {
+		XITER(vec_right, XARGS);
+		float16x8_t lo = vcvt_high_f16_f32(vcvt_f16_f32(lolo), lohi);
+		float16x8_t hi = vcvt_high_f16_f32(vcvt_f16_f32(hilo), hihi);
+
+		if (right - vec_right >= 8) {
+			vst1q_f16(dst_p + vec_right + 0, lo);
+			neon_store_idxlo_f16(dst_p + vec_right + 8, hi, right % 8);
+		} else {
+			neon_store_idxlo_f16(dst_p + vec_right, lo, right % 8);
+		}
+	}
+#undef XITER
+#undef XARGS
+}
+#endif // !defined(_MSC_VER) || defined(_M_ARM64)
+
 void depth_convert_b2f_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
 	const uint8_t *src_p = static_cast<const uint8_t *>(src);
@@ -276,6 +330,44 @@ void depth_convert_b2f_neon(const void *src, void *dst, float scale, float offse
 #undef XITER
 #undef XARGS
 }
+
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+void depth_convert_w2h_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
+{
+	const uint16_t *src_p = static_cast<const uint16_t *>(src);
+	__fp16 *dst_p = static_cast<__fp16 *>(dst);
+
+	unsigned vec_left = ceil_n(left, 8);
+	unsigned vec_right = floor_n(right, 8);
+
+	const float32x4_t scale_x4 = vdupq_n_f32(scale);
+	const float32x4_t offset_x4 = vdupq_n_f32(offset);
+
+	float32x4_t lo, hi;
+
+#define XITER depth_convert_w2f_neon_xiter
+#define XARGS src_p, scale_x4, offset_x4, lo, hi
+	if (left != vec_left) {
+		XITER(vec_left - 8, XARGS);
+		float16x8_t x = vcvt_high_f16_f32(vcvt_f16_f32(lo), hi);
+		neon_store_idxhi_f16(dst_p + vec_left - 8, x, left % 8);
+	}
+
+	for (unsigned j = vec_left; j < vec_right; j += 8) {
+		XITER(j, XARGS);
+		float16x8_t x = vcvt_high_f16_f32(vcvt_f16_f32(lo), hi);
+		vst1q_f16(dst_p + j, x);
+	}
+
+	if (right != vec_right) {
+		XITER(vec_right, XARGS);
+		float16x8_t x = vcvt_high_f16_f32(vcvt_f16_f32(lo), hi);
+		neon_store_idxlo_f16(dst_p + vec_right, x, right % 8);
+	}
+#undef XITER
+#undef XARGS
+}
+#endif
 
 void depth_convert_w2f_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {

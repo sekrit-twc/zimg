@@ -27,12 +27,18 @@ DECLARE_ORDERED_DITHER(b2b, neon);
 DECLARE_ORDERED_DITHER(b2w, neon);
 DECLARE_ORDERED_DITHER(w2b, neon);
 DECLARE_ORDERED_DITHER(w2w, neon);
+DECLARE_ORDERED_DITHER(h2b, neon);
+DECLARE_ORDERED_DITHER(h2w, neon);
 DECLARE_ORDERED_DITHER(f2b, neon);
 DECLARE_ORDERED_DITHER(f2w, neon);
 
 #undef DECLARE_ORDERED_DITHER
 
 dither_convert_func select_ordered_dither_func_arm(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+
+dither_f16c_func select_dither_f16c_func_arm(CPUClass cpu);
+
+bool needs_dither_f16c_func_arm(CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg
