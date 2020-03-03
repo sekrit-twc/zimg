@@ -1,0 +1,105 @@
+#ifdef ZIMG_ARM
+
+#include <cmath>
+#include "common/cpuinfo.h"
+#include "common/pixel.h"
+#include "common/arm/cpuinfo_arm.h"
+#include "resize/filter.h"
+#include "resize/resize_impl.h"
+
+#include "gtest/gtest.h"
+#include "graph/filter_validator.h"
+
+namespace {
+
+void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src_w, unsigned src_h, unsigned dst_w, unsigned dst_h,
+               const zimg::PixelFormat &format, const char * const expected_sha1[3], double expected_snr)
+{
+	if (!zimg::query_arm_capabilities().neon) {
+		SUCCEED() << "neon not available, skipping";
+		return;
+	}
+
+	SCOPED_TRACE(filter.support());
+	SCOPED_TRACE(horizontal ? static_cast<double>(dst_w) / src_w : static_cast<double>(dst_h) / src_h);
+
+	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }
+		.set_horizontal(horizontal)
+		.set_dst_dim(horizontal ? dst_w : dst_h)
+		.set_depth(format.depth)
+		.set_filter(&filter)
+		.set_shift(0.0)
+		.set_subwidth(horizontal ? src_w : src_h);
+
+	std::unique_ptr<zimg::graph::ImageFilter> filter_neon = builder.set_cpu(zimg::CPUClass::ARM_NEON).create();
+	std::unique_ptr<zimg::graph::ImageFilter> filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
+
+	ASSERT_FALSE(assert_different_dynamic_type(filter_c.get(), filter_neon.get()));
+
+	FilterValidator validator{ filter_neon.get(), src_w, src_h, format };
+	validator.set_sha1(expected_sha1);
+	validator.set_ref_filter(filter_c.get(), expected_snr);
+	validator.validate();
+}
+
+} // namespace
+
+
+TEST(ResizeImplNeonTest, test_resize_h_f32)
+{
+	const unsigned src_w = 640;
+	const unsigned dst_w = 960;
+	const unsigned h = 480;
+	const zimg::PixelType format = zimg::PixelType::FLOAT;
+
+	const char *expected_sha1[][3] = {
+#if defined(_M_ARM64) || defined(__aarch64__)
+		{ "1b2e37a345d315b0fa4d11e3532c70cb57b1e569" },
+		{ "2d0582a2f6af8a480e8f053fbd89eac0668b33f3" },
+		{ "967f921dc3fd2b3d166a276fe671105c3fac0756" },
+		{ "166dfd1881724fe546571c2d7ac959e6433623be" }
+#else
+		{ "1b2e37a345d315b0fa4d11e3532c70cb57b1e569" },
+		{ "df391f7157d8c283abd408b35894139ca1903872" },
+		{ "81fcfbdb9a3b31c625a3cdff1cf46da06f8af735" },
+		{ "389b609ac62a8b9276e00fdcd39b921535196a07" }
+#endif
+	};
+	const double expected_snr = 120.0;
+
+	test_case(zimg::resize::BilinearFilter{}, true, src_w, h, dst_w, h, format, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, true, src_w, h, dst_w, h, format, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, src_w, h, dst_w, h, format, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, true, dst_w, h, src_w, h, format, expected_sha1[3], expected_snr);
+}
+
+
+TEST(ResizeImplNeonTest, test_resize_v_f32)
+{
+	const unsigned w = 640;
+	const unsigned src_h = 480;
+	const unsigned dst_h = 720;
+	const zimg::PixelType type = zimg::PixelType::FLOAT;
+
+	const char *expected_sha1[][3] = {
+#if defined(_M_ARM64) || defined(__aarch64__)
+		{ "6b7507617dc89d5d3077f9cc4c832b261dea2be0" },
+		{ "46283014e580fa47deacae5e0cec1ce952973f51" },
+		{ "47946b5a3aba5e9ee6967659e8aeb26070ae80d6" },
+		{ "bcedc16781dc7781557d744b75ccac510a98a3ac" }
+#else
+		{ "6b7507617dc89d5d3077f9cc4c832b261dea2be0" },
+		{ "d07a8c6f3452ada7bd865a3283dc308176541db3" },
+		{ "6a15c26ad08e7576b415b70a3681f2a38667b301" },
+		{ "f1cc0dea71ca9fa3d9090ecdf21369aa5e0fb0be" }
+#endif
+	};
+	const double expected_snr = 120.0;
+
+	test_case(zimg::resize::BilinearFilter{}, false, w, src_h, w, dst_h, type, expected_sha1[0], expected_snr);
+	test_case(zimg::resize::Spline16Filter{}, false, w, src_h, w, dst_h, type, expected_sha1[1], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, src_h, w, dst_h, type, expected_sha1[2], expected_snr);
+	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, dst_h, w, src_h, type, expected_sha1[3], expected_snr);
+}
+
+#endif // ZIMG_ARM
