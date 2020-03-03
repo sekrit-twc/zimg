@@ -41,6 +41,19 @@ struct LoadU16 {
 	}
 };
 
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+struct LoadF16 {
+	typedef __fp16 type;
+
+	static inline FORCE_INLINE void load8(const __fp16 *ptr, float32x4_t &lo, float32x4_t &hi, unsigned n = 8)
+	{
+		float16x8_t x = vld1q_f16(ptr);
+		lo = vcvt_f32_f16(vget_low_f16(x));
+		hi = vcvt_high_f32_f16(x);
+	}
+};
+#endif // !defined(_MSC_VER) || defined(_M_ARM64)
+
 struct LoadF32 {
 	typedef float type;
 
@@ -175,6 +188,20 @@ void ordered_dither_w2w_neon(const float *dither, unsigned dither_offset, unsign
 {
 	ordered_dither_neon_impl<LoadU16, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
 }
+
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+void ordered_dither_h2b_neon(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
+{
+	ordered_dither_neon_impl<LoadF16, StoreU8>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
+}
+
+void ordered_dither_h2w_neon(const float *dither, unsigned dither_offset, unsigned dither_mask,
+                             const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
+{
+	ordered_dither_neon_impl<LoadF16, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
+}
+#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 void ordered_dither_f2b_neon(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)

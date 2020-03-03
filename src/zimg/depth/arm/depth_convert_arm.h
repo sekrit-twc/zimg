@@ -20,7 +20,9 @@ DECLARE_LEFT_SHIFT(b2w, neon);
 DECLARE_LEFT_SHIFT(w2b, neon);
 DECLARE_LEFT_SHIFT(w2w, neon);
 
+DECLARE_DEPTH_CONVERT(b2h, neon);
 DECLARE_DEPTH_CONVERT(b2f, neon);
+DECLARE_DEPTH_CONVERT(w2h, neon);
 DECLARE_DEPTH_CONVERT(w2f, neon);
 
 #undef DECLARE_LEFT_SHIFT
@@ -29,6 +31,10 @@ DECLARE_DEPTH_CONVERT(w2f, neon);
 left_shift_func select_left_shift_func_arm(PixelType pixel_in, PixelType pixel_out, CPUClass cpu);
 
 depth_convert_func select_depth_convert_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
+
+depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu);
+
+bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

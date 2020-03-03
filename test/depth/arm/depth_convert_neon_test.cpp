@@ -31,7 +31,7 @@ void test_case_left_shift(const zimg::PixelFormat &pixel_in, const zimg::PixelFo
 		.validate();
 }
 
-void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const char * const expected_sha1[3], double expected_snr)
+void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel_out, const char * const expected_sha1[3], double expected_snr)
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
@@ -41,8 +41,6 @@ void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const char * con
 		return;
 	}
 
-	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT, 32, pixel_in.fullrange, pixel_in.chroma };
-
 	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_neon = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::ARM_NEON);
 
@@ -51,6 +49,7 @@ void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const char * con
 	         .set_ref_filter(filter_c.get(), expected_snr)
 	         .validate();
 }
+
 
 } // namespace
 
@@ -103,27 +102,52 @@ TEST(DepthConvertNeonTest, test_left_shift_w2w)
 	test_case_left_shift(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
+TEST(DepthConvertNeonTest, test_depth_convert_b2h)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::HALF };
+
+	const char *expected_sha1[3] = {
+		"f0e4a68158eab0ab350c7161498a8eed3196c233"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
 TEST(DepthConvertNeonTest, test_depth_convert_b2f)
 {
 	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT };
 
 	const char *expected_sha1[3] = {
 		"20c77820ff7d4443a0de7991218e2f8eee551e8d"
 	};
 
-	test_case_depth_convert(pixel_in, expected_sha1, INFINITY);
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
+}
+
+TEST(DepthConvertNeonTest, test_depth_convert_w2h)
+{
+	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::HALF };
+
+	const char *expected_sha1[3] = {
+		"07b6aebbfe48004c8acb12a3c76137db57ba9a0b"
+	};
+
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
 TEST(DepthConvertNeonTest, test_depth_convert_w2f)
 {
 	zimg::PixelFormat pixel_in{ zimg::PixelType::WORD, 16, true };
+	zimg::PixelFormat pixel_out{ zimg::PixelType::FLOAT };
 
 	const char *expected_sha1[3] = {
 		"7ad2bc4ba1be92699ec22f489ae93a8b0dc89821"
 	};
 
-	test_case_depth_convert(pixel_in, expected_sha1, INFINITY);
+	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
-
 
 #endif // ZIMG_ARM

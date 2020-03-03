@@ -99,6 +99,46 @@ TEST(DitherNeonTest, test_ordered_dither_w2w)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
+TEST(DitherNeonTest, test_ordered_dither_h2b)
+{
+	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
+	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
+
+	const char *expected_sha1[3] = {
+#if defined(_M_ARM64) || defined(__aarch64__)
+		"708482e7450ab5b770bc820b08810b98df2f4b98"
+#else
+		"865ca02e1b3bcd29f237a5698ce005116e1f992a"
+#endif
+	};
+
+#if defined(_M_ARM64) || defined(__aarch64__)
+	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
+#else
+	test_case(pixel_in, pixel_out, expected_sha1, 90.0);
+#endif
+}
+
+TEST(DitherNeonTest, test_ordered_dither_h2w)
+{
+	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
+	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
+
+	const char *expected_sha1[3] = {
+#if defined(_M_ARM64) || defined(__aarch64__)
+		"8db2cf8d8ffa46eb351e5615bd6d684801431bf9"
+#else
+		"f4ea5e3bbe05b668180a74a8701c5fdcb01d78ae"
+#endif
+	};
+
+#if defined(_M_ARM64) || defined(__aarch64__)
+	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
+#else
+	test_case(pixel_in, pixel_out, expected_sha1, 90.0);
+#endif
+}
+
 TEST(DitherNeonTest, test_ordered_dither_f2b)
 {
 	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
