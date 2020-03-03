@@ -203,12 +203,12 @@ inline FORCE_INLINE __m128i ordered_dither_w2w_sse2_xiter(unsigned j, const floa
 }
 
 inline FORCE_INLINE __m128i ordered_dither_f2b_sse2_xiter(unsigned j, const float *dither, unsigned dither_offset, unsigned dither_mask,
-                                                          const float *src_p, __m128 scale, __m128 offset, __m128i out_max)
+                                                          const float *src_p, __m128 scale, __m128 offset, __m128i out_max, unsigned n = 16)
 {
 	__m128 lolo = _mm_load_ps(src_p + j + 0);
 	__m128 lohi = _mm_load_ps(src_p + j + 4);
-	__m128 hilo = _mm_load_ps(src_p + j + 8);
-	__m128 hihi = _mm_load_ps(src_p + j + 12);
+	__m128 hilo = n >= 8 ? _mm_load_ps(src_p + j + 8) : _mm_setzero_ps();
+	__m128 hihi = n >= 8 ? _mm_load_ps(src_p + j + 12) : _mm_setzero_ps();
 	__m128 dith;
 	__m128i x;
 
@@ -443,7 +443,7 @@ void ordered_dither_f2b_sse2(const float *dither, unsigned dither_offset, unsign
 	}
 
 	if (right != vec_right) {
-		__m128i x = XITER(vec_right, XARGS);
+		__m128i x = XITER(vec_right, XARGS, right % 16);
 		mm_store_idxlo_epi8((__m128i *)(dst_p + vec_right), x, right % 16);
 	}
 #undef XITER
