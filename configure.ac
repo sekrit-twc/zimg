@@ -40,8 +40,10 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
       [
         CFLAGS="$CFLAGS -fno-fast-math -ffp-contract=off" CXXFLAGS="$CXXFLAGS -fno-fast-math -ffp-contract=off"
         AS_CASE([$host_cpu],
-                [i?86],   [CFLAGS="$CFLAGS -mfpmath=sse -msse2" CXXFLAGS="$CXXFLAGS -mfpmath=sse -msse2"],
-                [x86_64], [],
+                [armv7*],  [],
+                [aarch64], [],
+                [i?86],    [CFLAGS="$CFLAGS -mfpmath=sse -msse2" CXXFLAGS="$CXXFLAGS -mfpmath=sse -msse2"],
+                [x86_64],  [],
                 [AC_MSG_WARN([Could not determine how to enable IEEE-754 compliance on host. Tests may fail.])])
 
         AC_CHECK_PROG([CMAKE], [cmake], [cmake])
@@ -58,11 +60,24 @@ AS_IF([test "x$enable_debug" = "xyes"],
 AS_IF([test "x$STL_LIBS" = "x"], [STL_LIBS="-lstdc++"])
 AC_SUBST([STL_LIBS], [$STL_LIBS])
 
+ARM="no"
 X86="no"
 
 AS_CASE([$host_cpu],
-        [i?86],   [BITS="32" X86="yes"],
-        [x86_64], [BITS="64" X86="yes"])
+        [armv7*],  [
+                      BITS="32" ARM="yes" NEON_CFLAGS="-march=armv7-a -mfpu=neon-vfpv4"
+                      AX_CHECK_COMPILE_FLAG([-mfp16-format=ieee], [NEON_CFLAGS="$NEON_CFLAGS -mfp16-format=ieee"])
+                   ],
+        [aarch64], [BITS="64" ARM="yes"],
+        [i?86],    [BITS="32" X86="yes"],
+        [x86_64],  [BITS="64" X86="yes"])
+
+AS_IF([test "x$ARM" = "xyes" && test "x$enable_simd" != "xno"],
+      [
+        AC_DEFINE([ZIMG_ARM])
+        AC_SUBST([NEON_CFLAGS], [$NEON_CFLAGS])
+        enable_arm_simd=yes
+      ])
 
 AS_IF([test "x$X86" = "xyes" && test "x$enable_simd" != "xno"],
       [
@@ -99,6 +114,7 @@ int main()
 AM_CONDITIONAL([TESTAPP],        [test "x$enable_testapp" = "xyes"])
 AM_CONDITIONAL([EXAMPLES],       [test "x$enable_example" = "xyes"])
 AM_CONDITIONAL([UNIT_TEST],      [test "x$enable_unit_test" = "xyes"])
+AM_CONDITIONAL([ARMSIMD],        [test "x$enable_arm_simd" = "xyes"])
 AM_CONDITIONAL([X86SIMD],        [test "x$enable_x86_simd" = "xyes"])
 AM_CONDITIONAL([X86SIMD_AVX512], [test "x$enable_x86_simd_avx512" = "xyes"])
 
