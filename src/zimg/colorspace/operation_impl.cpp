@@ -306,8 +306,10 @@ std::unique_ptr<Operation> create_gamma_operation(const TransferFunction &transf
 {
 	std::unique_ptr<Operation> ret;
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	ret = create_gamma_operation_x86(transfer, params, cpu);
+#elif defined(ZIMG_ARM)
+	ret = create_gamma_operation_arm(transfer, params, cpu);
 #endif
 	if (!ret)
 		ret = ztd::make_unique<GammaOperationC>(transfer.to_gamma, transfer.to_gamma_scale, 1.0f);
@@ -319,8 +321,10 @@ std::unique_ptr<Operation> create_inverse_gamma_operation(const TransferFunction
 {
 	std::unique_ptr<Operation> ret;
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	ret = create_inverse_gamma_operation_x86(transfer, params, cpu);
+#elif defined(ZIMG_ARM)
+	ret = create_inverse_gamma_operation_arm(transfer, params, cpu);
 #endif
 	if (!ret)
 		ret = ztd::make_unique<GammaOperationC>(transfer.to_linear, 1.0f, transfer.to_linear_scale);
