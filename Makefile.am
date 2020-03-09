@@ -121,6 +121,38 @@ libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
 libzimg_internal_la_LIBADD =
 
 
+if ARMSIMD
+noinst_LTLIBRARIES += libneon.la
+
+libzimg_internal_la_SOURCES += \
+	src/zimg/colorspace/arm/operation_impl_arm.cpp \
+	src/zimg/colorspace/arm/operation_impl_arm.h \
+	src/zimg/common/arm/cpuinfo_arm.cpp \
+	src/zimg/common/arm/cpuinfo_arm.h \
+	src/zimg/common/arm/neon_util.cpp \
+	src/zimg/common/arm/neon_util.h \
+	src/zimg/depth/arm/depth_convert_arm.cpp \
+	src/zimg/depth/arm/depth_convert_arm.h \
+	src/zimg/depth/arm/dither_arm.cpp \
+	src/zimg/depth/arm/dither_arm.h \
+	src/zimg/depth/arm/f16c_arm.h \
+	src/zimg/resize/arm/resize_impl_arm.cpp \
+	src/zimg/resize/arm/resize_impl_arm.h
+
+
+libneon_la_SOURCES = \
+	src/zimg/colorspace/arm/operation_impl_neon.cpp \
+	src/zimg/depth/arm/depth_convert_neon.cpp \
+	src/zimg/depth/arm/dither_neon.cpp \
+	src/zimg/depth/arm/f16c_neon.cpp \
+	src/zimg/resize/arm/resize_impl_neon.cpp
+
+libneon_la_CXXFLAGS = $(AM_CXXFLAGS) $(NEON_CFLAGS)
+libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+
+libzimg_internal_la_LIBADD += libneon.la
+endif # ARMSIMD
+
 if X86SIMD
 noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 
@@ -349,6 +381,15 @@ test_unit_test_SOURCES = \
 	test/resize/filter_test.cpp \
 	test/resize/resize_impl_test.cpp
 
+if ARMSIMD
+test_unit_test_SOURCES += \
+	test/colorspace/arm/colorspace_neon_test.cpp \
+	test/depth/arm/depth_convert_neon_test.cpp \
+	test/depth/arm/dither_neon_test.cpp \
+	test/depth/arm/f16c_neon_test.cpp \
+	test/resize/arm/resize_impl_neon_test.cpp
+endif # ARMSIMD
+
 if X86SIMD
 test_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx_test.cpp \
@@ -367,7 +408,7 @@ test_unit_test_SOURCES += \
 	test/resize/x86/resize_impl_avx2_test.cpp \
 	test/resize/x86/resize_impl_sse_test.cpp \
 	test/resize/x86/resize_impl_sse2_test.cpp
-endif #X86SIMD
+endif # X86SIMD
 
 if X86SIMD_AVX512
 test_unit_test_SOURCES += \
