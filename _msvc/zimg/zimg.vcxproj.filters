@@ -97,6 +97,12 @@
     <Filter Include="Header Files\resize\arm">
       <UniqueIdentifier>{bae8ebf3-5219-4bd2-8ab1-3f2d024204b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\colorspace\arm">
+      <UniqueIdentifier>{98960bd9-d79c-47fe-9969-0b4a95668346}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\colorspace\arm">
+      <UniqueIdentifier>{b6dc8560-89cc-4434-b557-eb6ea8080f53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -275,6 +281,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\resize\arm\resize_impl_arm.h">
       <Filter>Header Files\resize\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.h">
+      <Filter>Header Files\colorspace\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -466,6 +475,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\arm\resize_impl_neon.cpp">
       <Filter>Source Files\resize\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.cpp">
+      <Filter>Source Files\colorspace\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_neon.cpp">
+      <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

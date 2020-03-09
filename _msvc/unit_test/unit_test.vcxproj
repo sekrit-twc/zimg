@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\api\api_test.cpp" />
+    <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx2_test.cpp" />
