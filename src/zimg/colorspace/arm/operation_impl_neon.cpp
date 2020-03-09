@@ -1,19 +1,102 @@
 #ifdef ZIMG_ARM
 
+#include <algorithm>
 #include <cstdint>
+#include <vector>
 #include <arm_neon.h>
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/make_unique.h"
+#include "colorspace/gamma.h"
+#include "colorspace/operation.h"
 #include "colorspace/operation_impl.h"
 #include "operation_impl_arm.h"
 
 #include "common/arm/neon_util.h"
 
+#if defined(_M_ARM) || defined(__arm__)
+  #define vcvtnq_s32_f32_(x) vcvtq_s32_f32(vaddq_f32(x, vdupq_n_f32(0.49999997f)))
+#else
+  #define vcvtnq_s32_f32_ vcvtnq_s32_f32
+#endif
+
 namespace zimg {
 namespace colorspace {
 
 namespace {
+
+constexpr unsigned LUT_DEPTH = 16;
+
+void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, const float *src, float *dst, unsigned left, unsigned right)
+{
+	unsigned vec_left = ceil_n(left, 8);
+	unsigned vec_right = floor_n(right, 8);
+
+	const int32_t lut_limit = static_cast<int32_t>(1U) << lut_depth;
+
+	const float32x4_t scale = vdupq_n_f32(0.5f * lut_limit);
+	const float32x4_t offset = vdupq_n_f32(0.25f * lut_limit);
+	const int32x4_t zero = vdupq_n_s32(0);
+	const int32x4_t limit = vdupq_n_s32(lut_limit);
+
+	for (unsigned j = left; j < vec_left; ++j) {
+		float32x4_t x = vdupq_n_f32(src[j]);
+		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
+		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+	}
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
+		float32x4_t x;
+		int32x4_t xi;
+
+		x = vld1q_f32(src + j);
+		x = vfmaq_f32(offset, x, scale);
+		xi = vcvtnq_s32_f32_(x);
+		xi = vmaxq_s32(xi, zero);
+		xi = vminq_s32(xi, limit);
+
+		dst[j + 0] = lut[vgetq_lane_s32(xi, 0)];
+		dst[j + 1] = lut[vgetq_lane_s32(xi, 1)];
+		dst[j + 2] = lut[vgetq_lane_s32(xi, 2)];
+		dst[j + 3] = lut[vgetq_lane_s32(xi, 3)];
+	}
+	for (unsigned j = vec_right; j < right; ++j) {
+		float32x4_t x = vdupq_n_f32(src[j]);
+		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
+		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+	}
+}
+
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float *dst, unsigned left, unsigned right)
+{
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
+
+	for (unsigned j = left; j < vec_left; ++j) {
+		float32x4_t x = vdupq_n_f32(src[j]);
+		int idx = vget_lane_u16(vreinterpret_u16_f16(vcvt_f16_f32(x)), 0);
+		dst[j] = lut[idx];
+	}
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
+		float32x4_t x;
+		uint16x4_t xi;
+
+		x = vld1q_f32(src + j);
+		xi = vreinterpret_u16_f16(vcvt_f16_f32(x));
+
+		dst[j + 0] = lut[vget_lane_u16(xi, 0)];
+		dst[j + 1] = lut[vget_lane_u16(xi, 1)];
+		dst[j + 2] = lut[vget_lane_u16(xi, 2)];
+		dst[j + 3] = lut[vget_lane_u16(xi, 3)];
+	}
+	for (unsigned j = vec_right; j < right; ++j) {
+		float32x4_t x = vdupq_n_f32(src[j]);
+		int idx = vget_lane_u16(vreinterpret_u16_f16(vcvt_f16_f32(x)), 0);
+		dst[j] = lut[idx];
+	}
+}
+#endif // !defined(_MSC_VER) || defined(_M_ARM64)
+
 
 inline FORCE_INLINE void matrix_filter_line_neon_xiter(unsigned j, const float *src0, const float *src1, const float *src2,
 	                                                   const float32x4_t &c00, const float32x4_t &c01, const float32x4_t &c02,
@@ -95,6 +178,52 @@ void matrix_filter_line_neon(const float *matrix, const float * const * RESTRICT
 }
 
 
+class ToLinearLutOperationNeon final : public Operation {
+	std::vector<float> m_lut;
+	unsigned m_lut_depth;
+public:
+	ToLinearLutOperationNeon(gamma_func func, unsigned lut_depth, float postscale) :
+		m_lut((1UL << lut_depth) + 1),
+		m_lut_depth{ lut_depth }
+	{
+		// Allocate an extra LUT entry so that indexing can be done by multipying by a power of 2.
+		for (size_t i = 0; i < m_lut.size(); ++i) {
+			float x = static_cast<float>(i) / (1 << lut_depth) * 2.0f - 0.5f;
+			m_lut[i] = func(x) * postscale;
+		}
+	}
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
+		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[1], dst[1], left, right);
+		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[2], dst[2], left, right);
+	}
+};
+
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+class ToGammaLutOperationNeon final : public Operation {
+	std::vector<float> m_lut;
+public:
+	ToGammaLutOperationNeon(gamma_func func, float prescale) :
+		m_lut(static_cast<uint32_t>(UINT16_MAX) + 1)
+	{
+		for (size_t i = 0; i <= UINT16_MAX; ++i) {
+			uint16_t half = static_cast<uint16_t>(i);
+			float x = vgetq_lane_f32(vcvt_f32_f16(vreinterpret_f16_u16(vdup_n_u16(half))), 0);
+			m_lut[i] = func(x * prescale);
+		}
+	}
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		to_gamma_lut_filter_line(m_lut.data(), src[0], dst[0], left, right);
+		to_gamma_lut_filter_line(m_lut.data(), src[1], dst[1], left, right);
+		to_gamma_lut_filter_line(m_lut.data(), src[2], dst[2], left, right);
+	}
+};
+#endif // !defined(_MSC_VER) || defined(_M_ARM64)
+
 class MatrixOperationNeon final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationNeon(const Matrix3x3 &m) :
@@ -113,6 +242,26 @@ public:
 std::unique_ptr<Operation> create_matrix_operation_neon(const Matrix3x3 &m)
 {
 	return ztd::make_unique<MatrixOperationNeon>(m);
+}
+
+std::unique_ptr<Operation> create_gamma_operation_neon(const TransferFunction &transfer, const OperationParams &params)
+{
+#if !defined(_MSC_VER) || defined(_M_ARM64)
+	if (!params.approximate_gamma)
+		return nullptr;
+
+	return ztd::make_unique<ToGammaLutOperationNeon>(transfer.to_gamma, transfer.to_gamma_scale);
+#else
+	return nullptr;
+#endif
+}
+
+std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFunction &transfer, const OperationParams &params)
+{
+	if (!params.approximate_gamma)
+		return nullptr;
+
+	return ztd::make_unique<ToLinearLutOperationNeon>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
 } // namespace colorspace
