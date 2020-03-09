@@ -9,8 +9,10 @@
 #include "operation.h"
 #include "operation_impl.h"
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
   #include "x86/operation_impl_x86.h"
+#elif defined(ZIMG_ARM)
+  #include "arm/operation_impl_arm.h"
 #endif
 
 namespace zimg {
@@ -289,8 +291,10 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 {
 	std::unique_ptr<Operation> ret;
 
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 	ret = create_matrix_operation_x86(m, cpu);
+#elif defined(ZIMG_ARM)
+	ret = create_matrix_operation_arm(m, cpu);
 #endif
 	if (!ret)
 		ret = ztd::make_unique<MatrixOperationC>(m);

@@ -289,6 +289,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp" />
     <ClInclude Include="..\..\src\zimg\api\zimg.h" />
+    <ClInclude Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\colorspace.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\colorspace_param.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\gamma.h" />
@@ -349,6 +350,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.cpp" />
+    <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_neon.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp" />

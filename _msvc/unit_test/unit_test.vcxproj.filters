@@ -64,6 +64,9 @@
     <Filter Include="Source Files\resize\arm">
       <UniqueIdentifier>{e97edbd5-dc25-41c5-947b-8264d96270ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\colorspace\arm">
+      <UniqueIdentifier>{9eb6313d-3d43-4c63-ac20-4c293b3ccd32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
@@ -242,6 +245,9 @@
     </ClCompile>
     <ClCompile Include="..\..\test\resize\arm\resize_impl_neon_test.cpp">
       <Filter>Source Files\resize\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp">
+      <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
