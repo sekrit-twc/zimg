@@ -28,7 +28,7 @@ main_func lookup_app(const char *name)
 		{ "colorspace", colorspace_main },
 		{ "cpuinfo",    cpuinfo_main },
 		{ "depth",      depth_main },
-		{ "graph2",     graph_main },
+		{ "graph",      graph_main },
 		{ "resize",     resize_main },
 		{ "unresize",   unresize_main }
 	};
