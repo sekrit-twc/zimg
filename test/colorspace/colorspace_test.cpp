@@ -305,7 +305,7 @@ TEST(ColorspaceConversionTest, test_constant_luminance)
 	SCOPED_TRACE("rgb->2020cl");
 	test_case(csp_2020cl.to_rgb(), csp_2020cl, expected_sha1[1]);
 
-	SCOPED_TRACE("2020cl->rgb (derived)");
+	SCOPED_TRACE("rgb->2020cl (derived)");
 	test_case(csp_2020cl.to_rgb(), csp_2020cl.to(MatrixCoefficients::CHROMATICITY_DERIVED_CL), expected_sha1[1]);
 
 	SCOPED_TRACE("2020cl->2020ncl");
