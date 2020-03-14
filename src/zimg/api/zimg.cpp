@@ -134,7 +134,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_NONE,           CPUClass::NONE },
 		{ ZIMG_CPU_AUTO,           CPUClass::AUTO },
 		{ ZIMG_CPU_AUTO_64B,       CPUClass::AUTO_64B },
-#ifdef ZIMG_X86
+#if defined(ZIMG_X86)
 		{ ZIMG_CPU_X86_MMX,        CPUClass::NONE },
 		{ ZIMG_CPU_X86_SSE,        CPUClass::X86_SSE },
 		{ ZIMG_CPU_X86_SSE2,       CPUClass::X86_SSE2 },
@@ -150,6 +150,9 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_X86_AVX512_CLX, CPUClass::X86_AVX512_CLX },
 		{ ZIMG_CPU_X86_AVX512_PMC, CPUClass::X86_AVX512 },
 		{ ZIMG_CPU_X86_AVX512_SNC, CPUClass::X86_AVX512_CLX },
+#elif defined(ZIMG_ARM)
+		{ ZIMG_CPU_ARM_NEON_VFPv3, CPUClass::NONE },
+		{ ZIMG_CPU_ARM_NEON_VFPv4, CPUClass::ARM_NEON },
 #endif
 	};
 	return search_enum_map(map, cpu, "unrecognized cpu type");
