@@ -198,6 +198,30 @@
     <ClCompile Include="..\..\test\graph\filtergraph_test.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\exp2f_data.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\logf_data.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\powf_data.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\__math_oflowf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\__math_uflowf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\__math_xflowf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\__math_divzerof.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\extra\musl-libm\__math_invalidf.c">
+      <Filter>Source Files\extra\musl-libm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
@@ -220,6 +244,15 @@
     </ClInclude>
     <ClInclude Include="..\..\test\graph\mock_filter.h">
       <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\extra\musl-libm\exp2f_data.h">
+      <Filter>Header Files\extra\musl-libm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\extra\musl-libm\logf_data.h">
+      <Filter>Header Files\extra\musl-libm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\extra\musl-libm\powf_data.h">
+      <Filter>Header Files\extra\musl-libm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

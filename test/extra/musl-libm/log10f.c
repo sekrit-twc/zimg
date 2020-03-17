@@ -22,59 +22,10 @@ ivln10lo  = -3.1689971365e-05, /* 0xb804ead9 */
 log10_2hi =  3.0102920532e-01, /* 0x3e9a2080 */
 log10_2lo =  7.9034151668e-07, /* 0x355427db */
 /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
-#if 0
 Lg1 = 0xaaaaaa.0p-24, /* 0.66666662693 */
 Lg2 = 0xccce13.0p-25, /* 0.40000972152 */
 Lg3 = 0x91e9ee.0p-25, /* 0.28498786688 */
 Lg4 = 0xf89e26.0p-26; /* 0.24279078841 */
-#else
-Unused = 0;
-#endif
-
-static float get_Lg1(void)
-{
-#ifdef _MSC_VER
-	return ldexpf((float)0xaaaaaa, -24);
-#else
-	return 0xaaaaaa.0p-24;
-#endif
-}
-
-static float get_Lg2(void)
-{
-#ifdef _MSC_VER
-	return ldexpf((float)0xccce13, -25);
-#else
-	return 0xccce13.0p-25;
-#endif
-}
-
-static float get_Lg3(void)
-{
-#ifdef _MSC_VER
-	return ldexpf(0x91e9ee, -25);
-#else
-	return 0x91e9ee.0p-25;
-#endif
-}
-
-static float get_Lg4(void)
-{
-#ifdef _MSC_VER
-	return ldexpf(0xf89e26, -26);
-#else
-	return 0xf89e26.0p-26;
-#endif
-}
-
-static float get_0x1p25f(void)
-{
-#ifdef _MSC_VER
-	return ldexpf(1, 25);
-#else
-	return 0x1p25f;
-#endif
-}
 
 float _mylog10f(float x)
 {
@@ -92,7 +43,7 @@ float _mylog10f(float x)
 			return (x-x)/0.0f; /* log(-#) = NaN */
 		/* subnormal number, scale up x */
 		k -= 25;
-		x *= get_0x1p25f();
+		x *= 0x1p25f;
 		u.f = x;
 		ix = u.i;
 	} else if (ix >= 0x7f800000) {
@@ -111,8 +62,8 @@ float _mylog10f(float x)
 	s = f/(2.0f + f);
 	z = s*s;
 	w = z*z;
-	t1= w*(get_Lg2()+w*get_Lg4());
-	t2= z*(get_Lg1()+w*get_Lg3());
+	t1= w*(Lg2+w*Lg4);
+	t2= z*(Lg1+w*Lg3);
 	R = t2 + t1;
 	hfsq = 0.5f*f*f;
 

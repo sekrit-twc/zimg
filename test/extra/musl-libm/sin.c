@@ -42,19 +42,6 @@
 
 #include "libm.h"
 
-#ifdef _MSC_VER
-  #include <math.h>
-#endif
-
-static float get_0x1p120f(void)
-{
-#ifdef _MSC_VER
-	return ldexpf(1.0, 120);
-#else
-	return 0x1p120f;
-#endif
-}
-
 double _mysin(double x)
 {
 	double y[2];
@@ -69,7 +56,7 @@ double _mysin(double x)
 	if (ix <= 0x3fe921fb) {
 		if (ix < 0x3e500000) {  /* |x| < 2**-26 */
 			/* raise inexact if x != 0 and underflow if subnormal*/
-			FORCE_EVAL(ix < 0x00100000 ? x/get_0x1p120f() : x+get_0x1p120f());
+			FORCE_EVAL(ix < 0x00100000 ? x/0x1p120f : x+0x1p120f);
 			return x;
 		}
 		return my__sin(x, 0.0, 0);

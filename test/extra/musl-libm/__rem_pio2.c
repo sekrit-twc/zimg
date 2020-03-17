@@ -20,26 +20,13 @@
 #include "libm.h"
 
 #ifdef _MSC_VER
-  #include <math.h>
+  #pragma fenv_access(off)
 #endif
-
-static double get_0x1p24(void)
-{
-#ifdef _MSC_VER
-	return ldexp(1.0, 24);
-#else
-	return 0x1p24;
-#endif
-}
 
 #if FLT_EVAL_METHOD==0 || FLT_EVAL_METHOD==1
 #define EPS DBL_EPSILON
 #elif FLT_EVAL_METHOD==2
 #define EPS LDBL_EPSILON
-#endif
-
-#ifdef _MSC_VER
-#pragma fenv_access (off)
 #endif
 
 /*
@@ -176,7 +163,7 @@ medium:
 	z = u.f;
 	for (i=0; i < 2; i++) {
 		tx[i] = (double)(int32_t)z;
-		z     = (z-tx[i])*get_0x1p24();
+		z     = (z-tx[i])*0x1p24;
 	}
 	tx[i] = z;
 	/* skip zero terms, first term is non-zero */

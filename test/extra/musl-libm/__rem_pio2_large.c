@@ -124,28 +124,6 @@
 
 #include "libm.h"
 
-#ifdef _MSC_VER
-  #include <math.h>
-#endif
-
-static double get_0x1p24(void)
-{
-#ifdef _MSC_VER
-	return ldexp(1.0, 24);
-#else
-	return 0x1p24;
-#endif
-}
-
-static double get_0x1pN24(void)
-{
-#ifdef _MSC_VER
-	return ldexp(1.0, -24);
-#else
-	return 0x1p-24;
-#endif
-}
-
 static const int init_jk[] = {3,4,4,6}; /* initial value for jk */
 
 /*
@@ -322,8 +300,8 @@ int my__rem_pio2_large(double *x, double *y, int e0, int nx, int prec)
 recompute:
 	/* distill q[] into iq[] reversingly */
 	for (i=0,j=jz,z=q[jz]; j>0; i++,j--) {
-		fw    = (double)(int32_t)(get_0x1pN24()*z);
-		iq[i] = (int32_t)(z - get_0x1p24()*fw);
+		fw    = (double)(int32_t)(0x1p-24*z);
+		iq[i] = (int32_t)(z - 0x1p24*fw);
 		z     = q[j-1]+fw;
 	}
 
@@ -396,9 +374,9 @@ recompute:
 		}
 	} else { /* break z into 24-bit if necessary */
 		z = scalbn(z,-q0);
-		if (z >= get_0x1p24()) {
-			fw = (double)(int32_t)(get_0x1pN24()*z);
-			iq[jz] = (int32_t)(z - get_0x1p24()*fw);
+		if (z >= 0x1p24) {
+			fw = (double)(int32_t)(0x1p-24*z);
+			iq[jz] = (int32_t)(z - 0x1p24*fw);
 			jz += 1;
 			q0 += 24;
 			iq[jz] = (int32_t)fw;
@@ -410,7 +388,7 @@ recompute:
 	fw = scalbn(1.0,q0);
 	for (i=jz; i>=0; i--) {
 		q[i] = fw*(double)iq[i];
-		fw *= get_0x1pN24();
+		fw *= 0x1p-24;
 	}
 
 	/* compute PIo2[0,...,jp]*q[jz,...,0] */

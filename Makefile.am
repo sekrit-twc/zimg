@@ -298,17 +298,28 @@ test_libmusl_m_la_CFLAGS = $(AM_CFLAGS) -std=c99 -Wno-sign-compare -Wno-unused-v
 
 test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/__cos.c \
+	test/extra/musl-libm/__math_divzerof.c \
+	test/extra/musl-libm/__math_invalidf.c \
+	test/extra/musl-libm/__math_oflowf.c \
+	test/extra/musl-libm/__math_uflowf.c \
+	test/extra/musl-libm/__math_xflowf.c \
 	test/extra/musl-libm/__rem_pio2.c \
 	test/extra/musl-libm/__rem_pio2_large.c \
 	test/extra/musl-libm/__sin.c \
 	test/extra/musl-libm/cos.c \
+	test/extra/musl-libm/exp2f_data.c \
+	test/extra/musl-libm/exp2f_data.h \
 	test/extra/musl-libm/fpu_wrapper.c \
 	test/extra/musl-libm/expf.c \
 	test/extra/musl-libm/libm.h \
 	test/extra/musl-libm/log10f.c \
 	test/extra/musl-libm/logf.c \
+	test/extra/musl-libm/logf_data.c \
+	test/extra/musl-libm/logf_data.h \
 	test/extra/musl-libm/mymath.h \
 	test/extra/musl-libm/powf.c \
+	test/extra/musl-libm/powf_data.c \
+	test/extra/musl-libm/powf_data.h \
 	test/extra/musl-libm/sin.c
 
 test_unit_test_CPPFLAGS = \
