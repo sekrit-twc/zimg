@@ -14,7 +14,6 @@
 #include "blue.h"
 #include "depth.h"
 #include "dither.h"
-#include "hexfloat.h"
 #include "quantize.h"
 
 #ifdef ZIMG_X86

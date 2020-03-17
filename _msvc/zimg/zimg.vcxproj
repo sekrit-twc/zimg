@@ -322,7 +322,6 @@
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth_convert.h" />
     <ClInclude Include="..\..\src\zimg\depth\dither.h" />
-    <ClInclude Include="..\..\src\zimg\depth\hexfloat.h" />
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\depth_convert_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h" />
