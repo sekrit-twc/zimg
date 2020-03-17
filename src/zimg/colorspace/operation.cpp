@@ -65,7 +65,8 @@ std::unique_ptr<Operation> create_lms_to_ictcp_operation(const ColorspaceDefinit
 std::unique_ptr<Operation> create_gamma_to_linear_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
-	zassert_d(in.matrix == MatrixCoefficients::RGB && out.matrix == MatrixCoefficients::RGB, "must be RGB");
+	zassert_d((in.matrix == MatrixCoefficients::RGB || in.matrix == MatrixCoefficients::REC_2100_LMS) &&
+	          (out.matrix == MatrixCoefficients::RGB || out.matrix == MatrixCoefficients::REC_2100_LMS), "must be RGB or LMS");
 	zassert_d(in.transfer != TransferCharacteristics::LINEAR && out.transfer == TransferCharacteristics::LINEAR, "wrong transfer characteristics");
 
 	if (in.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(in.primaries, params))
@@ -77,7 +78,8 @@ std::unique_ptr<Operation> create_gamma_to_linear_operation(const ColorspaceDefi
 std::unique_ptr<Operation> create_linear_to_gamma_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 {
 	zassert_d(in.primaries == out.primaries, "primaries mismatch");
-	zassert_d(in.matrix == MatrixCoefficients::RGB && out.matrix == MatrixCoefficients::RGB, "must be RGB");
+	zassert_d((in.matrix == MatrixCoefficients::RGB || in.matrix == MatrixCoefficients::REC_2100_LMS) &&
+	          (out.matrix == MatrixCoefficients::RGB || out.matrix == MatrixCoefficients::REC_2100_LMS), "must be RGB or LMS");
 	zassert_d(in.transfer == TransferCharacteristics::LINEAR && out.transfer != TransferCharacteristics::LINEAR, "wrong transfer characteristics");
 
 	if (out.transfer == TransferCharacteristics::ARIB_B67 && use_display_referred_b67(out.primaries, params))
