@@ -33,17 +33,18 @@ private:
 		unsigned cache_pos;
 		unsigned cache_history;
 		unsigned cursor;
+		unsigned subsample_h;
 		bool cursor_initialized;
 	};
 
 	std::vector<state> m_state;
 	size_t m_tmp;
 public:
-	explicit SimulationState(size_t num_nodes);
+	explicit SimulationState(const std::vector<std::unique_ptr<GraphNode>> &nodes);
 
 	result get_result(const std::vector<std::unique_ptr<GraphNode>> &nodes) const;
 
-	void update(node_id id, node_id cache_id, unsigned first, unsigned last);
+	void update(node_id id, node_id cache_id, unsigned first, unsigned last, unsigned plane);
 
 	unsigned get_cursor(node_id id, unsigned initial_pos) const;
 

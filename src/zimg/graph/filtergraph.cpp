@@ -121,7 +121,7 @@ class FilterGraph::impl {
 
 	void simulate_interleaved()
 	{
-		SimulationState sim{ m_nodes.size() };
+		SimulationState sim{ m_nodes };
 		unsigned height = m_sink->get_image_attributes(PLANE_Y).height;
 		unsigned step = 1U << m_sink->get_subsample_h();
 
@@ -153,7 +153,7 @@ class FilterGraph::impl {
 			if (!m_output_nodes[p])
 				continue;
 
-			SimulationState sim{ m_nodes.size() };
+			SimulationState sim{ m_nodes };
 			unsigned height = m_output_nodes[p]->get_image_attributes(p).height;
 
 			for (unsigned i = 0; i < height; ++i) {

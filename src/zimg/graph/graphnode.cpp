@@ -61,6 +61,7 @@ public:
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
 		zassert_d(m_planes[plane], "plane not present");
+
 		if (plane == PLANE_U || plane == PLANE_V) {
 			first <<= m_subsample_h;
 			last <<= m_subsample_h;
@@ -68,10 +69,10 @@ public:
 
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), cache_id(), first, last);
+			state->update(id(), cache_id(), first, last, PLANE_Y);
 		} else {
 			unsigned step = 1U << m_subsample_h;
-			state->update(id(), cache_id(), floor_n(first, step), ceil_n(last, step));
+			state->update(id(), cache_id(), floor_n(first, step), ceil_n(last, step), PLANE_Y);
 		}
 	}
 
@@ -188,6 +189,7 @@ public:
 	void simulate(SimulationState *state, unsigned first, unsigned last, int plane) const override
 	{
 		zassert_d(m_parents[plane], "plane not present");
+
 		if (plane == PLANE_U || plane == PLANE_V) {
 			first <<= m_subsample_h;
 			last <<= m_subsample_h;
@@ -195,7 +197,7 @@ public:
 
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), cache_id(), first, last);
+			state->update(id(), cache_id(), first, last, PLANE_Y);
 			return;
 		}
 
@@ -211,7 +213,7 @@ public:
 				m_parents[PLANE_A]->simulate(state, cursor, cursor + (1U << m_subsample_h), PLANE_A);
 			}
 		}
-		state->update(id(), cache_id(), first, cursor);
+		state->update(id(), cache_id(), first, cursor, PLANE_Y);
 	}
 
 	void simulate_alloc(SimulationState *state) const override
@@ -321,7 +323,7 @@ public:
 		zassert_d(m_output_planes[plane], "plane not present");
 		unsigned cursor = state->get_cursor(id(), 0);
 		if (cursor >= last) {
-			state->update(id(), cache_id(), first, last);
+			state->update(id(), cache_id(), first, last, plane);
 			return;
 		}
 
@@ -334,7 +336,7 @@ public:
 					m_parents[p]->simulate(state, range.first, range.second, p);
 			}
 		}
-		state->update(id(), cache_id(), first, cursor);
+		state->update(id(), cache_id(), first, cursor, plane);
 	}
 
 	void simulate_alloc(SimulationState *state) const override
@@ -501,7 +503,12 @@ public:
 } // namespace
 
 
-SimulationState::SimulationState(size_t num_nodes) : m_state(num_nodes), m_tmp{} {}
+SimulationState::SimulationState(const std::vector<std::unique_ptr<GraphNode>> &nodes) : m_state(nodes.size()), m_tmp{}
+{
+	for (const auto &node : nodes) {
+		m_state[node->cache_id()].subsample_h = std::max(m_state[node->cache_id()].subsample_h, node->get_subsample_h());
+	}
+}
 
 SimulationState::result SimulationState::get_result(const std::vector<std::unique_ptr<GraphNode>> &nodes) const
 {
@@ -528,7 +535,7 @@ SimulationState::result SimulationState::get_result(const std::vector<std::uniqu
 	return res;
 }
 
-void SimulationState::update(node_id id, node_id cache_id, unsigned first, unsigned last)
+void SimulationState::update(node_id id, node_id cache_id, unsigned first, unsigned last, unsigned plane)
 {
 	zassert_d(id >= 0, "invalid id");
 	state &s = m_state[id];
@@ -537,8 +544,11 @@ void SimulationState::update(node_id id, node_id cache_id, unsigned first, unsig
 	s.cursor = s.cursor_initialized ? std::max(s.cursor, last) : last;
 	s.cursor_initialized = true;
 
-	cache.cache_pos = std::max(cache.cache_pos, s.cursor);
-	cache.cache_history = std::max(cache.cache_history, s.cursor - first);
+	unsigned real_first = first << (plane == PLANE_U || plane == PLANE_V ? cache.subsample_h : 0);
+	unsigned real_cursor = s.cursor << (plane == PLANE_U || plane == PLANE_V ? cache.subsample_h : 0);
+
+	cache.cache_pos = std::max(cache.cache_pos, real_cursor);
+	cache.cache_history = std::max(cache.cache_history, real_cursor - real_first);
 }
 
 unsigned SimulationState::get_cursor(node_id id, unsigned initial_pos) const
