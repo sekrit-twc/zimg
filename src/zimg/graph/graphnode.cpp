@@ -548,7 +548,7 @@ void SimulationState::update(node_id id, node_id cache_id, unsigned first, unsig
 	unsigned real_cursor = s.cursor << (plane == PLANE_U || plane == PLANE_V ? cache.subsample_h : 0);
 
 	cache.cache_pos = std::max(cache.cache_pos, real_cursor);
-	cache.cache_history = std::max(cache.cache_history, real_cursor - real_first);
+	cache.cache_history = std::max(cache.cache_history, cache.cache_pos - real_first);
 }
 
 unsigned SimulationState::get_cursor(node_id id, unsigned initial_pos) const
