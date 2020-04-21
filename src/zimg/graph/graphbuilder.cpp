@@ -595,7 +595,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 			convert_resize(spec, params, factory);
 
 			if (is_greyscale(m_state))
-				grey_to_color(target.color, target.colorspace.matrix, 0, 0, target.chroma_location_w, target.chroma_location_h);
+				grey_to_color(ColorFamily::RGB, colorspace::MatrixCoefficients::RGB, 0, 0, ChromaLocationW::CENTER, ChromaLocationH::CENTER);
 
 			convert_colorspace(target.colorspace, params, factory);
 		} else if (!is_greyscale(m_state) && is_greyscale(target)) {
