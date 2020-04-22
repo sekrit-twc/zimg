@@ -109,11 +109,14 @@ class FilterGraph::impl {
 				}
 			}
 		} else {
-			auto input_attr = m_source->get_image_attributes(plane);
-			auto output_attr = out->get_image_attributes(plane);
-
-			footprint += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_lines;
-			footprint += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_lines;
+			if (m_source->get_plane_mask()[plane]) {
+				auto input_attr = m_source->get_image_attributes(plane);
+				footprint += ceil_n(static_cast<checked_size_t>(input_attr.width) * pixel_size(input_attr.type), ALIGNMENT) * input_lines;
+			}
+			if (m_sink->get_plane_mask()[plane]) {
+				auto output_attr = m_sink->get_image_attributes(plane);
+				footprint += ceil_n(static_cast<checked_size_t>(output_attr.width) * pixel_size(output_attr.type), ALIGNMENT) * output_lines;
+			}
 		}
 
 		return footprint.get();
