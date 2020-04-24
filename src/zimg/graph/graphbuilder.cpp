@@ -789,7 +789,7 @@ void GraphBuilder::connect_alpha_channel(const state &orig, const state &target,
 
 	// (2) Convert to target pixel format.
 	if (needs_depth(source_alpha, target_alpha)) {
-		convert_depth(&source_alpha, { target.type, target.depth, target.fullrange }, params, factory, true);
+		convert_depth(&source_alpha, { target_alpha.type, target_alpha.depth, target_alpha.fullrange }, params, factory, true);
 		zassert_d(!needs_depth(source_alpha, target_alpha), "conversion did not apply");
 	}
 }
