@@ -390,18 +390,7 @@ void GraphBuilder::convert_resize(state *state, const resize_spec &spec, const p
 	unsigned subsample_h = is_color(*state) ? spec.subsample_h : 0;
 	ChromaLocationW chroma_loc_w = subsample_w ? spec.chroma_location_w : ChromaLocationW::CENTER;
 	ChromaLocationH chroma_loc_h = subsample_h ? spec.chroma_location_h : ChromaLocationH::CENTER;
-
 	bool image_shifted = spec.shift_w != 0.0 || spec.shift_h != 0.0 || state->width != spec.subwidth || state->height != spec.subheight;
-
-	if (state->width == spec.width &&
-		state->height == spec.height &&
-		state->subsample_w == subsample_w &&
-		state->subsample_h == subsample_h &&
-		state->chroma_location_w == chroma_loc_w &&
-		state->chroma_location_h == chroma_loc_h && !image_shifted)
-	{
-		return;
-	}
 
 	// Default filter instances.
 	resize::BicubicFilter bicubic;
