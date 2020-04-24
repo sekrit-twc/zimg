@@ -826,7 +826,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	if (params && cpu_requires_64b_alignment(params->cpu))
 		m_graph->set_requires_64b_alignment();
 
-	if (m_state.alpha == AlphaType::STRAIGHT && (needs_colorspace(m_state, target) || needs_resize(m_state, target) || !has_alpha(target)))
+	if (m_state.alpha == AlphaType::STRAIGHT && (needs_colorspace(m_state, target) || needs_resize(m_state, target) || target.alpha != AlphaType::STRAIGHT))
 		premultiply(params, factory);
 
 	if (!has_alpha(target)) {
