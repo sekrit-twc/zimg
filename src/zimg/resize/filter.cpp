@@ -37,10 +37,7 @@ double round_halfup(double x) noexcept
 	 * must be preserved. This precludes the use of modes such as
 	 * half-to-even and half-away-from-zero.
 	 */
-	bool sign = std::signbit(x);
-
-	x = std::round(std::abs(x));
-	return sign ? -x : x;
+	return x < 0 ? std::floor(x + 0.5) : std::floor(x + 0.49999999999999994);
 }
 
 
