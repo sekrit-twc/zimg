@@ -87,9 +87,15 @@ public:
 		if (!state->is_initialized(id()))
 			state->reset_tile_bounds(id());
 
-		left <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_w : 0;
-		right <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_w : 0;
-		top <<= (plane == PLANE_U || plane == PLANE_V) ? m_subsample_h : 0;
+		if (plane == PLANE_U || plane == PLANE_V) {
+			left <<= m_subsample_w;
+			right <<= m_subsample_w;
+			top <<= m_subsample_h;
+		} else {
+			left = floor_n(left, 1U << m_subsample_w);
+			right = ceil_n(right, 1U << m_subsample_w);
+			top = floor_n(top, 1U << m_subsample_h);
+		}
 
 		ExecutionState::node_state *s = state->get_node_state(id());
 		s->left = std::min(s->left, left);
