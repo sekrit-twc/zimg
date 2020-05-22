@@ -196,7 +196,7 @@ zimg::graph::GraphBuilder::AlphaType translate_alpha(zimg_alpha_type_e alpha)
 	static SM_CONSTEXPR_14 const zimg::static_map<zimg_alpha_type_e, GraphBuilder::AlphaType, 3> map{
 		{ ZIMG_ALPHA_NONE,          GraphBuilder::AlphaType::NONE },
 		{ ZIMG_ALPHA_STRAIGHT,      GraphBuilder::AlphaType::STRAIGHT },
-		{ ZIMG_ALPHA_PREMULTIPLIED, GraphBuilder::AlphaType::PREMULTIPLED },
+		{ ZIMG_ALPHA_PREMULTIPLIED, GraphBuilder::AlphaType::PREMULTIPLIED },
 	};
 	return search_enum_map(map, alpha, "unrecognized alpha type");
 }

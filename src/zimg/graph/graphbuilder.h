@@ -91,7 +91,7 @@ public:
 	enum class AlphaType {
 		NONE,
 		STRAIGHT,
-		PREMULTIPLED,
+		PREMULTIPLIED,
 	};
 
 	enum class FieldParity {

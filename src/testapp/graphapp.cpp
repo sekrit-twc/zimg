@@ -120,7 +120,7 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::AlphaType, 3> alpha_map{
 		{ "none",     zimg::graph::GraphBuilder::AlphaType::NONE },
 		{ "straight", zimg::graph::GraphBuilder::AlphaType::STRAIGHT },
-		{ "premul",   zimg::graph::GraphBuilder::AlphaType::PREMULTIPLED },
+		{ "premul",   zimg::graph::GraphBuilder::AlphaType::PREMULTIPLIED },
 	};
 
 	if (const auto &val = obj["width"])

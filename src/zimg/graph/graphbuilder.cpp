@@ -613,12 +613,12 @@ void GraphBuilder::premultiply(const params *params, FilterFactory *factory)
 	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
 	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
 
-	m_state.alpha = AlphaType::PREMULTIPLED;
+	m_state.alpha = AlphaType::PREMULTIPLIED;
 }
 
 void GraphBuilder::unpremultiply(const params *params, FilterFactory *factory)
 {
-	zassert_d(m_state.alpha == AlphaType::PREMULTIPLED, "must be premultiplied");
+	zassert_d(m_state.alpha == AlphaType::PREMULTIPLIED, "must be premultiplied");
 
 	state alpha_state = make_alpha_state(m_state);
 	convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
@@ -834,12 +834,12 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 		m_state.alpha = AlphaType::NONE;
 	}
 
-	if (m_state.alpha == AlphaType::PREMULTIPLED && target.alpha == AlphaType::STRAIGHT) {
+	if (m_state.alpha == AlphaType::PREMULTIPLIED && target.alpha == AlphaType::STRAIGHT) {
 		state tmp = target;
 		tmp.type = PixelType::FLOAT;
 		tmp.subsample_w = 0;
 		tmp.subsample_h = 0;
-		tmp.alpha = AlphaType::PREMULTIPLED;
+		tmp.alpha = AlphaType::PREMULTIPLIED;
 
 		state orig = m_state;
 		connect_color_channels(tmp, params, factory);
