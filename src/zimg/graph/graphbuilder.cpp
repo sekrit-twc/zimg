@@ -745,10 +745,6 @@ void GraphBuilder::connect_alpha_channel(const state &orig, const state &target,
 
 	// (1) Resize plane to target dimensions.
 	if (needs_resize(source_alpha, target_alpha)) {
-		// (1.1) Convert to compatible pixel type.
-		if (source_alpha.type != PixelType::FLOAT)
-			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
-
 		// (1.1) Convert to compatible pixel type, attempting to minimize total conversions.
 		// If neither the source nor target pixel format is directly supported, select a different format.
 		// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
