@@ -38,7 +38,8 @@ typedef int node_id;
 typedef std::array<bool, PLANE_NUM> plane_mask;
 typedef std::array<node_id, PLANE_NUM> id_map;
 
-constexpr id_map null_ids{ { -1, -1, -1, -1 } };
+constexpr node_id invalid_id = -1;
+constexpr id_map null_ids{ { invalid_id, invalid_id, invalid_id, invalid_id } };
 
 
 class FilterGraph : public zimg_filter_graph {

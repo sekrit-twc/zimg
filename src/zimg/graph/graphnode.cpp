@@ -428,7 +428,7 @@ public:
 	}
 };
 
-template <int P0, int P1, int P2, int P3>
+template <int P0 = invalid_id, int P1 = invalid_id, int P2 = invalid_id, int P3 = invalid_id>
 class FilterNodeColor final : public FilterNodeBase {
 public:
 	using FilterNodeBase::FilterNodeBase;
@@ -445,26 +445,26 @@ public:
 		ExecutionState::node_state *node_state = state->get_node_state(id());
 		void *tmp = state->get_shared_tmp();
 
-		if (P0 == 1 || (P0 == -1 && m_parents[0]))
+		if (P0 == 1 || (P0 == invalid_id && m_parents[0]))
 			new (&src[0]) ImageBuffer<const void>(state->get_buffer(m_parents[0]->cache_id())[0]);
-		if (P1 == 1 || (P1 == -1 && m_parents[1]))
+		if (P1 == 1 || (P1 == invalid_id && m_parents[1]))
 			new (&src[1]) ImageBuffer<const void>(state->get_buffer(m_parents[1]->cache_id())[1]);
-		if (P2 == 1 || (P2 == -1 && m_parents[2]))
+		if (P2 == 1 || (P2 == invalid_id && m_parents[2]))
 			new (&src[2]) ImageBuffer<const void>(state->get_buffer(m_parents[2]->cache_id())[2]);
-		if (P3 == 1 || (P3 == -1 && m_parents[3]))
+		if (P3 == 1 || (P3 == invalid_id && m_parents[3]))
 			new (&src[3]) ImageBuffer<const void>(state->get_buffer(m_parents[3]->cache_id())[3]);
 
 		for (; cursor < last; cursor += m_step) {
 			auto range = m_filter->get_required_row_range(cursor);
 			zassert_d(range.first < range.second, "bad row range");
 
-			if (P0 == 1 || (P0 == -1 && m_parents[0]))
+			if (P0 == 1 || (P0 == invalid_id && m_parents[0]))
 				m_parents[0]->generate(state, range.second, 0);
-			if (P1 == 1 || (P1 == -1 && m_parents[1]))
+			if (P1 == 1 || (P1 == invalid_id && m_parents[1]))
 				m_parents[1]->generate(state, range.second, 1);
-			if (P2 == 1 || (P2 == -1 && m_parents[2]))
+			if (P2 == 1 || (P2 == invalid_id && m_parents[2]))
 				m_parents[2]->generate(state, range.second, 2);
-			if (P3 == 1 || (P3 == -1 && m_parents[3]))
+			if (P3 == 1 || (P3 == invalid_id && m_parents[3]))
 				m_parents[3]->generate(state, range.second, 3);
 
 			m_filter->process(node_state->context, reinterpret_cast<ImageBuffer<const void> *>(src), dst, tmp, cursor, node_state->left, node_state->right);
@@ -770,7 +770,7 @@ std::unique_ptr<GraphNode> make_filter_node(node_id id, std::shared_ptr<ImageFil
 		else if (parents[0] && parents[1] && parents[2] && !parents[3])
 			return ztd::make_unique<FilterNodeColor<1, 1, 1, 0>>(id, filter, parents, output_planes);
 		else
-			return ztd::make_unique<FilterNodeColor<-1, -1, -1, -1>>(id, filter, parents, output_planes);
+			return ztd::make_unique<FilterNodeColor<>>(id, filter, parents, output_planes);
 	} else {
 		if (parents[0] && output_planes[0])
 			return ztd::make_unique<FilterNodeGrey<0, true>>(id, filter, parents, output_planes);

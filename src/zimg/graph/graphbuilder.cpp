@@ -272,7 +272,7 @@ void GraphBuilder::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, 
 	id_map deps = null_ids;
 	plane_mask mask{};
 
-	deps[plane] = dep ? m_plane_ids[plane] : -1;
+	deps[plane] = dep ? m_plane_ids[plane] : invalid_id;
 	mask[plane] = true;
 
 	m_plane_ids[plane] = m_graph->attach_filter(std::move(filter), deps, mask);
@@ -529,8 +529,8 @@ void GraphBuilder::add_opaque_alpha()
 void GraphBuilder::discard_chroma()
 {
 	zassert_d(is_yuv(m_state), "can not drop chroma planes from RGB image");
-	m_plane_ids[PLANE_U] = -1;
-	m_plane_ids[PLANE_V] = -1;
+	m_plane_ids[PLANE_U] = invalid_id;
+	m_plane_ids[PLANE_V] = invalid_id;
 	m_state.color = ColorFamily::GREY;
 	m_state.subsample_w = 0;
 	m_state.subsample_h = 0;
@@ -599,8 +599,8 @@ void GraphBuilder::premultiply(const params *params, FilterFactory *factory)
 
 	id_map deps = null_ids;
 	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
-	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
+	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : invalid_id;
+	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : invalid_id;
 	deps[PLANE_A] = m_plane_ids[PLANE_A];
 
 	plane_mask mask{};
@@ -610,8 +610,8 @@ void GraphBuilder::premultiply(const params *params, FilterFactory *factory)
 
 	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
-	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
+	m_plane_ids[PLANE_U] = is_color(m_state) ? id : invalid_id;
+	m_plane_ids[PLANE_V] = is_color(m_state) ? id : invalid_id;
 
 	m_state.alpha = AlphaType::PREMULTIPLIED;
 }
@@ -633,8 +633,8 @@ void GraphBuilder::unpremultiply(const params *params, FilterFactory *factory)
 
 	id_map deps = null_ids;
 	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : -1;
-	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : -1;
+	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : invalid_id;
+	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : invalid_id;
 	deps[PLANE_A] = m_plane_ids[PLANE_A];
 
 	plane_mask mask{};
@@ -644,8 +644,8 @@ void GraphBuilder::unpremultiply(const params *params, FilterFactory *factory)
 
 	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
 	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(m_state) ? id : -1;
-	m_plane_ids[PLANE_V] = is_color(m_state) ? id : -1;
+	m_plane_ids[PLANE_U] = is_color(m_state) ? id : invalid_id;
+	m_plane_ids[PLANE_V] = is_color(m_state) ? id : invalid_id;
 
 	m_state.alpha = AlphaType::STRAIGHT;
 }
@@ -794,9 +794,9 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 
 	node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
 	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(source) ? id : -1;
-	m_plane_ids[PLANE_V] = is_color(source) ? id : -1;
-	m_plane_ids[PLANE_A] = has_alpha(source) ? id : -1;
+	m_plane_ids[PLANE_U] = is_color(source) ? id : invalid_id;
+	m_plane_ids[PLANE_V] = is_color(source) ? id : invalid_id;
+	m_plane_ids[PLANE_A] = has_alpha(source) ? id : invalid_id;
 
 	return *this;
 } catch (const std::bad_alloc &) {
@@ -826,7 +826,7 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 		premultiply(params, factory);
 
 	if (!has_alpha(target)) {
-		m_plane_ids[PLANE_A] = -1;
+		m_plane_ids[PLANE_A] = invalid_id;
 		m_state.alpha = AlphaType::NONE;
 	}
 

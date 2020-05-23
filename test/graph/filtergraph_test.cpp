@@ -18,6 +18,7 @@ namespace {
 using zimg::graph::node_id;
 using zimg::graph::plane_mask;
 using zimg::graph::id_map;
+using zimg::graph::invalid_id;
 
 plane_mask enabled_planes(bool color)
 {
@@ -32,8 +33,8 @@ id_map id_to_map(node_id id, bool color)
 {
 	id_map map = zimg::graph::null_ids;
 	map[zimg::graph::PLANE_Y] = id;
-	map[zimg::graph::PLANE_U] = color ? id : -1;
-	map[zimg::graph::PLANE_V] = color ? id : -1;
+	map[zimg::graph::PLANE_U] = color ? id : invalid_id;
+	map[zimg::graph::PLANE_V] = color ? id : invalid_id;
 	return map;
 }
 
@@ -57,7 +58,7 @@ public:
 	}
 };
 
-}
+} // namespace
 
 
 TEST(FilterGraphTest, test_noop)
@@ -225,11 +226,11 @@ TEST(FilterGraphTest, test_skip_plane)
 		if (x) {
 			id_y = graph.attach_filter(filter2, id_to_map(id_y, false), enabled_planes(false));
 		} else {
-			id_u = graph.attach_filter(filter2, { -1, id_u, -1, -1 }, { false, true, false, false });
-			id_v = graph.attach_filter(filter2, { -1, -1, id_v, -1 }, { false, false, true, false });
+			id_u = graph.attach_filter(filter2, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
+			id_v = graph.attach_filter(filter2, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
 		}
 
-		graph.set_output({ id_y, id_u, id_v, -1 });
+		graph.set_output({ id_y, id_u, id_v, invalid_id });
 
 		AuditImage<float> src_image{ AuditBufferType::COLOR_YUV, w, h, type, 0, 0 };
 		AuditImage<float> dst_image{ AuditBufferType::COLOR_YUV, w, h, type, 0, 0 };
@@ -395,7 +396,7 @@ TEST(FilterGraphTest, test_grey_to_color_yuv)
 	id_u = graph.attach_filter(chroma_init, zimg::graph::null_ids, { false, true, false, false });
 	id_v = graph.attach_filter(chroma_init, zimg::graph::null_ids, { false, false, true, false });
 
-	graph.set_output({ id_y, id_u, id_v, -1 });
+	graph.set_output({ id_y, id_u, id_v, invalid_id });
 
 	AuditImage<uint8_t> src_image{ AuditBufferType::PLANE, w, h, type, 0, 0 };
 	AuditImage<uint8_t> dst_image{ AuditBufferType::COLOR_YUV, w, h, type, 1, 1 };
@@ -567,9 +568,9 @@ TEST(FilterGraphTest, test_callback)
 				node_id id_v = id_y;
 
 				id_y = graph.attach_filter(filter1, id_to_map(id_y, false), enabled_planes(false));
-				id_u = graph.attach_filter(filter2, { -1, id_u, -1, -1 }, { false, true, false, false });
-				id_v = graph.attach_filter(filter2, { -1, -1, id_v, -1 }, { false, false, true, false });
-				graph.set_output({ id_y, id_u, id_v, -1 });
+				id_u = graph.attach_filter(filter2, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
+				id_v = graph.attach_filter(filter2, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
+				graph.set_output({ id_y, id_u, id_v, invalid_id });
 
 				graph.set_tile_width(512);
 
