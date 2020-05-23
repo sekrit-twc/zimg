@@ -151,6 +151,7 @@
     <ClCompile Include="..\..\test\graph\audit_buffer.cpp" />
     <ClCompile Include="..\..\test\graph\filtergraph_test.cpp" />
     <ClCompile Include="..\..\test\graph\filter_validator.cpp" />
+    <ClCompile Include="..\..\test\graph\graphbuilder_test.cpp" />
     <ClCompile Include="..\..\test\graph\mock_filter.cpp" />
     <ClCompile Include="..\..\test\main.cpp" />
     <ClCompile Include="..\..\test\resize\filter_test.cpp" />

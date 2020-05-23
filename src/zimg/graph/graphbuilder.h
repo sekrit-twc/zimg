@@ -4,132 +4,97 @@
 #define ZIMG_GRAPH_GRAPHBUILDER2_H_
 
 #include <memory>
-#include <vector>
-#include "common/pixel.h"
 #include "colorspace/colorspace.h"
-#include "depth/depth.h"
-#include "resize/resize.h"
-#include "unresize/unresize.h"
-#include "filtergraph.h"
 
 namespace zimg {
 
 enum class CPUClass;
+enum class PixelType;
+
+namespace depth {
+enum class DitherType;
+struct DepthConversion;
+}
+
+namespace resize {
+class Filter;
+struct ResizeConversion;
+}
+
+namespace unresize {
+struct UnresizeConversion;
+}
+
 
 namespace graph {
 
-class ImageFilter;
+class FilterGraph;
 
 /**
- * Factory interface for filter instantiation.
+ * Observer interface for debugging filter instantiation.
  */
-class FilterFactory {
+class FilterObserver {
 public:
-	typedef std::vector<std::unique_ptr<ImageFilter>> filter_list;
+	virtual ~FilterObserver() = default;
 
-	/**
-	 * Destroy factory.
-	 */
-	virtual ~FilterFactory() = default;
+	virtual void yuv_to_grey() {}
+	virtual void grey_to_yuv() {}
+	virtual void grey_to_rgb() {}
 
-	/**
-	 * Create filters implementing colorspace conversion.
-	 *
-	 * @param conv conversion specifier
-	 * @return list of filters
-	 */
-	virtual filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) = 0;
+	virtual void premultiply() {}
+	virtual void unpremultiply() {}
+	virtual void add_opaque() {}
+	virtual void discard_alpha() {}
 
-	/**
-	 * Create filters implementing depth conversion.
-	 *
-	 * @see create_colorspace
-	 */
-	virtual filter_list create_depth(const depth::DepthConversion &conv) = 0;
-
-	/**
-	 * Create filters implementing resizing.
-	 *
-	 * @see create_colorspace
-	 */
-	virtual filter_list create_resize(const resize::ResizeConversion &conv) = 0;
-
-	/**
-	 * Create filters implementing unresizing.
-	 *
-	 * @see create_unresize
-	 */
-	virtual filter_list create_unresize(const unresize::UnresizeConversion &conv) = 0;
-};
-
-/**
- * Default implementation of factory interface.
- */
-class DefaultFilterFactory : public FilterFactory {
-public:
-	filter_list create_colorspace(const colorspace::ColorspaceConversion &conv) override;
-
-	filter_list create_depth(const depth::DepthConversion &conv) override;
-
-	filter_list create_resize(const resize::ResizeConversion &conv) override;
-
-	filter_list create_unresize(const unresize::UnresizeConversion &conv) override;
+	virtual void colorspace(const colorspace::ColorspaceConversion &conv) {}
+	virtual void depth(const depth::DepthConversion &conv, int plane) {}
+	virtual void resize(const resize::ResizeConversion &conv, int plane) {}
+	virtual void unresize(const unresize::UnresizeConversion &conv, int plane) {}
 };
 
 
 /**
- * Manages initialization of filter graphs.
+ * Models a filter graph with one source node and one sink node.
  */
 class GraphBuilder {
+	struct internal_state;
 public:
+	// Interpretation of the three color channels.
 	enum class ColorFamily {
 		GREY,
 		RGB,
 		YUV,
 	};
 
+	// Whether an alpha channel is present and whether the color channels have
+	// been premultiplied with the alpha channel.
 	enum class AlphaType {
 		NONE,
 		STRAIGHT,
 		PREMULTIPLIED,
 	};
 
+	// Whether the image is a frame or a field.
 	enum class FieldParity {
 		PROGRESSIVE,
 		TOP,
 		BOTTOM,
 	};
 
+	// For horizontally subsampled YUV.
 	enum class ChromaLocationW {
 		LEFT,
 		CENTER,
 	};
 
+	// For vertically subsampled YUV.
 	enum class ChromaLocationH {
 		CENTER,
 		TOP,
 		BOTTOM,
 	};
 
-	/**
-	 * Filter instantiation parameters.
-	 */
-	struct params {
-		std::unique_ptr<const resize::Filter> filter;
-		std::unique_ptr<const resize::Filter> filter_uv;
-		bool unresize;
-		depth::DitherType dither_type;
-		double peak_luminance;
-		bool approximate_gamma;
-		bool scene_referred;
-		CPUClass cpu;
-
-		params() noexcept;
-	};
-
-	/**
-	 * Image format specifier.
-	 */
+	// Canonical state.
 	struct state {
 		unsigned width;
 		unsigned height;
@@ -154,51 +119,43 @@ public:
 
 		AlphaType alpha;
 	};
+
+	// Filter instantiation parameters.
+	struct params {
+		const resize::Filter *filter;
+		const resize::Filter *filter_uv;
+		bool unresize;
+		depth::DitherType dither_type;
+		double peak_luminance;
+		bool approximate_gamma;
+		bool scene_referred;
+		CPUClass cpu;
+
+		params() noexcept;
+	};
 private:
-	struct resize_spec;
+	class impl;
 
-	std::unique_ptr<FilterGraph> m_graph;
-	state m_state;
-	id_map m_plane_ids;
+	std::unique_ptr<impl> m_impl;
 
-	static state make_alpha_state(const state &s);
-
-	void attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep = true);
-
-	void attach_color_filter(std::shared_ptr<ImageFilter> filter);
-
-	void convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory);
-
-	void convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory *factory, bool alpha);
-
-	void convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory *factory, bool alpha);
-
-	void connect_color_channels(const state &target, const params *params, FilterFactory *factory);
-
-	void connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory *factory);
-
-	void add_opaque_alpha();
-
-	void discard_chroma();
-
-	void grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h);
-
-	void premultiply(const params *params, FilterFactory *factory);
-
-	void unpremultiply(const params *params, FilterFactory *factory);
+	impl *get_impl() noexcept { return m_impl.get(); }
 public:
 	/**
 	 * Default construct GraphBuilder, creating an empty graph.
 	 */
-	GraphBuilder() noexcept;
+	GraphBuilder();
 
 	/**
-	 * Destroy builder.
+	 * Destory builder.
 	 */
 	~GraphBuilder();
 
 	/**
-	 * Set image format of graph input.
+	 * Set image format of the source node in the graph.
+	 *
+	 * A graph must have exactly one source node. GraphBuilder::set_source
+	 * must be the first function called. Since a graph can have only one
+	 * output node, the source format also becomes the current working format.
 	 *
 	 * @param source image format
 	 * @return reference to self
@@ -206,22 +163,30 @@ public:
 	GraphBuilder &set_source(const state &source);
 
 	/**
-	 * Connect graph to target image format.
+	 * Convert current graph node to target format.
+	 *
+	 * GraphBuilder::connect may be called multiple times to implement custom
+	 * format negotiation logic. After each call, the graph's current working
+	 * format is updated to the target format.
+	 *
+	 * For debugging purposes, the observer is called with the details of each
+	 * internal operation.
 	 *
 	 * @param target image format
-	 * @param params filter creation parameters
-	 * @return reference to self
+	 * @param params filter instantiation parameters
+	 * @params observer observer
 	 */
-	GraphBuilder &connect_graph(const state &target, const params *params, FilterFactory *factory = nullptr);
+	GraphBuilder &connect(const state &target, const params *params, FilterObserver *observer = nullptr);
 
 	/**
-	 * Finalize and return managed graph.
+	 * Finalize and return a complete filter graph.
+	 *
+	 * Returns a graph with the output node set to the current format.
 	 *
 	 * @return graph
 	 */
-	std::unique_ptr<FilterGraph> complete_graph();
+	std::unique_ptr<FilterGraph> complete();
 };
-
 
 } // namespace graph
 } // namespace zimg

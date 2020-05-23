@@ -1,94 +1,191 @@
-#include <algorithm>
 #include <cmath>
-#include <cstdint>
-#include <iterator>
-#include <limits>
-#include <new>
+#include <memory>
+#include <utility>
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
+#include "common/pixel.h"
+#include "depth/depth.h"
 #include "resize/filter.h"
+#include "resize/resize.h"
+#include "unresize/unresize.h"
 #include "basic_filter.h"
 #include "filtergraph.h"
 #include "graphbuilder.h"
+#include "image_filter.h"
+
+
+#ifndef ZIMG_UNSAFE_IMAGE_SIZE
+  #include <limits>
+  static constexpr size_t IMAGE_DIMENSION_MAX = static_cast<size_t>(1U) << (std::numeric_limits<size_t>::digits / 2 - 2);
+#else
+  static constexpr size_t IMAGE_DIMENSION_MAX = ~static_cast<size_t>(0);
+#endif // ZIMG_UNSAFE_IMAGE_SIZE
+
+
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+#define iassert(cond) do { \
+  if (!(cond)) \
+    error::throw_<error::InternalError>("invalid graph state L" STRINGIFY(__LINE__) ": " #cond); \
+} while (0)
+
 
 namespace zimg {
 namespace graph {
 
 namespace {
 
-#ifndef ZIMG_UNSAFE_IMAGE_SIZE
-#include <limits>
-constexpr size_t IMAGE_DIMENSION_MAX = static_cast<size_t>(1U) << (std::numeric_limits<size_t>::digits / 2 - 2);
-#else
-constexpr size_t IMAGE_DIMENSION_MAX = ~static_cast<size_t>(0);
-#endif // ZIMG_UNSAFE_IMAGE_SIZE
+constexpr plane_mask luma_planes{ true, false, false, false };
+constexpr plane_mask chroma_planes{ false, true, true, false };
+constexpr plane_mask alpha_planes{ false, false, false, true };
 
-double chroma_shift_raw(GraphBuilder::ChromaLocationW loc, GraphBuilder::FieldParity)
+plane_mask operator|(plane_mask lhs, plane_mask rhs)
 {
+	return{ lhs[0] || rhs[0], lhs[1] || rhs[1], lhs[2] || rhs[2], lhs[3] || rhs[3] };
+}
+
+plane_mask &operator|=(plane_mask &lhs, plane_mask rhs)
+{
+	lhs = lhs | rhs;
+	return lhs;
+}
+
+id_map operator&(id_map lhs, plane_mask rhs)
+{
+	auto select = [](node_id id, bool enabled) { return enabled ? id : invalid_id; };
+	return{ select(lhs[0], rhs[0]), select(lhs[1], rhs[1]), select(lhs[2], rhs[2]), select(lhs[3], rhs[3]) };
+}
+
+
+class DefaultFilterObserver : public FilterObserver {};
+
+
+// Offset of chroma sample from corresponding centered chroma sample in units of chroma pixels.
+double chroma_offset_w(GraphBuilder::ChromaLocationW loc, double subsampling)
+{
+	// 4:2:0
+	// x x x x
+	// LCR LCR
+	// x x x x
+	//
+	// L offset = -1/4, R offset = +1/4
+	//
+	// 4:1:0
+	// x x x x x x x x
+	// L  C  R L  C  R
+	// x x x x x x x x
+	//
+	// L offset = -3/8, R offset = +3/8
+	//
+	// x = luma, L = left chroma, C = center chroma, R = right chroma
+
 	if (loc == GraphBuilder::ChromaLocationW::LEFT)
-		return -0.5;
+		return -0.5 + 0.5 * subsampling;
 	else
 		return 0.0;
 }
 
-double chroma_shift_raw(GraphBuilder::ChromaLocationH loc, GraphBuilder::FieldParity parity)
+double chroma_offset_h(GraphBuilder::ChromaLocationH loc, double subsampling)
 {
-	double shift;
+	// 4:2:0 (chroma horizontally centered for illustration)
+	// xTx
+	//  C
+	// xBx
+	//
+	// xTx
+	//  C
+	// xBx
+	//
+	// T offset = -1/4, B offset = +1/4
+	//
+	// x = luma, T = top chroma, C = center chroma, B = bottom chroma
 
 	if (loc == GraphBuilder::ChromaLocationH::TOP)
-		shift = -0.5;
+		return -0.5 + 0.5 * subsampling;
 	else if (loc == GraphBuilder::ChromaLocationH::BOTTOM)
-		shift = 0.5;
+		return 0.5 - 0.5 * subsampling;
 	else
-		shift = 0;
+		return 0.0;
+}
+
+// Calculate the offset from a progressive frame with the same dimensions as a field.
+double chroma_offset_parity_adjustment(GraphBuilder::FieldParity parity, double offset)
+{
+	// 4:2:2 (chroma horizontally centered for illustration)
+	// INTERLACED PROG_FRAME PROG_FIELD
+	//  0 1 2      0 1 2      0 1 2
+	// 0          0          0
+	//   TtT        xox
+	// 1          1          1 xox
+	//   BbB        xox
+	// 2          2          2
+	//   TtT        xox
+	// 3          3          3 xox
+	//   BbB        xox
+	//
+	// offset from PROG_FIELD: -1/4 (top field), +1/4 (bottom field)
+	//
+	// 4:2:0 (horizontally centered for illustration)
+	// CTOP       CCENTER    CBOTTOM    PROG_FRAME PROG_FIELD
+	//  0 1 2      0 1 2      0 1 2      0 1 2      0 1 2
+	// 0          0          0          0          0
+	//   TtT        T T        T T        x x
+	// 1          1  t       1          1  o       1 x x
+	//   B B        B B        BtB        x x
+	// 2          2          2          2          2  o
+	//   TbT        T T        T T        x x
+	// 3          3  b        3         3  o       3 x x
+	//   B B        B B        BbB        x x
+	// 4          4          4          4          4
+	//   TtT        T T        T T        x x
+	// 5          5  t        5         5  o       5 x x
+	//   B B        B B        BtB        x x
+	// 6          6          6          6          6  o
+	//   TbT        T T        T T        x x
+	// 7          7  b       7          7  o       7 x x
+	//   B B        B B        BtB        x x
+	//
+	// TOP offset from PROG_FIELD: -3/8 (top field), +1/8 (bottom field)
+	// CENTER offset from PROG_FIELD: -1/4 (top field), +1/4 (bottom field)
+	// BOTTOM offset from PROG_FIELD: -1/8 (top field), +3/8 (bottom field)
+	//
+	// x = progressive luma, o = progressive chroma
+	// T = top field luma, B = bottom field luma
+	// t = top field chroma, b = bottomm field chroma
 
 	if (parity == GraphBuilder::FieldParity::TOP)
-		shift = (shift - 0.5) / 2.0;
+		return -0.25 + offset / 2;
 	else if (parity == GraphBuilder::FieldParity::BOTTOM)
-		shift = (shift + 0.5) / 2.0;
-
-	return shift;
+		return 0.25 + offset / 2;
+	else
+		return offset;
 }
 
-template <class T>
-double chroma_shift_factor(T loc_in, T loc_out, unsigned subsample_in, unsigned subsample_out, GraphBuilder::FieldParity parity, unsigned src_dim, unsigned dst_dim)
+double luma_parity_offset(GraphBuilder::FieldParity parity)
 {
-	double shift = 0.0;
-	double sub_scale = 1.0 / (1 << subsample_in);
-
-	if (subsample_in)
-		shift -= sub_scale * chroma_shift_raw(loc_in, parity);
-	if (subsample_out)
-		shift += sub_scale * chroma_shift_raw(loc_out, parity) * src_dim / dst_dim;
-
-	return shift;
-}
-
-double luma_shift_factor(GraphBuilder::FieldParity parity, unsigned src_height, unsigned dst_height)
-{
-	double shift = 0.0;
+	// INTERLACED PROG_FRAME PROG_FIELD
+	//  0 1 2      0 1 2      0 1 2
+	// 0          0          0
+	//   T T        x x
+	// 1          1          1 x x
+	//   B B        x x
+	// 2          2          2
+	//   T T        x x
+	// 3          3          3 x x
+	//   B B        x x
+	//
+	// offset from PROG_FIELD: -1/4 (top field), +1/4 (bottom field)
+	//
+	// x = progressive, T = top field, B = bottom field
 
 	if (parity == GraphBuilder::FieldParity::TOP)
-		shift = -0.25;
+		return -0.25;
 	else if (parity == GraphBuilder::FieldParity::BOTTOM)
-		shift = 0.25;
-
-	return shift * src_height / dst_height - shift;
+		return 0.25;
+	else
+		return 0.0;
 }
-
-
-bool is_greyscale(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::GREY; }
-
-bool is_rgb(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::RGB; }
-
-bool is_yuv(const GraphBuilder::state &state) { return state.color == GraphBuilder::ColorFamily::YUV; }
-
-bool is_color(const GraphBuilder::state &state) { return !is_greyscale(state); }
-
-bool is_ycgco(const GraphBuilder::state &state) { return state.colorspace.matrix == colorspace::MatrixCoefficients::YCGCO; }
-
-bool has_alpha(const GraphBuilder::state &state) { return state.alpha != GraphBuilder::AlphaType::NONE; }
 
 void validate_state(const GraphBuilder::state &state)
 {
@@ -99,21 +196,21 @@ void validate_state(const GraphBuilder::state &state)
 	if (state.width > pixel_max_width(state.type))
 		error::throw_<error::InvalidImageSize>("image width exceeds memory addressing limit");
 
-	if (is_greyscale(state)) {
+	if (state.color == GraphBuilder::ColorFamily::GREY) {
 		if (state.subsample_w || state.subsample_h)
 			error::throw_<error::GreyscaleSubsampling>("cannot subsample greyscale image");
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("GREY color family cannot have RGB matrix coefficients");
 	}
 
-	if (is_rgb(state)) {
+	if (state.color == GraphBuilder::ColorFamily::RGB) {
 		if (state.subsample_w || state.subsample_h)
 			error::throw_<error::UnsupportedSubsampling>("subsampled RGB image not supported");
 		if (state.colorspace.matrix != colorspace::MatrixCoefficients::UNSPECIFIED && state.colorspace.matrix != colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("RGB color family cannot have YUV matrix coefficients");
 	}
 
-	if (is_yuv(state)) {
+	if (state.color == GraphBuilder::ColorFamily::YUV) {
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("YUV color family cannot have RGB matrix coefficients");
 	}
@@ -137,743 +234,797 @@ void validate_state(const GraphBuilder::state &state)
 		error::throw_<error::InvalidImageSize>("active window must be positive");
 }
 
-bool needs_colorspace(const GraphBuilder::state &source, const GraphBuilder::state &target)
-{
-	auto csp_in = source.colorspace;
-	auto csp_out = target.colorspace;
-
-	if (is_greyscale(target) && !is_rgb(source))
-		csp_in.matrix = csp_out.matrix;
-
-	return csp_in != csp_out;
-}
-
-bool needs_depth(const GraphBuilder::state &source, const GraphBuilder::state &target)
-{
-	return PixelFormat{ source.type, source.depth, source.fullrange } != PixelFormat{ target.type, target.depth, target.fullrange };
-}
-
-bool needs_resize(const GraphBuilder::state &source, const GraphBuilder::state &target)
-{
-	bool result = source.width != target.width ||
-		          source.height != target.height ||
-		          source.active_left != target.active_left ||
-		          source.active_top != target.active_top ||
-		          source.active_width != target.active_width ||
-		          source.active_height != target.active_height;
-
-	if (is_color(source) || is_color(target)) {
-		result = result ||
-		         source.subsample_w != target.subsample_w ||
-			     source.subsample_h != target.subsample_h ||
-		         (source.subsample_w && source.chroma_location_w != target.chroma_location_w) ||
-			     (source.subsample_h && source.chroma_location_h != target.chroma_location_h);
-	};
-
-	return result;
-}
-
 } // namespace
 
 
-auto DefaultFilterFactory::create_colorspace(const colorspace::ColorspaceConversion &conv) -> filter_list
-{
-	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
-	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
-}
+struct GraphBuilder::internal_state {
+	struct plane {
+		unsigned width;
+		unsigned height;
+		PixelFormat format;
+		double active_left;
+		double active_top;
+		double active_width;
+		double active_height;
 
-auto DefaultFilterFactory::create_depth(const depth::DepthConversion &conv) -> filter_list
-{
-	std::unique_ptr<ImageFilter> filters[1] = { conv.create() };
-	return{ std::make_move_iterator(filters), std::make_move_iterator(filters + 1) };
-}
+		friend bool operator==(const plane &lhs, const plane &rhs)
+		{
+			return lhs.width == rhs.width &&
+				lhs.height == rhs.height &&
+				lhs.format == rhs.format &&
+				lhs.active_left == rhs.active_left &&
+				lhs.active_top == rhs.active_top &&
+				lhs.active_width == rhs.active_width &&
+				lhs.active_height == rhs.active_height;
+		}
 
-auto DefaultFilterFactory::create_resize(const resize::ResizeConversion &conv) -> filter_list
-{
-	auto filter_pair = conv.create();
-	filter_list list;
+		friend bool operator!=(const plane &lhs, const plane &rhs)
+		{
+			return !(lhs == rhs);
+		}
+	};
 
-	if (filter_pair.first)
-		list.emplace_back(std::move(filter_pair.first));
-	if (filter_pair.second)
-		list.emplace_back(std::move(filter_pair.second));
+	plane planes[4];
+	ColorFamily color;
+	colorspace::ColorspaceDefinition colorspace;
+	AlphaType alpha;
+private:
+	void chroma_from_luma(unsigned subsample_w, unsigned subsample_h)
+	{
+		double subscale_w = 1.0 / (1U << subsample_w);
+		double subscale_h = 1.0 / (1U << subsample_h);
 
-	return list;
-}
+		planes[PLANE_U] = planes[PLANE_Y];
+		planes[PLANE_U].width >>= subsample_w;
+		planes[PLANE_U].height >>= subsample_h;
+		planes[PLANE_U].format.chroma = color == ColorFamily::YUV;
+		planes[PLANE_U].active_left *= subscale_w;
+		planes[PLANE_U].active_top *= subscale_h;
+		planes[PLANE_U].active_width *= subscale_w;
+		planes[PLANE_U].active_height *= subscale_h;
 
-auto DefaultFilterFactory::create_unresize(const unresize::UnresizeConversion &conv) -> filter_list
-{
-	auto filter_pair = conv.create();
-	filter_list list;
+		planes[PLANE_V] = planes[PLANE_U];
+	}
 
-	if (filter_pair.first)
-		list.emplace_back(std::move(filter_pair.first));
-	if (filter_pair.second)
-		list.emplace_back(std::move(filter_pair.second));
+	void apply_pixel_siting(FieldParity parity, ChromaLocationW chroma_location_w, ChromaLocationH chroma_location_h)
+	{
+		planes[PLANE_Y].active_top -= luma_parity_offset(parity);
 
-	return list;
-}
+		if (color != ColorFamily::GREY) {
+			double subscale_w = static_cast<double>(planes[PLANE_U].width) / planes[PLANE_Y].width;
+			double subscale_h = static_cast<double>(planes[PLANE_U].height) / planes[PLANE_Y].height;
+			double offset_w = chroma_offset_w(chroma_location_w, subscale_w);
+			double offset_h = chroma_offset_parity_adjustment(parity, chroma_offset_h(chroma_location_h, subscale_h));
+
+			planes[PLANE_U].active_left -= offset_w;
+			planes[PLANE_U].active_top -= offset_h;
+			planes[PLANE_V].active_left -= offset_w;
+			planes[PLANE_V].active_top -= offset_h;
+		}
+
+		if (alpha != AlphaType::NONE)
+			planes[PLANE_A].active_top -= luma_parity_offset(parity);
+	}
+public:
+	internal_state() : planes{}, color{}, colorspace{}, alpha{} {}
+
+	explicit internal_state(const state &state) :
+		planes{},
+		color{ state.color },
+		colorspace(state.colorspace),
+		alpha{ state.alpha }
+	{
+		planes[PLANE_Y].width = state.width;
+		planes[PLANE_Y].height = state.height;
+		planes[PLANE_Y].format.type = state.type;
+		planes[PLANE_Y].format.depth = state.depth;
+		planes[PLANE_Y].format.fullrange = pixel_is_integer(state.type) && state.fullrange;
+		planes[PLANE_Y].format.chroma = false;
+		planes[PLANE_Y].format.ycgco = colorspace.matrix == colorspace::MatrixCoefficients::YCGCO;
+		planes[PLANE_Y].active_left = state.active_left;
+		planes[PLANE_Y].active_top = state.active_top;
+		planes[PLANE_Y].active_width = state.active_width;
+		planes[PLANE_Y].active_height = state.active_height;
+
+		if (color != ColorFamily::GREY)
+			chroma_from_luma(state.subsample_w, state.subsample_h);
+
+		if (alpha != AlphaType::NONE)
+			alpha_from_luma();
+
+		apply_pixel_siting(state.parity, state.chroma_location_w, state.chroma_location_h);
+	}
+
+	void chroma_from_luma_444()
+	{
+		planes[PLANE_U] = planes[PLANE_Y];
+		planes[PLANE_U].format.chroma = color == ColorFamily::YUV;
+		planes[PLANE_V] = planes[PLANE_U];
+	}
+
+	void alpha_from_luma()
+	{
+		planes[PLANE_A] = planes[PLANE_Y];
+		planes[PLANE_A].format.fullrange = pixel_is_integer(planes[PLANE_A].format.type);
+	}
+
+	bool has_chroma() const { return color != ColorFamily::GREY; }
+
+	bool has_alpha() const { return alpha != AlphaType::NONE; }
+
+	friend bool operator==(const internal_state &lhs, const internal_state &rhs)
+	{
+		return lhs.color == rhs.color &&
+			lhs.colorspace == rhs.colorspace &&
+			lhs.alpha == rhs.alpha &&
+			lhs.planes[PLANE_Y] == rhs.planes[PLANE_Y] &&
+			(!lhs.has_chroma() || lhs.planes[PLANE_U] == rhs.planes[PLANE_U]) &&
+			(!lhs.has_chroma() || lhs.planes[PLANE_V] == rhs.planes[PLANE_V]) &&
+			(!lhs.has_alpha() || lhs.planes[PLANE_A] == rhs.planes[PLANE_A]);
+	}
+
+	friend bool operator!=(const internal_state &lhs, const internal_state &rhs)
+	{
+		return !(lhs == rhs);
+	}
+};
+
+
+class GraphBuilder::impl {
+private:
+	enum class ConnectMode {
+		LUMA,
+		CHROMA,
+		ALPHA,
+	};
+
+	std::unique_ptr<FilterGraph> m_graph;
+	id_map m_ids;
+	internal_state m_state;
+
+	internal_state make_float_444_state(const internal_state &state, bool include_alpha)
+	{
+		internal_state result = state;
+		result.planes[PLANE_Y].format = PixelType::FLOAT;
+
+		if (result.has_chroma())
+			result.chroma_from_luma_444();
+		if (result.has_alpha() && include_alpha)
+			result.alpha_from_luma();
+
+		return result;
+	}
+
+	template <class Func>
+	void apply_mask(plane_mask mask, Func func)
+	{
+		for (int p = 0; p < PLANE_NUM; ++p) {
+			if (mask[p])
+				func(p);
+		}
+	}
+
+	void attach_filter(std::shared_ptr<ImageFilter> filter, id_map deps, plane_mask outputs)
+	{
+		node_id id = m_graph->attach_filter(std::move(filter), deps, outputs);
+		apply_mask(outputs, [&](int p) { m_ids[p] = id; });
+	}
+
+	void attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, plane_mask mask, bool has_dep)
+	{
+		apply_mask(mask, [&](int p)
+		{
+			plane_mask mask{};
+			mask[p] = true;
+
+			id_map deps = has_dep ? m_ids & mask : null_ids;
+			attach_filter(filter, deps, mask);
+		});
+	}
+
+	void check_is_444_float(bool check_alpha)
+	{
+		iassert(m_state.planes[PLANE_Y].format.type == PixelType::FLOAT);
+		if (m_state.has_chroma()) {
+			iassert(m_state.planes[PLANE_U].format.type == PixelType::FLOAT);
+			iassert(m_state.planes[PLANE_V].format.type == PixelType::FLOAT);
+		}
+		if (check_alpha && m_state.has_alpha())
+			iassert(m_state.planes[PLANE_A].format.type == PixelType::FLOAT);
+
+		if (m_state.has_chroma()) {
+			iassert(m_state.planes[0].width == m_state.planes[1].width && m_state.planes[0].height == m_state.planes[1].height);
+			iassert(m_state.planes[0].width == m_state.planes[2].width && m_state.planes[0].height == m_state.planes[2].height);
+		}
+	}
+
+	bool needs_colorspace(const internal_state &target)
+	{
+		colorspace::ColorspaceDefinition csp_in = m_state.colorspace;
+		colorspace::ColorspaceDefinition csp_out = target.colorspace;
+
+		if (csp_in == csp_out)
+			return false;
+
+		if (csp_in.transfer == csp_out.transfer && csp_in.primaries == csp_out.primaries) {
+			// Can convert GREY-->YUV/RGB using value-init or dup filter.
+			if (m_state.color == ColorFamily::GREY)
+				return false;
+			// Can convert YUV/GREY-->GREY by dropping chroma.
+			if (m_state.color != ColorFamily::RGB && target.color == ColorFamily::GREY)
+				return false;
+		}
+
+		return true;
+	}
+
+	bool needs_resize_plane(const internal_state &target, int p)
+	{
+		internal_state::plane plane = target.planes[p];
+		plane.format = m_state.planes[p].format;
+		return m_state.planes[p] != plane;
+	}
+
+	bool needs_resize(const internal_state &target)
+	{
+		if (needs_resize_plane(target, PLANE_Y))
+			return true;
+		if (m_state.has_chroma() && target.has_chroma() && needs_resize_plane(target, PLANE_U))
+			return true;
+		if (m_state.has_chroma() && target.has_chroma() && needs_resize_plane(target, PLANE_V))
+			return true;
+		if (m_state.has_alpha() && target.has_alpha() && needs_resize_plane(target, PLANE_A))
+			return true;
+		return false;
+	}
+
+	bool needs_premul(const internal_state &target)
+	{
+		if (m_state.alpha != AlphaType::STRAIGHT)
+			return false;
+		return target.alpha != AlphaType::STRAIGHT || needs_colorspace(target) || needs_resize(target);
+	}
+
+	void drop_plane(int p) { m_ids[p] = invalid_id; }
+
+	void yuv_to_grey(FilterObserver &observer)
+	{
+		iassert(m_state.color == ColorFamily::YUV);
+
+		observer.yuv_to_grey();
+
+		drop_plane(PLANE_U);
+		drop_plane(PLANE_V);
+		m_state.color = ColorFamily::GREY;
+	}
+
+	void grey_to_rgb(colorspace::MatrixCoefficients matrix, FilterObserver &observer)
+	{
+		iassert(m_state.color == ColorFamily::GREY);
+
+		observer.grey_to_rgb();
+
+		auto filter = std::make_shared<RGBExtendFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.planes[PLANE_Y].format.type);
+		attach_filter(std::move(filter), m_ids & luma_planes, chroma_planes);
+
+		m_state.color = ColorFamily::RGB;
+		m_state.colorspace.matrix = matrix;
+		m_state.chroma_from_luma_444();
+	}
+
+	void grey_to_yuv(const internal_state &target, FilterObserver &observer)
+	{
+		iassert(m_state.color == ColorFamily::GREY);
+
+		observer.grey_to_yuv();
+
+		PixelFormat format = m_state.planes[PLANE_Y].format;
+		format.chroma = true;
+
+		ValueInitializeFilter::value_type val;
+
+		switch (format.type) {
+		case PixelType::BYTE: val.b = 1U << (format.depth - 1); break;
+		case PixelType::WORD: val.w = 1U << (format.depth - 1); break;
+		case PixelType::HALF: val.w = 0; break;
+		case PixelType::FLOAT: val.f = 0.0f; break;
+		}
+
+		auto filter = std::make_shared<ValueInitializeFilter>(
+			target.planes[PLANE_U].width, target.planes[PLANE_U].height, format.type, val);
+		attach_greyscale_filter(filter, chroma_planes, false);
+
+		m_state.color = ColorFamily::YUV;
+		m_state.colorspace.matrix = target.colorspace.matrix;
+		m_state.planes[PLANE_U] = target.planes[PLANE_U];
+		m_state.planes[PLANE_U].format = format;
+		m_state.planes[PLANE_V] = target.planes[PLANE_V];
+		m_state.planes[PLANE_V].format = format;
+	}
+
+	void premultiply(FilterObserver &observer)
+	{
+		iassert(m_state.alpha == AlphaType::STRAIGHT);
+		check_is_444_float(true);
+
+		observer.premultiply();
+
+		auto filter = std::make_shared<PremultiplyFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.has_chroma());
+
+		plane_mask dep_mask = luma_planes | alpha_planes;
+		plane_mask output_mask = luma_planes;
+
+		if (m_state.has_chroma()) {
+			dep_mask |= chroma_planes;
+			output_mask |= chroma_planes;
+		}
+
+		attach_filter(std::move(filter), m_ids & dep_mask, output_mask);
+		m_state.alpha = AlphaType::PREMULTIPLIED;
+	}
+
+	void unpremultiply(FilterObserver &observer)
+	{
+		iassert(m_state.alpha == AlphaType::PREMULTIPLIED);
+		check_is_444_float(true);
+
+		observer.unpremultiply();
+
+		auto filter = std::make_shared<UnpremultiplyFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.has_chroma());
+
+		plane_mask dep_mask = luma_planes | alpha_planes;
+		plane_mask output_mask = luma_planes;
+
+		if (m_state.has_chroma()) {
+			dep_mask |= chroma_planes;
+			output_mask |= chroma_planes;
+		}
+
+		attach_filter(std::move(filter), m_ids & dep_mask, output_mask);
+		m_state.alpha = AlphaType::STRAIGHT;
+	}
+
+	void add_opaque_alpha(AlphaType type, FilterObserver &observer)
+	{
+		iassert(m_state.alpha == AlphaType::NONE);
+
+		observer.add_opaque();
+
+		PixelFormat format = m_state.planes[PLANE_Y].format;
+		ValueInitializeFilter::value_type val;
+
+		switch (format.type) {
+		case PixelType::BYTE: val.b = UINT8_MAX >> (8 - format.depth); break;
+		case PixelType::WORD: val.w = UINT16_MAX >> (16 - format.depth); break;
+		case PixelType::HALF: val.w = 0x3C00; break; // 1.0
+		case PixelType::FLOAT: val.f = 1.0f; break;
+		}
+
+		auto filter = std::make_shared<ValueInitializeFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, format.type, val);
+		attach_greyscale_filter(std::move(filter), alpha_planes, false);
+
+		m_state.alpha = type;
+		m_state.alpha_from_luma();
+	}
+
+	void reinterpret_full_to_limited(internal_state &target, plane_mask mask)
+	{
+		apply_mask(mask, [&](int p)
+		{
+			m_state.planes[p].format.fullrange = false;
+			target.planes[p].format.fullrange = false;
+		});
+	}
+
+	PixelFormat choose_resize_format(const internal_state &target, const params &params, int p)
+	{
+		if (params.unresize)
+			return PixelType::FLOAT;
+
+		bool supported[4] = { false, true, cpu_has_fast_f16(params.cpu), true };
+		auto is_supported_type = [=](PixelType type) { return supported[static_cast<int>(type)]; };
+
+		double src_pels = static_cast<double>(m_state.planes[p].width) * m_state.planes[p].height;
+		double dst_pels = static_cast<double>(target.planes[p].width) * target.planes[p].height;
+
+		PixelFormat src_format = m_state.planes[p].format;
+		PixelFormat dst_format = target.planes[p].format;
+
+		// If both formats are supported, pick the one that ends up converting the fewest pixels.
+		if (is_supported_type(src_format.type) && is_supported_type(dst_format.type))
+			return src_pels < dst_pels ? dst_format : src_format;
+
+		// Pick the supported format.
+		if (is_supported_type(src_format.type))
+			return src_format;
+		if (is_supported_type(dst_format.type))
+			return dst_format;
+
+		// Promote BYTE to WORD if dithering would not be required.
+		if (is_supported_type(PixelType::WORD) && src_format.type == PixelType::BYTE && !src_format.fullrange)
+			return { PixelType::WORD, 16, false, src_format.chroma, src_format.ycgco };
+
+		// FLOAT is always supported.
+		return PixelType::FLOAT;
+	}
+
+	void resize_plane(const internal_state &target, const params &params, FilterObserver &observer, plane_mask mask, int p)
+	{
+		if (!needs_resize_plane(target, p))
+			return;
+
+		const internal_state::plane &src_plane = m_state.planes[p];
+		const internal_state::plane &dst_plane = target.planes[p];
+
+		if (params.unresize) {
+			if (src_plane.width != src_plane.active_width || src_plane.height != src_plane.active_height ||
+			    dst_plane.width != dst_plane.active_height || dst_plane.height != dst_plane.active_height)
+			{
+				error::throw_<error::ResamplingNotAvailable>("unresize not supported for for given subregion");
+			}
+		}
+
+		double scale_w = static_cast<double>(dst_plane.width) / src_plane.width;
+		double scale_h = static_cast<double>(dst_plane.height) / src_plane.height;
+
+		// Map active region in output image to the corresponding rectangle in input image.
+		double shift_w = src_plane.active_left - dst_plane.active_left / scale_w;
+		double shift_h = src_plane.active_top - dst_plane.active_top / scale_h;
+		double subwidth = src_plane.active_width * (dst_plane.width / dst_plane.active_width);
+		double subheight = src_plane.active_height * (dst_plane.height / dst_plane.active_height);
+
+		std::unique_ptr<ImageFilter> first;
+		std::unique_ptr<ImageFilter> second;
+
+		if (params.unresize) {
+			unresize::UnresizeConversion conv{ src_plane.width, src_plane.height, src_plane.format.type };
+			conv.set_orig_width(dst_plane.width)
+				.set_orig_height(dst_plane.height)
+				.set_shift_w(shift_w)
+				.set_shift_h(shift_h)
+				.set_cpu(params.cpu);
+
+			observer.unresize(conv, p);
+
+			auto filter_list = conv.create();
+			first = std::move(filter_list.first);
+			second = std::move(filter_list.second);
+		} else{
+			resize::ResizeConversion conv{ src_plane.width, src_plane.height, src_plane.format.type };
+			conv.set_depth(src_plane.format.depth)
+				.set_filter(p == PLANE_U || p == PLANE_V ? params.filter_uv : params.filter)
+				.set_dst_width(dst_plane.width)
+				.set_dst_height(dst_plane.height)
+				.set_shift_w(shift_w)
+				.set_shift_h(shift_h)
+				.set_subwidth(subwidth)
+				.set_subheight(subheight)
+				.set_cpu(params.cpu);
+
+			observer.resize(conv, p);
+
+			auto filter_list = conv.create();
+			first = std::move(filter_list.first);
+			second = std::move(filter_list.second);
+		}
+
+		if (first)
+			attach_greyscale_filter(std::move(first), mask, true);
+		if (second)
+			attach_greyscale_filter(std::move(second), mask, true);
+
+		apply_mask(mask, [&](int q)
+		{
+			PixelFormat format = m_state.planes[q].format;
+			m_state.planes[q] = target.planes[q];
+			m_state.planes[q].format = format;
+		});
+	}
+
+	void convert_colorspace(const colorspace::ColorspaceDefinition &csp, const params &params, FilterObserver &observer)
+	{
+		iassert(m_state.color != ColorFamily::GREY);
+		check_is_444_float(false);
+
+		if (m_state.colorspace == csp)
+			return;
+
+		colorspace::ColorspaceConversion conv{ m_state.planes[0].width, m_state.planes[0].height };
+		conv.set_csp_in(m_state.colorspace)
+			.set_csp_out(csp)
+			.set_peak_luminance(params.peak_luminance)
+			.set_approximate_gamma(params.approximate_gamma)
+			.set_scene_referred(params.scene_referred)
+			.set_cpu(params.cpu);
+
+		observer.colorspace(conv);
+
+		auto filter = conv.create();
+		attach_filter(std::move(filter), m_ids & (luma_planes | chroma_planes), luma_planes | chroma_planes);
+
+		if (csp.matrix == colorspace::MatrixCoefficients::RGB) {
+			m_state.color = ColorFamily::RGB;
+			m_state.planes[PLANE_U].format.chroma = false;
+			m_state.planes[PLANE_V].format.chroma = false;
+		} else {
+			m_state.color = ColorFamily::YUV;
+			m_state.planes[PLANE_U].format.chroma = true;
+			m_state.planes[PLANE_V].format.chroma = true;
+		}
+		m_state.colorspace = csp;
+	}
+
+	void convert_pixel_format(const PixelFormat &format, const params &params, FilterObserver &observer, plane_mask mask, int p)
+	{
+		if (m_state.planes[p].format == format)
+			return;
+
+		depth::DepthConversion conv{ m_state.planes[p].width, m_state.planes[p].height };
+		conv.set_pixel_in(m_state.planes[p].format)
+			.set_pixel_out(format)
+			.set_dither_type(params.dither_type)
+			.set_cpu(params.cpu);
+
+		observer.depth(conv, p);
+
+		auto filter = conv.create();
+		attach_greyscale_filter(std::move(filter), mask, true);
+
+		apply_mask(mask, [&](int q) { m_state.planes[q].format = format; });
+	}
+
+	void connect_plane(internal_state &target, const params &params, FilterObserver &observer, ConnectMode mode, bool reinterpret_range)
+	{
+		plane_mask mask{};
+		int p;
+
+		if (mode == ConnectMode::LUMA) {
+			mask = m_state.color == ColorFamily::RGB ? luma_planes | chroma_planes : luma_planes;
+			p = PLANE_Y;
+		} else if (mode == ConnectMode::CHROMA) {
+			mask = chroma_planes;
+			p = PLANE_U;
+		} else {
+			mask = alpha_planes;
+			p = PLANE_A;
+		}
+
+		if (reinterpret_range) {
+			PixelFormat src_format = m_state.planes[p].format;
+			PixelFormat dst_format = target.planes[p].format;
+
+			// Promote full-range BYTE inputs to a limited-range WORD if it would not affect the output.
+			if (src_format.type == PixelType::BYTE && src_format.fullrange && dst_format.fullrange &&
+			    src_format.depth == dst_format.depth)
+			{
+				reinterpret_full_to_limited(target, mask);
+			}
+		}
+
+		if (needs_resize_plane(target, p)) {
+			PixelFormat format = choose_resize_format(target, params, p);
+			convert_pixel_format(format, params, observer, mask, p);
+			resize_plane(target, params, observer, mask, p);
+		}
+
+		if (m_state.planes[p].format != target.planes[p].format)
+			convert_pixel_format(target.planes[p].format, params, observer, mask, p);
+
+		iassert(m_state.planes[p] == target.planes[p]);
+	}
+
+	void connect_color_channels_planar(internal_state &target, const params &params, FilterObserver &observer, bool reinterpret_range)
+	{
+		connect_plane(target, params, observer, ConnectMode::LUMA, reinterpret_range);
+
+		if (m_state.color == ColorFamily::YUV)
+			connect_plane(target, params, observer, ConnectMode::CHROMA, reinterpret_range);
+	}
+
+	void connect_color_channels(internal_state &target, const params &params, FilterObserver &observer)
+	{
+		if (needs_colorspace(target)) {
+			internal_state tmp = make_float_444_state(m_state, false);
+
+			const internal_state &w = m_state.planes[PLANE_Y].width < target.planes[PLANE_Y].width ? m_state : target;
+			const internal_state &h = m_state.planes[PLANE_Y].height < target.planes[PLANE_Y].height ? m_state : target;
+
+			tmp.planes[PLANE_Y].width = w.planes[PLANE_Y].width;
+			tmp.planes[PLANE_Y].height = h.planes[PLANE_Y].height;
+			tmp.planes[PLANE_Y].active_left = w.planes[PLANE_Y].active_left;
+			tmp.planes[PLANE_Y].active_height = h.planes[PLANE_Y].active_top;
+			tmp.planes[PLANE_Y].active_width = w.planes[PLANE_Y].active_width;
+			tmp.planes[PLANE_Y].active_height = h.planes[PLANE_Y].active_height;
+
+			if (tmp.has_chroma())
+				tmp.chroma_from_luma_444();
+
+			connect_color_channels_planar(tmp, params, observer, false);
+
+			if (!m_state.has_chroma()) {
+				colorspace::MatrixCoefficients matrix =
+					target.color == ColorFamily::RGB ? target.colorspace.matrix : colorspace::MatrixCoefficients::RGB;
+				grey_to_rgb(matrix, observer);
+			}
+
+			convert_colorspace(target.colorspace, params, observer);
+			iassert(m_state.colorspace == target.colorspace);
+		}
+
+		if (m_state.has_chroma() && !target.has_chroma())
+			yuv_to_grey(observer);
+
+		if (!m_state.has_chroma() && !target.has_chroma() &&
+			m_state.colorspace.transfer == target.colorspace.transfer &&
+			m_state.colorspace.primaries == target.colorspace.primaries)
+		{
+			m_state.colorspace.matrix = target.colorspace.matrix;
+		}
+
+		connect_color_channels_planar(target, params, observer, true);
+
+		if (m_state.color == ColorFamily::GREY && target.color == ColorFamily::RGB)
+			grey_to_rgb(target.colorspace.matrix, observer);
+		if (m_state.color == ColorFamily::GREY && target.color == ColorFamily::YUV)
+			grey_to_yuv(target, observer);
+
+		iassert(m_state.color == target.color);
+		iassert(m_state.colorspace == target.colorspace);
+		iassert(m_state.planes[PLANE_Y] == target.planes[PLANE_Y]);
+		iassert(!m_state.has_chroma() || m_state.planes[PLANE_U] == target.planes[PLANE_U]);
+		iassert(!m_state.has_chroma() || m_state.planes[PLANE_V] == target.planes[PLANE_V]);
+	}
+
+	void connect_internal(internal_state &target, const params &params, FilterObserver &observer)
+	{
+		if (needs_premul(target)) {
+			internal_state::plane orig_alpha_plane = m_state.planes[PLANE_A];
+			node_id orig_alpha_node = m_ids[PLANE_A];
+
+			internal_state tmp = make_float_444_state(m_state, true);
+			connect_color_channels(tmp, params, observer);
+			connect_plane(tmp, params, observer, ConnectMode::ALPHA, false);
+
+			premultiply(observer);
+
+			if (target.has_alpha() && target.planes[PLANE_A] == orig_alpha_plane) {
+				m_ids[PLANE_A] = orig_alpha_node;
+				m_state.planes[PLANE_A] = orig_alpha_plane;
+			}
+		}
+
+		if (m_state.has_alpha() && !target.has_alpha()) {
+			observer.discard_alpha();
+			drop_plane(PLANE_A);
+			m_state.alpha = AlphaType::NONE;
+		}
+
+		if (m_state.alpha == AlphaType::PREMULTIPLIED && target.alpha == AlphaType::STRAIGHT) {
+			internal_state::plane orig_alpha_plane = m_state.planes[PLANE_A];
+			node_id orig_alpha_node = m_ids[PLANE_A];
+
+			internal_state tmp = make_float_444_state(target, true);
+			connect_color_channels(tmp, params, observer);
+			connect_plane(tmp, params, observer, ConnectMode::ALPHA, false);
+
+			unpremultiply(observer);
+
+			if (target.has_alpha() && target.planes[PLANE_A] == orig_alpha_plane) {
+				m_ids[PLANE_A] = orig_alpha_node;
+				m_state.planes[PLANE_A] = orig_alpha_plane;
+			}
+		}
+
+		connect_color_channels(target, params, observer);
+		if (m_state.has_alpha()) {
+			iassert(m_state.alpha == target.alpha);
+			connect_plane(target, params, observer, ConnectMode::ALPHA, true);
+		}
+
+		if (!m_state.has_alpha() && target.has_alpha())
+			add_opaque_alpha(target.alpha, observer);
+
+		if (m_state != target)
+			error::throw_<error::InternalError>("failed to connect graph");
+	}
+public:
+	impl() : m_ids(null_ids), m_state{} {}
+
+	void set_source(const state &source)
+	{
+		if (m_graph)
+			error::throw_<error::InternalError>("graph already initialized");
+
+		m_graph = ztd::make_unique<FilterGraph>();
+		m_ids = null_ids;
+		m_state = internal_state{ source };
+
+		ImageFilter::image_attributes attr{ source.width, source.height, source.type };
+
+		plane_mask mask{};
+		mask[PLANE_Y] = true;
+		mask[PLANE_U] = m_state.has_chroma();
+		mask[PLANE_V] = m_state.has_chroma();
+		mask[PLANE_A] = m_state.has_alpha();
+
+		node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
+		apply_mask(mask, [&](int p) { m_ids[p] = id; });
+	}
+
+	void connect(const state &target, const params &params, FilterObserver &observer)
+	{
+		if (!m_graph)
+			error::throw_<error::InternalError>("graph not initialized");
+
+		internal_state internal_target{ target };
+		connect_internal(internal_target, params, observer);
+	}
+
+	std::unique_ptr<FilterGraph> complete()
+	{
+		if (!m_graph)
+			error::throw_<error::InternalError>("graph not initialized");
+
+		m_graph->set_output(m_ids);
+		return std::move(m_graph);
+	}
+};
 
 
 GraphBuilder::params::params() noexcept :
+	filter{},
+	filter_uv{},
 	unresize{},
 	dither_type{},
-	peak_luminance{ NAN },
+	peak_luminance{ 100.0 },
 	approximate_gamma{},
 	scene_referred{},
 	cpu{}
-{}
+{
+	static const resize::BicubicFilter bicubic;
+	static const resize::BilinearFilter bilinear;
 
-struct GraphBuilder::resize_spec {
-	unsigned width;
-	unsigned height;
-	unsigned subsample_w;
-	unsigned subsample_h;
-	double shift_w;
-	double shift_h;
-	double subwidth;
-	double subheight;
-	ChromaLocationW chroma_location_w;
-	ChromaLocationH chroma_location_h;
+	filter = &bicubic;
+	filter_uv = &bilinear;
+}
 
-	resize_spec() = default;
 
-	explicit resize_spec(const state &state) :
-		width{ state.width },
-		height{ state.height },
-		subsample_w{ state.subsample_w },
-		subsample_h{ state.subsample_h },
-		shift_w{ state.active_left },
-		shift_h{ state.active_top },
-		subwidth{ state.active_width },
-		subheight{ state.active_height },
-		chroma_location_w{ state.chroma_location_w },
-		chroma_location_h{ state.chroma_location_h }
-	{}
-};
-
-GraphBuilder::GraphBuilder() noexcept : m_state{}, m_plane_ids(null_ids) {}
+GraphBuilder::GraphBuilder() : m_impl(ztd::make_unique<impl>()) {}
 
 GraphBuilder::~GraphBuilder() = default;
 
-GraphBuilder::state GraphBuilder::make_alpha_state(const state &s)
+GraphBuilder &GraphBuilder::set_source(const state &source)
 {
-	state result = s;
-	result.color = ColorFamily::GREY;
-	result.colorspace = { colorspace::MatrixCoefficients::UNSPECIFIED, colorspace::TransferCharacteristics::UNSPECIFIED, colorspace::ColorPrimaries::UNSPECIFIED };
-	result.fullrange = true;
-	result.alpha = AlphaType::NONE;
-
-	return result;
-}
-
-void GraphBuilder::attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, int plane, bool dep)
-{
-	id_map deps = null_ids;
-	plane_mask mask{};
-
-	deps[plane] = dep ? m_plane_ids[plane] : invalid_id;
-	mask[plane] = true;
-
-	m_plane_ids[plane] = m_graph->attach_filter(std::move(filter), deps, mask);
-}
-
-void GraphBuilder::attach_color_filter(std::shared_ptr<ImageFilter> filter)
-{
-	id_map deps = null_ids;
-	plane_mask mask{};
-
-	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-	deps[PLANE_U] = m_plane_ids[PLANE_U];
-	deps[PLANE_V] = m_plane_ids[PLANE_V];
-
-	mask[PLANE_Y] = true;
-	mask[PLANE_U] = true;
-	mask[PLANE_V] = true;
-
-	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
-	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = id;
-	m_plane_ids[PLANE_V] = id;
-}
-
-void GraphBuilder::convert_colorspace(const colorspace::ColorspaceDefinition &colorspace, const params *params, FilterFactory *factory)
-{
-	zassert_d(!is_greyscale(m_state), "expected color image");
-
-	if (m_state.colorspace == colorspace)
-		return;
-
-	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
-
-	colorspace::ColorspaceConversion conv{ m_state.width, m_state.height };
-	conv.set_csp_in(m_state.colorspace)
-		.set_csp_out(colorspace)
-		.set_cpu(cpu);
-
-	if (params) {
-		if (!std::isnan(params->peak_luminance))
-			conv.set_peak_luminance(params->peak_luminance);
-		conv.set_approximate_gamma(params->approximate_gamma);
-		conv.set_scene_referred(params->scene_referred);
-	}
-
-	for (auto &&filter : factory->create_colorspace(conv)) {
-		attach_color_filter(std::move(filter));
-	}
-
-	m_state.color = colorspace.matrix == colorspace::MatrixCoefficients::RGB ? ColorFamily::RGB : ColorFamily::YUV;
-	m_state.colorspace = colorspace;
-}
-
-void GraphBuilder::convert_depth(state *state, const PixelFormat &format, const params *params, FilterFactory *factory, bool alpha)
-{
-	PixelFormat basic_format{ state->type, state->depth, state->fullrange };
-
-	if (basic_format == format)
-		return;
-
-	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
-	depth::DitherType dither_type = params ? params->dither_type : depth::DitherType::NONE;
-
-	// (1) Luma or alpha plane.
-	{
-		depth::DepthConversion conv{ state->width, state->height };
-		conv.set_pixel_in(basic_format)
-		    .set_pixel_out(format)
-		    .set_dither_type(dither_type)
-		    .set_cpu(cpu);
-
-		for (auto &&filter : factory->create_depth(conv)) {
-			if (is_rgb(*state)) {
-				std::shared_ptr<ImageFilter> shared{ std::move(filter) };
-				attach_greyscale_filter(shared, PLANE_Y);
-				attach_greyscale_filter(shared, PLANE_U);
-				attach_greyscale_filter(shared, PLANE_V);
-			} else {
-				attach_greyscale_filter(std::move(filter), alpha ? PLANE_A : PLANE_Y);
-			}
-		}
-	}
-
-	// (2) Chroma planes.
-	if (is_yuv(*state)) {
-		PixelFormat source_chroma_format = basic_format;
-		source_chroma_format.chroma = true;
-		source_chroma_format.ycgco = is_ycgco(*state);
-
-		PixelFormat target_chroma_format = format;
-		target_chroma_format.chroma = true;
-		target_chroma_format.ycgco = is_ycgco(*state);
-
-		depth::DepthConversion conv{ state->width >> state->subsample_w, state->height >> state->subsample_h };
-		conv.set_pixel_in(source_chroma_format)
-		    .set_pixel_out(target_chroma_format)
-		    .set_dither_type(dither_type)
-		    .set_cpu(cpu);
-
-		for (auto &&filter : factory->create_depth(conv)) {
-			std::shared_ptr<ImageFilter> shared{ std::move(filter) };
-			attach_greyscale_filter(shared, PLANE_U);
-			attach_greyscale_filter(shared, PLANE_V);
-		}
-	}
-
-	state->type = format.type;
-	state->depth = format.depth;
-	state->fullrange = format.fullrange;
-}
-
-void GraphBuilder::convert_resize(state *state, const resize_spec &spec, const params *params, FilterFactory *factory, bool alpha)
-{
-	unsigned subsample_w = is_color(*state) ? spec.subsample_w : 0;
-	unsigned subsample_h = is_color(*state) ? spec.subsample_h : 0;
-	ChromaLocationW chroma_loc_w = subsample_w ? spec.chroma_location_w : ChromaLocationW::CENTER;
-	ChromaLocationH chroma_loc_h = subsample_h ? spec.chroma_location_h : ChromaLocationH::CENTER;
-	bool image_shifted = spec.shift_w != 0.0 || spec.shift_h != 0.0 || state->width != spec.subwidth || state->height != spec.subheight;
-
-	// Default filter instances.
-	resize::BicubicFilter bicubic;
-	resize::BilinearFilter bilinear;
-
-	const resize::Filter *resample_filter = params ? params->filter.get() : &bicubic;
-	const resize::Filter *resample_filter_uv = params ? params->filter_uv.get() : &bilinear;
-	bool unresize = params && params->unresize;
-	CPUClass cpu = params ? params->cpu : CPUClass::AUTO;
-
-	if (unresize && (spec.subwidth != state->width || spec.subheight != state->height))
-		error::throw_<error::ResamplingNotAvailable>("unresize not supported for given subregion");
-
-	// (1) Luma or alpha plane.
-	if (state->width != spec.width || state->height != spec.height || image_shifted) {
-		double extra_shift_h = luma_shift_factor(state->parity, state->height, spec.height);
-
-		FilterFactory::filter_list filters;
-		if (unresize) {
-			unresize::UnresizeConversion conv{ state->width, state->height, state->type };
-			conv.set_orig_width(spec.width)
-			    .set_orig_height(spec.height)
-			    .set_shift_w(spec.shift_w)
-			    .set_shift_h(spec.shift_h + extra_shift_h)
-			    .set_cpu(cpu);
-			filters = factory->create_unresize(conv);
-		} else {
-			resize::ResizeConversion conv{ state->width, state->height, state->type };
-			conv.set_depth(state->depth)
-			    .set_filter(resample_filter)
-			    .set_dst_width(spec.width)
-			    .set_dst_height(spec.height)
-			    .set_shift_w(spec.shift_w)
-			    .set_shift_h(spec.shift_h + extra_shift_h)
-			    .set_subwidth(spec.subwidth)
-			    .set_subheight(spec.subheight)
-			    .set_cpu(cpu);
-			filters = factory->create_resize(conv);
-		}
-
-		for (auto &&filter : filters) {
-			if (is_rgb(*state)) {
-				std::shared_ptr<ImageFilter> shared{ std::move(filter) };
-				attach_greyscale_filter(shared, PLANE_Y);
-				attach_greyscale_filter(shared, PLANE_U);
-				attach_greyscale_filter(shared, PLANE_V);
-			} else {
-				attach_greyscale_filter(std::move(filter), alpha ? PLANE_A : PLANE_Y);
-			}
-		}
-	}
-
-	// (2) Chroma planes.
-	if (is_yuv(*state) && (
-	    (state->width >> state->subsample_w != spec.width >> subsample_w) ||
-	    (state->height >> state->subsample_h != spec.height >> subsample_h) ||
-	    ((state->subsample_w || subsample_w) && state->chroma_location_w != chroma_loc_w) ||
-	    ((state->subsample_h || subsample_h) && state->chroma_location_h != chroma_loc_h) ||
-	    image_shifted))
-	{
-		unsigned width_in = state->width >> state->subsample_w;
-		unsigned height_in = state->height >> state->subsample_h;
-		unsigned width_out = spec.width >> subsample_w;
-		unsigned height_out = spec.height >> subsample_h;
-
-		double extra_shift_w = chroma_shift_factor(
-			state->chroma_location_w, chroma_loc_w, state->subsample_w, subsample_w, state->parity, state->width, spec.width);
-		double extra_shift_h = chroma_shift_factor(
-			state->chroma_location_h, chroma_loc_h, state->subsample_h, subsample_h, state->parity, state->height, spec.height);
-
-		FilterFactory::filter_list filters;
-		if (unresize) {
-			unresize::UnresizeConversion conv{ width_in, height_in, state->type };
-			conv.set_orig_width(width_out)
-				.set_orig_height(height_out)
-				.set_shift_w(spec.shift_w / (1 << state->subsample_w) + extra_shift_w)
-				.set_shift_h(spec.shift_h / (1 << state->subsample_h) + extra_shift_h)
-				.set_cpu(cpu);
-			filters = factory->create_unresize(conv);
-		} else {
-			resize::ResizeConversion conv{ width_in, height_in, state->type };
-			conv.set_depth(state->depth)
-				.set_filter(resample_filter_uv)
-				.set_dst_width(width_out)
-				.set_dst_height(height_out)
-				.set_shift_w(spec.shift_w / (1 << state->subsample_w) + extra_shift_w)
-				.set_shift_h(spec.shift_h / (1 << state->subsample_h) + extra_shift_h)
-				.set_subwidth(spec.subwidth / (1 << state->subsample_w))
-				.set_subheight(spec.subheight / (1 << state->subsample_h))
-				.set_cpu(cpu);
-			filters = factory->create_resize(conv);
-		}
-
-		for (auto &&filter : filters) {
-			std::shared_ptr<ImageFilter> shared{ std::move(filter) };
-			attach_greyscale_filter(shared, PLANE_U);
-			attach_greyscale_filter(shared, PLANE_V);
-		}
-	}
-
-	state->width = spec.width;
-	state->height = spec.height;
-	state->subsample_w = subsample_w;
-	state->subsample_h = subsample_h;
-	state->chroma_location_w = chroma_loc_w;
-	state->chroma_location_h = chroma_loc_h;
-	state->active_left = 0.0;
-	state->active_top = 0.0;
-	state->active_width = spec.width;
-	state->active_height = spec.height;
-}
-
-void GraphBuilder::add_opaque_alpha()
-{
-	ValueInitializeFilter::value_type val;
-
-	switch (m_state.type) {
-	case PixelType::BYTE:
-		val.b = UINT8_MAX >> (8 - m_state.depth);
-		break;
-	case PixelType::WORD:
-		val.w = UINT16_MAX >> (16 - m_state.depth);
-		break;
-	case PixelType::HALF:
-		val.w = 0x3C00;
-		break;
-	case PixelType::FLOAT:
-		val.f = 1.0f;
-		break;
-	}
-
-	auto filter = std::make_shared<ValueInitializeFilter>(m_state.width, m_state.height, m_state.type, val);
-	attach_greyscale_filter(std::move(filter), PLANE_A, false);
-}
-
-void GraphBuilder::discard_chroma()
-{
-	zassert_d(is_yuv(m_state), "can not drop chroma planes from RGB image");
-	m_plane_ids[PLANE_U] = invalid_id;
-	m_plane_ids[PLANE_V] = invalid_id;
-	m_state.color = ColorFamily::GREY;
-	m_state.subsample_w = 0;
-	m_state.subsample_h = 0;
-}
-
-void GraphBuilder::grey_to_color(ColorFamily color, unsigned subsample_w, unsigned subsample_h, ChromaLocationW chroma_loc_w, ChromaLocationH chroma_loc_h)
-{
-	if (color == ColorFamily::RGB) {
-		zassert_d(!subsample_w && !subsample_h, "RGB can not be subsampled");
-
-		id_map deps = null_ids;
-		plane_mask mask{};
-
-		deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-		mask[PLANE_U] = true;
-		mask[PLANE_V] = true;
-
-		auto filter = std::make_shared<RGBExtendFilter>(m_state.width, m_state.height, m_state.type);
-		node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
-		m_plane_ids[PLANE_U] = id;
-		m_plane_ids[PLANE_V] = id;
-	} else {
-		ValueInitializeFilter::value_type val;
-
-		switch (m_state.type) {
-		case PixelType::BYTE:
-			val.b = 1U << (m_state.depth - 1);
-			break;
-		case PixelType::WORD:
-			val.w = 1U << (m_state.depth - 1);
-			break;
-		case PixelType::HALF:
-			val.w = 0;
-			break;
-		case PixelType::FLOAT:
-			val.f = 0.0f;
-			break;
-		}
-
-		auto filter = std::make_shared<ValueInitializeFilter>(m_state.width >> subsample_w, m_state.height >> subsample_h, m_state.type, val);
-		attach_greyscale_filter(filter, PLANE_U, false);
-		attach_greyscale_filter(filter, PLANE_V, false);
-	}
-
-	m_state.color = color;
-	m_state.subsample_w = subsample_w;
-	m_state.subsample_h = subsample_h;
-	m_state.chroma_location_w = chroma_loc_w;
-	m_state.chroma_location_h = chroma_loc_h;
-}
-
-void GraphBuilder::premultiply(const params *params, FilterFactory *factory)
-{
-	zassert_d(m_state.alpha == AlphaType::STRAIGHT, "must be straight alpha");
-
-	state alpha_state = make_alpha_state(m_state);
-	convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-	convert_depth(&alpha_state, PixelType::FLOAT, params, factory, true);
-
-	resize_spec resize{ m_state };
-	resize.subsample_w = 0;
-	resize.subsample_h = 0;
-	convert_resize(&m_state, resize, params, factory, false);
-
-	auto filter = std::make_shared<PremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
-
-	id_map deps = null_ids;
-	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : invalid_id;
-	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : invalid_id;
-	deps[PLANE_A] = m_plane_ids[PLANE_A];
-
-	plane_mask mask{};
-	mask[PLANE_Y] = true;
-	mask[PLANE_U] = is_color(m_state);
-	mask[PLANE_V] = is_color(m_state);
-
-	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
-	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(m_state) ? id : invalid_id;
-	m_plane_ids[PLANE_V] = is_color(m_state) ? id : invalid_id;
-
-	m_state.alpha = AlphaType::PREMULTIPLIED;
-}
-
-void GraphBuilder::unpremultiply(const params *params, FilterFactory *factory)
-{
-	zassert_d(m_state.alpha == AlphaType::PREMULTIPLIED, "must be premultiplied");
-
-	state alpha_state = make_alpha_state(m_state);
-	convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-	convert_depth(&alpha_state, PixelType::FLOAT, params, factory, true);
-
-	resize_spec resize{ m_state };
-	resize.subsample_w = 0;
-	resize.subsample_h = 0;
-	convert_resize(&m_state, resize, params, factory, false);
-
-	auto filter = std::make_shared<UnpremultiplyFilter>(m_state.width, m_state.height, is_color(m_state));
-
-	id_map deps = null_ids;
-	deps[PLANE_Y] = m_plane_ids[PLANE_Y];
-	deps[PLANE_U] = is_color(m_state) ? m_plane_ids[PLANE_U] : invalid_id;
-	deps[PLANE_V] = is_color(m_state) ? m_plane_ids[PLANE_V] : invalid_id;
-	deps[PLANE_A] = m_plane_ids[PLANE_A];
-
-	plane_mask mask{};
-	mask[PLANE_Y] = true;
-	mask[PLANE_U] = is_color(m_state);
-	mask[PLANE_V] = is_color(m_state);
-
-	node_id id = m_graph->attach_filter(std::move(filter), deps, mask);
-	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(m_state) ? id : invalid_id;
-	m_plane_ids[PLANE_V] = is_color(m_state) ? id : invalid_id;
-
-	m_state.alpha = AlphaType::STRAIGHT;
-}
-
-void GraphBuilder::connect_color_channels(const state &target, const params *params, FilterFactory *factory)
-{
-	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
-
-	// (1) Convert to target colorspace.
-	if (needs_colorspace(m_state, target)) {
-		// Determine whether resampling is needed.
-		resize_spec spec{ m_state };
-		spec.subsample_w = 0;
-		spec.subsample_h = 0;
-
-		if ((m_state.subsample_w || m_state.subsample_h) &&
-			(!target.subsample_w && !target.subsample_h)) {
-			spec.width = target.width;
-			spec.height = target.height;
-		} else {
-			spec.width = std::min(m_state.width, target.width);
-			spec.height = std::min(m_state.height, target.height);
-		}
-
-		// (1.1) Convert to float.
-		if (m_state.type != PixelType::FLOAT)
-			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-
-		// (1.2) Resize to optimal dimensions. Chroma subsampling is also handled here.
-		convert_resize(&m_state, spec, params, factory, false);
-
-		// (1.3) Add fake chroma planes if needed.
-		if (is_greyscale(m_state)) {
-			grey_to_color(ColorFamily::RGB, 0, 0, ChromaLocationW::CENTER, ChromaLocationH::CENTER);
-			m_state.colorspace.matrix = colorspace::MatrixCoefficients::RGB;
-		}
-
-		// (1.4) Convert colorspace.
-		convert_colorspace(target.colorspace, params, factory);
-		zassert_d(!needs_colorspace(m_state, target), "conversion did not apply");
-	}
-
-	// (2) Drop chroma planes (including fake planes from (1)).
-	if (!is_greyscale(m_state) && is_greyscale(target))
-		discard_chroma();
-
-	// (3) Resize to target dimensions.
-	if (needs_resize(m_state, target)) {
-		// (3.1) Convert to compatible pixel type, attempting to minimize total conversions.
-		// If neither the source nor target pixel format is directly supported, select a different format.
-		// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
-		if (params && params->unresize)
-			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-		else if (target.type == PixelType::WORD)
-			convert_depth(&m_state, PixelFormat{ target.type, target.depth, target.fullrange, false, is_ycgco(target) }, params, factory, false);
-		else if (target.type == PixelType::HALF && fast_f16)
-			convert_depth(&m_state, PixelType::HALF, params, factory, false);
-		else if (target.type == PixelType::FLOAT)
-			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-		else if (m_state.type == PixelType::BYTE)
-			convert_depth(&m_state, PixelFormat{ PixelType::WORD, 16, false, false, is_ycgco(target) }, params, factory, false);
-		else if (m_state.type == PixelType::HALF && (target.type != PixelType::HALF || !fast_f16))
-			convert_depth(&m_state, PixelType::FLOAT, params, factory, false);
-
-		// (3.2) Resize image.
-		resize_spec spec{ target };
-		spec.shift_w = m_state.active_left;
-		spec.shift_h = m_state.active_top;
-		spec.subwidth = m_state.active_width;
-		spec.subheight = m_state.active_height;
-		spec.chroma_location_w = target.chroma_location_w;
-		spec.chroma_location_h = target.chroma_location_h;
-
-		convert_resize(&m_state, spec, params, factory, false);
-		zassert_d(!needs_resize(m_state, target), "conversion did not apply");
-	}
-
-	// (4) Convert to target pixel format.
-	if (needs_depth(m_state, target)) {
-		convert_depth(&m_state, PixelFormat{ target.type, target.depth, target.fullrange }, params, factory, false);
-		zassert_d(!needs_depth(m_state, target), "conversion did not apply");
-	}
-
-	// (5) Add fake chroma planes.
-	if (is_greyscale(m_state) && !is_greyscale(target))
-		grey_to_color(target.color, target.subsample_w, target.subsample_h, target.chroma_location_w, target.chroma_location_h);
-}
-
-void GraphBuilder::connect_alpha_channel(const state &orig, const state &target, const params *params, FilterFactory *factory)
-{
-	zassert_d(has_alpha(m_state) && has_alpha(target), "alpha channel missing");
-
-	state source_alpha = make_alpha_state(orig);
-	state target_alpha = make_alpha_state(target);
-
-	bool fast_f16 = cpu_has_fast_f16(params ? params->cpu : CPUClass::NONE);
-
-	// (1) Resize plane to target dimensions.
-	if (needs_resize(source_alpha, target_alpha)) {
-		// (1.1) Convert to compatible pixel type, attempting to minimize total conversions.
-		// If neither the source nor target pixel format is directly supported, select a different format.
-		// Direct operation on half-precision is slightly slower, so avoid it if the target is not also half.
-		if (params && params->unresize)
-			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
-		else if (target_alpha.type == PixelType::WORD)
-			convert_depth(&source_alpha, PixelFormat{ target_alpha.type, target_alpha.depth, target_alpha.fullrange }, params, factory, true);
-		else if (target_alpha.type == PixelType::HALF && fast_f16)
-			convert_depth(&source_alpha, PixelType::HALF, params, factory, true);
-		else if (target_alpha.type == PixelType::FLOAT)
-			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
-		else if (source_alpha.type == PixelType::BYTE)
-			convert_depth(&source_alpha, PixelFormat{ PixelType::WORD, 16, false }, params, factory, true);
-		else if (source_alpha.type == PixelType::HALF && (target_alpha.type != PixelType::HALF || !fast_f16))
-			convert_depth(&source_alpha, PixelType::FLOAT, params, factory, true);
-
-		// (1.2) Resize plane.
-		resize_spec spec{ target_alpha };
-		spec.shift_w = source_alpha.active_left;
-		spec.shift_h = source_alpha.active_top;
-		spec.subwidth = source_alpha.active_width;
-		spec.subheight = source_alpha.active_height;
-
-		convert_resize(&source_alpha, spec, params, factory, true);
-		zassert_d(!needs_resize(source_alpha, target_alpha), "conversion did not apply");
-	}
-
-	// (2) Convert to target pixel format.
-	if (needs_depth(source_alpha, target_alpha)) {
-		convert_depth(&source_alpha, { target_alpha.type, target_alpha.depth, target_alpha.fullrange }, params, factory, true);
-		zassert_d(!needs_depth(source_alpha, target_alpha), "conversion did not apply");
-	}
-}
-
-GraphBuilder &GraphBuilder::set_source(const state &source) try
-{
-	if (m_graph)
-		error::throw_<error::InternalError>("graph already initialized");
-
 	validate_state(source);
-
-	m_graph = ztd::make_unique<FilterGraph>();
-	m_state = source;
-
-	ImageFilter::image_attributes attr{ source.width, source.height, source.type };
-	plane_mask mask{ { true, is_color(source), is_color(source), has_alpha(source) } };
-
-	node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
-	m_plane_ids[PLANE_Y] = id;
-	m_plane_ids[PLANE_U] = is_color(source) ? id : invalid_id;
-	m_plane_ids[PLANE_V] = is_color(source) ? id : invalid_id;
-	m_plane_ids[PLANE_A] = has_alpha(source) ? id : invalid_id;
-
+	get_impl()->set_source(source);
 	return *this;
-} catch (const std::bad_alloc &) {
-	error::throw_<error::OutOfMemory>();
 }
 
-GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) try
+GraphBuilder &GraphBuilder::connect(const state &target, const params *params, FilterObserver *observer)
 {
-	if (!m_graph)
-		error::throw_<error::InternalError>("graph not initialized");
+	static const GraphBuilder::params default_params;
+	DefaultFilterObserver default_factory;
 
 	validate_state(target);
-
 	if (target.active_left != 0 || target.active_top != 0 || target.active_width != target.width || target.active_height != target.height)
-		error::throw_<error::ResamplingNotAvailable>("active subregions not supported on target image");
-	if (m_state.parity != target.parity)
-		error::throw_<error::NoFieldParityConversion>("conversion between field parity not supported");
+		error::throw_<error::ResamplingNotAvailable>("active subregion not supported on target image");
 
-	DefaultFilterFactory default_factory;
-	if (!factory)
-		factory = &default_factory;
+	if (!params)
+		params = &default_params;
+	if (!observer)
+		observer = &default_factory;
 
-	if (params && cpu_requires_64b_alignment(params->cpu))
-		m_graph->set_requires_64b_alignment();
-
-	if (m_state.alpha == AlphaType::STRAIGHT && (needs_colorspace(m_state, target) || needs_resize(m_state, target) || target.alpha != AlphaType::STRAIGHT))
-		premultiply(params, factory);
-
-	if (!has_alpha(target)) {
-		m_plane_ids[PLANE_A] = invalid_id;
-		m_state.alpha = AlphaType::NONE;
-	}
-
-	if (m_state.alpha == AlphaType::PREMULTIPLIED && target.alpha == AlphaType::STRAIGHT) {
-		state tmp = target;
-		tmp.type = PixelType::FLOAT;
-		tmp.subsample_w = 0;
-		tmp.subsample_h = 0;
-		tmp.alpha = AlphaType::PREMULTIPLIED;
-
-		state orig = m_state;
-		connect_color_channels(tmp, params, factory);
-		connect_alpha_channel(orig, tmp, params, factory);
-		unpremultiply(params, factory);
-
-		orig = m_state;
-		connect_color_channels(target, params, factory);
-		connect_alpha_channel(orig, target, params, factory);
-	} else {
-		state orig = m_state;
-		connect_color_channels(target, params, factory);
-		if (has_alpha(m_state))
-			connect_alpha_channel(orig, target, params, factory);
-	}
-
-	if (!has_alpha(m_state) && has_alpha(target)) {
-		add_opaque_alpha();
-		m_state.alpha = target.alpha;
-	}
-
+	get_impl()->connect(target, *params, *observer);
 	return *this;
-} catch (const std::bad_alloc &) {
-	error::throw_<error::OutOfMemory>();
 }
 
-std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
+std::unique_ptr<FilterGraph> GraphBuilder::complete()
 {
-	if (!m_graph)
-		error::throw_<error::InternalError>("graph not initialized");
-
-	id_map map;
-	std::copy(std::begin(m_plane_ids), std::end(m_plane_ids), map.begin());
-
-	m_graph->set_output(map);
-	return std::move(m_graph);
-} catch (const std::bad_alloc &) {
-	error::throw_<error::OutOfMemory>();
+	return get_impl()->complete();
 }
 
 } // namespace graph

@@ -10,10 +10,13 @@
 #include "common/alloc.h"
 #include "common/except.h"
 #include "common/static_map.h"
+#include "depth/depth.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
+#include "resize/resize.h"
+#include "unresize/unresize.h"
 
 #include "apps.h"
 #include "argparse.h"
@@ -23,64 +26,69 @@
 #include "timer.h"
 
 namespace {
-
-class TracingFilterFactory2 : public zimg::graph::DefaultFilterFactory {
+class TracingObserver : public zimg::graph::FilterObserver {
 public:
-	filter_list create_colorspace(const zimg::colorspace::ColorspaceConversion &conv) override
+	void yuv_to_grey() override { puts("yuv_to_grey"); }
+
+	void grey_to_yuv() override { puts("grey_to_yuv"); }
+	void grey_to_rgb() override { puts("grey_to_rgb"); }
+
+	void premultiply() override { puts("premultiply"); }
+	void unpremultiply() override { puts("unpremultiply"); }
+	void add_opaque() override { puts("add_opaque"); }
+	void discard_alpha() override { puts("discard_alpha"); }
+
+	void colorspace(const zimg::colorspace::ColorspaceConversion &conv) override
 	{
 		printf("colorspace: [%d, %d, %d] => [%d, %d, %d] (%f)\n",
-		       static_cast<int>(conv.csp_in.matrix),
-		       static_cast<int>(conv.csp_in.transfer),
-		       static_cast<int>(conv.csp_in.primaries),
-		       static_cast<int>(conv.csp_out.matrix),
-		       static_cast<int>(conv.csp_out.transfer),
-		       static_cast<int>(conv.csp_out.primaries),
-		       conv.peak_luminance);
-
-		return zimg::graph::DefaultFilterFactory::create_colorspace(conv);
+			static_cast<int>(conv.csp_in.matrix),
+			static_cast<int>(conv.csp_in.transfer),
+			static_cast<int>(conv.csp_in.primaries),
+			static_cast<int>(conv.csp_out.matrix),
+			static_cast<int>(conv.csp_out.transfer),
+			static_cast<int>(conv.csp_out.primaries),
+			conv.peak_luminance);
 	}
 
-	filter_list create_depth(const zimg::depth::DepthConversion &conv) override
+	void depth(const zimg::depth::DepthConversion &conv, int plane) override
 	{
-		printf("depth: [%d/%u %c:%c] => [%d/%u %c:%c]\n",
-		       static_cast<int>(conv.pixel_in.type),
-		       conv.pixel_in.depth,
-		       conv.pixel_in.fullrange ? 'f' : 'l',
-			   conv.pixel_in.chroma ? 'c' : 'l',
-		       static_cast<int>(conv.pixel_out.type),
-		       conv.pixel_out.depth,
-		       conv.pixel_out.fullrange ? 'f' : 'l',
-		       conv.pixel_out.chroma ? 'c' : 'l');
-
-		return zimg::graph::DefaultFilterFactory::create_depth(conv);
+		printf("depth[%d]: [%d/%u %c:%c%s] => [%d/%u %c:%c%s]\n",
+			plane,
+			static_cast<int>(conv.pixel_in.type),
+			conv.pixel_in.depth,
+			conv.pixel_in.fullrange ? 'f' : 'l',
+			conv.pixel_in.chroma ? 'c' : 'l',
+			conv.pixel_in.ycgco ? " ycgco" : "",
+			static_cast<int>(conv.pixel_out.type),
+			conv.pixel_out.depth,
+			conv.pixel_out.fullrange ? 'f' : 'l',
+			conv.pixel_out.chroma ? 'c' : 'l',
+			conv.pixel_out.ycgco ? " ycgco" : "");
 	}
 
-	filter_list create_resize(const zimg::resize::ResizeConversion &conv) override
+	void resize(const zimg::resize::ResizeConversion &conv, int plane) override
 	{
-		printf("resize: [%d, %d] => [%d, %d] (%f, %f, %f, %f)\n",
-		       conv.src_width,
-		       conv.src_height,
-		       conv.dst_width,
-		       conv.dst_height,
-		       conv.shift_w,
-		       conv.shift_h,
-		       conv.subwidth,
-		       conv.subheight);
-
-		return zimg::graph::DefaultFilterFactory::create_resize(conv);
+		printf("resize[%d]: [%u, %u] => [%u, %u] (%f, %f, %f, %f)\n",
+			plane,
+			conv.src_width,
+			conv.src_height,
+			conv.dst_width,
+			conv.dst_height,
+			conv.shift_w,
+			conv.shift_h,
+			conv.subwidth,
+			conv.subheight);
 	}
 
-	filter_list create_unresize(const zimg::unresize::UnresizeConversion &conv) override
+	void unresize(const zimg::unresize::UnresizeConversion &conv, int plane) override
 	{
-		printf("unresize: [%d, %d] => [%d, %d] (%f, %f)\n",
-		       conv.up_width,
-		       conv.up_height,
-		       conv.orig_width,
-		       conv.orig_height,
-		       conv.shift_w,
-		       conv.shift_h);
-
-		return zimg::graph::DefaultFilterFactory::create_unresize(conv);
+		printf("unresize: [%u, %u] => [%u, %u] (%f, %f)\n",
+			conv.up_width,
+			conv.up_height,
+			conv.orig_width,
+			conv.orig_height,
+			conv.shift_w,
+			conv.shift_h);
 	}
 };
 
@@ -173,23 +181,28 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 		state->alpha = alpha_map[val.string().c_str()];
 }
 
-void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Object &obj)
+void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Object &obj, std::unique_ptr<zimg::resize::Filter> filters[2])
 {
+	static const zimg::resize::BicubicFilter bicubic{};
+	static const zimg::resize::BilinearFilter bilinear{};
+
 	if (const auto &val = obj["filter"]) {
 		const json::Object &filter_obj = val.object();
 		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
-		params->filter = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		filters[0] = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		params->filter = filters[0].get();
 		params->unresize = filter_obj["name"].string() == "unresize";
 	} else {
-		params->filter.reset(new zimg::resize::BicubicFilter{});
+		params->filter = &bicubic;
 	}
 
 	if (const auto &val = obj["filter_uv"]) {
 		const json::Object &filter_obj = val.object();
 		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
-		params->filter_uv = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		filters[1] = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		params->filter_uv = filters[1].get();
 	} else {
-		params->filter_uv.reset(new zimg::resize::BilinearFilter{});
+		params->filter_uv = &bilinear;
 	}
 
 	if (const auto &val = obj["dither_type"])
@@ -212,8 +225,10 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 	zimg::graph::GraphBuilder::state src_state{};
 	zimg::graph::GraphBuilder::state dst_state{};
 	zimg::graph::GraphBuilder::params params{};
-	TracingFilterFactory2 factory;
+	TracingObserver observer;
 	bool has_params = false;
+
+	std::unique_ptr<zimg::resize::Filter> filters[2];
 
 	try {
 		read_graph_state(&src_state, spec["source"].object());
@@ -222,7 +237,7 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 		read_graph_state(&dst_state, spec["target"].object());
 
 		if (const auto &val = spec["params"]) {
-			read_graph_params(&params, val.object());
+			read_graph_params(&params, val.object(), filters);
 			has_params = true;
 		}
 
@@ -237,9 +252,10 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 	*src_state_out = src_state;
 	*dst_state_out = dst_state;
 
-	return zimg::graph::GraphBuilder{}.set_source(src_state)
-	                                  .connect_graph(dst_state, has_params ? &params : nullptr, &factory)
-	                                  .complete_graph();
+	zimg::graph::GraphBuilder builder;
+	return builder.set_source(src_state)
+		.connect(dst_state, has_params ? &params : nullptr, &observer)
+		.complete();
 }
 
 ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)

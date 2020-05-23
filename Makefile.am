@@ -343,6 +343,7 @@ test_unit_test_SOURCES = \
 	test/graph/filter_validator.cpp \
 	test/graph/filter_validator.h \
 	test/graph/filtergraph_test.cpp \
+	test/graph/graphbuilder_test.cpp \
 	test/graph/mock_filter.cpp \
 	test/graph/mock_filter.h \
 	test/resize/filter_test.cpp \

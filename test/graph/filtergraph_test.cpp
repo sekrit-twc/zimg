@@ -518,6 +518,9 @@ TEST(FilterGraphTest, test_callback)
 	{
 		callback_data *xptr = static_cast<callback_data *>(ptr);
 
+		if (right > w)
+			return 1;
+
 		EXPECT_LT(i, h);
 		EXPECT_EQ(0U, i % (1 << xptr->subsample_h));
 		EXPECT_LT(left, right);

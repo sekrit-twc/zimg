@@ -449,15 +449,18 @@ std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> im
 	return{ src_state, dst_state };
 }
 
-zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_params &src)
+zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_params &src, std::unique_ptr<zimg::resize::Filter> filters[2])
 {
 	API_VERSION_ASSERT(src.version);
 
 	zimg::graph::GraphBuilder::params params{};
 
 	if (src.version >= API_VERSION_2_0) {
-		params.filter = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
-		params.filter_uv = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
+		filters[0] = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
+		filters[1] = translate_resize_filter(src.resample_filter_uv, src.filter_param_a_uv, src.filter_param_b_uv);
+
+		params.filter = filters[0].get();
+		params.filter_uv = filters[1].get();
 		params.unresize = src.resample_filter == ZIMG_RESIZE_UNRESIZE;
 		params.dither_type = translate_dither(src.dither_type);
 		params.cpu = translate_cpu(src.cpu_type);
@@ -708,14 +711,17 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		zimg::graph::GraphBuilder::state dst_state;
 		zimg::graph::GraphBuilder::params graph_params;
 
+		std::unique_ptr<zimg::resize::Filter> filters[2];
+
 		std::tie(src_state, dst_state) = import_graph_state(*src_format, *dst_format);
 		if (params)
-			graph_params = import_graph_params(*params);
+			graph_params = import_graph_params(*params, filters);
 
-		return zimg::graph::GraphBuilder{}.set_source(src_state)
-		                                  .connect_graph(dst_state, params ? &graph_params : nullptr)
-		                                  .complete_graph()
-		                                  .release();
+		zimg::graph::GraphBuilder builder;
+		return builder.set_source(src_state)
+			.connect(dst_state, params ? &graph_params : nullptr)
+			.complete()
+			.release();
 	} catch (...) {
 		handle_exception(std::current_exception());
 		return nullptr;
