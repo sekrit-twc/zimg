@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdint>
-
 #include "common/alloc.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -524,6 +523,9 @@ TEST(FilterGraphTest, test_callback)
 		EXPECT_LT(left, right);
 		EXPECT_LE(right, w);
 
+		if (HasFailure())
+			return 1;
+
 		for (unsigned ii = i; ii < i + (1 << xptr->subsample_h); ++ii) {
 			const auto &buf = zimg::graph::static_buffer_cast<uint8_t>(xptr->buffer[0]);
 
@@ -539,7 +541,7 @@ TEST(FilterGraphTest, test_callback)
 		}
 
 		++xptr->call_count;
-		return HasFatalFailure();
+		return 0;
 	};
 
 	for (unsigned sw = 0; sw < 3; ++sw) {
