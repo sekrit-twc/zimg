@@ -641,7 +641,7 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 		}
 
 		const __m256i mask = _mm256_load_si256((const __m256i *)(permute_mask + j));
-		const int16_t *data = filter_data + j * N;
+		const int16_t *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m256i accum0 = _mm256_setzero_si256();
 		__m256i accum1 = _mm256_setzero_si256();
@@ -699,7 +699,7 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 	}
 	for (unsigned j = fallback_idx; j < right; j += 8) {
 		unsigned left = permute_left[j / 8];
-		const int16_t *data = filter_data + j * N;
+		const int16_t *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m256i accum = _mm256_setzero_si256();
 		__m256i x, coeffs;
@@ -763,7 +763,7 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 		}
 
 		const __m256i mask = _mm256_load_si256((const __m256i *)(permute_mask + j));
-		const float *data = filter_data + j * N;
+		const float *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m256 accum0 = _mm256_setzero_ps();
 		__m256 accum1 = _mm256_setzero_ps();
@@ -830,7 +830,7 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 #undef mm256_alignr_ps
 	for (unsigned j = fallback_idx; j < right; j += 8) {
 		unsigned left = permute_left[j / 8];
-		const float *data = filter_data + j * N;
+		const float *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m256 accum0 = _mm256_setzero_ps();
 		__m256 accum1 = _mm256_setzero_ps();

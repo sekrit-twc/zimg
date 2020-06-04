@@ -401,8 +401,8 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 			break;
 		}
 
-		const __m512i mask = _mm512_load_si512(permute_mask + j * 2);
-		const int16_t *data = filter_data + j * N;
+		const __m512i mask = _mm512_load_si512(permute_mask + static_cast<size_t>(j) * 2);
+		const int16_t *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m512i accum0 = _mm512_setzero_si512();
 		__m512i accum1 = _mm512_setzero_si512();

@@ -375,7 +375,7 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 		}
 
 		const __m512i mask = _mm512_load_si512(permute_mask + j);
-		const float *data = filter_data + j * N;
+		const float *data = filter_data + static_cast<size_t>(j) * N;
 
 		__m512 accum0 = _mm512_setzero_ps();
 		__m512 accum1 = _mm512_setzero_ps();
