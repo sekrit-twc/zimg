@@ -44,8 +44,7 @@ public:
 	EnumRange(T first, T last) :
 		m_first{ first },
 		m_last{ static_cast<T>(static_cast<integer_type>(last) + 1) }
-	{
-	}
+	{}
 
 	iterator begin() const { return m_first; }
 	iterator end() const { return m_last; }
@@ -94,9 +93,7 @@ constexpr bool is_valid_csp(const ColorspaceDefinition &csp)
 	// 5. Check requirements for chromaticity-derived CL matrix.
 	// 6. Check requirements for Rec.2100 ICtCp.
 	// 7. Check requirements for Rec.2100 LMS.
-	return !(csp.matrix == MatrixCoefficients::UNSPECIFIED && csp.transfer != TransferCharacteristics::UNSPECIFIED) &&
-		!(csp.transfer == TransferCharacteristics::UNSPECIFIED && csp.primaries != ColorPrimaries::UNSPECIFIED) &&
-		!(csp.matrix == MatrixCoefficients::REC_2020_CL && !is_valid_2020cl(csp)) &&
+	return !(csp.matrix == MatrixCoefficients::REC_2020_CL && !is_valid_2020cl(csp)) &&
 		!(csp.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_NCL && csp.primaries == ColorPrimaries::UNSPECIFIED) &&
 		!(csp.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL && csp.primaries == ColorPrimaries::UNSPECIFIED) &&
 		!(csp.matrix == MatrixCoefficients::REC_2100_ICTCP && !is_valid_ictcp(csp)) &&
@@ -140,9 +137,8 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 
 		// RGB can be converted to conventional YUV.
 		for (auto matrix : all_matrix()) {
-			if (std::find(std::begin(special_matrices), std::end(special_matrices), matrix) == std::end(special_matrices)) {
+			if (std::find(std::begin(special_matrices), std::end(special_matrices), matrix) == std::end(special_matrices))
 				add_edge(csp.to(matrix), create_ncl_rgb_to_yuv_operation);
-			}
 		}
 		if (csp.primaries != ColorPrimaries::UNSPECIFIED)
 			add_edge(csp.to(MatrixCoefficients::CHROMATICITY_DERIVED_NCL), create_ncl_rgb_to_yuv_operation);
