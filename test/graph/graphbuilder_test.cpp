@@ -649,3 +649,43 @@ TEST(GraphBuilderTest, test_resize_premul_alpha)
 		"resize[3]: [64, 48] => [128, 96]",
 	});
 }
+
+TEST(GraphBuilderTest, test_straight_depth)
+{
+	auto source = make_basic_yuv_state();
+	set_resolution(source, 64, 48);
+	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+
+	auto target = source;
+	target.type = zimg::PixelType::WORD;
+	target.depth = 16;
+
+	test_case(source, target, {
+		"depth[0]: [3/32 l:l] => [1/16 l:l]",
+		"depth[1]: [3/32 l:c] => [1/16 l:c]",
+		"depth[3]: [3/32 l:l] => [1/16 f:l]",
+	});
+}
+
+TEST(GraphBuilderTest, test_straight_depth_tile)
+{
+	auto source = make_basic_yuv_state();
+	set_resolution(source, 64, 48);
+	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.active_width = 32;
+	source.active_height = 24;
+
+	auto target = source;
+	set_resolution(target, 32, 24);
+	target.type = zimg::PixelType::WORD;
+	target.depth = 16;
+
+	test_case(source, target, {
+		"resize[0]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"depth[0]: [3/32 l:l] => [1/16 l:l]",
+		"resize[1]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"depth[1]: [3/32 l:c] => [1/16 l:c]",
+		"resize[3]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"depth[3]: [3/32 l:l] => [1/16 f:l]",
+	});
+}

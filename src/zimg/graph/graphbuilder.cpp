@@ -458,6 +458,37 @@ private:
 		return true;
 	}
 
+	bool needs_interpolation_plane(const internal_state &target, int p)
+	{
+		const internal_state::plane &source_plane = m_state.planes[p];
+		const internal_state::plane &target_plane = target.planes[p];
+
+		const auto phase = [](double x) { return std::modf(x, &x); };
+
+		// 1. Is the resolution different?
+		if (source_plane.active_width != target_plane.active_width || source_plane.active_height != target_plane.active_height)
+			return true;
+
+		// 2. Is the phase different?
+		if (phase(source_plane.active_left) != phase(target_plane.active_left) || phase(source_plane.active_top) != phase(target_plane.active_top))
+			return true;
+
+		return false;
+	}
+
+	bool needs_interpolation(const internal_state &target)
+	{
+		if (needs_interpolation_plane(target, PLANE_Y))
+			return true;
+		if (m_state.has_chroma() && target.has_chroma() && needs_interpolation_plane(target, PLANE_U))
+			return true;
+		if (m_state.has_chroma() && target.has_chroma() && needs_interpolation_plane(target, PLANE_V))
+			return true;
+		if (m_state.has_alpha() && target.has_alpha() && needs_interpolation_plane(target, PLANE_A))
+			return true;
+		return false;
+	}
+
 	bool needs_resize_plane(const internal_state &target, int p)
 	{
 		internal_state::plane plane = target.planes[p];
@@ -482,7 +513,7 @@ private:
 	{
 		if (m_state.alpha != AlphaType::STRAIGHT)
 			return false;
-		return target.alpha != AlphaType::STRAIGHT || needs_colorspace(target) || needs_resize(target);
+		return target.alpha != AlphaType::STRAIGHT || needs_colorspace(target) || needs_interpolation(target);
 	}
 
 	void drop_plane(int p) { m_ids[p] = invalid_id; }
