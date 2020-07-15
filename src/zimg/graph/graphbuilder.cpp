@@ -836,7 +836,7 @@ private:
 			tmp.planes[PLANE_Y].width = w.planes[PLANE_Y].width;
 			tmp.planes[PLANE_Y].height = h.planes[PLANE_Y].height;
 			tmp.planes[PLANE_Y].active_left = w.planes[PLANE_Y].active_left;
-			tmp.planes[PLANE_Y].active_height = h.planes[PLANE_Y].active_top;
+			tmp.planes[PLANE_Y].active_top = h.planes[PLANE_Y].active_top;
 			tmp.planes[PLANE_Y].active_width = w.planes[PLANE_Y].active_width;
 			tmp.planes[PLANE_Y].active_height = h.planes[PLANE_Y].active_height;
 

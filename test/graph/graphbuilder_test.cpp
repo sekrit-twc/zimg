@@ -435,6 +435,48 @@ TEST(GraphBuilderTest, test_downscale_colorspace)
 	});
 }
 
+TEST(GraphBuilderTest, test_upscale_colorspace_tile)
+{
+	auto source = make_basic_yuv_state();
+	set_resolution(source, 64, 48);
+	source.subsample_w = 1;
+	source.subsample_h = 1;
+	source.active_left = 32;
+	source.active_top = 24;
+	source.active_width = 32;
+	source.active_height = 24;
+
+	auto target = make_basic_rgb_state();
+	set_resolution(target, 48, 36);
+
+	test_case(source, target, {
+		"resize[0]: [64, 48] => [48, 36] (32.000000, 24.000000, 32.000000, 24.000000)",
+		"resize[1]: [32, 24] => [48, 36] (16.000000, 12.000000, 16.000000, 12.000000)",
+		"colorspace",
+	});
+}
+
+TEST(GraphBuilderTest, test_downscale_colorspace_tile)
+{
+	auto source = make_basic_rgb_state();
+	set_resolution(source, 96, 72);
+	source.active_left = 48;
+	source.active_top = 36;
+	source.active_width = 48;
+	source.active_height = 36;
+
+	auto target = make_basic_yuv_state();
+	set_resolution(target, 32, 24);
+	target.subsample_w = 1;
+	target.subsample_h = 1;
+
+	test_case(source, target, {
+		"resize[0]: [96, 72] => [32, 24] (48.000000, 36.000000, 48.000000, 36.000000)",
+		"colorspace",
+		"resize[1]: [32, 24] => [16, 12] (0.000000, 0.000000, 32.000000, 24.000000)",
+	});
+}
+
 TEST(GraphBuilderTest, test_grey_to_grey_noop)
 {
 	auto source = make_basic_yuv_state();
