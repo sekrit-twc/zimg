@@ -405,6 +405,14 @@ public:
 		if (!state->is_initialized(id()))
 			state->reset_tile_bounds(id());
 
+		auto flags = m_filter->get_flags();
+		if (flags.has_state || flags.entire_plane)
+			top = 0;
+		if (flags.entire_row || flags.entire_plane) {
+			left = 0;
+			right = get_image_attributes(plane).width;
+		}
+
 		auto row_range = m_filter->get_required_row_range(top);
 		auto col_range = m_filter->get_required_col_range(left, right);
 
