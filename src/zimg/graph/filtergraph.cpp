@@ -14,6 +14,7 @@
 #include "basic_filter.h"
 #include "filtergraph.h"
 #include "graphnode.h"
+#include "image_buffer.h"
 
 namespace zimg {
 namespace graph {
@@ -324,13 +325,15 @@ public:
 	unsigned get_input_buffering() const
 	{
 		zassert_d(m_sink, "complete graph required");
-		return m_interleaved_sim.node_result[m_source->id()].cache_lines;
+		unsigned lines = m_interleaved_sim.node_result[m_source->id()].cache_lines;
+		return lines >= m_source->get_image_attributes(PLANE_Y).height ? BUFFER_MAX : lines;
 	}
 
 	unsigned get_output_buffering() const
 	{
 		zassert_d(m_sink, "complete graph required");
-		return m_interleaved_sim.node_result[m_sink->id()].cache_lines;
+		unsigned lines = m_interleaved_sim.node_result[m_sink->id()].cache_lines;
+		return lines >= m_sink->get_image_attributes(PLANE_Y).height ? BUFFER_MAX : lines;
 	}
 
 	unsigned get_tile_width() const
