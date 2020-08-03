@@ -40,7 +40,10 @@ template <>
 struct error_diffusion_traits<uint8_t> {
 	static __m128 load4(const uint8_t *ptr)
 	{
-		__m128i x = _mm_cvtsi32_si128(*(const uint32_t *)ptr);
+		uint32_t tmp;
+		std::copy_n(ptr, sizeof(uint32_t), reinterpret_cast<uint8_t *>(&tmp));
+
+		__m128i x = _mm_cvtsi32_si128(tmp);
 		x = _mm_unpacklo_epi8(x, _mm_setzero_si128());
 		x = _mm_unpacklo_epi16(x, _mm_setzero_si128());
 		return _mm_cvtepi32_ps(x);
@@ -50,7 +53,8 @@ struct error_diffusion_traits<uint8_t> {
 	{
 		x = _mm_packs_epi32(x, x);
 		x = _mm_packus_epi16(x, x);
-		*(uint32_t *)ptr = _mm_cvtsi128_si32(x);
+		uint32_t tmp = _mm_cvtsi128_si32(x);
+		std::copy_n(reinterpret_cast<const uint8_t *>(&tmp), sizeof(uint32_t), ptr);
 	}
 };
 

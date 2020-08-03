@@ -66,7 +66,7 @@ struct error_diffusion_traits<PixelType::WORD> {
 
 	static __m256 load8(const uint16_t *ptr)
 	{
-		return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_load_si128((const __m128i *)ptr)));
+		return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_loadu_si128((const __m128i *)ptr)));
 	}
 
 	static void store8(uint16_t *ptr, __m256i x)
