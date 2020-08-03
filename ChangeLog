@@ -1,3 +1,13 @@
+3.0 (API 2.4)
+api: support alpha channel as the fourth plane
+colorspace: accept UNSPECIFIED transfer characteristics in more situations
+colorspace: fix conversion from ICtCp to ARIB STD-B67
+depth: fix out of bounds access in SSE2 ordered dither
+graph: rewrite for alpha channel support
+resize: fix incorrect rounding when calculating pixel coordinates
+resize: AVX-512 VNNI code paths
+arm: NEON/ASIMD code paths
+
 2.9.3
 resize: add spline64 filter
 
