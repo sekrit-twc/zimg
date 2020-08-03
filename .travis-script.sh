@@ -1,10 +1,13 @@
 #!/bin/sh
 set -e
 
+NPROC=$(nproc --all)
+
 echo "PWD: $(pwd)"
 echo "CC: ${CC}"
 echo "CXX: ${CXX}"
 echo "TRAVIS_BRANCH: ${TRAVIS_BRANCH}"
+echo "NPROC: ${NPROC}"
 ls -l
 
 # Do not execute build on coverity branch.
@@ -17,6 +20,6 @@ fi
 ./autogen.sh
 ./configure --enable-simd --enable-testapp --enable-example --enable-unit-test
 make clean
-make -j2
-make -j2 test/unit_test
+make "-j${NPROC}"
+make "-j${NPROC}" test/unit_test
 ./test/unit_test
