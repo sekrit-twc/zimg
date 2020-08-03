@@ -314,7 +314,7 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[3];
+	zimg::graph::ImageBuffer<void> line_buffer[4];
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
@@ -369,7 +369,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[3];
+	zimg::graph::ImageBuffer<void> line_buffer[4];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(width), 0 };
@@ -484,7 +484,7 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[3];
+	zimg::graph::ImageBuffer<void> line_buffer[4];
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
@@ -529,7 +529,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[3];
+	zimg::graph::ImageBuffer<void> line_buffer[4];
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(frame.width()), 0 };
