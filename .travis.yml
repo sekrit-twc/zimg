@@ -4,7 +4,7 @@ language: cpp
 
 matrix:
   include:
-    # GCC 4.9.
+    # GCC 4.9
     - compiler: gcc
       # GCC 4.9 no longer available in Bionic
       dist: xenial
@@ -18,15 +18,15 @@ matrix:
       env: 
         - MY_CC: gcc-4.9
         - MY_CXX: g++-4.9
-    # GCC 9.
+    # GCC 10
     - compiler: gcc
       addons:
         apt:
           sources:
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
-            - gcc-9
-            - g++-9
+            - gcc-10
+            - g++-10
         coverity_scan:
           project:
             name: "sekrit-twc/zimg"
@@ -36,47 +36,32 @@ matrix:
           build_command: make
           branch_pattern: coverity_scan
       env: 
-        - MY_CC: gcc-9
-        - MY_CXX: g++-9
+        - MY_CC: gcc-10
+        - MY_CXX: g++-10
         # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
         #   via the "travis encrypt" command using the project repo's public key
         - secure: "ZPVIqS6exYthp6FL6XQYyzz3Y17BKUP60bMj3X6vHk0aJ3d5jOVE4OEOjEY2uOnEWQej1a1ea0kBqpvljnrDUNZZjKdG7Auv0N8Dmg1RKznyjHLbqoGPD2Yj+ooYHT8qE7thCZC8v7axoCf2sObViWtZg3AmeqAMVxHGoG3OxRU="
-    # Clang/LLVM 9.0
+    # Clang/LLVM 11.0 Sanitized
     - compiler: clang
       addons:
         apt:
           sources:
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
-            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
+            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
-            - clang-9
-            # Needed for updated libstdc++.
-            - g++-9
+            - clang-11
+            # Needed for updated libstdc++
+            - g++-10
       env:
-        - MY_CC: clang-9
-        - MY_CXX: clang++-9
-    # Clang/LLVM 9.0 Sanitized
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
-              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-          packages:
-            - clang-9
-            # Needed for updated libstdc++.
-            - g++-9
-      env:
-        - MY_CC: clang-9
-        - MY_CXX: clang++-9
+        - MY_CC: clang-11
+        - MY_CXX: clang++-11
         - CFLAGS: -fsanitize=undefined -fsanitize=address
         - CXXFLAGS: -fsanitize=undefined -fsanitize=address
         - LSAN_OPTIONS: detect_leaks=0
     # Apple Clang
     - os: osx
-      osx_image: xcode11.2
+      osx_image: xcode11.6
       compiler: clang
       env:
         - MY_CC: clang
