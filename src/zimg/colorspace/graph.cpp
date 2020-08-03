@@ -206,7 +206,7 @@ std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in,
 	std::unordered_set<ColorspaceDefinition, ColorspaceHash> visited;
 	std::unordered_map<ColorspaceDefinition, ColorspaceNode, ColorspaceHash> parents;
 
-	ColorspaceDefinition vertex;
+	ColorspaceDefinition vertex{};
 
 	visited.insert(in);
 	queue.push_back(in);
