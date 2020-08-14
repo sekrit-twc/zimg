@@ -767,10 +767,11 @@ private:
 		colorspace::ColorspaceConversion conv{ m_state.planes[0].width, m_state.planes[0].height };
 		conv.set_csp_in(m_state.colorspace)
 			.set_csp_out(csp)
-			.set_peak_luminance(params.peak_luminance)
 			.set_approximate_gamma(params.approximate_gamma)
 			.set_scene_referred(params.scene_referred)
 			.set_cpu(params.cpu);
+		if (!std::isnan(params.peak_luminance))
+			conv.set_peak_luminance(params.peak_luminance);
 
 		observer.colorspace(conv);
 
@@ -1011,7 +1012,7 @@ GraphBuilder::params::params() noexcept :
 	filter_uv{},
 	unresize{},
 	dither_type{},
-	peak_luminance{ 100.0 },
+	peak_luminance{ NAN },
 	approximate_gamma{},
 	scene_referred{},
 	cpu{}
