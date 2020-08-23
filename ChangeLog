@@ -1,3 +1,6 @@
+3.0.1
+graph: fix handling of default nominal_peak_luminance (introduced in 3.0)
+
 3.0 (API 2.4)
 api: support alpha channel as the fourth plane
 colorspace: accept UNSPECIFIED transfer characteristics in more situations
