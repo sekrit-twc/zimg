@@ -123,17 +123,17 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_st_2084)
 	const char *expected_sha1[][3] = {
 		{
 			"a0d7b4c6dc3381e8831aa84ab7ba05eb86cafd2b",
-			"6345c0b2fdf0ee348ba118079d42ceefaaf8246a",
-			"a9b9b13c86994111b90b7ad27e7b97023ad740a1"
+			"de66d5dba367ceaede45ebe67c69bfe37d9d93ca",
+			"d05cd2436d1fd07d7f86c0652a590cbe1486d610"
 		},
 		{
 			"e64ec0811294da6869b6220ff00c6f7d3dda7399",
-			"f5d36d61da9d7b137101b21e2ce269d001e80c8e",
-			"6d70abd6fcf589ceb01d0e9b26f9314af146a06a"
+			"8337219bbe647c04db8b78f6eefc83198d00c989",
+			"008a31ae15dc49d78c4920a755c436b55fb6ba66"
 		},
 	};
-	const double expected_tolinear_snr = 70.0;
-	const double expected_togamma_snr = 80.0;
+	const double expected_tolinear_snr = 90.0;
+	const double expected_togamma_snr = 100.0;
 
 	SCOPED_TRACE("tolinear");
 	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::ST_2084, ColorPrimaries::UNSPECIFIED },

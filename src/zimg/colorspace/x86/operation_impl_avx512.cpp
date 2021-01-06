@@ -1,5 +1,6 @@
 #ifdef ZIMG_X86_AVX512
 
+#include <cfloat>
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
@@ -217,6 +218,8 @@ struct SegmentedPolynomial {
 
 		if (Prescale)
 			x = _mm512_mul_ps(x, scale);
+
+		x = _mm512_max_ps(x, _mm512_set1_ps(FLT_MIN));
 
 		if (Log) {
 			// Classify the argument into one of 32 segments by its exponent.

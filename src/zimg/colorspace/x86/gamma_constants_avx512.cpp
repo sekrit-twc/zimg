@@ -1,6 +1,7 @@
 #ifdef ZIMG_X86_AVX512
 
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include "gamma_constants_avx512.h"
 
@@ -260,6 +261,8 @@ float segmented_polynomial(float x)
 {
 	float result;
 	int idx;
+
+	x = std::max(x, FLT_MIN);
 
 	if (Log) {
 		int exp;
