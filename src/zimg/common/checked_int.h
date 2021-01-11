@@ -13,6 +13,9 @@ namespace zimg {
 template <class From, class To, class T = void>
 using _enable_if_convertible_t = typename std::enable_if<std::is_convertible<From, To>::value, T>::type;
 
+template <class T, class U>
+using _common_type_t = typename std::common_type<T, U>::type;
+
 // Integer wrapper that throws on overflow.
 template <class T>
 class checked_integer {
@@ -47,27 +50,46 @@ public:
 	// (4) Post-decrements the object.
 	checked_integer operator--(int);
 
-	// (1) Adds |other| to *this.
+	// (1 - 2) Adds |other| to *this.
 	checked_integer &operator+=(const checked_integer &other);
-	// (2) Subtracts |other| from *this.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator+=(const checked_integer<U> &other);
+	// (3 - 4) Subtracts |other| from *this.
 	checked_integer &operator-=(const checked_integer &other);
-	// (3) Multiplies *this by |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator-=(const checked_integer<U> &other);
+	// (5 - 6) Multiplies *this by |other|.
 	checked_integer &operator*=(const checked_integer &other);
-	// (4) Divides *this by |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator*=(const checked_integer<U> &other);
+	// (7 - 8) Divides *this by |other|.
 	checked_integer &operator/=(const checked_integer &other);
-	// (5) Modulos *this by |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator/=(const checked_integer<U> &other);
+	// (9 - 10) Modulos *this by |other|.
 	checked_integer &operator%=(const checked_integer &other);
-	// (6) Left-shifts *this by |n|.
-	checked_integer &operator<<=(unsigned n);
-	// (7) Right-shifts *this by |n|.
-	checked_integer &operator>>=(unsigned n);
-	// (8) Bitwise-ANDs *this with |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator%=(const checked_integer<U> &other);
+	// (11) Left-shifts *this by |n|.
+	checked_integer &operator<<=(unsigned long long n);
+	// (12) Right-shifts *this by |n|.
+	checked_integer &operator>>=(unsigned long long n);
+	// (13 - 14) Bitwise-ANDs *this with |other|.
 	checked_integer &operator&=(const checked_integer &other);
-	// (9) Bitwise-ORs *this with |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator&=(const checked_integer<U> &other);
+	// (15 - 16) Bitwise-ORs *this with |other|.
 	checked_integer &operator|=(const checked_integer &other);
-	// (10) Bitwise-XORs *this with |other|.
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator|=(const checked_integer<U> &other);
+	// (17 - 18) Bitwise-XORs *this with |other|.
 	checked_integer &operator^=(const checked_integer &other);
+	template <class U>
+	_enable_if_convertible_t<U, T, checked_integer> &operator^=(const checked_integer<U> &other);
 };
+
+template <class T, class U>
+using _checked_promoted_t = checked_integer<_common_type_t<T, U>>;
 
 // (1) Returns the value of the argument.
 template <class T>
@@ -80,69 +102,69 @@ template <class T>
 checked_integer<T> operator~(const checked_integer<T> &value);
 
 // (1 - 3) Returns the sum of the arguments.
-template <class T>
-checked_integer<T> operator+(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator+(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator+(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator+(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator+(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator+(const U &lhs, const checked_integer<T> &rhs);
 // (4 - 6) Returns the result of subtracting rhs from lhs.
-template <class T>
-checked_integer<T> operator-(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator-(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator-(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator-(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator-(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator-(const U &lhs, const checked_integer<T> &rhs);
 // (7 - 9) Multiplies its arguments.
-template <class T>
-checked_integer<T> operator*(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator*(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator*(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator*(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator*(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator*(const U &lhs, const checked_integer<T> &rhs);
 // (10 - 12) Divides lhs by rhs.
-template <class T>
-checked_integer<T> operator/(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator/(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator/(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator/(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator/(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator/(const U &lhs, const checked_integer<T> &rhs);
 // (13 - 15) Returns lhs modulo rhs.
-template <class T>
-checked_integer<T> operator%(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator%(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator%(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator%(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator%(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator%(const U &lhs, const checked_integer<T> &rhs);
 
 // (1) Left-shifts value by n.
 template <class T>
-checked_integer<T> operator<<(const checked_integer<T> &value, unsigned n);
+checked_integer<T> operator<<(const checked_integer<T> &value, unsigned long long n);
 // (2) Right-shifts value by n.
 template <class T>
-checked_integer<T> operator>>(const checked_integer<T> &value, unsigned n);
+checked_integer<T> operator>>(const checked_integer<T> &value, unsigned long long n);
 
 // (1 - 3) Bitwise-ANDs lhs with rhs.
-template <class T>
-checked_integer<T> operator&(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator&(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator&(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator&(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator&(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator&(const U &lhs, const checked_integer<T> &rhs);
 // (4 - 6) Bitwise-ORs lhs with rhs.
-template <class T>
-checked_integer<T> operator|(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator|(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator|(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator|(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator|(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator|(const U &lhs, const checked_integer<T> &rhs);
 // (7 - 9) Bitwise-XORs lhs with rhs.
-template <class T>
-checked_integer<T> operator^(const checked_integer<T> &lhs, const checked_integer<T> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator^(const checked_integer<T> &lhs, const U &rhs);
+_checked_promoted_t<T, U> operator^(const checked_integer<T> &lhs, const checked_integer<U> &rhs);
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator^(const U &lhs, const checked_integer<T> &rhs);
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator^(const checked_integer<T> &lhs, const U &rhs);
+template <class T, class U>
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator^(const U &lhs, const checked_integer<T> &rhs);
 
 // (1 - 3) Compares lhs and rhs for equality.
 template <class T>
@@ -339,14 +361,14 @@ struct _checked_arithmetic<T, false> {
 		lhs %= rhs;
 	}
 
-	static void lshift(T &value, unsigned n)
+	static void lshift(T &value, unsigned long long n)
 	{
 		if (n >= std::numeric_limits<T>::digits || (value > (std::numeric_limits<T>::max() >> n)))
 			_checked_arithmetic_throw();
 		value <<= n;
 	}
 
-	static void rshift(T &value, unsigned n)
+	static void rshift(T &value, unsigned long long n)
 	{
 		if (n >= std::numeric_limits<T>::digits)
 			_checked_arithmetic_throw();
@@ -371,6 +393,7 @@ struct _checked_arithmetic<T, true> {
 		{
 			_checked_arithmetic_throw();
 		}
+
 		lhs += rhs;
 	}
 
@@ -381,6 +404,7 @@ struct _checked_arithmetic<T, true> {
 		{
 			_checked_arithmetic_throw();
 		}
+
 		lhs -= rhs;
 	}
 
@@ -393,6 +417,7 @@ struct _checked_arithmetic<T, true> {
 		{
 			_checked_arithmetic_throw();
 		}
+
 		lhs *= rhs;
 	}
 
@@ -400,6 +425,7 @@ struct _checked_arithmetic<T, true> {
 	{
 		if (rhs == T() || (lhs == std::numeric_limits<T>::min() && rhs == -1))
 			_checked_arithmetic_throw();
+
 		lhs /= rhs;
 	}
 
@@ -407,20 +433,23 @@ struct _checked_arithmetic<T, true> {
 	{
 		if (rhs == T() || (lhs == std::numeric_limits<T>::min() && rhs == -1))
 			_checked_arithmetic_throw();
+
 		lhs %= rhs;
 	}
 
-	static void lshift(T &value, unsigned n)
+	static void lshift(T &value, unsigned long long n)
 	{
 		if (n >= std::numeric_limits<T>::digits || value < T() || (value > (std::numeric_limits<T>::max() >> n)))
 			_checked_arithmetic_throw();
+
 		value <<= n;
 	}
 
-	static void rshift(T &value, unsigned n)
+	static void rshift(T &value, unsigned long long n)
 	{
 		if (n >= std::numeric_limits<T>::digits || value < T())
 			_checked_arithmetic_throw();
+
 		value >>= n;
 	}
 };
@@ -430,7 +459,7 @@ struct _checked_arithmetic<T, true> {
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::false_type, std::false_type)
 {
-	typedef typename std::common_type<T, U>::type common_type;
+	typedef _common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -442,7 +471,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::false_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::false_type, std::true_type)
 {
-	typedef typename std::common_type<T, U>::type common_type;
+	typedef _common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (value < U() || common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -454,7 +483,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::true_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::true_type, std::false_type)
 {
-	typedef typename std::common_type<T, U>::type common_type;
+	typedef _common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -466,7 +495,7 @@ T _checked_integer_cast(const U &value, std::true_type, std::false_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::true_type, std::true_type)
 {
-	typedef typename std::common_type<T, U>::type common_type;
+	typedef _common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) < common_type(std::numeric_limits<T>::min()) ||
@@ -608,16 +637,16 @@ checked_integer<T> checked_integer<T>::operator--(int)
 // ztd::checked_integer::operator+=,-=,*=,/=,%=,<<=,>>=,&=,|=,^=
 //
 // Implements the compound assignment operators.
-// (1) Adds other to *this.
-// (2) Subtracts other from *this.
-// (3) Multiplies *this by other.
-// (4) Divides *this by other.
-// (5) Modulos *this by other.
-// (6) Left-shifts *this by n.
-// (7) Right-shifts *this by n.
-// (8) Bitwise-ANDs *this with other.
-// (9) Bitwise-ORs *this with other.
-// (10) Bitwise-XORs *this with other.
+// (1 - 2) Adds other to *this.
+// (3 - 4) Subtracts other from *this.
+// (5 - 6) Multiplies *this by other.
+// (7 - 8) Divides *this by other.
+// (9 - 10) Modulos *this by other.
+// (11) Left-shifts *this by n.
+// (12) Right-shifts *this by n.
+// (13 - 14) Bitwise-ANDs *this with other.
+// (15 - 16) Bitwise-ORs *this with other.
+// (17 - 18) Bitwise-XORs *this with other.
 //
 // Parameters
 // other - right-hand side argument to operator
@@ -638,13 +667,29 @@ checked_integer<T> &checked_integer<T>::operator+=(const checked_integer<T> &rhs
 
 // (2)
 template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator+=(const checked_integer<U> &rhs)
+{
+	return *this += checked_integer(rhs.get());
+}
+
+// (3)
+template <class T>
 checked_integer<T> &checked_integer<T>::operator-=(const checked_integer<T> &rhs)
 {
 	_checked_arithmetic<T>::sub(m_value, rhs.m_value);
 	return *this;
 }
 
-// (3)
+// (4)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator-=(const checked_integer<U> &rhs)
+{
+	return *this -= checked_integer(rhs.get());
+}
+
+// (5)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator*=(const checked_integer<T> &rhs)
 {
@@ -652,7 +697,15 @@ checked_integer<T> &checked_integer<T>::operator*=(const checked_integer<T> &rhs
 	return *this;
 }
 
-// (4)
+// (6)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator*=(const checked_integer<U> &rhs)
+{
+	return *this *= checked_integer(rhs.get());
+}
+
+// (7)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator/=(const checked_integer<T> &rhs)
 {
@@ -660,7 +713,15 @@ checked_integer<T> &checked_integer<T>::operator/=(const checked_integer<T> &rhs
 	return *this;
 }
 
-// (5)
+// (8)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator/=(const checked_integer<U> &rhs)
+{
+	return *this /= checked_integer(rhs.get());
+}
+
+// (9)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator%=(const checked_integer<T> &rhs)
 {
@@ -668,23 +729,31 @@ checked_integer<T> &checked_integer<T>::operator%=(const checked_integer<T> &rhs
 	return *this;
 }
 
-// (6)
+// (10)
 template <class T>
-checked_integer<T> &checked_integer<T>::operator<<=(unsigned n)
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator%=(const checked_integer<U> &rhs)
+{
+	return *this %= checked_integer(rhs.get());
+}
+
+// (11)
+template <class T>
+checked_integer<T> &checked_integer<T>::operator<<=(unsigned long long n)
 {
 	_checked_arithmetic<T>::lshift(m_value, n);
 	return *this;
 }
 
-// (7)
+// (12)
 template <class T>
-checked_integer<T> &checked_integer<T>::operator>>=(unsigned n)
+checked_integer<T> &checked_integer<T>::operator>>=(unsigned long long n)
 {
 	_checked_arithmetic<T>::rshift(m_value, n);
 	return *this;
 }
 
-// (8)
+// (13)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator&=(const checked_integer<T> &rhs)
 {
@@ -692,7 +761,15 @@ checked_integer<T> &checked_integer<T>::operator&=(const checked_integer<T> &rhs
 	return *this;
 }
 
-// (9)
+// (14)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator&=(const checked_integer<U> &rhs)
+{
+	return *this &= checked_integer(rhs.get());
+}
+
+// (15)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator|=(const checked_integer<T> &rhs)
 {
@@ -700,12 +777,28 @@ checked_integer<T> &checked_integer<T>::operator|=(const checked_integer<T> &rhs
 	return *this;
 }
 
-// (10)
+// (16)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator|=(const checked_integer<U> &rhs)
+{
+	return *this |= checked_integer(rhs.get());
+}
+
+// (17)
 template <class T>
 checked_integer<T> &checked_integer<T>::operator^=(const checked_integer<T> &rhs)
 {
 	m_value ^= rhs.m_value;
 	return *this;
+}
+
+// (18)
+template <class T>
+template <class U>
+_enable_if_convertible_t<U, T, checked_integer<T>> &checked_integer<T>::operator^=(const checked_integer<U> &rhs)
+{
+	return *this ^= checked_integer(rhs.get());
 }
 
 // operator+(unary), operator-(unary), operator~ (ztd::checked_integer)
@@ -762,108 +855,108 @@ checked_integer<T> operator~(const checked_integer<T> &value)
 // std::overflow_error if result would overflow.
 
 // (1)
-template <class T>
-checked_integer<T> operator+(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator+(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) += rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) += _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (2)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator+(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator+(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) += rhs;
+	return lhs + checked_integer<U>{ rhs };
 }
 
 // (3)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator+(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator+(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) += rhs;
+	return checked_integer<U>{ lhs } + rhs;
 }
 
 // (4)
-template <class T>
-checked_integer<T> operator-(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator-(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) -= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) -= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (5)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator-(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator-(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) -= rhs;
+	return lhs - checked_integer<U>{ rhs };
 }
 
 // (6)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator-(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator-(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) -= rhs;
+	return checked_integer<U>{ lhs } - rhs;
 }
 
 // (7)
-template <class T>
-checked_integer<T> operator*(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator*(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) *= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) *= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (8)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator*(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator*(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) *= rhs;
+	return lhs * checked_integer<U>{ rhs };
 }
 
 // (9)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator*(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator*(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) *= rhs;
+	return checked_integer<U>{ lhs } * rhs;
 }
 
 // (10)
-template <class T>
-checked_integer<T> operator/(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator/(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) /= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) /= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (11)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator/(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator/(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) /= rhs;
+	return lhs / checked_integer<U>(rhs);
 }
 
 // (12)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator/(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator/(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) /= rhs;
+	return checked_integer<U>(lhs) / rhs;
 }
 
 // (13)
-template <class T>
-checked_integer<T> operator%(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator%(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) %= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) %= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (14)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator%(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator%(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) %= rhs;
+	return lhs % checked_integer<U>(rhs);
 }
 
 // (15)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator%(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator%(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) %= rhs;
+	return checked_integer<U>(lhs) % rhs;
 }
 
 // operator<<,>> (ztd::checked_integer)
@@ -886,14 +979,14 @@ _enable_if_convertible_t<U, T, checked_integer<T>> operator%(const U &lhs, const
 
 // (1)
 template <class T>
-checked_integer<T> operator<<(const checked_integer<T> &value, unsigned n)
+checked_integer<T> operator<<(const checked_integer<T> &value, unsigned long long n)
 {
 	return checked_integer<T>(value) <<= n;
 }
 
 // (2)
 template <class T>
-checked_integer<T> operator>>(const checked_integer<T> &value, unsigned n)
+checked_integer<T> operator>>(const checked_integer<T> &value, unsigned long long n)
 {
 	return checked_integer<T>(value) >>= n;
 }
@@ -909,74 +1002,74 @@ checked_integer<T> operator>>(const checked_integer<T> &value, unsigned n)
 // lhs, rhs - the arguments
 //
 // Return value
-// (1 - 3) checked_integer<T>(lhs) &= rhs
-// (4 - 6) checked_integer<T>(lhs) |= rhs
-// (7 - 9) checked_integer<T>(lhs) ^= rhs
+// (1 - 3) lhs & rhs
+// (4 - 6) lhs | rhs
+// (7 - 9) lhs ^ rhs
 //
 // Exceptions
-// None.
+// std::overflow_error if implicit conversion overflow.
 
 // (1)
-template <class T>
-checked_integer<T> operator&(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator&(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) &= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) &= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (2)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator&(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator&(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) &= rhs;
+	return lhs & _checked_promoted_t<T, U>(rhs);
 }
 
 // (3)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator&(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator&(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) &= rhs;
+	return _checked_promoted_t<T, U>(lhs) & rhs;
 }
 
 // (4)
-template <class T>
-checked_integer<T> operator|(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator|(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) |= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) |= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (5)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator|(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator|(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) |= rhs;
+	return lhs | _checked_promoted_t<T, U>(rhs);
 }
 
 // (6)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator|(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator|(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) |= rhs;
+	return _checked_promoted_t<T, U>(lhs) | rhs;
 }
 
 // (7)
-template <class T>
-checked_integer<T> operator^(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
+template <class T, class U>
+_checked_promoted_t<T, U> operator^(const checked_integer<T> &lhs, const checked_integer<U> &rhs)
 {
-	return checked_integer<T>(lhs) ^= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) ^= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (8)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator^(const checked_integer<T> &lhs, const U &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator^(const checked_integer<T> &lhs, const U &rhs)
 {
-	return checked_integer<T>(lhs) ^= rhs;
+	return lhs ^ _checked_promoted_t<T, U>(rhs);
 }
 
 // (9)
 template <class T, class U>
-_enable_if_convertible_t<U, T, checked_integer<T>> operator^(const U &lhs, const checked_integer<T> &rhs)
+_enable_if_convertible_t<U, T, _checked_promoted_t<T, U>> operator^(const U &lhs, const checked_integer<T> &rhs)
 {
-	return checked_integer<T>(lhs) ^= rhs;
+	return _checked_promoted_t<T, U>(lhs) ^ rhs;
 }
 
 // operator==,!=,<,<=,>,>= (ztd::checked_integer)
@@ -994,6 +1087,9 @@ _enable_if_convertible_t<U, T, checked_integer<T>> operator^(const U &lhs, const
 //
 // Return value
 // true if comparison is true, else false
+//
+// Exceptions
+// std::overflow_error if implicit conversion overflows.
 
 // (1)
 template <class T>
@@ -1006,14 +1102,14 @@ bool operator==(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator==(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() == rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) == _checked_promoted_t<T, U>(rhs);
 }
 
 // (3)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator==(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs == rhs.get();
+	return _checked_promoted_t<T, U>(lhs) == _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (4)
@@ -1027,14 +1123,14 @@ bool operator!=(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator!=(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() != rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) != _checked_promoted_t<T, U>(rhs);
 }
 
 // (6)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator!=(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs != rhs.get();
+	return _checked_promoted_t<T, U>(lhs) != _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (7)
@@ -1048,14 +1144,14 @@ bool operator<(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator<(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() < rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) < _checked_promoted_t<T, U>(rhs);
 }
 
 // (9)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator<(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs < rhs.get();
+	return _checked_promoted_t<T, U>(lhs) < _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (10)
@@ -1069,14 +1165,14 @@ bool operator<=(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator<=(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() <= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) <= _checked_promoted_t<T, U>(rhs);
 }
 
 // (12)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator<=(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs <= rhs.get();
+	return _checked_promoted_t<T, U>(lhs) <= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (13)
@@ -1090,14 +1186,14 @@ bool operator>(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator>(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() > rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) > _checked_promoted_t<T, U>(rhs);
 }
 
 // (15)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator>(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs > rhs.get();
+	return _checked_promoted_t<T, U>(lhs) > _checked_promoted_t<T, U>(rhs.get());
 }
 
 // (16)
@@ -1111,14 +1207,14 @@ bool operator>=(const checked_integer<T> &lhs, const checked_integer<T> &rhs)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator>=(const checked_integer<T> &lhs, const U &rhs)
 {
-	return lhs.get() >= rhs;
+	return _checked_promoted_t<T, U>(lhs.get()) >= _checked_promoted_t<T, U>(rhs);
 }
 
 // (18)
 template <class T, class U>
 _enable_if_convertible_t<U, T, bool> operator>=(const U &lhs, const checked_integer<T> &rhs)
 {
-	return lhs >= rhs.get();
+	return _checked_promoted_t<T, U>(lhs) >= _checked_promoted_t<T, U>(rhs.get());
 }
 
 // ztd::abs(ztd::checked_integer)
