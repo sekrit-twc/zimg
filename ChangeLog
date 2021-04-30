@@ -1,3 +1,7 @@
+3.0.2
+colorspace: fix underflow in AVX-512 ST.2084 transfer functions
+arm: fix data alignment
+
 3.0.1
 graph: fix handling of default nominal_peak_luminance (introduced in 3.0)
 
