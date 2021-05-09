@@ -316,8 +316,8 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 		func.to_gamma = rec_470bg_inverse_oetf;
 		break;
 	case TransferCharacteristics::SMPTE_240M:
-		func.to_linear = scene_referred ? smpte_240m_inverse_oetf : rec_1886_eotf;
-		func.to_gamma = scene_referred ? smpte_240m_oetf : rec_1886_inverse_eotf;
+		func.to_linear = smpte_240m_inverse_oetf;
+		func.to_gamma = smpte_240m_oetf;
 		break;
 	case TransferCharacteristics::XVYCC:
 		func.to_linear = scene_referred ? xvycc_inverse_oetf : xvycc_eotf;
