@@ -302,7 +302,7 @@ zimg::colorspace::ColorPrimaries translate_primaries(zimg_color_primaries_e prim
 		{ ZIMG_PRIMARIES_ST428,       ColorPrimaries::XYZ },
 		{ ZIMG_PRIMARIES_ST431_2,     ColorPrimaries::DCI_P3 },
 		{ ZIMG_PRIMARIES_ST432_1,     ColorPrimaries::DCI_P3_D65 },
-		{ ZIMG_PRIMARIES_EBU3213_E,   ColorPrimaries::JEDEC_P22 },
+		{ ZIMG_PRIMARIES_EBU3213_E,   ColorPrimaries::EBU_3213_E },
 	};
 	return search_itu_enum_map(map, primaries, "unrecognized color primaries");
 }

@@ -93,8 +93,8 @@ void get_primaries_xy(double out[3][2], ColorPrimaries primaries)
 	case ColorPrimaries::DCI_P3_D65:
 		memcpy(out, DCI_P3_PRIMARIES, sizeof(DCI_P3_PRIMARIES));
 		break;
-	case ColorPrimaries::JEDEC_P22:
-		memcpy(out, JEDEC_P22_PRIMARIES, sizeof(JEDEC_P22_PRIMARIES));
+	case ColorPrimaries::EBU_3213_E:
+		memcpy(out, EBU_3213_E_PRIMARIES, sizeof(EBU_3213_E_PRIMARIES));
 		break;
 	default:
 		error::throw_<error::InternalError>("unrecognized primaries");

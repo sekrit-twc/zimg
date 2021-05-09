@@ -60,7 +60,7 @@ enum class ColorPrimaries {
 	XYZ,
 	DCI_P3,
 	DCI_P3_D65,
-	JEDEC_P22,
+	EBU_3213_E,
 };
 
 /**

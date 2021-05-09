@@ -107,7 +107,7 @@ const zimg::static_string_map<ColorPrimaries, 12> g_primaries_table{
 	{ "xyz",       ColorPrimaries::XYZ },
 	{ "dcip3",     ColorPrimaries::DCI_P3 },
 	{ "dcip3_d65", ColorPrimaries::DCI_P3_D65 },
-	{ "jedec_p22", ColorPrimaries::JEDEC_P22 },
+	{ "ebu",       ColorPrimaries::EBU_3213_E },
 };
 
 const zimg::static_string_map<DitherType, 4> g_dither_table{
