@@ -642,24 +642,6 @@ private:
 		m_state.alpha_from_luma();
 	}
 
-	void reinterpret_full_to_limited(internal_state &target, plane_mask mask)
-	{
-		apply_mask(mask, [&](int p)
-		{
-			m_state.planes[p].format.fullrange = false;
-			target.planes[p].format.fullrange = false;
-		});
-	}
-
-	void reinterpret_limited_to_full(internal_state &target, plane_mask mask)
-	{
-		apply_mask(mask, [&](int p)
-		{
-			m_state.planes[p].format.fullrange = true;
-			target.planes[p].format.fullrange = true;
-		});
-	}
-
 	PixelFormat choose_resize_format(const internal_state &target, const params &params, int p)
 	{
 		if (params.unresize)
@@ -818,9 +800,10 @@ private:
 		apply_mask(mask, [&](int q) { m_state.planes[q].format = format; });
 	}
 
-	void connect_plane(internal_state &target, const params &params, FilterObserver &observer, ConnectMode mode, bool reinterpret_range)
+	void connect_plane(const internal_state &target, const params &params, FilterObserver &observer, ConnectMode mode, bool reinterpret_range)
 	{
 		plane_mask mask{};
+		internal_state tmp = target;
 		bool reinterpreted = false;
 		int p;
 
@@ -837,34 +820,35 @@ private:
 
 		if (reinterpret_range) {
 			PixelFormat src_format = m_state.planes[p].format;
-			PixelFormat dst_format = target.planes[p].format;
+			PixelFormat dst_format = tmp.planes[p].format;
 
-			// Promote full-range BYTE inputs to a limited-range WORD if it would not affect the output.
+			// Promote full-range BYTE inputs to a limited-range WORD with a left-shift operator it would not affect the output.
 			if (src_format.type == PixelType::BYTE && src_format.fullrange && dst_format.fullrange &&
 			    src_format.depth == dst_format.depth)
 			{
-				reinterpret_full_to_limited(target, mask);
+				apply_mask(mask, [&](int p) { m_state.planes[p].format.fullrange = false; });
+				apply_mask(mask, [&](int p) { tmp.planes[p].format.fullrange = false; });
 				reinterpreted = true;
 			}
 		}
 
-		if (needs_resize_plane(target, p)) {
-			PixelFormat format = choose_resize_format(target, params, p);
+		if (needs_resize_plane(tmp, p)) {
+			PixelFormat format = choose_resize_format(tmp, params, p);
 			convert_pixel_format(format, params, observer, mask, p);
-			resize_plane(target, params, observer, mask, p);
+			resize_plane(tmp, params, observer, mask, p);
 		}
 
-		if (m_state.planes[p].format != target.planes[p].format)
-			convert_pixel_format(target.planes[p].format, params, observer, mask, p);
+		if (m_state.planes[p].format != tmp.planes[p].format)
+			convert_pixel_format(tmp.planes[p].format, params, observer, mask, p);
 
 		// Undo temporary changes.
 		if (reinterpreted)
-			reinterpret_limited_to_full(target, mask);
+			apply_mask(mask, [&](int p) { m_state.planes[p].format.fullrange = true; });
 
 		iassert(m_state.planes[p] == target.planes[p]);
 	}
 
-	void connect_color_channels_planar(internal_state &target, const params &params, FilterObserver &observer, bool reinterpret_range)
+	void connect_color_channels_planar(const internal_state &target, const params &params, FilterObserver &observer, bool reinterpret_range)
 	{
 		connect_plane(target, params, observer, ConnectMode::LUMA, reinterpret_range);
 
@@ -872,7 +856,7 @@ private:
 			connect_plane(target, params, observer, ConnectMode::CHROMA, reinterpret_range);
 	}
 
-	void connect_color_channels(internal_state &target, const params &params, FilterObserver &observer)
+	void connect_color_channels(const internal_state &target, const params &params, FilterObserver &observer)
 	{
 		if (needs_colorspace(target)) {
 			internal_state tmp = make_float_444_state(m_state, false);
@@ -926,7 +910,7 @@ private:
 		iassert(!m_state.has_chroma() || m_state.planes[PLANE_V] == target.planes[PLANE_V]);
 	}
 
-	void connect_internal(internal_state &target, const params &params, FilterObserver &observer)
+	void connect_internal(const internal_state &target, const params &params, FilterObserver &observer)
 	{
 		if (needs_premul(target)) {
 			internal_state::plane orig_alpha_plane = m_state.planes[PLANE_A];
