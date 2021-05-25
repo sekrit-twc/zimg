@@ -651,6 +651,15 @@ private:
 		});
 	}
 
+	void reinterpret_limited_to_full(internal_state &target, plane_mask mask)
+	{
+		apply_mask(mask, [&](int p)
+		{
+			m_state.planes[p].format.fullrange = true;
+			target.planes[p].format.fullrange = true;
+		});
+	}
+
 	PixelFormat choose_resize_format(const internal_state &target, const params &params, int p)
 	{
 		if (params.unresize)
@@ -812,6 +821,7 @@ private:
 	void connect_plane(internal_state &target, const params &params, FilterObserver &observer, ConnectMode mode, bool reinterpret_range)
 	{
 		plane_mask mask{};
+		bool reinterpreted = false;
 		int p;
 
 		if (mode == ConnectMode::LUMA) {
@@ -834,6 +844,7 @@ private:
 			    src_format.depth == dst_format.depth)
 			{
 				reinterpret_full_to_limited(target, mask);
+				reinterpreted = true;
 			}
 		}
 
@@ -845,6 +856,10 @@ private:
 
 		if (m_state.planes[p].format != target.planes[p].format)
 			convert_pixel_format(target.planes[p].format, params, observer, mask, p);
+
+		// Undo temporary changes.
+		if (reinterpreted)
+			reinterpret_limited_to_full(target, mask);
 
 		iassert(m_state.planes[p] == target.planes[p]);
 	}
