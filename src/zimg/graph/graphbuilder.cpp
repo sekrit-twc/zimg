@@ -247,6 +247,8 @@ struct GraphBuilder::internal_state {
 		double active_width;
 		double active_height;
 
+		plane() : width{}, height{}, format{}, active_left{}, active_top{}, active_width{}, active_height{} {}
+
 		friend bool operator==(const plane &lhs, const plane &rhs)
 		{
 			return lhs.width == rhs.width &&
