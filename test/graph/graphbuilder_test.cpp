@@ -526,7 +526,7 @@ TEST(GraphBuilderTest, test_grey_to_grey_colorspace)
 		"grey_to_rgb",
 		"colorspace",
 		"yuv_to_grey",
-		});
+	});
 }
 
 TEST(GraphBuilderTest, test_yuv_to_grey_colorspace)
