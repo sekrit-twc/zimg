@@ -1016,7 +1016,7 @@ GraphBuilder::params::params() noexcept :
 	peak_luminance{ NAN },
 	approximate_gamma{},
 	scene_referred{},
-	cpu{}
+	cpu{ CPUClass::AUTO }
 {
 	static const resize::BicubicFilter bicubic;
 	static const resize::BilinearFilter bilinear;
