@@ -39,14 +39,15 @@ struct X86Capabilities {
 	unsigned piledriver : 1;
 	unsigned zen1 : 1;
 	unsigned zen2 : 1;
+	unsigned zen3 : 1;
 };
 
 /* 17 cycles per store on Piledriver. */
 constexpr bool cpu_has_slow_avx(const X86Capabilities &caps) { return caps.piledriver; }
-/* 2+ cycles per value on AMD. */
+/* 2+ cycles per value on AMD. Still >1 cycle on Zen3, but usable. */
 constexpr bool cpu_has_slow_gather(const X86Capabilities &caps) { return caps.xop || caps.zen1 || caps.zen2; }
-/* 4 cycles per vpermd on Zen. */
-constexpr bool cpu_has_slow_permute(const X86Capabilities &caps) { return caps.zen1 || caps.zen2; }
+/* 4 cycles per vpermd on Zen. Higher throughput on Zen3, but still long latency. */
+constexpr bool cpu_has_slow_permute(const X86Capabilities &caps) { return caps.zen1 || caps.zen2 || caps.zen3; }
 
 constexpr bool cpu_has_avx512_f_dq_bw_vl(const X86Capabilities &caps) { return caps.avx512f && caps.avx512dq && caps.avx512bw && caps.avx512vl; }
 
