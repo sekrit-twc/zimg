@@ -45,6 +45,7 @@ void show_x86_info()
 	std::cout << "Piledriver: " << yes_no(caps.piledriver) << '\n';
 	std::cout << "Zen1:   " << yes_no(caps.zen1) << '\n';
 	std::cout << "Zen2:   " << yes_no(caps.zen2) << '\n';
+	std::cout << "Zen3:   " << yes_no(caps.zen3) << '\n';
 	std::cout << '\n';
 
 	const zimg::X86CacheHierarchy cache = zimg::query_x86_cache_hierarchy();

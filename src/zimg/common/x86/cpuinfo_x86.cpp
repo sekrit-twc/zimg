@@ -119,16 +119,15 @@ X86Capabilities do_query_x86_capabilities() noexcept
 		model  = (regs[0] >> 4) & 0x0FU;
 		family = (regs[0] >> 8) & 0x0FU;
 
-		if (family == 6) {
-			family += ((regs[0] >> 20) & 0x0FU);
-		} else if (family == 15) {
+		if (family == 15) {
 			family += ((regs[0] >> 20) & 0x0FU);
 			model  += ((regs[0] >> 16) & 0x0FU) << 4;
 		}
 
 		caps.piledriver = family == 0x15 && model == 0x02;
-		caps.zen1 = family == 0x17 && model <= 0x1FU;
-		caps.zen2 = family == 0x17 && model >= 0x20U;
+		caps.zen1 = family == 0x17 && model <= 0x2F;
+		caps.zen2 = family == 0x17 && model >= 0x30;
+		caps.zen3 = family == 0x19;
 	}
 
 	return caps;
