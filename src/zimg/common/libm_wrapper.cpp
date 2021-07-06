@@ -1,5 +1,6 @@
-#include <math.h>
 #include "libm_wrapper.h"
+#define __CRT__NO_INLINE 1
+#include <math.h>
 
 float (*zimg_x_expf)(float) = expf;
 float (*zimg_x_logf)(float) = logf;
