@@ -1,6 +1,10 @@
 3.0.2
+api: default to ZIMG_CPU_AUTO when graph params are null
+colorspace: fix incorrect SMPTE 240M transfer function
 colorspace: fix underflow in AVX-512 ST.2084 transfer functions
+graph: fix conversion from fullrange grey to RGB
 arm: fix data alignment
+x86: optimizations for AMD Zen3 processors
 
 3.0.1
 graph: fix handling of default nominal_peak_luminance (introduced in 3.0)
