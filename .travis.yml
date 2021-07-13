@@ -4,20 +4,20 @@ language: cpp
 
 matrix:
   include:
-    # GCC 4.9
+    # GCC 5
     - compiler: gcc
-      # GCC 4.9 no longer available in Bionic
+      # GCC 5 no longer available in Bionic
       dist: xenial
       addons:
         apt:
           sources:
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
-            - gcc-4.9
-            - g++-4.9
+            - gcc-5
+            - g++-5
       env: 
-        - MY_CC: gcc-4.9
-        - MY_CXX: g++-4.9
+        - MY_CC: gcc-5
+        - MY_CXX: g++-5
     # GCC 10
     - compiler: gcc
       addons:
