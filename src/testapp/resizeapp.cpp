@@ -29,7 +29,7 @@ constexpr bool is_set_pixel_format(const zimg::PixelFormat &format) noexcept
 int decode_filter(const struct ArgparseOption *, void *out, const char *param, int)
 {
 	try {
-		std::unique_ptr<zimg::resize::Filter> *filter = static_cast<std::unique_ptr<zimg::resize::Filter> *>(out);
+		zimg::resize::Filter **filter = static_cast<zimg::resize::Filter **>(out);
 		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };
 		std::cmatch match;
 		std::string filter_str;
@@ -46,7 +46,7 @@ int decode_filter(const struct ArgparseOption *, void *out, const char *param, i
 		if (match.size() >= 3 && match[3].length())
 			param_b = std::stod(match[3]);
 
-		*filter = g_resize_table[filter_str.c_str()](param_a, param_b);
+		*filter = g_resize_table[filter_str.c_str()](param_a, param_b).release();
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return -1;
@@ -63,7 +63,7 @@ struct Arguments {
 	unsigned height_in;
 	unsigned width_out;
 	unsigned height_out;
-	std::unique_ptr<zimg::resize::Filter> filter;
+	zimg::resize::Filter *filter;
 	double param_a;
 	double param_b;
 	double shift_w;
@@ -74,6 +74,12 @@ struct Arguments {
 	const char *visualise_path;
 	unsigned times;
 	zimg::CPUClass cpu;
+
+	Arguments(const Arguments &) = delete;
+
+	~Arguments() { delete filter; }
+
+	Arguments &operator=(const Arguments &) = delete;
 };
 
 const ArgparseOption program_switches[] = {
@@ -157,7 +163,7 @@ int resize_main(int argc, char **argv)
 		ImageFrame src_frame = imageframe::read(args.inpath, "i444s", args.width_in, args.height_in, args.working_format.type, false);
 
 		if (!args.filter)
-			args.filter = g_resize_table["bicubic"](NAN, NAN);
+			args.filter = g_resize_table["bicubic"](NAN, NAN).release();
 		if (std::isnan(args.subwidth))
 			args.subwidth = src_frame.width();
 		if (std::isnan(args.subheight))
@@ -170,7 +176,7 @@ int resize_main(int argc, char **argv)
 
 		auto filter_pair = zimg::resize::ResizeConversion{ src_frame.width(), src_frame.height(), src_frame.pixel_type() }
 			.set_depth(args.working_format.depth)
-			.set_filter(args.filter.get())
+			.set_filter(args.filter)
 			.set_dst_width(dst_frame.width())
 			.set_dst_height(dst_frame.height())
 			.set_shift_w(args.shift_w)
