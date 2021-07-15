@@ -50,9 +50,9 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 	}
 	zassert_d(width, "empty matrix");
 
-	if (width > floor_n(UINT_MAX, AlignmentOf<uint16_t>::value))
+	if (width > floor_n(UINT_MAX, AlignmentOf<uint16_t>))
 		error::throw_<error::OutOfMemory>();
-	if (width > floor_n(UINT_MAX, AlignmentOf<float>::value))
+	if (width > floor_n(UINT_MAX, AlignmentOf<float>))
 		error::throw_<error::OutOfMemory>();
 
 	FilterContext e{};
@@ -61,8 +61,8 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 		e.filter_width = static_cast<unsigned>(width);
 		e.filter_rows = static_cast<unsigned>(m.rows());
 		e.input_width = static_cast<unsigned>(m.cols());
-		e.stride = static_cast<unsigned>(ceil_n(width, AlignmentOf<float>::value));
-		e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>::value));
+		e.stride = static_cast<unsigned>(ceil_n(width, AlignmentOf<float>));
+		e.stride_i16 = static_cast<unsigned>(ceil_n(width, AlignmentOf<uint16_t>));
 
 		if (e.filter_rows > UINT_MAX / e.stride || e.filter_rows > UINT_MAX / e.stride_i16)
 			error::throw_<error::OutOfMemory>();

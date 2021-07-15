@@ -131,10 +131,10 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 		}
 		zassert_d(rowsize, "empty matrix");
 
-		if (rowsize > floor_n(SIZE_MAX, AlignmentOf<float>::value))
+		if (rowsize > floor_n(SIZE_MAX, AlignmentOf<float>))
 			error::throw_<error::OutOfMemory>();
 
-		size_t rowstride = ceil_n(rowsize, AlignmentOf<float>::value);
+		size_t rowstride = ceil_n(rowsize, AlignmentOf<float>);
 		if (rows > SIZE_MAX / rowstride)
 			error::throw_<error::OutOfMemory>();
 

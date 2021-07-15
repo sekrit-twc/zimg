@@ -40,10 +40,10 @@ struct PixelTraits {
  * Table used by {@link pixel_get_traits}.
  */
 constexpr PixelTraits pixel_traits_table[] = {
-	{ sizeof(uint8_t),   8, AlignmentOf<uint8_t>::value,  true },
-	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, true },
-	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>::value, false },
-	{ sizeof(float),    32, AlignmentOf<float>::value,    false },
+	{ sizeof(uint8_t),   8, AlignmentOf<uint8_t>,  true },
+	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>, true },
+	{ sizeof(uint16_t), 16, AlignmentOf<uint16_t>, false },
+	{ sizeof(float),    32, AlignmentOf<float>,    false },
 };
 
 /**

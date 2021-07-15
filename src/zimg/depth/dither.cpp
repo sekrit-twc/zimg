@@ -174,8 +174,8 @@ class NoneDitherTable final : public OrderedDitherTable {
 public:
 	std::tuple<const float *, unsigned, unsigned> get_dither_coeffs(unsigned i, unsigned seq) const override
 	{
-		static constexpr float table alignas(ALIGNMENT)[AlignmentOf<float>::value] = {};
-		return std::make_tuple(table, 0, AlignmentOf<float>::value - 1);
+		static constexpr float table alignas(ALIGNMENT)[AlignmentOf<float>] = {};
+		return std::make_tuple(table, 0, AlignmentOf<float> - 1);
 	}
 };
 

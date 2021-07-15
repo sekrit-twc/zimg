@@ -34,14 +34,12 @@ template <class T>
 constexpr T floor_n(T x, unsigned n) { return x & ~static_cast<T>(n - 1); }
 
 /**
- * Helper struct that computes alignment in units of object count.
+ * Alignment in units of object count.
  *
  * @tparam T type of object
  */
 template <class T>
-struct AlignmentOf {
-	static constexpr unsigned value = ALIGNMENT / sizeof(T);
-};
+constexpr unsigned AlignmentOf = ALIGNMENT / sizeof(T);
 
 } // namespace zimg
 

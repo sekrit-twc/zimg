@@ -83,7 +83,7 @@ void AuditBuffer<T>::add_guard_bytes()
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
 			T *line_base = m_buffer[p][i];
 
-			T *line_guard_left = line_base - zimg::AlignmentOf<T>::value;
+			T *line_guard_left = line_base - zimg::AlignmentOf<T>;
 			T *line_guard_right = line_guard_left + stride_T(p);
 
 			std::fill(line_guard_left, line_base, m_guard_val);
@@ -127,12 +127,12 @@ AuditBuffer<T>::AuditBuffer(AuditBufferType buffer_type, unsigned width, unsigne
 		unsigned mask_plane = p ? (mask == zimg::graph::BUFFER_MAX ? mask : mask >> subsample_h) : mask;
 		unsigned buffer_height = (mask_plane == zimg::graph::BUFFER_MAX) ? height_plane : mask_plane + 1;
 
-		size_t guarded_linesize = (zimg::ceil_n(width_plane, zimg::AlignmentOf<T>::value) + 2 * zimg::AlignmentOf<T>::value) * sizeof(T);
+		size_t guarded_linesize = (zimg::ceil_n(width_plane, zimg::AlignmentOf<T>) + 2 * zimg::AlignmentOf<T>) * sizeof(T);
 		size_t guarded_linecount = buffer_height + 2;
 
 		m_vector[p].resize(guarded_linesize * guarded_linecount / sizeof(T));
 		m_buffer[p] = zimg::graph::ImageBuffer<T>{
-			m_vector[p].data() + guarded_linesize / sizeof(T) + zimg::AlignmentOf<T>::value,
+			m_vector[p].data() + guarded_linesize / sizeof(T) + zimg::AlignmentOf<T>,
 			static_cast<ptrdiff_t>(guarded_linesize),
 			mask_plane
 		};
@@ -198,7 +198,7 @@ void AuditBuffer<T>::assert_guard_bytes() const
 
 		for (unsigned i = 0; i < m_buffer_height[p]; ++i) {
 			const T *line_base = m_buffer[p].data() + static_cast<ptrdiff_t>(i) * stride_T(p);
-			const T *line_guard_left = line_base - zimg::AlignmentOf<T>::value;
+			const T *line_guard_left = line_base - zimg::AlignmentOf<T>;
 			const T *line_guard_right = line_guard_left + stride_T(p);
 
 			ASSERT_TRUE(contains_only(line_guard_left, line_base, m_guard_val)) <<
