@@ -128,7 +128,7 @@ void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT e
 	}
 }
 
-decltype(&error_diffusion_scalar<uint8_t, uint8_t>) select_error_diffusion_scalar_func(PixelType pixel_in, PixelType pixel_out)
+auto select_error_diffusion_scalar_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::HALF)
 		pixel_in = PixelType::FLOAT;
@@ -319,7 +319,7 @@ void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph
 	                             scale, offset, bits, width - vec_count - 0);
 }
 
-decltype(&error_diffusion_sse2<uint8_t, uint8_t>) select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
+auto select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::HALF)
 		pixel_in = PixelType::FLOAT;
@@ -342,8 +342,8 @@ decltype(&error_diffusion_sse2<uint8_t, uint8_t>) select_error_diffusion_sse2_fu
 
 
 class ErrorDiffusionSSE2 final : public graph::ImageFilter {
-	decltype(&error_diffusion_scalar<uint8_t, uint8_t>) m_scalar_func;
-	decltype(&error_diffusion_sse2<uint8_t, uint8_t>) m_sse2_func;
+	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
+	decltype(select_error_diffusion_sse2_func({}, {})) m_sse2_func;
 	dither_f16c_func m_f16c;
 
 	PixelType m_pixel_in;

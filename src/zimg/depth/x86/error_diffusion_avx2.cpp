@@ -159,7 +159,7 @@ void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT e
 	}
 }
 
-decltype(&error_diffusion_scalar<PixelType::BYTE, PixelType::BYTE>) select_error_diffusion_scalar_func(PixelType pixel_in, PixelType pixel_out)
+auto select_error_diffusion_scalar_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
 		return error_diffusion_scalar<PixelType::BYTE, PixelType::BYTE>;
@@ -415,7 +415,7 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	                                         scale, offset, bits, width - vec_count - 0);
 }
 
-decltype(&error_diffusion_avx2<PixelType::BYTE, PixelType::BYTE>) select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
+auto select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
 		return error_diffusion_avx2<PixelType::BYTE, PixelType::BYTE>;
@@ -439,8 +439,8 @@ decltype(&error_diffusion_avx2<PixelType::BYTE, PixelType::BYTE>) select_error_d
 
 
 class ErrorDiffusionAVX2 final : public graph::ImageFilter {
-	decltype(&error_diffusion_scalar<PixelType::BYTE, PixelType::BYTE>) m_scalar_func;
-	decltype(&error_diffusion_avx2<PixelType::BYTE, PixelType::BYTE>) m_avx2_func;
+	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
+	decltype(select_error_diffusion_avx2_func({}, {})) m_avx2_func;
 
 	PixelType m_pixel_in;
 	PixelType m_pixel_out;

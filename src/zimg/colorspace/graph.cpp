@@ -119,7 +119,7 @@ std::vector<ColorspaceNode> get_neighboring_colorspaces(const ColorspaceDefiniti
 
 	std::vector<ColorspaceNode> edges;
 
-	auto add_edge = [&](const ColorspaceDefinition &out_csp, decltype(&create_ncl_rgb_to_yuv_operation) func)
+	auto add_edge = [&](const ColorspaceDefinition &out_csp, auto func)
 	{
 		edges.emplace_back(out_csp, std::bind(func, csp, out_csp, std::placeholders::_1, std::placeholders::_2));
 	};

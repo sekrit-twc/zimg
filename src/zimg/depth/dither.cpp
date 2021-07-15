@@ -105,7 +105,7 @@ dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pix
 		error::throw_<error::InternalError>("no conversion between pixel types");
 }
 
-decltype(&dither_ed<uint8_t, uint8_t>) select_error_diffusion_func(PixelType pixel_in, PixelType pixel_out)
+auto select_error_diffusion_func(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::HALF)
 		pixel_in = PixelType::FLOAT;
