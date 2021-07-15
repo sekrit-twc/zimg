@@ -8,6 +8,7 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
+#include "common/make_array.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_arm.h"
@@ -274,7 +275,7 @@ void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_
 #undef XARGS
 }
 
-const decltype(&resize_line8_h_u16_neon<false, 0>) resize_line8_h_u16_neon_jt_small[] = {
+constexpr auto resize_line8_h_u16_neon_jt_small = make_array(
 	resize_line8_h_u16_neon<false, 1>,
 	resize_line8_h_u16_neon<false, 2>,
 	resize_line8_h_u16_neon<false, 3>,
@@ -282,10 +283,9 @@ const decltype(&resize_line8_h_u16_neon<false, 0>) resize_line8_h_u16_neon_jt_sm
 	resize_line8_h_u16_neon<false, 5>,
 	resize_line8_h_u16_neon<false, 6>,
 	resize_line8_h_u16_neon<false, 7>,
-	resize_line8_h_u16_neon<false, 8>,
-};
+	resize_line8_h_u16_neon<false, 8>);
 
-const decltype(&resize_line8_h_u16_neon<false, 0>) resize_line8_h_u16_neon_jt_large[] = {
+constexpr auto resize_line8_h_u16_neon_jt_large = make_array(
 	resize_line8_h_u16_neon<true, 0>,
 	resize_line8_h_u16_neon<true, 1>,
 	resize_line8_h_u16_neon<true, 2>,
@@ -293,8 +293,7 @@ const decltype(&resize_line8_h_u16_neon<false, 0>) resize_line8_h_u16_neon_jt_la
 	resize_line8_h_u16_neon<true, 4>,
 	resize_line8_h_u16_neon<true, 5>,
 	resize_line8_h_u16_neon<true, 6>,
-	resize_line8_h_u16_neon<true, 7>,
-};
+	resize_line8_h_u16_neon<true, 7>);
 
 
 template <unsigned FWidth, unsigned Tail>
@@ -405,7 +404,7 @@ void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float 
 #undef XARGS
 }
 
-const decltype(&resize_line4_h_f32_neon<0, 0>) resize_line4_h_f32_neon_jt_small[] = {
+constexpr auto resize_line4_h_f32_neon_jt_small = make_array(
 	resize_line4_h_f32_neon<1, 1>,
 	resize_line4_h_f32_neon<2, 2>,
 	resize_line4_h_f32_neon<3, 3>,
@@ -413,15 +412,13 @@ const decltype(&resize_line4_h_f32_neon<0, 0>) resize_line4_h_f32_neon_jt_small[
 	resize_line4_h_f32_neon<5, 1>,
 	resize_line4_h_f32_neon<6, 2>,
 	resize_line4_h_f32_neon<7, 3>,
-	resize_line4_h_f32_neon<8, 4>
-};
+	resize_line4_h_f32_neon<8, 4>);
 
-const decltype(&resize_line4_h_f32_neon<0, 0>) resize_line4_h_f32_neon_jt_large[] = {
+constexpr auto resize_line4_h_f32_neon_jt_large = make_array(
 	resize_line4_h_f32_neon<0, 0>,
 	resize_line4_h_f32_neon<0, 1>,
 	resize_line4_h_f32_neon<0, 2>,
-	resize_line4_h_f32_neon<0, 3>
-};
+	resize_line4_h_f32_neon<0, 3>);
 
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
@@ -558,7 +555,7 @@ void resize_line_v_u16_neon(const int16_t * RESTRICT filter_data, const uint16_t
 #undef XARGS
 }
 
-const decltype(&resize_line_v_u16_neon<0, false, false>) resize_line_v_u16_neon_jt_a[] = {
+constexpr auto resize_line_v_u16_neon_jt_a = make_array(
 	resize_line_v_u16_neon<0, false, false>,
 	resize_line_v_u16_neon<1, false, false>,
 	resize_line_v_u16_neon<2, false, false>,
@@ -566,10 +563,9 @@ const decltype(&resize_line_v_u16_neon<0, false, false>) resize_line_v_u16_neon_
 	resize_line_v_u16_neon<4, false, false>,
 	resize_line_v_u16_neon<5, false, false>,
 	resize_line_v_u16_neon<6, false, false>,
-	resize_line_v_u16_neon<7, false, false>,
-};
+	resize_line_v_u16_neon<7, false, false>);
 
-const decltype(&resize_line_v_u16_neon<0, false, false>) resize_line_v_u16_neon_jt_b[] = {
+constexpr auto resize_line_v_u16_neon_jt_b = make_array(
 	resize_line_v_u16_neon<0, true, false>,
 	resize_line_v_u16_neon<1, true, false>,
 	resize_line_v_u16_neon<2, true, false>,
@@ -577,8 +573,7 @@ const decltype(&resize_line_v_u16_neon<0, false, false>) resize_line_v_u16_neon_
 	resize_line_v_u16_neon<4, true, false>,
 	resize_line_v_u16_neon<5, true, false>,
 	resize_line_v_u16_neon<6, true, false>,
-	resize_line_v_u16_neon<7, true, false>,
-};
+	resize_line_v_u16_neon<7, true, false>);
 
 
 template <unsigned N, bool UpdateAccum>
@@ -675,14 +670,7 @@ void resize_line_v_f32_neon(const float * RESTRICT filter_data, const float * co
 #undef XARGS
 }
 
-struct resize_line_v_f32_neon_jt {
-	typedef decltype(&resize_line_v_f32_neon<0, false>) func_type;
-
-	static const func_type table_a[8];
-	static const func_type table_b[8];
-};
-
-const resize_line_v_f32_neon_jt::func_type resize_line_v_f32_neon_jt::table_a[8] = {
+constexpr auto resize_line_v_f32_neon_jt_a = make_array(
 	resize_line_v_f32_neon<0, false>,
 	resize_line_v_f32_neon<1, false>,
 	resize_line_v_f32_neon<2, false>,
@@ -690,10 +678,9 @@ const resize_line_v_f32_neon_jt::func_type resize_line_v_f32_neon_jt::table_a[8]
 	resize_line_v_f32_neon<4, false>,
 	resize_line_v_f32_neon<5, false>,
 	resize_line_v_f32_neon<6, false>,
-	resize_line_v_f32_neon<7, false>,
-};
+	resize_line_v_f32_neon<7, false>);
 
-const resize_line_v_f32_neon_jt::func_type resize_line_v_f32_neon_jt::table_b[8] = {
+constexpr auto resize_line_v_f32_neon_jt_b = make_array(
 	resize_line_v_f32_neon<0, true>,
 	resize_line_v_f32_neon<1, true>,
 	resize_line_v_f32_neon<2, true>,
@@ -701,12 +688,11 @@ const resize_line_v_f32_neon_jt::func_type resize_line_v_f32_neon_jt::table_b[8]
 	resize_line_v_f32_neon<4, true>,
 	resize_line_v_f32_neon<5, true>,
 	resize_line_v_f32_neon<6, true>,
-	resize_line_v_f32_neon<7, true>,
-};
+	resize_line_v_f32_neon<7, true>);
 
 
 class ResizeImplH_U16_Neon final : public ResizeImplH {
-	decltype(&resize_line8_h_u16_neon<false, 0>) m_func;
+	decltype(resize_line8_h_u16_neon_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
 	ResizeImplH_U16_Neon(const FilterContext &filter, unsigned height, unsigned depth) :
@@ -762,7 +748,7 @@ public:
 
 
 class ResizeImplH_F32_Neon final : public ResizeImplH {
-	decltype(&resize_line4_h_f32_neon<0, 0>) m_func;
+	decltype(resize_line4_h_f32_neon_jt_small)::value_type m_func;
 public:
 	ResizeImplH_F32_Neon(const FilterContext &filter, unsigned height) :
 		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),
@@ -914,7 +900,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_f32_neon_jt::table_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
+			resize_line_v_f32_neon_jt_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
 
 		for (unsigned k = 8; k < filter_width; k += 8) {
@@ -930,7 +916,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_f32_neon_jt::table_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
+			resize_line_v_f32_neon_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
 };

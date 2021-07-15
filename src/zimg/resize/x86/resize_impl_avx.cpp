@@ -7,6 +7,7 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
+#include "common/make_array.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
@@ -180,7 +181,7 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 #undef XARGS
 }
 
-const decltype(&resize_line8_h_f32_avx<0, 0>) resize_line8_h_f32_avx_jt_small[] = {
+constexpr auto resize_line8_h_f32_avx_jt_small = make_array(
 	resize_line8_h_f32_avx<1, 1>,
 	resize_line8_h_f32_avx<2, 2>,
 	resize_line8_h_f32_avx<3, 3>,
@@ -188,15 +189,13 @@ const decltype(&resize_line8_h_f32_avx<0, 0>) resize_line8_h_f32_avx_jt_small[] 
 	resize_line8_h_f32_avx<5, 1>,
 	resize_line8_h_f32_avx<6, 2>,
 	resize_line8_h_f32_avx<7, 3>,
-	resize_line8_h_f32_avx<8, 4>
-};
+	resize_line8_h_f32_avx<8, 4>);
 
-const decltype(&resize_line8_h_f32_avx<0, 0>) resize_line8_h_f32_avx_jt_large[] = {
+constexpr auto resize_line8_h_f32_avx_jt_large = make_array(
 	resize_line8_h_f32_avx<0, 0>,
 	resize_line8_h_f32_avx<0, 1>,
 	resize_line8_h_f32_avx<0, 2>,
-	resize_line8_h_f32_avx<0, 3>
-};
+	resize_line8_h_f32_avx<0, 3>);
 
 
 template <unsigned N, bool UpdateAccum>
@@ -308,7 +307,7 @@ void resize_line_v_f32_avx(const float *filter_data, const float * const *src_li
 #undef XARGS
 }
 
-const decltype(&resize_line_v_f32_avx<0, false>) resize_line_v_f32_avx_jt_a[] = {
+constexpr auto resize_line_v_f32_avx_jt_a = make_array(
 	resize_line_v_f32_avx<0, false>,
 	resize_line_v_f32_avx<1, false>,
 	resize_line_v_f32_avx<2, false>,
@@ -316,10 +315,9 @@ const decltype(&resize_line_v_f32_avx<0, false>) resize_line_v_f32_avx_jt_a[] = 
 	resize_line_v_f32_avx<4, false>,
 	resize_line_v_f32_avx<5, false>,
 	resize_line_v_f32_avx<6, false>,
-	resize_line_v_f32_avx<7, false>,
-};
+	resize_line_v_f32_avx<7, false>);
 
-const decltype(&resize_line_v_f32_avx<0, false>) resize_line_v_f32_avx_jt_b[] = {
+constexpr auto resize_line_v_f32_avx_jt_b = make_array(
 	resize_line_v_f32_avx<0, true>,
 	resize_line_v_f32_avx<1, true>,
 	resize_line_v_f32_avx<2, true>,
@@ -327,12 +325,11 @@ const decltype(&resize_line_v_f32_avx<0, false>) resize_line_v_f32_avx_jt_b[] = 
 	resize_line_v_f32_avx<4, true>,
 	resize_line_v_f32_avx<5, true>,
 	resize_line_v_f32_avx<6, true>,
-	resize_line_v_f32_avx<7, true>,
-};
+	resize_line_v_f32_avx<7, true>);
 
 
 class ResizeImplH_F32_AVX final : public ResizeImplH {
-	decltype(&resize_line8_h_f32_avx<0, 0>) m_func;
+	decltype(resize_line8_h_f32_avx_jt_small)::value_type m_func;
 public:
 	ResizeImplH_F32_AVX(const FilterContext &filter, unsigned height) :
 		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),

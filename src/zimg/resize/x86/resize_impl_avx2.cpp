@@ -10,6 +10,7 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
+#include "common/make_array.h"
 #include "common/pixel.h"
 #include "common/x86/cpuinfo_x86.h"
 #include "graph/image_filter.h"
@@ -444,7 +445,7 @@ void resize_line8_h_u16_avx2(const unsigned * RESTRICT filter_left, const int16_
 #undef XARGS
 }
 
-const decltype(&resize_line8_h_u16_avx2<false, 0>) resize_line8_h_u16_avx2_jt_small[] = {
+constexpr auto resize_line8_h_u16_avx2_jt_small = make_array(
 	resize_line8_h_u16_avx2<false, 2>,
 	resize_line8_h_u16_avx2<false, 2>,
 	resize_line8_h_u16_avx2<false, 4>,
@@ -452,10 +453,9 @@ const decltype(&resize_line8_h_u16_avx2<false, 0>) resize_line8_h_u16_avx2_jt_sm
 	resize_line8_h_u16_avx2<false, 6>,
 	resize_line8_h_u16_avx2<false, 6>,
 	resize_line8_h_u16_avx2<false, 8>,
-	resize_line8_h_u16_avx2<false, 8>,
-};
+	resize_line8_h_u16_avx2<false, 8>);
 
-const decltype(&resize_line8_h_u16_avx2<false, 0>) resize_line8_h_u16_avx2_jt_large[] = {
+constexpr auto resize_line8_h_u16_avx2_jt_large = make_array(
 	resize_line8_h_u16_avx2<true, 0>,
 	resize_line8_h_u16_avx2<true, 2>,
 	resize_line8_h_u16_avx2<true, 2>,
@@ -463,8 +463,7 @@ const decltype(&resize_line8_h_u16_avx2<false, 0>) resize_line8_h_u16_avx2_jt_la
 	resize_line8_h_u16_avx2<true, 4>,
 	resize_line8_h_u16_avx2<true, 6>,
 	resize_line8_h_u16_avx2<true, 6>,
-	resize_line8_h_u16_avx2<true, 0>,
-};
+	resize_line8_h_u16_avx2<true, 0>);
 
 template <class Traits, unsigned FWidth, unsigned Tail>
 inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
@@ -591,15 +590,7 @@ void resize_line8_h_fp_avx2(const unsigned * RESTRICT filter_left, const float *
 }
 
 template <class Traits>
-struct resize_line8_h_fp_avx2_jt {
-	typedef decltype(&resize_line8_h_fp_avx2<Traits, 0, 0>) func_type;
-
-	static const func_type small[8];
-	static const func_type large[4];
-};
-
-template <class Traits>
-const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_avx2_jt<Traits>::small[8] = {
+constexpr auto resize_line8_h_fp_avx2_jt_small = make_array(
 	resize_line8_h_fp_avx2<Traits, 1, 1>,
 	resize_line8_h_fp_avx2<Traits, 2, 2>,
 	resize_line8_h_fp_avx2<Traits, 3, 3>,
@@ -607,16 +598,14 @@ const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_av
 	resize_line8_h_fp_avx2<Traits, 5, 1>,
 	resize_line8_h_fp_avx2<Traits, 6, 2>,
 	resize_line8_h_fp_avx2<Traits, 7, 3>,
-	resize_line8_h_fp_avx2<Traits, 8, 4>
-};
+	resize_line8_h_fp_avx2<Traits, 8, 4>);
 
 template <class Traits>
-const typename resize_line8_h_fp_avx2_jt<Traits>::func_type resize_line8_h_fp_avx2_jt<Traits>::large[4] = {
+constexpr auto resize_line8_h_fp_avx2_jt_large = make_array(
 	resize_line8_h_fp_avx2<Traits, 0, 0>,
 	resize_line8_h_fp_avx2<Traits, 0, 1>,
 	resize_line8_h_fp_avx2<Traits, 0, 2>,
-	resize_line8_h_fp_avx2<Traits, 0, 3>
-};
+	resize_line8_h_fp_avx2<Traits, 0, 3>);
 
 
 template <unsigned N>
@@ -729,18 +718,12 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 	}
 }
 
-struct resize_line_h_perm_u16_avx2_jt {
-	typedef decltype(&resize_line_h_perm_u16_avx2<2>) func_type;
-	static const func_type table[5];
-};
-
-const typename resize_line_h_perm_u16_avx2_jt::func_type resize_line_h_perm_u16_avx2_jt::table[5] = {
+constexpr auto resize_line_h_perm_u16_avx2_jt = make_array(
 	resize_line_h_perm_u16_avx2<2>,
 	resize_line_h_perm_u16_avx2<4>,
 	resize_line_h_perm_u16_avx2<6>,
 	resize_line_h_perm_u16_avx2<8>,
-	resize_line_h_perm_u16_avx2<10>,
-};
+	resize_line_h_perm_u16_avx2<10>);
 
 
 template <class Traits, unsigned N>
@@ -856,13 +839,7 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 }
 
 template <class Traits>
-struct resize_line_h_perm_fp_avx2_jt {
-	typedef decltype(&resize_line_h_perm_fp_avx2<Traits, 1>) func_type;
-	static const func_type table[8];
-};
-
-template <class Traits>
-const typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type resize_line_h_perm_fp_avx2_jt<Traits>::table[8] = {
+constexpr auto resize_line_h_perm_fp_avx2_jt = make_array(
 	resize_line_h_perm_fp_avx2<Traits, 1>,
 	resize_line_h_perm_fp_avx2<Traits, 2>,
 	resize_line_h_perm_fp_avx2<Traits, 3>,
@@ -870,8 +847,7 @@ const typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type resize_line_h_pe
 	resize_line_h_perm_fp_avx2<Traits, 5>,
 	resize_line_h_perm_fp_avx2<Traits, 6>,
 	resize_line_h_perm_fp_avx2<Traits, 7>,
-	resize_line_h_perm_fp_avx2<Traits, 8>,
-};
+	resize_line_h_perm_fp_avx2<Traits, 8>);
 
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
@@ -1011,7 +987,7 @@ void resize_line_v_u16_avx2(const int16_t * RESTRICT filter_data, const uint16_t
 #undef XARGS
 }
 
-const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_jt_a[] = {
+constexpr auto resize_line_v_u16_avx2_jt_a = make_array(
 	resize_line_v_u16_avx2<0, false, false>,
 	resize_line_v_u16_avx2<0, false, false>,
 	resize_line_v_u16_avx2<2, false, false>,
@@ -1019,10 +995,9 @@ const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_
 	resize_line_v_u16_avx2<4, false, false>,
 	resize_line_v_u16_avx2<4, false, false>,
 	resize_line_v_u16_avx2<6, false, false>,
-	resize_line_v_u16_avx2<6, false, false>,
-};
+	resize_line_v_u16_avx2<6, false, false>);
 
-const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_jt_b[] = {
+constexpr auto resize_line_v_u16_avx2_jt_b = make_array(
 	resize_line_v_u16_avx2<0, true, false>,
 	resize_line_v_u16_avx2<0, true, false>,
 	resize_line_v_u16_avx2<2, true, false>,
@@ -1030,8 +1005,7 @@ const decltype(&resize_line_v_u16_avx2<0, false, false>) resize_line_v_u16_avx2_
 	resize_line_v_u16_avx2<4, true, false>,
 	resize_line_v_u16_avx2<4, true, false>,
 	resize_line_v_u16_avx2<6, true, false>,
-	resize_line_v_u16_avx2<6, true, false>,
-};
+	resize_line_v_u16_avx2<6, true, false>);
 
 template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
 inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
@@ -1133,15 +1107,7 @@ void resize_line_v_fp_avx2(const float * RESTRICT filter_data, const typename Tr
 }
 
 template <class Traits>
-struct resize_line_v_fp_avx2_jt {
-	typedef decltype(&resize_line_v_fp_avx2<Traits, 0, false>) func_type;
-
-	static const func_type table_a[8];
-	static const func_type table_b[8];
-};
-
-template <class Traits>
-const typename resize_line_v_fp_avx2_jt<Traits>::func_type resize_line_v_fp_avx2_jt<Traits>::table_a[8] = {
+constexpr auto resize_line_v_fp_avx2_jt_a = make_array(
 	resize_line_v_fp_avx2<Traits, 0, false>,
 	resize_line_v_fp_avx2<Traits, 1, false>,
 	resize_line_v_fp_avx2<Traits, 2, false>,
@@ -1149,11 +1115,10 @@ const typename resize_line_v_fp_avx2_jt<Traits>::func_type resize_line_v_fp_avx2
 	resize_line_v_fp_avx2<Traits, 4, false>,
 	resize_line_v_fp_avx2<Traits, 5, false>,
 	resize_line_v_fp_avx2<Traits, 6, false>,
-	resize_line_v_fp_avx2<Traits, 7, false>,
-};
+	resize_line_v_fp_avx2 <Traits, 7, false>);
 
 template <class Traits>
-const typename resize_line_v_fp_avx2_jt<Traits>::func_type resize_line_v_fp_avx2_jt<Traits>::table_b[8] = {
+constexpr auto resize_line_v_fp_avx2_jt_b = make_array(
 	resize_line_v_fp_avx2<Traits, 0, true>,
 	resize_line_v_fp_avx2<Traits, 1, true>,
 	resize_line_v_fp_avx2<Traits, 2, true>,
@@ -1161,12 +1126,11 @@ const typename resize_line_v_fp_avx2_jt<Traits>::func_type resize_line_v_fp_avx2
 	resize_line_v_fp_avx2<Traits, 4, true>,
 	resize_line_v_fp_avx2<Traits, 5, true>,
 	resize_line_v_fp_avx2<Traits, 6, true>,
-	resize_line_v_fp_avx2<Traits, 7, true>,
-};
+	resize_line_v_fp_avx2<Traits, 7, true>);
 
 
 class ResizeImplH_U16_AVX2 final : public ResizeImplH {
-	decltype(&resize_line8_h_u16_avx2<false, 0>) m_func;
+	decltype(resize_line8_h_u16_avx2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
 	ResizeImplH_U16_AVX2(const FilterContext &filter, unsigned height, unsigned depth) :
@@ -1223,7 +1187,7 @@ public:
 template <class Traits>
 class ResizeImplH_FP_AVX2 final : public ResizeImplH {
 	typedef typename Traits::pixel_type pixel_type;
-	typedef typename resize_line8_h_fp_avx2_jt<Traits>::func_type func_type;
+	typedef typename decltype(resize_line8_h_fp_avx2_jt_small<Traits>)::value_type func_type;
 
 	func_type m_func;
 public:
@@ -1232,9 +1196,9 @@ public:
 		m_func{}
 	{
 		if (filter.filter_width <= 8)
-			m_func = resize_line8_h_fp_avx2_jt<Traits>::small[filter.filter_width - 1];
+			m_func = resize_line8_h_fp_avx2_jt_small<Traits>[filter.filter_width - 1];
 		else
-			m_func = resize_line8_h_fp_avx2_jt<Traits>::large[filter.filter_width % 4];
+			m_func = resize_line8_h_fp_avx2_jt_large<Traits>[filter.filter_width % 4];
 	}
 
 	unsigned get_simultaneous_lines() const override { return 8; }
@@ -1288,7 +1252,7 @@ public:
 };
 
 class ResizeImplH_Permute_U16_AVX2 final : public graph::ImageFilterBase {
-	typedef typename resize_line_h_perm_u16_avx2_jt::func_type func_type;
+	typedef decltype(resize_line_h_perm_u16_avx2_jt)::value_type func_type;
 
 	struct PermuteContext {
 		AlignedVector<unsigned> left;
@@ -1311,7 +1275,7 @@ class ResizeImplH_Permute_U16_AVX2 final : public graph::ImageFilterBase {
 		m_height{ height },
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
 		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
-		m_func{ resize_line_h_perm_u16_avx2_jt::table[(m_context.filter_width - 1) / 2] }
+		m_func{ resize_line_h_perm_u16_avx2_jt[(m_context.filter_width - 1) / 2] }
 	{}
 public:
 	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height, unsigned depth)
@@ -1407,7 +1371,7 @@ public:
 template <class Traits>
 class ResizeImplH_Permute_FP_AVX2 final : public graph::ImageFilterBase {
 	typedef typename Traits::pixel_type pixel_type;
-	typedef typename resize_line_h_perm_fp_avx2_jt<Traits>::func_type func_type;
+	typedef typename decltype(resize_line_h_perm_fp_avx2_jt<Traits>)::value_type func_type;
 
 	struct PermuteContext {
 		AlignedVector<unsigned> left;
@@ -1428,7 +1392,7 @@ class ResizeImplH_Permute_FP_AVX2 final : public graph::ImageFilterBase {
 		m_context(std::move(context)),
 		m_height{ height },
 		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
-		m_func{ resize_line_h_perm_fp_avx2_jt<Traits>::table[m_context.filter_width - 1] }
+		m_func{ resize_line_h_perm_fp_avx2_jt<Traits>[m_context.filter_width - 1] }
 	{}
 public:
 	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height)
@@ -1609,7 +1573,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_fp_avx2_jt<Traits>::table_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
+			resize_line_v_fp_avx2_jt_a<Traits>[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
 
 		for (unsigned k = 8; k < filter_width; k += 8) {
@@ -1625,7 +1589,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_fp_avx2_jt<Traits>::table_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
+			resize_line_v_fp_avx2_jt_b<Traits>[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
 };

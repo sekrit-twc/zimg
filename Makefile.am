@@ -78,6 +78,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/common/except.h \
 	src/zimg/common/libm_wrapper.h \
 	src/zimg/common/libm_wrapper.cpp \
+	src/zimg/common/make_array.h \
 	src/zimg/common/matrix.cpp \
 	src/zimg/common/matrix.h \
 	src/zimg/common/pixel.h \

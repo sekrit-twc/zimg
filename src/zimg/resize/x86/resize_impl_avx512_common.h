@@ -9,6 +9,7 @@
 #include "common/align.h"
 #include "common/ccdep.h"
 #include "common/checked_int.h"
+#include "common/make_array.h"
 #include "common/except.h"
 #include "resize/resize_impl.h"
 
@@ -358,7 +359,7 @@ void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int
 #undef XARGS
 }
 
-const decltype(&resize_line16_h_u16_avx512<false, 0>) resize_line16_h_u16_avx512_jt_small[] = {
+constexpr auto resize_line16_h_u16_avx512_jt_small = make_array(
 	resize_line16_h_u16_avx512<false, 2>,
 	resize_line16_h_u16_avx512<false, 2>,
 	resize_line16_h_u16_avx512<false, 4>,
@@ -366,10 +367,9 @@ const decltype(&resize_line16_h_u16_avx512<false, 0>) resize_line16_h_u16_avx512
 	resize_line16_h_u16_avx512<false, 6>,
 	resize_line16_h_u16_avx512<false, 6>,
 	resize_line16_h_u16_avx512<false, 8>,
-	resize_line16_h_u16_avx512<false, 8>,
-};
+	resize_line16_h_u16_avx512<false, 8>);
 
-const decltype(&resize_line16_h_u16_avx512<false, 0>) resize_line16_h_u16_avx512_jt_large[] = {
+constexpr auto resize_line16_h_u16_avx512_jt_large = make_array(
 	resize_line16_h_u16_avx512<true, 0>,
 	resize_line16_h_u16_avx512<true, 2>,
 	resize_line16_h_u16_avx512<true, 2>,
@@ -377,8 +377,7 @@ const decltype(&resize_line16_h_u16_avx512<false, 0>) resize_line16_h_u16_avx512
 	resize_line16_h_u16_avx512<true, 4>,
 	resize_line16_h_u16_avx512<true, 6>,
 	resize_line16_h_u16_avx512<true, 6>,
-	resize_line16_h_u16_avx512<true, 0>,
-};
+	resize_line16_h_u16_avx512<true, 0>);
 
 
 template <unsigned N>
@@ -500,12 +499,7 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 	}
 }
 
-struct resize_line_h_perm_u16_avx512_jt {
-	typedef decltype(&resize_line_h_perm_u16_avx512<2>) func_type;
-	static const func_type table[8];
-};
-
-const typename resize_line_h_perm_u16_avx512_jt::func_type resize_line_h_perm_u16_avx512_jt::table[8] = {
+constexpr auto resize_line_h_perm_u16_avx512_jt = make_array(
 	resize_line_h_perm_u16_avx512<2>,
 	resize_line_h_perm_u16_avx512<4>,
 	resize_line_h_perm_u16_avx512<6>,
@@ -513,8 +507,7 @@ const typename resize_line_h_perm_u16_avx512_jt::func_type resize_line_h_perm_u1
 	resize_line_h_perm_u16_avx512<10>,
 	resize_line_h_perm_u16_avx512<12>,
 	resize_line_h_perm_u16_avx512<14>,
-	resize_line_h_perm_u16_avx512<16>,
-};
+	resize_line_h_perm_u16_avx512<16>);
 
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
@@ -647,7 +640,7 @@ void resize_line_v_u16_avx512(const int16_t * RESTRICT filter_data, const uint16
 #undef XARGS
 }
 
-const decltype(&resize_line_v_u16_avx512<0, false, false>) resize_line_v_u16_avx512_jt_a[] = {
+constexpr auto resize_line_v_u16_avx512_jt_a = make_array(
 	resize_line_v_u16_avx512<0, false, false>,
 	resize_line_v_u16_avx512<0, false, false>,
 	resize_line_v_u16_avx512<2, false, false>,
@@ -655,10 +648,9 @@ const decltype(&resize_line_v_u16_avx512<0, false, false>) resize_line_v_u16_avx
 	resize_line_v_u16_avx512<4, false, false>,
 	resize_line_v_u16_avx512<4, false, false>,
 	resize_line_v_u16_avx512<6, false, false>,
-	resize_line_v_u16_avx512<6, false, false>,
-};
+	resize_line_v_u16_avx512<6, false, false>);
 
-const decltype(&resize_line_v_u16_avx512<0, false, false>) resize_line_v_u16_avx512_jt_b[] = {
+constexpr auto resize_line_v_u16_avx512_jt_b = make_array(
 	resize_line_v_u16_avx512<0, true, false>,
 	resize_line_v_u16_avx512<0, true, false>,
 	resize_line_v_u16_avx512<2, true, false>,
@@ -666,8 +658,7 @@ const decltype(&resize_line_v_u16_avx512<0, false, false>) resize_line_v_u16_avx
 	resize_line_v_u16_avx512<4, true, false>,
 	resize_line_v_u16_avx512<4, true, false>,
 	resize_line_v_u16_avx512<6, true, false>,
-	resize_line_v_u16_avx512<6, true, false>,
-};
+	resize_line_v_u16_avx512<6, true, false>);
 
 
 inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrdiff_t stride, unsigned mask, unsigned i, unsigned height)
@@ -691,7 +682,7 @@ inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrd
 
 
 class ResizeImplH_U16_AVX512 final : public ResizeImplH {
-	decltype(&resize_line16_h_u16_avx512<false, 0>) m_func;
+	decltype(resize_line16_h_u16_avx512_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
 	ResizeImplH_U16_AVX512(const FilterContext &filter, unsigned height, unsigned depth) :
@@ -746,7 +737,7 @@ public:
 };
 
 class ResizeImplH_Permute_U16_AVX512 final : public graph::ImageFilterBase {
-	typedef typename resize_line_h_perm_u16_avx512_jt::func_type func_type;
+	typedef decltype(resize_line_h_perm_u16_avx512_jt)::value_type func_type;
 
 	struct PermuteContext {
 		AlignedVector<unsigned> left;
@@ -769,7 +760,7 @@ class ResizeImplH_Permute_U16_AVX512 final : public graph::ImageFilterBase {
 		m_height{ height },
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
 		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
-		m_func{ resize_line_h_perm_u16_avx512_jt::table[(m_context.filter_width - 1) / 2] }
+		m_func{ resize_line_h_perm_u16_avx512_jt[(m_context.filter_width - 1) / 2] }
 	{}
 public:
 	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height, unsigned depth)

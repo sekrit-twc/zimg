@@ -7,6 +7,7 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
+#include "common/make_array.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
@@ -158,7 +159,7 @@ void resize_line4_h_f32_sse(const unsigned * RESTRICT filter_left, const float *
 #undef XARGS
 }
 
-const decltype(&resize_line4_h_f32_sse<0, 0>) resize_line4_h_f32_sse_jt_small[] = {
+constexpr auto resize_line4_h_f32_sse_jt_small = make_array(
 	resize_line4_h_f32_sse<1, 1>,
 	resize_line4_h_f32_sse<2, 2>,
 	resize_line4_h_f32_sse<3, 3>,
@@ -166,15 +167,13 @@ const decltype(&resize_line4_h_f32_sse<0, 0>) resize_line4_h_f32_sse_jt_small[] 
 	resize_line4_h_f32_sse<5, 1>,
 	resize_line4_h_f32_sse<6, 2>,
 	resize_line4_h_f32_sse<7, 3>,
-	resize_line4_h_f32_sse<8, 4>
-};
+	resize_line4_h_f32_sse<8, 4>);
 
-const decltype(&resize_line4_h_f32_sse<0, 0>) resize_line4_h_f32_sse_jt_large[] = {
+constexpr auto resize_line4_h_f32_sse_jt_large = make_array(
 	resize_line4_h_f32_sse<0, 0>,
 	resize_line4_h_f32_sse<0, 1>,
 	resize_line4_h_f32_sse<0, 2>,
-	resize_line4_h_f32_sse<0, 3>
-};
+	resize_line4_h_f32_sse<0, 3>);
 
 
 template <unsigned N, bool UpdateAccum>
@@ -249,23 +248,21 @@ void resize_line_v_f32_sse(const float * RESTRICT filter_data, const float * con
 #undef XARGS
 }
 
-const decltype(&resize_line_v_f32_sse<0, false>) resize_line_v_f32_sse_jt_a[] = {
+constexpr auto resize_line_v_f32_sse_jt_a = make_array(
 	resize_line_v_f32_sse<0, false>,
 	resize_line_v_f32_sse<1, false>,
 	resize_line_v_f32_sse<2, false>,
-	resize_line_v_f32_sse<3, false>,
-};
+	resize_line_v_f32_sse<3, false>);
 
-const decltype(&resize_line_v_f32_sse<0, false>) resize_line_v_f32_sse_jt_b[] = {
+constexpr auto resize_line_v_f32_sse_jt_b = make_array(
 	resize_line_v_f32_sse<0, true>,
 	resize_line_v_f32_sse<1, true>,
 	resize_line_v_f32_sse<2, true>,
-	resize_line_v_f32_sse<3, true>,
-};
+	resize_line_v_f32_sse<3, true>);
 
 
 class ResizeImplH_F32_SSE final : public ResizeImplH {
-	decltype(&resize_line4_h_f32_sse<0, 0>) m_func;
+	decltype(resize_line4_h_f32_sse_jt_small)::value_type m_func;
 public:
 	ResizeImplH_F32_SSE(const FilterContext &filter, unsigned height) :
 		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),

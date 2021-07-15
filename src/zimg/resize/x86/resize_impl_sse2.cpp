@@ -8,6 +8,7 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
+#include "common/make_array.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -270,7 +271,7 @@ void resize_line8_h_u16_sse2(const unsigned * RESTRICT filter_left, const int16_
 #undef XARGS
 }
 
-const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_small[] = {
+constexpr auto resize_line8_h_u16_sse2_jt_small = make_array(
 	resize_line8_h_u16_sse2<false, 2>,
 	resize_line8_h_u16_sse2<false, 2>,
 	resize_line8_h_u16_sse2<false, 4>,
@@ -278,10 +279,9 @@ const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_sm
 	resize_line8_h_u16_sse2<false, 6>,
 	resize_line8_h_u16_sse2<false, 6>,
 	resize_line8_h_u16_sse2<false, 8>,
-	resize_line8_h_u16_sse2<false, 8>
-};
+	resize_line8_h_u16_sse2<false, 8>);
 
-const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_large[] = {
+constexpr auto resize_line8_h_u16_sse2_jt_large = make_array(
 	resize_line8_h_u16_sse2<true, 0>,
 	resize_line8_h_u16_sse2<true, 2>,
 	resize_line8_h_u16_sse2<true, 2>,
@@ -289,8 +289,7 @@ const decltype(&resize_line8_h_u16_sse2<false, 0>) resize_line8_h_u16_sse2_jt_la
 	resize_line8_h_u16_sse2<true, 4>,
 	resize_line8_h_u16_sse2<true, 6>,
 	resize_line8_h_u16_sse2<true, 6>,
-	resize_line8_h_u16_sse2<true, 0>,
-};
+	resize_line8_h_u16_sse2<true, 0>);
 
 
 template <unsigned N, bool ReadAccum, bool WriteToAccum>
@@ -430,7 +429,7 @@ void resize_line_v_u16_sse2(const int16_t * RESTRICT filter_data, const uint16_t
 #undef XARGS
 }
 
-const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_jt_a[] = {
+constexpr auto resize_line_v_u16_sse2_jt_a = make_array(
 	resize_line_v_u16_sse2<0, false, false>,
 	resize_line_v_u16_sse2<0, false, false>,
 	resize_line_v_u16_sse2<2, false, false>,
@@ -438,10 +437,9 @@ const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_
 	resize_line_v_u16_sse2<4, false, false>,
 	resize_line_v_u16_sse2<4, false, false>,
 	resize_line_v_u16_sse2<6, false, false>,
-	resize_line_v_u16_sse2<6, false, false>,
-};
+	resize_line_v_u16_sse2<6, false, false>);
 
-const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_jt_b[] = {
+constexpr auto resize_line_v_u16_sse2_jt_b = make_array(
 	resize_line_v_u16_sse2<0, true, false>,
 	resize_line_v_u16_sse2<0, true, false>,
 	resize_line_v_u16_sse2<2, true, false>,
@@ -449,12 +447,11 @@ const decltype(&resize_line_v_u16_sse2<0, false, false>) resize_line_v_u16_sse2_
 	resize_line_v_u16_sse2<4, true, false>,
 	resize_line_v_u16_sse2<4, true, false>,
 	resize_line_v_u16_sse2<6, true, false>,
-	resize_line_v_u16_sse2<6, true, false>,
-};
+	resize_line_v_u16_sse2<6, true, false>);
 
 
 class ResizeImplH_U16_SSE2 final : public ResizeImplH {
-	decltype(&resize_line8_h_u16_sse2<false, 0>) m_func;
+	decltype(resize_line8_h_u16_sse2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
 	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) :

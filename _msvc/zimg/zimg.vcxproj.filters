@@ -282,6 +282,9 @@
     <ClInclude Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.h">
       <Filter>Header Files\colorspace\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\make_array.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
