@@ -7,7 +7,6 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
@@ -456,7 +455,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx(const FilterContext
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplH_F32_AVX>(context, height);
+		ret = std::make_unique<ResizeImplH_F32_AVX>(context, height);
 
 	return ret;
 }
@@ -466,7 +465,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx(const FilterContext
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == zimg::PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplV_F32_AVX>(context, width);
+		ret = std::make_unique<ResizeImplV_F32_AVX>(context, width);
 
 	return ret;
 }

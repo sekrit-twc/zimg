@@ -2,7 +2,6 @@
 #include <cstdint>
 #include "common/alloc.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "graph/basic_filter.h"
 #include "graph/filtergraph.h"
@@ -337,7 +336,7 @@ TEST(FilterGraphTest, test_grey_to_color_rgb)
 
 	id = graph.attach_filter(filter1, id_to_map(id, false), enabled_planes(false));
 
-	auto rgbextend = ztd::make_unique<zimg::graph::RGBExtendFilter>(w, h, type);
+	auto rgbextend = std::make_unique<zimg::graph::RGBExtendFilter>(w, h, type);
 	id = graph.attach_filter(std::move(rgbextend), id_to_map(id, false), enabled_planes(true));
 
 	id = graph.attach_filter(filter2, id_to_map(id, true), enabled_planes(true));

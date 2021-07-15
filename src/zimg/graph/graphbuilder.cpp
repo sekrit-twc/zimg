@@ -3,7 +3,6 @@
 #include <utility>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
@@ -972,7 +971,7 @@ public:
 		if (m_graph)
 			error::throw_<error::InternalError>("graph already initialized");
 
-		m_graph = ztd::make_unique<FilterGraph>();
+		m_graph = std::make_unique<FilterGraph>();
 		m_ids = null_ids;
 		m_state = internal_state{ source };
 
@@ -1026,7 +1025,7 @@ GraphBuilder::params::params() noexcept :
 }
 
 
-GraphBuilder::GraphBuilder() : m_impl(ztd::make_unique<impl>()) {}
+GraphBuilder::GraphBuilder() : m_impl(std::make_unique<impl>()) {}
 
 GraphBuilder::~GraphBuilder() = default;
 

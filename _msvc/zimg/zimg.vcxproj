@@ -316,7 +316,6 @@
     <ClInclude Include="..\..\src\zimg\common\cpuinfo.h" />
     <ClInclude Include="..\..\src\zimg\common\except.h" />
     <ClInclude Include="..\..\src\zimg\common\libm_wrapper.h" />
-    <ClInclude Include="..\..\src\zimg\common\make_unique.h" />
     <ClInclude Include="..\..\src\zimg\common\matrix.h" />
     <ClInclude Include="..\..\src\zimg\common\ccdep.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />

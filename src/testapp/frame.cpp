@@ -4,7 +4,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
@@ -223,9 +222,9 @@ public:
 		}
 
 		if (write)
-			m_handle = ztd::make_unique<MemoryMappedFile>(spec.path.c_str(), size, MemoryMappedFile::CREATE_TAG);
+			m_handle = std::make_unique<MemoryMappedFile>(spec.path.c_str(), size, MemoryMappedFile::CREATE_TAG);
 		else
-			m_handle = ztd::make_unique<MemoryMappedFile>(spec.path.c_str(), MemoryMappedFile::READ_TAG);
+			m_handle = std::make_unique<MemoryMappedFile>(spec.path.c_str(), MemoryMappedFile::READ_TAG);
 
 		if (m_handle->size() != size)
 			throw std::runtime_error{ "bad file size" };
@@ -260,7 +259,7 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &
 
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph>();
+	auto graph = std::make_unique<zimg::graph::FilterGraph>();
 	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
 	zimg::graph::node_id id_u = color ? id_y : invalid_id;
 	zimg::graph::node_id id_v = color ? id_y : invalid_id;
@@ -437,7 +436,7 @@ std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier 
 
 	bool color = spec.planes >= 3;
 
-	auto graph = ztd::make_unique<zimg::graph::FilterGraph>();
+	auto graph = std::make_unique<zimg::graph::FilterGraph>();
 	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
 	zimg::graph::node_id id_u = color ? id_y : invalid_id;
 	zimg::graph::node_id id_v = color ? id_y : invalid_id;

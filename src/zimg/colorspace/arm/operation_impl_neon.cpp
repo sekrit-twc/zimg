@@ -6,7 +6,6 @@
 #include <arm_neon.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-#include "common/make_unique.h"
 #include "colorspace/gamma.h"
 #include "colorspace/operation.h"
 #include "colorspace/operation_impl.h"
@@ -241,7 +240,7 @@ public:
 
 std::unique_ptr<Operation> create_matrix_operation_neon(const Matrix3x3 &m)
 {
-	return ztd::make_unique<MatrixOperationNeon>(m);
+	return std::make_unique<MatrixOperationNeon>(m);
 }
 
 std::unique_ptr<Operation> create_gamma_operation_neon(const TransferFunction &transfer, const OperationParams &params)
@@ -250,7 +249,7 @@ std::unique_ptr<Operation> create_gamma_operation_neon(const TransferFunction &t
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return ztd::make_unique<ToGammaLutOperationNeon>(transfer.to_gamma, transfer.to_gamma_scale);
+	return std::make_unique<ToGammaLutOperationNeon>(transfer.to_gamma, transfer.to_gamma_scale);
 #else
 	return nullptr;
 #endif
@@ -261,7 +260,7 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFun
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return ztd::make_unique<ToLinearLutOperationNeon>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
+	return std::make_unique<ToLinearLutOperationNeon>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
 } // namespace colorspace

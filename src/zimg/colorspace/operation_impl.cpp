@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cfloat>
-#include "common/make_unique.h"
 #include "common/zassert.h"
 #include "colorspace.h"
 #include "colorspace_param.h"
@@ -297,7 +296,7 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 	ret = create_matrix_operation_arm(m, cpu);
 #endif
 	if (!ret)
-		ret = ztd::make_unique<MatrixOperationC>(m);
+		ret = std::make_unique<MatrixOperationC>(m);
 
 	return ret;
 }
@@ -312,7 +311,7 @@ std::unique_ptr<Operation> create_gamma_operation(const TransferFunction &transf
 	ret = create_gamma_operation_arm(transfer, params, cpu);
 #endif
 	if (!ret)
-		ret = ztd::make_unique<GammaOperationC>(transfer.to_gamma, transfer.to_gamma_scale, 1.0f);
+		ret = std::make_unique<GammaOperationC>(transfer.to_gamma, transfer.to_gamma_scale, 1.0f);
 
 	return ret;
 }
@@ -327,7 +326,7 @@ std::unique_ptr<Operation> create_inverse_gamma_operation(const TransferFunction
 	ret = create_inverse_gamma_operation_arm(transfer, params, cpu);
 #endif
 	if (!ret)
-		ret = ztd::make_unique<GammaOperationC>(transfer.to_linear, 1.0f, transfer.to_linear_scale);
+		ret = std::make_unique<GammaOperationC>(transfer.to_linear, 1.0f, transfer.to_linear_scale);
 
 	return ret;
 }
@@ -337,7 +336,7 @@ std::unique_ptr<Operation> create_arib_b67_operation(const Matrix3x3 &m, const O
 	zassert_d(!params.scene_referred, "must be display-referred");
 
 	TransferFunction func = select_transfer_function(TransferCharacteristics::ARIB_B67, params.peak_luminance, false);
-	return ztd::make_unique<AribB67OperationC>(m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
+	return std::make_unique<AribB67OperationC>(m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
 }
 
 std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params)
@@ -345,7 +344,7 @@ std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m,
 	zassert_d(!params.scene_referred, "must be display-referred");
 
 	TransferFunction func = select_transfer_function(TransferCharacteristics::ARIB_B67, params.peak_luminance, false);
-	return ztd::make_unique<AribB67InverseOperationC>(m[0][0], m[0][1], m[0][2], func.to_linear_scale);
+	return std::make_unique<AribB67InverseOperationC>(m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
 std::unique_ptr<Operation> create_cl_yuv_to_rgb_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -357,7 +356,7 @@ std::unique_ptr<Operation> create_cl_yuv_to_rgb_operation(const ColorspaceDefini
 	// CL is always scene-referred.
 	TransferFunction func = select_transfer_function(in.transfer, params.peak_luminance, true);
 	Matrix3x3 m = in.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL ? ncl_rgb_to_yuv_matrix_from_primaries(in.primaries) : ncl_rgb_to_yuv_matrix(in.matrix);
-	return ztd::make_unique<CLToRGBOperationC>(func.to_gamma, func.to_linear, m[0][0], m[0][1], m[0][2], func.to_linear_scale);
+	return std::make_unique<CLToRGBOperationC>(func.to_gamma, func.to_linear, m[0][0], m[0][1], m[0][2], func.to_linear_scale);
 }
 
 std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -369,7 +368,7 @@ std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefini
 	// CL is always scene-referred.
 	TransferFunction func = select_transfer_function(out.transfer, params.peak_luminance, true);
 	Matrix3x3 m = out.matrix == MatrixCoefficients::CHROMATICITY_DERIVED_CL ? ncl_rgb_to_yuv_matrix_from_primaries(out.primaries) : ncl_rgb_to_yuv_matrix(out.matrix);
-	return ztd::make_unique<CLToYUVOperationC>(func.to_gamma, m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
+	return std::make_unique<CLToYUVOperationC>(func.to_gamma, m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
 }
 
 } // namespace colorspace

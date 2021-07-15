@@ -2,7 +2,6 @@
 #include <climits>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "unresize_impl.h"
@@ -215,9 +214,9 @@ std::unique_ptr<graph::ImageFilter> UnresizeImplBuilder::create() const
 	BilinearContext context = create_bilinear_context(orig_dim, up_dim, shift);
 
 	if (!ret && horizontal)
-		ret = ztd::make_unique<UnresizeImplH_C>(context, up_height, type);
+		ret = std::make_unique<UnresizeImplH_C>(context, up_height, type);
 	if (!ret && !horizontal)
-		ret = ztd::make_unique<UnresizeImplV_C>(context, up_width, type);
+		ret = std::make_unique<UnresizeImplV_C>(context, up_width, type);
 
 	return ret;
 }

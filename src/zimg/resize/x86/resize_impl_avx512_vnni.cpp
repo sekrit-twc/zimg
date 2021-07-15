@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <immintrin.h>
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize_impl_x86.h"
 
@@ -23,7 +22,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx512_vnni(const Filte
 
 	if (!ret) {
 		if (type == PixelType::WORD)
-			ret = ztd::make_unique<ResizeImplH_U16_AVX512>(context, height, depth);
+			ret = std::make_unique<ResizeImplH_U16_AVX512>(context, height, depth);
 	}
 
 	return ret;
@@ -34,7 +33,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx512_vnni(const Filte
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplV_U16_AVX512>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_AVX512>(context, width, depth);
 
 	return ret;
 }

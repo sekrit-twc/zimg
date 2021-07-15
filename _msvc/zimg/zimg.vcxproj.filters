@@ -198,9 +198,6 @@
     <ClInclude Include="..\..\src\zimg\common\builder.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\make_unique.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\colorspace\gamma.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>

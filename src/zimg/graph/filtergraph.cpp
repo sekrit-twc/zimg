@@ -8,7 +8,6 @@
 #include "common/checked_int.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "basic_filter.h"
@@ -301,7 +300,7 @@ public:
 				mask[p] = true;
 
 				auto attr = node->get_image_attributes(p);
-				node_id id = attach_filter(ztd::make_unique<CopyFilter>(attr.width, attr.height, attr.type), deps, mask);
+				node_id id = attach_filter(std::make_unique<CopyFilter>(attr.width, attr.height, attr.type), deps, mask);
 				parents[p] = m_nodes[id].get();
 			}
 		}
@@ -395,7 +394,7 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 }
 
 
-FilterGraph::FilterGraph() : m_impl(ztd::make_unique<impl>()) {}
+FilterGraph::FilterGraph() : m_impl(std::make_unique<impl>()) {}
 
 FilterGraph::FilterGraph(FilterGraph &&other) noexcept = default;
 

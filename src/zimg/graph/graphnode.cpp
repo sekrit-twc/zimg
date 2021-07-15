@@ -2,7 +2,6 @@
 #include <climits>
 #include <type_traits>
 #include "common/alloc.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "image_buffer.h"
@@ -762,40 +761,40 @@ GraphNode::~GraphNode() = default;
 
 std::unique_ptr<GraphNode> make_source_node(node_id id, const ImageFilter::image_attributes &attr, unsigned subsample_w, unsigned subsample_h, const plane_mask &planes)
 {
-	return ztd::make_unique<SourceNode>(id, attr, subsample_w, subsample_h, planes);
+	return std::make_unique<SourceNode>(id, attr, subsample_w, subsample_h, planes);
 }
 
 std::unique_ptr<GraphNode> make_sink_node(node_id id, const node_map &parents)
 {
-	return ztd::make_unique<SinkNode>(id, parents);
+	return std::make_unique<SinkNode>(id, parents);
 }
 
 std::unique_ptr<GraphNode> make_filter_node(node_id id, std::shared_ptr<ImageFilter> filter, const node_map &parents, const plane_mask &output_planes)
 {
 	if (filter->get_flags().color) {
 		if (parents[0] && parents[1] && parents[2] && parents[3])
-			return ztd::make_unique<FilterNodeColor<1, 1, 1, 1>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeColor<1, 1, 1, 1>>(id, filter, parents, output_planes);
 		else if (parents[0] && parents[1] && parents[2] && !parents[3])
-			return ztd::make_unique<FilterNodeColor<1, 1, 1, 0>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeColor<1, 1, 1, 0>>(id, filter, parents, output_planes);
 		else
-			return ztd::make_unique<FilterNodeColor<>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeColor<>>(id, filter, parents, output_planes);
 	} else {
 		if (parents[0] && output_planes[0])
-			return ztd::make_unique<FilterNodeGrey<0, true>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<0, true>>(id, filter, parents, output_planes);
 		else if (parents[1] && output_planes[1])
-			return ztd::make_unique<FilterNodeGrey<1, true>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<1, true>>(id, filter, parents, output_planes);
 		else if (parents[2] && output_planes[2])
-			return ztd::make_unique<FilterNodeGrey<2, true>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<2, true>>(id, filter, parents, output_planes);
 		else if (parents[3] && output_planes[3])
-			return ztd::make_unique<FilterNodeGrey<3, true>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<3, true>>(id, filter, parents, output_planes);
 		else if (!parents[0] && output_planes[0])
-			return ztd::make_unique<FilterNodeGrey<0, false>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<0, false>>(id, filter, parents, output_planes);
 		else if (!parents[1] && output_planes[1])
-			return ztd::make_unique<FilterNodeGrey<1, false>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<1, false>>(id, filter, parents, output_planes);
 		else if (!parents[2] && output_planes[2])
-			return ztd::make_unique<FilterNodeGrey<2, false>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<2, false>>(id, filter, parents, output_planes);
 		else if (!parents[3] && output_planes[3])
-			return ztd::make_unique<FilterNodeGrey<3, false>>(id, filter, parents, output_planes);
+			return std::make_unique<FilterNodeGrey<3, false>>(id, filter, parents, output_planes);
 		else
 			error::throw_<error::InternalError>("must produce output plane");
 	}

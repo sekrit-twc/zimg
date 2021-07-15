@@ -3,7 +3,6 @@
 #include <cstdint>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/image_filter.h"
@@ -283,9 +282,9 @@ std::unique_ptr<graph::ImageFilter> ResizeImplBuilder::create() const
 		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu);
 #endif
 	if (!ret && horizontal)
-		ret = ztd::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
+		ret = std::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
 	if (!ret && !horizontal)
-		ret = ztd::make_unique<ResizeImplV_C>(filter_ctx, src_width, type, depth);
+		ret = std::make_unique<ResizeImplV_C>(filter_ctx, src_width, type, depth);
 
 	return ret;
 }

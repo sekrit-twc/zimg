@@ -1,7 +1,6 @@
 #include <iostream>
 #include <memory>
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "unresize/unresize.h"
 
@@ -113,7 +112,7 @@ int unresize_main(int argc, char **argv)
 			.create();
 
 		if (filter_pair.second)
-			filter_pair.first = ztd::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
+			filter_pair.first = std::make_unique<PairFilter>(std::move(filter_pair.first), std::move(filter_pair.second));
 
 		execute(filter_pair.first.get(), &src_frame, &dst_frame, args.times);
 

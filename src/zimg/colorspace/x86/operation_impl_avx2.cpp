@@ -6,7 +6,6 @@
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-#include "common/make_unique.h"
 #include "colorspace/gamma.h"
 #include "colorspace/operation.h"
 #include "operation_impl_x86.h"
@@ -137,7 +136,7 @@ std::unique_ptr<Operation> create_gamma_operation_avx2(const TransferFunction &t
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return ztd::make_unique<ToGammaLutOperationAVX2>(transfer.to_gamma, transfer.to_gamma_scale);
+	return std::make_unique<ToGammaLutOperationAVX2>(transfer.to_gamma, transfer.to_gamma_scale);
 }
 
 std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFunction &transfer, const OperationParams &params)
@@ -145,7 +144,7 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFun
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return ztd::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
+	return std::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
 } // namespace colorspace

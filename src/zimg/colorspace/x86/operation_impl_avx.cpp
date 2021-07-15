@@ -3,7 +3,6 @@
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-#include "common/make_unique.h"
 #include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"
 
@@ -118,7 +117,7 @@ public:
 
 std::unique_ptr<Operation> create_matrix_operation_avx(const Matrix3x3 &m)
 {
-	return ztd::make_unique<MatrixOperationAVX>(m);
+	return std::make_unique<MatrixOperationAVX>(m);
 }
 
 } // namespace colorspace

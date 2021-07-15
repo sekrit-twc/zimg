@@ -6,7 +6,6 @@
 #include <utility>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
@@ -328,22 +327,22 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 	try {
 		switch (filter_type) {
 		case ZIMG_RESIZE_POINT:
-			return ztd::make_unique<zimg::resize::PointFilter>();
+			return std::make_unique<zimg::resize::PointFilter>();
 		case ZIMG_RESIZE_BILINEAR:
-			return ztd::make_unique<zimg::resize::BilinearFilter>();
+			return std::make_unique<zimg::resize::BilinearFilter>();
 		case ZIMG_RESIZE_BICUBIC:
 			param_a = std::isnan(param_a) ? zimg::resize::BicubicFilter::DEFAULT_B : param_a;
 			param_b = std::isnan(param_b) ? zimg::resize::BicubicFilter::DEFAULT_C : param_b;
-			return ztd::make_unique<zimg::resize::BicubicFilter>(param_a, param_b);
+			return std::make_unique<zimg::resize::BicubicFilter>(param_a, param_b);
 		case ZIMG_RESIZE_SPLINE16:
-			return ztd::make_unique<zimg::resize::Spline16Filter>();
+			return std::make_unique<zimg::resize::Spline16Filter>();
 		case ZIMG_RESIZE_SPLINE36:
-			return ztd::make_unique<zimg::resize::Spline36Filter>();
+			return std::make_unique<zimg::resize::Spline36Filter>();
 		case ZIMG_RESIZE_SPLINE64:
-			return ztd::make_unique<zimg::resize::Spline64Filter>();
+			return std::make_unique<zimg::resize::Spline64Filter>();
 		case ZIMG_RESIZE_LANCZOS:
 			param_a = std::isnan(param_a) ? zimg::resize::LanczosFilter::DEFAULT_TAPS : std::max(param_a, 1.0);
-			return ztd::make_unique<zimg::resize::LanczosFilter>(static_cast<unsigned>(param_a));
+			return std::make_unique<zimg::resize::LanczosFilter>(static_cast<unsigned>(param_a));
 		default:
 			zimg::error::throw_<zimg::error::EnumOutOfRange>("unrecognized resampling filter");
 		}

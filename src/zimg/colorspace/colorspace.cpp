@@ -2,7 +2,6 @@
 #include <memory>
 #include "common/cpuinfo.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/basic_filter.h"
@@ -109,9 +108,9 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 	      .set_scene_referred(scene_referred);
 
 	if (csp_in == csp_out)
-		return ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT, true);
+		return std::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT, true);
 	else
-		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
+		return std::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
 }

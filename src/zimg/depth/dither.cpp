@@ -7,7 +7,6 @@
 #include "common/alloc.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/image_filter.h"
@@ -413,11 +412,11 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 {
 	switch (type) {
 	case DitherType::NONE:
-		return ztd::make_unique<NoneDitherTable>();
+		return std::make_unique<NoneDitherTable>();
 	case DitherType::ORDERED:
-		return ztd::make_unique<BayerDitherTable>();
+		return std::make_unique<BayerDitherTable>();
 	case DitherType::RANDOM:
-		return ztd::make_unique<RandomDitherTable>();
+		return std::make_unique<RandomDitherTable>();
 	default:
 		error::throw_<error::InternalError>("unrecognized dither type");
 	}
@@ -439,7 +438,7 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsig
 	if (needs_f16c && !f16c)
 		f16c = half_to_float_n;
 
-	return ztd::make_unique<ErrorDiffusion>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ErrorDiffusion>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace
@@ -475,7 +474,7 @@ std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned widt
 			f16c = half_to_float_n;
 	}
 
-	return ztd::make_unique<OrderedDither>(std::move(table), func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<OrderedDither>(std::move(table), func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth

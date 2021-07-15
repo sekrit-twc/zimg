@@ -8,7 +8,6 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_arm.h"
@@ -944,9 +943,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_neon(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplH_F32_Neon>(context, height);
+		ret = std::make_unique<ResizeImplH_F32_Neon>(context, height);
 	else if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplH_U16_Neon>(context, height, depth);
+		ret = std::make_unique<ResizeImplH_U16_Neon>(context, height, depth);
 
 	return ret;
 }
@@ -956,9 +955,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_neon(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplV_F32_Neon>(context, width);
+		ret = std::make_unique<ResizeImplV_F32_Neon>(context, width);
 	else if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplV_U16_Neon>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_Neon>(context, width, depth);
 
 	return ret;
 }

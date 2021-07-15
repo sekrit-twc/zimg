@@ -8,7 +8,6 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -583,7 +582,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse2(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
+		ret = std::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
 
 	return ret;
 }
@@ -593,7 +592,7 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);
 
 	return ret;
 }

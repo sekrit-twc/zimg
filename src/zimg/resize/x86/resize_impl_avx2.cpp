@@ -11,7 +11,6 @@
 #include "common/checked_int.h"
 #include "common/except.h"
 #include "common/pixel.h"
-#include "common/make_unique.h"
 #include "common/x86/cpuinfo_x86.h"
 #include "graph/image_filter.h"
 #include "resize/filter.h"
@@ -1651,11 +1650,11 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx2(const FilterContex
 
 	if (!ret) {
 		if (type == PixelType::WORD)
-			ret = ztd::make_unique<ResizeImplH_U16_AVX2>(context, height, depth);
+			ret = std::make_unique<ResizeImplH_U16_AVX2>(context, height, depth);
 		else if (type == PixelType::HALF)
-			ret = ztd::make_unique<ResizeImplH_FP_AVX2<f16_traits>>(context, height);
+			ret = std::make_unique<ResizeImplH_FP_AVX2<f16_traits>>(context, height);
 		else if (type == PixelType::FLOAT)
-			ret = ztd::make_unique<ResizeImplH_FP_AVX2<f32_traits>>(context, height);
+			ret = std::make_unique<ResizeImplH_FP_AVX2<f32_traits>>(context, height);
 	}
 
 	return ret;
@@ -1666,11 +1665,11 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx2(const FilterContex
 	std::unique_ptr<graph::ImageFilter> ret;
 
 	if (type == PixelType::WORD)
-		ret = ztd::make_unique<ResizeImplV_U16_AVX2>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_AVX2>(context, width, depth);
 	else if (type == PixelType::HALF)
-		ret = ztd::make_unique<ResizeImplV_FP_AVX2<f16_traits>>(context, width);
+		ret = std::make_unique<ResizeImplV_FP_AVX2<f16_traits>>(context, width);
 	else if (type == PixelType::FLOAT)
-		ret = ztd::make_unique<ResizeImplV_FP_AVX2<f32_traits>>(context, width);
+		ret = std::make_unique<ResizeImplV_FP_AVX2<f32_traits>>(context, width);
 
 	return ret;
 }

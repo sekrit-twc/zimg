@@ -4,7 +4,6 @@
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
-#include "common/make_unique.h"
 #include "colorspace/gamma.h"
 #include "colorspace/operation_impl.h"
 #include "gamma_constants_avx512.h"
@@ -319,7 +318,7 @@ public:
 
 std::unique_ptr<Operation> create_matrix_operation_avx512(const Matrix3x3 &m)
 {
-	return ztd::make_unique<MatrixOperationAVX512>(m);
+	return std::make_unique<MatrixOperationAVX512>(m);
 }
 
 std::unique_ptr<Operation> create_gamma_operation_avx512(const TransferFunction &transfer, const OperationParams &params)
@@ -328,11 +327,11 @@ std::unique_ptr<Operation> create_gamma_operation_avx512(const TransferFunction 
 		return nullptr;
 
 	if (transfer.to_gamma == rec_1886_inverse_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncRec1886InverseEOTF>>(transfer.to_gamma_scale);
+		return std::make_unique<GammaOperationAVX512<FuncRec1886InverseEOTF>>(transfer.to_gamma_scale);
 	else if (transfer.to_gamma == srgb_inverse_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncSRGBInverseEOTF>>(transfer.to_gamma_scale);
+		return std::make_unique<GammaOperationAVX512<FuncSRGBInverseEOTF>>(transfer.to_gamma_scale);
 	else if (transfer.to_gamma == st_2084_inverse_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncST2084InverseEOTF>>(transfer.to_gamma_scale);
+		return std::make_unique<GammaOperationAVX512<FuncST2084InverseEOTF>>(transfer.to_gamma_scale);
 
 	return nullptr;
 }
@@ -343,11 +342,11 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferF
 		return nullptr;
 
 	if (transfer.to_linear == rec_1886_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncRec1886EOTF>>(transfer.to_linear_scale);
+		return std::make_unique<GammaOperationAVX512<FuncRec1886EOTF>>(transfer.to_linear_scale);
 	else if (transfer.to_linear == srgb_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncSRGBEOTF>>(transfer.to_linear_scale);
+		return std::make_unique<GammaOperationAVX512<FuncSRGBEOTF>>(transfer.to_linear_scale);
 	else if (transfer.to_linear == st_2084_eotf)
-		return ztd::make_unique<GammaOperationAVX512<FuncST2084EOTF>>(transfer.to_linear_scale);
+		return std::make_unique<GammaOperationAVX512<FuncST2084EOTF>>(transfer.to_linear_scale);
 
 	return nullptr;
 }

@@ -10,7 +10,6 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
@@ -496,7 +495,7 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion_sse2(unsigned width, 
 	if (width < 6)
 		return nullptr;
 
-	return ztd::make_unique<ErrorDiffusionSSE2>(width, height, pixel_in, pixel_out, cpu);
+	return std::make_unique<ErrorDiffusionSSE2>(width, height, pixel_in, pixel_out, cpu);
 }
 
 } // namespace depth

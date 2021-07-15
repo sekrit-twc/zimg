@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include "common/checked_int.h"
 #include "common/except.h"
-#include "common/make_unique.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/image_filter.h"
@@ -238,7 +237,7 @@ std::unique_ptr<graph::ImageFilter> create_left_shift(unsigned width, unsigned h
 	if (!func)
 		func = select_left_shift_func(pixel_in.type, pixel_out.type);
 
-	return ztd::make_unique<IntegerLeftShift>(func, width, height, pixel_in, pixel_out);
+	return std::make_unique<IntegerLeftShift>(func, width, height, pixel_in, pixel_out);
 }
 
 
@@ -270,7 +269,7 @@ std::unique_ptr<graph::ImageFilter> create_convert_to_float(unsigned width, unsi
 			f16c = float_to_half_n;
 	}
 
-	return ztd::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth
