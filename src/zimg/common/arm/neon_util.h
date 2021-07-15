@@ -26,10 +26,6 @@
   #define float16x8_t uint16x8_t
   #define vld1q_f16 vld1q_u16
   #define vst1q_f16 vst1q_u16
-  #define vmovn_high_u16(r, a) neon_xtn2_16(r, a)
-  #define vdupq_laneq_s16(vec, lane) neon_dupqe16q(vec, lane)
-  #define vdupq_laneq_f32(vec, lane) neon_dupqe32q(vec, lane)
-  #define vreinterpretq_f32_f64(a) a
 #endif
 
 namespace zimg {
