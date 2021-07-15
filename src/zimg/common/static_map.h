@@ -10,11 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#if __cplusplus >= 201402L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
-  #define SM_CONSTEXPR_14 constexpr
-#else
-  #define SM_CONSTEXPR_14
-#endif
+#define SM_CONSTEXPR_14 constexpr
 
 namespace zimg {
 
