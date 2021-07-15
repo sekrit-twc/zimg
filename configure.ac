@@ -23,9 +23,7 @@ AC_ARG_ENABLE([simd],      AS_HELP_STRING([--disable-simd],     [Disable SIMD co
 AC_LANG_PUSH([C++])
 AS_IF([test "x$CXXSTD" = "x"],
       AX_CHECK_COMPILE_FLAG([-std=c++14], [CXXSTD="c++14"]))
-AS_IF([test "x$CXXSTD" = "x"],
-      AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXSTD="c++11"]))
-AS_IF([test "x$CXXSTD" = "x"], AC_MSG_ERROR([C++11 support required]))
+AS_IF([test "x$CXXSTD" = "x"], AC_MSG_ERROR([C++14 support required]))
 AC_LANG_POP([C++])
 
 AC_SUBST([CXXSTD], [$CXXSTD])
