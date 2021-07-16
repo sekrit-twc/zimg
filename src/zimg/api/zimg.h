@@ -371,7 +371,7 @@ typedef enum zimg_resample_filter_e {
 } zimg_resample_filter_e;
 
 
-#define ZIMG_BUFFER_MAX ((unsigned)-1)
+#define ZIMG_BUFFER_MAX (~0U)
 
  /**
   * Read-only buffer structure.

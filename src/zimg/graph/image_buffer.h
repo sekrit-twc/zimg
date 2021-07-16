@@ -15,7 +15,7 @@ namespace zimg {
 namespace graph {
 
 // Special mask value with all bits set.
-constexpr unsigned BUFFER_MAX = -1;
+constexpr unsigned BUFFER_MAX = ~0U;
 
 /**
  * Circular image buffer.
@@ -238,27 +238,27 @@ const ColorImageBuffer<U> *static_buffer_cast(const ColorImageBuffer<T> *buf) no
  */
 inline unsigned select_zimg_buffer_mask(unsigned count) noexcept
 {
-	constexpr unsigned UINT_BITS = std::numeric_limits<unsigned>::digits;
+	unsigned long lzcnt;
 
-	unsigned long msb = 0;
-
-	if (count <= 1U)
+	if (count <= 1)
 		return 0;
 
 #if defined(_MSC_VER)
+	unsigned long msb;
 	_BitScanReverse(&msb, count - 1);
+	lzcnt = 31 - msb;
 #elif defined(__GNUC__)
-	msb = UINT_BITS - __builtin_clz(count - 1) - 1;
+	lzcnt = __builtin_clz(count - 1);
 #else
-	for (unsigned i = UINT_BITS; i != 0; --i) {
-		if ((count - 1) & (1U << (i - 1))) {
-			msb = i - 1;
-			break;
-		}
+	lzcnt = 0;
+	count -= 1;
+	while (!(count & (1U << (std::numeric_limits<unsigned>::digits - 1)))) {
+		count <<= 1;
+		++lzcnt;
 	}
 #endif
 
-	return msb == UINT_BITS - 1 ? BUFFER_MAX : (1U << (msb + 1)) - 1;
+	return BUFFER_MAX >> lzcnt;
 }
 
 } // namespace graph
