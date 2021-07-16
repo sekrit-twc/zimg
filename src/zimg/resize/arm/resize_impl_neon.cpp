@@ -84,11 +84,15 @@ inline FORCE_INLINE int16x8_t export_i30_u16(int32x4_t lo, int32x4_t hi)
 }
 
 
-template <bool DoLoop, unsigned Tail>
+template <int Taps>
 inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
                                                              const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                              const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
+	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
+	static_assert(Taps >= -7, "only up to 7 taps in epilogue");
+	constexpr int Tail = Taps > 0 ? Taps : -Taps;
+
 	const int16x8_t i16_min = vdupq_n_s16(INT16_MIN);
 	const int16x8_t lim = vdupq_n_s16(limit + INT16_MIN);
 
@@ -99,7 +103,7 @@ inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
 	int32x4_t accum_hi = vdupq_n_s32(0);
 	int16x8_t x, c, coeffs;
 
-	unsigned k_end = DoLoop ? floor_n(filter_width + 1, 8) : 0;
+	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = vld1q_s16(filter_coeffs + k);
@@ -220,7 +224,7 @@ inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
 	return vreinterpretq_u16_s16(result);
 }
 
-template <bool DoLoop, unsigned Tail>
+template <int Taps>
 void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                              const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
@@ -236,7 +240,7 @@ void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_
 	uint16_t *dst_p6 = dst[6];
 	uint16_t *dst_p7 = dst[7];
 
-#define XITER resize_line8_h_u16_neon_xiter<DoLoop, Tail>
+#define XITER resize_line8_h_u16_neon_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		uint16x8_t x = XITER(j, XARGS);
@@ -276,31 +280,35 @@ void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_
 }
 
 constexpr auto resize_line8_h_u16_neon_jt_small = make_array(
-	resize_line8_h_u16_neon<false, 1>,
-	resize_line8_h_u16_neon<false, 2>,
-	resize_line8_h_u16_neon<false, 3>,
-	resize_line8_h_u16_neon<false, 4>,
-	resize_line8_h_u16_neon<false, 5>,
-	resize_line8_h_u16_neon<false, 6>,
-	resize_line8_h_u16_neon<false, 7>,
-	resize_line8_h_u16_neon<false, 8>);
+	resize_line8_h_u16_neon<1>,
+	resize_line8_h_u16_neon<2>,
+	resize_line8_h_u16_neon<3>,
+	resize_line8_h_u16_neon<4>,
+	resize_line8_h_u16_neon<5>,
+	resize_line8_h_u16_neon<6>,
+	resize_line8_h_u16_neon<7>,
+	resize_line8_h_u16_neon<8>);
 
 constexpr auto resize_line8_h_u16_neon_jt_large = make_array(
-	resize_line8_h_u16_neon<true, 0>,
-	resize_line8_h_u16_neon<true, 1>,
-	resize_line8_h_u16_neon<true, 2>,
-	resize_line8_h_u16_neon<true, 3>,
-	resize_line8_h_u16_neon<true, 4>,
-	resize_line8_h_u16_neon<true, 5>,
-	resize_line8_h_u16_neon<true, 6>,
-	resize_line8_h_u16_neon<true, 7>);
+	resize_line8_h_u16_neon<0>,
+	resize_line8_h_u16_neon<-1>,
+	resize_line8_h_u16_neon<-2>,
+	resize_line8_h_u16_neon<-3>,
+	resize_line8_h_u16_neon<-4>,
+	resize_line8_h_u16_neon<-5>,
+	resize_line8_h_u16_neon<-6>,
+	resize_line8_h_u16_neon<-7>);
 
 
-template <unsigned FWidth, unsigned Tail>
+template <int Taps>
 inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
                                                               const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                               const float * RESTRICT src, unsigned src_base)
 {
+	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
+	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
+	constexpr int Tail = Taps >= 4 ? Taps - 4 : Taps > 0 ? Taps : -Taps;
+
 	const float *filter_coeffs = filter_data + j * filter_stride;
 	const float *src_p = src + (filter_left[j] - src_base) * 4;
 
@@ -308,7 +316,7 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
 	float32x4_t accum1 = vdupq_n_f32(0.0f);
 	float32x4_t x, c, coeffs;
 
-	unsigned k_end = FWidth ? FWidth - Tail : floor_n(filter_width, 4);
+	unsigned k_end = Taps >= 4 ? 4 : Taps > 0 ? 0 : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = vld1q_f32(filter_coeffs + k);
@@ -355,13 +363,13 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
 		accum1 = vfmaq_f32(accum1, c, x);
 	}
 
-	if (!FWidth || FWidth >= 2)
+	if (!Taps || Taps >= 2)
 		accum0 = vaddq_f32(accum0, accum1);
 
 	return accum0;
 }
 
-template <unsigned FWidth, unsigned Tail>
+template <int Taps>
 void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                             const float * RESTRICT src, float * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
 {
@@ -373,7 +381,7 @@ void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float 
 	float *dst_p2 = dst[2];
 	float *dst_p3 = dst[3];
 
-#define XITER resize_line4_h_f32_neon_xiter<FWidth, Tail>
+#define XITER resize_line4_h_f32_neon_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		float32x4_t x = XITER(j, XARGS);
@@ -405,29 +413,36 @@ void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float 
 }
 
 constexpr auto resize_line4_h_f32_neon_jt_small = make_array(
-	resize_line4_h_f32_neon<1, 1>,
-	resize_line4_h_f32_neon<2, 2>,
-	resize_line4_h_f32_neon<3, 3>,
-	resize_line4_h_f32_neon<4, 4>,
-	resize_line4_h_f32_neon<5, 1>,
-	resize_line4_h_f32_neon<6, 2>,
-	resize_line4_h_f32_neon<7, 3>,
-	resize_line4_h_f32_neon<8, 4>);
+	resize_line4_h_f32_neon<1>,
+	resize_line4_h_f32_neon<2>,
+	resize_line4_h_f32_neon<3>,
+	resize_line4_h_f32_neon<4>,
+	resize_line4_h_f32_neon<5>,
+	resize_line4_h_f32_neon<6>,
+	resize_line4_h_f32_neon<7>,
+	resize_line4_h_f32_neon<8>);
 
 constexpr auto resize_line4_h_f32_neon_jt_large = make_array(
-	resize_line4_h_f32_neon<0, 0>,
-	resize_line4_h_f32_neon<0, 1>,
-	resize_line4_h_f32_neon<0, 2>,
-	resize_line4_h_f32_neon<0, 3>);
+	resize_line4_h_f32_neon<0>,
+	resize_line4_h_f32_neon<-1>,
+	resize_line4_h_f32_neon<-2>,
+	resize_line4_h_f32_neon<-3>);
 
 
-template <unsigned N, bool ReadAccum, bool WriteToAccum>
+constexpr unsigned V_ACCUM_NONE = 0;
+constexpr unsigned V_ACCUM_INITIAL = 1;
+constexpr unsigned V_ACCUM_UPDATE = 2;
+constexpr unsigned V_ACCUM_FINAL = 3;
+
+template <unsigned Taps, unsigned AccumMode>
 inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned accum_base,
                                                             const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
                                                             const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7, int32_t * RESTRICT accum_p,
                                                             const int16x8_t &c0, const int16x8_t &c1, const int16x8_t &c2, const int16x8_t &c3,
                                                             const int16x8_t &c4, const int16x8_t &c5, const int16x8_t &c6, const int16x8_t &c7, uint16_t limit)
 {
+	static_assert(Taps >= 1 && Taps <= 8, "must have between 2-8 taps");
+
 	const int16x8_t i16_min = vdupq_n_s16(INT16_MIN);
 	const int16x8_t lim = vdupq_n_s16(limit + INT16_MIN);
 
@@ -435,11 +450,11 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 	int32x4_t accum_hi = vdupq_n_s32(0);
 	int16x8_t x;
 
-	if (N >= 0) {
+	if (Taps >= 1) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p0 + j));
 		x = vaddq_s16(x, i16_min);
 
-		if (ReadAccum) {
+		if (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
 			accum_lo = vmlal_s16(vld1q_s32(accum_p + j - accum_base + 0), vget_low_s16(c0), vget_low_s16(x));
 			accum_hi = vmlal_high_s16(vld1q_s32(accum_p + j - accum_base + 4), c0, x);
 		} else {
@@ -447,50 +462,50 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 			accum_hi = vmull_high_s16(c0, x);
 		}
 	}
-	if (N >= 1) {
+	if (Taps >= 2) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p1 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c1), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c1, x);
 	}
-	if (N >= 2) {
+	if (Taps >= 3) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p2 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c2), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c2, x);
 	}
-	if (N >= 3) {
+	if (Taps >= 4) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p3 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c3), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c3, x);
 	}
-	if (N >= 4) {
+	if (Taps >= 5) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p4 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c4), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c4, x);
 	}
-	if (N >= 5) {
+	if (Taps >= 6) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p5 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c5), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c5, x);
 	}
-	if (N >= 6) {
+	if (Taps >= 7) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p6 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c6), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c6, x);
 	}
-	if (N >= 7) {
+	if (Taps >= 8) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p7 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c7), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c7, x);
 	}
 
-	if (WriteToAccum) {
+	if (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		vst1q_s32(accum_p + j - accum_base + 0, accum_lo);
 		vst1q_s32(accum_p + j - accum_base + 4, accum_hi);
 		return vdupq_n_u16(0);
@@ -502,7 +517,7 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 	}
 }
 
-template <unsigned N, bool ReadAccum, bool WriteToAccum>
+template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_neon(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, int32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
 	const uint16_t * RESTRICT src_p0 = src[0];
@@ -529,102 +544,107 @@ void resize_line_v_u16_neon(const int16_t * RESTRICT filter_data, const uint16_t
 
 	uint16x8_t out;
 
-#define XITER resize_line_v_u16_neon_xiter<N, ReadAccum, WriteToAccum>
+#define XITER resize_line_v_u16_neon_xiter<Taps, AccumMode>
 #define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c0, c1, c2, c3, c4, c5, c6, c7, limit
 	if (left != vec_left) {
 		out = XITER(vec_left - 8, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			neon_store_idxhi_u16(dst + vec_left - 8, out, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		out = XITER(j, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			vst1q_u16(dst + j, out);
 	}
 
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			neon_store_idxlo_u16(dst + vec_right, out, right % 8);
 	}
 #undef XITER
 #undef XARGS
 }
 
-constexpr auto resize_line_v_u16_neon_jt_a = make_array(
-	resize_line_v_u16_neon<0, false, false>,
-	resize_line_v_u16_neon<1, false, false>,
-	resize_line_v_u16_neon<2, false, false>,
-	resize_line_v_u16_neon<3, false, false>,
-	resize_line_v_u16_neon<4, false, false>,
-	resize_line_v_u16_neon<5, false, false>,
-	resize_line_v_u16_neon<6, false, false>,
-	resize_line_v_u16_neon<7, false, false>);
+constexpr auto resize_line_v_u16_neon_jt_small = make_array(
+	resize_line_v_u16_neon<1, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<2, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<3, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<4, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<5, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<6, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<7, V_ACCUM_NONE>,
+	resize_line_v_u16_neon<8, V_ACCUM_NONE>);
 
-constexpr auto resize_line_v_u16_neon_jt_b = make_array(
-	resize_line_v_u16_neon<0, true, false>,
-	resize_line_v_u16_neon<1, true, false>,
-	resize_line_v_u16_neon<2, true, false>,
-	resize_line_v_u16_neon<3, true, false>,
-	resize_line_v_u16_neon<4, true, false>,
-	resize_line_v_u16_neon<5, true, false>,
-	resize_line_v_u16_neon<6, true, false>,
-	resize_line_v_u16_neon<7, true, false>);
+constexpr auto resize_line_v_u16_neon_initial = resize_line_v_u16_neon<8, V_ACCUM_INITIAL>;
+constexpr auto resize_line_v_u16_neon_update = resize_line_v_u16_neon<8, V_ACCUM_UPDATE>;
+
+constexpr auto resize_line_v_u16_neon_jt_final = make_array(
+	resize_line_v_u16_neon<1, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<2, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<3, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<4, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<5, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<6, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<7, V_ACCUM_FINAL>,
+	resize_line_v_u16_neon<8, V_ACCUM_FINAL>);
 
 
-template <unsigned N, bool UpdateAccum>
+template <unsigned Taps, bool Continue>
 inline FORCE_INLINE float32x4_t resize_line_v_f32_neon_xiter(unsigned j,
                                                              const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3,
                                                              const float *src_p4, const float *src_p5, const float *src_p6, const float *src_p7, float * RESTRICT accum_p,
                                                              const float32x4_t &c0, const float32x4_t &c1, const float32x4_t &c2, const float32x4_t &c3,
                                                              const float32x4_t &c4, const float32x4_t &c5, const float32x4_t &c6, const float32x4_t &c7)
 {
+	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
+
 	float32x4_t accum0 = vdupq_n_f32(0.0f);
 	float32x4_t accum1 = vdupq_n_f32(0.0f);
 	float32x4_t x;
 
-	if (N >= 0) {
+	if (Taps >= 1) {
 		x = vld1q_f32(src_p0 + j);
-		accum0 = UpdateAccum ? vfmaq_f32(vld1q_f32(accum_p + j), c0, x) : vmulq_f32(c0, x);
+		accum0 = Continue ? vfmaq_f32(vld1q_f32(accum_p + j), c0, x) : vmulq_f32(c0, x);
 	}
-	if (N >= 1) {
+	if (Taps >= 2) {
 		x = vld1q_f32(src_p1 + j);
 		accum1 = vmulq_f32(c1, x);
 	}
-	if (N >= 2) {
+	if (Taps >= 3) {
 		x = vld1q_f32(src_p2 + j);
 		accum0 = vfmaq_f32(accum0, c2, x);
 	}
-	if (N >= 3) {
+	if (Taps >= 4) {
 		x = vld1q_f32(src_p3 + j);
 		accum1 = vfmaq_f32(accum1, c3, x);
 	}
-	if (N >= 4) {
+	if (Taps >= 5) {
 		x = vld1q_f32(src_p4 + j);
 		accum0 = vfmaq_f32(accum0, c4, x);
 	}
-	if (N >= 5) {
+	if (Taps >= 6) {
 		x = vld1q_f32(src_p5 + j);
 		accum1 = vfmaq_f32(accum1, c5, x);
 	}
-	if (N >= 6) {
+	if (Taps >= 7) {
 		x = vld1q_f32(src_p6 + j);
 		accum0 = vfmaq_f32(accum0, c6, x);
 	}
-	if (N >= 7) {
+	if (Taps >= 8) {
 		x = vld1q_f32(src_p7 + j);
 		accum1 = vfmaq_f32(accum1, c7, x);
 	}
 
-	accum0 = (N >= 1) ? vaddq_f32(accum0, accum1) : accum0;
+	accum0 = (Taps >= 2) ? vaddq_f32(accum0, accum1) : accum0;
 	return accum0;
 }
 
-template <unsigned N, bool UpdateAccum>
+template <unsigned Taps, bool Continue>
 void resize_line_v_f32_neon(const float * RESTRICT filter_data, const float * const * RESTRICT src, float * RESTRICT dst, unsigned left, unsigned right)
 {
 	const float *src_p0 = src[0];
@@ -650,7 +670,7 @@ void resize_line_v_f32_neon(const float * RESTRICT filter_data, const float * co
 
 	float32x4_t accum;
 
-#define XITER resize_line_v_f32_neon_xiter<N, UpdateAccum>
+#define XITER resize_line_v_f32_neon_xiter<Taps, Continue>
 #define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 4, XARGS);
@@ -670,25 +690,25 @@ void resize_line_v_f32_neon(const float * RESTRICT filter_data, const float * co
 #undef XARGS
 }
 
-constexpr auto resize_line_v_f32_neon_jt_a = make_array(
-	resize_line_v_f32_neon<0, false>,
+constexpr auto resize_line_v_f32_neon_jt_init = make_array(
 	resize_line_v_f32_neon<1, false>,
 	resize_line_v_f32_neon<2, false>,
 	resize_line_v_f32_neon<3, false>,
 	resize_line_v_f32_neon<4, false>,
 	resize_line_v_f32_neon<5, false>,
 	resize_line_v_f32_neon<6, false>,
-	resize_line_v_f32_neon<7, false>);
+	resize_line_v_f32_neon<7, false>,
+	resize_line_v_f32_neon<8, false>);
 
-constexpr auto resize_line_v_f32_neon_jt_b = make_array(
-	resize_line_v_f32_neon<0, true>,
+constexpr auto resize_line_v_f32_neon_jt_cont = make_array(
 	resize_line_v_f32_neon<1, true>,
 	resize_line_v_f32_neon<2, true>,
 	resize_line_v_f32_neon<3, true>,
 	resize_line_v_f32_neon<4, true>,
 	resize_line_v_f32_neon<5, true>,
 	resize_line_v_f32_neon<6, true>,
-	resize_line_v_f32_neon<7, true>);
+	resize_line_v_f32_neon<7, true>,
+	resize_line_v_f32_neon<8, true>);
 
 
 class ResizeImplH_U16_Neon final : public ResizeImplH {
@@ -700,10 +720,10 @@ public:
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
-		if (filter.filter_width > 8)
-			m_func = resize_line8_h_u16_neon_jt_large[filter.filter_width % 8];
-		else
+		if (filter.filter_width <= 8)
 			m_func = resize_line8_h_u16_neon_jt_small[filter.filter_width - 1];
+		else
+			m_func = resize_line8_h_u16_neon_jt_large[filter.filter_width % 8];
 	}
 
 	unsigned get_simultaneous_lines() const override { return 8; }
@@ -840,30 +860,29 @@ public:
 
 		unsigned top = m_filter.left[i];
 
-		if (filter_width <= 8) {
+		auto gather_8_lines = [&](unsigned i)
+		{
 			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(top + n, src_height - 1)];
+				src_lines[n] = src_buf[std::min(i + n, src_height - 1)];
 			}
-			resize_line_v_u16_neon_jt_a[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+		};
+
+		if (filter_width <= 8) {
+			gather_8_lines(top);
+			resize_line_v_u16_neon_jt_small[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		} else {
 			unsigned k_end = ceil_n(filter_width, 8) - 8;
 
-			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(top + 0 + n, src_height - 1)];
-			}
-			resize_line_v_u16_neon<7, false, true>(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			gather_8_lines(top);
+			resize_line_v_u16_neon_initial(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 
 			for (unsigned k = 8; k < k_end; k += 8) {
-				for (unsigned n = 0; n < 8; ++n) {
-					src_lines[n] = src_buf[std::min(top + k + n, src_height - 1)];
-				}
-				resize_line_v_u16_neon<7, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+				gather_8_lines(top + k);
+				resize_line_v_u16_neon_update(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 			}
 
-			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(top + k_end + n, src_height - 1)];
-			}
-			resize_line_v_u16_neon_jt_b[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			gather_8_lines(top + k_end);
+			resize_line_v_u16_neon_jt_final[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		}
 	}
 };
@@ -900,7 +919,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_f32_neon_jt_a[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
+			resize_line_v_f32_neon_jt_init[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
 
 		for (unsigned k = 8; k < filter_width; k += 8) {
@@ -916,7 +935,7 @@ public:
 			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
 			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
 
-			resize_line_v_f32_neon_jt_b[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
+			resize_line_v_f32_neon_jt_cont[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
 };

@@ -190,11 +190,15 @@ void transpose_line_16x16(T * RESTRICT dst, const T * const * RESTRICT src, unsi
 }
 
 
-template <class Traits, unsigned FWidth, unsigned Tail>
+template <class Traits, int Taps>
 inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
                                                            const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                            const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
 {
+	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
+	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
+	constexpr int Tail = Taps >= 4 ? Taps - 4 : Taps > 0 ? Taps : -Taps;
+
 	typedef typename Traits::pixel_type pixel_type;
 
 	const float *filter_coeffs = filter_data + j * filter_stride;
@@ -204,7 +208,7 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 	__m512 accum1 = _mm512_setzero_ps();
 	__m512 x, c, coeffs;
 
-	unsigned k_end = FWidth ? FWidth - Tail : floor_n(filter_width, 4);
+	unsigned k_end = Taps >= 4 ? 4 : Taps > 0 ? 0 : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = _mm512_broadcast_f32x4(_mm_load_ps(filter_coeffs + k));
@@ -251,20 +255,20 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
 
-	if (!FWidth || FWidth >= 2)
+	if (!Taps || Taps >= 2)
 		accum0 = _mm512_add_ps(accum0, accum1);
 
 	return accum0;
 }
 
-template <class Traits, unsigned FWidth, unsigned Tail>
+template <class Traits, int Taps>
 void resize_line16_h_fp_avx512(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
 
-#define XITER resize_line16_h_fp_avx512_xiter<Traits, FWidth, Tail>
+#define XITER resize_line16_h_fp_avx512_xiter<Traits, Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m512 x = XITER(j, XARGS);
@@ -329,28 +333,28 @@ void resize_line16_h_fp_avx512(const unsigned * RESTRICT filter_left, const floa
 
 template <class Traits>
 constexpr auto resize_line16_h_fp_avx512_jt_small = make_array(
-	resize_line16_h_fp_avx512<Traits, 1, 1>,
-	resize_line16_h_fp_avx512<Traits, 2, 2>,
-	resize_line16_h_fp_avx512<Traits, 3, 3>,
-	resize_line16_h_fp_avx512<Traits, 4, 4>,
-	resize_line16_h_fp_avx512<Traits, 5, 1>,
-	resize_line16_h_fp_avx512<Traits, 6, 2>,
-	resize_line16_h_fp_avx512<Traits, 7, 3>,
-	resize_line16_h_fp_avx512<Traits, 8, 4>);
+	resize_line16_h_fp_avx512<Traits, 1>,
+	resize_line16_h_fp_avx512<Traits, 2>,
+	resize_line16_h_fp_avx512<Traits, 3>,
+	resize_line16_h_fp_avx512<Traits, 4>,
+	resize_line16_h_fp_avx512<Traits, 5>,
+	resize_line16_h_fp_avx512<Traits, 6>,
+	resize_line16_h_fp_avx512<Traits, 7>,
+	resize_line16_h_fp_avx512<Traits, 8>);
 
 template <class Traits>
 constexpr auto resize_line16_h_fp_avx512_jt_large = make_array(
-	resize_line16_h_fp_avx512<Traits, 0, 0>,
-	resize_line16_h_fp_avx512<Traits, 0, 1>,
-	resize_line16_h_fp_avx512<Traits, 0, 2>,
-	resize_line16_h_fp_avx512<Traits, 0, 3>);
+	resize_line16_h_fp_avx512<Traits, 0>,
+	resize_line16_h_fp_avx512<Traits, -1>,
+	resize_line16_h_fp_avx512<Traits, -2>,
+	resize_line16_h_fp_avx512<Traits, -3>);
 
 
-template <class Traits, unsigned N>
+template <class Traits, unsigned Taps>
 void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const unsigned * RESTRICT permute_mask, const float * RESTRICT filter_data, unsigned input_width,
                                   const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * RESTRICT dst, unsigned left, unsigned right)
 {
-	static_assert(N <= 16, "permuted resampler only supports up to 16 taps");
+	static_assert(Taps <= 16, "permuted resampler only supports up to 16 taps");
 
 	unsigned vec_right = floor_n(right, 16);
 	unsigned fallback_idx = vec_right;
@@ -365,13 +369,13 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 		}
 
 		const __m512i mask = _mm512_load_si512(permute_mask + j);
-		const float *data = filter_data + static_cast<size_t>(j) * N;
+		const float *data = filter_data + static_cast<size_t>(j) * Taps;
 
 		__m512 accum0 = _mm512_setzero_ps();
 		__m512 accum1 = _mm512_setzero_ps();
 		__m512 x, x0, x4, x8, x12, x16, coeffs;
 
-		if (N >= 1) {
+		if (Taps >= 1) {
 			x0 = Traits::load16(src + left + 0);
 
 			x = x0;
@@ -379,7 +383,7 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 0 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 2) {
+		if (Taps >= 2) {
 			x4 = Traits::load16(src + left + 4);
 
 			x = mm512_alignr_epi8_ps(x4, x0, 4);
@@ -387,25 +391,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 1 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 3) {
+		if (Taps >= 3) {
 			x = mm512_alignr_epi8_ps(x4, x0, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 2 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 4) {
+		if (Taps >= 4) {
 			x = mm512_alignr_epi8_ps(x4, x0, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 3 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 5) {
+		if (Taps >= 5) {
 			x = x4;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 4 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 6) {
+		if (Taps >= 6) {
 			x8 = Traits::load16(src + left + 8);
 
 			x = mm512_alignr_epi8_ps(x8, x4, 4);
@@ -413,25 +417,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 5 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 7) {
+		if (Taps >= 7) {
 			x = mm512_alignr_epi8_ps(x8, x4, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 6 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 8) {
+		if (Taps >= 8) {
 			x = mm512_alignr_epi8_ps(x8, x4, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 7 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 9) {
+		if (Taps >= 9) {
 			x = x8;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 8 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 10) {
+		if (Taps >= 10) {
 			x12 = Traits::load16(src + left + 12);
 
 			x = mm512_alignr_epi8_ps(x12, x8, 4);
@@ -439,25 +443,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 9 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 11) {
+		if (Taps >= 11) {
 			x = mm512_alignr_epi8_ps(x12, x8, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 10 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 12) {
+		if (Taps >= 12) {
 			x = mm512_alignr_epi8_ps(x12, x8, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 11 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 13) {
+		if (Taps >= 13) {
 			x = x12;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 12 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 14) {
+		if (Taps >= 14) {
 			x16 = Traits::load16(src + left + 16);
 
 			x = mm512_alignr_epi8_ps(x16, x12, 4);
@@ -465,13 +469,13 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 13 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (N >= 15) {
+		if (Taps >= 15) {
 			x = mm512_alignr_epi8_ps(x16, x12, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 14 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (N >= 16) {
+		if (Taps >= 16) {
 			x = mm512_alignr_epi8_ps(x16, x12, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 15 * 16);
@@ -486,13 +490,13 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 		unsigned left = permute_left[j / 16];
 
 		const __m512i mask = _mm512_load_si512(permute_mask + j);
-		const float *data = filter_data + j * N;
+		const float *data = filter_data + j * Taps;
 
 		__m512 accum0 = _mm512_setzero_ps();
 		__m512 accum1 = _mm512_setzero_ps();
 		__m512 x, coeffs;
 
-		for (unsigned k = 0; k < N; ++k) {
+		for (unsigned k = 0; k < Taps; ++k) {
 			unsigned num_load = std::min(input_width - left - k, 16U);
 			__mmask16 load_mask = 0xFFFFU >> (16 - num_load);
 
@@ -530,7 +534,7 @@ constexpr auto resize_line_h_perm_fp_avx512_jt = make_array(
 	resize_line_h_perm_fp_avx512<Traits, 16>);
 
 
-template <class Traits, unsigned N, bool UpdateAccum, class T = typename Traits::pixel_type>
+template <class Traits, unsigned Taps, bool Continue, class T = typename Traits::pixel_type>
 inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
                                                          const T *src_p0, const T *src_p1, const T *src_p2, const T *src_p3,
                                                          const T *src_p4, const T *src_p5, const T *src_p6, const T *src_p7, T * RESTRICT accum_p,
@@ -544,44 +548,44 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 	__m512 accum1 = _mm512_setzero_ps();
 	__m512 x;
 
-	if (N >= 0) {
+	if (Taps >= 0) {
 		x = Traits::load16(src_p0 + j);
-		accum0 = UpdateAccum ? _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j)) : _mm512_mul_ps(c0, x);
+		accum0 = Continue ? _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j)) : _mm512_mul_ps(c0, x);
 	}
-	if (N >= 1) {
+	if (Taps >= 1) {
 		x = Traits::load16(src_p1 + j);
 		accum1 = _mm512_mul_ps(c1, x);
 	}
-	if (N >= 2) {
+	if (Taps >= 2) {
 		x = Traits::load16(src_p2 + j);
 		accum0 = _mm512_fmadd_ps(c2, x, accum0);
 	}
-	if (N >= 3) {
+	if (Taps >= 3) {
 		x = Traits::load16(src_p3 + j);
 		accum1 = _mm512_fmadd_ps(c3, x, accum1);
 	}
-	if (N >= 4) {
+	if (Taps >= 4) {
 		x = Traits::load16(src_p4 + j);
 		accum0 = _mm512_fmadd_ps(c4, x, accum0);
 	}
-	if (N >= 5) {
+	if (Taps >= 5) {
 		x = Traits::load16(src_p5 + j);
 		accum1 = _mm512_fmadd_ps(c5, x, accum1);
 	}
-	if (N >= 6) {
+	if (Taps >= 6) {
 		x = Traits::load16(src_p6 + j);
 		accum0 = _mm512_fmadd_ps(c6, x, accum0);
 	}
-	if (N >= 7) {
+	if (Taps >= 7) {
 		x = Traits::load16(src_p7 + j);
 		accum1 = _mm512_fmadd_ps(c7, x, accum1);
 	}
 
-	accum0 = (N >= 1) ? _mm512_add_ps(accum0, accum1) : accum0;
+	accum0 = (Taps >= 2) ? _mm512_add_ps(accum0, accum1) : accum0;
 	return accum0;
 }
 
-template <class Traits, unsigned N, bool UpdateAccum>
+template <class Traits, unsigned Taps, bool Continue>
 void resize_line_v_fp_avx512(const float * RESTRICT filter_data, const typename Traits::pixel_type * const * RESTRICT src, typename Traits::pixel_type * RESTRICT dst,
                              unsigned left, unsigned right)
 {
@@ -610,7 +614,7 @@ void resize_line_v_fp_avx512(const float * RESTRICT filter_data, const typename 
 
 	__m512 accum;
 
-#define XITER resize_line_v_fp_avx512_xiter<Traits, N, UpdateAccum>
+#define XITER resize_line_v_fp_avx512_xiter<Traits, Taps, Continue>
 #define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
 	if (left != vec_left) {
 		accum = XITER(vec_left - 16, XARGS);
@@ -629,26 +633,26 @@ void resize_line_v_fp_avx512(const float * RESTRICT filter_data, const typename 
 }
 
 template <class Traits>
-constexpr auto resize_line_v_fp_avx512_jt_a = make_array(
-	resize_line_v_fp_avx512<Traits, 0, false>,
+constexpr auto resize_line_v_fp_avx512_jt_init = make_array(
 	resize_line_v_fp_avx512<Traits, 1, false>,
 	resize_line_v_fp_avx512<Traits, 2, false>,
 	resize_line_v_fp_avx512<Traits, 3, false>,
 	resize_line_v_fp_avx512<Traits, 4, false>,
 	resize_line_v_fp_avx512<Traits, 5, false>,
 	resize_line_v_fp_avx512<Traits, 6, false>,
-	resize_line_v_fp_avx512<Traits, 7, false>);
+	resize_line_v_fp_avx512<Traits, 7, false>,
+	resize_line_v_fp_avx512<Traits, 8, false>);
 
 template <class Traits>
-constexpr auto resize_line_v_fp_avx512_jt_b = make_array(
-	resize_line_v_fp_avx512<Traits, 0, true>,
+constexpr auto resize_line_v_fp_avx512_jt_cont = make_array(
 	resize_line_v_fp_avx512<Traits, 1, true>,
 	resize_line_v_fp_avx512<Traits, 2, true>,
 	resize_line_v_fp_avx512<Traits, 3, true>,
 	resize_line_v_fp_avx512<Traits, 4, true>,
 	resize_line_v_fp_avx512<Traits, 5, true>,
 	resize_line_v_fp_avx512<Traits, 6, true>,
-	resize_line_v_fp_avx512<Traits, 7, true>);
+	resize_line_v_fp_avx512<Traits, 7, true>,
+	resize_line_v_fp_avx512<Traits, 8, true>);
 
 
 template <class Traits>
@@ -835,7 +839,7 @@ public:
 			unsigned top = m_filter.left[i] + 0;
 
 			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top, src_height);
-			resize_line_v_fp_avx512_jt_a<Traits>[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
+			resize_line_v_fp_avx512_jt_init<Traits>[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
 
 		for (unsigned k = 8; k < filter_width; k += 8) {
@@ -843,7 +847,7 @@ public:
 			unsigned top = m_filter.left[i] + k;
 
 			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top, src_height);
-			resize_line_v_fp_avx512_jt_b<Traits>[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
+			resize_line_v_fp_avx512_jt_cont<Traits>[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
 	}
 };

@@ -122,11 +122,16 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 	}
 }
 
-template <bool DoLoop, unsigned Tail>
+template <int Taps>
 inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
                                                              const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                              const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
+	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
+	static_assert(Taps >= -6, "only up to 6 taps in epilogue");
+	static_assert(Taps % 2 == 0, "tap count must be even");
+	constexpr int Tail = Taps > 0 ? Taps : -Taps;
+
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
 
@@ -137,7 +142,7 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 	__m512i accum_hi = _mm512_setzero_si512();
 	__m512i x0, x1, xl, xh, c, coeffs;
 
-	unsigned k_end = DoLoop ? floor_n(filter_width + 1, 8) : 0;
+	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm512_broadcast_i32x4(_mm_load_si128((const __m128i *)(filter_coeffs + k)));
@@ -249,14 +254,14 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 	return accum_lo;
 }
 
-template <bool DoLoop, unsigned Tail>
+template <int Taps>
 void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                 const uint16_t * RESTRICT src, uint16_t * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 32);
 	unsigned vec_right = floor_n(right, 32);
 
-#define XITER resize_line16_h_u16_avx512_xiter<DoLoop, Tail>
+#define XITER resize_line16_h_u16_avx512_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m512i x = XITER(j, XARGS);
@@ -360,31 +365,31 @@ void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int
 }
 
 constexpr auto resize_line16_h_u16_avx512_jt_small = make_array(
-	resize_line16_h_u16_avx512<false, 2>,
-	resize_line16_h_u16_avx512<false, 2>,
-	resize_line16_h_u16_avx512<false, 4>,
-	resize_line16_h_u16_avx512<false, 4>,
-	resize_line16_h_u16_avx512<false, 6>,
-	resize_line16_h_u16_avx512<false, 6>,
-	resize_line16_h_u16_avx512<false, 8>,
-	resize_line16_h_u16_avx512<false, 8>);
+	resize_line16_h_u16_avx512<2>,
+	resize_line16_h_u16_avx512<2>,
+	resize_line16_h_u16_avx512<4>,
+	resize_line16_h_u16_avx512<4>,
+	resize_line16_h_u16_avx512<6>,
+	resize_line16_h_u16_avx512<6>,
+	resize_line16_h_u16_avx512<8>,
+	resize_line16_h_u16_avx512<8>);
 
 constexpr auto resize_line16_h_u16_avx512_jt_large = make_array(
-	resize_line16_h_u16_avx512<true, 0>,
-	resize_line16_h_u16_avx512<true, 2>,
-	resize_line16_h_u16_avx512<true, 2>,
-	resize_line16_h_u16_avx512<true, 4>,
-	resize_line16_h_u16_avx512<true, 4>,
-	resize_line16_h_u16_avx512<true, 6>,
-	resize_line16_h_u16_avx512<true, 6>,
-	resize_line16_h_u16_avx512<true, 0>);
+	resize_line16_h_u16_avx512<0>,
+	resize_line16_h_u16_avx512<-2>,
+	resize_line16_h_u16_avx512<-2>,
+	resize_line16_h_u16_avx512<-4>,
+	resize_line16_h_u16_avx512<-4>,
+	resize_line16_h_u16_avx512<-6>,
+	resize_line16_h_u16_avx512<-6>,
+	resize_line16_h_u16_avx512<0>);
 
 
-template <unsigned N>
+template <unsigned Taps>
 void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const uint16_t * RESTRICT permute_mask, const int16_t * RESTRICT filter_data, unsigned input_width,
                                    const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, unsigned left, unsigned right, uint16_t limit)
 {
-	static_assert(N <= 16, "permuted resampler only supports up to 16 taps");
+	static_assert(Taps <= 16, "permuted resampler only supports up to 16 taps");
 
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
@@ -401,13 +406,13 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 		}
 
 		const __m512i mask = _mm512_load_si512(permute_mask + static_cast<size_t>(j) * 2);
-		const int16_t *data = filter_data + static_cast<size_t>(j) * N;
+		const int16_t *data = filter_data + static_cast<size_t>(j) * Taps;
 
 		__m512i accum0 = _mm512_setzero_si512();
 		__m512i accum1 = _mm512_setzero_si512();
 		__m512i x, x0, x8, x16, coeffs;
 
-		if (N >= 2) {
+		if (Taps >= 2) {
 			x0 = _mm512_loadu_si512(src + left + 0);
 			x0 = _mm512_add_epi16(x0, i16_min);
 
@@ -416,7 +421,7 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 			coeffs = _mm512_load_si512(data + 0 * 16);
 			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
 		}
-		if (N >= 4) {
+		if (Taps >= 4) {
 			x8 = _mm512_loadu_si512(src + left + 8);
 			x8 = _mm512_add_epi16(x8, i16_min);
 
@@ -425,25 +430,25 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 			coeffs = _mm512_load_si512(data + 2 * 16);
 			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
 		}
-		if (N >= 6) {
+		if (Taps >= 6) {
 			x = _mm512_alignr_epi8(x8, x0, 8);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512(data + 4 * 16);
 			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
 		}
-		if (N >= 8) {
+		if (Taps >= 8) {
 			x = _mm512_alignr_epi8(x8, x0, 12);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512(data + 6 * 16);
 			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
 		}
-		if (N >= 10) {
+		if (Taps >= 10) {
 			x = x8;
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512(data + 8 * 16);
 			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
 		}
-		if (N >= 12) {
+		if (Taps >= 12) {
 			x16 = _mm512_loadu_si512(src + left + 16);
 			x16 = _mm512_add_epi16(x16, i16_min);
 
@@ -452,13 +457,13 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 			coeffs = _mm512_load_si512(data + 10 * 16);
 			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
 		}
-		if (N >= 14) {
+		if (Taps >= 14) {
 			x = _mm512_alignr_epi8(x16, x8, 8);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512(data + 12 * 16);
 			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
 		}
-		if (N >= 16) {
+		if (Taps >= 16) {
 			x = _mm512_alignr_epi8(x16, x8, 12);
 			x = _mm512_permutexvar_epi16(mask, x);
 			coeffs = _mm512_load_si512(data + 14 * 16);
@@ -476,12 +481,12 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 		unsigned left = permute_left[j / 16];
 
 		const __m512i mask = _mm512_load_si512(permute_mask + j * 2);
-		const int16_t *data = filter_data + j * N;
+		const int16_t *data = filter_data + j * Taps;
 
 		__m512i accum = _mm512_setzero_si512();
 		__m512i x, coeffs;
 
-		for (unsigned k = 0; k < N; k += 2) {
+		for (unsigned k = 0; k < Taps; k += 2) {
 			unsigned num_load = std::min(input_width - left - k, 32U);
 			__mmask32 load_mask = 0xFFFFFFFFU >> (32 - num_load);
 
@@ -510,12 +515,20 @@ constexpr auto resize_line_h_perm_u16_avx512_jt = make_array(
 	resize_line_h_perm_u16_avx512<16>);
 
 
-template <unsigned N, bool ReadAccum, bool WriteToAccum>
+constexpr unsigned V_ACCUM_NONE = 0;
+constexpr unsigned V_ACCUM_INITIAL = 1;
+constexpr unsigned V_ACCUM_UPDATE = 2;
+constexpr unsigned V_ACCUM_FINAL = 3;
+
+template <unsigned Taps, unsigned AccumMode>
 inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base,
                                                            const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
                                                            const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
                                                            uint32_t * RESTRICT accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
 {
+	static_assert(Taps >= 2 && Taps <= 8, "must have between 2-8 taps");
+	static_assert(Taps % 2 == 0, "tap count must be even");
+
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
 
@@ -523,7 +536,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 	__m512i accum_hi = _mm512_setzero_si512();
 	__m512i x0, x1, xl, xh;
 
-	if (N >= 0) {
+	if (Taps >= 2) {
 		x0 = _mm512_load_si512(src_p0 + j);
 		x1 = _mm512_load_si512(src_p1 + j);
 		x0 = _mm512_add_epi16(x0, i16_min);
@@ -532,7 +545,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 		xl = _mm512_unpacklo_epi16(x0, x1);
 		xh = _mm512_unpackhi_epi16(x0, x1);
 
-		if (ReadAccum) {
+		if (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
 			accum_lo = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 0), c01, xl);
 			accum_hi = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 16), c01, xh);
 		} else {
@@ -540,7 +553,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 			accum_hi = _mm512_madd_epi16(c01, xh);
 		}
 	}
-	if (N >= 2) {
+	if (Taps >= 4) {
 		x0 = _mm512_load_si512(src_p2 + j);
 		x1 = _mm512_load_si512(src_p3 + j);
 		x0 = _mm512_add_epi16(x0, i16_min);
@@ -552,7 +565,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 		accum_lo = mm512_dpwssd_epi32(accum_lo, c23, xl);
 		accum_hi = mm512_dpwssd_epi32(accum_hi, c23, xh);
 	}
-	if (N >= 4) {
+	if (Taps >= 6) {
 		x0 = _mm512_load_si512(src_p4 + j);
 		x1 = _mm512_load_si512(src_p5 + j);
 		x0 = _mm512_add_epi16(x0, i16_min);
@@ -564,7 +577,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 		accum_lo = mm512_dpwssd_epi32(accum_lo, c45, xl);
 		accum_hi = mm512_dpwssd_epi32(accum_hi, c45, xh);
 	}
-	if (N >= 6) {
+	if (Taps >= 8) {
 		x0 = _mm512_load_si512(src_p6 + j);
 		x1 = _mm512_load_si512(src_p7 + j);
 		x0 = _mm512_add_epi16(x0, i16_min);
@@ -577,7 +590,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 		accum_hi = mm512_dpwssd_epi32(accum_hi, c67, xh);
 	}
 
-	if (WriteToAccum) {
+	if (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm512_store_si512(accum_p + j - accum_base + 0, accum_lo);
 		_mm512_store_si512(accum_p + j - accum_base + 16, accum_hi);
 		return _mm512_setzero_si512();
@@ -590,7 +603,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 	}
 }
 
-template <unsigned N, bool ReadAccum, bool WriteToAccum>
+template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_avx512(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum,
                               unsigned left, unsigned right, uint16_t limit)
 {
@@ -614,51 +627,54 @@ void resize_line_v_u16_avx512(const int16_t * RESTRICT filter_data, const uint16
 
 	__m512i out;
 
-#define XITER resize_line_v_u16_avx512_xiter<N, ReadAccum, WriteToAccum>
+#define XITER resize_line_v_u16_avx512_xiter<Taps, AccumMode>
 #define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
 	if (left != vec_left) {
 		out = XITER(vec_left - 32, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_mask_storeu_epi16(dst + vec_left - 32, mmask32_set_hi(vec_left - left), out);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 32) {
 		out = XITER(j, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_store_si512(dst + j, out);
 	}
 
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
-		if (!WriteToAccum)
+		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_mask_storeu_epi16(dst + vec_right, mmask32_set_lo(right - vec_right), out);
 	}
 #undef XITER
 #undef XARGS
 }
 
-constexpr auto resize_line_v_u16_avx512_jt_a = make_array(
-	resize_line_v_u16_avx512<0, false, false>,
-	resize_line_v_u16_avx512<0, false, false>,
-	resize_line_v_u16_avx512<2, false, false>,
-	resize_line_v_u16_avx512<2, false, false>,
-	resize_line_v_u16_avx512<4, false, false>,
-	resize_line_v_u16_avx512<4, false, false>,
-	resize_line_v_u16_avx512<6, false, false>,
-	resize_line_v_u16_avx512<6, false, false>);
+constexpr auto resize_line_v_u16_avx512_jt_small = make_array(
+	resize_line_v_u16_avx512<2, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<2, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<4, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<4, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<6, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<6, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<8, V_ACCUM_NONE>,
+	resize_line_v_u16_avx512<8, V_ACCUM_NONE>);
 
-constexpr auto resize_line_v_u16_avx512_jt_b = make_array(
-	resize_line_v_u16_avx512<0, true, false>,
-	resize_line_v_u16_avx512<0, true, false>,
-	resize_line_v_u16_avx512<2, true, false>,
-	resize_line_v_u16_avx512<2, true, false>,
-	resize_line_v_u16_avx512<4, true, false>,
-	resize_line_v_u16_avx512<4, true, false>,
-	resize_line_v_u16_avx512<6, true, false>,
-	resize_line_v_u16_avx512<6, true, false>);
+constexpr auto resize_line_v_u16_avx512_initial = resize_line_v_u16_avx512<8, V_ACCUM_INITIAL>;
+constexpr auto resize_line_v_u16_avx512_update = resize_line_v_u16_avx512<8, V_ACCUM_UPDATE>;
+
+constexpr auto resize_line_v_u16_avx512_jt_final = make_array(
+	resize_line_v_u16_avx512<2, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<2, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<4, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<4, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<6, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<6, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<8, V_ACCUM_FINAL>,
+	resize_line_v_u16_avx512<8, V_ACCUM_FINAL>);
 
 
 inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrdiff_t stride, unsigned mask, unsigned i, unsigned height)
@@ -885,20 +901,20 @@ public:
 
 		if (filter_width <= 8) {
 			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + 0, src_height);
-			resize_line_v_u16_avx512_jt_a[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_avx512_jt_small[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		} else {
 			unsigned k_end = ceil_n(filter_width, 8) - 8;
 
 			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + 0, src_height);
-			resize_line_v_u16_avx512<6, false, true>(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_avx512_initial(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 
 			for (unsigned k = 8; k < k_end; k += 8) {
 				calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + k, src_height);
-				resize_line_v_u16_avx512<6, true, true>(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+				resize_line_v_u16_avx512_update(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 			}
 
 			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + k_end, src_height);
-			resize_line_v_u16_avx512_jt_b[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_avx512_jt_final[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		}
 	}
 };
