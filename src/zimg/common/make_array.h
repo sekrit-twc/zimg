@@ -9,7 +9,7 @@
 namespace zimg {
 
 template<typename... T>
-std::array<typename std::common_type<T...>::type, sizeof...(T)>
+std::array<std::common_type_t<T...>, sizeof...(T)>
 constexpr make_array(T &&...t)
 {
     return { std::forward<T>(t)... };

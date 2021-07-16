@@ -24,8 +24,8 @@ constexpr unsigned BUFFER_MAX = -1;
  */
 template <class T>
 class ImageBuffer {
-	typedef typename std::conditional<std::is_const<T>::value, const void, void>::type void_pointer;
-	typedef typename std::conditional<std::is_const<T>::value, const char, char>::type char_pointer;
+	typedef std::conditional_t<std::is_const<T>::value, const void, void> void_pointer;
+	typedef std::conditional_t<std::is_const<T>::value, const char, char> char_pointer;
 
 	// Use a void pointer to ensure all instantiations are layout compatible.
 	void_pointer *m_data;
@@ -66,7 +66,7 @@ public:
 	 */
 	template <class U>
 	constexpr ImageBuffer(const ImageBuffer<U> &other,
-	                      typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) noexcept :
+	                      std::enable_if_t<std::is_convertible<U *, T *>::value> * = nullptr) noexcept :
 		ImageBuffer{ other.data(), other.stride(), other.mask() }
 	{}
 
@@ -161,7 +161,7 @@ public:
 	 */
 	template <class U>
 	constexpr ColorImageBuffer(const ColorImageBuffer<U> &other,
-	                           typename std::enable_if<std::is_convertible<U *, T *>::value>::type * = nullptr) noexcept :
+	                           std::enable_if_t<std::is_convertible<U *, T *>::value> * = nullptr) noexcept :
 		ColorImageBuffer{ other[0], other[1], other[2], other[3] }
 	{}
 

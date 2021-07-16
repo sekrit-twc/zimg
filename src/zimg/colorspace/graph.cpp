@@ -18,7 +18,7 @@ namespace {
 template <class T>
 class EnumRange {
 	static_assert(std::is_enum<T>::value, "not an enum");
-	typedef typename std::underlying_type<T>::type integer_type;
+	typedef std::underlying_type_t<T> integer_type;
 
 	class iterator {
 		T x;

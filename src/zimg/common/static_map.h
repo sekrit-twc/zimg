@@ -100,21 +100,21 @@ public:
 	size_type count(const Key &key) const;
 	// (2) Returns the number of elements with key that compares equivalent to the value |x|.
 	template <class K>
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, size_type>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, size_type>
 	count(const K &key) const;
 
 	// (1) Finds an element with key equivalent to |key|.
 	const_iterator find(const Key &key) const;
 	// (2) Finds an element with key that compares equivalent to the value |x|.
 	template <class K>
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, const_iterator>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, const_iterator>
 	find(const K &x) const;
 
 	// (1) Compares the keys to |key|.
 	std::pair<const_iterator, const_iterator> equal_range(const Key &key) const;
 	// (2) Compares the keys to the value |x|.
 	template <class K>
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, std::pair<const_iterator, const_iterator>>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, std::pair<const_iterator, const_iterator>>
 	equal_range(const K &x) const;
 
 	// Returns the function object that compares the keys.
@@ -379,7 +379,7 @@ auto static_map<Key, T, N, Compare>::count(const Key &key) const -> size_type
 template <class Key, class T, std::size_t N, class Compare>
 template <class K>
 auto static_map<Key, T, N, Compare>::count(const K &x) const ->
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, size_type>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, size_type>
 {
 	auto range = equal_range(x);
 	return range.second - range.first;
@@ -416,7 +416,7 @@ auto static_map<Key, T, N, Compare>::find(const Key &key) const -> const_iterato
 template <class Key, class T, std::size_t N, class Compare>
 template <class K>
 auto static_map<Key, T, N, Compare>::find(const K &x) const ->
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, const_iterator>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, const_iterator>
 {
 	const_iterator it = std::lower_bound(begin(), end(), x, xcompare(key_comp()));
 	key_compare comp = key_comp();
@@ -461,7 +461,7 @@ auto static_map<Key, T, N, Compare>::equal_range(const Key &key) const -> std::p
 template <class Key, class T, std::size_t N, class Compare>
 template <class K>
 auto static_map<Key, T, N, Compare>::equal_range(const K &x) const ->
-	typename std::enable_if<_static_map_is_transparent<Compare, K>::value, std::pair<const_iterator, const_iterator>>::type
+	std::enable_if_t<_static_map_is_transparent<Compare, K>::value, std::pair<const_iterator, const_iterator>>
 {
 	const_iterator first = std::lower_bound(begin(), end(), x, xcompare(key_comp()));
 	const_iterator last = std::upper_bound(first, end(), x, xcompare(key_comp()));

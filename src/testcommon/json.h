@@ -75,16 +75,13 @@ public:
 		BOOL_,
 	};
 private:
-#if defined(__GNUC__) && !(__GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ >= 1))
-	typedef std::aligned_storage<64>::type union_type;
-#else
-	typedef std::aligned_union<0,
+	typedef std::aligned_union_t<0,
 		std::nullptr_t,
 		double,
 		std::string,
 		Array,
-		Object>::type union_type;
-#endif
+		Object
+	> union_type;
 
 	tag_type m_tag;
 	union_type m_union;
@@ -122,7 +119,7 @@ public:
 	explicit Value(Object val) : m_tag{ OBJECT } { construct(std::move(val)); }
 	explicit Value(bool val) noexcept : m_tag{ BOOL_ } { construct(val); }
 
-	template <class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
+	template <class T, class = std::enable_if_t<std::is_integral<T>::value>>
 	explicit Value(T val) noexcept : Value{ static_cast<double>(val) } {}
 
 	Value(const Value &other);

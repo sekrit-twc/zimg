@@ -447,7 +447,7 @@ public:
 		if (cursor >= last)
 			return;
 
-		std::aligned_storage<sizeof(ImageBuffer<const void>), alignof(ImageBuffer<const void>)>::type src[PLANE_NUM];
+		std::aligned_union_t<0, ImageBuffer<const void>> src[PLANE_NUM];
 		const ImageBuffer<void> *dst = state->get_buffer(cache_id());
 		ExecutionState::node_state *node_state = state->get_node_state(id());
 		void *tmp = state->get_shared_tmp();

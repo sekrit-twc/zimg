@@ -11,10 +11,10 @@
 namespace zimg {
 
 template <class From, class To, class T = void>
-using _enable_if_convertible_t = typename std::enable_if<std::is_convertible<From, To>::value, T>::type;
+using _enable_if_convertible_t = std::enable_if_t<std::is_convertible<From, To>::value, T>;
 
 template <class T, class U>
-using _common_type_t = typename std::common_type<T, U>::type;
+using _common_type_t = std::common_type_t<T, U>;
 
 // Integer wrapper that throws on overflow.
 template <class T>
