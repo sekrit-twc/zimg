@@ -98,13 +98,14 @@ void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT e
 	U *dst_p = static_cast<U *>(dst);
 
 	float err_left = error_cur[0];
-	float err_top_right = error_top[1 + 1];
+	float err_top_right;
 	float err_top = error_top[0 + 1];
 	float err_top_left = error_top[0];
 
 	for (unsigned j = 0; j < width; ++j) {
 		// Error array is padded by one on each side.
 		unsigned j_err = j + 1;
+		err_top_right = error_top[j_err + 1];
 
 		float x = static_cast<float>(src_p[j]) * scale + offset;
 		float err;
@@ -124,7 +125,6 @@ void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT e
 		err_left = err;
 		err_top_left = err_top;
 		err_top = err_top_right;
-		err_top_right = error_top[j_err + 2];
 	}
 }
 
