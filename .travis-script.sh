@@ -22,4 +22,5 @@ fi
 make clean
 make "-j${NPROC}"
 make "-j${NPROC}" test/unit_test
+./testapp cpuinfo
 ./test/unit_test
