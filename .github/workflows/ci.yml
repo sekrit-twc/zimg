@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_gcc_legacy:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - run: sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+    - run: sudo apt install g++-5
+    - run: ./.travis-script.sh
+      env:
+        CC: gcc-5
+        CXX: g++-5
+
+  build_gcc:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - run: sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+    - run: sudo apt install g++-11
+    - run: ./.travis-script.sh
+      env:
+        CC: gcc-11
+        CXX: g++-11
+
+  build_clang_san:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - run: curl 'https://apt.llvm.org/llvm-snapshot.gpg.key' | sudo apt-key add -
+    - run: sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+    - run: sudo apt-add-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main'
+    - run: sudo apt install clang-12 g++-11
+    - run: ./.travis-script.sh
+      env:
+        CC: clang-12
+        CXX: clang++-12
+        CFLAGS: -fsanitize=undefined -fsanitize=address
+        CXXFLAGS: -fsanitize=undefined -fsanitize=address
+        LSAN_OPTIONS: detect_leaks=0
