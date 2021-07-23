@@ -129,7 +129,7 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 {
 	using zimg::CPUClass;
 
-	static constexpr const zimg::static_map<zimg_cpu_type_e, CPUClass, 19> map{
+	static constexpr const zimg::static_map<zimg_cpu_type_e, CPUClass, 21> map{
 		{ ZIMG_CPU_NONE,           CPUClass::NONE },
 		{ ZIMG_CPU_AUTO,           CPUClass::AUTO },
 		{ ZIMG_CPU_AUTO_64B,       CPUClass::AUTO_64B },
@@ -149,6 +149,8 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_X86_AVX512_CLX, CPUClass::X86_AVX512_CLX },
 		{ ZIMG_CPU_X86_AVX512_PMC, CPUClass::X86_AVX512 },
 		{ ZIMG_CPU_X86_AVX512_SNC, CPUClass::X86_AVX512_CLX },
+		{ ZIMG_CPU_X86_AVX512_WLC, CPUClass::X86_AVX512_CLX },
+		{ ZIMG_CPU_X86_AVX512_GLC, CPUClass::X86_AVX512_CLX },
 #elif defined(ZIMG_ARM)
 		{ ZIMG_CPU_ARM_NEON_VFPv3, CPUClass::NONE },
 		{ ZIMG_CPU_ARM_NEON_VFPv4, CPUClass::ARM_NEON },
