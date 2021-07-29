@@ -43,6 +43,7 @@ void show_x86_info()
 	std::cout << "AVX-512 VPOPCNTDQ:    " << yes_no(caps.avx512vpopcntdq) << '\n';
 	std::cout << "AVX-512 VP2INTERSECT: " << yes_no(caps.avx512vp2intersect) << '\n';
 	std::cout << "AVX-512 FP16:         " << yes_no(caps.avx512fp16) << '\n';
+	std::cout << "AVX-512 BF16:         " << yes_no(caps.avx512bf16) << '\n';
 	std::cout << "XOP:    " << yes_no(caps.xop) << '\n';
 	std::cout << "Piledriver: " << yes_no(caps.piledriver) << '\n';
 	std::cout << "Zen1:   " << yes_no(caps.zen1) << '\n';

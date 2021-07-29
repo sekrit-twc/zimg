@@ -65,6 +65,8 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	X86Capabilities caps = { 0 };
 	unsigned long long xcr0 = 0;
 	int regs[4] = { 0 };
+	int xmmymm = 0;
+	int zmm = 0;
 
 	do_cpuid(regs, 1, 0);
 	caps.sse      = !!(regs[3] & (1U << 25));
@@ -76,22 +78,25 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	caps.sse42    = !!(regs[2] & (1U << 20));
 
 	// osxsave
-	if (regs[2] & (1U << 27))
+	if (regs[2] & (1U << 27)) {
 		xcr0 = do_xgetbv(0);
+		xmmymm = (xcr0 & 0x06) == 0x06;
+		zmm = (xcr0 & 0xE0) == 0xE0;
+	}
 
 	// XMM and YMM state.
-	if ((xcr0 & 0x06) == 0x06) {
+	if (xmmymm) {
 		caps.avx  = !!(regs[2] & (1U << 28));
 		caps.f16c = !!(regs[2] & (1U << 29));
 	}
 
 	do_cpuid(regs, 7, 0);
-	if ((xcr0 & 0x06) == 0x06) {
+	if (xmmymm) {
 		caps.avx2 = !!(regs[1] & (1U << 5));
 	}
 
 	// ZMM state.
-	if ((xcr0 & 0xE0) == 0xE0) {
+	if (zmm) {
 		caps.avx512f            = !!(regs[1] & (1U << 16));
 		caps.avx512dq           = !!(regs[1] & (1U << 17));
 		caps.avx512ifma         = !!(regs[1] & (1U << 21));
@@ -105,6 +110,11 @@ X86Capabilities do_query_x86_capabilities() noexcept
 		caps.avx512vpopcntdq    = !!(regs[2] & (1U << 14));
 		caps.avx512vp2intersect = !!(regs[3] & (1U << 8));
 		caps.avx512fp16         = !!(regs[3] & (1U << 23));
+	}
+
+	do_cpuid(regs, 7, 1);
+	if (zmm) {
+		caps.avx512bf16         = !!(regs[0] & (1U << 5));
 	}
 
 	// Extended processor info.

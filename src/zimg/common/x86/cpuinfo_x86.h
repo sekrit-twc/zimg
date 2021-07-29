@@ -36,6 +36,7 @@ struct X86Capabilities {
 	unsigned avx512vpopcntdq    : 1;
 	unsigned avx512vp2intersect : 1;
 	unsigned avx512fp16         : 1;
+	unsigned avx512bf16         : 1;
 	/* AMD architectures needing workarounds. */
 	unsigned xop : 1;
 	unsigned piledriver : 1;
