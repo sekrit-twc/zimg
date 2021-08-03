@@ -27,7 +27,17 @@ public:
 	{
 		zassert_d(width <= pixel_max_width(PixelType::FLOAT), "overflow");
 
-		auto path = get_operation_path(in, out);
+		ColorspaceDefinition csp_in = in;
+		ColorspaceDefinition csp_out = out;
+
+		if (!params.scene_referred) {
+			if (csp_in.transfer == TransferCharacteristics::SMPTE_240M)
+				csp_in.transfer = TransferCharacteristics::REC_709;
+			if (csp_out.transfer == TransferCharacteristics::SMPTE_240M)
+				csp_out.transfer = TransferCharacteristics::REC_709;
+		}
+
+		auto path = get_operation_path(csp_in, csp_out);
 		zassert(!path.empty(), "empty path");
 		zassert(path.size() <= 6, "too many operations");
 
