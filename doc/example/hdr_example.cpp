@@ -58,10 +58,14 @@ struct Arguments {
 	double luminance;
 	uint8_t mask_key[3];
 	char fast;
+	char hlg;
+	char wcg;
 };
 
 const ArgparseOption program_switches[] = {
 	{ OPTION_FLAG,   "f", "fast",      offsetof(Arguments, fast),      nullptr, "use fast gamma functions" },
+	{ OPTION_FLAG,   "g", "hlg",       offsetof(Arguments, hlg),       nullptr, "use HLG transfer function (default: PQ)" },
+	{ OPTION_FLAG,   "w", "wcg",       offsetof(Arguments, wcg),       nullptr, "use wide color gamut (default: true)" },
 	{ OPTION_FLOAT,  "l", "luminance", offsetof(Arguments, luminance), nullptr, "legacy peak brightness (cd/m^2)" },
 	{ OPTION_USER1,  "k", "key",       offsetof(Arguments, mask_key),  decode_mask_key, "HDR color key (RRGGBB hex string)" },
 	{ OPTION_STRING, "m", "mask",      offsetof(Arguments, hdrpath),   nullptr, "HDR difference mask" },
@@ -247,7 +251,7 @@ void execute(const Arguments &args)
 	src_format.subsample_h = 1;
 	src_format.color_family = ZIMG_COLOR_YUV;
 	src_format.matrix_coefficients = ZIMG_MATRIX_BT2020_NCL;
-	src_format.transfer_characteristics = ZIMG_TRANSFER_ST2084;
+	src_format.transfer_characteristics = args.hlg ? ZIMG_TRANSFER_ARIB_B67 : ZIMG_TRANSFER_ST2084;
 	src_format.color_primaries = ZIMG_PRIMARIES_BT2020;
 	src_format.depth = 10;
 	src_format.pixel_range = ZIMG_RANGE_LIMITED;
@@ -260,7 +264,7 @@ void execute(const Arguments &args)
 	linear_format.color_family = ZIMG_COLOR_RGB;
 	linear_format.matrix_coefficients = ZIMG_MATRIX_RGB;
 	linear_format.transfer_characteristics = ZIMG_TRANSFER_LINEAR;
-	linear_format.color_primaries = ZIMG_PRIMARIES_BT709;
+	linear_format.color_primaries = args.wcg ? ZIMG_PRIMARIES_BT2020 : ZIMG_PRIMARIES_BT709;
 
 	// HDR10 RGB corresponding to above.
 	zimgxx::zimage_format rgb_format;
@@ -269,7 +273,7 @@ void execute(const Arguments &args)
 	rgb_format.pixel_type = ZIMG_PIXEL_WORD;
 	rgb_format.color_family = ZIMG_COLOR_RGB;
 	rgb_format.matrix_coefficients = ZIMG_MATRIX_RGB;
-	rgb_format.transfer_characteristics = ZIMG_TRANSFER_ST2084;
+	rgb_format.transfer_characteristics = args.hlg ? ZIMG_TRANSFER_ARIB_B67 : ZIMG_TRANSFER_ST2084;
 	rgb_format.color_primaries = ZIMG_PRIMARIES_BT2020;
 	rgb_format.depth = 10;
 	rgb_format.pixel_range = ZIMG_RANGE_FULL;
@@ -282,7 +286,7 @@ void execute(const Arguments &args)
 	sdr_format.color_family = ZIMG_COLOR_RGB;
 	sdr_format.matrix_coefficients = ZIMG_MATRIX_RGB;
 	sdr_format.transfer_characteristics = ZIMG_TRANSFER_BT709;
-	sdr_format.color_primaries = ZIMG_PRIMARIES_BT709;
+	sdr_format.color_primaries = args.wcg ? ZIMG_PRIMARIES_BT2020 : ZIMG_PRIMARIES_BT709;
 	sdr_format.depth = 8;
 	sdr_format.pixel_range = ZIMG_RANGE_FULL;
 
