@@ -355,6 +355,7 @@
     <ClInclude Include="..\..\src\zimg\unresize\bilinear.h" />
     <ClInclude Include="..\..\src\zimg\unresize\unresize.h" />
     <ClInclude Include="..\..\src\zimg\unresize\unresize_impl.h" />
+    <ClInclude Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
@@ -517,6 +518,8 @@
     <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_sse.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

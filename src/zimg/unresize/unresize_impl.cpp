@@ -6,6 +6,10 @@
 #include "common/zassert.h"
 #include "unresize_impl.h"
 
+#if defined(ZIMG_X86)
+  #include "x86/unresize_impl_x86.h"
+#endif
+
 namespace zimg {
 namespace unresize {
 
@@ -212,6 +216,12 @@ std::unique_ptr<graph::ImageFilter> UnresizeImplBuilder::create() const
 
 	unsigned up_dim = horizontal ? up_width : up_height;
 	BilinearContext context = create_bilinear_context(orig_dim, up_dim, shift);
+
+#if defined(ZIMG_X86)
+	ret = horizontal ?
+		create_unresize_impl_h_x86(context, up_height, type, cpu) :
+		create_unresize_impl_v_x86(context, up_width, type, cpu);
+#endif
 
 	if (!ret && horizontal)
 		ret = std::make_unique<UnresizeImplH_C>(context, up_height, type);

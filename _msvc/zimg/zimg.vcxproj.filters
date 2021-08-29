@@ -103,6 +103,12 @@
     <Filter Include="Source Files\colorspace\arm">
       <UniqueIdentifier>{b6dc8560-89cc-4434-b557-eb6ea8080f53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\unresize\x86">
+      <UniqueIdentifier>{b6b2c97d-9f57-4968-b38d-a3d87572c5ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\unresize\x86">
+      <UniqueIdentifier>{e0ee2789-00f2-4c5f-b7cc-a94be9b4b1dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -284,6 +290,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\make_array.h">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.h">
+      <Filter>Header Files\unresize\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -481,6 +490,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_neon.cpp">
       <Filter>Source Files\colorspace\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.cpp">
+      <Filter>Source Files\unresize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_sse.cpp">
+      <Filter>Source Files\unresize\x86</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

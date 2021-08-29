@@ -174,12 +174,15 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/depth/x86/dither_x86.h \
 	src/zimg/depth/x86/f16c_x86.h \
 	src/zimg/resize/x86/resize_impl_x86.cpp \
-	src/zimg/resize/x86/resize_impl_x86.h
+	src/zimg/resize/x86/resize_impl_x86.h \
+	src/zimg/unresize/x86/unresize_impl_x86.cpp \
+	src/zimg/unresize/x86/unresize_impl_x86.h
 
 
 libsse_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_sse.cpp \
-	src/zimg/resize/x86/resize_impl_sse.cpp
+	src/zimg/resize/x86/resize_impl_sse.cpp \
+	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
 libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
