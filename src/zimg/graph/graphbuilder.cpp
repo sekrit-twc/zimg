@@ -702,7 +702,7 @@ private:
 
 		if (params.unresize) {
 			if (src_plane.width != src_plane.active_width || src_plane.height != src_plane.active_height ||
-			    dst_plane.width != dst_plane.active_height || dst_plane.height != dst_plane.active_height)
+			    dst_plane.width != dst_plane.active_width || dst_plane.height != dst_plane.active_height)
 			{
 				error::throw_<error::ResamplingNotAvailable>("unresize not supported for for given subregion");
 			}
