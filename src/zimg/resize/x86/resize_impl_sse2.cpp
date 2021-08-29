@@ -488,7 +488,7 @@ public:
 		auto range = get_required_col_range(left, right);
 
 		try {
-			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 8) + 8) * sizeof(uint16_t) * 8;
+			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 8) - floor_n(range.first, 8)) * sizeof(uint16_t) * 8;
 			return size.get();
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();

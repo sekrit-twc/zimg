@@ -1175,7 +1175,7 @@ public:
 		auto range = get_required_col_range(left, right);
 
 		try {
-			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 16) + 16) * sizeof(uint16_t) * 16;
+			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 16) - floor_n(range.first, 16)) * sizeof(uint16_t) * 16;
 			return size.get();
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
@@ -1233,7 +1233,7 @@ public:
 		auto range = get_required_col_range(left, right);
 
 		try {
-			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 8) + 8) * sizeof(pixel_type) * 8;
+			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 8) - floor_n(range.first, 8)) * sizeof(pixel_type) * 8;
 			return size.get();
 		} catch (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
