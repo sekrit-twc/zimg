@@ -5,8 +5,10 @@
 
 # MSVC files.
 *.db
+*.idb
 *.opendb
 *.opensdf
+*.pdb
 *.sdf
 *.suo
 *.user
