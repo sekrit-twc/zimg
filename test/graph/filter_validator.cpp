@@ -13,6 +13,8 @@
 
 #include "gtest/gtest.h"
 
+#include <endian.h>
+
 extern "C" {
   #include "sha1/sha1.h"
 }
@@ -40,7 +42,13 @@ void hash_buffer(const AuditBuffer<T> &buf, unsigned p, unsigned width, unsigned
 
 	for (unsigned i = 0; i < height; ++i) {
 		const unsigned char *ptr = static_cast<const unsigned char *>(image_buffer[p][i]);
+#if (__BYTE_ORDER == __LITTLE_ENDIAN)
 		SHA1Update(&sha_ctx, ptr, width * sizeof(T));
+#else
+		for (unsigned j = 0; j < width; j++)
+			for (int k = sizeof(T) - 1; k >= 0; k--)
+				SHA1Update(&sha_ctx, ptr + (j * sizeof(T)) + k, 1);
+#endif
 	}
 
 	SHA1Final(digest, &sha_ctx);
