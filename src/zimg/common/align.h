@@ -40,7 +40,7 @@ constexpr T floor_n(T x, unsigned n) { return x & ~static_cast<T>(n - 1); }
  */
 template <class T>
 struct AlignmentOf {
-	static constexpr unsigned value = ALIGNMENT / sizeof(T);
+	static constexpr unsigned value = ALIGNMENT >= sizeof(T) ? ALIGNMENT / sizeof(T) : 1;
 };
 
 } // namespace zimg
