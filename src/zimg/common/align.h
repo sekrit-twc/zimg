@@ -39,7 +39,7 @@ constexpr T floor_n(T x, unsigned n) { return x & ~static_cast<T>(n - 1); }
  * @tparam T type of object
  */
 template <class T>
-constexpr unsigned AlignmentOf = ALIGNMENT / sizeof(T);
+constexpr unsigned AlignmentOf = ALIGNMENT >= sizeof(T) ? ALIGNMENT / sizeof(T) : 1;
 
 } // namespace zimg
 
