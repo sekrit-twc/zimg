@@ -15,8 +15,8 @@ constexpr int ALIGNMENT_RELAXED = 32;
 constexpr int ALIGNMENT = 16;
 constexpr int ALIGNMENT_RELAXED = 16;
 #else
-constexpr int ALIGNMENT = sizeof(long double);
-constexpr int ALIGNMENT_RELAXED = sizeof(long double);
+constexpr int ALIGNMENT = alignof(long double);
+constexpr int ALIGNMENT_RELAXED = alignof(long double);
 #endif
 
 /**
