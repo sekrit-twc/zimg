@@ -3,9 +3,10 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = $(CONFIG_SUBDIRS)
 
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
-commonflags = -O2 $(warningflags) $(DEBUGCFLAGS)
+commonflags = -O2 $(warningflags) $(DEBUGCFLAGS) $(PTHREAD_CFLAGS)
 AM_CXXFLAGS = -std=$(CXXSTD) $(commonflags)
 AM_CFLAGS = -std=c89 $(commonflags)
+LDADD = $(PTHREAD_LIBS)
 
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -286,8 +287,7 @@ doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
 
 doc_example_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
 doc_example_tile_example_SOURCES = doc/example/tile_example.cpp
-doc_example_tile_example_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
-doc_example_tile_example_LDADD = $(PTHREAD_LIBS) $(EXAMPLE_LDADD)
+doc_example_tile_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 
@@ -314,8 +314,7 @@ testapp_SOURCES = \
 	src/testapp/utils.cpp \
 	src/testapp/utils.h
 
-testapp_CXXFLAGS = $(AM_CXXFLAGS) $(PTHREAD_CFLAGS)
-testapp_LDADD = $(PTHREAD_LIBS) libtestcommon.la libzimg_internal.la
+testapp_LDADD = libtestcommon.la libzimg_internal.la
 endif # TESTAPP
 
 
