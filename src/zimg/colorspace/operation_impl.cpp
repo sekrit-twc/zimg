@@ -132,13 +132,18 @@ public:
 			float r = src[0][i];
 			float g = src[1][i];
 			float b = src[2][i];
+			float ys;
 
-			float ys = std::max(m_kr * r + m_kg * g + m_kb * b, FLT_MIN);
+			r = arib_b67_inverse_oetf(r);
+			g = arib_b67_inverse_oetf(g);
+			b = arib_b67_inverse_oetf(b);
+
+			ys = std::max(m_kr * r + m_kg * g + m_kb * b, FLT_MIN);
 			ys = zimg_x_powf(ys, gamma - 1.0f);
 
-			r = arib_b67_inverse_oetf(r * ys);
-			g = arib_b67_inverse_oetf(g * ys);
-			b = arib_b67_inverse_oetf(b * ys);
+			r = r * ys;
+			g = g * ys;
+			b = b * ys;
 
 			dst[0][i] = r * m_scale;
 			dst[1][i] = g * m_scale;
