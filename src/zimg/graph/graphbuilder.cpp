@@ -708,8 +708,8 @@ private:
 			}
 		}
 
-		double scale_w = static_cast<double>(dst_plane.width) / src_plane.width;
-		double scale_h = static_cast<double>(dst_plane.height) / src_plane.height;
+		double scale_w = static_cast<double>(dst_plane.active_width) / src_plane.active_width;
+		double scale_h = static_cast<double>(dst_plane.active_height) / src_plane.active_height;
 
 		// Map active region in output image to the corresponding rectangle in input image.
 		double shift_w = src_plane.active_left - dst_plane.active_left / scale_w;

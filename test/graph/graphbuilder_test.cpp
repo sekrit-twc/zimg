@@ -689,3 +689,24 @@ TEST(GraphBuilderTest, test_straight_depth_tile)
 		"depth[3]: [3/32 l:l] => [1/16 f:l]",
 	});
 }
+
+TEST(GraphBuilderTest, test_subsample_noop_tile)
+{
+	auto source = make_basic_yuv_state();
+	set_resolution(source, 64, 48);
+	source.subsample_w = 1;
+	source.subsample_h = 1;
+	source.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
+	source.active_width = 32;
+	source.active_height = 24;
+	source.active_left = 32;
+	source.active_top = 24;
+
+	auto target = source;
+	set_resolution(target, 32, 24);
+
+	test_case(source, target, {
+		"resize[0]: [64, 48] => [32, 24] (32.000000, 24.000000, 32.000000, 24.000000)",
+		"resize[1]: [32, 24] => [16, 12] (16.000000, 12.000000, 16.000000, 12.000000)",
+	});
+}
