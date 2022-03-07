@@ -1,6 +1,7 @@
 3.0.4
 colorspace: fix ARIB STD-B67 constant-luminance EOTF (introduced in 2.6)
 common: compilation fixes on esoteric architectures
+graph: fix active region with chroma subsampling
 
 3.0.3
 depth: fix out-of-bounds read in SSE2/AVX2 error diffusion (introduced in 2.5)
