@@ -63,6 +63,8 @@ float inverse_ootf_st2084(float x) noexcept
 
 float rec_709_oetf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < REC709_BETA)
 		x = x * 4.5f;
 	else
@@ -73,6 +75,8 @@ float rec_709_oetf(float x) noexcept
 
 float rec_709_inverse_oetf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < 4.5f * REC709_BETA)
 		x = x / 4.5f;
 	else
@@ -123,6 +127,8 @@ float rec_470bg_inverse_oetf(float x) noexcept
 
 float smpte_240m_oetf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < 4.0f * SMPTE_240M_BETA)
 		x = x / 4.0f;
 	else
@@ -133,6 +139,8 @@ float smpte_240m_oetf(float x) noexcept
 
 float smpte_240m_inverse_oetf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < SMPTE_240M_BETA)
 		x = x * 4.0f;
 	else
@@ -190,6 +198,8 @@ float rec_1886_inverse_eotf(float x) noexcept
 
 float srgb_eotf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < 12.92f * SRGB_BETA)
 		x = x / 12.92f;
 	else
@@ -200,6 +210,8 @@ float srgb_eotf(float x) noexcept
 
 float srgb_inverse_eotf(float x) noexcept
 {
+	x = std::max(x, 0.0f);
+
 	if (x < SRGB_BETA)
 		x = x * 12.92f;
 	else
