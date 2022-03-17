@@ -46,9 +46,9 @@ TEST(ColorspaceConversionAVXTest, test_matrix)
 	using namespace zimg::colorspace;
 
 	const char *expected_sha1[3] = {
-		"0495adab9c82d98e73841e229a9b2041838fc0f2",
-		"ece7edb1118d4b3063ad80f5d8febb6db7e9633a",
-		"73a9ee951c7bde9ae0ada9b90afd1f7ce8b604df"
+		"1d559e4b2812a5940839b064f5bd74bc4fe0a2f9",
+		"b32a33c4bbbf3901f89458f914e6d03cc81f2c1d",
+		"4aadd644fae30cfd2098bb8d2b9f98483c8821fd"
 	};
 	const double expected_snr = INFINITY;
 
