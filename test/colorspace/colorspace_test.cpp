@@ -290,9 +290,9 @@ TEST(ColorspaceConversionTest, test_constant_luminance)
 			"5e3a0a16dfbe0587df7f07675e5899ce8be9f75d"
 		},
 		{
-			"44dbd0902500de97d8fc6023ec7679cc88f9a708",
-			"d117394f9eacaa2775d04f619cd59c348e7bac85",
-			"971601695569eefec58f218ec78e9b94c640afe4"
+			"5f3ff22abf441d3276203390c4d25ff42200a4a2",
+			"4023ac08b9631ba9882b18e30509ffee40bddf1e",
+			"2e7af737cd42a5d38ced36288285d614f2d5d2ad"
 		},
 	};
 
