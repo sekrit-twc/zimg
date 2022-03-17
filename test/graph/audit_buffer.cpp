@@ -222,7 +222,7 @@ void AuditBuffer<T>::random_fill(unsigned first_row, unsigned last_row, unsigned
 		unsigned last_col_plane = last_col << (p ? m_subsample_w : 0);
 
 		bool chroma = (m_buffer_type == AuditBufferType::PLANE && m_format.chroma) ||
-			(m_buffer_type == AuditBufferType::COLOR_RGB && p > 0);
+			(m_buffer_type == AuditBufferType::COLOR_YUV && p > 0);
 
 		for (unsigned i = first_row_plane; i < last_row_plane; ++i) {
 			Mt19937Generator<T> engine{ p, i, first_col_plane, m_format, chroma };

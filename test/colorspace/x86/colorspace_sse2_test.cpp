@@ -49,23 +49,23 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 	const char *expected_sha1[][3] = {
 		{
 			"23d012fcb280f601e2e3c349229d0108e3cd632a",
-			"21f5071b0a817c28295d51ead5137cabc6e0d5c4",
-			"158c4ff0c91c08f82e9fc35a500a1c8166f5ae6b"
+			"7ae186215d5fa45065f7aeac74ab2dc74b556696",
+			"bad84d4e0de8572c81df6d9f91fef05b1576f9e5"
 		},
 		{
 			"74e3ebaea6ed216e6792a186592f70149616d2ca",
-			"a9f8a97a9f51c6be9aab3f48fb9cd51d6c33a605",
-			"b5b101c985b5e6ce6cac6f89c9b8d21085e134a3"
+			"af7e809a82f9075d68696d155022a2b12c7260e5",
+			"d2796151e5d9d01e6aea73d64ac11134424900e8"
 		},
 		{
 			"8206be2ae5e8a0fc003daeec4178189eecf82a13",
-			"6bc5833cbd22f04c1965d230aad2ef8969da24b7",
-			"6538399afe0b9fd55a95608b25c8036e16d658b8"
+			"24843f17600dd7bf9870f5c778549bd96c333427",
+			"26a6b00801b41da17d849e02217bf69add6324a6"
 		},
 		{
 			"a33cd49cc2cf605ef8e80d61133d35660ab0ca5a",
-			"9525b3bad68eb52b6675de13bba15fae35bc9816",
-			"e783d9b01fd6d7ae5c5b65349b3d4739c0e5bc5f"
+			"e411937485a414de43f0f67d2e0105efde153f96",
+			"cd211d2b32dbbcb57c70f095f3e5f9170e468073"
 		},
 	};
 	const double expected_tolinear_snr = 80.0;
