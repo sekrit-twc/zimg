@@ -1,5 +1,6 @@
 3.0.4
 colorspace: fix ARIB STD-B67 constant-luminance EOTF (introduced in 2.6)
+colorspace: filter negative values from sRGB-like transfer functions
 common: compilation fixes on esoteric architectures
 graph: fix active region with chroma subsampling
 
