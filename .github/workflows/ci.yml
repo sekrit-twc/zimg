@@ -46,12 +46,12 @@ jobs:
         submodules: recursive
     - run: curl 'https://apt.llvm.org/llvm-snapshot.gpg.key' | sudo apt-key add -
     - run: sudo apt-add-repository ppa:ubuntu-toolchain-r/test
-    - run: sudo apt-add-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main'
-    - run: sudo apt install clang-12 g++-11
+    - run: sudo apt-add-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
+    - run: sudo apt install clang-14 g++-11
     - run: ./.travis-script.sh
       env:
-        CC: clang-12
-        CXX: clang++-12
+        CC: clang-14
+        CXX: clang++-14
         #CFLAGS: -fsanitize=undefined -fsanitize=address
         #CXXFLAGS: -fsanitize=undefined -fsanitize=address
         #LSAN_OPTIONS: detect_leaks=0
