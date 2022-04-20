@@ -173,7 +173,6 @@
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>
@@ -190,7 +189,6 @@
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>
@@ -207,7 +205,6 @@
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>
@@ -245,7 +242,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>
@@ -265,7 +261,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>
@@ -285,7 +280,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
       <ProgramDataBaseFileName />
     </ClCompile>
     <Link>

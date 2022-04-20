@@ -294,7 +294,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\$(Platform)\lib\$(Configuration)</AdditionalLibraryDirectories>
@@ -310,7 +309,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\$(Platform)\lib\$(Configuration)</AdditionalLibraryDirectories>
@@ -326,7 +324,6 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\test\extra\googletest\$(Platform)\lib\$(Configuration)</AdditionalLibraryDirectories>
@@ -362,7 +359,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -381,7 +377,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -400,7 +395,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
