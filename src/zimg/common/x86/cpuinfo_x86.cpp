@@ -67,6 +67,10 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	int regs[4] = { 0 };
 	int xmmymm = 0;
 	int zmm = 0;
+	int max_feature = 0;
+
+	do_cpuid(regs, 0, 0);
+	max_feature = regs[0];
 
 	do_cpuid(regs, 1, 0);
 	caps.sse      = !!(regs[3] & (1U << 25));
@@ -90,31 +94,33 @@ X86Capabilities do_query_x86_capabilities() noexcept
 		caps.f16c = !!(regs[2] & (1U << 29));
 	}
 
-	do_cpuid(regs, 7, 0);
-	if (xmmymm) {
-		caps.avx2 = !!(regs[1] & (1U << 5));
-	}
+	if (max_feature >= 7) {
+		do_cpuid(regs, 7, 0);
+		if (xmmymm) {
+			caps.avx2 = !!(regs[1] & (1U << 5));
+		}
 
-	// ZMM state.
-	if (zmm) {
-		caps.avx512f            = !!(regs[1] & (1U << 16));
-		caps.avx512dq           = !!(regs[1] & (1U << 17));
-		caps.avx512ifma         = !!(regs[1] & (1U << 21));
-		caps.avx512cd           = !!(regs[1] & (1U << 28));
-		caps.avx512bw           = !!(regs[1] & (1U << 30));
-		caps.avx512vl           = !!(regs[1] & (1U << 31));
-		caps.avx512vbmi         = !!(regs[2] & (1U << 1));
-		caps.avx512vbmi2        = !!(regs[2] & (1U << 6));
-		caps.avx512vnni         = !!(regs[2] & (1U << 11));
-		caps.avx512bitalg       = !!(regs[2] & (1U << 12));
-		caps.avx512vpopcntdq    = !!(regs[2] & (1U << 14));
-		caps.avx512vp2intersect = !!(regs[3] & (1U << 8));
-		caps.avx512fp16         = !!(regs[3] & (1U << 23));
-	}
+		// ZMM state.
+		if (zmm) {
+			caps.avx512f            = !!(regs[1] & (1U << 16));
+			caps.avx512dq           = !!(regs[1] & (1U << 17));
+			caps.avx512ifma         = !!(regs[1] & (1U << 21));
+			caps.avx512cd           = !!(regs[1] & (1U << 28));
+			caps.avx512bw           = !!(regs[1] & (1U << 30));
+			caps.avx512vl           = !!(regs[1] & (1U << 31));
+			caps.avx512vbmi         = !!(regs[2] & (1U << 1));
+			caps.avx512vbmi2        = !!(regs[2] & (1U << 6));
+			caps.avx512vnni         = !!(regs[2] & (1U << 11));
+			caps.avx512bitalg       = !!(regs[2] & (1U << 12));
+			caps.avx512vpopcntdq    = !!(regs[2] & (1U << 14));
+			caps.avx512vp2intersect = !!(regs[3] & (1U << 8));
+			caps.avx512fp16         = !!(regs[3] & (1U << 23));
+		}
 
-	do_cpuid(regs, 7, 1);
-	if (zmm) {
-		caps.avx512bf16         = !!(regs[0] & (1U << 5));
+		do_cpuid(regs, 7, 1);
+		if (zmm) {
+			caps.avx512bf16         = !!(regs[0] & (1U << 5));
+		}
 	}
 
 	// Extended processor info.
