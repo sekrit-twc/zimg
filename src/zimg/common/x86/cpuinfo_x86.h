@@ -23,6 +23,7 @@ struct X86Capabilities {
 	unsigned avx                : 1;
 	unsigned f16c               : 1;
 	unsigned avx2               : 1;
+	unsigned avxvnni            : 1;
 	unsigned avx512f            : 1;
 	unsigned avx512dq           : 1;
 	unsigned avx512ifma         : 1;

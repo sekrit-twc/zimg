@@ -20,16 +20,17 @@ void show_x86_info()
 	const zimg::X86Capabilities caps = zimg::query_x86_capabilities();
 
 	std::cout << "Supported instruction set extensions:\n";
-	std::cout << "SSE:    " << yes_no(caps.sse) << '\n';
-	std::cout << "SSE2:   " << yes_no(caps.sse2) << '\n';
-	std::cout << "SSE3:   " << yes_no(caps.sse3) << '\n';
-	std::cout << "SSSE3:  " << yes_no(caps.ssse3) << '\n';
-	std::cout << "FMA:    " << yes_no(caps.fma) << '\n';
-	std::cout << "SSE4.1: " << yes_no(caps.sse41) << '\n';
-	std::cout << "SSE4.2: " << yes_no(caps.sse42) << '\n';
-	std::cout << "AVX:    " << yes_no(caps.avx) << '\n';
-	std::cout << "F16C:   " << yes_no(caps.f16c) << '\n';
-	std::cout << "AVX2:   " << yes_no(caps.avx2) << '\n';
+	std::cout << "SSE:                  " << yes_no(caps.sse) << '\n';
+	std::cout << "SSE2:                 " << yes_no(caps.sse2) << '\n';
+	std::cout << "SSE3:                 " << yes_no(caps.sse3) << '\n';
+	std::cout << "SSSE3:                " << yes_no(caps.ssse3) << '\n';
+	std::cout << "FMA:                  " << yes_no(caps.fma) << '\n';
+	std::cout << "SSE4.1:               " << yes_no(caps.sse41) << '\n';
+	std::cout << "SSE4.2:               " << yes_no(caps.sse42) << '\n';
+	std::cout << "AVX:                  " << yes_no(caps.avx) << '\n';
+	std::cout << "F16C:                 " << yes_no(caps.f16c) << '\n';
+	std::cout << "AVX2:                 " << yes_no(caps.avx2) << '\n';
+	std::cout << "AVX VNNI:             " << yes_no(caps.avxvnni) << '\n';
 	std::cout << "AVX-512 F:            " << yes_no(caps.avx512f) << '\n';
 	std::cout << "AVX-512 DQ:           " << yes_no(caps.avx512dq) << '\n';
 	std::cout << "AVX-512 IFMA:         " << yes_no(caps.avx512ifma) << '\n';
@@ -44,11 +45,11 @@ void show_x86_info()
 	std::cout << "AVX-512 VP2INTERSECT: " << yes_no(caps.avx512vp2intersect) << '\n';
 	std::cout << "AVX-512 FP16:         " << yes_no(caps.avx512fp16) << '\n';
 	std::cout << "AVX-512 BF16:         " << yes_no(caps.avx512bf16) << '\n';
-	std::cout << "XOP:    " << yes_no(caps.xop) << '\n';
-	std::cout << "Piledriver: " << yes_no(caps.piledriver) << '\n';
-	std::cout << "Zen1:   " << yes_no(caps.zen1) << '\n';
-	std::cout << "Zen2:   " << yes_no(caps.zen2) << '\n';
-	std::cout << "Zen3:   " << yes_no(caps.zen3) << '\n';
+	std::cout << "XOP:                  " << yes_no(caps.xop) << '\n';
+	std::cout << "Piledriver:           " << yes_no(caps.piledriver) << '\n';
+	std::cout << "Zen1:                 " << yes_no(caps.zen1) << '\n';
+	std::cout << "Zen2:                 " << yes_no(caps.zen2) << '\n';
+	std::cout << "Zen3:                 " << yes_no(caps.zen3) << '\n';
 	std::cout << '\n';
 
 	const zimg::X86CacheHierarchy cache = zimg::query_x86_cache_hierarchy();

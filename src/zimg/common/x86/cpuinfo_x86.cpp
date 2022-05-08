@@ -175,6 +175,7 @@ X86Capabilities do_query_x86_capabilities() noexcept
 
 	do_cpuid(regs, 7, 1);
 	if (zmm) {
+		caps.avxvnni            = !!(regs[0] & (1U << 4));
 		caps.avx512bf16         = !!(regs[0] & (1U << 5));
 	}
 
