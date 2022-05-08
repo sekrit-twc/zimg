@@ -60,8 +60,69 @@ unsigned long long do_xgetbv(unsigned ecx)
 #endif
 }
 
+enum { GENUINEINTEL, AUTHENTICAMD, OTHER };
+
+struct X86BasicInfo {
+	unsigned vendor;
+	unsigned max_feature;
+	unsigned max_extended_feature;
+	unsigned family;
+	unsigned model;
+	unsigned stepping;
+};
+
+X86BasicInfo do_query_x86_basic_info() noexcept
+{
+	X86BasicInfo info = { 0 };
+	int regs[4] = { 0 };
+
+	do_cpuid(regs, 0, 1);
+	info.max_feature = regs[0] & 0xFFU;
+	TRACE("max feature #: 0x%x\n", info.max_feature);
+
+	if (regs[1] == 0x756E6547U && regs[3] == 0x49656E69U && regs[2] == 0x6C65746EU) {
+		info.vendor = GENUINEINTEL;
+		TRACE("%s\n", "GenuineIntel");
+	} else if (regs[1] == 0x68747541U && regs[3] == 0x69746E65U && regs[2] == 0x444D4163U) {
+		info.vendor = AUTHENTICAMD;
+		TRACE("%s\n", "AuthenticAMD");
+	} else {
+		info.vendor = OTHER;
+		TRACE("vendor %08x-%08x-%08x\n", regs[0], regs[2], regs[1]);
+	}
+
+	do_cpuid(regs, 1, 0);
+	info.family = (regs[0] >> 8) & 0x0FU;
+	info.model = (regs[0] >> 4) & 0x0FU;
+	info.stepping = regs[0] & 0x0FU;
+
+	if (info.family == 0x0F) {
+		unsigned extended_family = (regs[0] >> 20) & 0xFFU;
+		info.family += extended_family;
+	}
+	if (info.family == 0x06 || info.family == 0x0F) {
+		unsigned extended_model = (regs[0] >> 16) & 0x0FU;
+		info.model += (extended_model) << 4;
+	}
+	TRACE("model %xh family %xh stepping %u\n", info.model, info.family, info.stepping);
+
+	do_cpuid(regs, 0x80000000, 0);
+	info.max_extended_feature = static_cast<unsigned>(regs[0]);
+	TRACE("max extended feature #: 0x%x\n", info.max_extended_feature);
+
+	return info;
+}
+
+X86BasicInfo query_x86_basic_info() noexcept
+{
+	static const X86BasicInfo info = do_query_x86_basic_info();
+	return info;
+}
+
 X86Capabilities do_query_x86_capabilities() noexcept
 {
+	X86BasicInfo info = query_x86_basic_info();
+
 	X86Capabilities caps = { 0 };
 	unsigned long long xcr0 = 0;
 	int regs[4] = { 0 };
@@ -118,23 +179,15 @@ X86Capabilities do_query_x86_capabilities() noexcept
 	}
 
 	// Extended processor info.
-	do_cpuid(regs, 0x80000001U, 0);
-	caps.xop = !!(regs[2] & (1U << 11));
+	if (info.max_extended_feature >= 0x80000001U) {
+		do_cpuid(regs, 0x80000001U, 0);
+		caps.xop = !!(regs[2] & (1U << 11));
+	}
 
 	// Zen1 vs Zen2.
-	do_cpuid(regs, 0, 1);
-	if (regs[1] == 0x68747541U && regs[3] == 0x69746E65U && regs[2] == 0x444D4163U /* AuthenticAMD */) {
-		unsigned model;
-		unsigned family;
-
-		do_cpuid(regs, 1, 0);
-		model  = (regs[0] >> 4) & 0x0FU;
-		family = (regs[0] >> 8) & 0x0FU;
-
-		if (family == 15) {
-			family += ((regs[0] >> 20) & 0x0FU);
-			model  += ((regs[0] >> 16) & 0x0FU) << 4;
-		}
+	if (info.vendor == AUTHENTICAMD) {
+		unsigned model = info.model;
+		unsigned family = info.family;
 
 		caps.piledriver = family == 0x15 && model == 0x02;
 		caps.zen1 = family == 0x17 && model <= 0x2F;
@@ -204,24 +257,25 @@ void do_query_x86_deterministic_cache_parameters(X86CacheHierarchy &cache, int l
 	}
 }
 
-X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
+X86CacheHierarchy do_query_x86_cache_hierarchy_intel() noexcept
 {
+	X86BasicInfo info = query_x86_basic_info();
 	X86CacheHierarchy cache = { 0 };
 	int regs[4];
 
-	if (max_feature < 2)
+	if (info.max_feature < 0x2)
 		return cache;
 
 	// Detect cache size of single-threaded CPU from flags.
-	if (max_feature >= 2 && max_feature < 4)
+	if (info.max_feature >= 0x2 && info.max_feature < 0x4)
 		return cache;
 
 	// Detect cache hierarchy.
-	if (max_feature >= 4)
+	if (info.max_feature >= 0x4)
 		do_query_x86_deterministic_cache_parameters(cache, 4);
 
 	// Detect logical processor count on x2APIC systems.
-	if (max_feature >= 0x0B) {
+	if (info.max_feature >= 0x0B) {
 		unsigned l1d_threads = cache.l1d_threads;
 		unsigned l2_threads = cache.l2_threads;
 		unsigned l3_threads = cache.l3_threads;
@@ -252,24 +306,20 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_intel(int max_feature) noexcept
 	return cache;
 }
 
-X86CacheHierarchy do_query_x86_cache_hierarchy_amd(int max_feature) noexcept
+X86CacheHierarchy do_query_x86_cache_hierarchy_amd() noexcept
 {
+	X86BasicInfo info = query_x86_basic_info();
 	X86CacheHierarchy cache = { 0 };
 	int regs[4];
-	unsigned max_extended_feature;
 
-	do_cpuid(regs, 0x80000000U, 0);
-	max_extended_feature = static_cast<unsigned>(regs[0]);
-	TRACE("max extended feature #: 0x%x\n", max_extended_feature);
-
-	if (max_extended_feature >= 0x80000005U) {
+	if (info.max_extended_feature >= 0x80000005U) {
 		do_cpuid(regs, 0x80000005U, 0);
 		cache.l1d = ((static_cast<unsigned>(regs[2]) >> 24) & 0xFFU) * 1024U;
 		cache.l1d_threads = cache.l1d ? 1 : cache.l1d_threads;
 		TRACE("L1d: %lu\n", cache.l1d);
 	}
 
-	if (max_extended_feature >= 0x80000006U) {
+	if (info.max_extended_feature >= 0x80000006U) {
 		do_cpuid(regs, 0x80000006U, 0);
 		cache.l2 = ((static_cast<unsigned>(regs[2]) >> 16) & 0xFFFFU) * 1024U;
 		cache.l3 = ((static_cast<unsigned>(regs[3]) >> 18) & 0x3FFFU) * 512U * 1024U;
@@ -279,26 +329,21 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_amd(int max_feature) noexcept
 		TRACE("L3: %lu\n", cache.l3);
 	}
 
-	if (max_extended_feature >= 0x80000008U) {
+	if (info.max_extended_feature >= 0x80000008U) {
 		unsigned threads;
-		unsigned family;
 
 		do_cpuid(regs, 0x80000008U, 0);
 		threads = (regs[2] & 0xFFU) + 1;
 		cache.l3_threads = cache.l3 ? threads : cache.l3_threads;
 		TRACE("package threads: %u\n", threads);
 
-		do_cpuid(regs, 1, 0);
-		family = ((static_cast<unsigned>(regs[0]) >> 20) & 0xFFU) + ((static_cast<unsigned>(regs[0]) >> 8) & 0x0FU);
-		TRACE("family %xh\n", family);
-
-		if (family == 0x15)
+		if (info.family == 0x15)
 			cache.l2_threads = 2; // Bulldozer shared L2 cache.
-		else if (family == 0x16)
+		else if (info.family == 0x16)
 			cache.l2_threads = threads; // Jaguar L2 LLC.
 	}
 
-	if (max_extended_feature >= 0x8000001DU)
+	if (info.max_extended_feature >= 0x8000001DU)
 		do_query_x86_deterministic_cache_parameters(cache, 0x8000001DU);
 
 	return cache;
@@ -306,31 +351,13 @@ X86CacheHierarchy do_query_x86_cache_hierarchy_amd(int max_feature) noexcept
 
 X86CacheHierarchy do_query_x86_cache_hierarchy() noexcept
 {
-	enum { GENUINEINTEL, AUTHENTICAMD, OTHER } vendor;
-
+	X86BasicInfo info = query_x86_basic_info();
 	X86CacheHierarchy cache = { 0 };
-	int regs[4] = { 0 };
-	int max_feature;
 
-	do_cpuid(regs, 0, 1);
-	max_feature = regs[0] & 0xFFU;
-	TRACE("max feature #: %d\n", max_feature);
-
-	if (regs[1] == 0x756E6547U && regs[3] == 0x49656E69U && regs[2] == 0x6C65746EU) {
-		vendor = GENUINEINTEL;
-		TRACE("%s\n", "GenuineIntel");
-	} else if (regs[1] == 0x68747541U && regs[3] == 0x69746E65U && regs[2] == 0x444D4163U) {
-		vendor = AUTHENTICAMD;
-		TRACE("%s\n", "AuthenticAMD");
-	} else {
-		vendor = OTHER;
-		TRACE("vendor %08x-%08x-%08x\n", regs[0], regs[2], regs[1]);
-	}
-
-	if (vendor == GENUINEINTEL)
-		cache = do_query_x86_cache_hierarchy_intel(max_feature);
-	else if (vendor == AUTHENTICAMD)
-		cache = do_query_x86_cache_hierarchy_amd(max_feature);
+	if (info.vendor == GENUINEINTEL)
+		cache = do_query_x86_cache_hierarchy_intel();
+	else if (info.vendor == AUTHENTICAMD)
+		cache = do_query_x86_cache_hierarchy_amd();
 
 	TRACE("final hierarchy: L1 %lu / %lu, L2: %lu / %lu, L3: %lu / %lu\n",
 	      cache.l1d, cache.l1d_threads, cache.l2, cache.l2_threads, cache.l3, cache.l3_threads);
