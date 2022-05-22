@@ -9,9 +9,8 @@
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "graph/filtergraph.h"
-#include "graph/graphbuilder.h"
-#include "graph/image_buffer.h"
+#include "graph/filtergraph2.h"
+#include "graph/graphbuilder2.h"
 #include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
@@ -181,46 +180,46 @@ bool translate_pixel_range(zimg_pixel_range_e range)
 	return search_enum_map(map, range, "unrecognized pixel range");
 }
 
-zimg::graph::GraphBuilder::ColorFamily translate_color_family(zimg_color_family_e family)
+zimg::graph::GraphBuilder2::ColorFamily translate_color_family(zimg_color_family_e family)
 {
-	using zimg::graph::GraphBuilder;
+	using zimg::graph::GraphBuilder2;
 
-	static constexpr const zimg::static_map<zimg_color_family_e, GraphBuilder::ColorFamily, 3> map{
-		{ ZIMG_COLOR_GREY, GraphBuilder::ColorFamily::GREY },
-		{ ZIMG_COLOR_RGB,  GraphBuilder::ColorFamily::RGB },
-		{ ZIMG_COLOR_YUV,  GraphBuilder::ColorFamily::YUV },
+	static constexpr const zimg::static_map<zimg_color_family_e, GraphBuilder2::ColorFamily, 3> map{
+		{ ZIMG_COLOR_GREY, GraphBuilder2::ColorFamily::GREY },
+		{ ZIMG_COLOR_RGB,  GraphBuilder2::ColorFamily::RGB },
+		{ ZIMG_COLOR_YUV,  GraphBuilder2::ColorFamily::YUV },
 	};
 	return search_enum_map(map, family, "unrecognized color family");
 }
 
-zimg::graph::GraphBuilder::AlphaType translate_alpha(zimg_alpha_type_e alpha)
+zimg::graph::GraphBuilder2::AlphaType translate_alpha(zimg_alpha_type_e alpha)
 {
-	using zimg::graph::GraphBuilder;
+	using zimg::graph::GraphBuilder2;
 
-	static constexpr const zimg::static_map<zimg_alpha_type_e, GraphBuilder::AlphaType, 3> map{
-		{ ZIMG_ALPHA_NONE,          GraphBuilder::AlphaType::NONE },
-		{ ZIMG_ALPHA_STRAIGHT,      GraphBuilder::AlphaType::STRAIGHT },
-		{ ZIMG_ALPHA_PREMULTIPLIED, GraphBuilder::AlphaType::PREMULTIPLIED },
+	static constexpr const zimg::static_map<zimg_alpha_type_e, GraphBuilder2::AlphaType, 3> map{
+		{ ZIMG_ALPHA_NONE,          GraphBuilder2::AlphaType::NONE },
+		{ ZIMG_ALPHA_STRAIGHT,      GraphBuilder2::AlphaType::STRAIGHT },
+		{ ZIMG_ALPHA_PREMULTIPLIED, GraphBuilder2::AlphaType::PREMULTIPLIED },
 	};
 	return search_enum_map(map, alpha, "unrecognized alpha type");
 }
 
-zimg::graph::GraphBuilder::FieldParity translate_field_parity(zimg_field_parity_e field)
+zimg::graph::GraphBuilder2::FieldParity translate_field_parity(zimg_field_parity_e field)
 {
-	using zimg::graph::GraphBuilder;
+	using zimg::graph::GraphBuilder2;
 
-	static constexpr const zimg::static_map<zimg_field_parity_e, GraphBuilder::FieldParity, 3> map{
-		{ ZIMG_FIELD_PROGRESSIVE, GraphBuilder::FieldParity::PROGRESSIVE },
-		{ ZIMG_FIELD_TOP,         GraphBuilder::FieldParity::TOP },
-		{ ZIMG_FIELD_BOTTOM,      GraphBuilder::FieldParity::BOTTOM },
+	static constexpr const zimg::static_map<zimg_field_parity_e, GraphBuilder2::FieldParity, 3> map{
+		{ ZIMG_FIELD_PROGRESSIVE, GraphBuilder2::FieldParity::PROGRESSIVE },
+		{ ZIMG_FIELD_TOP,         GraphBuilder2::FieldParity::TOP },
+		{ ZIMG_FIELD_BOTTOM,      GraphBuilder2::FieldParity::BOTTOM },
 	};
 	return search_enum_map(map, field, "unrecognized field parity");
 }
 
-std::pair<zimg::graph::GraphBuilder::ChromaLocationW, zimg::graph::GraphBuilder::ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
+std::pair<zimg::graph::GraphBuilder2::ChromaLocationW, zimg::graph::GraphBuilder2::ChromaLocationH> translate_chroma_location(zimg_chroma_location_e chromaloc)
 {
-	typedef zimg::graph::GraphBuilder::ChromaLocationW ChromaLocationW;
-	typedef zimg::graph::GraphBuilder::ChromaLocationH ChromaLocationH;
+	typedef zimg::graph::GraphBuilder2::ChromaLocationW ChromaLocationW;
+	typedef zimg::graph::GraphBuilder2::ChromaLocationH ChromaLocationH;
 
 	// Workaround for std::pair assignment operator missing constexpr.
 	struct chroma_pair {
@@ -385,7 +384,7 @@ zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_b
 	return dst;
 }
 
-void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphBuilder::state *out)
+void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphBuilder2::state *out)
 {
 	if (src.version >= API_VERSION_2_0) {
 		out->width = src.width;
@@ -418,14 +417,14 @@ void import_graph_state_common(const zimg_image_format &src, zimg::graph::GraphB
 		out->alpha = translate_alpha(src.alpha);
 }
 
-std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> import_graph_state(const zimg_image_format &src, const zimg_image_format &dst)
+std::pair<zimg::graph::GraphBuilder2::state, zimg::graph::GraphBuilder2::state> import_graph_state(const zimg_image_format &src, const zimg_image_format &dst)
 {
 	API_VERSION_ASSERT(src.version);
 	API_VERSION_ASSERT(dst.version);
 	zassert_d(src.version == dst.version, "image format versions do not match");
 
-	zimg::graph::GraphBuilder::state src_state{};
-	zimg::graph::GraphBuilder::state dst_state{};
+	zimg::graph::GraphBuilder2::state src_state{};
+	zimg::graph::GraphBuilder2::state dst_state{};
 
 	import_graph_state_common(src, &src_state);
 	import_graph_state_common(dst, &dst_state);
@@ -453,11 +452,11 @@ std::pair<zimg::graph::GraphBuilder::state, zimg::graph::GraphBuilder::state> im
 	return{ src_state, dst_state };
 }
 
-zimg::graph::GraphBuilder::params import_graph_params(const zimg_graph_builder_params &src, std::unique_ptr<zimg::resize::Filter> filters[2])
+zimg::graph::GraphBuilder2::params import_graph_params(const zimg_graph_builder_params &src, std::unique_ptr<zimg::resize::Filter> filters[2])
 {
 	API_VERSION_ASSERT(src.version);
 
-	zimg::graph::GraphBuilder::params params{};
+	zimg::graph::GraphBuilder2::params params{};
 
 	if (src.version >= API_VERSION_2_0) {
 		filters[0] = translate_resize_filter(src.resample_filter, src.filter_param_a, src.filter_param_b);
@@ -542,7 +541,7 @@ zimg_error_code_e zimg_filter_graph_get_tmp_size(const zimg_filter_graph *ptr, s
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_tmp_size();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_tmp_size();
 	EX_END
 }
 
@@ -552,7 +551,7 @@ zimg_error_code_e zimg_filter_graph_get_input_buffering(const zimg_filter_graph 
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_input_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_input_buffering();
 	EX_END
 }
 
@@ -562,7 +561,7 @@ zimg_error_code_e zimg_filter_graph_get_output_buffering(const zimg_filter_graph
 	zassert_d(out, "null pointer");
 
 	EX_BEGIN
-	*out = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr)->get_output_buffering();
+	*out = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr)->get_output_buffering();
 	EX_END
 }
 
@@ -575,7 +574,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 	zassert_d(dst, "null pointer");
 
 	EX_BEGIN
-	const zimg::graph::FilterGraph *graph = assert_dynamic_type<const zimg::graph::FilterGraph>(ptr);
+	const zimg::graph::FilterGraph2 *graph = assert_dynamic_type<const zimg::graph::FilterGraph2>(ptr);
 
 	if (graph->requires_64b_alignment()) {
 		POINTER_ALIGNMENT64_ASSERT(src->plane[0].data);
@@ -633,9 +632,9 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 		POINTER_ALIGNMENT_ASSERT(tmp);
 	}
 
-	auto src_buf = import_image_buffer(*src);
-	auto dst_buf = import_image_buffer(*dst);
-	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
+	zimg::graph::ColorImageBuffer<const void> src_buf = import_image_buffer(*src);
+	zimg::graph::ColorImageBuffer<void> dst_buf = import_image_buffer(*dst);
+	graph->process(src_buf, dst_buf, tmp, unpack_cb, unpack_user, pack_cb, pack_user);
 	EX_END
 }
 
@@ -711,9 +710,9 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 	zassert_d(dst_format, "null pointer");
 
 	try {
-		zimg::graph::GraphBuilder::state src_state;
-		zimg::graph::GraphBuilder::state dst_state;
-		zimg::graph::GraphBuilder::params graph_params;
+		zimg::graph::GraphBuilder2::state src_state;
+		zimg::graph::GraphBuilder2::state dst_state;
+		zimg::graph::GraphBuilder2::params graph_params;
 
 		std::unique_ptr<zimg::resize::Filter> filters[2];
 
@@ -721,7 +720,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		if (params)
 			graph_params = import_graph_params(*params, filters);
 
-		zimg::graph::GraphBuilder builder;
+		zimg::graph::GraphBuilder2 builder;
 		return builder.set_source(src_state)
 			.connect(dst_state, params ? &graph_params : nullptr)
 			.complete()

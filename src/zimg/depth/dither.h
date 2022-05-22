@@ -4,6 +4,12 @@
 #define ZIMG_DEPTH_DITHER_H_
 
 #include <memory>
+#include "depth.h"
+
+namespace graphengine {
+class Filter;
+}
+
 
 namespace zimg {
 
@@ -27,6 +33,9 @@ typedef void (*dither_convert_func)(const float *dither, unsigned dither_offset,
 typedef void (*dither_f16c_func)(const void *src, void *dst, unsigned left, unsigned right);
 
 std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+
+
+DepthConversion::result create_dither_ge(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

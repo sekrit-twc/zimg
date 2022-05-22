@@ -6,6 +6,11 @@
 #include <memory>
 #include <utility>
 
+namespace graphengine {
+class Filter;
+}
+
+
 namespace zimg {
 
 enum class CPUClass;
@@ -24,6 +29,7 @@ class Filter;
 
 struct ResizeConversion {
 	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
+	typedef std::pair<std::unique_ptr<graphengine::Filter>, std::unique_ptr<graphengine::Filter>> filter_pair_ge;
 
 	unsigned src_width;
 	unsigned src_height;
@@ -44,6 +50,8 @@ struct ResizeConversion {
 	ResizeConversion(unsigned src_width, unsigned src_height, PixelType type);
 
 	filter_pair create() const;
+
+	filter_pair_ge create_ge() const;
 };
 
 } // namespace resize

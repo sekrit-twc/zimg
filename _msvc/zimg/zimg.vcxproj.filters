@@ -109,6 +109,18 @@
     <Filter Include="Header Files\unresize\x86">
       <UniqueIdentifier>{e0ee2789-00f2-4c5f-b7cc-a94be9b4b1dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\graphengine">
+      <UniqueIdentifier>{05ce6e68-e5f9-4ab9-ae40-f01dea203f60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphengine">
+      <UniqueIdentifier>{cb64ac14-507c-436e-a76a-213165b72000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphengine\x86">
+      <UniqueIdentifier>{4ec37bd3-e1fd-4b92-9d52-d3115aea577d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphengine\x86">
+      <UniqueIdentifier>{a2560677-8928-42fc-9e7f-74d795270ebc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -293,6 +305,36 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.h">
       <Filter>Header Files\unresize\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\cpuinfo.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\filter.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\graph.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\node.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\state.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\types.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.h">
+      <Filter>Header Files\graphengine\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\graphbuilder2.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\basic_filter2.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h">
+      <Filter>Header Files\graph</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -496,6 +538,27 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_sse.cpp">
       <Filter>Source Files\unresize\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\graphengine\graphengine\cpuinfo.cpp">
+      <Filter>Source Files\graphengine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\graphengine\graphengine\graph.cpp">
+      <Filter>Source Files\graphengine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\graphengine\graphengine\node.cpp">
+      <Filter>Source Files\graphengine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.cpp">
+      <Filter>Source Files\graphengine\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\graphbuilder2.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\basic_filter2.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph2.cpp">
+      <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

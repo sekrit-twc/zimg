@@ -5,6 +5,11 @@
 
 #include <memory>
 
+namespace graphengine {
+class Filter;
+}
+
+
 namespace zimg {
 
 enum class CPUClass;
@@ -126,6 +131,8 @@ struct ColorspaceConversion {
 	ColorspaceConversion(unsigned width, unsigned height);
 
 	std::unique_ptr<graph::ImageFilter> create() const;
+
+	std::unique_ptr<graphengine::Filter> create_ge() const;
 };
 
 } // namespace colorspace

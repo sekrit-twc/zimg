@@ -106,6 +106,56 @@ void resize_line_v_f32_c(const FilterContext &filter, const graph::ImageBuffer<c
 }
 
 
+class ResizeImplH_GE_C : public ResizeImplH_GE {
+	PixelType m_type;
+	uint32_t m_pixel_max;
+public:
+	ResizeImplH_GE_C(const FilterContext &filter, unsigned height, PixelType type, unsigned depth) :
+		ResizeImplH_GE(filter, height, type),
+		m_type{ type },
+		m_pixel_max{ static_cast<uint32_t>(1UL << depth) - 1 }
+	{
+		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
+			error::throw_<error::InternalError>("pixel type not supported");
+	}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
+	{
+		if (m_type == PixelType::WORD)
+			resize_line_h_u16_c(m_filter, in->get_line<uint16_t>(i), out->get_line<uint16_t>(i), left, right, m_pixel_max);
+		else
+			resize_line_h_f32_c(m_filter, in->get_line<float>(i), out->get_line<float>(i), left, right);
+	}
+};
+
+class ResizeImplV_GE_C : public ResizeImplV_GE {
+	PixelType m_type;
+	uint32_t m_pixel_max;
+public:
+	ResizeImplV_GE_C(const FilterContext &filter, unsigned width, PixelType type, unsigned depth) :
+		ResizeImplV_GE(filter, width, type),
+		m_type{ type },
+		m_pixel_max{ static_cast<uint32_t>(1UL << depth) - 1 }
+	{
+		if (m_type != PixelType::WORD && m_type != PixelType::FLOAT)
+			error::throw_<error::InternalError>("pixel type not supported");
+	}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
+	{
+		graph::ImageBuffer<const void> src_buf{ in->ptr, in->stride, in->mask };
+		graph::ImageBuffer<void> dst_buf{ out->ptr, out->stride, out->mask };
+
+		if (m_type == PixelType::WORD)
+			resize_line_v_u16_c(m_filter, src_buf.static_buffer_cast<const uint16_t>(), dst_buf.static_buffer_cast<uint16_t>(), i, left, right, m_pixel_max);
+		else
+			resize_line_v_f32_c(m_filter, src_buf.static_buffer_cast<const float>(), dst_buf.static_buffer_cast<float>(), i, left, right);
+	}
+};
+
+
 class ResizeImplH_C : public ResizeImplH {
 	PixelType m_type;
 	int32_t m_pixel_max;
@@ -151,6 +201,74 @@ public:
 };
 
 } // namespace
+
+
+ResizeImplH_GE::ResizeImplH_GE(const FilterContext &filter, unsigned height, PixelType type) :
+	m_desc{},
+	m_filter(filter)
+{
+	zassert_d(m_filter.input_width <= pixel_max_width(type), "overflow");
+	zassert_d(m_filter.filter_rows <= pixel_max_width(type), "overflow");
+
+	m_desc.format = { m_filter.filter_rows, height, pixel_size(type) };
+	m_desc.num_deps = 1;
+	m_desc.num_planes = 1;
+	m_desc.step = 1;
+
+	m_desc.flags.entire_row = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
+}
+
+std::pair<unsigned, unsigned> ResizeImplH_GE::get_row_deps(unsigned i) const noexcept
+{
+	unsigned step = m_desc.step;
+	unsigned last = std::min(i, UINT_MAX - step) + step;
+	return{ i, std::min(last, m_desc.format.height) };
+}
+
+std::pair<unsigned, unsigned> ResizeImplH_GE::get_col_deps(unsigned left, unsigned right) const noexcept
+{
+	if (m_desc.flags.entire_row)
+		return{ 0, m_filter.input_width };
+
+	unsigned left_dep = m_filter.left[left];
+	unsigned right_dep = m_filter.left[right - 1] + m_filter.filter_width;
+	return{ left_dep, right_dep };
+}
+
+
+ResizeImplV_GE::ResizeImplV_GE(const FilterContext &filter, unsigned width, PixelType type) :
+	m_desc{},
+	m_filter(filter),
+	m_unsorted{}
+{
+	zassert_d(width <= pixel_max_width(type), "overflow");
+
+	m_desc.format = { width, filter.filter_rows, pixel_size(type) };
+	m_desc.num_deps = 1;
+	m_desc.num_planes = 1;
+	m_desc.step = 1;
+
+	m_unsorted = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
+}
+
+std::pair<unsigned, unsigned> ResizeImplV_GE::get_row_deps(unsigned i) const noexcept
+{
+	if (m_unsorted)
+		return{ 0, m_filter.input_width };
+
+	unsigned step = m_desc.step;
+	unsigned last = std::min(std::min(i, UINT_MAX - step) + step, m_desc.format.height);
+	unsigned top_dep = m_filter.left[i];
+	unsigned bot_dep = m_filter.left[last - 1];
+
+	zassert_d(bot_dep <= UINT_MAX - m_filter.filter_width, "overflow");
+	return{ top_dep, bot_dep + m_filter.filter_width };
+}
+
+std::pair<unsigned, unsigned> ResizeImplV_GE::get_col_deps(unsigned left, unsigned right) const noexcept
+{
+	return{ left, right };
+}
 
 
 ResizeImplH::ResizeImplH(const FilterContext &filter, const image_attributes &attr) :
@@ -205,7 +323,6 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, const image_attributes &at
 	m_attr(attr),
 	m_is_sorted{ std::is_sorted(m_filter.left.begin(), m_filter.left.end()) }
 {
-	zassert_d(m_filter.input_width <= pixel_max_width(attr.type), "overflow");
 	zassert_d(attr.width <= pixel_max_width(attr.type), "overflow");
 }
 
@@ -285,6 +402,30 @@ std::unique_ptr<graph::ImageFilter> ResizeImplBuilder::create() const
 		ret = std::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
 	if (!ret && !horizontal)
 		ret = std::make_unique<ResizeImplV_C>(filter_ctx, src_width, type, depth);
+
+	return ret;
+}
+
+std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create_ge() const
+{
+	std::unique_ptr<graphengine::Filter> ret;
+
+	unsigned src_dim = horizontal ? src_width : src_height;
+	FilterContext filter_ctx = compute_filter(*filter, src_dim, dst_dim, shift, subwidth);
+
+#if defined(ZIMG_X86)
+	ret = nullptr /*horizontal ?
+		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu)*/;
+#elif defined(ZIMG_ARM)
+	ret = nullptr /*horizontal ?
+		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu)*/;
+#endif
+	if (!ret && horizontal)
+		ret = std::make_unique<ResizeImplH_GE_C>(filter_ctx, src_height, type, depth);
+	if (!ret && !horizontal)
+		ret = std::make_unique<ResizeImplV_GE_C>(filter_ctx, src_width, type, depth);
 
 	return ret;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_GRAPH_FILTERGRAPH2_H_
-#define ZIMG_GRAPH_FILTERGRAPH2_H_
+#ifndef ZIMG_GRAPH_FILTERGRAPH_H_
+#define ZIMG_GRAPH_FILTERGRAPH_H_
 
 #include <array>
 #include <memory>
@@ -202,4 +202,4 @@ public:
 } // namespace graph
 } // namespace zimg
 
-#endif // ZIMG_GRAPH_FILTERGRAPH2_H_
+#endif // ZIMG_GRAPH_FILTERGRAPH_H_
