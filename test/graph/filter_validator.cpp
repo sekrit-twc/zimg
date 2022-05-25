@@ -117,7 +117,7 @@ double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigne
 {
 	auto ref_buf = ref.as_read_buffer();
 	auto test_buf = test.as_read_buffer();
-	double snr = 0.0;
+	double snr = INFINITY;
 
 	for (unsigned p = 0; p < (color ? 3U : 1U); ++p) {
 		double signal_plane = 0.0;
@@ -132,7 +132,7 @@ double snr_buffer(const AuditBuffer<T> &ref, const AuditBuffer<T> &test, unsigne
 			noise_plane += snr_pair.second;
 		}
 
-		snr = std::max(snr, signal_plane / noise_plane);
+		snr = std::min(snr, signal_plane / noise_plane);
 	}
 
 	return 10.0 * std::log10(snr);
