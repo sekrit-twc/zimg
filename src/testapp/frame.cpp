@@ -4,11 +4,13 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "graph/filtergraph.h"
-#include "graph/image_filter.h"
+#include "graph/filtergraph2.h"
+#include "graphengine/filter.h"
+#include "graphengine/graph.h"
 #include "depth/depth.h"
 
 #include "frame.h"
@@ -253,45 +255,55 @@ public:
 	}
 };
 
-std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
-	using zimg::graph::invalid_id;
+	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
+	auto graph = std::make_unique<graphengine::Graph>();
 
-	bool color = spec.planes >= 3;
+	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		planes[p].width = width >> (p == 1 || p == 2 ? spec.subsample_w : 0);
+		planes[p].height = height >> (p == 1 || p == 2 ? spec.subsample_h : 0);
+		planes[p].bytes_per_sample = zimg::pixel_size(type);
+	}
 
-	auto graph = std::make_unique<zimg::graph::FilterGraph>();
-	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
-	zimg::graph::node_id id_u = color ? id_y : invalid_id;
-	zimg::graph::node_id id_v = color ? id_y : invalid_id;
+	graphengine::node_id src_id = graph->add_source(spec.planes, planes.data());
+
+	std::vector<graphengine::node_dep_desc> ids(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		ids[p] = { src_id, p };
+	}
 
 	if (type != spec.type) {
-		zimg::PixelFormat src_format{ spec.type };
-		zimg::PixelFormat dst_format{ type };
-		src_format.fullrange = fullrange;
-		dst_format.fullrange = fullrange;
+		{
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width, height }
+				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
+				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, false })
+				.set_planes({ true, false, false, false })
+				.create_ge();
+			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
+		}
 
-		auto conv = zimg::depth::DepthConversion{ width, height }
-			.set_pixel_in(src_format)
-			.set_pixel_out(dst_format);
+		if (spec.planes > 1) {
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
+				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
+				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, spec.is_yuv })
+				.set_planes({ false, true, true, false })
+				.create_ge();
 
-		id_y = graph->attach_filter(conv.create(), { id_y, invalid_id, invalid_id, invalid_id }, { true, false, false, false });
-
-		if (color) {
-			src_format.chroma = spec.is_yuv;
-			dst_format.chroma = spec.is_yuv;
-
-			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
-				.set_pixel_in(src_format)
-				.set_pixel_out(dst_format);
-			std::shared_ptr<zimg::graph::ImageFilter> f{ conv.create() };
-
-			id_u = graph->attach_filter(f, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
-			id_v = graph->attach_filter(f, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
+			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
+			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
 		}
 	}
 
-	graph->set_output({ id_y, id_u, id_v, -1 });
-	return graph;
+	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
+	return std::make_unique<zimg::graph::FilterGraph2>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
@@ -302,7 +314,7 @@ ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned 
 	MappedImageFile mapped_image{ spec, width, height, false };
 	ImageFrame out_image{ width, height, type, spec.planes, spec.is_yuv, spec.subsample_w, spec.subsample_h };
 
-	graph->process(mapped_image.as_read_buffer(), out_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+	graph->process(mapped_image.as_read_buffer(), out_image.as_write_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 
 	return out_image;
 }
@@ -315,7 +327,7 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
+	zimg::graph::ColorImageBuffer<void> line_buffer;
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
@@ -351,8 +363,8 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
 	               out_image.as_write_buffer(),
 	               tmp.data(),
-	               { cb, &callback_context },
-	               nullptr);
+	               cb, &callback_context,
+	               nullptr, nullptr);
 
 	return out_image;
 }
@@ -370,7 +382,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
+	zimg::graph::ColorImageBuffer<void> line_buffer;
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(width), 0 };
@@ -407,8 +419,8 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
 	               out_image.as_write_buffer(),
 	               tmp.data(),
-	               { cb, &callback_context },
-	               nullptr);
+	               cb, &callback_context,
+	               nullptr, nullptr);
 
 	return out_image;
 }
@@ -429,46 +441,56 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
-                                                            unsigned depth_in, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
+                                                             unsigned depth_in, bool fullrange)
 {
-	using zimg::graph::invalid_id;
+	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
+	auto graph = std::make_unique<graphengine::Graph>();
 
-	bool color = spec.planes >= 3;
+	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		planes[p].width = width >> (p == 1 || p == 2 ? spec.subsample_w : 0);
+		planes[p].height = height >> (p == 1 || p == 2 ? spec.subsample_h : 0);
+		planes[p].bytes_per_sample = zimg::pixel_size(type);
+	}
 
-	auto graph = std::make_unique<zimg::graph::FilterGraph>();
-	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
-	zimg::graph::node_id id_u = color ? id_y : invalid_id;
-	zimg::graph::node_id id_v = color ? id_y : invalid_id;
+	graphengine::node_id src_id = graph->add_source(spec.planes, planes.data());
+
+	std::vector<graphengine::node_dep_desc> ids(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		ids[p] = { src_id, p };
+	}
 
 	if (type != spec.type || depth_in != zimg::pixel_depth(type)) {
-		zimg::PixelFormat src_format{ type, depth_in };
-		zimg::PixelFormat dst_format{ spec.type };
-		src_format.fullrange = fullrange;
-		dst_format.fullrange = fullrange;
+		{
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width, height }
+				.set_pixel_in({ type, depth_in, fullrange, false })
+				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
+				.set_planes({ true, false, false, false })
+				.create_ge();
+			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
+		}
 
-		auto conv = zimg::depth::DepthConversion{ width, height }
-			.set_pixel_in(src_format)
-			.set_pixel_out(dst_format);
+		if (spec.planes > 1) {
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
+				.set_pixel_in({ type, depth_in, fullrange, spec.is_yuv })
+				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
+				.set_planes({ false, true, true, false })
+				.create_ge();
 
-		id_y = graph->attach_filter(conv.create(), { id_y, invalid_id, invalid_id, invalid_id }, { true, false, false, false });
-
-		if (color) {
-			src_format.chroma = spec.is_yuv;
-			dst_format.chroma = spec.is_yuv;
-
-			auto conv_uv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
-				.set_pixel_in(src_format)
-				.set_pixel_out(dst_format);
-			std::shared_ptr<zimg::graph::ImageFilter> f{ conv_uv.create() };
-
-			id_u = graph->attach_filter(f, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
-			id_v = graph->attach_filter(f, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
+			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
+			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
 		}
 	}
 
-	graph->set_output({ id_y, id_u, id_v, invalid_id });
-	return graph;
+	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
+	return std::make_unique<zimg::graph::FilterGraph2>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
@@ -477,7 +499,7 @@ void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigne
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, frame.width(), frame.height(), true };
-	graph->process(frame.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+	graph->process(frame.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 }
 
 void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
@@ -487,7 +509,7 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
+	zimg::graph::ColorImageBuffer<void> line_buffer;
 	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
@@ -520,7 +542,7 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 		return 0;
 	};
 
-	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, { cb, &callback_context });
+	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, nullptr, cb, &callback_context);
 }
 
 void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
@@ -532,7 +554,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
 	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
+	zimg::graph::ColorImageBuffer<void> line_buffer;
 	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(frame.width()), 0 };
@@ -566,7 +588,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 		return 0;
 	};
 
-	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, { cb, &callback_context });
+	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, nullptr, cb, &callback_context);
 }
 
 } // namespace
