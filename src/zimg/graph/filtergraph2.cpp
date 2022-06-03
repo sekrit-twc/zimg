@@ -39,6 +39,16 @@ unsigned FilterGraph2::get_output_buffering() const
 	return std::min(it->second, UINT_MAX - 1) + 1;
 }
 
+unsigned FilterGraph2::get_tile_width() const
+{
+	return m_graph->get_tile_width(false);
+}
+
+void FilterGraph2::set_tile_width(unsigned tile_width)
+{
+	m_graph->set_tile_width(tile_width);
+}
+
 void FilterGraph2::process(const ColorImageBuffer<const void> &src, const ColorImageBuffer<void> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
 {
 	graphengine::Graph::EndpointConfiguration endpoints{};

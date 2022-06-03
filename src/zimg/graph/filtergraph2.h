@@ -41,6 +41,10 @@ public:
 
 	unsigned get_output_buffering() const;
 
+	unsigned get_tile_width() const;
+
+	void set_tile_width(unsigned tile_width);
+
 	bool requires_64b_alignment() const { return m_requires_64b; }
 
 	void set_requires_64b_alignment() { m_requires_64b = true; }
