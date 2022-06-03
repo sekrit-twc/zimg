@@ -414,9 +414,9 @@ std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create_ge() const
 	FilterContext filter_ctx = compute_filter(*filter, src_dim, dst_dim, shift, subwidth);
 
 #if defined(ZIMG_X86)
-	ret = nullptr /*horizontal ?
-		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
-		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu)*/;
+	ret = horizontal ?
+		create_resize_impl_h_ge_x86(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_ge_x86(filter_ctx, src_width, type, depth, cpu);
 #elif defined(ZIMG_ARM)
 	ret = nullptr /*horizontal ?
 		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :

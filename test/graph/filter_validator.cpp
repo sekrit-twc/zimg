@@ -9,6 +9,7 @@
 #include "common/alloc.h"
 #include "common/pixel.h"
 #include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "depth/quantize.h"
 
 #include "gtest/gtest.h"
@@ -392,6 +393,18 @@ void FilterValidator::validate()
 
 
 bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, const zimg::graph::ImageFilter *filter_b)
+{
+	const auto &tid_a = typeid(*filter_a);
+	const auto &tid_b = typeid(*filter_b);
+
+	if (tid_a == tid_b) {
+		ADD_FAILURE() << "expected different types: " << tid_a.name() << " vs " << tid_b.name();
+		return true;
+	}
+	return false;
+}
+
+bool assert_different_dynamic_type(const graphengine::Filter *filter_a, const graphengine::Filter *filter_b)
 {
 	const auto &tid_a = typeid(*filter_a);
 	const auto &tid_b = typeid(*filter_b);

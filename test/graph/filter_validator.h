@@ -5,6 +5,10 @@
 
 #include "common/pixel.h"
 
+namespace graphengine {
+class Filter;
+}
+
 namespace zimg {
 namespace graph {
 
@@ -38,5 +42,7 @@ public:
 
 
 bool assert_different_dynamic_type(const zimg::graph::ImageFilter *filter_a, const zimg::graph::ImageFilter *filter_b);
+
+bool assert_different_dynamic_type(const graphengine::Filter *filter_a, const graphengine::Filter *filter_b);
 
 #endif // ZIMG_UNIT_TEST_GRAPH_FILTER_VALIDATOR_H_
