@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <climits>
+#include "common/except.h"
 #include "common/zassert.h"
 #include "graphengine/graph.h"
 #include "graphengine/types.h"
@@ -18,30 +19,38 @@ FilterGraph2::FilterGraph2(std::unique_ptr<graphengine::Graph> graph, std::share
 
 FilterGraph2::~FilterGraph2() = default;
 
-size_t FilterGraph2::get_tmp_size() const
+size_t FilterGraph2::get_tmp_size() const try
 {
 	return m_graph->get_tmp_size();
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_input_buffering() const
+unsigned FilterGraph2::get_input_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_source_id; });
 	zassert(it != buffering.end(), "invalid node id");
 	return std::min(it->second, UINT_MAX - 1) + 1;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_output_buffering() const
+unsigned FilterGraph2::get_output_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_sink_id; });
 	zassert(it != buffering.end(), "invalid node id");
 	return std::min(it->second, UINT_MAX - 1) + 1;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_tile_width() const
+unsigned FilterGraph2::get_tile_width() const try
 {
 	return m_graph->get_tile_width(false);
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
 void FilterGraph2::set_tile_width(unsigned tile_width)
@@ -74,7 +83,13 @@ void FilterGraph2::process(const ColorImageBuffer<const void> &src, const ColorI
 		{ pack_cb, pack_user }
 	};
 
-	m_graph->run(endpoints, tmp);
+	try {
+		m_graph->run(endpoints, tmp);
+	} catch (const graphengine::Graph::CallbackError &) {
+		error::throw_<error::UserCallbackFailed>();
+	} catch (const std::exception &e) {
+		error::throw_<error::InternalError>(e.what());
+	}
 }
 
 } // namespace graph

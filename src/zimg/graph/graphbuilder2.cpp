@@ -1080,14 +1080,18 @@ GraphBuilder2::GraphBuilder2() : m_impl(std::make_unique<impl>()) {}
 
 GraphBuilder2::~GraphBuilder2() = default;
 
-GraphBuilder2 &GraphBuilder2::set_source(const state &source)
+GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
 {
 	validate_state(source);
 	get_impl()->set_source(source);
 	return *this;
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-GraphBuilder2 &GraphBuilder2::connect(const state &target, const params *params, FilterObserver *observer)
+GraphBuilder2 &GraphBuilder2::connect(const state &target, const params *params, FilterObserver *observer) try
 {
 	static const GraphBuilder2::params default_params;
 	DefaultFilterObserver default_factory;
@@ -1103,11 +1107,19 @@ GraphBuilder2 &GraphBuilder2::connect(const state &target, const params *params,
 
 	get_impl()->connect(target, *params, *observer);
 	return *this;
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-std::unique_ptr<FilterGraph2> GraphBuilder2::complete()
+std::unique_ptr<FilterGraph2> GraphBuilder2::complete() try
 {
 	return get_impl()->complete();
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
 } // namespace graph
