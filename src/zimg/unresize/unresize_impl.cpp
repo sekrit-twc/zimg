@@ -200,7 +200,7 @@ std::pair<unsigned, unsigned> UnresizeImplH_GE::get_row_deps(unsigned i) const n
 
 std::pair<unsigned, unsigned> UnresizeImplH_GE::get_col_deps(unsigned, unsigned) const noexcept
 {
-	return{ 0, m_desc.format.width };
+	return{ 0, m_context.input_width  };
 }
 
 
@@ -214,7 +214,7 @@ UnresizeImplV_GE::UnresizeImplV_GE(const BilinearContext &context, unsigned widt
 	m_desc.format = { width, height, pixel_size(type) };
 	m_desc.num_deps = 1;
 	m_desc.num_planes = 1;
-	m_desc.step = 1;
+	m_desc.step = UINT_MAX;
 	m_desc.flags.entire_col = 1;
 }
 
@@ -335,9 +335,9 @@ std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create_ge() const
 	BilinearContext context = create_bilinear_context(orig_dim, up_dim, shift);
 
 #if defined(ZIMG_X86)
-	ret = nullptr /*horizontal ?
-		create_unresize_impl_h_x86(context, up_height, type, cpu) :
-		create_unresize_impl_v_x86(context, up_width, type, cpu)*/;
+	ret = horizontal ?
+		create_unresize_impl_h_ge_x86(context, up_height, type, cpu) :
+		create_unresize_impl_v_ge_x86(context, up_width, type, cpu);
 #endif
 
 	if (!ret && horizontal)

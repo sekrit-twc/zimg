@@ -9,6 +9,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "unresize/bilinear.h"
 #include "unresize/unresize_impl.h"
 #include "unresize_impl_x86.h"
@@ -119,7 +120,7 @@ void unresize_line_forward_v_f32_sse(unsigned filter_offset, const float * RESTR
 		_mm_store_ps(dst + j, z);
 	}
 
-	for (unsigned j = floor_n(width, 4); j < width; ++j) {
+	for (unsigned j = floor_n(width, 4); j < width; j += 4) {
 		__m128 z = above ? _mm_load_ps(above + j) : _mm_setzero_ps();
 		__m128 accum = _mm_setzero_ps();
 
@@ -143,7 +144,7 @@ void unresize_line_back_v_f32_sse(float u_, const float * RESTRICT below, float 
 		w = _mm_sub_ps(_mm_load_ps(dst + j), _mm_mul_ps(u, w)); // dst[i] - u[i] * w
 		_mm_store_ps(dst + j, w);
 	}
-	for (unsigned j = floor_n(width, 4); j < width; ++j) {
+	for (unsigned j = floor_n(width, 4); j < width; j += 4) {
 		__m128 w = below ? _mm_load_ps(below + j) : _mm_setzero_ps();
 		w = _mm_sub_ps(_mm_load_ps(dst + j), _mm_mul_ps(u, w)); // dst[i] - u[i] * w
 		mm_store_idxlo_ps(dst + j, w, width % 4);
@@ -199,6 +200,42 @@ public:
 };
 
 
+class UnresizeImplH_GE_F32_SSE final : public UnresizeImplH_GE {
+public:
+	UnresizeImplH_GE_F32_SSE(const BilinearContext &context, unsigned height) :
+		UnresizeImplH_GE(context, context.output_width, height, PixelType::FLOAT)
+	{
+		m_desc.step = 4;
+		m_desc.scratchpad_size = ((static_cast<checked_size_t>(m_context.input_width) + m_context.output_width) * 4 * sizeof(float)).get();
+	}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
+	{
+		const float *src_ptr[4] = { 0 };
+		float *dst_ptr[4] = { 0 };
+		float *transpose_buf = static_cast<float *>(tmp);
+		float *transpose_buf2 = transpose_buf + m_context.input_width * 4;
+		unsigned height = m_desc.format.height;
+
+		src_ptr[0] = in->get_line<float>(std::min(i + 0, height - 1));
+		src_ptr[1] = in->get_line<float>(std::min(i + 1, height - 1));
+		src_ptr[2] = in->get_line<float>(std::min(i + 2, height - 1));
+		src_ptr[3] = in->get_line<float>(std::min(i + 3, height - 1));
+
+		transpose_line_4x4_ps(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], m_context.input_width);
+
+		dst_ptr[0] = out->get_line<float>(std::min(i + 0, height - 1));
+		dst_ptr[1] = out->get_line<float>(std::min(i + 1, height - 1));
+		dst_ptr[2] = out->get_line<float>(std::min(i + 2, height - 1));
+		dst_ptr[3] = out->get_line<float>(std::min(i + 3, height - 1));
+
+		unresize_line4_h_f32_sse(m_context.matrix_row_offsets.data(), m_context.matrix_coefficients.data(), m_context.matrix_row_stride, m_context.matrix_row_size,
+		                         m_context.lu_c.data(), m_context.lu_l.data(), m_context.lu_u.data(), transpose_buf, dst_ptr, transpose_buf2, m_context.output_width);
+	}
+};
+
+
 class UnresizeImplV_F32_SSE final : public UnresizeImplV {
 public:
 	UnresizeImplV_F32_SSE(const BilinearContext &context, unsigned width) :
@@ -232,6 +269,37 @@ public:
 	}
 };
 
+
+class UnresizeImplV_GE_F32_SSE final : public UnresizeImplV_GE {
+public:
+	UnresizeImplV_GE_F32_SSE(const BilinearContext &context, unsigned width) :
+		UnresizeImplV_GE(context, width, context.output_width, PixelType::FLOAT)
+	{
+		m_desc.alignment_mask = 3;
+	}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned, unsigned left, unsigned right, void *, void *) const noexcept override
+	{
+		unsigned height = m_desc.format.height;
+
+		const float *above = nullptr;
+		for (unsigned i = 0; i < height; ++i) {
+			float *cur = out->get_line<float>(i);
+			unresize_line_forward_v_f32_sse(m_context.matrix_row_offsets[i], m_context.matrix_coefficients.data() + i * m_context.matrix_row_stride, m_context.matrix_row_size,
+			                                m_context.lu_c[i], m_context.lu_l[i], static_cast<const float *>(in->ptr) + left, in->stride, in->mask, above, cur, right - left);
+			above = cur;
+		}
+
+		const float *below = nullptr;
+		for (unsigned i = height; i != 0; --i) {
+			float *cur = out->get_line<float>(i - 1) + left;
+			unresize_line_back_v_f32_sse(m_context.lu_u[i - 1], below, cur, right - left);
+			below = cur;
+		}
+	}
+};
+
 } // namespace
 
 
@@ -243,12 +311,28 @@ std::unique_ptr<graph::ImageFilter> create_unresize_impl_h_sse(const BilinearCon
 	return std::make_unique<UnresizeImplH_F32_SSE>(context, height);
 }
 
+std::unique_ptr<graphengine::Filter> create_unresize_impl_h_ge_sse(const BilinearContext &context, unsigned height, PixelType type)
+{
+	if (type != PixelType::FLOAT)
+		return nullptr;
+
+	return std::make_unique<UnresizeImplH_GE_F32_SSE>(context, height);
+}
+
 std::unique_ptr<graph::ImageFilter> create_unresize_impl_v_sse(const BilinearContext &context, unsigned width, PixelType type)
 {
 	if (type != PixelType::FLOAT)
 		return nullptr;
 
 	return std::make_unique<UnresizeImplV_F32_SSE>(context, width);
+}
+
+std::unique_ptr<graphengine::Filter> create_unresize_impl_v_ge_sse(const BilinearContext &context, unsigned width, PixelType type)
+{
+	if (type != PixelType::FLOAT)
+		return nullptr;
+
+	return std::make_unique<UnresizeImplV_GE_F32_SSE>(context, width);
 }
 
 } // namespace unresize
