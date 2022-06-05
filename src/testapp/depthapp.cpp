@@ -71,8 +71,8 @@ struct Arguments {
 	unsigned width;
 	unsigned height;
 	zimg::depth::DitherType dither;
-	zimg::PixelFormat format_in;
-	zimg::PixelFormat format_out;
+	zimg::PixelFormat pixel_in;
+	zimg::PixelFormat pixel_out;
 	int force_color_family;
 	const char *visualise_path;
 	unsigned times;
@@ -94,8 +94,8 @@ const ArgparseOption program_switches[] = {
 const ArgparseOption program_positional[] = {
 	{ OPTION_STRING, nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
 	{ OPTION_STRING, nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
-	{ OPTION_USER1,  nullptr, "format-in",  offsetof(Arguments, format_in),  arg_decode_pixfmt, "input pixel format"},
-	{ OPTION_USER1,  nullptr, "format-out", offsetof(Arguments, format_out), arg_decode_pixfmt, "output pixel format"},
+	{ OPTION_USER1,  nullptr, "format-in",  offsetof(Arguments, pixel_in),  arg_decode_pixfmt, "input pixel format"},
+	{ OPTION_USER1,  nullptr, "format-out", offsetof(Arguments, pixel_out), arg_decode_pixfmt, "output pixel format"},
 	{ OPTION_NULL }
 };
 
@@ -134,14 +134,14 @@ int depth_main(int argc, char **argv)
 
 		if (src_frame.is_yuv() != is_yuv)
 			std::cerr << "warning: input file is of different color family than declared format\n";
-		if (src_frame.pixel_type() != args.format_in.type)
+		if (src_frame.pixel_type() != args.pixel_in.type)
 			std::cerr << "warning: input file is of a different pixel type than declared format\n";
 
-		if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
+		if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.pixel_in.type))
 			throw std::runtime_error{ "pixel sizes not compatible" };
 
 		ImageFrame dst_frame{
-			src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(),
+			src_frame.width(), src_frame.height(), args.pixel_out.type, src_frame.planes(),
 			is_yuv, src_frame.subsample_w(), src_frame.subsample_h()
 		};
 
@@ -149,16 +149,16 @@ int depth_main(int argc, char **argv)
 		std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
 
 		auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }
-			.set_pixel_in(args.format_in)
-			.set_pixel_out(args.format_out)
+			.set_pixel_in(args.pixel_in)
+			.set_pixel_out(args.pixel_out)
 			.set_dither_type(args.dither)
 			.set_cpu(args.cpu);
 
 		filter = conv.create();
 
 		if (src_frame.planes() >= 3 && is_yuv) {
-			zimg::PixelFormat format_in_uv = args.format_in;
-			zimg::PixelFormat format_out_uv = args.format_out;
+			zimg::PixelFormat format_in_uv = args.pixel_in;
+			zimg::PixelFormat format_out_uv = args.pixel_out;
 
 			format_in_uv.chroma = true;
 			format_out_uv.chroma = true;
@@ -169,9 +169,9 @@ int depth_main(int argc, char **argv)
 		execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)
-			imageframe::write(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
+			imageframe::write(dst_frame, args.visualise_path, "bmp", args.pixel_out.depth, true);
 
-		imageframe::write(dst_frame, args.outpath, "i444", args.format_out.fullrange);
+		imageframe::write(dst_frame, args.outpath, "i444", args.pixel_out.fullrange);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;

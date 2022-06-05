@@ -15,6 +15,7 @@
 #include "depth/quantize.h"
 #include "graph/image_buffer.h"
 #include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "dither_x86.h"
 
 #include "common/x86/avx_util.h"
@@ -438,6 +439,105 @@ auto select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
+class ErrorDiffusionAVX2_GE final : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
+
+	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
+	decltype(select_error_diffusion_avx2_func({}, {})) m_avx2_func;
+
+	float m_scale;
+	float m_offset;
+	unsigned m_depth;
+
+	void process_scalar(void *ctx, const void *src, void *dst, bool parity) const
+	{
+		float *ctx_a = reinterpret_cast<float *>(ctx);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
+
+		float *error_top = parity ? ctx_a : ctx_b;
+		float *error_cur = parity ? ctx_b : ctx_a;
+
+		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
+	}
+
+	void process_vector(void *ctx, const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out, unsigned i) const
+	{
+		float *ctx_a = reinterpret_cast<float *>(ctx);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
+
+		float *error_top = (i / 8) % 2 ? ctx_a : ctx_b;
+		float *error_cur = (i / 8) % 2 ? ctx_b : ctx_a;
+
+		graph::ImageBuffer<const void> src_buf{ in->ptr, in->stride, in->mask };
+		graph::ImageBuffer<void> dst_buf{ out->ptr, out->stride, out->mask };
+		m_avx2_func(src_buf, dst_buf, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
+	}
+public:
+	ErrorDiffusionAVX2_GE(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :
+		m_desc{},
+		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
+		m_avx2_func{ select_error_diffusion_avx2_func(pixel_in.type, pixel_out.type) },
+		m_scale{},
+		m_offset{},
+		m_depth{ pixel_out.depth }
+	{
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
+
+		if (!pixel_is_integer(pixel_out.type))
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
+
+		m_desc.format = { width, height, pixel_size(pixel_out.type) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 8;
+		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
+
+		m_desc.flags.stateful = 1;
+		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
+		m_desc.flags.entire_row = 1;
+
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
+	}
+
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
+
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override
+	{
+		unsigned last = std::min(i, UINT_MAX - 8) + 8;
+		return{ i, std::min(last, m_desc.format.height) };
+	}
+
+	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override
+	{
+		return{ 0, m_desc.format.width };
+	}
+
+	void init_context(void *ctx) const noexcept override
+	{
+		std::fill_n(static_cast<unsigned char *>(ctx), m_desc.context_size, 0);
+	}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *context, void *) const noexcept override
+	{
+		if (m_desc.format.height - i < 8) {
+			bool parity = !!((i / 8) % 2);
+
+			for (unsigned ii = i; ii < m_desc.format.height; ++ii) {
+				process_scalar(context, in->get_line(ii), out->get_line(ii), parity);
+				parity = !parity;
+			}
+		} else {
+			process_vector(context, in, out, i);
+		}
+	}
+};
+
+
+
 class ErrorDiffusionAVX2 final : public graph::ImageFilter {
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
 	decltype(select_error_diffusion_avx2_func({}, {})) m_avx2_func;
@@ -474,24 +574,24 @@ class ErrorDiffusionAVX2 final : public graph::ImageFilter {
 		m_avx2_func(src, dst, i, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
 	}
 public:
-	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &format_in, const PixelFormat &format_out) :
-		m_scalar_func{ select_error_diffusion_scalar_func(format_in.type, format_out.type) },
-		m_avx2_func{ select_error_diffusion_avx2_func(format_in.type, format_out.type) },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
+	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
+		m_avx2_func{ select_error_diffusion_avx2_func(pixel_in.type, pixel_out.type) },
+		m_pixel_in{ pixel_in.type },
+		m_pixel_out{ pixel_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
+		m_depth{ pixel_out.depth },
 		m_width{ width },
 		m_height{ height }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
-		if (!pixel_is_integer(format_out.type))
+		if (!pixel_is_integer(pixel_out.type))
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
 
 	filter_flags get_flags() const override
@@ -567,6 +667,14 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion_avx2(unsigned width, 
 		return nullptr;
 
 	return std::make_unique<ErrorDiffusionAVX2>(width, height, pixel_in, pixel_out);
+}
+
+std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+{
+	if (width < 14)
+		return nullptr;
+
+	return std::make_unique<ErrorDiffusionAVX2_GE>(width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth

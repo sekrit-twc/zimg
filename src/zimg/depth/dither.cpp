@@ -307,24 +307,24 @@ class OrderedDither final : public graph::ImageFilterBase {
 	unsigned m_height;
 public:
 	OrderedDither(std::unique_ptr<OrderedDitherTable> &&table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
-	              const PixelFormat &format_in, const PixelFormat &format_out) :
+	              const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_func{ func },
 		m_f16c{ f16c },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
+		m_pixel_in{ pixel_in.type },
+		m_pixel_out{ pixel_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
+		m_depth{ pixel_out.depth },
 		m_width{ width },
 		m_height{ height }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
-		if (!pixel_is_integer(format_out.type))
+		if (!pixel_is_integer(pixel_out.type))
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 		m_dither_table = std::move(table);
 	}
 
@@ -463,24 +463,24 @@ private:
 	unsigned m_width;
 	unsigned m_height;
 public:
-	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &format_in, const PixelFormat &format_out) :
+	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_func{ func },
 		m_f16c{ f16c },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
+		m_pixel_in{ pixel_in.type },
+		m_pixel_out{ pixel_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
+		m_depth{ pixel_out.depth },
 		m_width{ width },
 		m_height{ height }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
-		if (!pixel_is_integer(format_out.type))
+		if (!pixel_is_integer(pixel_out.type))
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
 
 	filter_flags get_flags() const override
@@ -587,7 +587,7 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsig
 std::unique_ptr<graphengine::Filter> create_error_diffusion_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 #ifdef ZIMG_X86
-	if (auto ret = nullptr /*create_error_diffusion_x86_ge(width, height, pixel_in, pixel_out, cpu)*/)
+	if (auto ret = create_error_diffusion_x86_ge(width, height, pixel_in, pixel_out, cpu))
 		return ret;
 #endif
 

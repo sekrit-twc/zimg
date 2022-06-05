@@ -44,11 +44,11 @@ DECLARE_DEPTH_CONVERT(w2f, avx512);
 
 left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_out, CPUClass cpu);
 
-depth_convert_func select_depth_convert_func_x86(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
+depth_convert_func select_depth_convert_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu);
 
-bool needs_depth_f16c_func_x86(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
+bool needs_depth_f16c_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

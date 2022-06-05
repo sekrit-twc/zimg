@@ -34,7 +34,6 @@ typedef void (*dither_f16c_func)(const void *src, void *dst, unsigned left, unsi
 
 std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-
 DepthConversion::result create_dither_ge(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu);
 
 } // namespace depth
