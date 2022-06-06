@@ -37,7 +37,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\testapp\apps.h" />
     <ClInclude Include="..\..\src\testapp\frame.h" />
-    <ClInclude Include="..\..\src\testapp\pair_filter.h" />
     <ClInclude Include="..\..\src\testapp\table.h" />
     <ClInclude Include="..\..\src\testapp\utils.h" />
   </ItemGroup>
@@ -49,7 +48,6 @@
     <ClCompile Include="..\..\src\testapp\graphapp.cpp" />
     <ClCompile Include="..\..\src\testapp\graphapp2.cpp" />
     <ClCompile Include="..\..\src\testapp\main.cpp" />
-    <ClCompile Include="..\..\src\testapp\pair_filter.cpp" />
     <ClCompile Include="..\..\src\testapp\resizeapp.cpp" />
     <ClCompile Include="..\..\src\testapp\table.cpp" />
     <ClCompile Include="..\..\src\testapp\unresizeapp.cpp" />
