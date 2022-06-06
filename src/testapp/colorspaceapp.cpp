@@ -4,10 +4,10 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include "colorspace/colorspace.h"
 #include "common/except.h"
 #include "common/pixel.h"
-#include "graph/image_filter.h"
-#include "colorspace/colorspace.h"
+#include "graphengine/filter.h"
 
 #include "apps.h"
 #include "argparse.h"
@@ -47,9 +47,9 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::graph::ImageFilter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	auto results = measure_benchmark(times, FilterExecutor{ filter, nullptr, src_frame, dst_frame }, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor_GE{ filter, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -141,7 +141,7 @@ int colorspace_main(int argc, char **argv)
 		if (!std::isnan(args.peak_luminance))
 			conv.set_peak_luminance(args.peak_luminance);
 
-		auto convert = conv.create();
+		auto convert = conv.create_ge();
 		execute(convert.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)

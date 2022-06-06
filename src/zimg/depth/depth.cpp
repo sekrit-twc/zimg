@@ -71,6 +71,8 @@ DepthConversion::result DepthConversion::create_ge() const try
 {
 	if (width > pixel_max_width(pixel_in.type) || width > pixel_max_width(pixel_out.type))
 		error::throw_<error::OutOfMemory>();
+	if (!pixel_in.fullrange && pixel_in.depth < 8 || !pixel_out.fullrange && pixel_out.depth < 8)
+		error::throw_<error::BitDepthOverflow>("bit depth must be at least 8 for limited range");
 
 	if (pixel_in == pixel_out)
 		return{};
