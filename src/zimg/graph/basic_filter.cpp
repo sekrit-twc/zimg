@@ -139,7 +139,7 @@ void PremultiplyFilter::process(void *, const ImageBuffer<const void> src[], con
 		for (unsigned j = left; j < right; ++j) {
 			float a = alpha[j];
 			a = std::min(std::max(a, 0.0f), 1.0f);
-			dst_p[j] = src_p[j] * alpha[j];
+			dst_p[j] = src_p[j] * a;
 		}
 	}
 }
