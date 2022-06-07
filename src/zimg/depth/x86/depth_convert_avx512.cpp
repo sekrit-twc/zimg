@@ -117,8 +117,8 @@ inline FORCE_INLINE void depth_convert_avx512_impl(const void *src, void *dst, f
 	const typename Load::src_type *src_p = static_cast<const typename Load::src_type *>(src);
 	typename Store::dst_type *dst_p = static_cast<typename Store::dst_type *>(dst);
 
-	unsigned vec_left = floor_n(left, 16);
-	unsigned vec_right = ceil_n(right, 16);
+	unsigned vec_left = ceil_n(left, 16);
+	unsigned vec_right = floor_n(right, 16);
 
 	const __m512 scale_ps = _mm512_set1_ps(scale);
 	const __m512 offset_ps = _mm512_set1_ps(offset);
