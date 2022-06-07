@@ -1,14 +1,14 @@
 #ifdef ZIMG_X86
 
 #include <cmath>
+#include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graph/image_filter.h"
-#include "colorspace/colorspace.h"
+#include "graphengine/filter.h"
 
 #include "gtest/gtest.h"
-#include "graph/filter_validator.h"
+#include "graphengine/filter_validation.h"
 
 namespace {
 
@@ -29,14 +29,24 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		.set_csp_out(csp_out)
 		.set_approximate_gamma(true);
 
-	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
-	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::X86_SSE2).create();
+	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create_ge();
+	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::X86_SSE2).create_ge();
 
-	FilterValidator validator{ filter_sse2.get(), w, h, format };
-	validator.set_sha1(expected_sha1)
-	         .set_ref_filter(filter_c.get(), expected_snr)
-	         .set_yuv(csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB)
-	         .validate();
+	ASSERT_TRUE(filter_c);
+	ASSERT_TRUE(filter_sse2);
+
+	graphengine::FilterValidation(filter_sse2.get(), { w, h, zimg::pixel_size(zimg::PixelType::FLOAT) })
+		.set_reference_filter(filter_c.get(), expected_snr)
+		.set_input_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_input_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_input_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_output_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_sha1(0, expected_sha1[0])
+		.set_sha1(1, expected_sha1[1])
+		.set_sha1(2, expected_sha1[2])
+		.run();
 }
 
 } // namespace
@@ -46,7 +56,7 @@ TEST(ColorspaceConversionSSE2Test, test_transfer_lut)
 {
 	using namespace zimg::colorspace;
 
-	const char *expected_sha1[][3] = {
+	static const char *expected_sha1[][3] = {
 		{
 			"23d012fcb280f601e2e3c349229d0108e3cd632a",
 			"7ae186215d5fa45065f7aeac74ab2dc74b556696",
