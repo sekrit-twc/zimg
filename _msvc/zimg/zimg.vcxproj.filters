@@ -121,6 +121,9 @@
     <Filter Include="Source Files\graphengine\x86">
       <UniqueIdentifier>{a2560677-8928-42fc-9e7f-74d795270ebc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graphengine\include">
+      <UniqueIdentifier>{c5b02a09-186a-4693-81d1-289fa06bcba0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\zimg\api\zimg.h">
@@ -309,19 +312,10 @@
     <ClInclude Include="..\..\graphengine\graphengine\cpuinfo.h">
       <Filter>Header Files\graphengine</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\filter.h">
-      <Filter>Header Files\graphengine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\graph.h">
-      <Filter>Header Files\graphengine</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\graphengine\graphengine\node.h">
       <Filter>Header Files\graphengine</Filter>
     </ClInclude>
     <ClInclude Include="..\..\graphengine\graphengine\state.h">
-      <Filter>Header Files\graphengine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\types.h">
       <Filter>Header Files\graphengine</Filter>
     </ClInclude>
     <ClInclude Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.h">
@@ -335,6 +329,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h">
       <Filter>Header Files\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\include\graphengine\types.h">
+      <Filter>Header Files\graphengine\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\include\graphengine\filter.h">
+      <Filter>Header Files\graphengine\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\include\graphengine\graph.h">
+      <Filter>Header Files\graphengine\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

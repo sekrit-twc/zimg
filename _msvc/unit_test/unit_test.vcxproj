@@ -35,8 +35,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\graphengine\graphengine\filter_validation.cpp" />
-    <ClCompile Include="..\..\graphengine\graphengine\sha1\sha1.c" />
+    <ClCompile Include="..\..\graphengine\filter_validation\filter_validation.cpp" />
+    <ClCompile Include="..\..\graphengine\filter_validation\sha1\sha1.c" />
     <ClCompile Include="..\..\test\api\api_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
@@ -170,9 +170,9 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_sse_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\graphengine\graphengine\filter_validation.h" />
-    <ClInclude Include="..\..\graphengine\graphengine\sha1\config.h" />
-    <ClInclude Include="..\..\graphengine\graphengine\sha1\sha1.h" />
+    <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h" />
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h" />
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\exp2f_data.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\logf_data.h" />
@@ -278,7 +278,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -294,7 +294,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -309,7 +309,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -324,7 +324,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -341,7 +341,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Strict</FloatingPointModel>
@@ -360,7 +360,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -378,7 +378,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -396,7 +396,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

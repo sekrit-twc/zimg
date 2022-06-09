@@ -255,10 +255,10 @@
     <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp">
       <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\graphengine\graphengine\sha1\sha1.c">
+    <ClCompile Include="..\..\graphengine\filter_validation\sha1\sha1.c">
       <Filter>Source Files\graphengine\sha1</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\graphengine\graphengine\filter_validation.cpp">
+    <ClCompile Include="..\..\graphengine\filter_validation\filter_validation.cpp">
       <Filter>Source Files\graphengine</Filter>
     </ClCompile>
   </ItemGroup>
@@ -293,14 +293,14 @@
     <ClInclude Include="..\..\test\extra\musl-libm\powf_data.h">
       <Filter>Header Files\extra\musl-libm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\filter_validation.h">
-      <Filter>Header Files\graphengine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\sha1\config.h">
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h">
       <Filter>Header Files\graphengine\sha1</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\graphengine\graphengine\sha1\sha1.h">
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h">
       <Filter>Header Files\graphengine\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
