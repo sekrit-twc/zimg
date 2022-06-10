@@ -986,7 +986,7 @@ public:
 		if (m_graph)
 			error::throw_<error::InternalError>("graph already initialized");
 
-		m_graph = std::make_unique<graphengine::Graph>();
+		m_graph = std::make_unique<graphengine::GraphImpl>();
 		std::fill(m_ids.begin(), m_ids.end(), graphengine::node_dep_desc{ graphengine::null_node, 0 });
 		m_state = internal_state{ source };
 		m_requires_64b = false;

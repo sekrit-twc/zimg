@@ -74,7 +74,7 @@ void FilterExecutor::operator()()
 }
 
 struct FilterExecutor_GE::data {
-	graphengine::Graph graph;
+	graphengine::GraphImpl graph;
 	graphengine::Graph::EndpointConfiguration endpoints;
 	zimg::AlignedVector<char> tmp;
 };

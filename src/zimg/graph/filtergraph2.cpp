@@ -48,14 +48,14 @@ unsigned FilterGraph2::get_output_buffering() const try
 
 unsigned FilterGraph2::get_tile_width() const try
 {
-	return m_graph->get_tile_width(false);
+	return graphengine::GraphImpl::from(m_graph.get())->get_tile_width(false);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
 
 void FilterGraph2::set_tile_width(unsigned tile_width)
 {
-	m_graph->set_tile_width(tile_width);
+	graphengine::GraphImpl::from(m_graph.get())->set_tile_width(tile_width);
 }
 
 void FilterGraph2::process(const ColorImageBuffer<const void> &src, const ColorImageBuffer<void> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const

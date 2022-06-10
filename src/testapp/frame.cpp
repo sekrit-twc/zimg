@@ -258,7 +258,7 @@ public:
 std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
-	auto graph = std::make_unique<graphengine::Graph>();
+	auto graph = std::make_unique<graphengine::GraphImpl>();
 
 	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
 	for (unsigned p = 0; p < spec.planes; ++p) {
@@ -445,7 +445,7 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier
                                                              unsigned depth_in, bool fullrange)
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
-	auto graph = std::make_unique<graphengine::Graph>();
+	auto graph = std::make_unique<graphengine::GraphImpl>();
 
 	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
 	for (unsigned p = 0; p < spec.planes; ++p) {
