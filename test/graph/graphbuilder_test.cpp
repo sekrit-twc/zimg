@@ -5,8 +5,8 @@
 #include "colorspace/colorspace.h"
 #include "common/pixel.h"
 #include "depth/depth.h"
-#include "graph/filtergraph.h"
-#include "graph/graphbuilder.h"
+#include "graph/filtergraph2.h"
+#include "graph/graphbuilder2.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
 
@@ -17,7 +17,7 @@ namespace {
 using zimg::colorspace::MatrixCoefficients;
 using zimg::colorspace::TransferCharacteristics;
 using zimg::colorspace::ColorPrimaries;
-using zimg::graph::GraphBuilder;
+using zimg::graph::GraphBuilder2;
 
 typedef std::vector<std::string> TraceList;
 
@@ -99,38 +99,38 @@ public:
 };
 
 
-GraphBuilder::state make_basic_rgb_state()
+GraphBuilder2::state make_basic_rgb_state()
 {
-	GraphBuilder::state state{};
+	GraphBuilder2::state state{};
 	state.width = 64;
 	state.height = 48;
 	state.type = zimg::PixelType::FLOAT;
 	state.subsample_w = 0;
 	state.subsample_h = 0;
-	state.color = GraphBuilder::ColorFamily::RGB;
+	state.color = GraphBuilder2::ColorFamily::RGB;
 	state.colorspace = { MatrixCoefficients::RGB, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 };
 	state.depth = zimg::pixel_depth(zimg::PixelType::FLOAT);
 	state.fullrange = false;
-	state.parity = GraphBuilder::FieldParity::PROGRESSIVE;
-	state.chroma_location_w = GraphBuilder::ChromaLocationW::CENTER;
-	state.chroma_location_h = GraphBuilder::ChromaLocationH::CENTER;
+	state.parity = GraphBuilder2::FieldParity::PROGRESSIVE;
+	state.chroma_location_w = GraphBuilder2::ChromaLocationW::CENTER;
+	state.chroma_location_h = GraphBuilder2::ChromaLocationH::CENTER;
 	state.active_left = 0.0;
 	state.active_top = 0.0;
 	state.active_width = 64.0;
 	state.active_height = 48.0;
-	state.alpha = GraphBuilder::AlphaType::NONE;
+	state.alpha = GraphBuilder2::AlphaType::NONE;
 	return state;
 }
 
-GraphBuilder::state make_basic_yuv_state()
+GraphBuilder2::state make_basic_yuv_state()
 {
-	GraphBuilder::state state = make_basic_rgb_state();
-	state.color = GraphBuilder::ColorFamily::YUV;
+	GraphBuilder2::state state = make_basic_rgb_state();
+	state.color = GraphBuilder2::ColorFamily::YUV;
 	state.colorspace = { MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 };
 	return state;
 }
 
-void set_resolution(GraphBuilder::state &state, unsigned width, unsigned height)
+void set_resolution(GraphBuilder2::state &state, unsigned width, unsigned height)
 {
 	state.width = width;
 	state.height = height;
@@ -140,9 +140,9 @@ void set_resolution(GraphBuilder::state &state, unsigned width, unsigned height)
 	state.active_height = height;
 }
 
-void test_case(const GraphBuilder::state &source, const GraphBuilder::state &target, const TraceList &trace)
+void test_case(const GraphBuilder2::state &source, const GraphBuilder2::state &target, const TraceList &trace)
 {
-	GraphBuilder builder;
+	GraphBuilder2 builder;
 	TracingObserver observer;
 	builder.set_source(source).connect(target, nullptr, &observer).complete();
 
@@ -235,8 +235,8 @@ TEST(GraphBuilderTest, test_resize_chromaloc_upsample)
 	set_resolution(source, 64, 48);
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
-	source.chroma_location_h = GraphBuilder::ChromaLocationH::BOTTOM;
+	source.chroma_location_w = GraphBuilder2::ChromaLocationW::LEFT;
+	source.chroma_location_h = GraphBuilder2::ChromaLocationH::BOTTOM;
 
 	auto target = make_basic_yuv_state();
 	set_resolution(target, 64, 48);
@@ -253,8 +253,8 @@ TEST(GraphBuilderTest, test_resize_chromaloc_downsample)
 	set_resolution(target, 64, 48);
 	target.subsample_w = 1;
 	target.subsample_h = 1;
-	target.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
-	target.chroma_location_h = GraphBuilder::ChromaLocationH::BOTTOM;
+	target.chroma_location_w = GraphBuilder2::ChromaLocationW::LEFT;
+	target.chroma_location_h = GraphBuilder2::ChromaLocationH::BOTTOM;
 
 	test_case(source, target, { "resize[1]: [64, 48] => [32, 24] (-0.500000, 0.500000, 64.000000, 48.000000)" });
 }
@@ -268,15 +268,15 @@ TEST(GraphBuilderTest, test_resize_deinterlace)
 	auto target = make_basic_yuv_state();
 	set_resolution(target, 64, 48);
 	target.subsample_h = 1;
-	target.parity = GraphBuilder::FieldParity::PROGRESSIVE;
+	target.parity = GraphBuilder2::FieldParity::PROGRESSIVE;
 
-	source.parity = GraphBuilder::FieldParity::TOP;
+	source.parity = GraphBuilder2::FieldParity::TOP;
 	test_case(source, target, {
 		"resize[0]: [64, 48] => [64, 48] (0.000000, 0.250000, 64.000000, 48.000000)",
 		"resize[1]: [64, 24] => [64, 24] (0.000000, 0.250000, 64.000000, 24.000000)",
 	});
 
-	source.parity = GraphBuilder::FieldParity::BOTTOM;
+	source.parity = GraphBuilder2::FieldParity::BOTTOM;
 	test_case(source, target, {
 		"resize[0]: [64, 48] => [64, 48] (0.000000, -0.250000, 64.000000, 48.000000)",
 		"resize[1]: [64, 24] => [64, 24] (0.000000, -0.250000, 64.000000, 24.000000)",
@@ -289,17 +289,17 @@ TEST(GraphBuilderTest, test_resize_interlace_to_interlace)
 	set_resolution(source, 64, 48);
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.parity = GraphBuilder::FieldParity::TOP;
-	source.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
-	source.chroma_location_h = GraphBuilder::ChromaLocationH::BOTTOM;
+	source.parity = GraphBuilder2::FieldParity::TOP;
+	source.chroma_location_w = GraphBuilder2::ChromaLocationW::LEFT;
+	source.chroma_location_h = GraphBuilder2::ChromaLocationH::BOTTOM;
 
 	auto target = make_basic_yuv_state();
 	set_resolution(target, 64, 96);
 	target.subsample_w = 1;
 	target.subsample_h = 1;
-	target.parity = GraphBuilder::FieldParity::TOP;
-	target.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
-	target.chroma_location_h = GraphBuilder::ChromaLocationH::BOTTOM;
+	target.parity = GraphBuilder2::FieldParity::TOP;
+	target.chroma_location_w = GraphBuilder2::ChromaLocationW::LEFT;
+	target.chroma_location_h = GraphBuilder2::ChromaLocationH::BOTTOM;
 
 	test_case(source, target, {
 		"resize[0]: [64, 48] => [64, 96] (0.000000, 0.125000, 64.000000, 48.000000)",
@@ -480,7 +480,7 @@ TEST(GraphBuilderTest, test_downscale_colorspace_tile)
 TEST(GraphBuilderTest, test_grey_to_grey_noop)
 {
 	auto source = make_basic_yuv_state();
-	source.color = GraphBuilder::ColorFamily::GREY;
+	source.color = GraphBuilder2::ColorFamily::GREY;
 	source.colorspace = { MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::REC_709 };
 
 	auto target = source;
@@ -492,7 +492,7 @@ TEST(GraphBuilderTest, test_grey_to_grey_noop)
 TEST(GraphBuilderTest, test_grey_to_rgb_noop)
 {
 	auto source = make_basic_yuv_state();
-	source.color = GraphBuilder::ColorFamily::GREY;
+	source.color = GraphBuilder2::ColorFamily::GREY;
 	source.colorspace.matrix = MatrixCoefficients::REC_2020_CL;
 
 	auto target = make_basic_rgb_state();
@@ -504,7 +504,7 @@ TEST(GraphBuilderTest, test_grey_to_rgb_noop)
 TEST(GraphBuilderTest, test_grey_to_yuv_noop)
 {
 	auto source = make_basic_yuv_state();
-	source.color = GraphBuilder::ColorFamily::GREY;
+	source.color = GraphBuilder2::ColorFamily::GREY;
 	source.colorspace.matrix = MatrixCoefficients::UNSPECIFIED;
 
 	auto target = make_basic_yuv_state();
@@ -516,7 +516,7 @@ TEST(GraphBuilderTest, test_grey_to_yuv_noop)
 TEST(GraphBuilderTest, test_grey_to_grey_colorspace)
 {
 	auto source = make_basic_yuv_state();
-	source.color = GraphBuilder::ColorFamily::GREY;
+	source.color = GraphBuilder2::ColorFamily::GREY;
 	source.colorspace = { MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::DCI_P3 };
 
 	auto target = source;
@@ -535,7 +535,7 @@ TEST(GraphBuilderTest, test_yuv_to_grey_colorspace)
 	source.colorspace = { MatrixCoefficients::REC_709, TransferCharacteristics::REC_709, ColorPrimaries::DCI_P3 };
 
 	auto target = source;
-	target.color = GraphBuilder::ColorFamily::GREY;
+	target.color = GraphBuilder2::ColorFamily::GREY;
 	target.colorspace = { MatrixCoefficients::REC_601, TransferCharacteristics::REC_709, ColorPrimaries::SMPTE_C };
 
 	test_case(source, target, {
@@ -549,10 +549,10 @@ TEST(GraphBuilderTest, test_straight_to_premul)
 	auto source = make_basic_yuv_state();
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	auto target = source;
-	target.alpha = GraphBuilder::AlphaType::PREMULTIPLIED;
+	target.alpha = GraphBuilder2::AlphaType::PREMULTIPLIED;
 
 	test_case(source, target, {
 		"resize[1]",
@@ -566,10 +566,10 @@ TEST(GraphBuilderTest, test_premul_to_straight)
 	auto source = make_basic_yuv_state();
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.alpha = GraphBuilder::AlphaType::PREMULTIPLIED;
+	source.alpha = GraphBuilder2::AlphaType::PREMULTIPLIED;
 
 	auto target = source;
-	target.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	target.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	test_case(source, target, {
 		"resize[1]",
@@ -581,10 +581,10 @@ TEST(GraphBuilderTest, test_premul_to_straight)
 TEST(GraphBuilderTest, test_straight_to_opaque)
 {
 	auto source = make_basic_rgb_state();
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	auto target = source;
-	target.alpha = GraphBuilder::AlphaType::NONE;
+	target.alpha = GraphBuilder2::AlphaType::NONE;
 
 	test_case(source, target, { "premultiply", "discard_alpha" });
 }
@@ -592,10 +592,10 @@ TEST(GraphBuilderTest, test_straight_to_opaque)
 TEST(GraphBuilderTest, test_opaque_to_straight)
 {
 	auto source = make_basic_rgb_state();
-	source.alpha = GraphBuilder::AlphaType::NONE;
+	source.alpha = GraphBuilder2::AlphaType::NONE;
 
 	auto target = make_basic_yuv_state();
-	target.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	target.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	test_case(source, target, { "colorspace", "add_opaque" });
 }
@@ -605,10 +605,10 @@ TEST(GraphBuilderTest, test_colorspace_straight_alpha)
 	auto source = make_basic_yuv_state();
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	auto target = make_basic_rgb_state();
-	target.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	target.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	test_case(source, target, {
 		"resize[1]",
@@ -622,7 +622,7 @@ TEST(GraphBuilderTest, test_resize_straight_alpha)
 {
 	auto source = make_basic_rgb_state();
 	set_resolution(source, 64, 48);
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	auto target = source;
 	set_resolution(target, 128, 96);
@@ -639,7 +639,7 @@ TEST(GraphBuilderTest, test_resize_premul_alpha)
 {
 	auto source = make_basic_rgb_state();
 	set_resolution(source, 64, 48);
-	source.alpha = GraphBuilder::AlphaType::PREMULTIPLIED;
+	source.alpha = GraphBuilder2::AlphaType::PREMULTIPLIED;
 
 	auto target = source;
 	set_resolution(target, 128, 96);
@@ -654,7 +654,7 @@ TEST(GraphBuilderTest, test_straight_depth)
 {
 	auto source = make_basic_yuv_state();
 	set_resolution(source, 64, 48);
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 
 	auto target = source;
 	target.type = zimg::PixelType::WORD;
@@ -671,7 +671,7 @@ TEST(GraphBuilderTest, test_straight_depth_tile)
 {
 	auto source = make_basic_yuv_state();
 	set_resolution(source, 64, 48);
-	source.alpha = GraphBuilder::AlphaType::STRAIGHT;
+	source.alpha = GraphBuilder2::AlphaType::STRAIGHT;
 	source.active_width = 32;
 	source.active_height = 24;
 
@@ -696,7 +696,7 @@ TEST(GraphBuilderTest, test_subsample_noop_tile)
 	set_resolution(source, 64, 48);
 	source.subsample_w = 1;
 	source.subsample_h = 1;
-	source.chroma_location_w = GraphBuilder::ChromaLocationW::LEFT;
+	source.chroma_location_w = GraphBuilder2::ChromaLocationW::LEFT;
 	source.active_width = 32;
 	source.active_height = 24;
 	source.active_left = 32;
