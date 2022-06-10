@@ -144,7 +144,7 @@ void test_case(const GraphBuilder2::state &source, const GraphBuilder2::state &t
 {
 	GraphBuilder2 builder;
 	TracingObserver observer;
-	builder.set_source(source).connect(target, nullptr, &observer).complete();
+	builder.set_source(source).connect(target, nullptr, &observer).build_graph();
 
 	EXPECT_EQ(trace.size(), observer.trace().size());
 	for (size_t i = 0; i < std::min(trace.size(), observer.trace().size()); ++i) {

@@ -723,7 +723,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		zimg::graph::GraphBuilder2 builder;
 		return builder.set_source(src_state)
 			.connect(dst_state, params ? &graph_params : nullptr)
-			.complete()
+			.build_graph()
 			.release();
 	} catch (...) {
 		handle_exception(std::current_exception());
