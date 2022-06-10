@@ -1008,6 +1008,8 @@ public:
 		return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
+	void init_context(void *) const noexcept override {}
+
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{

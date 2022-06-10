@@ -24,6 +24,8 @@ public:
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
 
+	void init_context(void *) const noexcept override {}
+
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
@@ -52,6 +54,8 @@ public:
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
 
+	void init_context(void *) const noexcept override {}
+
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
@@ -68,6 +72,8 @@ public:
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
 
+	void init_context(void *) const noexcept override {}
+
 	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
@@ -83,6 +89,8 @@ public:
 	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+
+	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;

@@ -28,6 +28,8 @@ public:
 	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override;
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override;
+
+	void init_context(void *) const noexcept override {}
 };
 
 class ResizeImplV_GE : public graphengine::Filter {
@@ -43,6 +45,8 @@ public:
 	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override;
 
 	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override;
+
+	void init_context(void *) const noexcept override {}
 };
 
 class ResizeImplH : public graph::ImageFilterBase {
