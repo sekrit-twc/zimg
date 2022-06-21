@@ -3,7 +3,6 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/arm/cpuinfo_arm.h"
-#include "graph/image_filter.h"
 #include "dither_arm.h"
 #include "f16c_arm.h"
 

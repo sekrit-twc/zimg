@@ -1064,9 +1064,9 @@ public:
 		internal_state internal_target{ target };
 		connect_internal(internal_target, params, observer);
 
-		if (true &&
+		if (true
 #ifdef ZIMG_X86
-			(params.cpu == CPUClass::AUTO_64B || params.cpu >= CPUClass::X86_AVX512)
+		    && (params.cpu == CPUClass::AUTO_64B || params.cpu >= CPUClass::X86_AVX512)
 #endif
 		) {
 			m_requires_64b = true;

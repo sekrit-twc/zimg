@@ -257,9 +257,9 @@ std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create() const
 		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
 		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu);
 #elif defined(ZIMG_ARM)
-	ret = nullptr /*horizontal ?
+	ret = horizontal ?
 		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :
-		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu)*/;
+		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu);
 #endif
 	if (!ret && horizontal)
 		ret = std::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
