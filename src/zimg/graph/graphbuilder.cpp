@@ -51,15 +51,9 @@ constexpr plane_mask luma_planes{ true, false, false, false };
 constexpr plane_mask chroma_planes{ false, true, true, false };
 constexpr plane_mask alpha_planes{ false, false, false, true };
 
-plane_mask operator|(plane_mask lhs, plane_mask rhs)
+constexpr plane_mask operator|(const plane_mask &lhs, const plane_mask &rhs)
 {
 	return{ lhs[0] || rhs[0], lhs[1] || rhs[1], lhs[2] || rhs[2], lhs[3] || rhs[3] };
-}
-
-plane_mask &operator|=(plane_mask &lhs, plane_mask rhs)
-{
-	lhs = lhs | rhs;
-	return lhs;
 }
 
 
