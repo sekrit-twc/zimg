@@ -13,7 +13,6 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graph/image_buffer.h"
 #include "graphengine/filter.h"
 #include "dither_x86.h"
 
@@ -23,6 +22,16 @@ namespace zimg {
 namespace depth {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 struct error_state {
 	float err_left[8];
@@ -224,7 +233,7 @@ inline FORCE_INLINE void error_diffusion_wf_avx2_xiter(__m256 &v, unsigned j, co
 }
 
 template <PixelType SrcType, PixelType DstType, class T, class U>
-void error_diffusion_wf_avx2(const graph::ImageBuffer<const T> &src, const graph::ImageBuffer<U> &dst, unsigned i,
+void error_diffusion_wf_avx2(const Buffer<const T> &src, const Buffer<U> &dst, unsigned i,
                              const float *error_top, float *error_cur, error_state *state, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
@@ -304,7 +313,7 @@ void error_diffusion_wf_avx2(const graph::ImageBuffer<const T> &src, const graph
 }
 
 template <PixelType SrcType, PixelType DstType>
-void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i,
+void error_diffusion_avx2(const Buffer<const void> &src_, const Buffer<void> &dst_, unsigned i,
                           const float *error_top, float *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
@@ -313,20 +322,20 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	typedef typename src_traits::type src_type;
 	typedef typename dst_traits::type dst_type;
 
-	const graph::ImageBuffer<const src_type> &src_buf = graph::static_buffer_cast<const src_type>(src);
-	const graph::ImageBuffer<dst_type> &dst_buf = graph::static_buffer_cast<dst_type>(dst);
+	Buffer<const src_type> src = src_.buffer;
+	Buffer<dst_type> dst = dst_.buffer;
 
 	error_state state alignas(32) = {};
 	float error_tmp[7][24] = {};
 
 	// Prologue.
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 0], dst_buf[i + 0], error_top, error_tmp[0], scale, offset, bits, 14);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 1], dst_buf[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 12);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 2], dst_buf[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 10);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 3], dst_buf[i + 3], error_tmp[2], error_tmp[3], scale, offset, bits, 8);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 4], dst_buf[i + 4], error_tmp[3], error_tmp[4], scale, offset, bits, 6);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 5], dst_buf[i + 5], error_tmp[4], error_tmp[5], scale, offset, bits, 4);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 6], dst_buf[i + 6], error_tmp[5], error_tmp[6], scale, offset, bits, 2);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 0], dst[i + 0], error_top, error_tmp[0], scale, offset, bits, 14);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 1], dst[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 12);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 2], dst[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 10);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 3], dst[i + 3], error_tmp[2], error_tmp[3], scale, offset, bits, 8);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 4], dst[i + 4], error_tmp[3], error_tmp[4], scale, offset, bits, 6);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 5], dst[i + 5], error_tmp[4], error_tmp[5], scale, offset, bits, 4);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 6], dst[i + 6], error_tmp[5], error_tmp[6], scale, offset, bits, 2);
 
 	// Wavefront.
 	state.err_left[0] = error_tmp[0][13 + 1];
@@ -366,7 +375,7 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	state.err_top_left[7] = 0.0f;
 
 	unsigned vec_count = floor_n(width - 14, 8);
-	error_diffusion_wf_avx2<SrcType, DstType>(src_buf, dst_buf, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
+	error_diffusion_wf_avx2<SrcType, DstType>(src, dst, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
 
 	error_tmp[0][13 + 1] = state.err_top_right[1];
 	error_tmp[0][12 + 1] = state.err_top[1];
@@ -397,21 +406,21 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	error_tmp[6][0] = state.err_top_left[7];
 
 	// Epilogue.
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 0] + vec_count + 14, dst_buf[i + 0] + vec_count + 14, error_top + vec_count + 14, error_tmp[0] + 14,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 0] + vec_count + 14, dst[i + 0] + vec_count + 14, error_top + vec_count + 14, error_tmp[0] + 14,
 	                                         scale, offset, bits, width - vec_count - 14);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 1] + vec_count + 12, dst_buf[i + 1] + vec_count + 12, error_tmp[0] + 12, error_tmp[1] + 12,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 1] + vec_count + 12, dst[i + 1] + vec_count + 12, error_tmp[0] + 12, error_tmp[1] + 12,
 	                                         scale, offset, bits, width - vec_count - 12);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 2] + vec_count + 10, dst_buf[i + 2] + vec_count + 10, error_tmp[1] + 10, error_tmp[2] + 10,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 2] + vec_count + 10, dst[i + 2] + vec_count + 10, error_tmp[1] + 10, error_tmp[2] + 10,
 	                                         scale, offset, bits, width - vec_count - 10);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 3] + vec_count + 8, dst_buf[i + 3] + vec_count + 8, error_tmp[2] + 8, error_tmp[3] + 8,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 3] + vec_count + 8, dst[i + 3] + vec_count + 8, error_tmp[2] + 8, error_tmp[3] + 8,
 	                                         scale, offset, bits, width - vec_count - 8);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 4] + vec_count + 6, dst_buf[i + 4] + vec_count + 6, error_tmp[3] + 6, error_tmp[4] + 6,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 4] + vec_count + 6, dst[i + 4] + vec_count + 6, error_tmp[3] + 6, error_tmp[4] + 6,
 	                                         scale, offset, bits, width - vec_count - 6);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 5] + vec_count + 4, dst_buf[i + 5] + vec_count + 4, error_tmp[4] + 4, error_tmp[5] + 4,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 5] + vec_count + 4, dst[i + 5] + vec_count + 4, error_tmp[4] + 4, error_tmp[5] + 4,
 	                                         scale, offset, bits, width - vec_count - 4);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 6] + vec_count + 2, dst_buf[i + 6] + vec_count + 2, error_tmp[5] + 2, error_tmp[6] + 2,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 6] + vec_count + 2, dst[i + 6] + vec_count + 2, error_tmp[5] + 2, error_tmp[6] + 2,
 	                                         scale, offset, bits, width - vec_count - 2);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 7] + vec_count + 0, dst_buf[i + 7] + vec_count + 0, error_tmp[6] + 0, error_cur + vec_count + 0,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 7] + vec_count + 0, dst[i + 7] + vec_count + 0, error_tmp[6] + 0, error_cur + vec_count + 0,
 	                                         scale, offset, bits, width - vec_count - 0);
 }
 
@@ -467,9 +476,7 @@ class ErrorDiffusionAVX2 final : public graphengine::Filter {
 		float *error_top = (i / 8) % 2 ? ctx_a : ctx_b;
 		float *error_cur = (i / 8) % 2 ? ctx_b : ctx_a;
 
-		graph::ImageBuffer<const void> src_buf{ in->ptr, in->stride, in->mask };
-		graph::ImageBuffer<void> dst_buf{ out->ptr, out->stride, out->mask };
-		m_avx2_func(src_buf, dst_buf, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
+		m_avx2_func(*in, *out, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
 	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :

@@ -4,7 +4,6 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graph/image_buffer.h"
 #include "unresize_impl.h"
 
 #if defined(ZIMG_X86)
@@ -15,6 +14,16 @@ namespace zimg {
 namespace unresize {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *dst)
 {
@@ -46,7 +55,7 @@ void unresize_line_h_f32_c(const BilinearContext &ctx, const float *src, float *
 	}
 }
 
-void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const graph::ImageBuffer<const float> &src, const graph::ImageBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
+void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const Buffer<const float> &src, const Buffer<float> &dst, unsigned i, unsigned left, unsigned right)
 {
 	const float *c = ctx.lu_c.data();
 	const float *l = ctx.lu_l.data();
@@ -70,7 +79,7 @@ void unresize_line_forward_v_f32_c(const BilinearContext &ctx, const graph::Imag
 	}
 }
 
-void unresize_line_back_v_f32_c(const BilinearContext &ctx, const graph::ImageBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
+void unresize_line_back_v_f32_c(const BilinearContext &ctx, const Buffer<float> &dst, unsigned i, unsigned left, unsigned right)
 {
 	const float *u = ctx.lu_u.data();
 
@@ -114,15 +123,13 @@ public:
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
-		graph::ImageBuffer<const float> src_buf{ static_cast<const float *>(in->ptr), in->stride, in->mask };
-		graph::ImageBuffer<float> dst_buf{ static_cast<float *>(out->ptr), out->stride, out->mask };
 		unsigned height = m_desc.format.height;
 
 		for (unsigned i = 0; i < height; ++i) {
-			unresize_line_forward_v_f32_c(m_context, src_buf, dst_buf, i, left, right);
+			unresize_line_forward_v_f32_c(m_context, *in, *out, i, left, right);
 		}
 		for (unsigned i = height; i != 0; --i) {
-			unresize_line_back_v_f32_c(m_context, dst_buf, i, left, right);
+			unresize_line_back_v_f32_c(m_context, *out, i, left, right);
 		}
 	}
 };

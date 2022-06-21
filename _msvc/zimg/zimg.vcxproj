@@ -344,7 +344,6 @@
     <ClInclude Include="..\..\src\zimg\graph\basic_filter2.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder2.h" />
-    <ClInclude Include="..\..\src\zimg\graph\image_buffer.h" />
     <ClInclude Include="..\..\src\zimg\resize\arm\resize_impl_arm.h" />
     <ClInclude Include="..\..\src\zimg\resize\filter.h" />
     <ClInclude Include="..\..\src\zimg\resize\resize.h" />

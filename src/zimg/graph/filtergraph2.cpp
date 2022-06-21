@@ -58,30 +58,15 @@ void FilterGraph2::set_tile_width(unsigned tile_width)
 	graphengine::GraphImpl::from(m_graph.get())->set_tile_width(tile_width);
 }
 
-void FilterGraph2::process(const ColorImageBuffer<const void> &src, const ColorImageBuffer<void> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
+void FilterGraph2::process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
 {
 	graphengine::Graph::EndpointConfiguration endpoints{};
 
-	endpoints[0] = {
-		m_source_id,
-		{
-			{ const_cast<void *>(src[0].data()), src[0].stride(), src[0].mask() },
-			{ const_cast<void *>(src[1].data()), src[1].stride(), src[1].mask() },
-			{ const_cast<void *>(src[2].data()), src[2].stride(), src[2].mask() },
-			{ const_cast<void *>(src[3].data()), src[3].stride(), src[3].mask() },
-		},
-		{ unpack_cb, unpack_user }
-	};
-	endpoints[1] = {
-		m_sink_id,
-		{
-			{ dst[0].data(), dst[0].stride(), dst[0].mask() },
-			{ dst[1].data(), dst[1].stride(), dst[1].mask() },
-			{ dst[2].data(), dst[2].stride(), dst[2].mask() },
-			{ dst[3].data(), dst[3].stride(), dst[3].mask() },
-		},
-		{ pack_cb, pack_user }
-	};
+	endpoints[0] = { m_source_id, {}, {unpack_cb, unpack_user} };
+	std::copy_n(src.data(), 4, endpoints[0].buffer);
+
+	endpoints[1] = { m_sink_id, {}, {pack_cb, pack_user} };
+	std::copy_n(dst.data(), 4, endpoints[1].buffer);
 
 	try {
 		m_graph->run(endpoints, tmp);

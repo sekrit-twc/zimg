@@ -3,8 +3,9 @@
 #ifndef ZIMG_GRAPH_FILTERGRAPH2_H_
 #define ZIMG_GRAPH_FILTERGRAPH2_H_
 
+#include <array>
 #include <memory>
-#include "image_buffer.h"
+#include "graphengine/types.h"
 
 // Base class in global namespace for API export.
 struct zimg_filter_graph {
@@ -49,7 +50,7 @@ public:
 
 	void set_requires_64b_alignment() { m_requires_64b = true; }
 
-	void process(const ColorImageBuffer<const void> &src, const ColorImageBuffer<void> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const;
+	void process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const;
 };
 
 } // namespace graph

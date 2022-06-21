@@ -5,7 +5,6 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graph/image_buffer.h"
 #include "filter.h"
 #include "resize_impl.h"
 
@@ -19,6 +18,16 @@ namespace zimg {
 namespace resize {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 int32_t unpack_pixel_u16(uint16_t x) noexcept
 {
@@ -67,7 +76,7 @@ void resize_line_h_f32_c(const FilterContext &filter, const float *src, float *d
 	}
 }
 
-void resize_line_v_u16_c(const FilterContext &filter, const graph::ImageBuffer<const uint16_t> &src, const graph::ImageBuffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
+void resize_line_v_u16_c(const FilterContext &filter, const Buffer<const uint16_t> &src, const Buffer<uint16_t> &dst, unsigned i, unsigned left, unsigned right, unsigned pixel_max)
 {
 	const int16_t *filter_coeffs = &filter.data_i16[i * filter.stride_i16];
 	unsigned top = filter.left[i];
@@ -86,7 +95,7 @@ void resize_line_v_u16_c(const FilterContext &filter, const graph::ImageBuffer<c
 	}
 }
 
-void resize_line_v_f32_c(const FilterContext &filter, const graph::ImageBuffer<const float> &src, const graph::ImageBuffer<float> &dst, unsigned i, unsigned left, unsigned right)
+void resize_line_v_f32_c(const FilterContext &filter, const Buffer<const float> &src, const Buffer<float> &dst, unsigned i, unsigned left, unsigned right)
 {
 	const float *filter_coeffs = &filter.data[i * filter.stride];
 	unsigned top = filter.left[i];
@@ -145,13 +154,10 @@ public:
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
-		graph::ImageBuffer<const void> src_buf{ in->ptr, in->stride, in->mask };
-		graph::ImageBuffer<void> dst_buf{ out->ptr, out->stride, out->mask };
-
 		if (m_type == PixelType::WORD)
-			resize_line_v_u16_c(m_filter, src_buf.static_buffer_cast<const uint16_t>(), dst_buf.static_buffer_cast<uint16_t>(), i, left, right, m_pixel_max);
+			resize_line_v_u16_c(m_filter, *in, *out, i, left, right, m_pixel_max);
 		else
-			resize_line_v_f32_c(m_filter, src_buf.static_buffer_cast<const float>(), dst_buf.static_buffer_cast<float>(), i, left, right);
+			resize_line_v_f32_c(m_filter, *in, *out, i, left, right);
 	}
 };
 

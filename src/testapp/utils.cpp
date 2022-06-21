@@ -75,12 +75,12 @@ FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengin
 
 	m_data->endpoints[0].id = src_id;
 	for (unsigned p = 0; p < src_frame->planes(); ++p) {
-		m_data->endpoints[0].buffer[p] = { const_cast<void *>(src_frame->as_read_buffer(p).data()), src_frame->as_read_buffer(p).stride(), src_frame->as_read_buffer(p).mask() };
+		m_data->endpoints[0].buffer[p] = src_frame->as_buffer(p);
 	}
 
 	m_data->endpoints[1].id = sink_id;
 	for (unsigned p = 0; p < dst_frame->planes(); ++p) {
-		m_data->endpoints[1].buffer[p] = { dst_frame->as_write_buffer(p).data(), dst_frame->as_write_buffer(p).stride(), dst_frame->as_write_buffer(p).mask() };
+		m_data->endpoints[1].buffer[p] = dst_frame->as_buffer(p);
 	}
 
 	m_data->tmp.resize(m_data->graph.get_tmp_size(false));

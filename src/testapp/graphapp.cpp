@@ -286,7 +286,7 @@ void thread_target(const zimg::graph::FilterGraph2 *graph,
 			if ((*counter)-- <= 0)
 				break;
 
-			graph->process(src_frame.as_read_buffer(), dst_frame.as_write_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
+			graph->process(src_frame.as_buffer(), dst_frame.as_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 		}
 	} catch (...) {
 		std::lock_guard<std::mutex> lock{ *mutex };

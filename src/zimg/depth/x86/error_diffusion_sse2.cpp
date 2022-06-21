@@ -13,7 +13,6 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graph/image_buffer.h"
 #include "graphengine/filter.h"
 #include "dither_x86.h"
 
@@ -23,6 +22,16 @@ namespace zimg {
 namespace depth {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 struct error_state {
 	float err_left[4];
@@ -190,7 +199,7 @@ inline FORCE_INLINE void error_diffusion_wf_sse2_xiter(__m128 &v, unsigned j, co
 }
 
 template <class T, class U>
-void error_diffusion_wf_sse2(const graph::ImageBuffer<const T> &src, const graph::ImageBuffer<U> &dst, unsigned i,
+void error_diffusion_wf_sse2(const Buffer<const T> &src, const Buffer<U> &dst, unsigned i,
                              const float *error_top, float *error_cur, error_state *state, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<T> src_traits;
@@ -258,19 +267,19 @@ void error_diffusion_wf_sse2(const graph::ImageBuffer<const T> &src, const graph
 }
 
 template <class T, class U>
-void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i,
+void error_diffusion_sse2(const Buffer<const void> &src_, const Buffer<void> &dst_, unsigned i,
                           const float *error_top, float *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
-	const graph::ImageBuffer<const T> &src_buf = graph::static_buffer_cast<const T>(src);
-	const graph::ImageBuffer<U> &dst_buf = graph::static_buffer_cast<U>(dst);
+	Buffer<const T> src{ src_.buffer };
+	Buffer<U> dst{ dst_.buffer };
 
 	error_state state alignas(16) = {};
 	float error_tmp[3][12] = {};
 
 	// Prologue.
-	error_diffusion_scalar<T, U>(src_buf[i + 0], dst_buf[i + 0], error_top, error_tmp[0], scale, offset, bits, 6);
-	error_diffusion_scalar<T, U>(src_buf[i + 1], dst_buf[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 4);
-	error_diffusion_scalar<T, U>(src_buf[i + 2], dst_buf[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 2);
+	error_diffusion_scalar<T, U>(src[i + 0], dst[i + 0], error_top, error_tmp[0], scale, offset, bits, 6);
+	error_diffusion_scalar<T, U>(src[i + 1], dst[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 4);
+	error_diffusion_scalar<T, U>(src[i + 2], dst[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 2);
 
 	// Wavefront.
 	state.err_left[0] = error_tmp[0][5 + 1];
@@ -294,7 +303,7 @@ void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph
 	state.err_top_left[3] = 0.0f;
 
 	unsigned vec_count = floor_n(width - 6, 4);
-	error_diffusion_wf_sse2<T, U>(src_buf, dst_buf, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
+	error_diffusion_wf_sse2<T, U>(src, dst, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
 
 	error_tmp[0][5 + 1] = state.err_top_right[1];
 	error_tmp[0][4 + 1] = state.err_top[1];
@@ -309,13 +318,13 @@ void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph
 	error_tmp[2][0] = state.err_top_left[3];
 
 	// Epilogue.
-	error_diffusion_scalar<T, U>(src_buf[i + 0] + vec_count + 6, dst_buf[i + 0] + vec_count + 6, error_top + vec_count + 6, error_tmp[0] + 6,
+	error_diffusion_scalar<T, U>(src[i + 0] + vec_count + 6, dst[i + 0] + vec_count + 6, error_top + vec_count + 6, error_tmp[0] + 6,
 	                             scale, offset, bits, width - vec_count - 6);
-	error_diffusion_scalar<T, U>(src_buf[i + 1] + vec_count + 4, dst_buf[i + 1] + vec_count + 4, error_tmp[0] + 4, error_tmp[1] + 4,
+	error_diffusion_scalar<T, U>(src[i + 1] + vec_count + 4, dst[i + 1] + vec_count + 4, error_tmp[0] + 4, error_tmp[1] + 4,
 	                             scale, offset, bits, width - vec_count - 4);
-	error_diffusion_scalar<T, U>(src_buf[i + 2] + vec_count + 2, dst_buf[i + 2] + vec_count + 2, error_tmp[1] + 2, error_tmp[2] + 2,
+	error_diffusion_scalar<T, U>(src[i + 2] + vec_count + 2, dst[i + 2] + vec_count + 2, error_tmp[1] + 2, error_tmp[2] + 2,
 	                             scale, offset, bits, width - vec_count - 2);
-	error_diffusion_scalar<T, U>(src_buf[i + 3] + vec_count + 0, dst_buf[i + 3] + vec_count + 0, error_tmp[2] + 0, error_cur + vec_count + 0,
+	error_diffusion_scalar<T, U>(src[i + 3] + vec_count + 0, dst[i + 3] + vec_count + 0, error_tmp[2] + 0, error_cur + vec_count + 0,
 	                             scale, offset, bits, width - vec_count - 0);
 }
 
@@ -375,9 +384,7 @@ class ErrorDiffusionSSE2 : public graphengine::Filter {
 		float *error_top = (i / 4) % 2 ? ctx_a : ctx_b;
 		float *error_cur = (i / 4) % 2 ? ctx_b : ctx_a;
 
-		graph::ImageBuffer<const void> src_buf{ in->ptr, in->stride, in->mask };
-		graph::ImageBuffer<void> dst_buf{ out->ptr, out->stride, out->mask };
-		m_sse2_func(src_buf, dst_buf, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
+		m_sse2_func(*in, *out, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
 	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) try :
