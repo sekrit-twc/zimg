@@ -153,11 +153,7 @@
     <ClCompile Include="..\..\test\extra\musl-libm\__rem_pio2.c" />
     <ClCompile Include="..\..\test\extra\musl-libm\__rem_pio2_large.c" />
     <ClCompile Include="..\..\test\extra\musl-libm\__sin.c" />
-    <ClCompile Include="..\..\test\graph\audit_buffer.cpp" />
-    <ClCompile Include="..\..\test\graph\filtergraph_test.cpp" />
-    <ClCompile Include="..\..\test\graph\filter_validator.cpp" />
     <ClCompile Include="..\..\test\graph\graphbuilder_test.cpp" />
-    <ClCompile Include="..\..\test\graph\mock_filter.cpp" />
     <ClCompile Include="..\..\test\main.cpp" />
     <ClCompile Include="..\..\test\resize\arm\resize_impl_neon_test.cpp" />
     <ClCompile Include="..\..\test\resize\filter_test.cpp" />
@@ -173,16 +169,12 @@
     <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h" />
     <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h" />
     <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h" />
+    <ClInclude Include="..\..\test\dynamic_type.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\exp2f_data.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\logf_data.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\mymath.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\powf_data.h" />
-    <ClInclude Include="..\..\test\extra\sha1\config.h" />
-    <ClInclude Include="..\..\test\extra\sha1\sha1.h" />
-    <ClInclude Include="..\..\test\graph\audit_buffer.h" />
-    <ClInclude Include="..\..\test\graph\filter_validator.h" />
-    <ClInclude Include="..\..\test\graph\mock_filter.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DDD98DB2-2ABE-4550-9F8C-0E4E4E991D73}</ProjectGuid>

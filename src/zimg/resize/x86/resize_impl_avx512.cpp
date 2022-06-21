@@ -12,7 +12,6 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graph/filtergraph.h"
 #include "graphengine/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -658,60 +657,6 @@ constexpr auto resize_line_v_fp_avx512_jt_cont = make_array(
 
 
 template <class Traits>
-class ResizeImplH_FP_AVX512 final : public ResizeImplH {
-	typedef typename Traits::pixel_type pixel_type;
-	typedef typename decltype(resize_line16_h_fp_avx512_jt_small<Traits>)::value_type func_type;
-
-	func_type m_func;
-public:
-	ResizeImplH_FP_AVX512(const FilterContext &filter, unsigned height) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, Traits::type_constant }),
-		m_func{}
-	{
-		if (filter.filter_width <= 8)
-			m_func = resize_line16_h_fp_avx512_jt_small<Traits>[filter.filter_width - 1];
-		else
-			m_func = resize_line16_h_fp_avx512_jt_large<Traits>[filter.filter_width % 4];
-	}
-
-	unsigned get_simultaneous_lines() const override { return 16; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
-	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 16) - floor_n(range.first, 16)) * sizeof(pixel_type) * 16;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		auto range = get_required_col_range(left, right);
-
-		alignas(64) const pixel_type *src_ptr[16];
-		alignas(64) pixel_type *dst_ptr[16];
-		pixel_type *transpose_buf = static_cast<pixel_type *>(tmp);
-		unsigned height = get_image_attributes().height;
-
-		calculate_line_address(src_ptr + 0, src->data(), src->stride(), src->mask(), i + 0, height);
-		calculate_line_address(src_ptr + 8, src->data(), src->stride(), src->mask(), i + std::min(8U, height - i - 1), height);
-
-		transpose_line_16x16<Traits>(transpose_buf, src_ptr, floor_n(range.first, 16), ceil_n(range.second, 16));
-
-		calculate_line_address(dst_ptr + 0, dst->data(), dst->stride(), dst->mask(), i + 0, height);
-		calculate_line_address(dst_ptr + 8, dst->data(), dst->stride(), dst->mask(), i + std::min(8U, height - i - 1), height);
-
-		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
-		       transpose_buf, dst_ptr, floor_n(range.first, 16), left, right);
-	}
-};
-
-
-template <class Traits>
 class ResizeImplH_GE_FP_AVX512 final : public ResizeImplH_GE {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line16_h_fp_avx512_jt_small<Traits>)::value_type func_type;
@@ -753,114 +698,6 @@ public:
 
 		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
 		       transpose_buf, dst_ptr, floor_n(range.first, 16), left, right);
-	}
-};
-
-
-template <class Traits>
-class ResizeImplH_Permute_FP_AVX512 final : public graph::ImageFilterBase {
-	typedef typename Traits::pixel_type pixel_type;
-	typedef typename decltype(resize_line_h_perm_fp_avx512_jt<Traits>)::value_type func_type;
-
-	struct PermuteContext {
-		AlignedVector<unsigned> left;
-		AlignedVector<unsigned> permute;
-		AlignedVector<float> data;
-		unsigned filter_rows;
-		unsigned filter_width;
-		unsigned input_width;
-	};
-
-	PermuteContext m_context;
-	unsigned m_height;
-	bool m_is_sorted;
-
-	func_type m_func;
-
-	ResizeImplH_Permute_FP_AVX512(PermuteContext context, unsigned height) :
-		m_context(std::move(context)),
-		m_height{ height },
-		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
-		m_func{ resize_line_h_perm_fp_avx512_jt<Traits>[m_context.filter_width - 1] }
-	{}
-public:
-	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height)
-	{
-		// Transpose is faster for large filters.
-		if (filter.filter_width > 16)
-			return nullptr;
-
-		PermuteContext context{};
-
-		context.left.resize(ceil_n(filter.filter_rows, 16) / 16);
-		context.permute.resize(ceil_n(filter.filter_rows, 16));
-		context.data.resize(ceil_n(filter.filter_rows, 16) * filter.filter_width);
-		context.filter_rows = filter.filter_rows;
-		context.filter_width = filter.filter_width;
-		context.input_width = filter.input_width;
-
-		for (unsigned i = 0; i < filter.filter_rows; i += 16) {
-			unsigned left_min = UINT_MAX;
-			unsigned left_max = 0U;
-
-			for (unsigned ii = i; ii < std::min(i + 16, context.filter_rows); ++ii) {
-				left_min = std::min(left_min, filter.left[ii]);
-				left_max = std::max(left_max, filter.left[ii]);
-			}
-			if (left_max - left_min >= 16)
-				return nullptr;
-
-			for (unsigned ii = i; ii < std::min(i + 16, context.filter_rows); ++ii) {
-				context.permute[ii] = filter.left[ii] - left_min;
-			}
-			context.left[i / 16] = left_min;
-
-			float *data = context.data.data() + i * context.filter_width;
-			for (unsigned k = 0; k < context.filter_width; ++k) {
-				for (unsigned ii = i; ii < std::min(i + 16, context.filter_rows); ++ii) {
-					data[static_cast<size_t>(k) * 16 + (ii - i)] = filter.data[ii * static_cast<ptrdiff_t>(filter.stride) + k];
-				}
-			}
-		}
-
-		std::unique_ptr<graph::ImageFilter> ret{ new ResizeImplH_Permute_FP_AVX512(std::move(context), height) };
-		return ret;
-	}
-
-	filter_flags get_flags() const override
-	{
-		filter_flags flags{};
-
-		flags.same_row = true;
-		flags.entire_row = !m_is_sorted;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_context.filter_rows, m_height, Traits::type_constant };
-	}
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
-	{
-		if (m_is_sorted) {
-			unsigned input_width = m_context.input_width;
-			unsigned right_base = m_context.left[(right + 15) / 16 - 1];
-			unsigned iter_width = m_context.filter_width + 16;
-
-			return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
-		} else {
-			return{ 0, m_context.input_width };
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const pixel_type>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<pixel_type>(*dst);
-
-		m_func(m_context.left.data(), m_context.permute.data(), m_context.data.data(), m_context.input_width, src_buf[i], dst_buf[i], left, right);
 	}
 };
 
@@ -965,44 +802,6 @@ public:
 
 
 template <class Traits>
-class ResizeImplV_FP_AVX512 final : public ResizeImplV {
-	typedef typename Traits::pixel_type pixel_type;
-public:
-	ResizeImplV_FP_AVX512(const FilterContext &filter, unsigned width) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, Traits::type_constant })
-	{}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &dst_buf = graph::static_buffer_cast<pixel_type>(*dst);
-
-		const float *filter_data = m_filter.data.data() + i * m_filter.stride;
-		unsigned filter_width = m_filter.filter_width;
-		unsigned src_height = m_filter.input_width;
-
-		alignas(64) const pixel_type *src_lines[8];
-		pixel_type *dst_line = dst_buf[i];
-
-		{
-			unsigned taps_remain = std::min(filter_width - 0, 8U);
-			unsigned top = m_filter.left[i] + 0;
-
-			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top, src_height);
-			resize_line_v_fp_avx512_jt_init<Traits>[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
-		}
-
-		for (unsigned k = 8; k < filter_width; k += 8) {
-			unsigned taps_remain = std::min(filter_width - k, 8U);
-			unsigned top = m_filter.left[i] + k;
-
-			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top, src_height);
-			resize_line_v_fp_avx512_jt_cont<Traits>[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
-		}
-	}
-};
-
-
-template <class Traits>
 class ResizeImplV_GE_FP_AVX512 final : public ResizeImplV_GE {
 	typedef typename Traits::pixel_type pixel_type;
 public:
@@ -1041,31 +840,6 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx512(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
-{
-	std::unique_ptr<graph::ImageFilter> ret;
-
-#ifndef ZIMG_RESIZE_NO_PERMUTE
-	if (type == PixelType::WORD)
-		ret = ResizeImplH_Permute_U16_AVX512::create(context, height, depth);
-	else if (type == PixelType::HALF)
-		ret = ResizeImplH_Permute_FP_AVX512<f16_traits>::create(context, height);
-	else if (type == PixelType::FLOAT)
-		ret = ResizeImplH_Permute_FP_AVX512<f32_traits>::create(context, height);
-#endif
-
-	if (!ret) {
-		if (type == PixelType::WORD)
-			ret = std::make_unique<ResizeImplH_U16_AVX512>(context, height, depth);
-		else if (type == PixelType::HALF)
-			ret = std::make_unique<ResizeImplH_FP_AVX512<f16_traits>>(context, height);
-		else if (type == PixelType::FLOAT)
-			ret = std::make_unique<ResizeImplH_FP_AVX512<f32_traits>>(context, height);
-	}
-
-	return ret;
-}
-
 std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx512(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
@@ -1087,20 +861,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx512(const Filter
 		else if (type == PixelType::FLOAT)
 			ret = std::make_unique<ResizeImplH_GE_FP_AVX512<f32_traits>>(context, height);
 	}
-
-	return ret;
-}
-
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx512(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
-{
-	std::unique_ptr<graph::ImageFilter> ret;
-
-	if (type == PixelType::WORD)
-		ret = std::make_unique<ResizeImplV_U16_AVX512>(context, width, depth);
-	else if (type == PixelType::HALF)
-		ret = std::make_unique<ResizeImplV_FP_AVX512<f16_traits>>(context, width);
-	else if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplV_FP_AVX512<f32_traits>>(context, width);
 
 	return ret;
 }

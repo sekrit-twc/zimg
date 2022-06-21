@@ -14,7 +14,6 @@
 #include "common/zassert.h"
 #include "depth/quantize.h"
 #include "graph/image_buffer.h"
-#include "graph/image_filter.h"
 #include "graphengine/filter.h"
 #include "dither_x86.h"
 
@@ -342,153 +341,6 @@ auto select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionSSE2 final : public graph::ImageFilter {
-	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
-	decltype(select_error_diffusion_sse2_func({}, {})) m_sse2_func;
-	dither_f16c_func m_f16c;
-
-	PixelType m_pixel_in;
-	PixelType m_pixel_out;
-
-	float m_scale;
-	float m_offset;
-	unsigned m_depth;
-
-	unsigned m_width;
-	unsigned m_height;
-
-	void process_scalar(void *ctx, const void *src, void *dst, void *tmp, bool parity) const
-	{
-		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
-
-		float *error_top = parity ? ctx_a : ctx_b;
-		float *error_cur = parity ? ctx_b : ctx_a;
-
-		if (m_f16c) {
-			m_f16c(src, tmp, 0, m_width);
-			src = tmp;
-		}
-		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
-	}
-
-	void process_vector(void *ctx, const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i) const
-	{
-		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
-
-		float *error_top = (i / 4) % 2 ? ctx_a : ctx_b;
-		float *error_cur = (i / 4) % 2 ? ctx_b : ctx_a;
-
-		m_sse2_func(src, dst, i, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
-	}
-public:
-	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) :
-		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
-		m_sse2_func{ select_error_diffusion_sse2_func(pixel_in.type, pixel_out.type) },
-		m_f16c{},
-		m_pixel_in{ pixel_in.type },
-		m_pixel_out{ pixel_out.type },
-		m_scale{},
-		m_offset{},
-		m_depth{ pixel_out.depth },
-		m_width{ width },
-		m_height{ height }
-	{
-		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
-
-		if (!pixel_is_integer(pixel_out.type))
-			error::throw_<error::InternalError>("cannot dither to non-integer format");
-		if (m_pixel_in == PixelType::HALF)
-			m_f16c = select_dither_f16c_func_x86(cpu);
-
-		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
-	}
-
-	filter_flags get_flags() const override
-	{
-		filter_flags flags{};
-
-		flags.has_state = true;
-		flags.same_row = true;
-		flags.in_place = pixel_size(m_pixel_in) == pixel_size(m_pixel_out);
-		flags.entire_row = true;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_pixel_out };
-	}
-
-	pair_unsigned get_required_row_range(unsigned i) const override
-	{
-		unsigned last = std::min(i, UINT_MAX - 4) + 4;
-		return{ i, std::min(last, m_height) };
-	}
-
-	pair_unsigned get_required_col_range(unsigned, unsigned) const override
-	{
-		return{ 0, get_image_attributes().width };
-	}
-
-	unsigned get_simultaneous_lines() const override { return 4; }
-
-	unsigned get_max_buffering() const override { return 4; }
-
-	size_t get_context_size() const override
-	{
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	size_t get_tmp_size(unsigned, unsigned) const override
-	{
-		try {
-			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) * 4 : 0;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void init_context(void *ctx, unsigned seq) const override
-	{
-		std::fill_n(static_cast<unsigned char *>(ctx), get_context_size(), 0);
-	}
-
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const override
-	{
-		if (m_height - i < 4) {
-			bool parity = !!((i / 4) % 2);
-
-			for (unsigned ii = i; ii < m_height; ++ii) {
-				process_scalar(ctx, (*src)[ii], (*dst)[ii], tmp, parity);
-				parity = !parity;
-			}
-		} else if (m_f16c) {
-			float *tmp_p = static_cast<float *>(tmp);
-			ptrdiff_t tmp_stride = ceil_n(m_width * sizeof(float), ALIGNMENT);
-
-			for (unsigned n = 0; n < 4; ++n) {
-				m_f16c((*src)[i + n], tmp_p + n * (tmp_stride / sizeof(float)), 0, m_width);
-			}
-
-			graph::ImageBuffer<const void> tmp_buf{ tmp_p, tmp_stride, 0x03 };
-			process_vector(ctx, tmp_buf, *dst, i);
-		} else {
-			process_vector(ctx, *src, *dst, i);
-		}
-	}
-};
-
-
 class ErrorDiffusionSSE2_GE : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 
@@ -609,14 +461,6 @@ public:
 
 } // namespace
 
-
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
-{
-	if (width < 6)
-		return nullptr;
-
-	return std::make_unique<ErrorDiffusionSSE2>(width, height, pixel_in, pixel_out, cpu);
-}
 
 std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {

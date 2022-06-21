@@ -4,7 +4,6 @@
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
 #include <memory>
-#include "graph/image_filter.h"
 #include "graphengine/filter.h"
 #include "bilinear.h"
 
@@ -47,44 +46,6 @@ public:
 	void init_context(void *) const noexcept override {}
 };
 
-class UnresizeImplH : public graph::ImageFilterBase {
-protected:
-	BilinearContext m_context;
-	image_attributes m_attr;
-
-	UnresizeImplH(const BilinearContext &context, const image_attributes &attr);
-public:
-	filter_flags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	pair_unsigned get_required_row_range(unsigned i) const override;
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_max_buffering() const override;
-};
-
-class UnresizeImplV : public graph::ImageFilterBase {
-protected:
-	BilinearContext m_context;
-	image_attributes m_attr;
-
-	UnresizeImplV(const BilinearContext &context, const image_attributes &attr);
-public:
-	filter_flags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	pair_unsigned get_required_row_range(unsigned i) const override;
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_simultaneous_lines() const override;
-
-	unsigned get_max_buffering() const override;
-};
-
 struct UnresizeImplBuilder {
 	unsigned up_width;
 	unsigned up_height;
@@ -98,8 +59,6 @@ struct UnresizeImplBuilder {
 #undef BUILDER_MEMBER
 
 	UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type);
-
-	std::unique_ptr<graph::ImageFilter> create() const;
 
 	std::unique_ptr<graphengine::Filter> create_ge() const;
 };

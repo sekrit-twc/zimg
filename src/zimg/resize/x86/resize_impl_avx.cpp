@@ -9,7 +9,6 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graph/image_filter.h"
 #include "graphengine/filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
@@ -335,70 +334,6 @@ constexpr auto resize_line_v_f32_avx_jt_cont = make_array(
 	resize_line_v_f32_avx<8, true>);
 
 
-class ResizeImplH_F32_AVX final : public ResizeImplH {
-	decltype(resize_line8_h_f32_avx_jt_small)::value_type m_func;
-public:
-	ResizeImplH_F32_AVX(const FilterContext &filter, unsigned height) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),
-		m_func{}
-	{
-		if (filter.filter_width <= 8)
-			m_func = resize_line8_h_f32_avx_jt_small[filter.filter_width - 1];
-		else
-			m_func = resize_line8_h_f32_avx_jt_large[filter.filter_width % 4];
-	}
-
-	unsigned get_simultaneous_lines() const override { return 8; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
-	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (ceil_n(static_cast<checked_size_t>(range.second), 8) - floor_n(range.first, 8)) * sizeof(float) * 8;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
-		auto range = get_required_col_range(left, right);
-
-		const float *src_ptr[8] = { 0 };
-		float *dst_ptr[8] = { 0 };
-		float *transpose_buf = static_cast<float *>(tmp);
-		unsigned height = get_image_attributes().height;
-
-		src_ptr[0] = src_buf[std::min(i + 0, height - 1)];
-		src_ptr[1] = src_buf[std::min(i + 1, height - 1)];
-		src_ptr[2] = src_buf[std::min(i + 2, height - 1)];
-		src_ptr[3] = src_buf[std::min(i + 3, height - 1)];
-		src_ptr[4] = src_buf[std::min(i + 4, height - 1)];
-		src_ptr[5] = src_buf[std::min(i + 5, height - 1)];
-		src_ptr[6] = src_buf[std::min(i + 6, height - 1)];
-		src_ptr[7] = src_buf[std::min(i + 7, height - 1)];
-
-		transpose_line_8x8_ps(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
-
-		dst_ptr[0] = dst_buf[std::min(i + 0, height - 1)];
-		dst_ptr[1] = dst_buf[std::min(i + 1, height - 1)];
-		dst_ptr[2] = dst_buf[std::min(i + 2, height - 1)];
-		dst_ptr[3] = dst_buf[std::min(i + 3, height - 1)];
-		dst_ptr[4] = dst_buf[std::min(i + 4, height - 1)];
-		dst_ptr[5] = dst_buf[std::min(i + 5, height - 1)];
-		dst_ptr[6] = dst_buf[std::min(i + 6, height - 1)];
-		dst_ptr[7] = dst_buf[std::min(i + 7, height - 1)];
-
-		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
-			   transpose_buf, dst_ptr, floor_n(range.first, 8), left, right);
-	}
-};
-
-
 class ResizeImplH_GE_F32_AVX final : public ResizeImplH_GE {
 	decltype(resize_line8_h_f32_avx_jt_small)::value_type m_func;
 public:
@@ -449,59 +384,6 @@ public:
 
 		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
 			   transpose_buf, dst_ptr, floor_n(range.first, 8), left, right);
-	}
-};
-
-
-class ResizeImplV_F32_AVX final : public ResizeImplV {
-public:
-	ResizeImplV_F32_AVX(const FilterContext &filter, unsigned width) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, zimg::PixelType::FLOAT })
-	{}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
-
-		const float *filter_data = m_filter.data.data() + i * m_filter.stride;
-		unsigned filter_width = m_filter.filter_width;
-		unsigned src_height = m_filter.input_width;
-
-		const float *src_lines[8] = { 0 };
-		float *dst_line = dst_buf[i];
-
-		{
-			unsigned taps_remain = std::min(filter_width - 0, 8U);
-			unsigned top = m_filter.left[i] + 0;
-
-			src_lines[0] = src_buf[std::min(top + 0, src_height - 1)];
-			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
-			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
-			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
-			src_lines[4] = src_buf[std::min(top + 4, src_height - 1)];
-			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
-			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
-			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-
-			resize_line_v_f32_avx_jt_init[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
-		}
-
-		for (unsigned k = 8; k < filter_width; k += 8) {
-			unsigned taps_remain = std::min(filter_width - k, 8U);
-			unsigned top = m_filter.left[i] + k;
-
-			src_lines[0] = src_buf[std::min(top + 0, src_height - 1)];
-			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
-			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
-			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
-			src_lines[4] = src_buf[std::min(top + 4, src_height - 1)];
-			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
-			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
-			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
-
-			resize_line_v_f32_avx_jt_cont[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
-		}
 	}
 };
 
@@ -559,32 +441,12 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_avx(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
-{
-	std::unique_ptr<graph::ImageFilter> ret;
-
-	if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplH_F32_AVX>(context, height);
-
-	return ret;
-}
-
 std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
 		ret = std::make_unique<ResizeImplH_GE_F32_AVX>(context, height);
-
-	return ret;
-}
-
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_avx(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
-{
-	std::unique_ptr<graph::ImageFilter> ret;
-
-	if (type == zimg::PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplV_F32_AVX>(context, width);
 
 	return ret;
 }

@@ -1,7 +1,7 @@
 #include <cmath>
+#include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
-#include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
 
@@ -21,21 +21,20 @@ typedef std::unique_ptr<zimg::resize::Filter> filter_uptr;
 template <class T>
 filter_uptr make_filter(double, double)
 {
-	return filter_uptr{ new T{} };
+	return std::make_unique<T>();
 }
 
 filter_uptr make_bicubic_filter(double b, double c)
 {
 	b = std::isnan(b) ? zimg::resize::BicubicFilter::DEFAULT_B : b;
 	c = std::isnan(c) ? zimg::resize::BicubicFilter::DEFAULT_C : c;
-
-	return filter_uptr{ new zimg::resize::BicubicFilter{ b, c } };
+	return std::make_unique<zimg::resize::BicubicFilter>(b, c);
 }
 
 filter_uptr make_lanczos_filter(double taps, double)
 {
 	taps = std::isnan(taps) ? zimg::resize::LanczosFilter::DEFAULT_TAPS : std::max(taps, 1.0);
-	return filter_uptr{ new zimg::resize::LanczosFilter{ static_cast<unsigned>(taps) } };
+	return std::make_unique<zimg::resize::LanczosFilter>(static_cast<unsigned>(taps));
 }
 
 filter_uptr make_null_filter(double, double) { return nullptr; }

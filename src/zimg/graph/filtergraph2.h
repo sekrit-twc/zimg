@@ -4,7 +4,7 @@
 #define ZIMG_GRAPH_FILTERGRAPH2_H_
 
 #include <memory>
-#include "image_filter.h"
+#include "image_buffer.h"
 
 // Base class in global namespace for API export.
 struct zimg_filter_graph {

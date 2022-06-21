@@ -54,3 +54,4 @@ test-driver
 test-suite.log
 
 !doc/example/Makefile
+!src/testapp

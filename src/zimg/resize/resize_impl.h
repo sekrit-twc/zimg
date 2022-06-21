@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <utility>
-#include "graph/image_filter.h"
 #include "graphengine/filter.h"
 #include "filter.h"
 
@@ -49,42 +48,6 @@ public:
 	void init_context(void *) const noexcept override {}
 };
 
-class ResizeImplH : public graph::ImageFilterBase {
-protected:
-	FilterContext m_filter;
-	image_attributes m_attr;
-	bool m_is_sorted;
-
-	ResizeImplH(const FilterContext &filter, const image_attributes &attr);
-public:
-	filter_flags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	pair_unsigned get_required_row_range(unsigned i) const override;
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_max_buffering() const override;
-};
-
-class ResizeImplV : public graph::ImageFilterBase {
-protected:
-	FilterContext m_filter;
-	image_attributes m_attr;
-	bool m_is_sorted;
-
-	ResizeImplV(const FilterContext &filter, const image_attributes &attr);
-public:
-	filter_flags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	pair_unsigned get_required_row_range(unsigned i) const override;
-
-	unsigned get_max_buffering() const override;
-};
-
 struct ResizeImplBuilder {
 	unsigned src_width;
 	unsigned src_height;
@@ -101,8 +64,6 @@ struct ResizeImplBuilder {
 #undef BUILDER_MEMBER
 
 	ResizeImplBuilder(unsigned src_width, unsigned src_height, PixelType type);
-
-	std::unique_ptr<graph::ImageFilter> create() const;
 
 	std::unique_ptr<graphengine::Filter> create_ge() const;
 };

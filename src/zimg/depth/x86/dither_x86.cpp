@@ -3,7 +3,6 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graph/image_filter.h"
 #include "graphengine/filter.h"
 #include "dither_x86.h"
 #include "f16c_x86.h"
@@ -139,26 +138,6 @@ bool needs_dither_f16c_func_x86(CPUClass cpu)
 		return !caps.avx2;
 	else
 		return cpu < CPUClass::X86_AVX2;
-}
-
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
-{
-	X86Capabilities caps = query_x86_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
-
-	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.avx2 && caps.f16c && caps.fma)
-			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
-		if (!ret && caps.sse2)
-			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
-	} else {
-		if (!ret && cpu >= CPUClass::X86_AVX2)
-			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
-		if (!ret && cpu >= CPUClass::X86_SSE2)
-			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
-	}
-
-	return ret;
 }
 
 std::unique_ptr<graphengine::Filter> create_error_diffusion_x86_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)

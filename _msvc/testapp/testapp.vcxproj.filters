@@ -59,8 +59,5 @@
     <ClCompile Include="..\..\src\testapp\graphapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\testapp\graphapp2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
