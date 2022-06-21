@@ -14,7 +14,7 @@ namespace colorspace {
 
 namespace {
 
-class ColorspaceConversionImpl_GE : public graphengine::Filter {
+class ColorspaceConversionImpl : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 	std::array<std::unique_ptr<Operation>, 6> m_operations;
 
@@ -39,7 +39,7 @@ class ColorspaceConversionImpl_GE : public graphengine::Filter {
 		}
 	}
 public:
-	ColorspaceConversionImpl_GE(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out,
+	ColorspaceConversionImpl(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out,
 	                         const OperationParams &params, CPUClass cpu) :
 		m_desc{}
 	{
@@ -111,7 +111,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	cpu{ CPUClass::NONE }
 {}
 
-std::unique_ptr<graphengine::Filter> ColorspaceConversion::create_ge() const try
+std::unique_ptr<graphengine::Filter> ColorspaceConversion::create() const try
 {
 	if (width > pixel_max_width(PixelType::FLOAT))
 		error::throw_<error::OutOfMemory>();
@@ -124,7 +124,7 @@ std::unique_ptr<graphengine::Filter> ColorspaceConversion::create_ge() const try
 	      .set_approximate_gamma(approximate_gamma)
 	      .set_scene_referred(scene_referred);
 
-	return std::make_unique<ColorspaceConversionImpl_GE>(width, height, csp_in, csp_out, params, cpu);
+	return std::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
 } catch (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
 }

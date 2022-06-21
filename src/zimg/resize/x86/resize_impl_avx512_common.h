@@ -698,12 +698,12 @@ inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrd
 }
 
 
-class ResizeImplH_GE_U16_AVX512 final : public ResizeImplH_GE {
+class ResizeImplH_U16_AVX512 final : public ResizeImplH {
 	decltype(resize_line16_h_u16_avx512_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_GE_U16_AVX512(const FilterContext &filter, unsigned height, unsigned depth) try :
-		ResizeImplH_GE(filter, height, PixelType::WORD),
+	ResizeImplH_U16_AVX512(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
@@ -746,7 +746,7 @@ public:
 };
 
 
-class ResizeImplH_GE_Permute_U16_AVX512 final : public graphengine::Filter {
+class ResizeImplH_Permute_U16_AVX512 final : public graphengine::Filter {
 	typedef decltype(resize_line_h_perm_u16_avx512_jt)::value_type func_type;
 
 	struct PermuteContext {
@@ -763,7 +763,7 @@ class ResizeImplH_GE_Permute_U16_AVX512 final : public graphengine::Filter {
 	uint16_t m_pixel_max;
 	func_type m_func;
 
-	ResizeImplH_GE_Permute_U16_AVX512(PermuteContext context, unsigned height, unsigned depth) :
+	ResizeImplH_Permute_U16_AVX512(PermuteContext context, unsigned height, unsigned depth) :
 		m_desc{},
 		m_context(std::move(context)),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
@@ -820,7 +820,7 @@ public:
 			}
 		}
 
-		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_GE_Permute_U16_AVX512(std::move(context), height, depth) };
+		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_Permute_U16_AVX512(std::move(context), height, depth) };
 		return ret;
 	}
 
@@ -849,11 +849,11 @@ public:
 };
 
 
-class ResizeImplV_GE_U16_AVX512 final : public ResizeImplV_GE {
+class ResizeImplV_U16_AVX512 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_GE_U16_AVX512(const FilterContext &filter, unsigned width, unsigned depth) try :
-		ResizeImplV_GE(filter, width, PixelType::WORD),
+	ResizeImplV_U16_AVX512(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
 		if (m_filter.filter_width > 8)

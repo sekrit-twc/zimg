@@ -25,8 +25,8 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 	}
 
 	bool planes[] = { true, false, false, false };
-	auto result_c = zimg::depth::create_dither_ge(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::NONE);
-	auto result_avx2 = zimg::depth::create_dither_ge(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::X86_AVX2);
+	auto result_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::NONE);
+	auto result_avx2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::X86_AVX2);
 
 	graphengine::FilterValidation(result_avx2.filter_refs[0], {w, h, zimg::pixel_size(pixel_in.type)})
 		.set_reference_filter(result_c.filter_refs[0], expected_snr)

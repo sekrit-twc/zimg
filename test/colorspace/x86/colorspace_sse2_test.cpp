@@ -29,8 +29,8 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		.set_csp_out(csp_out)
 		.set_approximate_gamma(true);
 
-	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create_ge();
-	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::X86_SSE2).create_ge();
+	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
+	auto filter_sse2 = builder.set_cpu(zimg::CPUClass::X86_SSE2).create();
 
 	ASSERT_TRUE(filter_c);
 	ASSERT_TRUE(filter_sse2);

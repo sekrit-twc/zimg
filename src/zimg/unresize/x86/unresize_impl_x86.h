@@ -11,28 +11,20 @@ namespace graphengine {
 class Filter;
 }
 
+
 namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
 
 namespace unresize {
 
 struct BilinearContext;
 
 #define DECLARE_IMPL_H(cpu) \
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_h_##cpu(const BilinearContext &context, unsigned height, PixelType type); \
-std::unique_ptr<graphengine::Filter> create_unresize_impl_h_ge_##cpu(const BilinearContext &context, unsigned height, PixelType type);
+std::unique_ptr<graphengine::Filter> create_unresize_impl_h_##cpu(const BilinearContext &context, unsigned height, PixelType type);
 #define DECLARE_IMPL_V(cpu) \
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_v_##cpu(const BilinearContext &context, unsigned width, PixelType type); \
-std::unique_ptr<graphengine::Filter> create_unresize_impl_v_ge_##cpu(const BilinearContext &context, unsigned width, PixelType type);
+std::unique_ptr<graphengine::Filter> create_unresize_impl_v_##cpu(const BilinearContext &context, unsigned width, PixelType type);
 
 DECLARE_IMPL_H(sse)
 DECLARE_IMPL_V(sse)
@@ -40,13 +32,8 @@ DECLARE_IMPL_V(sse)
 #undef DECLARE_IMPL_H
 #undef DECLARE_IMPL_V
 
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_h_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu);
-
-std::unique_ptr<graphengine::Filter> create_unresize_impl_h_ge_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu);
-
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_v_x86(const BilinearContext &context, unsigned width, PixelType type, CPUClass cpu);
-
-std::unique_ptr<graphengine::Filter> create_unresize_impl_v_ge_x86(const BilinearContext &context, unsigned width, PixelType type, CPUClass cpu);
+std::unique_ptr<graphengine::Filter> create_unresize_impl_h_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu);
+std::unique_ptr<graphengine::Filter> create_unresize_impl_v_x86(const BilinearContext &context, unsigned width, PixelType type, CPUClass cpu);
 
 } // namespace unresize
 } // namespace zimg

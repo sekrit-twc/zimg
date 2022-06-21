@@ -28,8 +28,8 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 		.set_csp_in(csp_in)
 		.set_csp_out(csp_out);
 
-	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create_ge();
-	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create_ge();
+	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
+	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create();
 
 	ASSERT_TRUE(filter_c);
 	ASSERT_TRUE(filter_avx);

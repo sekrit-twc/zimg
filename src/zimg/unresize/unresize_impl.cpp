@@ -83,10 +83,10 @@ void unresize_line_back_v_f32_c(const BilinearContext &ctx, const graph::ImageBu
 }
 
 
-class UnresizeImplH_GE_C : public UnresizeImplH_GE {
+class UnresizeImplH_C : public UnresizeImplH {
 public:
-	UnresizeImplH_GE_C(const BilinearContext &context, unsigned height, PixelType type) :
-		UnresizeImplH_GE(context, context.output_width, height, type)
+	UnresizeImplH_C(const BilinearContext &context, unsigned height, PixelType type) :
+		UnresizeImplH(context, context.output_width, height, type)
 	{
 		zassert_d(context.input_width <= pixel_max_width(type), "overflow");
 		zassert_d(context.output_width <= pixel_max_width(type), "overflow");
@@ -102,10 +102,10 @@ public:
 	}
 };
 
-class UnresizeImplV_GE_C : public UnresizeImplV_GE {
+class UnresizeImplV_C : public UnresizeImplV {
 public:
-	UnresizeImplV_GE_C(const BilinearContext &context, unsigned width, PixelType type) :
-		UnresizeImplV_GE(context, width, context.output_width, type)
+	UnresizeImplV_C(const BilinearContext &context, unsigned width, PixelType type) :
+		UnresizeImplV(context, width, context.output_width, type)
 	{
 		if (type != PixelType::FLOAT)
 			error::throw_<error::InternalError>("pixel type not supported");
@@ -130,7 +130,7 @@ public:
 } // namespace
 
 
-UnresizeImplH_GE::UnresizeImplH_GE(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
+UnresizeImplH::UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
 	m_desc{},
 	m_context(context)
 {
@@ -144,20 +144,20 @@ UnresizeImplH_GE::UnresizeImplH_GE(const BilinearContext &context, unsigned widt
 	m_desc.flags.entire_row = 1;
 }
 
-std::pair<unsigned, unsigned> UnresizeImplH_GE::get_row_deps(unsigned i) const noexcept
+std::pair<unsigned, unsigned> UnresizeImplH::get_row_deps(unsigned i) const noexcept
 {
 	unsigned step = m_desc.step;
 	unsigned last = std::min(i, UINT_MAX - step) + step;
 	return{ i, std::min(last, m_desc.format.height) };
 }
 
-std::pair<unsigned, unsigned> UnresizeImplH_GE::get_col_deps(unsigned, unsigned) const noexcept
+std::pair<unsigned, unsigned> UnresizeImplH::get_col_deps(unsigned, unsigned) const noexcept
 {
 	return{ 0, m_context.input_width  };
 }
 
 
-UnresizeImplV_GE::UnresizeImplV_GE(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
+UnresizeImplV::UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
 	m_desc{},
 	m_context(context)
 {
@@ -171,12 +171,12 @@ UnresizeImplV_GE::UnresizeImplV_GE(const BilinearContext &context, unsigned widt
 	m_desc.flags.entire_col = 1;
 }
 
-std::pair<unsigned, unsigned> UnresizeImplV_GE::get_row_deps(unsigned i) const noexcept
+std::pair<unsigned, unsigned> UnresizeImplV::get_row_deps(unsigned i) const noexcept
 {
 	return{ 0, m_context.input_width };
 }
 
-std::pair<unsigned, unsigned> UnresizeImplV_GE::get_col_deps(unsigned left, unsigned right) const noexcept
+std::pair<unsigned, unsigned> UnresizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept
 {
 	return{ left, right };
 }
@@ -192,7 +192,7 @@ UnresizeImplBuilder::UnresizeImplBuilder(unsigned up_width, unsigned up_height, 
 	cpu{ CPUClass::NONE }
 {}
 
-std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create_ge() const
+std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create() const
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
@@ -201,14 +201,14 @@ std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create_ge() const
 
 #if defined(ZIMG_X86)
 	ret = horizontal ?
-		create_unresize_impl_h_ge_x86(context, up_height, type, cpu) :
-		create_unresize_impl_v_ge_x86(context, up_width, type, cpu);
+		create_unresize_impl_h_x86(context, up_height, type, cpu) :
+		create_unresize_impl_v_x86(context, up_width, type, cpu);
 #endif
 
 	if (!ret && horizontal)
-		ret = std::make_unique<UnresizeImplH_GE_C>(context, up_height, type);
+		ret = std::make_unique<UnresizeImplH_C>(context, up_height, type);
 	if (!ret && !horizontal)
-		ret = std::make_unique<UnresizeImplV_GE_C>(context, up_width, type);
+		ret = std::make_unique<UnresizeImplV_C>(context, up_width, type);
 
 	return ret;
 }

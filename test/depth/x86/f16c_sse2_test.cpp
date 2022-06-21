@@ -22,8 +22,8 @@ void test_case(zimg::PixelType pixel_in, zimg::PixelType pixel_out, const char *
 		return;
 	}
 
-	auto filter_c = zimg::depth::create_convert_to_float_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
-	auto filter_sse2 = zimg::depth::create_convert_to_float_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_SSE2);
+	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_sse2 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_SSE2);
 
 	graphengine::FilterValidation(filter_sse2.get(), { w, h, zimg::pixel_size(pixel_in) })
 		.set_reference_filter(filter_c.get(), expected_snr)

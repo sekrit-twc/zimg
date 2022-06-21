@@ -267,11 +267,11 @@ constexpr auto resize_line_v_f32_sse_jt_cont = make_array(
 	resize_line_v_f32_sse<4, true>);
 
 
-class ResizeImplH_GE_F32_SSE final : public ResizeImplH_GE {
+class ResizeImplH_F32_SSE final : public ResizeImplH {
 	decltype(resize_line4_h_f32_sse_jt_small)::value_type m_func;
 public:
-	ResizeImplH_GE_F32_SSE(const FilterContext &filter, unsigned height) try :
-		ResizeImplH_GE(filter, height, PixelType::FLOAT),
+	ResizeImplH_F32_SSE(const FilterContext &filter, unsigned height) try :
+		ResizeImplH(filter, height, PixelType::FLOAT),
 		m_func{}
 	{
 		m_desc.step = 4;
@@ -313,10 +313,10 @@ public:
 };
 
 
-class ResizeImplV_GE_F32_SSE final : public ResizeImplV_GE {
+class ResizeImplV_F32_SSE final : public ResizeImplV {
 public:
-	ResizeImplV_GE_F32_SSE(const FilterContext &filter, unsigned width) :
-		ResizeImplV_GE(filter, width, PixelType::FLOAT)
+	ResizeImplV_F32_SSE(const FilterContext &filter, unsigned width) :
+		ResizeImplV(filter, width, PixelType::FLOAT)
 	{}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
@@ -358,22 +358,22 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_sse(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplH_GE_F32_SSE>(context, height);
+		ret = std::make_unique<ResizeImplH_F32_SSE>(context, height);
 
 	return ret;
 }
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_v_ge_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_sse(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplV_GE_F32_SSE>(context, width);
+		ret = std::make_unique<ResizeImplV_F32_SSE>(context, width);
 
 	return ret;
 }

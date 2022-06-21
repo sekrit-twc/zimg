@@ -32,7 +32,7 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 	cpu{ CPUClass::NONE }
 {}
 
-auto UnresizeConversion::create_ge() const -> filter_pair_ge try
+auto UnresizeConversion::create() const -> filter_pair try
 {
 	if (up_width > pixel_max_width(PixelType::FLOAT) || orig_width > pixel_max_width(PixelType::FLOAT))
 		error::throw_<error::OutOfMemory>();
@@ -44,18 +44,18 @@ auto UnresizeConversion::create_ge() const -> filter_pair_ge try
 		return{};
 
 	auto builder = UnresizeImplBuilder{ up_width, up_height, type }.set_cpu(cpu);
-	filter_pair_ge ret{};
+	filter_pair ret{};
 
 	if (skip_h) {
 		ret.first = builder.set_horizontal(false)
 		                   .set_orig_dim(orig_height)
 		                   .set_shift(shift_h)
-		                   .create_ge();
+		                   .create();
 	} else if (skip_v) {
 		ret.first = builder.set_horizontal(true)
 		                   .set_orig_dim(orig_width)
 		                   .set_shift(shift_w)
-		                   .create_ge();
+		                   .create();
 	} else {
 		bool h_first = unresize_h_first(static_cast<double>(orig_width) / up_width, static_cast<double>(orig_height) / up_height);
 
@@ -63,24 +63,24 @@ auto UnresizeConversion::create_ge() const -> filter_pair_ge try
 			ret.first = builder.set_horizontal(true)
 			                   .set_orig_dim(orig_width)
 			                   .set_shift(shift_w)
-			                   .create_ge();
+			                   .create();
 
 			builder.up_width = orig_width;
 			ret.second = builder.set_horizontal(false)
 			                    .set_orig_dim(orig_height)
 			                    .set_shift(shift_h)
-			                    .create_ge();
+			                    .create();
 		} else {
 			ret.first = builder.set_horizontal(false)
 			                   .set_orig_dim(orig_height)
 			                   .set_shift(shift_h)
-			                   .create_ge();
+			                   .create();
 
 			builder.up_height = orig_height;
 			ret.second = builder.set_horizontal(true)
 			                    .set_orig_dim(orig_width)
 			                    .set_shift(shift_w)
-			                    .create_ge();
+			                    .create();
 		}
 	}
 

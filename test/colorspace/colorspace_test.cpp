@@ -16,7 +16,7 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	auto filter = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)
 		.set_csp_out(csp_out)
-		.create_ge();
+		.create();
 
 	ASSERT_TRUE(filter);
 
@@ -43,7 +43,7 @@ TEST(ColorspaceConversionTest, test_nop)
 	auto filter = zimg::colorspace::ColorspaceConversion{ 640, 480 }
 		.set_csp_in({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED })
 		.set_csp_out({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED })
-		.create_ge();
+		.create();
 	EXPECT_FALSE(filter);
 }
 

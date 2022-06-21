@@ -106,12 +106,12 @@ void resize_line_v_f32_c(const FilterContext &filter, const graph::ImageBuffer<c
 }
 
 
-class ResizeImplH_GE_C : public ResizeImplH_GE {
+class ResizeImplH_C : public ResizeImplH {
 	PixelType m_type;
 	uint32_t m_pixel_max;
 public:
-	ResizeImplH_GE_C(const FilterContext &filter, unsigned height, PixelType type, unsigned depth) :
-		ResizeImplH_GE(filter, height, type),
+	ResizeImplH_C(const FilterContext &filter, unsigned height, PixelType type, unsigned depth) :
+		ResizeImplH(filter, height, type),
 		m_type{ type },
 		m_pixel_max{ static_cast<uint32_t>(1UL << depth) - 1 }
 	{
@@ -129,12 +129,12 @@ public:
 	}
 };
 
-class ResizeImplV_GE_C : public ResizeImplV_GE {
+class ResizeImplV_C : public ResizeImplV {
 	PixelType m_type;
 	uint32_t m_pixel_max;
 public:
-	ResizeImplV_GE_C(const FilterContext &filter, unsigned width, PixelType type, unsigned depth) :
-		ResizeImplV_GE(filter, width, type),
+	ResizeImplV_C(const FilterContext &filter, unsigned width, PixelType type, unsigned depth) :
+		ResizeImplV(filter, width, type),
 		m_type{ type },
 		m_pixel_max{ static_cast<uint32_t>(1UL << depth) - 1 }
 	{
@@ -158,7 +158,7 @@ public:
 } // namespace
 
 
-ResizeImplH_GE::ResizeImplH_GE(const FilterContext &filter, unsigned height, PixelType type) :
+ResizeImplH::ResizeImplH(const FilterContext &filter, unsigned height, PixelType type) :
 	m_desc{},
 	m_filter(filter)
 {
@@ -173,14 +173,14 @@ ResizeImplH_GE::ResizeImplH_GE(const FilterContext &filter, unsigned height, Pix
 	m_desc.flags.entire_row = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
 }
 
-std::pair<unsigned, unsigned> ResizeImplH_GE::get_row_deps(unsigned i) const noexcept
+std::pair<unsigned, unsigned> ResizeImplH::get_row_deps(unsigned i) const noexcept
 {
 	unsigned step = m_desc.step;
 	unsigned last = std::min(i, UINT_MAX - step) + step;
 	return{ i, std::min(last, m_desc.format.height) };
 }
 
-std::pair<unsigned, unsigned> ResizeImplH_GE::get_col_deps(unsigned left, unsigned right) const noexcept
+std::pair<unsigned, unsigned> ResizeImplH::get_col_deps(unsigned left, unsigned right) const noexcept
 {
 	if (m_desc.flags.entire_row)
 		return{ 0, m_filter.input_width };
@@ -191,7 +191,7 @@ std::pair<unsigned, unsigned> ResizeImplH_GE::get_col_deps(unsigned left, unsign
 }
 
 
-ResizeImplV_GE::ResizeImplV_GE(const FilterContext &filter, unsigned width, PixelType type) :
+ResizeImplV::ResizeImplV(const FilterContext &filter, unsigned width, PixelType type) :
 	m_desc{},
 	m_filter(filter),
 	m_unsorted{}
@@ -206,7 +206,7 @@ ResizeImplV_GE::ResizeImplV_GE(const FilterContext &filter, unsigned width, Pixe
 	m_unsorted = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
 }
 
-std::pair<unsigned, unsigned> ResizeImplV_GE::get_row_deps(unsigned i) const noexcept
+std::pair<unsigned, unsigned> ResizeImplV::get_row_deps(unsigned i) const noexcept
 {
 	if (m_unsorted)
 		return{ 0, m_filter.input_width };
@@ -220,7 +220,7 @@ std::pair<unsigned, unsigned> ResizeImplV_GE::get_row_deps(unsigned i) const noe
 	return{ top_dep, bot_dep + m_filter.filter_width };
 }
 
-std::pair<unsigned, unsigned> ResizeImplV_GE::get_col_deps(unsigned left, unsigned right) const noexcept
+std::pair<unsigned, unsigned> ResizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept
 {
 	return{ left, right };
 }
@@ -239,7 +239,7 @@ ResizeImplBuilder::ResizeImplBuilder(unsigned src_width, unsigned src_height, Pi
 	cpu{ CPUClass::NONE }
 {}
 
-std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create_ge() const
+std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create() const
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
@@ -248,17 +248,17 @@ std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create_ge() const
 
 #if defined(ZIMG_X86)
 	ret = horizontal ?
-		create_resize_impl_h_ge_x86(filter_ctx, src_height, type, depth, cpu) :
-		create_resize_impl_v_ge_x86(filter_ctx, src_width, type, depth, cpu);
+		create_resize_impl_h_x86(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_x86(filter_ctx, src_width, type, depth, cpu);
 #elif defined(ZIMG_ARM)
 	ret = nullptr /*horizontal ?
-		create_resize_impl_h_ge_arm(filter_ctx, src_height, type, depth, cpu) :
-		create_resize_impl_v_ge_arm(filter_ctx, src_width, type, depth, cpu)*/;
+		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu)*/;
 #endif
 	if (!ret && horizontal)
-		ret = std::make_unique<ResizeImplH_GE_C>(filter_ctx, src_height, type, depth);
+		ret = std::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
 	if (!ret && !horizontal)
-		ret = std::make_unique<ResizeImplV_GE_C>(filter_ctx, src_width, type, depth);
+		ret = std::make_unique<ResizeImplV_C>(filter_ctx, src_width, type, depth);
 
 	return ret;
 }

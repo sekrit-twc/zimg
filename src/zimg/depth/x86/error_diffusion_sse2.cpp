@@ -341,7 +341,7 @@ auto select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionSSE2_GE : public graphengine::Filter {
+class ErrorDiffusionSSE2 : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
@@ -380,7 +380,7 @@ class ErrorDiffusionSSE2_GE : public graphengine::Filter {
 		m_sse2_func(src_buf, dst_buf, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
-	ErrorDiffusionSSE2_GE(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) try :
+	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) try :
 		m_desc{},
 		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
 		m_sse2_func{ select_error_diffusion_sse2_func(pixel_in.type, pixel_out.type) },
@@ -462,12 +462,12 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (width < 6)
 		return nullptr;
 
-	return std::make_unique<ErrorDiffusionSSE2_GE>(width, height, pixel_in, pixel_out, cpu);
+	return std::make_unique<ErrorDiffusionSSE2>(width, height, pixel_in, pixel_out, cpu);
 }
 
 } // namespace depth

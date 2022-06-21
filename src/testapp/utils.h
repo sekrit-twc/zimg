@@ -23,7 +23,7 @@ class ImageFilter;
 
 class ImageFrame;
 
-class FilterExecutor_GE {
+class FilterExecutor {
 public:
 	static constexpr int ALL_PLANES = -1;
 	static constexpr int CHROMA_PLANES = -2;
@@ -32,15 +32,15 @@ private:
 
 	std::unique_ptr<data> m_data;
 public:
-	FilterExecutor_GE(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame);
+	FilterExecutor(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame);
 
-	FilterExecutor_GE(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame);
+	FilterExecutor(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame);
 
-	FilterExecutor_GE(FilterExecutor_GE &&other) noexcept;
+	FilterExecutor(FilterExecutor &&other) noexcept;
 
-	~FilterExecutor_GE();
+	~FilterExecutor();
 
-	FilterExecutor_GE &operator=(FilterExecutor_GE &&other) noexcept;
+	FilterExecutor &operator=(FilterExecutor &&other) noexcept;
 
 	void operator()();
 };

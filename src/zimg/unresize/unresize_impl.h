@@ -14,12 +14,12 @@ enum class PixelType;
 
 namespace unresize {
 
-class UnresizeImplH_GE : public graphengine::Filter {
+class UnresizeImplH : public graphengine::Filter {
 protected:
 	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
 
-	UnresizeImplH_GE(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
+	UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -30,12 +30,12 @@ public:
 	void init_context(void *) const noexcept override {}
 };
 
-class UnresizeImplV_GE : public graphengine::Filter {
+class UnresizeImplV : public graphengine::Filter {
 protected:
 	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
 
-	UnresizeImplV_GE(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
+	UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -60,7 +60,7 @@ struct UnresizeImplBuilder {
 
 	UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type);
 
-	std::unique_ptr<graphengine::Filter> create_ge() const;
+	std::unique_ptr<graphengine::Filter> create() const;
 };
 
 } // namespace unresize

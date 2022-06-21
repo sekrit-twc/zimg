@@ -467,12 +467,12 @@ constexpr auto resize_line_v_u16_sse2_jt_final = make_array(
 	resize_line_v_u16_sse2<8, V_ACCUM_FINAL>);
 
 
-class ResizeImplH_GE_U16_SSE2 final : public ResizeImplH_GE {
+class ResizeImplH_U16_SSE2 final : public ResizeImplH {
 	decltype(resize_line8_h_u16_sse2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_GE_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) try :
-		ResizeImplH_GE(filter, height, PixelType::WORD),
+	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
@@ -513,11 +513,11 @@ public:
 };
 
 
-class ResizeImplV_GE_U16_SSE2 final : public ResizeImplV_GE {
+class ResizeImplV_U16_SSE2 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_GE_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) try :
-		ResizeImplV_GE(filter, width, PixelType::WORD),
+	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
 		if (m_filter.filter_width > 8)
@@ -571,22 +571,22 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
-		ret = std::make_unique<ResizeImplH_GE_U16_SSE2>(context, height, depth);
+		ret = std::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
 
 	return ret;
 }
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_v_ge_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
-		ret = std::make_unique<ResizeImplV_GE_U16_SSE2>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);
 
 	return ret;
 }

@@ -32,7 +32,7 @@ void test_case(zimg::depth::DitherType type, bool fullrange, bool chroma, const 
 			fmt_out.chroma = chroma;
 
 			bool planes[] = { true, false, false, false };
-			zimg::depth::DepthConversion::result dither = zimg::depth::create_dither_ge(type, w, h, fmt_in, fmt_out, planes, zimg::CPUClass::NONE);
+			zimg::depth::DepthConversion::result dither = zimg::depth::create_dither(type, w, h, fmt_in, fmt_out, planes, zimg::CPUClass::NONE);
 			ASSERT_TRUE(dither.filters[0]);
 			ASSERT_TRUE(dither.filter_refs[0]);
 

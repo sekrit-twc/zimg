@@ -334,11 +334,11 @@ constexpr auto resize_line_v_f32_avx_jt_cont = make_array(
 	resize_line_v_f32_avx<8, true>);
 
 
-class ResizeImplH_GE_F32_AVX final : public ResizeImplH_GE {
+class ResizeImplH_F32_AVX final : public ResizeImplH {
 	decltype(resize_line8_h_f32_avx_jt_small)::value_type m_func;
 public:
-	ResizeImplH_GE_F32_AVX(const FilterContext &filter, unsigned height) try :
-		ResizeImplH_GE(filter, height, PixelType::FLOAT),
+	ResizeImplH_F32_AVX(const FilterContext &filter, unsigned height) try :
+		ResizeImplH(filter, height, PixelType::FLOAT),
 		m_func{}
 	{
 		m_desc.step = 8;
@@ -388,10 +388,10 @@ public:
 };
 
 
-class ResizeImplV_GE_F32_AVX final : public ResizeImplV_GE {
+class ResizeImplV_F32_AVX final : public ResizeImplV {
 public:
-	ResizeImplV_GE_F32_AVX(const FilterContext &filter, unsigned width) :
-		ResizeImplV_GE(filter, width, zimg::PixelType::FLOAT)
+	ResizeImplV_F32_AVX(const FilterContext &filter, unsigned width) :
+		ResizeImplV(filter, width, zimg::PixelType::FLOAT)
 	{}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
@@ -441,22 +441,22 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_avx(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplH_GE_F32_AVX>(context, height);
+		ret = std::make_unique<ResizeImplH_F32_AVX>(context, height);
 
 	return ret;
 }
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_v_ge_avx(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == zimg::PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplV_GE_F32_AVX>(context, width);
+		ret = std::make_unique<ResizeImplV_F32_AVX>(context, width);
 
 	return ret;
 }

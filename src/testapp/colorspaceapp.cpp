@@ -49,7 +49,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 
 void execute(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	auto results = measure_benchmark(times, FilterExecutor_GE{ filter, src_frame, dst_frame }, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor{ filter, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -141,7 +141,7 @@ int colorspace_main(int argc, char **argv)
 		if (!std::isnan(args.peak_luminance))
 			conv.set_peak_luminance(args.peak_luminance);
 
-		auto convert = conv.create_ge();
+		auto convert = conv.create();
 		execute(convert.get(), &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)

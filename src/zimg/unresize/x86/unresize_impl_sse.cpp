@@ -151,10 +151,10 @@ void unresize_line_back_v_f32_sse(float u_, const float * RESTRICT below, float 
 }
 
 
-class UnresizeImplH_GE_F32_SSE final : public UnresizeImplH_GE {
+class UnresizeImplH_F32_SSE final : public UnresizeImplH {
 public:
-	UnresizeImplH_GE_F32_SSE(const BilinearContext &context, unsigned height) :
-		UnresizeImplH_GE(context, context.output_width, height, PixelType::FLOAT)
+	UnresizeImplH_F32_SSE(const BilinearContext &context, unsigned height) :
+		UnresizeImplH(context, context.output_width, height, PixelType::FLOAT)
 	{
 		m_desc.step = 4;
 		m_desc.scratchpad_size = ((static_cast<checked_size_t>(m_context.input_width) + m_context.output_width) * 4 * sizeof(float)).get();
@@ -187,10 +187,10 @@ public:
 };
 
 
-class UnresizeImplV_GE_F32_SSE final : public UnresizeImplV_GE {
+class UnresizeImplV_F32_SSE final : public UnresizeImplV {
 public:
-	UnresizeImplV_GE_F32_SSE(const BilinearContext &context, unsigned width) :
-		UnresizeImplV_GE(context, width, context.output_width, PixelType::FLOAT)
+	UnresizeImplV_F32_SSE(const BilinearContext &context, unsigned width) :
+		UnresizeImplV(context, width, context.output_width, PixelType::FLOAT)
 	{
 		m_desc.alignment_mask = 3;
 	}
@@ -220,20 +220,20 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_unresize_impl_h_ge_sse(const BilinearContext &context, unsigned height, PixelType type)
+std::unique_ptr<graphengine::Filter> create_unresize_impl_h_sse(const BilinearContext &context, unsigned height, PixelType type)
 {
 	if (type != PixelType::FLOAT)
 		return nullptr;
 
-	return std::make_unique<UnresizeImplH_GE_F32_SSE>(context, height);
+	return std::make_unique<UnresizeImplH_F32_SSE>(context, height);
 }
 
-std::unique_ptr<graphengine::Filter> create_unresize_impl_v_ge_sse(const BilinearContext &context, unsigned width, PixelType type)
+std::unique_ptr<graphengine::Filter> create_unresize_impl_v_sse(const BilinearContext &context, unsigned width, PixelType type)
 {
 	if (type != PixelType::FLOAT)
 		return nullptr;
 
-	return std::make_unique<UnresizeImplV_GE_F32_SSE>(context, width);
+	return std::make_unique<UnresizeImplV_F32_SSE>(context, width);
 }
 
 } // namespace unresize

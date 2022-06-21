@@ -16,13 +16,6 @@ namespace zimg {
 enum class CPUClass;
 enum class PixelType;
 
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
-
 namespace unresize {
 
 /**
@@ -102,8 +95,7 @@ namespace unresize {
  * Generalization to two dimensions is done by processing each dimension.
  */
 struct UnresizeConversion {
-	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
-	typedef std::pair<std::unique_ptr<graphengine::Filter>, std::unique_ptr<graphengine::Filter>> filter_pair_ge;
+	typedef std::pair<std::unique_ptr<graphengine::Filter>, std::unique_ptr<graphengine::Filter>> filter_pair;
 
 	unsigned up_width;
 	unsigned up_height;
@@ -120,8 +112,6 @@ struct UnresizeConversion {
 	UnresizeConversion(unsigned up_width, unsigned up_height, PixelType type);
 
 	filter_pair create() const;
-
-	filter_pair_ge create_ge() const;
 };
 
 } // namespace unresize

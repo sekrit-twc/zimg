@@ -140,21 +140,21 @@ bool needs_dither_f16c_func_x86(CPUClass cpu)
 		return cpu < CPUClass::X86_AVX2;
 }
 
-std::unique_ptr<graphengine::Filter> create_error_diffusion_x86_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c && caps.fma)
-			ret = create_error_diffusion_avx2_ge(width, height, pixel_in, pixel_out);
+			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
 		if (!ret && caps.sse2)
-			ret = create_error_diffusion_sse2_ge(width, height, pixel_in, pixel_out, cpu);
+			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX2)
-			ret = create_error_diffusion_avx2_ge(width, height, pixel_in, pixel_out);
+			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
-			ret = create_error_diffusion_sse2_ge(width, height, pixel_in, pixel_out, cpu);
+			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	}
 
 	return ret;

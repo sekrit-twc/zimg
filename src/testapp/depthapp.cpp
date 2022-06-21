@@ -56,7 +56,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 
 void execute(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	auto results = measure_benchmark(times, FilterExecutor_GE{ filters, src_frame, dst_frame }, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor{ filters, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -153,7 +153,7 @@ int depth_main(int argc, char **argv)
 			.set_cpu(args.cpu)
 			.set_planes({ true, false, false, false });
 
-		zimg::depth::DepthConversion::result luma_result = conv.create_ge();
+		zimg::depth::DepthConversion::result luma_result = conv.create();
 		zimg::depth::DepthConversion::result chroma_result;
 		std::vector<std::pair<int, const graphengine::Filter *>> filters;
 		
@@ -170,7 +170,7 @@ int depth_main(int argc, char **argv)
 			chroma_result = conv.set_pixel_in(format_in_uv)
 				.set_pixel_out(format_out_uv)
 				.set_planes({ false, true, true, false })
-				.create_ge();
+				.create();
 
 			if (chroma_result.filter_refs[1])
 				filters.push_back({ 1, chroma_result.filter_refs[1] });

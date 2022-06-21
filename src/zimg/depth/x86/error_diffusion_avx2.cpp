@@ -438,7 +438,7 @@ auto select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionAVX2_GE final : public graphengine::Filter {
+class ErrorDiffusionAVX2 final : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
@@ -472,7 +472,7 @@ class ErrorDiffusionAVX2_GE final : public graphengine::Filter {
 		m_avx2_func(src_buf, dst_buf, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
-	ErrorDiffusionAVX2_GE(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :
+	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :
 		m_desc{},
 		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
 		m_avx2_func{ select_error_diffusion_avx2_func(pixel_in.type, pixel_out.type) },
@@ -538,12 +538,12 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {
 	if (width < 14)
 		return nullptr;
 
-	return std::make_unique<ErrorDiffusionAVX2_GE>(width, height, pixel_in, pixel_out);
+	return std::make_unique<ErrorDiffusionAVX2>(width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth

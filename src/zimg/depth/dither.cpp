@@ -227,7 +227,7 @@ public:
 };
 
 
-class OrderedDither_GE : public graphengine::Filter {
+class OrderedDither : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 	std::shared_ptr<OrderedDitherTable> m_dither_table;
 	dither_convert_func m_func;
@@ -246,7 +246,7 @@ class OrderedDither_GE : public graphengine::Filter {
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 	}
 public:
-	OrderedDither_GE(std::shared_ptr<OrderedDitherTable> table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
+	OrderedDither(std::shared_ptr<OrderedDitherTable> table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
 	              const PixelFormat &pixel_in, const PixelFormat &pixel_out, unsigned plane) :
 		m_desc{},
 		m_dither_table{ std::move(table) },
@@ -295,7 +295,7 @@ public:
 };
 
 
-class ErrorDiffusion_GE : public graphengine::Filter {
+class ErrorDiffusion : public graphengine::Filter {
 public:
 	typedef void (*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
@@ -315,7 +315,7 @@ private:
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 	}
 public:
-	ErrorDiffusion_GE(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_desc{},
 		m_func{ func },
 		m_f16c{ f16c },
@@ -387,14 +387,14 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 	}
 }
 
-std::unique_ptr<graphengine::Filter> create_error_diffusion_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 #ifdef ZIMG_X86
-	if (auto ret = create_error_diffusion_x86_ge(width, height, pixel_in, pixel_out, cpu))
+	if (auto ret = create_error_diffusion_x86(width, height, pixel_in, pixel_out, cpu))
 		return ret;
 #endif
 
-	ErrorDiffusion_GE::ed_func func = nullptr;
+	ErrorDiffusion::ed_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);
 
@@ -403,16 +403,16 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_ge(unsigned width, u
 	if (needs_f16c && !f16c)
 		f16c = half_to_float_n;
 
-	return std::make_unique<ErrorDiffusion_GE>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ErrorDiffusion>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace
 
 
-DepthConversion::result create_dither_ge(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu)
+DepthConversion::result create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu)
 {
 	if (type == DitherType::ERROR_DIFFUSION)
-		return{ create_error_diffusion_ge(width, height, pixel_in, pixel_out, cpu), planes };
+		return{ create_error_diffusion(width, height, pixel_in, pixel_out, cpu), planes };
 
 	dither_convert_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
@@ -444,7 +444,7 @@ DepthConversion::result create_dither_ge(DitherType type, unsigned width, unsign
 		if (!planes[p])
 			continue;
 
-		res.filters[p] = std::make_unique<OrderedDither_GE>(table, func, f16c, width, height, pixel_in, pixel_out, p);
+		res.filters[p] = std::make_unique<OrderedDither>(table, func, f16c, width, height, pixel_in, pixel_out, p);
 		res.filter_refs[p] = res.filters[p].get();
 	}
 	return res;

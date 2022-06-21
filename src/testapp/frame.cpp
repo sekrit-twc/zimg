@@ -280,7 +280,7 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier 
 				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
 				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, false })
 				.set_planes({ true, false, false, false })
-				.create_ge();
+				.create();
 			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
 			for (auto &filter : result.filters) {
 				filter_instances.push_back(std::move(filter));
@@ -292,7 +292,7 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier 
 				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
 				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, spec.is_yuv })
 				.set_planes({ false, true, true, false })
-				.create_ge();
+				.create();
 
 			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
 			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };
@@ -467,7 +467,7 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier
 				.set_pixel_in({ type, depth_in, fullrange, false })
 				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
 				.set_planes({ true, false, false, false })
-				.create_ge();
+				.create();
 			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
 			for (auto &filter : result.filters) {
 				filter_instances.push_back(std::move(filter));
@@ -479,7 +479,7 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier
 				.set_pixel_in({ type, depth_in, fullrange, spec.is_yuv })
 				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
 				.set_planes({ false, true, true, false })
-				.create_ge();
+				.create();
 
 			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
 			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };

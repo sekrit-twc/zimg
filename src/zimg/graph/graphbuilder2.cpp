@@ -605,7 +605,7 @@ private:
 		PixelFormat format = m_state.planes[PLANE_Y].format;
 		format.chroma = true;
 
-		ValueInitializeFilter_GE::value_type val;
+		ValueInitializeFilter::value_type val;
 
 		switch (format.type) {
 		case PixelType::BYTE: val.b = 1U << (format.depth - 1); break;
@@ -614,7 +614,7 @@ private:
 		case PixelType::FLOAT: val.f = 0.0f; break;
 		}
 
-		auto filter = std::make_unique<ValueInitializeFilter_GE>(
+		auto filter = std::make_unique<ValueInitializeFilter>(
 			target.planes[PLANE_U].width, target.planes[PLANE_U].height, format.type, val);
 		graphengine::node_id id = m_graph.add_transform(filter.get(), nullptr);
 		m_ids[PLANE_U] = { id, 0 };
@@ -636,7 +636,7 @@ private:
 
 		observer.premultiply();
 
-		auto filter = std::make_unique<PremultiplyFilter_GE>(
+		auto filter = std::make_unique<PremultiplyFilter>(
 			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height);
 		for (unsigned p = 0; p < (m_state.has_chroma() ? 3U : 1U); ++p) {
 			graphengine::node_dep_desc deps[2] = { m_ids[p], m_ids[PLANE_A] };
@@ -654,7 +654,7 @@ private:
 
 		observer.unpremultiply();
 
-		auto filter = std::make_unique<UnpremultiplyFilter_GE>(
+		auto filter = std::make_unique<UnpremultiplyFilter>(
 			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height);
 		for (unsigned p = 0; p < (m_state.has_chroma() ? 3U : 1U); ++p) {
 			graphengine::node_dep_desc deps[2] = {m_ids[p], m_ids[PLANE_A]};
@@ -672,7 +672,7 @@ private:
 		observer.add_opaque();
 
 		PixelFormat format = m_state.planes[PLANE_Y].format;
-		ValueInitializeFilter_GE::value_type val;
+		ValueInitializeFilter::value_type val;
 
 		switch (format.type) {
 		case PixelType::BYTE: val.b = UINT8_MAX >> (8 - format.depth); break;
@@ -681,7 +681,7 @@ private:
 		case PixelType::FLOAT: val.f = 1.0f; break;
 		}
 
-		auto filter = std::make_unique<ValueInitializeFilter_GE>(
+		auto filter = std::make_unique<ValueInitializeFilter>(
 			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, format.type, val);
 		m_ids[PLANE_A] = { m_graph.add_transform(filter.get(), nullptr), 0 };
 		m_graph.save_filter(std::move(filter));
@@ -760,7 +760,7 @@ private:
 
 			observer.unresize(conv, p);
 
-			auto filter_list = conv.create_ge();
+			auto filter_list = conv.create();
 			first = std::move(filter_list.first);
 			second = std::move(filter_list.second);
 		} else{
@@ -777,7 +777,7 @@ private:
 
 			observer.resize(conv, p);
 
-			auto filter_list = conv.create_ge();
+			auto filter_list = conv.create();
 			first = std::move(filter_list.first);
 			second = std::move(filter_list.second);
 		}
@@ -818,7 +818,7 @@ private:
 
 		observer.colorspace(conv);
 
-		auto filter = conv.create_ge();
+		auto filter = conv.create();
 		if (filter) {
 			graphengine::node_id id = m_graph.add_transform(filter.get(), m_ids.data());
 			m_ids[PLANE_Y] = { id, 0 };
@@ -853,7 +853,7 @@ private:
 
 		observer.depth(conv, p);
 
-		auto result = conv.create_ge();
+		auto result = conv.create();
 		apply_mask(mask, [&](int q)
 		{
 			if (result.filter_refs[q])

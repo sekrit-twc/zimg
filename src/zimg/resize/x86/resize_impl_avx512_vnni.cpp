@@ -11,29 +11,29 @@
 namespace zimg {
 namespace resize {
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx512_vnni(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_avx512_vnni(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 #ifndef ZIMG_RESIZE_NO_PERMUTE
 	if (type == PixelType::WORD)
-		ret = ResizeImplH_GE_Permute_U16_AVX512::create(context, height, depth);
+		ret = ResizeImplH_Permute_U16_AVX512::create(context, height, depth);
 #endif
 
 	if (!ret) {
 		if (type == PixelType::WORD)
-			ret = std::make_unique<ResizeImplH_GE_U16_AVX512>(context, height, depth);
+			ret = std::make_unique<ResizeImplH_U16_AVX512>(context, height, depth);
 	}
 
 	return ret;
 }
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_v_ge_avx512_vnni(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx512_vnni(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
-		ret = std::make_unique<ResizeImplV_GE_U16_AVX512>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_AVX512>(context, width, depth);
 
 	return ret;
 }

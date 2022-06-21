@@ -48,7 +48,7 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 	cpu{ CPUClass::NONE }
 {}
 
-DepthConversion::result DepthConversion::create_ge() const try
+DepthConversion::result DepthConversion::create() const try
 {
 	if (width > pixel_max_width(pixel_in.type) || width > pixel_max_width(pixel_out.type))
 		error::throw_<error::OutOfMemory>();
@@ -58,11 +58,11 @@ DepthConversion::result DepthConversion::create_ge() const try
 	if (pixel_in == pixel_out)
 		return{};
 	else if (is_lossless_conversion(pixel_in, pixel_out))
-		return{ create_left_shift_ge(width, height, pixel_in, pixel_out, cpu), planes.data() };
+		return{ create_left_shift(width, height, pixel_in, pixel_out, cpu), planes.data() };
 	else if (pixel_is_float(pixel_out.type))
-		return{ create_convert_to_float_ge(width, height, pixel_in, pixel_out, cpu), planes.data() };
+		return{ create_convert_to_float(width, height, pixel_in, pixel_out, cpu), planes.data() };
 	else
-		return create_dither_ge(dither_type, width, height, pixel_in, pixel_out, planes.data(), cpu);
+		return create_dither(dither_type, width, height, pixel_in, pixel_out, planes.data(), cpu);
 } catch (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
 }

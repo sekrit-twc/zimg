@@ -36,7 +36,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	cpu{ CPUClass::NONE }
 {}
 
-auto ResizeConversion::create_ge() const -> filter_pair_ge try
+auto ResizeConversion::create() const -> filter_pair try
 {
 	if (src_width > pixel_max_width(type) || dst_width > pixel_max_width(type))
 		error::throw_<error::OutOfMemory>();
@@ -51,20 +51,20 @@ auto ResizeConversion::create_ge() const -> filter_pair_ge try
 		.set_depth(depth)
 		.set_filter(filter)
 		.set_cpu(cpu);
-	filter_pair_ge ret{};
+	filter_pair ret{};
 
 	if (skip_h) {
 		ret.first = builder.set_horizontal(false)
 		                   .set_dst_dim(dst_height)
 		                   .set_shift(shift_h)
 		                   .set_subwidth(subheight)
-		                   .create_ge();
+		                   .create();
 	} else if (skip_v) {
 		ret.first = builder.set_horizontal(true)
 		                   .set_dst_dim(dst_width)
 		                   .set_shift(shift_w)
 		                   .set_subwidth(subwidth)
-		                   .create_ge();
+		                   .create();
 	} else {
 		bool h_first = resize_h_first(static_cast<double>(dst_width) / subwidth, static_cast<double>(dst_height) / subheight);
 
@@ -73,27 +73,27 @@ auto ResizeConversion::create_ge() const -> filter_pair_ge try
 			                   .set_dst_dim(dst_width)
 			                   .set_shift(shift_w)
 			                   .set_subwidth(subwidth)
-			                   .create_ge();
+			                   .create();
 
 			builder.src_width = dst_width;
 			ret.second = builder.set_horizontal(false)
 			                    .set_dst_dim(dst_height)
 			                    .set_shift(shift_h)
 			                    .set_subwidth(subheight)
-			                    .create_ge();
+			                    .create();
 		} else {
 			ret.first = builder.set_horizontal(false)
 			                   .set_dst_dim(dst_height)
 			                   .set_shift(shift_h)
 			                   .set_subwidth(subheight)
-			                   .create_ge();
+			                   .create();
 
 			builder.src_height = dst_height;
 			ret.second = builder.set_horizontal(true)
 			                    .set_dst_dim(dst_width)
 			                    .set_shift(shift_w)
 			                    .set_subwidth(subwidth)
-			                    .create_ge();
+			                    .create();
 		}
 	}
 

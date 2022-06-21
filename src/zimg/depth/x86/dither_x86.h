@@ -13,14 +13,6 @@ class Filter;
 }
 
 namespace zimg {
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
-
 namespace depth {
 
 #define DECLARE_ORDERED_DITHER(x, cpu) \
@@ -60,15 +52,10 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu);
 
 bool needs_dither_f16c_func_x86(CPUClass cpu);
 
+std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out);
 
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out);
-
-std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
-std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out);
-
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
-std::unique_ptr<graphengine::Filter> create_error_diffusion_x86_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
+std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
 } // namespace depth
 } // namespace zimg

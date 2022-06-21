@@ -15,12 +15,12 @@ enum class PixelType;
 
 namespace resize {
 
-class ResizeImplH_GE : public graphengine::Filter {
+class ResizeImplH : public graphengine::Filter {
 protected:
 	graphengine::FilterDescriptor m_desc;
 	FilterContext m_filter;
 
-	ResizeImplH_GE(const FilterContext &filter, unsigned height, PixelType type);
+	ResizeImplH(const FilterContext &filter, unsigned height, PixelType type);
 public:
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -31,13 +31,13 @@ public:
 	void init_context(void *) const noexcept override {}
 };
 
-class ResizeImplV_GE : public graphengine::Filter {
+class ResizeImplV : public graphengine::Filter {
 protected:
 	graphengine::FilterDescriptor m_desc;
 	FilterContext m_filter;
 	bool m_unsorted;
 
-	ResizeImplV_GE(const FilterContext &filter, unsigned width, PixelType type);
+	ResizeImplV(const FilterContext &filter, unsigned width, PixelType type);
 public:
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -65,7 +65,7 @@ struct ResizeImplBuilder {
 
 	ResizeImplBuilder(unsigned src_width, unsigned src_height, PixelType type);
 
-	std::unique_ptr<graphengine::Filter> create_ge() const;
+	std::unique_ptr<graphengine::Filter> create() const;
 };
 
 } // namespace resize

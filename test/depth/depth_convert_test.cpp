@@ -38,7 +38,7 @@ void test_case(bool fullrange, bool chroma, bool ycgco, const char * const *expe
 			zimg::depth::DepthConversion::result convert = zimg::depth::DepthConversion{ w, h }
 				.set_pixel_in(fmt_in)
 				.set_pixel_out(fmt_out)
-				.create_ge();
+				.create();
 			ASSERT_TRUE(convert.filters[0]);
 			ASSERT_TRUE(convert.filter_refs[0]);
 
@@ -59,7 +59,7 @@ TEST(DepthConvertTest, test_nop)
 	zimg::depth::DepthConversion::result convert = zimg::depth::DepthConversion{ 640, 480 }
 		.set_pixel_in(zimg::PixelType::FLOAT)
 		.set_pixel_out(zimg::PixelType::FLOAT)
-		.create_ge();
+		.create();
 	ASSERT_FALSE(convert.filters[0]);
 	ASSERT_FALSE(convert.filter_refs[0]);
 }
@@ -78,7 +78,7 @@ TEST(DepthConvertTest, test_half_to_float)
 		zimg::depth::DepthConversion::result convert = zimg::depth::DepthConversion{ 640, 480 }
 			.set_pixel_in({ zimg::PixelType::HALF, zimg::pixel_depth(zimg::PixelType::HALF), false, chroma })
 			.set_pixel_out({ zimg::PixelType::FLOAT, zimg::pixel_depth(zimg::PixelType::FLOAT), false, chroma })
-			.create_ge();
+			.create();
 		ASSERT_TRUE(convert.filters[0]);
 		ASSERT_TRUE(convert.filter_refs[0]);
 
@@ -104,7 +104,7 @@ TEST(DepthConvertTest, test_float_to_half)
 		zimg::depth::DepthConversion::result convert = zimg::depth::DepthConversion{ 640, 480 }
 			.set_pixel_in({ zimg::PixelType::FLOAT, zimg::pixel_depth(zimg::PixelType::FLOAT), false, chroma })
 			.set_pixel_out({ zimg::PixelType::HALF, zimg::pixel_depth(zimg::PixelType::HALF), false, chroma })
-			.create_ge();
+			.create();
 		ASSERT_TRUE(convert.filters[0]);
 		ASSERT_TRUE(convert.filter_refs[0]);
 
@@ -220,7 +220,7 @@ TEST(DepthConvertTest, test_padding_bits)
 		zimg::depth::DepthConversion::result convert = zimg::depth::DepthConversion{ w, h, }
 			.set_pixel_in(format)
 			.set_pixel_out(dst_format)
-			.create_ge();
+			.create();
 		ASSERT_TRUE(convert.filters[0]);
 		ASSERT_TRUE(convert.filter_refs[0]);
 

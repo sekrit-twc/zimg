@@ -16,13 +16,6 @@ namespace zimg {
 
 enum class CPUClass;
 
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
-
 namespace depth {
 
 enum class DitherType {
@@ -57,9 +50,7 @@ struct DepthConversion {
 
 	DepthConversion(unsigned width, unsigned height);
 
-	std::unique_ptr<graph::ImageFilter> create() const;
-
-	result create_ge() const;
+	result create() const;
 };
 
 } // namespace depth

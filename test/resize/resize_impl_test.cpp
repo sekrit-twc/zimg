@@ -33,7 +33,7 @@ void test_case(const zimg::PixelFormat &format, bool horizontal, double scale_fa
 			.set_filter(resample_filter)
 			.set_shift(shift)
 			.set_subwidth(subwidth_factor * (horizontal ? src_w : src_h))
-			.create_ge();
+			.create();
 
 		ASSERT_TRUE(filter);
 

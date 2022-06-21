@@ -31,8 +31,8 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 		.set_shift(0.0)
 		.set_subwidth(horizontal ? src_w : src_h);
 
-	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create_ge();
-	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create_ge();
+	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
+	auto filter_avx = builder.set_cpu(zimg::CPUClass::X86_AVX).create();
 
 	ASSERT_TRUE(assert_different_dynamic_type(filter_c.get(), filter_avx.get()));
 

@@ -26,8 +26,8 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 	}
 
 	bool planes[] = { true, false, false, false };
-	zimg::depth::DepthConversion::result result_c = zimg::depth::create_dither_ge(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::NONE);
-	zimg::depth::DepthConversion::result result_avx2 = zimg::depth::create_dither_ge(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::X86_AVX2);
+	zimg::depth::DepthConversion::result result_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::NONE);
+	zimg::depth::DepthConversion::result result_avx2 = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::X86_AVX2);
 	ASSERT_TRUE(result_c.filter_refs[0]);
 	ASSERT_TRUE(result_avx2.filter_refs[0]);
 	ASSERT_TRUE(assert_different_dynamic_type(result_c.filter_refs[0], result_avx2.filter_refs[0]));

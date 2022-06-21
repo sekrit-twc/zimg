@@ -33,7 +33,7 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 		.set_shift(0.0)
 		.set_subwidth(horizontal ? src_w : src_h);
 
-	std::unique_ptr<graphengine::Filter> filter_avx512 = builder.set_cpu(zimg::CPUClass::X86_AVX512).create_ge();
+	std::unique_ptr<graphengine::Filter> filter_avx512 = builder.set_cpu(zimg::CPUClass::X86_AVX512).create();
 	std::unique_ptr<graphengine::Filter> filter_c;
 
 	graphengine::FilterValidation validation(filter_avx512.get(), { src_w, src_h, zimg::pixel_size(format.type) });
@@ -43,7 +43,7 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 
 	// No half-precision implementation is available in C. Make sure to visually check results if they differ from hash.
 	if (format.type != zimg::PixelType::HALF) {
-		filter_c = builder.set_cpu(zimg::CPUClass::NONE).create_ge();
+		filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 		ASSERT_TRUE(assert_different_dynamic_type(filter_c.get(), filter_avx512.get()));
 		validation.set_reference_filter(filter_c.get(), expected_snr);
 	}

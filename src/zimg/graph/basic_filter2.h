@@ -13,10 +13,10 @@ enum class PixelType;
 namespace graph {
 
 // Copies an image buffer.
-class CopyFilter_GE : public graphengine::Filter {
+class CopyFilter : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 public:
-	CopyFilter_GE(unsigned width, unsigned height, PixelType type);
+	CopyFilter(unsigned width, unsigned height, PixelType type);
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -31,7 +31,7 @@ public:
 };
 
 // Initializes a plane to a constant value.
-class ValueInitializeFilter_GE : public graphengine::Filter {
+class ValueInitializeFilter : public graphengine::Filter {
 public:
 	union value_type {
 		uint8_t b;
@@ -46,7 +46,7 @@ private:
 	void fill_w(void *ptr, size_t n) const;
 	void fill_f(void *ptr, size_t n) const;
 public:
-	ValueInitializeFilter_GE(unsigned width, unsigned height, PixelType type, value_type val);
+	ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val);
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -61,10 +61,10 @@ public:
 };
 
 // Premultiplies an image.
-class PremultiplyFilter_GE : public graphengine::Filter {
+class PremultiplyFilter : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 public:
-	PremultiplyFilter_GE(unsigned width, unsigned height);
+	PremultiplyFilter(unsigned width, unsigned height);
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
@@ -79,10 +79,10 @@ public:
 };
 
 // Unpremultiplies an image.
-class UnpremultiplyFilter_GE : public graphengine::Filter {
+class UnpremultiplyFilter : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 public:
-	UnpremultiplyFilter_GE(unsigned width, unsigned height);
+	UnpremultiplyFilter(unsigned width, unsigned height);
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 

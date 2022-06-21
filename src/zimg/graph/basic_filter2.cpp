@@ -6,7 +6,7 @@
 namespace zimg {
 namespace graph {
 
-CopyFilter_GE::CopyFilter_GE(unsigned width, unsigned height, PixelType type) : m_desc{}
+CopyFilter::CopyFilter(unsigned width, unsigned height, PixelType type) : m_desc{}
 {
 	m_desc.format = { width, height, pixel_size(type) };
 	m_desc.num_deps = 1;
@@ -15,7 +15,7 @@ CopyFilter_GE::CopyFilter_GE(unsigned width, unsigned height, PixelType type) : 
 	m_desc.flags.in_place = 1;
 }
 
-void CopyFilter_GE::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+void CopyFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	                     unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
 {
 	const uint8_t *src_p = in->get_line<uint8_t>(i);
@@ -26,7 +26,7 @@ void CopyFilter_GE::process(const graphengine::BufferDescriptor *in, const graph
 }
 
 
-ValueInitializeFilter_GE::ValueInitializeFilter_GE(unsigned width, unsigned height, PixelType type, value_type val) :
+ValueInitializeFilter::ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val) :
 	m_desc{},
 	m_value(val)
 {
@@ -36,22 +36,22 @@ ValueInitializeFilter_GE::ValueInitializeFilter_GE(unsigned width, unsigned heig
 	m_desc.step = 1;
 }
 
-void ValueInitializeFilter_GE::fill_b(void *ptr, size_t n) const
+void ValueInitializeFilter::fill_b(void *ptr, size_t n) const
 {
 	std::fill_n(static_cast<uint8_t *>(ptr), n, m_value.b);
 }
 
-void ValueInitializeFilter_GE::fill_w(void *ptr, size_t n) const
+void ValueInitializeFilter::fill_w(void *ptr, size_t n) const
 {
 	std::fill_n(static_cast<uint16_t *>(ptr), n, m_value.w);
 }
 
-void ValueInitializeFilter_GE::fill_f(void *ptr, size_t n) const
+void ValueInitializeFilter::fill_f(void *ptr, size_t n) const
 {
 	std::fill_n(static_cast<float *>(ptr), n, m_value.f);
 }
 
-void ValueInitializeFilter_GE::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+void ValueInitializeFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
                                     unsigned i, unsigned left, unsigned right, void *, void *) const noexcept 
 {
 	unsigned char *dst_p = out->get_line<unsigned char>(i) + static_cast<size_t>(left) * m_desc.format.bytes_per_sample;
@@ -70,7 +70,7 @@ void ValueInitializeFilter_GE::process(const graphengine::BufferDescriptor *in, 
 }
 
 
-PremultiplyFilter_GE::PremultiplyFilter_GE(unsigned width, unsigned height) : m_desc{}
+PremultiplyFilter::PremultiplyFilter(unsigned width, unsigned height) : m_desc{}
 {
 	m_desc.format = { width, height, pixel_size(PixelType::FLOAT) };
 	m_desc.num_deps = 2;
@@ -79,7 +79,7 @@ PremultiplyFilter_GE::PremultiplyFilter_GE(unsigned width, unsigned height) : m_
 	m_desc.flags.in_place = 1;
 }
 
-void PremultiplyFilter_GE::process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
+void PremultiplyFilter::process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
                                 unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
 {
 	const float *src_p = in[0].get_line<float>(i);
@@ -94,7 +94,7 @@ void PremultiplyFilter_GE::process(const graphengine::BufferDescriptor in[2], co
 }
 
 
-UnpremultiplyFilter_GE::UnpremultiplyFilter_GE(unsigned width, unsigned height) : m_desc{}
+UnpremultiplyFilter::UnpremultiplyFilter(unsigned width, unsigned height) : m_desc{}
 {
 	m_desc.format = { width, height, pixel_size(PixelType::FLOAT) };
 	m_desc.num_deps = 2;
@@ -103,7 +103,7 @@ UnpremultiplyFilter_GE::UnpremultiplyFilter_GE(unsigned width, unsigned height) 
 	m_desc.flags.in_place = 1;
 }
 
-void UnpremultiplyFilter_GE::process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
+void UnpremultiplyFilter::process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
                                   unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
 {
 	const float *src_p = in[0].get_line<float>(i);

@@ -1153,12 +1153,12 @@ constexpr auto resize_line_v_fp_avx2_jt_cont = make_array(
 	resize_line_v_fp_avx2<Traits, 8, true>);
 
 
-class ResizeImplH_GE_U16_AVX2 final : public ResizeImplH_GE {
+class ResizeImplH_U16_AVX2 final : public ResizeImplH {
 	decltype(resize_line8_h_u16_avx2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_GE_U16_AVX2(const FilterContext &filter, unsigned height, unsigned depth) try :
-		ResizeImplH_GE(filter, height, PixelType::WORD),
+	ResizeImplH_U16_AVX2(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
@@ -1200,14 +1200,14 @@ public:
 
 
 template <class Traits>
-class ResizeImplH_GE_FP_AVX2 final : public ResizeImplH_GE {
+class ResizeImplH_FP_AVX2 final : public ResizeImplH {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line8_h_fp_avx2_jt_small<Traits>)::value_type func_type;
 
 	func_type m_func;
 public:
-	ResizeImplH_GE_FP_AVX2(const FilterContext &filter, unsigned height) try :
-		ResizeImplH_GE(filter, height, Traits::type_constant),
+	ResizeImplH_FP_AVX2(const FilterContext &filter, unsigned height) try :
+		ResizeImplH(filter, height, Traits::type_constant),
 		m_func{}
 	{
 		m_desc.step = 8;
@@ -1257,7 +1257,7 @@ public:
 };
 
 
-class ResizeImplH_GE_Permute_U16_AVX2 final : public graphengine::Filter {
+class ResizeImplH_Permute_U16_AVX2 final : public graphengine::Filter {
 	typedef decltype(resize_line_h_perm_u16_avx2_jt)::value_type func_type;
 
 	struct PermuteContext {
@@ -1274,7 +1274,7 @@ class ResizeImplH_GE_Permute_U16_AVX2 final : public graphengine::Filter {
 	uint16_t m_pixel_max;
 	func_type m_func;
 
-	ResizeImplH_GE_Permute_U16_AVX2(PermuteContext context, unsigned height, unsigned depth) :
+	ResizeImplH_Permute_U16_AVX2(PermuteContext context, unsigned height, unsigned depth) :
 		m_desc{},
 		m_context(std::move(context)),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
@@ -1337,7 +1337,7 @@ public:
 			}
 		}
 
-		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_GE_Permute_U16_AVX2(std::move(context), height, depth) };
+		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_Permute_U16_AVX2(std::move(context), height, depth) };
 		return ret;
 	}
 
@@ -1367,7 +1367,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplH_GE_Permute_FP_AVX2 final : public graphengine::Filter {
+class ResizeImplH_Permute_FP_AVX2 final : public graphengine::Filter {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line_h_perm_fp_avx2_jt<Traits>)::value_type func_type;
 
@@ -1384,7 +1384,7 @@ class ResizeImplH_GE_Permute_FP_AVX2 final : public graphengine::Filter {
 	PermuteContext m_context;
 	func_type m_func;
 
-	ResizeImplH_GE_Permute_FP_AVX2(PermuteContext context, unsigned height) :
+	ResizeImplH_Permute_FP_AVX2(PermuteContext context, unsigned height) :
 		m_desc{},
 		m_context(std::move(context)),
 		m_func{ resize_line_h_perm_fp_avx2_jt<Traits>[m_context.filter_width - 1] }
@@ -1436,7 +1436,7 @@ public:
 			}
 		}
 
-		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_GE_Permute_FP_AVX2(std::move(context), height) };
+		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_Permute_FP_AVX2(std::move(context), height) };
 		return ret;
 	}
 
@@ -1465,11 +1465,11 @@ public:
 };
 
 
-class ResizeImplV_GE_U16_AVX2 final : public ResizeImplV_GE {
+class ResizeImplV_U16_AVX2 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_GE_U16_AVX2(const FilterContext &filter, unsigned width, unsigned depth) try :
-		ResizeImplV_GE(filter, width, PixelType::WORD),
+	ResizeImplV_U16_AVX2(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
 		if (m_filter.filter_width > 8)
@@ -1520,11 +1520,11 @@ public:
 
 
 template <class Traits>
-class ResizeImplV_GE_FP_AVX2 final : public ResizeImplV_GE {
+class ResizeImplV_FP_AVX2 final : public ResizeImplV {
 	typedef typename Traits::pixel_type pixel_type;
 public:
-	ResizeImplV_GE_FP_AVX2(const FilterContext &filter, unsigned width) :
-		ResizeImplV_GE(filter, width, Traits::type_constant)
+	ResizeImplV_FP_AVX2(const FilterContext &filter, unsigned width) :
+		ResizeImplV(filter, width, Traits::type_constant)
 	{}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
@@ -1574,7 +1574,7 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_avx2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
@@ -1582,35 +1582,35 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_ge_avx2(const FilterCo
 	if (cpu_has_slow_permute(query_x86_capabilities()))
 		ret = nullptr;
 	else if (type == PixelType::WORD)
-		ret = ResizeImplH_GE_Permute_U16_AVX2::create(context, height, depth);
+		ret = ResizeImplH_Permute_U16_AVX2::create(context, height, depth);
 	else if (type == PixelType::HALF)
-		ret = ResizeImplH_GE_Permute_FP_AVX2<f16_traits>::create(context, height);
+		ret = ResizeImplH_Permute_FP_AVX2<f16_traits>::create(context, height);
 	else if (type == PixelType::FLOAT)
-		ret = ResizeImplH_GE_Permute_FP_AVX2<f32_traits>::create(context, height);
+		ret = ResizeImplH_Permute_FP_AVX2<f32_traits>::create(context, height);
 #endif
 
 	if (!ret) {
 		if (type == PixelType::WORD)
-			ret = std::make_unique<ResizeImplH_GE_U16_AVX2>(context, height, depth);
+			ret = std::make_unique<ResizeImplH_U16_AVX2>(context, height, depth);
 		else if (type == PixelType::HALF)
-			ret = std::make_unique<ResizeImplH_GE_FP_AVX2<f16_traits>>(context, height);
+			ret = std::make_unique<ResizeImplH_FP_AVX2<f16_traits>>(context, height);
 		else if (type == PixelType::FLOAT)
-			ret = std::make_unique<ResizeImplH_GE_FP_AVX2<f32_traits>>(context, height);
+			ret = std::make_unique<ResizeImplH_FP_AVX2<f32_traits>>(context, height);
 	}
 
 	return ret;
 }
 
-std::unique_ptr<graphengine::Filter> create_resize_impl_v_ge_avx2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
-		ret = std::make_unique<ResizeImplV_GE_U16_AVX2>(context, width, depth);
+		ret = std::make_unique<ResizeImplV_U16_AVX2>(context, width, depth);
 	else if (type == PixelType::HALF)
-		ret = std::make_unique<ResizeImplV_GE_FP_AVX2<f16_traits>>(context, width);
+		ret = std::make_unique<ResizeImplV_FP_AVX2<f16_traits>>(context, width);
 	else if (type == PixelType::FLOAT)
-		ret = std::make_unique<ResizeImplV_GE_FP_AVX2<f32_traits>>(context, width);
+		ret = std::make_unique<ResizeImplV_FP_AVX2<f32_traits>>(context, width);
 
 	return ret;
 }

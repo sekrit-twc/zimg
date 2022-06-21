@@ -10,20 +10,20 @@
 #include "frame.h"
 #include "utils.h"
 
-struct FilterExecutor_GE::data {
+struct FilterExecutor::data {
 	graphengine::GraphImpl graph;
 	graphengine::Graph::EndpointConfiguration endpoints;
 	zimg::AlignedVector<char> tmp;
 };
 
-FilterExecutor_GE::FilterExecutor_GE(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame) :
-	FilterExecutor_GE(filter
+FilterExecutor::FilterExecutor(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame) :
+	FilterExecutor(filter
 		? std::vector<std::pair<int, const graphengine::Filter *>>{ { ALL_PLANES, filter } }
 	    : std::vector<std::pair<int, const graphengine::Filter *>>{},
 			src_frame, dst_frame)
 {}
 
-FilterExecutor_GE::FilterExecutor_GE(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame) :
+FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame) :
 	m_data{ std::make_unique<data>() }
 {
 	std::vector<graphengine::PlaneDescriptor> src_desc(src_frame->planes());
@@ -86,13 +86,13 @@ FilterExecutor_GE::FilterExecutor_GE(const std::vector<std::pair<int, const grap
 	m_data->tmp.resize(m_data->graph.get_tmp_size(false));
 }
 
-FilterExecutor_GE::~FilterExecutor_GE() = default;
+FilterExecutor::~FilterExecutor() = default;
 
-FilterExecutor_GE::FilterExecutor_GE(FilterExecutor_GE &&) noexcept = default;
+FilterExecutor::FilterExecutor(FilterExecutor &&) noexcept = default;
 
-FilterExecutor_GE &FilterExecutor_GE::operator=(FilterExecutor_GE &&) noexcept = default;
+FilterExecutor &FilterExecutor::operator=(FilterExecutor &&) noexcept = default;
 
-void FilterExecutor_GE::operator()()
+void FilterExecutor::operator()()
 {
 	m_data->graph.run(m_data->endpoints, m_data->tmp.data());
 }

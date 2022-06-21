@@ -22,8 +22,8 @@ void test_case_left_shift(const zimg::PixelFormat &pixel_in, const zimg::PixelFo
 		return;
 	}
 
-	auto filter_c = zimg::depth::create_left_shift_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
-	auto filter_avx512 = zimg::depth::create_left_shift_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
+	auto filter_c = zimg::depth::create_left_shift(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_avx512 = zimg::depth::create_left_shift(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
 
 	graphengine::FilterValidation(filter_avx512.get(), { w, h, zimg::pixel_size(pixel_in.type) })
 		.set_reference_filter(filter_c.get(), expected_snr)
@@ -43,8 +43,8 @@ void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::Pixe
 		return;
 	}
 
-	auto filter_c = zimg::depth::create_convert_to_float_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
-	auto filter_avx512 = zimg::depth::create_convert_to_float_ge(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
+	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
+	auto filter_avx512 = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::X86_AVX512);
 
 	graphengine::FilterValidation(filter_avx512.get(), { w, h, zimg::pixel_size(pixel_in.type) })
 		.set_reference_filter(filter_c.get(), expected_snr)

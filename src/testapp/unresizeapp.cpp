@@ -70,7 +70,7 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 
 void execute(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	auto results = measure_benchmark(times, FilterExecutor_GE{ filters, src_frame, dst_frame }, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor{ filters, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -109,13 +109,13 @@ int unresize_main(int argc, char **argv)
 			.set_shift_w(args.shift_w)
 			.set_shift_h(args.shift_h)
 			.set_cpu(args.cpu)
-			.create_ge();
+			.create();
 
 		std::vector<std::pair<int, const graphengine::Filter *>> filters;
 		if (filter_pair.first)
-			filters.push_back({ FilterExecutor_GE::ALL_PLANES, filter_pair.first.get() });
+			filters.push_back({ FilterExecutor::ALL_PLANES, filter_pair.first.get() });
 		if (filter_pair.second)
-			filters.push_back({ FilterExecutor_GE::ALL_PLANES, filter_pair.second.get() });
+			filters.push_back({ FilterExecutor::ALL_PLANES, filter_pair.second.get() });
 
 		execute(filters, &src_frame, &dst_frame, args.times);
 

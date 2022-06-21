@@ -88,7 +88,7 @@ depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_o
 }
 
 
-class IntegerLeftShift_GE : public graphengine::Filter {
+class IntegerLeftShift : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 	left_shift_func m_func;
 	unsigned m_shift;
@@ -110,7 +110,7 @@ class IntegerLeftShift_GE : public graphengine::Filter {
 			error::throw_<error::InternalError>("too much shifting");
 	}
 public:
-	IntegerLeftShift_GE(left_shift_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+	IntegerLeftShift(left_shift_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_desc{},
 		m_func{ func },
 		m_shift{}
@@ -142,7 +142,7 @@ public:
 };
 
 
-class ConvertToFloat_GE : public graphengine::Filter {
+class ConvertToFloat : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
@@ -162,7 +162,7 @@ class ConvertToFloat_GE : public graphengine::Filter {
 			error::throw_<error::InternalError>("DepthConvert only converts to floating point types");
 	}
 public:
-	ConvertToFloat_GE(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
+	ConvertToFloat(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
 	               const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_desc{},
 		m_func{ func },
@@ -212,7 +212,7 @@ public:
 } // namespace
 
 
-std::unique_ptr<graphengine::Filter> create_left_shift_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_left_shift(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	left_shift_func func = nullptr;
 
@@ -224,10 +224,10 @@ std::unique_ptr<graphengine::Filter> create_left_shift_ge(unsigned width, unsign
 	if (!func)
 		func = select_left_shift_func(pixel_in.type, pixel_out.type);
 
-	return std::make_unique<IntegerLeftShift_GE>(func, width, height, pixel_in, pixel_out);
+	return std::make_unique<IntegerLeftShift>(func, width, height, pixel_in, pixel_out);
 }
 
-std::unique_ptr<graphengine::Filter> create_convert_to_float_ge(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
 	depth_f16c_func f16c = nullptr;
@@ -255,7 +255,7 @@ std::unique_ptr<graphengine::Filter> create_convert_to_float_ge(unsigned width, 
 			f16c = float_to_half_n;
 	}
 
-	return std::make_unique<ConvertToFloat_GE>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
 } // namespace depth
