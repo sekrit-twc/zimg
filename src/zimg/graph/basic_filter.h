@@ -4,7 +4,7 @@
 #define ZIMG_GRAPH_BASIC_FILTER_H_
 
 #include <cstdint>
-#include "image_filter.h"
+#include "graphengine/filter.h"
 
 namespace zimg {
 
@@ -13,38 +13,25 @@ enum class PixelType;
 namespace graph {
 
 // Copies an image buffer.
-class CopyFilter : public ImageFilterBase {
-	image_attributes m_attr;
-	bool m_color;
+class CopyFilter : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
 public:
-	CopyFilter(unsigned width, unsigned height, PixelType type, bool color = false);
+	CopyFilter(unsigned width, unsigned height, PixelType type);
 
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	void process(void *, const ImageBuffer<const void> *src, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override;
-};
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
 
-// Converts greyscale to RGB image by replicating the luma plane.
-//
-// For any YUV system, a greyscale image is encoded by U=0 and V=0, which also
-// implies R=G=B. Since Y is a weighted sum of R, G, and B, this also implies
-// R=G=B=Y.
-class RGBExtendFilter : public ImageFilterBase {
-	image_attributes m_attr;
-public:
-	RGBExtendFilter(unsigned width, unsigned height, PixelType type);
+	void init_context(void *) const noexcept override {}
 
-	filter_flags get_flags() const override;
-
-	image_attributes get_image_attributes() const override;
-
-	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override;
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Initializes a plane to a constant value.
-class ValueInitializeFilter : public ImageFilterBase {
+class ValueInitializeFilter : public graphengine::Filter {
 public:
 	union value_type {
 		uint8_t b;
@@ -52,7 +39,7 @@ public:
 		float f;
 	};
 private:
-	image_attributes m_attr;
+	graphengine::FilterDescriptor m_desc;
 	value_type m_value;
 
 	void fill_b(void *ptr, size_t n) const;
@@ -61,41 +48,52 @@ private:
 public:
 	ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val);
 
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	void process(void *, const ImageBuffer<const void> *, const ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override;
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+
+	void init_context(void *) const noexcept override {}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Premultiplies an image.
-class PremultiplyFilter : public ImageFilterBase {
-	unsigned m_width;
-	unsigned m_height;
-	bool m_color;
+class PremultiplyFilter : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
 public:
-	PremultiplyFilter(unsigned width, unsigned height, bool color);
+	PremultiplyFilter(unsigned width, unsigned height);
 
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override;
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+
+	void init_context(void *) const noexcept override {}
+
+	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Unpremultiplies an image.
-class UnpremultiplyFilter : public ImageFilterBase {
-	unsigned m_width;
-	unsigned m_height;
-	bool m_color;
+class UnpremultiplyFilter : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
 public:
-	UnpremultiplyFilter(unsigned width, unsigned height, bool color);
+	UnpremultiplyFilter(unsigned width, unsigned height);
 
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	void process(void *, const ImageBuffer<const void> src[], const ImageBuffer<void> dst[], void *, unsigned i, unsigned left, unsigned right) const override;
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+
+	void init_context(void *) const noexcept override {}
+
+	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 } // namespace graph

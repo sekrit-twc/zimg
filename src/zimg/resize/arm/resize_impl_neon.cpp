@@ -715,50 +715,40 @@ class ResizeImplH_U16_Neon final : public ResizeImplH {
 	decltype(resize_line8_h_u16_neon_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_U16_Neon(const FilterContext &filter, unsigned height, unsigned depth) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::WORD }),
+	ResizeImplH_U16_Neon(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
+		m_desc.step = 8;
+		m_desc.scratchpad_size = (ceil_n(checked_size_t{ filter.input_width }, 8) * sizeof(uint16_t) * 8).get();
+
 		if (filter.filter_width <= 8)
 			m_func = resize_line8_h_u16_neon_jt_small[filter.filter_width - 1];
 		else
 			m_func = resize_line8_h_u16_neon_jt_large[filter.filter_width % 8];
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	unsigned get_simultaneous_lines() const override { return 8; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 8) + 8) * sizeof(uint16_t) * 8;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
-		auto range = get_required_col_range(left, right);
+		auto range = get_col_deps(left, right);
 
 		const uint16_t *src_ptr[8] = { 0 };
 		uint16_t *dst_ptr[8] = { 0 };
 		uint16_t *transpose_buf = static_cast<uint16_t *>(tmp);
-		unsigned height = get_image_attributes().height;
+		unsigned height = m_desc.format.height;
 
 		for (unsigned n = 0; n < 8; ++n) {
-			src_ptr[n] = src_buf[std::min(i + n, height - 1)];
+			src_ptr[n] = in->get_line<uint16_t>(std::min(i + n, height - 1));
 		}
 
 		transpose_line_8x8_u16(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		for (unsigned n = 0; n < 8; ++n) {
-			dst_ptr[n] = dst_buf[std::min(i + n, height - 1)];
+			dst_ptr[n] = out->get_line<uint16_t>(std::min(i + n, height - 1));
 		}
 
 		m_func(m_filter.left.data(), m_filter.data_i16.data(), m_filter.stride_i16, m_filter.filter_width,
@@ -770,52 +760,42 @@ public:
 class ResizeImplH_F32_Neon final : public ResizeImplH {
 	decltype(resize_line4_h_f32_neon_jt_small)::value_type m_func;
 public:
-	ResizeImplH_F32_Neon(const FilterContext &filter, unsigned height) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::FLOAT }),
+	ResizeImplH_F32_Neon(const FilterContext &filter, unsigned height) try :
+		ResizeImplH(filter, height, PixelType::FLOAT),
 		m_func{}
 	{
+		m_desc.step = 4;
+		m_desc.scratchpad_size = (ceil_n(checked_size_t{ filter.input_width }, 4) * sizeof(float) * 4).get();
+
 		if (filter.filter_width <= 8)
 			m_func = resize_line4_h_f32_neon_jt_small[filter.filter_width - 1];
 		else
 			m_func = resize_line4_h_f32_neon_jt_large[filter.filter_width % 4];
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	unsigned get_simultaneous_lines() const override { return 4; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 4) + 4) * sizeof(float) * 4;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
-		auto range = get_required_col_range(left, right);
+		auto range = get_col_deps(left, right);
 
 		const float *src_ptr[4] = { 0 };
 		float *dst_ptr[4] = { 0 };
 		float *transpose_buf = static_cast<float *>(tmp);
-		unsigned height = get_image_attributes().height;
+		unsigned height = m_desc.format.height;
 
-		src_ptr[0] = src_buf[std::min(i + 0, height - 1)];
-		src_ptr[1] = src_buf[std::min(i + 1, height - 1)];
-		src_ptr[2] = src_buf[std::min(i + 2, height - 1)];
-		src_ptr[3] = src_buf[std::min(i + 3, height - 1)];
+		src_ptr[0] = in->get_line<float>(std::min(i + 0, height - 1));
+		src_ptr[1] = in->get_line<float>(std::min(i + 1, height - 1));
+		src_ptr[2] = in->get_line<float>(std::min(i + 2, height - 1));
+		src_ptr[3] = in->get_line<float>(std::min(i + 3, height - 1));
 
 		transpose_line_4x4_f32(transpose_buf, src_ptr[0], src_ptr[1], src_ptr[2], src_ptr[3], floor_n(range.first, 4), ceil_n(range.second, 4));
 
-		dst_ptr[0] = dst_buf[std::min(i + 0, height - 1)];
-		dst_ptr[1] = dst_buf[std::min(i + 1, height - 1)];
-		dst_ptr[2] = dst_buf[std::min(i + 2, height - 1)];
-		dst_ptr[3] = dst_buf[std::min(i + 3, height - 1)];
+		dst_ptr[0] = out->get_line<float>(std::min(i + 0, height - 1));
+		dst_ptr[1] = out->get_line<float>(std::min(i + 1, height - 1));
+		dst_ptr[2] = out->get_line<float>(std::min(i + 2, height - 1));
+		dst_ptr[3] = out->get_line<float>(std::min(i + 3, height - 1));
 
 		m_func(m_filter.left.data(), m_filter.data.data(), m_filter.stride, m_filter.filter_width,
 		       transpose_buf, dst_ptr, floor_n(range.first, 4), left, right);
@@ -826,36 +806,25 @@ public:
 class ResizeImplV_U16_Neon final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_U16_Neon(const FilterContext &filter, unsigned width, unsigned depth) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
+	ResizeImplV_U16_Neon(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
-	{}
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		checked_size_t size = 0;
-
-		try {
-			if (m_filter.filter_width > 8)
-				size += (ceil_n(checked_size_t{ right }, 8) - floor_n(left, 8)) * sizeof(int32_t);
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-
-		return size.get();
+		if (m_filter.filter_width > 8)
+			m_desc.scratchpad_size = (ceil_n(checked_size_t{ width }, 8) * sizeof(uint32_t)).get();
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
-
 		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
 		unsigned filter_width = m_filter.filter_width;
 		unsigned src_height = m_filter.input_width;
 
 		const uint16_t *src_lines[8] = { 0 };
-		uint16_t *dst_line = dst_buf[i];
+		uint16_t *dst_line = out->get_line<uint16_t>(i);
 		int32_t *accum_buf = static_cast<int32_t *>(tmp);
 
 		unsigned top = m_filter.left[i];
@@ -863,27 +832,29 @@ public:
 		auto gather_8_lines = [&](unsigned i)
 		{
 			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(i + n, src_height - 1)];
+				src_lines[n] = in->get_line<uint16_t>(std::min(i + n, src_height - 1));
 			}
 		};
 
+#define XARGS src_lines, dst_line, accum_buf, left, right, m_pixel_max
 		if (filter_width <= 8) {
 			gather_8_lines(top);
-			resize_line_v_u16_neon_jt_small[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_neon_jt_small[filter_width - 1](filter_data, XARGS);
 		} else {
 			unsigned k_end = ceil_n(filter_width, 8) - 8;
 
 			gather_8_lines(top);
-			resize_line_v_u16_neon_initial(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_neon_initial(filter_data + 0, XARGS);
 
 			for (unsigned k = 8; k < k_end; k += 8) {
 				gather_8_lines(top + k);
-				resize_line_v_u16_neon_update(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+				resize_line_v_u16_neon_update(filter_data + k, XARGS);
 			}
 
 			gather_8_lines(top + k_end);
-			resize_line_v_u16_neon_jt_final[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
+			resize_line_v_u16_neon_jt_final[filter_width - k_end - 1](filter_data + k_end, XARGS);
 		}
+#undef XARGS
 	}
 };
 
@@ -891,33 +862,31 @@ public:
 class ResizeImplV_F32_Neon final : public ResizeImplV {
 public:
 	ResizeImplV_F32_Neon(const FilterContext &filter, unsigned width) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::FLOAT })
+		ResizeImplV(filter, width, PixelType::FLOAT)
 	{}
 
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override 
 	{
-		const auto &src_buf = graph::static_buffer_cast<const float>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<float>(*dst);
-
 		const float *filter_data = m_filter.data.data() + i * m_filter.stride;
 		unsigned filter_width = m_filter.filter_width;
 		unsigned src_height = m_filter.input_width;
 
 		const float *src_lines[8] = { 0 };
-		float *dst_line = dst_buf[i];
+		float *dst_line = out->get_line<float>(i);
 
 		{
 			unsigned taps_remain = std::min(filter_width - 0, 8U);
 			unsigned top = m_filter.left[i] + 0;
 
-			src_lines[0] = src_buf[std::min(top + 0, src_height - 1)];
-			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
-			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
-			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
-			src_lines[4] = src_buf[std::min(top + 4, src_height - 1)];
-			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
-			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
-			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
+			src_lines[0] = in->get_line<float>(std::min(top + 0, src_height - 1));
+			src_lines[1] = in->get_line<float>(std::min(top + 1, src_height - 1));
+			src_lines[2] = in->get_line<float>(std::min(top + 2, src_height - 1));
+			src_lines[3] = in->get_line<float>(std::min(top + 3, src_height - 1));
+			src_lines[4] = in->get_line<float>(std::min(top + 4, src_height - 1));
+			src_lines[5] = in->get_line<float>(std::min(top + 5, src_height - 1));
+			src_lines[6] = in->get_line<float>(std::min(top + 6, src_height - 1));
+			src_lines[7] = in->get_line<float>(std::min(top + 7, src_height - 1));
 
 			resize_line_v_f32_neon_jt_init[taps_remain - 1](filter_data + 0, src_lines, dst_line, left, right);
 		}
@@ -926,14 +895,14 @@ public:
 			unsigned taps_remain = std::min(filter_width - k, 8U);
 			unsigned top = m_filter.left[i] + k;
 
-			src_lines[0] = src_buf[std::min(top + 0, src_height - 1)];
-			src_lines[1] = src_buf[std::min(top + 1, src_height - 1)];
-			src_lines[2] = src_buf[std::min(top + 2, src_height - 1)];
-			src_lines[3] = src_buf[std::min(top + 3, src_height - 1)];
-			src_lines[4] = src_buf[std::min(top + 4, src_height - 1)];
-			src_lines[5] = src_buf[std::min(top + 5, src_height - 1)];
-			src_lines[6] = src_buf[std::min(top + 6, src_height - 1)];
-			src_lines[7] = src_buf[std::min(top + 7, src_height - 1)];
+			src_lines[0] = in->get_line<float>(std::min(top + 0, src_height - 1));
+			src_lines[1] = in->get_line<float>(std::min(top + 1, src_height - 1));
+			src_lines[2] = in->get_line<float>(std::min(top + 2, src_height - 1));
+			src_lines[3] = in->get_line<float>(std::min(top + 3, src_height - 1));
+			src_lines[4] = in->get_line<float>(std::min(top + 4, src_height - 1));
+			src_lines[5] = in->get_line<float>(std::min(top + 5, src_height - 1));
+			src_lines[6] = in->get_line<float>(std::min(top + 6, src_height - 1));
+			src_lines[7] = in->get_line<float>(std::min(top + 7, src_height - 1));
 
 			resize_line_v_f32_neon_jt_cont[taps_remain - 1](filter_data + k, src_lines, dst_line, left, right);
 		}
@@ -943,9 +912,9 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_neon(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_neon(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
 		ret = std::make_unique<ResizeImplH_F32_Neon>(context, height);
@@ -955,9 +924,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_neon(const FilterContex
 	return ret;
 }
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_neon(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_neon(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::FLOAT)
 		ret = std::make_unique<ResizeImplV_F32_Neon>(context, width);

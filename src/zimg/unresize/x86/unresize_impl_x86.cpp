@@ -2,16 +2,16 @@
 
 #include "common/cpuinfo.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "unresize_impl_x86.h"
 
 namespace zimg {
 namespace unresize {
 
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_h_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_unresize_impl_h_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.sse)
@@ -24,10 +24,10 @@ std::unique_ptr<graph::ImageFilter> create_unresize_impl_h_x86(const BilinearCon
 	return ret;
 }
 
-std::unique_ptr<graph::ImageFilter> create_unresize_impl_v_x86(const BilinearContext &context, unsigned width, PixelType type, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_unresize_impl_v_x86(const BilinearContext &context, unsigned width, PixelType type, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.sse)

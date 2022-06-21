@@ -13,8 +13,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graph/image_buffer.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "dither_x86.h"
 
 #include "common/x86/sse2_util.h"
@@ -23,6 +22,16 @@ namespace zimg {
 namespace depth {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 struct error_state {
 	float err_left[4];
@@ -190,7 +199,7 @@ inline FORCE_INLINE void error_diffusion_wf_sse2_xiter(__m128 &v, unsigned j, co
 }
 
 template <class T, class U>
-void error_diffusion_wf_sse2(const graph::ImageBuffer<const T> &src, const graph::ImageBuffer<U> &dst, unsigned i,
+void error_diffusion_wf_sse2(const Buffer<const T> &src, const Buffer<U> &dst, unsigned i,
                              const float *error_top, float *error_cur, error_state *state, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<T> src_traits;
@@ -258,19 +267,19 @@ void error_diffusion_wf_sse2(const graph::ImageBuffer<const T> &src, const graph
 }
 
 template <class T, class U>
-void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i,
+void error_diffusion_sse2(const Buffer<const void> &src_, const Buffer<void> &dst_, unsigned i,
                           const float *error_top, float *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
-	const graph::ImageBuffer<const T> &src_buf = graph::static_buffer_cast<const T>(src);
-	const graph::ImageBuffer<U> &dst_buf = graph::static_buffer_cast<U>(dst);
+	Buffer<const T> src{ src_.buffer };
+	Buffer<U> dst{ dst_.buffer };
 
 	error_state state alignas(16) = {};
 	float error_tmp[3][12] = {};
 
 	// Prologue.
-	error_diffusion_scalar<T, U>(src_buf[i + 0], dst_buf[i + 0], error_top, error_tmp[0], scale, offset, bits, 6);
-	error_diffusion_scalar<T, U>(src_buf[i + 1], dst_buf[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 4);
-	error_diffusion_scalar<T, U>(src_buf[i + 2], dst_buf[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 2);
+	error_diffusion_scalar<T, U>(src[i + 0], dst[i + 0], error_top, error_tmp[0], scale, offset, bits, 6);
+	error_diffusion_scalar<T, U>(src[i + 1], dst[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 4);
+	error_diffusion_scalar<T, U>(src[i + 2], dst[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 2);
 
 	// Wavefront.
 	state.err_left[0] = error_tmp[0][5 + 1];
@@ -294,7 +303,7 @@ void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph
 	state.err_top_left[3] = 0.0f;
 
 	unsigned vec_count = floor_n(width - 6, 4);
-	error_diffusion_wf_sse2<T, U>(src_buf, dst_buf, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
+	error_diffusion_wf_sse2<T, U>(src, dst, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
 
 	error_tmp[0][5 + 1] = state.err_top_right[1];
 	error_tmp[0][4 + 1] = state.err_top[1];
@@ -309,13 +318,13 @@ void error_diffusion_sse2(const graph::ImageBuffer<const void> &src, const graph
 	error_tmp[2][0] = state.err_top_left[3];
 
 	// Epilogue.
-	error_diffusion_scalar<T, U>(src_buf[i + 0] + vec_count + 6, dst_buf[i + 0] + vec_count + 6, error_top + vec_count + 6, error_tmp[0] + 6,
+	error_diffusion_scalar<T, U>(src[i + 0] + vec_count + 6, dst[i + 0] + vec_count + 6, error_top + vec_count + 6, error_tmp[0] + 6,
 	                             scale, offset, bits, width - vec_count - 6);
-	error_diffusion_scalar<T, U>(src_buf[i + 1] + vec_count + 4, dst_buf[i + 1] + vec_count + 4, error_tmp[0] + 4, error_tmp[1] + 4,
+	error_diffusion_scalar<T, U>(src[i + 1] + vec_count + 4, dst[i + 1] + vec_count + 4, error_tmp[0] + 4, error_tmp[1] + 4,
 	                             scale, offset, bits, width - vec_count - 4);
-	error_diffusion_scalar<T, U>(src_buf[i + 2] + vec_count + 2, dst_buf[i + 2] + vec_count + 2, error_tmp[1] + 2, error_tmp[2] + 2,
+	error_diffusion_scalar<T, U>(src[i + 2] + vec_count + 2, dst[i + 2] + vec_count + 2, error_tmp[1] + 2, error_tmp[2] + 2,
 	                             scale, offset, bits, width - vec_count - 2);
-	error_diffusion_scalar<T, U>(src_buf[i + 3] + vec_count + 0, dst_buf[i + 3] + vec_count + 0, error_tmp[2] + 0, error_cur + vec_count + 0,
+	error_diffusion_scalar<T, U>(src[i + 3] + vec_count + 0, dst[i + 3] + vec_count + 0, error_tmp[2] + 0, error_cur + vec_count + 0,
 	                             scale, offset, bits, width - vec_count - 0);
 }
 
@@ -341,148 +350,118 @@ auto select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionSSE2 final : public graph::ImageFilter {
+class ErrorDiffusionSSE2 : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
+
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
 	decltype(select_error_diffusion_sse2_func({}, {})) m_sse2_func;
 	dither_f16c_func m_f16c;
-
-	PixelType m_pixel_in;
-	PixelType m_pixel_out;
 
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
 
-	unsigned m_width;
-	unsigned m_height;
-
 	void process_scalar(void *ctx, const void *src, void *dst, void *tmp, bool parity) const
 	{
 		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
 
 		float *error_top = parity ? ctx_a : ctx_b;
 		float *error_cur = parity ? ctx_b : ctx_a;
 
 		if (m_f16c) {
-			m_f16c(src, tmp, 0, m_width);
+			m_f16c(src, tmp, 0, m_desc.format.width);
 			src = tmp;
 		}
-		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
+		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 
-	void process_vector(void *ctx, const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i) const
+	void process_vector(void *ctx, const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out, unsigned i) const
 	{
 		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
 
 		float *error_top = (i / 4) % 2 ? ctx_a : ctx_b;
 		float *error_cur = (i / 4) % 2 ? ctx_b : ctx_a;
 
-		m_sse2_func(src, dst, i, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
+		m_sse2_func(*in, *out, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
-	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu) :
-		m_scalar_func{ select_error_diffusion_scalar_func(format_in.type, format_out.type) },
-		m_sse2_func{ select_error_diffusion_sse2_func(format_in.type, format_out.type) },
+	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) try :
+		m_desc{},
+		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
+		m_sse2_func{ select_error_diffusion_sse2_func(pixel_in.type, pixel_out.type) },
 		m_f16c{},
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
-		m_width{ width },
-		m_height{ height }
+		m_depth{ pixel_out.depth }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
-		if (!pixel_is_integer(format_out.type))
+		if (!pixel_is_integer(pixel_out.type))
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
-		if (m_pixel_in == PixelType::HALF)
+
+		if (pixel_in.type == PixelType::HALF)
 			m_f16c = select_dither_f16c_func_x86(cpu);
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		m_desc.format = { width, height, pixel_size(pixel_out.type) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 4;
+		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
+		if (m_f16c)
+			m_desc.scratchpad_size = (ceil_n(static_cast<checked_size_t>(width) * sizeof(float), ALIGNMENT) * 4).get();
+
+		m_desc.flags.stateful = 1;
+		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
+		m_desc.flags.entire_row = 1;
+
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	filter_flags get_flags() const override
-	{
-		filter_flags flags{};
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-		flags.has_state = true;
-		flags.same_row = true;
-		flags.in_place = pixel_size(m_pixel_in) == pixel_size(m_pixel_out);
-		flags.entire_row = true;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_pixel_out };
-	}
-
-	pair_unsigned get_required_row_range(unsigned i) const override
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override
 	{
 		unsigned last = std::min(i, UINT_MAX - 4) + 4;
-		return{ i, std::min(last, m_height) };
+		return{ i, std::min(last, m_desc.format.height) };
 	}
 
-	pair_unsigned get_required_col_range(unsigned, unsigned) const override
+	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override
 	{
-		return{ 0, get_image_attributes().width };
+		return{ 0, m_desc.format.width };
 	}
 
-	unsigned get_simultaneous_lines() const override { return 4; }
-
-	unsigned get_max_buffering() const override { return 4; }
-
-	size_t get_context_size() const override
+	void init_context(void *ctx) const noexcept override
 	{
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
+		std::fill_n(static_cast<unsigned char *>(ctx), m_desc.context_size, 0);
 	}
 
-	size_t get_tmp_size(unsigned, unsigned) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+                 unsigned i, unsigned left, unsigned right, void *context, void *tmp) const noexcept override
 	{
-		try {
-			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) * 4 : 0;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void init_context(void *ctx, unsigned seq) const override
-	{
-		std::fill_n(static_cast<unsigned char *>(ctx), get_context_size(), 0);
-	}
-
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const override
-	{
-		if (m_height - i < 4) {
+		if (m_desc.format.height - i < 4) {
 			bool parity = !!((i / 4) % 2);
 
-			for (unsigned ii = i; ii < m_height; ++ii) {
-				process_scalar(ctx, (*src)[ii], (*dst)[ii], tmp, parity);
+			for (unsigned ii = i; ii < m_desc.format.height; ++ii) {
+				process_scalar(context, in->get_line(ii), out->get_line(ii), tmp, parity);
 				parity = !parity;
 			}
 		} else if (m_f16c) {
 			float *tmp_p = static_cast<float *>(tmp);
-			ptrdiff_t tmp_stride = ceil_n(m_width * sizeof(float), ALIGNMENT);
+			ptrdiff_t tmp_stride = ceil_n(m_desc.format.width * sizeof(float), ALIGNMENT);
 
 			for (unsigned n = 0; n < 4; ++n) {
-				m_f16c((*src)[i + n], tmp_p + n * (tmp_stride / sizeof(float)), 0, m_width);
+				m_f16c(in->get_line(i + n), tmp_p + n * (tmp_stride / sizeof(float)), 0, m_desc.format.width);
 			}
 
-			graph::ImageBuffer<const void> tmp_buf{ tmp_p, tmp_stride, 0x03 };
-			process_vector(ctx, tmp_buf, *dst, i);
+			graphengine::BufferDescriptor tmp_buf{ tmp_p, tmp_stride, 0x3 };
+			process_vector(context, &tmp_buf, out, i);
 		} else {
-			process_vector(ctx, *src, *dst, i);
+			process_vector(context, in, out, i);
 		}
 	}
 };
@@ -490,7 +469,7 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	if (width < 6)
 		return nullptr;

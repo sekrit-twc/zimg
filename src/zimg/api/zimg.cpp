@@ -11,7 +11,6 @@
 #include "common/zassert.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
-#include "graph/image_buffer.h"
 #include "colorspace/colorspace.h"
 #include "depth/depth.h"
 #include "resize/filter.h"
@@ -353,9 +352,10 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 	}
 }
 
-zimg::graph::ColorImageBuffer<void> import_image_buffer(const zimg_image_buffer &src)
+template <class T>
+std::array<graphengine::BufferDescriptor, 4> import_image_buffer(const T &src)
 {
-	zimg::graph::ColorImageBuffer<void> dst{};
+	std::array<graphengine::BufferDescriptor, 4> dst{};
 
 	API_VERSION_ASSERT(src.version);
 
@@ -363,23 +363,7 @@ zimg::graph::ColorImageBuffer<void> import_image_buffer(const zimg_image_buffer 
 		unsigned num_planes = src.version >= API_VERSION_2_4 ? 4 : 3;
 
 		for (unsigned p = 0; p < num_planes; ++p) {
-			dst[p] = zimg::graph::ImageBuffer<void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
-		}
-	}
-	return dst;
-}
-
-zimg::graph::ColorImageBuffer<const void> import_image_buffer(const zimg_image_buffer_const &src)
-{
-	zimg::graph::ColorImageBuffer<const void> dst{};
-
-	API_VERSION_ASSERT(src.version);
-
-	if (src.version >= API_VERSION_2_0) {
-		unsigned num_planes = src.version >= API_VERSION_2_4 ? 4 : 3;
-
-		for (unsigned p = 0; p < num_planes; ++p) {
-			dst[p] = zimg::graph::ImageBuffer<const void>{ src.plane[p].data, src.plane[p].stride, src.plane[p].mask };
+			dst[p] = { const_cast<void *>(src.plane[p].data), src.plane[p].stride, src.plane[p].mask };
 		}
 	}
 	return dst;
@@ -519,7 +503,27 @@ void zimg_clear_last_error(void)
 
 unsigned zimg_select_buffer_mask(unsigned count)
 {
-	return zimg::graph::select_zimg_buffer_mask(count);
+	unsigned long lzcnt;
+
+	if (count <= 1)
+		return 0;
+
+#if defined(_MSC_VER)
+	unsigned long msb;
+	_BitScanReverse(&msb, count - 1);
+	lzcnt = 31 - msb;
+#elif defined(__GNUC__)
+	lzcnt = __builtin_clz(count - 1);
+#else
+	lzcnt = 0;
+	count -= 1;
+	while (!(count & (1U << (std::numeric_limits<unsigned>::digits - 1)))) {
+		count <<= 1;
+		++lzcnt;
+	}
+#endif
+
+	return ZIMG_BUFFER_MAX >> lzcnt;
 }
 
 #define EX_BEGIN \
@@ -635,7 +639,7 @@ zimg_error_code_e zimg_filter_graph_process(const zimg_filter_graph *ptr, const 
 
 	auto src_buf = import_image_buffer(*src);
 	auto dst_buf = import_image_buffer(*dst);
-	graph->process(src_buf, dst_buf, tmp, { unpack_cb, unpack_user }, { pack_cb, pack_user });
+	graph->process(src_buf, dst_buf, tmp, unpack_cb, unpack_user, pack_cb, pack_user);
 	EX_END
 }
 
@@ -724,7 +728,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		zimg::graph::GraphBuilder builder;
 		return builder.set_source(src_state)
 			.connect(dst_state, params ? &graph_params : nullptr)
-			.complete()
+			.build_graph()
 			.release();
 	} catch (...) {
 		handle_exception(std::current_exception());

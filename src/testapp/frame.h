@@ -4,7 +4,7 @@
 #define FRAME_H_
 
 #include "common/alloc.h"
-#include "graph/image_buffer.h"
+#include "graphengine/types.h"
 
 #define PATH_SPECIFIER_HELP_STR \
 "Path specifier: spec@path\n" \
@@ -21,7 +21,7 @@ enum class PixelType;
 
 
 class ImageFrame {
-	zimg::AlignedVector<char> m_vector[4];
+	zimg::AlignedVector<unsigned char> m_vector[4];
 	ptrdiff_t m_offset[4];
 	unsigned m_width;
 	unsigned m_height;
@@ -48,13 +48,9 @@ public:
 
 	bool is_yuv() const noexcept;
 
-	zimg::graph::ImageBuffer<const void> as_read_buffer(unsigned plane) const noexcept;
+	graphengine::BufferDescriptor as_buffer(unsigned plane) const noexcept;
 
-	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const noexcept;
-
-	zimg::graph::ImageBuffer<void> as_write_buffer(unsigned plane) noexcept;
-
-	zimg::graph::ColorImageBuffer<void> as_write_buffer() noexcept;
+	std::array<graphengine::BufferDescriptor, 4> as_buffer() const noexcept;
 };
 
 

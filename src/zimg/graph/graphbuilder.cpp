@@ -1,17 +1,20 @@
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <utility>
+#include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/pixel.h"
 #include "depth/depth.h"
+#include "graphengine/filter.h"
+#include "graphengine/graph.h"
 #include "resize/filter.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
 #include "basic_filter.h"
 #include "filtergraph.h"
 #include "graphbuilder.h"
-#include "image_filter.h"
 
 
 #ifndef ZIMG_UNSAFE_IMAGE_SIZE
@@ -35,25 +38,22 @@ namespace graph {
 
 namespace {
 
+constexpr int PLANE_NUM = 4;
+constexpr int PLANE_Y = 0;
+constexpr int PLANE_U = 1;
+constexpr int PLANE_V = 2;
+constexpr int PLANE_A = 3;
+static_assert(PLANE_NUM <= graphengine::NODE_MAX_PLANES, "");
+
+typedef std::array<bool, PLANE_NUM> plane_mask;
+
 constexpr plane_mask luma_planes{ true, false, false, false };
 constexpr plane_mask chroma_planes{ false, true, true, false };
 constexpr plane_mask alpha_planes{ false, false, false, true };
 
-plane_mask operator|(plane_mask lhs, plane_mask rhs)
+constexpr plane_mask operator|(const plane_mask &lhs, const plane_mask &rhs)
 {
 	return{ lhs[0] || rhs[0], lhs[1] || rhs[1], lhs[2] || rhs[2], lhs[3] || rhs[3] };
-}
-
-plane_mask &operator|=(plane_mask &lhs, plane_mask rhs)
-{
-	lhs = lhs | rhs;
-	return lhs;
-}
-
-id_map operator&(id_map lhs, plane_mask rhs)
-{
-	auto select = [](node_id id, bool enabled) { return enabled ? id : invalid_id; };
-	return{ select(lhs[0], rhs[0]), select(lhs[1], rhs[1]), select(lhs[2], rhs[2]), select(lhs[3], rhs[3]) };
 }
 
 
@@ -236,6 +236,63 @@ void validate_state(const GraphBuilder::state &state)
 } // namespace
 
 
+SubGraph::SubGraph() :
+	m_subgraph(std::make_unique<graphengine::SubGraphImpl>()),
+	m_source_ids{},
+	m_sink_id{ graphengine::null_node }
+{
+	m_source_ids[0] = m_subgraph->add_source();
+	m_source_ids[1] = m_subgraph->add_source();
+	m_source_ids[2] = m_subgraph->add_source();
+	m_source_ids[3] = m_subgraph->add_source();
+}
+
+SubGraph::SubGraph(SubGraph &&other) noexcept = default;
+
+SubGraph::~SubGraph() = default;
+
+SubGraph &SubGraph::operator=(SubGraph &&other) noexcept = default;
+
+const graphengine::Filter *SubGraph::save_filter(std::unique_ptr<graphengine::Filter> filter)
+{
+	m_filters.push_back(std::move(filter));
+	return m_filters.back().get();
+}
+
+graphengine::node_id SubGraph::add_transform(const graphengine::Filter *filter, const graphengine::node_dep_desc deps[])
+{
+	return m_subgraph->add_transform(filter, deps);
+}
+
+void SubGraph::set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[])
+{
+	m_sink_id = m_subgraph->add_sink(num_planes, deps);
+}
+
+std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> SubGraph::connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const
+{
+	graphengine::SubGraph::SourceMapping mapping[4];
+	mapping[0] = { m_source_ids[0], source_deps[0] };
+	mapping[1] = { m_source_ids[1], source_deps[1] };
+	mapping[2] = { m_source_ids[2], source_deps[2] };
+	mapping[3] = { m_source_ids[3], source_deps[3] };
+
+	return m_subgraph->connect(graph, 4, mapping);
+}
+
+std::vector<std::unique_ptr<graphengine::Filter>> SubGraph::release_filters()
+{
+	std::vector<std::unique_ptr<graphengine::Filter>> filters(std::move(m_filters));
+	*this = SubGraph();
+	return filters;
+}
+
+std::shared_ptr<void> SubGraph::release_filters_opaque()
+{
+	return std::make_unique<decltype(release_filters())>(release_filters());
+}
+
+
 struct GraphBuilder::internal_state {
 	struct plane {
 		unsigned width;
@@ -272,8 +329,8 @@ struct GraphBuilder::internal_state {
 private:
 	void chroma_from_luma(unsigned subsample_w, unsigned subsample_h)
 	{
-		double subscale_w = 1.0 / (1U << subsample_w);
-		double subscale_h = 1.0 / (1U << subsample_h);
+		double subscale_w = 1.0 / (1UL << subsample_w);
+		double subscale_h = 1.0 / (1UL << subsample_h);
 
 		planes[PLANE_U] = planes[PLANE_Y];
 		planes[PLANE_U].width >>= subsample_w;
@@ -379,9 +436,11 @@ private:
 		ALPHA,
 	};
 
-	std::unique_ptr<FilterGraph> m_graph;
-	id_map m_ids;
+	SubGraph m_graph;
+	std::array<graphengine::node_dep_desc, PLANE_NUM> m_ids;
+	state m_source_state;
 	internal_state m_state;
+	bool m_requires_64b;
 
 	internal_state make_float_444_state(const internal_state &state, bool include_alpha)
 	{
@@ -405,22 +464,9 @@ private:
 		}
 	}
 
-	void attach_filter(std::shared_ptr<ImageFilter> filter, id_map deps, plane_mask outputs)
+	void attach_greyscale_filter(const graphengine::Filter *filter, plane_mask mask)
 	{
-		node_id id = m_graph->attach_filter(std::move(filter), deps, outputs);
-		apply_mask(outputs, [&](int p) { m_ids[p] = id; });
-	}
-
-	void attach_greyscale_filter(std::shared_ptr<ImageFilter> filter, plane_mask mask, bool has_dep)
-	{
-		apply_mask(mask, [&](int p)
-		{
-			plane_mask mask{};
-			mask[p] = true;
-
-			id_map deps = has_dep ? m_ids & mask : null_ids;
-			attach_filter(filter, deps, mask);
-		});
+		apply_mask(mask, [&](int p) { m_ids[p] = { m_graph.add_transform(filter, &m_ids[p]), 0 }; });
 	}
 
 	void check_is_444_float(bool check_alpha)
@@ -517,7 +563,7 @@ private:
 		return target.alpha != AlphaType::STRAIGHT || needs_colorspace(target) || needs_interpolation(target);
 	}
 
-	void drop_plane(int p) { m_ids[p] = invalid_id; }
+	void drop_plane(int p) { m_ids[p] = graphengine::null_dep; }
 
 	void yuv_to_grey(FilterObserver &observer)
 	{
@@ -536,9 +582,8 @@ private:
 
 		observer.grey_to_rgb();
 
-		auto filter = std::make_shared<RGBExtendFilter>(
-			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.planes[PLANE_Y].format.type);
-		attach_filter(std::move(filter), m_ids & luma_planes, chroma_planes);
+		m_ids[PLANE_U] = m_ids[PLANE_Y];
+		m_ids[PLANE_V] = m_ids[PLANE_Y];
 
 		m_state.color = ColorFamily::RGB;
 		m_state.colorspace.matrix = matrix;
@@ -563,9 +608,12 @@ private:
 		case PixelType::FLOAT: val.f = 0.0f; break;
 		}
 
-		auto filter = std::make_shared<ValueInitializeFilter>(
+		auto filter = std::make_unique<ValueInitializeFilter>(
 			target.planes[PLANE_U].width, target.planes[PLANE_U].height, format.type, val);
-		attach_greyscale_filter(filter, chroma_planes, false);
+		graphengine::node_id id = m_graph.add_transform(filter.get(), nullptr);
+		m_ids[PLANE_U] = { id, 0 };
+		m_ids[PLANE_V] = { id, 0 };
+		m_graph.save_filter(std::move(filter));
 
 		m_state.color = ColorFamily::YUV;
 		m_state.colorspace.matrix = target.colorspace.matrix;
@@ -582,18 +630,14 @@ private:
 
 		observer.premultiply();
 
-		auto filter = std::make_shared<PremultiplyFilter>(
-			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.has_chroma());
-
-		plane_mask dep_mask = luma_planes | alpha_planes;
-		plane_mask output_mask = luma_planes;
-
-		if (m_state.has_chroma()) {
-			dep_mask |= chroma_planes;
-			output_mask |= chroma_planes;
+		auto filter = std::make_unique<PremultiplyFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height);
+		for (unsigned p = 0; p < (m_state.has_chroma() ? 3U : 1U); ++p) {
+			graphengine::node_dep_desc deps[2] = { m_ids[p], m_ids[PLANE_A] };
+			m_ids[p] = { m_graph.add_transform(filter.get(), deps), 0 };
 		}
+		m_graph.save_filter(std::move(filter));
 
-		attach_filter(std::move(filter), m_ids & dep_mask, output_mask);
 		m_state.alpha = AlphaType::PREMULTIPLIED;
 	}
 
@@ -604,18 +648,14 @@ private:
 
 		observer.unpremultiply();
 
-		auto filter = std::make_shared<UnpremultiplyFilter>(
-			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, m_state.has_chroma());
-
-		plane_mask dep_mask = luma_planes | alpha_planes;
-		plane_mask output_mask = luma_planes;
-
-		if (m_state.has_chroma()) {
-			dep_mask |= chroma_planes;
-			output_mask |= chroma_planes;
+		auto filter = std::make_unique<UnpremultiplyFilter>(
+			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height);
+		for (unsigned p = 0; p < (m_state.has_chroma() ? 3U : 1U); ++p) {
+			graphengine::node_dep_desc deps[2] = {m_ids[p], m_ids[PLANE_A]};
+			m_ids[p] = { m_graph.add_transform(filter.get(), deps), 0 };
 		}
+		m_graph.save_filter(std::move(filter));
 
-		attach_filter(std::move(filter), m_ids & dep_mask, output_mask);
 		m_state.alpha = AlphaType::STRAIGHT;
 	}
 
@@ -635,9 +675,10 @@ private:
 		case PixelType::FLOAT: val.f = 1.0f; break;
 		}
 
-		auto filter = std::make_shared<ValueInitializeFilter>(
+		auto filter = std::make_unique<ValueInitializeFilter>(
 			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, format.type, val);
-		attach_greyscale_filter(std::move(filter), alpha_planes, false);
+		m_ids[PLANE_A] = { m_graph.add_transform(filter.get(), nullptr), 0 };
+		m_graph.save_filter(std::move(filter));
 
 		m_state.alpha = type;
 		m_state.alpha_from_luma();
@@ -700,8 +741,8 @@ private:
 		double subwidth = src_plane.active_width * (dst_plane.width / dst_plane.active_width);
 		double subheight = src_plane.active_height * (dst_plane.height / dst_plane.active_height);
 
-		std::unique_ptr<ImageFilter> first;
-		std::unique_ptr<ImageFilter> second;
+		std::unique_ptr<graphengine::Filter> first;
+		std::unique_ptr<graphengine::Filter> second;
 
 		if (params.unresize) {
 			unresize::UnresizeConversion conv{ src_plane.width, src_plane.height, src_plane.format.type };
@@ -735,10 +776,14 @@ private:
 			second = std::move(filter_list.second);
 		}
 
-		if (first)
-			attach_greyscale_filter(std::move(first), mask, true);
-		if (second)
-			attach_greyscale_filter(std::move(second), mask, true);
+		if (first) {
+			attach_greyscale_filter(first.get(), mask);
+			m_graph.save_filter(std::move(first));
+		}
+		if (second) {
+			attach_greyscale_filter(second.get(), mask);
+			m_graph.save_filter(std::move(second));
+		}
 
 		apply_mask(mask, [&](int q)
 		{
@@ -768,7 +813,13 @@ private:
 		observer.colorspace(conv);
 
 		auto filter = conv.create();
-		attach_filter(std::move(filter), m_ids & (luma_planes | chroma_planes), luma_planes | chroma_planes);
+		if (filter) {
+			graphengine::node_id id = m_graph.add_transform(filter.get(), m_ids.data());
+			m_ids[PLANE_Y] = { id, 0 };
+			m_ids[PLANE_U] = { id, 1 };
+			m_ids[PLANE_V] = { id, 2 };
+			m_graph.save_filter(std::move(filter));
+		}
 
 		if (csp.matrix == colorspace::MatrixCoefficients::RGB) {
 			m_state.color = ColorFamily::RGB;
@@ -791,12 +842,20 @@ private:
 		conv.set_pixel_in(m_state.planes[p].format)
 			.set_pixel_out(format)
 			.set_dither_type(params.dither_type)
+			.set_planes(mask)
 			.set_cpu(params.cpu);
 
 		observer.depth(conv, p);
 
-		auto filter = conv.create();
-		attach_greyscale_filter(std::move(filter), mask, true);
+		auto result = conv.create();
+		apply_mask(mask, [&](int q)
+		{
+			if (result.filter_refs[q])
+				m_ids[q] = { m_graph.add_transform(result.filter_refs[q], &m_ids[q]), 0 };
+		});
+		for (auto &&filter : result.filters) {
+			m_graph.save_filter(std::move(filter));
+		}
 
 		apply_mask(mask, [&](int q) { m_state.planes[q].format = format; });
 	}
@@ -915,7 +974,7 @@ private:
 	{
 		if (needs_premul(target)) {
 			internal_state::plane orig_alpha_plane = m_state.planes[PLANE_A];
-			node_id orig_alpha_node = m_ids[PLANE_A];
+			graphengine::node_dep_desc orig_alpha_node = m_ids[PLANE_A];
 
 			internal_state tmp = make_float_444_state(m_state, true);
 			connect_color_channels(tmp, params, observer);
@@ -937,7 +996,7 @@ private:
 
 		if (m_state.alpha == AlphaType::PREMULTIPLIED && target.alpha == AlphaType::STRAIGHT) {
 			internal_state::plane orig_alpha_plane = m_state.planes[PLANE_A];
-			node_id orig_alpha_node = m_ids[PLANE_A];
+			graphengine::node_dep_desc orig_alpha_node = m_ids[PLANE_A];
 
 			internal_state tmp = make_float_444_state(target, true);
 			connect_color_channels(tmp, params, observer);
@@ -964,45 +1023,119 @@ private:
 			error::throw_<error::InternalError>("failed to connect graph");
 	}
 public:
-	impl() : m_ids(null_ids), m_state{} {}
+	impl() :
+		m_ids(),
+		m_source_state{},
+		m_state{},
+		m_requires_64b{}
+	{
+		std::fill(m_ids.begin(), m_ids.end(), graphengine::null_dep);
+	}
 
 	void set_source(const state &source)
 	{
-		if (m_graph)
+		if (m_state.planes[0].width)
 			error::throw_<error::InternalError>("graph already initialized");
 
-		m_graph = std::make_unique<FilterGraph>();
-		m_ids = null_ids;
+		m_source_state = source;
 		m_state = internal_state{ source };
+		m_requires_64b = false;
 
-		ImageFilter::image_attributes attr{ source.width, source.height, source.type };
-
-		plane_mask mask{};
-		mask[PLANE_Y] = true;
-		mask[PLANE_U] = m_state.has_chroma();
-		mask[PLANE_V] = m_state.has_chroma();
-		mask[PLANE_A] = m_state.has_alpha();
-
-		node_id id = m_graph->add_source(attr, source.subsample_w, source.subsample_h, mask);
-		apply_mask(mask, [&](int p) { m_ids[p] = id; });
+		m_ids[PLANE_Y] = m_graph.source_plane_0();
+		if (m_state.has_chroma()) {
+			m_ids[PLANE_U] = m_graph.source_plane_1();
+			m_ids[PLANE_V] = m_graph.source_plane_2();
+		}
+		if (m_state.has_alpha())
+			m_ids[PLANE_A] = m_graph.source_plane_3();
 	}
 
 	void connect(const state &target, const params &params, FilterObserver &observer)
 	{
-		if (!m_graph)
+		if (!m_state.planes[0].width)
 			error::throw_<error::InternalError>("graph not initialized");
 
 		internal_state internal_target{ target };
 		connect_internal(internal_target, params, observer);
+
+		if (true
+#ifdef ZIMG_X86
+		    && (params.cpu == CPUClass::AUTO_64B || params.cpu >= CPUClass::X86_AVX512)
+#endif
+		) {
+			m_requires_64b = true;
+		}
 	}
 
-	std::unique_ptr<FilterGraph> complete()
+	SubGraph build_subgraph()
 	{
-		if (!m_graph)
+		if (!m_state.planes[0].width)
 			error::throw_<error::InternalError>("graph not initialized");
 
-		m_graph->set_output(m_ids);
-		return std::move(m_graph);
+		std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> sink_deps;
+		std::fill(sink_deps.begin(), sink_deps.end(), graphengine::null_dep);
+
+		unsigned num_sink_deps;
+		{
+			auto sink_deps_it = sink_deps.begin();
+
+			*sink_deps_it++ = m_ids[PLANE_Y];
+			if (m_state.has_chroma()) {
+				*sink_deps_it++ = m_ids[PLANE_U];
+				*sink_deps_it++ = m_ids[PLANE_V];
+			}
+			if (m_state.has_alpha())
+				*sink_deps_it++ = m_ids[PLANE_A];
+
+			num_sink_deps = static_cast<unsigned>(sink_deps_it - sink_deps.begin());
+		}
+		m_graph.set_sink(num_sink_deps, sink_deps.data());
+
+		SubGraph result = std::move(m_graph);
+		*this = impl();
+		return result;
+	}
+
+	std::unique_ptr<FilterGraph> build_graph()
+	{
+		state source_state = m_source_state;
+		unsigned num_sink_planes = 1 + (m_state.has_chroma() ? 2 : 0) + (m_state.has_alpha() ? 1 : 0);
+
+		SubGraph subgraph = build_subgraph();
+		std::unique_ptr<graphengine::Graph> real_graph = std::make_unique<graphengine::GraphImpl>();
+
+		// Set the source node.
+		std::array<graphengine::PlaneDescriptor, PLANE_NUM> source_desc{};
+		unsigned num_source_planes;
+		{
+			auto source_desc_it = source_desc.begin();
+
+			*source_desc_it++ = { source_state.width, source_state.height, zimg::pixel_size(source_state.type) };
+			if (source_state.color != ColorFamily::GREY) {
+				*source_desc_it++ = { source_state.width >> source_state.subsample_w, source_state.height >> source_state.subsample_h, zimg::pixel_size(source_state.type) };
+				*source_desc_it++ = { source_state.width >> source_state.subsample_w, source_state.height >> source_state.subsample_h, zimg::pixel_size(source_state.type) };
+			}
+			if (source_state.alpha != AlphaType::NONE)
+				*source_desc_it++ = { source_state.width, source_state.height, zimg::pixel_size(source_state.type) };
+
+			num_source_planes = static_cast<unsigned>(source_desc_it - source_desc.begin());
+		}
+		graphengine::node_id source_id = real_graph->add_source(num_source_planes, source_desc.data());
+
+		// Apply the partial graph to the real graph.
+		std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> source_deps;
+		for (unsigned p = 0; p < graphengine::NODE_MAX_PLANES; ++p) {
+			source_deps[p] = { source_id, p };
+		}
+		auto real_sink_deps = subgraph.connect(real_graph.get(), source_deps.data());
+
+		// Compile the final graph.
+		graphengine::node_id sink_id = real_graph->add_sink(num_sink_planes, real_sink_deps.data());
+		auto finished_graph = std::make_unique<FilterGraph>(std::move(real_graph), subgraph.release_filters_opaque(), source_id, sink_id);
+		if (m_requires_64b)
+			finished_graph->set_requires_64b_alignment();
+
+		return finished_graph;
 	}
 };
 
@@ -1029,14 +1162,18 @@ GraphBuilder::GraphBuilder() : m_impl(std::make_unique<impl>()) {}
 
 GraphBuilder::~GraphBuilder() = default;
 
-GraphBuilder &GraphBuilder::set_source(const state &source)
+GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	validate_state(source);
 	get_impl()->set_source(source);
 	return *this;
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-GraphBuilder &GraphBuilder::connect(const state &target, const params *params, FilterObserver *observer)
+GraphBuilder &GraphBuilder::connect(const state &target, const params *params, FilterObserver *observer) try
 {
 	static const GraphBuilder::params default_params;
 	DefaultFilterObserver default_factory;
@@ -1052,11 +1189,28 @@ GraphBuilder &GraphBuilder::connect(const state &target, const params *params, F
 
 	get_impl()->connect(target, *params, *observer);
 	return *this;
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
-std::unique_ptr<FilterGraph> GraphBuilder::complete()
+SubGraph GraphBuilder::build_subgraph() try
 {
-	return get_impl()->complete();
+	return get_impl()->build_subgraph();
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
+}
+
+std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
+{
+	return get_impl()->build_graph();
+} catch (const error::Exception &) {
+	throw;
+} catch (const std::exception &e) {
+	error::throw_<error::InternalError>(e.what());
 }
 
 } // namespace graph

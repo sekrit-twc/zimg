@@ -11,6 +11,7 @@
 #include "common/checked_int.h"
 #include "common/make_array.h"
 #include "common/except.h"
+#include "graphengine/filter.h"
 #include "resize/resize_impl.h"
 
 #include "common/x86/sse2_util.h"
@@ -701,58 +702,51 @@ class ResizeImplH_U16_AVX512 final : public ResizeImplH {
 	decltype(resize_line16_h_u16_avx512_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_U16_AVX512(const FilterContext &filter, unsigned height, unsigned depth) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::WORD }),
+	ResizeImplH_U16_AVX512(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
+		m_desc.step = 32;
+		m_desc.scratchpad_size = (ceil_n(checked_size_t{ filter.input_width }, 32) * sizeof(uint16_t) * 32).get();
+
 		if (filter.filter_width > 8)
 			m_func = resize_line16_h_u16_avx512_jt_large[filter.filter_width % 8];
 		else
 			m_func = resize_line16_h_u16_avx512_jt_small[filter.filter_width - 1];
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	unsigned get_simultaneous_lines() const override { return 32; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 32) - floor_n(range.first, 32)) * sizeof(uint16_t) * 32;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		auto range = get_required_col_range(left, right);
+		auto range = get_col_deps(left, right);
 
 		alignas(64) const uint16_t *src_ptr[32];
 		alignas(64) uint16_t *dst_ptr[32];
 		uint16_t *transpose_buf = static_cast<uint16_t *>(tmp);
-		unsigned height = get_image_attributes().height;
+		unsigned height = m_desc.format.height;
 
-		calculate_line_address(src_ptr + 0, src->data(), src->stride(), src->mask(), i + 0, height);
-		calculate_line_address(src_ptr + 8, src->data(), src->stride(), src->mask(), i + std::min(8U, height - i - 1), height);
-		calculate_line_address(src_ptr + 16, src->data(), src->stride(), src->mask(), i + std::min(16U, height - i - 1), height);
-		calculate_line_address(src_ptr + 24, src->data(), src->stride(), src->mask(), i + std::min(24U, height - i - 1), height);
+		calculate_line_address(src_ptr + 0, in->ptr, in->stride, in->mask, i + 0, height);
+		calculate_line_address(src_ptr + 8, in->ptr, in->stride, in->mask, i + std::min(8U, height - i - 1), height);
+		calculate_line_address(src_ptr + 16, in->ptr, in->stride, in->mask, i + std::min(16U, height - i - 1), height);
+		calculate_line_address(src_ptr + 24, in->ptr, in->stride, in->mask, i + std::min(24U, height - i - 1), height);
 
 		transpose_line_32x32_epi16(transpose_buf, src_ptr, floor_n(range.first, 32), ceil_n(range.second, 32));
 
-		calculate_line_address(dst_ptr + 0, dst->data(), dst->stride(), dst->mask(), i + 0, height);
-		calculate_line_address(dst_ptr + 8, dst->data(), dst->stride(), dst->mask(), i + std::min(8U, height - i - 1), height);
-		calculate_line_address(dst_ptr + 16, dst->data(), dst->stride(), dst->mask(), i + std::min(16U, height - i - 1), height);
-		calculate_line_address(dst_ptr + 24, dst->data(), dst->stride(), dst->mask(), i + std::min(24U, height - i - 1), height);
+		calculate_line_address(dst_ptr + 0, out->ptr, out->stride, out->mask, i + 0, height);
+		calculate_line_address(dst_ptr + 8, out->ptr, out->stride, out->mask, i + std::min(8U, height - i - 1), height);
+		calculate_line_address(dst_ptr + 16, out->ptr, out->stride, out->mask, i + std::min(16U, height - i - 1), height);
+		calculate_line_address(dst_ptr + 24, out->ptr, out->stride, out->mask, i + std::min(24U, height - i - 1), height);
 
 		m_func(m_filter.left.data(), m_filter.data_i16.data(), m_filter.stride_i16, m_filter.filter_width,
 		       transpose_buf, dst_ptr, floor_n(range.first, 32), left, right, m_pixel_max);
 	}
 };
 
-class ResizeImplH_Permute_U16_AVX512 final : public graph::ImageFilterBase {
+
+class ResizeImplH_Permute_U16_AVX512 final : public graphengine::Filter {
 	typedef decltype(resize_line_h_perm_u16_avx512_jt)::value_type func_type;
 
 	struct PermuteContext {
@@ -764,22 +758,26 @@ class ResizeImplH_Permute_U16_AVX512 final : public graph::ImageFilterBase {
 		unsigned input_width;
 	};
 
+	graphengine::FilterDescriptor m_desc;
 	PermuteContext m_context;
-	unsigned m_height;
 	uint16_t m_pixel_max;
-	bool m_is_sorted;
-
 	func_type m_func;
 
 	ResizeImplH_Permute_U16_AVX512(PermuteContext context, unsigned height, unsigned depth) :
+		m_desc{},
 		m_context(std::move(context)),
-		m_height{ height },
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
-		m_is_sorted{ std::is_sorted(m_context.left.begin(), m_context.left.end()) },
 		m_func{ resize_line_h_perm_u16_avx512_jt[(m_context.filter_width - 1) / 2] }
-	{}
+	{
+		m_desc.format = { context.filter_rows, height, pixel_size(PixelType::WORD) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 1;
+		m_desc.alignment_mask = 15;
+		m_desc.flags.entire_row = !std::is_sorted(m_context.left.begin(), m_context.left.end());
+	}
 public:
-	static std::unique_ptr<graph::ImageFilter> create(const FilterContext &filter, unsigned height, unsigned depth)
+	static std::unique_ptr<graphengine::Filter> create(const FilterContext &filter, unsigned height, unsigned depth)
 	{
 		// Transpose is faster for large filters.
 		if (filter.filter_width > 16)
@@ -822,98 +820,76 @@ public:
 			}
 		}
 
-		std::unique_ptr<graph::ImageFilter> ret{ new ResizeImplH_Permute_U16_AVX512(std::move(context), height, depth) };
+		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_Permute_U16_AVX512(std::move(context), height, depth) };
 		return ret;
 	}
 
-	filter_flags get_flags() const override
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
+
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override
 	{
-		filter_flags flags{};
-
-		flags.same_row = true;
-		flags.entire_row = !m_is_sorted;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_context.filter_rows, m_height, PixelType::WORD };
-	}
-
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override
-	{
-		if (m_is_sorted) {
-			unsigned input_width = m_context.input_width;
-			unsigned right_base = m_context.left[(right + 15) / 16 - 1];
-			unsigned iter_width = m_context.filter_width + 32;
-
-			return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
-		} else {
+		if (m_desc.flags.entire_row)
 			return{ 0, m_context.input_width };
-		}
+
+		unsigned input_width = m_context.input_width;
+		unsigned right_base = m_context.left[(right + 15) / 16 - 1];
+		unsigned iter_width = m_context.filter_width + 32;
+		return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
+	void init_context(void *) const noexcept override {}
 
-		m_func(m_context.left.data(), m_context.permute.data(), m_context.data.data(), m_context.input_width, src_buf[i], dst_buf[i], left, right, m_pixel_max);
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
+	{
+		m_func(m_context.left.data(), m_context.permute.data(), m_context.data.data(), m_context.input_width, in->get_line<uint16_t>(i), out->get_line<uint16_t>(i), left, right, m_pixel_max);
 	}
 };
+
 
 class ResizeImplV_U16_AVX512 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_U16_AVX512(const FilterContext &filter, unsigned width, unsigned depth) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
+	ResizeImplV_U16_AVX512(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
-	{}
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		checked_size_t size = 0;
-
-		try {
-			if (m_filter.filter_width > 8)
-				size += (ceil_n(checked_size_t{ right }, 32) - floor_n(left, 32)) * sizeof(uint32_t);
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-
-		return size.get();
+		if (m_filter.filter_width > 8)
+			m_desc.scratchpad_size = (ceil_n(checked_size_t{ width }, 32) * sizeof(uint32_t)).get();
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
-
 		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
 		unsigned filter_width = m_filter.filter_width;
 		unsigned src_height = m_filter.input_width;
 
 		alignas(64) const uint16_t *src_lines[8];
-		uint16_t *dst_line = dst_buf[i];
+		uint16_t *dst_line = out->get_line<uint16_t>(i);
 		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
 
 		unsigned top = m_filter.left[i];
 
 		if (filter_width <= 8) {
-			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + 0, src_height);
+			calculate_line_address(src_lines, in->ptr, in->stride, in->mask, top + 0, src_height);
 			resize_line_v_u16_avx512_jt_small[filter_width - 1](filter_data, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		} else {
 			unsigned k_end = ceil_n(filter_width, 8) - 8;
 
-			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + 0, src_height);
+			calculate_line_address(src_lines, in->ptr, in->stride, in->mask, top + 0, src_height);
 			resize_line_v_u16_avx512_initial(filter_data + 0, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 
 			for (unsigned k = 8; k < k_end; k += 8) {
-				calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + k, src_height);
+				calculate_line_address(src_lines, in->ptr, in->stride, in->mask, top + k, src_height);
 				resize_line_v_u16_avx512_update(filter_data + k, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 			}
 
-			calculate_line_address(src_lines, src->data(), src->stride(), src->mask(), top + k_end, src_height);
+			calculate_line_address(src_lines, in->ptr, in->stride, in->mask, top + k_end, src_height);
 			resize_line_v_u16_avx512_jt_final[filter_width - k_end - 1](filter_data + k_end, src_lines, dst_line, accum_buf, left, right, m_pixel_max);
 		}
 	}

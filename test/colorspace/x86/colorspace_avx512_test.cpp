@@ -1,14 +1,14 @@
 #ifdef ZIMG_X86_AVX512
 
 #include <cmath>
+#include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graph/image_filter.h"
-#include "colorspace/colorspace.h"
+#include "graphengine/filter.h"
 
 #include "gtest/gtest.h"
-#include "graph/filter_validator.h"
+#include "graphengine/filter_validation.h"
 
 namespace {
 
@@ -32,11 +32,21 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_avx512 = builder.set_cpu(zimg::CPUClass::X86_AVX512).create();
 
-	FilterValidator validator{ filter_avx512.get(), w, h, format };
-	validator.set_sha1(expected_sha1)
-	         .set_ref_filter(filter_c.get(), expected_snr)
-	         .set_yuv(csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB)
-	         .validate();
+	ASSERT_TRUE(filter_c);
+	ASSERT_TRUE(filter_avx512);
+
+	graphengine::FilterValidation(filter_avx512.get(), { w, h, zimg::pixel_size(zimg::PixelType::FLOAT) })
+		.set_reference_filter(filter_c.get(), expected_snr)
+		.set_input_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_input_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_input_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_output_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_sha1(0, expected_sha1[0])
+		.set_sha1(1, expected_sha1[1])
+		.set_sha1(2, expected_sha1[2])
+		.run();
 }
 
 } // namespace
@@ -46,7 +56,7 @@ TEST(ColorspaceConversionAVX512Test, test_matrix)
 {
 	using namespace zimg::colorspace;
 
-	const char *expected_sha1[3] = {
+	static const char *expected_sha1[3] = {
 		"749f74428406c019b1b727fa30352fcd1f0141ed",
 		"334cfa73375f8afef8423a163f3cff8f8a196762",
 		"aa3aab12d52e67b4d6765b4e8c03205a5375d8d9"
@@ -62,7 +72,7 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_rec_1886)
 {
 	using namespace zimg::colorspace;
 
-	const char *expected_sha1[][3] = {
+	static const char *expected_sha1[][3] = {
 		{
 			"08d5b0c5299a03d6ca7a477dcf2853ece6f31a96",
 			"1f1421c4a1c923f286314bcca9cb3b5d9a6ba4cc",
@@ -91,7 +101,7 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_srgb)
 {
 	using namespace zimg::colorspace;
 
-	const char *expected_sha1[][3] = {
+	static const char *expected_sha1[][3] = {
 		{
 			"43c2d947ab229997b225ac5ba9d96010048fa895",
 			"06c3c947a9b14727ea8f4344550e4a39f1407cc7",
@@ -120,7 +130,7 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_st_2084)
 {
 	using namespace zimg::colorspace;
 
-	const char *expected_sha1[][3] = {
+	static const char *expected_sha1[][3] = {
 		{
 			"a0d7b4c6dc3381e8831aa84ab7ba05eb86cafd2b",
 			"f40fd965e3938548da9a631099df7338bc3f2722",

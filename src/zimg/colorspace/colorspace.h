@@ -5,16 +5,14 @@
 
 #include <memory>
 
+namespace graphengine {
+class Filter;
+}
+
+
 namespace zimg {
 
 enum class CPUClass;
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
 
 namespace colorspace {
 
@@ -125,7 +123,7 @@ struct ColorspaceConversion {
 
 	ColorspaceConversion(unsigned width, unsigned height);
 
-	std::unique_ptr<graph::ImageFilter> create() const;
+	std::unique_ptr<graphengine::Filter> create() const;
 };
 
 } // namespace colorspace

@@ -2,16 +2,16 @@
 
 #include "common/cpuinfo.h"
 #include "common/arm/cpuinfo_arm.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "resize_impl_arm.h"
 
 namespace zimg {
 namespace resize {
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_arm(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_arm(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
 	ARMCapabilities caps = query_arm_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.neon && caps.vfpv4)
@@ -24,10 +24,10 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_arm(const FilterContext
 	return ret;
 }
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_arm(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_arm(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
 {
 	ARMCapabilities caps = query_arm_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.neon && caps.vfpv4)

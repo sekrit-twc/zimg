@@ -6,24 +6,22 @@
 #include <memory>
 #include <utility>
 
+namespace graphengine {
+class Filter;
+}
+
+
 namespace zimg {
 
 enum class CPUClass;
 enum class PixelType;
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
 
 namespace resize {
 
 class Filter;
 
 struct ResizeConversion {
-	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
+	typedef std::pair<std::unique_ptr<graphengine::Filter>, std::unique_ptr<graphengine::Filter>> filter_pair;
 
 	unsigned src_width;
 	unsigned src_height;

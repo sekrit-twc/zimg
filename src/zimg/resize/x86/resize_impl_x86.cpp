@@ -2,16 +2,16 @@
 
 #include "common/cpuinfo.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "resize_impl_x86.h"
 
 namespace zimg {
 namespace resize {
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 #ifdef ZIMG_X86_AVX512
@@ -50,10 +50,10 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_x86(const FilterContext
 	return ret;
 }
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu)
 {
 	X86Capabilities caps = query_x86_capabilities();
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
 #ifdef ZIMG_X86_AVX512

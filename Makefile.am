@@ -52,6 +52,17 @@ libzimg_la_LIBADD = libzimg_internal.la
 libzimg_la_LDFLAGS = -no-undefined -version-info 2
 
 libzimg_internal_la_SOURCES = \
+	graphengine/graphengine/cpuinfo.h \
+	graphengine/graphengine/cpuinfo.cpp \
+	graphengine/graphengine/graph.cpp \
+	graphengine/graphengine/node.cpp \
+	graphengine/graphengine/node.h \
+	graphengine/graphengine/state.h \
+	graphengine/graphengine/x86/cpuinfo_x86.cpp \
+	graphengine/graphengine/x86/cpuinfo_x86.h \
+	graphengine/include/graphengine/filter.h \
+	graphengine/include/graphengine/graph.h \
+	graphengine/include/graphengine/types.h \
 	src/zimg/api/zimg.cpp \
 	src/zimg/api/zimg.h \
 	src/zimg/api/zimg++.hpp \
@@ -101,10 +112,6 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/graph/filtergraph.cpp \
 	src/zimg/graph/graphbuilder.h \
 	src/zimg/graph/graphbuilder.cpp \
-	src/zimg/graph/graphnode.h \
-	src/zimg/graph/graphnode.cpp \
-	src/zimg/graph/image_buffer.h \
-	src/zimg/graph/image_filter.h \
 	src/zimg/resize/filter.cpp \
 	src/zimg/resize/filter.h \
 	src/zimg/resize/resize.cpp \
@@ -118,7 +125,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/unresize/unresize_impl.cpp \
 	src/zimg/unresize/unresize_impl.h
 
-libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 libzimg_internal_la_LIBADD =
 
 
@@ -149,7 +156,7 @@ libneon_la_SOURCES = \
 	src/zimg/resize/arm/resize_impl_neon.cpp
 
 libneon_la_CXXFLAGS = $(AM_CXXFLAGS) $(NEON_CFLAGS)
-libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengien/include
 
 libzimg_internal_la_LIBADD += libneon.la
 endif # ARMSIMD
@@ -186,7 +193,7 @@ libsse_la_SOURCES = \
 	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
-libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libsse2_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_sse2.cpp \
@@ -197,19 +204,19 @@ libsse2_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
-libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libavx_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx.cpp \
 	src/zimg/resize/x86/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SNB_CFLAGS)
-libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libf16c_la_SOURCES = src/zimg/depth/x86/f16c_ivb.cpp
 
 libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c $(IVB_CFLAGS)
-libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libavx2_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx2.cpp \
@@ -219,7 +226,7 @@ libavx2_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HSW_CFLAGS)
-libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 endif # X86SIMD
@@ -237,11 +244,11 @@ libavx512_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_avx512_common.h
 
 libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq $(SKX_CFLAGS)
-libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libavx512_vnni_la_SOURCES = src/zimg/resize/x86/resize_impl_avx512_vnni.cpp
 libavx512_vnni_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512vnni $(CLX_CFLAGS)
-libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg
+libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include
 
 libzimg_internal_la_LIBADD += libavx512.la libavx512_vnni.la
 endif # X86SIMD_AVX512
@@ -297,7 +304,7 @@ endif # EXAMPLES
 if TESTAPP
 noinst_PROGRAMS += testapp
 noinst_LTLIBRARIES += libtestcommon.la
-testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon
+testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon -I$(srcdir)/graphengine/include
 
 testapp_SOURCES = \
 	src/testapp/apps.h \
@@ -308,8 +315,6 @@ testapp_SOURCES = \
 	src/testapp/frame.h \
 	src/testapp/graphapp.cpp \
 	src/testapp/main.cpp \
-	src/testapp/pair_filter.cpp \
-	src/testapp/pair_filter.h \
 	src/testapp/resizeapp.cpp \
 	src/testapp/table.cpp \
 	src/testapp/table.h \
@@ -358,28 +363,25 @@ test_libmusl_m_la_SOURCES = \
 test_unit_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(srcdir)/src/zimg \
+	-I$(srcdir)/graphengine/include \
 	-I$(srcdir)/test \
 	-I$(srcdir)/test/extra \
 	-I$(srcdir)/test/extra/googletest/googletest/include
 
 test_unit_test_SOURCES = \
+	graphengine/filter_validation/filter_validation.cpp \
+	graphengine/filter_validation/sha1/config.h \
+	graphengine/filter_validation/sha1/sha1.c \
+	graphengine/filter_validation/sha1/sha1.h \
+	graphengine/include/graphengine/filter_validation.h \
+	test/dynamic_type.h \
 	test/main.cpp \
 	test/api/api_test.cpp \
 	test/colorspace/colorspace_test.cpp \
 	test/colorspace/gamma_test.cpp \
 	test/depth/depth_convert_test.cpp \
 	test/depth/dither_test.cpp \
-	test/extra/sha1/config.h \
-	test/extra/sha1/sha1.c \
-	test/extra/sha1/sha1.h \
-	test/graph/audit_buffer.cpp \
-	test/graph/audit_buffer.h \
-	test/graph/filter_validator.cpp \
-	test/graph/filter_validator.h \
-	test/graph/filtergraph_test.cpp \
 	test/graph/graphbuilder_test.cpp \
-	test/graph/mock_filter.cpp \
-	test/graph/mock_filter.h \
 	test/resize/filter_test.cpp \
 	test/resize/resize_impl_test.cpp
 

@@ -3,6 +3,21 @@
 #ifndef ZIMG_UNRESIZE_UNRESIZE_H_
 #define ZIMG_UNRESIZE_UNRESIZE_H_
 
+#include <memory>
+#include <utility>
+
+namespace graphengine {
+class Filter;
+}
+
+
+namespace zimg {
+
+enum class CPUClass;
+enum class PixelType;
+
+namespace unresize {
+
 /**
  * Unresize: reverses the effect of the bilinear scaling method.
  *
@@ -79,26 +94,8 @@
  *
  * Generalization to two dimensions is done by processing each dimension.
  */
-
-#include <memory>
-#include <utility>
-
-namespace zimg {
-
-enum class CPUClass;
-enum class PixelType;
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
-
-namespace unresize {
-
 struct UnresizeConversion {
-	typedef std::pair<std::unique_ptr<graph::ImageFilter>, std::unique_ptr<graph::ImageFilter>> filter_pair;
+	typedef std::pair<std::unique_ptr<graphengine::Filter>, std::unique_ptr<graphengine::Filter>> filter_pair;
 
 	unsigned up_width;
 	unsigned up_height;

@@ -4,7 +4,7 @@
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
 #include <memory>
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "bilinear.h"
 
 namespace zimg {
@@ -14,42 +14,36 @@ enum class PixelType;
 
 namespace unresize {
 
-class UnresizeImplH : public graph::ImageFilterBase {
+class UnresizeImplH : public graphengine::Filter {
 protected:
+	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
-	image_attributes m_attr;
 
-	UnresizeImplH(const BilinearContext &context, const image_attributes &attr);
+	UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override;
 
-	pair_unsigned get_required_row_range(unsigned i) const override;
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override;
 
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_max_buffering() const override;
+	void init_context(void *) const noexcept override {}
 };
 
-class UnresizeImplV : public graph::ImageFilterBase {
+class UnresizeImplV : public graphengine::Filter {
 protected:
+	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
-	image_attributes m_attr;
 
-	UnresizeImplV(const BilinearContext &context, const image_attributes &attr);
+	UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
-	filter_flags get_flags() const override;
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	image_attributes get_image_attributes() const override;
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override;
 
-	pair_unsigned get_required_row_range(unsigned i) const override;
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override;
 
-	pair_unsigned get_required_col_range(unsigned left, unsigned right) const override;
-
-	unsigned get_simultaneous_lines() const override;
-
-	unsigned get_max_buffering() const override;
+	void init_context(void *) const noexcept override {}
 };
 
 struct UnresizeImplBuilder {
@@ -66,7 +60,7 @@ struct UnresizeImplBuilder {
 
 	UnresizeImplBuilder(unsigned up_width, unsigned up_height, PixelType type);
 
-	std::unique_ptr<graph::ImageFilter> create() const;
+	std::unique_ptr<graphengine::Filter> create() const;
 };
 
 } // namespace unresize

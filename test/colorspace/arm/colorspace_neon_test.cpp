@@ -4,11 +4,11 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/arm/cpuinfo_arm.h"
-#include "graph/image_filter.h"
 #include "colorspace/colorspace.h"
+#include "graphengine/filter.h"
 
 #include "gtest/gtest.h"
-#include "graph/filter_validator.h"
+#include "graphengine/filter_validation.h"
 
 // ARMv7a vs ARMv8a numerics:
 //     ARMv7a NEON does not support round-half-to-even mode (i.e. IEEE-754).
@@ -32,17 +32,26 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	zimg::PixelFormat format = zimg::PixelType::FLOAT;
 	auto builder = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)
-		.set_csp_out(csp_out)
-		.set_approximate_gamma(true);
+		.set_csp_out(csp_out);
 
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_neon = builder.set_cpu(zimg::CPUClass::ARM_NEON).create();
 
-	FilterValidator validator{ filter_neon.get(), w, h, format };
-	validator.set_sha1(expected_sha1)
-	         .set_ref_filter(filter_c.get(), expected_snr)
-	         .set_yuv(csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB)
-	         .validate();
+	ASSERT_TRUE(filter_c);
+	ASSERT_TRUE(filter_neon);
+
+	graphengine::FilterValidation(filter_neon.get(), { w, h, zimg::pixel_size(zimg::PixelType::FLOAT) })
+		.set_reference_filter(filter_c.get(), expected_snr)
+		.set_input_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_input_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_input_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
+		.set_output_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_sha1(0, expected_sha1[0])
+		.set_sha1(1, expected_sha1[1])
+		.set_sha1(2, expected_sha1[2])
+		.run();
 }
 
 } // namespace

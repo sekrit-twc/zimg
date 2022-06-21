@@ -13,7 +13,6 @@
 #include "depth/depth.h"
 #include "graph/filtergraph.h"
 #include "graph/graphbuilder.h"
-#include "graph/image_filter.h"
 #include "resize/filter.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
@@ -255,7 +254,7 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 	zimg::graph::GraphBuilder builder;
 	return builder.set_source(src_state)
 		.connect(dst_state, has_params ? &params : nullptr, &observer)
-		.complete();
+		.build_graph();
 }
 
 ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)
@@ -281,13 +280,13 @@ void thread_target(const zimg::graph::FilterGraph *graph,
 	try {
 		ImageFrame src_frame = allocate_frame(*src_state);
 		ImageFrame dst_frame = allocate_frame(*dst_state);
-		zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+		zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 		while (true) {
 			if ((*counter)-- <= 0)
 				break;
 
-			graph->process(src_frame.as_read_buffer(), dst_frame.as_write_buffer(), tmp.data(), nullptr, nullptr);
+			graph->process(src_frame.as_buffer(), dst_frame.as_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 		}
 	} catch (...) {
 		std::lock_guard<std::mutex> lock{ *mutex };

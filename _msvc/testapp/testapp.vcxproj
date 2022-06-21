@@ -37,7 +37,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\testapp\apps.h" />
     <ClInclude Include="..\..\src\testapp\frame.h" />
-    <ClInclude Include="..\..\src\testapp\pair_filter.h" />
     <ClInclude Include="..\..\src\testapp\table.h" />
     <ClInclude Include="..\..\src\testapp\utils.h" />
   </ItemGroup>
@@ -48,7 +47,6 @@
     <ClCompile Include="..\..\src\testapp\frame.cpp" />
     <ClCompile Include="..\..\src\testapp\graphapp.cpp" />
     <ClCompile Include="..\..\src\testapp\main.cpp" />
-    <ClCompile Include="..\..\src\testapp\pair_filter.cpp" />
     <ClCompile Include="..\..\src\testapp\resizeapp.cpp" />
     <ClCompile Include="..\..\src\testapp\table.cpp" />
     <ClCompile Include="..\..\src\testapp\unresizeapp.cpp" />
@@ -146,8 +144,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -161,8 +159,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -176,8 +174,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -191,8 +189,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -208,8 +206,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -226,8 +224,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -244,8 +242,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -262,8 +260,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>graphengine=zimg_graphengine;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>

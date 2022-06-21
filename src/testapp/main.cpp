@@ -13,11 +13,12 @@ typedef int (*main_func)(int, char **);
 
 void usage()
 {
-	std::cout << "TestApp subapp [args]\n";
+	std::cout << "testapp subapp [args]\n";
 	std::cout << "    colorspace - change colorspace\n";
 	std::cout << "    cpuinfo    - show CPU information\n";
 	std::cout << "    depth      - change depth\n";
 	std::cout << "    graph      - benchmark filter graph\n";
+	std::cout << "    graph2     - benchmark filter graph\n";
 	std::cout << "    resize     - resize images\n";
 	std::cout << "    unresize   - unresize images\n";
 }
@@ -28,7 +29,7 @@ main_func lookup_app(const char *name)
 		{ "colorspace", colorspace_main },
 		{ "cpuinfo",    cpuinfo_main },
 		{ "depth",      depth_main },
-		{ "graph",      graph_main },
+		{ "graph",     graph_main },
 		{ "resize",     resize_main },
 		{ "unresize",   unresize_main }
 	};

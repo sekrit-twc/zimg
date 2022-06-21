@@ -9,7 +9,7 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "blue.h"
 #include "depth.h"
 #include "dither.h"
@@ -162,6 +162,7 @@ AlignedVector<float> load_dither_table(const uint8_t *data, unsigned len, unsign
 	return table;
 }
 
+
 class OrderedDitherTable {
 public:
 	virtual ~OrderedDitherTable() = default;
@@ -225,74 +226,64 @@ public:
 	}
 };
 
-class OrderedDither final : public graph::ImageFilterBase {
-	std::unique_ptr<OrderedDitherTable> m_dither_table;
+
+class OrderedDither : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
+	std::shared_ptr<OrderedDitherTable> m_dither_table;
 	dither_convert_func m_func;
 	dither_f16c_func m_f16c;
-
-	PixelType m_pixel_in;
-	PixelType m_pixel_out;
-
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
+	unsigned m_plane;
 
-	unsigned m_width;
-	unsigned m_height;
+	void check_preconditions(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+	{
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
+
+		if (!pixel_is_integer(pixel_out.type))
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
+	}
 public:
-	OrderedDither(std::unique_ptr<OrderedDitherTable> &&table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
-	              const PixelFormat &format_in, const PixelFormat &format_out) :
+	OrderedDither(std::shared_ptr<OrderedDitherTable> table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
+	              const PixelFormat &pixel_in, const PixelFormat &pixel_out, unsigned plane) :
+		m_desc{},
+		m_dither_table{ std::move(table) },
 		m_func{ func },
 		m_f16c{ f16c },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
-		m_width{ width },
-		m_height{ height }
+		m_depth{ pixel_out.depth },
+		m_plane{ plane }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		check_preconditions(width, pixel_in, pixel_out);
 
-		if (!pixel_is_integer(format_out.type))
-			error::throw_<error::InternalError>("cannot dither to non-integer format");
-
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
-		m_dither_table = std::move(table);
+		m_desc.format = { width, height, pixel_size(pixel_out.type) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 1;
+		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
+		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
+		
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
 
-	filter_flags get_flags() const override
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
+
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+
+	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+	
+	void init_context(void *) const noexcept override {}
+
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		filter_flags flags{};
+		auto dither = m_dither_table->get_dither_coeffs(i, m_plane);
 
-		flags.same_row = true;
-		flags.in_place = (pixel_size(m_pixel_in) == pixel_size(m_pixel_out));
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_pixel_out };
-	}
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
-	{
-		return m_f16c ? (static_cast<checked_size_t>(m_width) * sizeof(float)).get() : 0;
-	}
-
-	size_t get_context_size() const override { return sizeof(unsigned); }
-
-	void init_context(void *ctx, unsigned seq) const override { *static_cast<unsigned *>(ctx) = seq; }
-
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		unsigned seq = *static_cast<unsigned *>(ctx);
-		auto dither = m_dither_table->get_dither_coeffs(i, seq);
-
-		const void *src_line = (*src)[i];
-		void *dst_line = (*dst)[i];
+		const void *src_line = in->get_line(i);
+		void *dst_line = out->get_line(i);
 
 		if (m_f16c) {
 			m_f16c(src_line, tmp, left, right);
@@ -303,107 +294,81 @@ public:
 	}
 };
 
-class ErrorDiffusion final : public graph::ImageFilterBase {
+
+class ErrorDiffusion : public graphengine::Filter {
 public:
 	typedef void (*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
+	graphengine::FilterDescriptor m_desc;
 	ed_func m_func;
 	dither_f16c_func m_f16c;
-
-	PixelType m_pixel_in;
-	PixelType m_pixel_out;
-
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
 
-	unsigned m_width;
-	unsigned m_height;
+	void check_preconditions(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+	{
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
+
+		if (!pixel_is_integer(pixel_out.type))
+			error::throw_<error::InternalError>("cannot dither to non-integer format");
+	}
 public:
-	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &format_in, const PixelFormat &format_out) :
+	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+		m_desc{},
 		m_func{ func },
 		m_f16c{ f16c },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
-		m_width{ width },
-		m_height{ height }
+		m_depth{ pixel_out.depth }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		check_preconditions(width, pixel_in, pixel_out);
 
-		if (!pixel_is_integer(format_out.type))
-			error::throw_<error::InternalError>("cannot dither to non-integer format");
+		m_desc.format = { width, height, pixel_size(pixel_out.type) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 1;
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
+		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
+
+		m_desc.flags.stateful = 1;
+		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
+		m_desc.flags.entire_row = 1;
+
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
 
-	filter_flags get_flags() const override
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
+
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+
+	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override { return{ 0, m_desc.format.width }; }
+
+	void init_context(void *context) const noexcept override
 	{
-		filter_flags flags{};
-
-		flags.has_state = true;
-		flags.same_row = true;
-		flags.in_place = pixel_size(m_pixel_in) == pixel_size(m_pixel_out);
-		flags.entire_row = true;
-
-		return flags;
+		std::fill_n(static_cast<float *>(context), m_desc.context_size / sizeof(float), 0.0f);
 	}
 
-	pair_unsigned get_required_col_range(unsigned, unsigned) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *context, void *tmp) const noexcept override
 	{
-		return{ 0, get_image_attributes().width };
-	}
+		const void *src_p = in->get_line(i);
+		void *dst_p = out->get_line(i);
 
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_pixel_out };
-	}
-
-	size_t get_context_size() const override
-	{
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	size_t get_tmp_size(unsigned, unsigned) const override
-	{
-		try {
-			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) : 0;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void init_context(void *ctx, unsigned seq) const override
-	{
-		std::fill_n(static_cast<float *>(ctx), get_context_size() / sizeof(float), 0.0f);
-	}
-
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned, unsigned) const override
-	{
-		const void *src_p = (*src)[i];
-		void *dst_p = (*dst)[i];
-
-		void *error_a = ctx;
-		void *error_b = static_cast<unsigned char *>(ctx) + get_context_size() / 2;
+		void *error_a = context;
+		void *error_b = static_cast<uint8_t *>(context) + m_desc.context_size / 2;
 
 		void *error_top = i % 2 ? error_a : error_b;
 		void *error_cur = i % 2 ? error_b : error_a;
 
 		if (m_f16c) {
-			m_f16c(src_p, tmp, 0, m_width);
+			m_f16c(src_p, tmp, 0, m_desc.format.width);
 			src_p = tmp;
 		}
 
-		m_func(src_p, dst_p, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
+		m_func(src_p, dst_p, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 };
 
@@ -422,7 +387,7 @@ std::unique_ptr<OrderedDitherTable> create_dither_table(DitherType type, unsigne
 	}
 }
 
-std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+std::unique_ptr<graphengine::Filter> create_error_diffusion(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 #ifdef ZIMG_X86
 	if (auto ret = create_error_diffusion_x86(width, height, pixel_in, pixel_out, cpu))
@@ -444,12 +409,11 @@ std::unique_ptr<graph::ImageFilter> create_error_diffusion(unsigned width, unsig
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+DepthConversion::result create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu)
 {
 	if (type == DitherType::ERROR_DIFFUSION)
-		return create_error_diffusion(width, height, pixel_in, pixel_out, cpu);
+		return{ create_error_diffusion(width, height, pixel_in, pixel_out, cpu), planes };
 
-	auto table = create_dither_table(type, width, height);
 	dither_convert_func func = nullptr;
 	dither_f16c_func f16c = nullptr;
 	bool needs_f16c = (pixel_in.type == PixelType::HALF);
@@ -474,7 +438,16 @@ std::unique_ptr<graph::ImageFilter> create_dither(DitherType type, unsigned widt
 			f16c = half_to_float_n;
 	}
 
-	return std::make_unique<OrderedDither>(std::move(table), func, f16c, width, height, pixel_in, pixel_out);
+	std::shared_ptr<OrderedDitherTable> table = create_dither_table(type, width, height);
+	DepthConversion::result res{};
+	for (unsigned p = 0; p < 4; ++p) {
+		if (!planes[p])
+			continue;
+
+		res.filters[p] = std::make_unique<OrderedDither>(table, func, f16c, width, height, pixel_in, pixel_out, p);
+		res.filter_refs[p] = res.filters[p].get();
+	}
+	return res;
 }
 
 } // namespace depth

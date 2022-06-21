@@ -10,6 +10,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
+#include "graphengine/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -470,50 +471,40 @@ class ResizeImplH_U16_SSE2 final : public ResizeImplH {
 	decltype(resize_line8_h_u16_sse2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
-	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) :
-		ResizeImplH(filter, image_attributes{ filter.filter_rows, height, PixelType::WORD }),
+	ResizeImplH_U16_SSE2(const FilterContext &filter, unsigned height, unsigned depth) try :
+		ResizeImplH(filter, height, PixelType::WORD),
 		m_func{},
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
 	{
+		m_desc.step = 8;
+		m_desc.scratchpad_size = (ceil_n(checked_size_t{ filter.input_width }, 8) * sizeof(uint16_t) * 8).get();
+
 		if (filter.filter_width <= 8)
 			m_func = resize_line8_h_u16_sse2_jt_small[filter.filter_width - 1];
 		else
 			m_func = resize_line8_h_u16_sse2_jt_large[filter.filter_width % 8];
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	unsigned get_simultaneous_lines() const override { return 8; }
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		auto range = get_required_col_range(left, right);
-
-		try {
-			checked_size_t size = (ceil_n(checked_size_t{ range.second }, 8) - floor_n(range.first, 8)) * sizeof(uint16_t) * 8;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-	}
-
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
-	{
-		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
-		auto range = get_required_col_range(left, right);
+		auto range = get_col_deps(left, right);
 
 		const uint16_t *src_ptr[8] = { 0 };
 		uint16_t *dst_ptr[8] = { 0 };
 		uint16_t *transpose_buf = static_cast<uint16_t *>(tmp);
-		unsigned height = get_image_attributes().height;
+		unsigned height = m_desc.format.height;
 
 		for (unsigned n = 0; n < 8; ++n) {
-			src_ptr[n] = src_buf[std::min(i + n, height - 1)];
+			src_ptr[n] = in->get_line<uint16_t>(std::min(i + n, height - 1));
 		}
 
 		transpose_line_8x8_epi16(transpose_buf, src_ptr, floor_n(range.first, 8), ceil_n(range.second, 8));
 
 		for (unsigned n = 0; n < 8; ++n) {
-			dst_ptr[n] = dst_buf[std::min(i + n, height - 1)];
+			dst_ptr[n] = out->get_line<uint16_t>(std::min(i + n, height - 1));
 		}
 
 		m_func(m_filter.left.data(), m_filter.data_i16.data(), m_filter.stride_i16, m_filter.filter_width,
@@ -525,36 +516,25 @@ public:
 class ResizeImplV_U16_SSE2 final : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
-	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) :
-		ResizeImplV(filter, image_attributes{ width, filter.filter_rows, PixelType::WORD }),
+	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) try :
+		ResizeImplV(filter, width, PixelType::WORD),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) }
-	{}
-
-	size_t get_tmp_size(unsigned left, unsigned right) const override
 	{
-		checked_size_t size = 0;
-
-		try {
-			if (m_filter.filter_width > 8)
-				size += (ceil_n(checked_size_t{ right }, 8) - floor_n(left, 8)) * sizeof(uint32_t);
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
-
-		return size.get();
+		if (m_filter.filter_width > 8)
+			m_desc.scratchpad_size = (ceil_n(checked_size_t{ width }, 8) * sizeof(uint32_t)).get();
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	void process(void *, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *tmp, unsigned i, unsigned left, unsigned right) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		const auto &src_buf = graph::static_buffer_cast<const uint16_t>(*src);
-		const auto &dst_buf = graph::static_buffer_cast<uint16_t>(*dst);
-
 		const int16_t *filter_data = m_filter.data_i16.data() + i * m_filter.stride_i16;
 		unsigned filter_width = m_filter.filter_width;
 		unsigned src_height = m_filter.input_width;
 
 		const uint16_t *src_lines[8] = { 0 };
-		uint16_t *dst_line = dst_buf[i];
+		uint16_t *dst_line = out->get_line<uint16_t>(i);
 		uint32_t *accum_buf = static_cast<uint32_t *>(tmp);
 
 		unsigned top = m_filter.left[i];
@@ -562,7 +542,7 @@ public:
 		auto gather_8_lines = [&](unsigned i)
 		{
 			for (unsigned n = 0; n < 8; ++n) {
-				src_lines[n] = src_buf[std::min(i + n, src_height - 1)];
+				src_lines[n] = in->get_line<uint16_t>(std::min(i + n, src_height - 1));
 			}
 		};
 
@@ -591,9 +571,9 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_h_sse2(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
 		ret = std::make_unique<ResizeImplH_U16_SSE2>(context, height, depth);
@@ -601,9 +581,9 @@ std::unique_ptr<graph::ImageFilter> create_resize_impl_h_sse2(const FilterContex
 	return ret;
 }
 
-std::unique_ptr<graph::ImageFilter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
+std::unique_ptr<graphengine::Filter> create_resize_impl_v_sse2(const FilterContext &context, unsigned width, PixelType type, unsigned depth)
 {
-	std::unique_ptr<graph::ImageFilter> ret;
+	std::unique_ptr<graphengine::Filter> ret;
 
 	if (type == PixelType::WORD)
 		ret = std::make_unique<ResizeImplV_U16_SSE2>(context, width, depth);

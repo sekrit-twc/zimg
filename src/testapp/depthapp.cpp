@@ -2,10 +2,11 @@
 #include <iostream>
 #include <memory>
 #include <regex>
+#include <utility>
 #include "common/except.h"
 #include "common/pixel.h"
-#include "graph/image_filter.h"
 #include "depth/depth.h"
+#include "graphengine/filter.h"
 
 #include "apps.h"
 #include "argparse.h"
@@ -53,9 +54,9 @@ double ns_per_sample(const ImageFrame &frame, double seconds)
 	return seconds * 1e9 / samples;
 }
 
-void execute(const zimg::graph::ImageFilter *filter, const zimg::graph::ImageFilter *filter_uv, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
+void execute(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame, unsigned times)
 {
-	auto results = measure_benchmark(times, FilterExecutor{ filter, filter_uv, src_frame, dst_frame }, [](unsigned n, double d)
+	auto results = measure_benchmark(times, FilterExecutor{ filters, src_frame, dst_frame }, [](unsigned n, double d)
 	{
 		std::cout << '#' << n << ": " << d << '\n';
 	});
@@ -71,8 +72,8 @@ struct Arguments {
 	unsigned width;
 	unsigned height;
 	zimg::depth::DitherType dither;
-	zimg::PixelFormat format_in;
-	zimg::PixelFormat format_out;
+	zimg::PixelFormat pixel_in;
+	zimg::PixelFormat pixel_out;
 	int force_color_family;
 	const char *visualise_path;
 	unsigned times;
@@ -94,8 +95,8 @@ const ArgparseOption program_switches[] = {
 const ArgparseOption program_positional[] = {
 	{ OPTION_STRING, nullptr, "inpath",     offsetof(Arguments, inpath),     nullptr, "input path specifier" },
 	{ OPTION_STRING, nullptr, "outpath",    offsetof(Arguments, outpath),    nullptr, "output path specifier" },
-	{ OPTION_USER1,  nullptr, "format-in",  offsetof(Arguments, format_in),  arg_decode_pixfmt, "input pixel format"},
-	{ OPTION_USER1,  nullptr, "format-out", offsetof(Arguments, format_out), arg_decode_pixfmt, "output pixel format"},
+	{ OPTION_USER1,  nullptr, "format-in",  offsetof(Arguments, pixel_in),  arg_decode_pixfmt, "input pixel format"},
+	{ OPTION_USER1,  nullptr, "format-out", offsetof(Arguments, pixel_out), arg_decode_pixfmt, "output pixel format"},
 	{ OPTION_NULL }
 };
 
@@ -134,44 +135,55 @@ int depth_main(int argc, char **argv)
 
 		if (src_frame.is_yuv() != is_yuv)
 			std::cerr << "warning: input file is of different color family than declared format\n";
-		if (src_frame.pixel_type() != args.format_in.type)
+		if (src_frame.pixel_type() != args.pixel_in.type)
 			std::cerr << "warning: input file is of a different pixel type than declared format\n";
 
-		if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.format_in.type))
+		if (zimg::pixel_size(src_frame.pixel_type()) != zimg::pixel_size(args.pixel_in.type))
 			throw std::runtime_error{ "pixel sizes not compatible" };
 
 		ImageFrame dst_frame{
-			src_frame.width(), src_frame.height(), args.format_out.type, src_frame.planes(),
+			src_frame.width(), src_frame.height(), args.pixel_out.type, src_frame.planes(),
 			is_yuv, src_frame.subsample_w(), src_frame.subsample_h()
 		};
 
-		std::unique_ptr<zimg::graph::ImageFilter> filter;
-		std::unique_ptr<zimg::graph::ImageFilter> filter_uv;
-
 		auto conv = zimg::depth::DepthConversion{ src_frame.width(), src_frame.height() }
-			.set_pixel_in(args.format_in)
-			.set_pixel_out(args.format_out)
+			.set_pixel_in(args.pixel_in)
+			.set_pixel_out(args.pixel_out)
 			.set_dither_type(args.dither)
-			.set_cpu(args.cpu);
+			.set_cpu(args.cpu)
+			.set_planes({ true, false, false, false });
 
-		filter = conv.create();
+		zimg::depth::DepthConversion::result luma_result = conv.create();
+		zimg::depth::DepthConversion::result chroma_result;
+		std::vector<std::pair<int, const graphengine::Filter *>> filters;
+		
+		if (luma_result.filter_refs[0])
+			filters.push_back({ 0, luma_result.filter_refs[0] });
 
-		if (src_frame.planes() >= 3 && is_yuv) {
-			zimg::PixelFormat format_in_uv = args.format_in;
-			zimg::PixelFormat format_out_uv = args.format_out;
+		if (src_frame.planes() >= 3) {
+			zimg::PixelFormat format_in_uv = args.pixel_in;
+			zimg::PixelFormat format_out_uv = args.pixel_out;
 
-			format_in_uv.chroma = true;
-			format_out_uv.chroma = true;
+			format_in_uv.chroma = is_yuv;
+			format_out_uv.chroma = is_yuv;
 
-			filter_uv = conv.set_pixel_in(format_in_uv).set_pixel_out(format_out_uv).create();
+			chroma_result = conv.set_pixel_in(format_in_uv)
+				.set_pixel_out(format_out_uv)
+				.set_planes({ false, true, true, false })
+				.create();
+
+			if (chroma_result.filter_refs[1])
+				filters.push_back({ 1, chroma_result.filter_refs[1] });
+			if (chroma_result.filter_refs[2])
+				filters.push_back({ 2, chroma_result.filter_refs[2] });
 		}
 
-		execute(filter.get(), filter_uv.get(), &src_frame, &dst_frame, args.times);
+		execute(filters, &src_frame, &dst_frame, args.times);
 
 		if (args.visualise_path)
-			imageframe::write(dst_frame, args.visualise_path, "bmp", args.format_out.depth, true);
+			imageframe::write(dst_frame, args.visualise_path, "bmp", args.pixel_out.depth, true);
 
-		imageframe::write(dst_frame, args.outpath, "i444", args.format_out.fullrange);
+		imageframe::write(dst_frame, args.outpath, "i444", args.pixel_out.fullrange);
 	} catch (const zimg::error::Exception &e) {
 		std::cerr << e.what() << '\n';
 		return 2;

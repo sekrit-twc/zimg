@@ -16,9 +16,6 @@
     <Filter Include="Header Files\extra">
       <UniqueIdentifier>{afa47098-0626-408e-8476-68caddb67045}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\extra\sha1">
-      <UniqueIdentifier>{234ab586-8a2a-482d-9b2f-b83cbda196ac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\extra\musl-libm">
       <UniqueIdentifier>{b0f897a4-1ed0-4995-8da4-4df7b6b46a0a}</UniqueIdentifier>
     </Filter>
@@ -31,9 +28,6 @@
     <Filter Include="Source Files\extra">
       <UniqueIdentifier>{ca29a763-cb63-4d3f-95f1-1475b2f0cc77}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\extra\sha1">
-      <UniqueIdentifier>{c0a84f8e-bc1b-49f6-baee-5dfddfafe528}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\extra\musl-libm">
       <UniqueIdentifier>{b258cf6c-aaba-4a1a-9c6d-293f20058bcb}</UniqueIdentifier>
     </Filter>
@@ -42,9 +36,6 @@
     </Filter>
     <Filter Include="Source Files\graph">
       <UniqueIdentifier>{1f6bc32a-d82f-4666-829b-26a663b31e66}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\graph">
-      <UniqueIdentifier>{edf1e449-a6d2-4daf-9330-e320b77fb94d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\api">
       <UniqueIdentifier>{73ad656b-c64d-4557-a19c-c1cdcc46a900}</UniqueIdentifier>
@@ -66,6 +57,18 @@
     </Filter>
     <Filter Include="Source Files\colorspace\arm">
       <UniqueIdentifier>{9eb6313d-3d43-4c63-ac20-4c293b3ccd32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphengine">
+      <UniqueIdentifier>{cff18b5e-acd4-469f-bdd8-54ecbbc8b887}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphengine">
+      <UniqueIdentifier>{72698991-7004-4c4d-a325-7313248c69e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphengine\sha1">
+      <UniqueIdentifier>{661fce63-18cb-478b-91a1-e491937c1cf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\graphengine\sha1">
+      <UniqueIdentifier>{b7e45e61-fcd9-47fb-9d84-7ffca099177d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,23 +105,11 @@
     <ClCompile Include="..\..\test\extra\musl-libm\sin.c">
       <Filter>Source Files\extra\musl-libm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\extra\sha1\sha1.c">
-      <Filter>Source Files\extra\sha1</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\resize\resize_impl_test.cpp">
       <Filter>Source Files\resize</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\graph\audit_buffer.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\graph\filter_validator.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\graph\mock_filter.cpp">
-      <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\api_test.cpp">
       <Filter>Source Files\api</Filter>
@@ -204,9 +195,6 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_vnni_test.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\graph\filtergraph_test.cpp">
-      <Filter>Source Files\graph</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\extra\musl-libm\exp2f_data.c">
       <Filter>Source Files\extra\musl-libm</Filter>
     </ClCompile>
@@ -249,6 +237,12 @@
     <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp">
       <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\graphengine\filter_validation\sha1\sha1.c">
+      <Filter>Source Files\graphengine\sha1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\graphengine\filter_validation\filter_validation.cpp">
+      <Filter>Source Files\graphengine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
@@ -256,21 +250,6 @@
     </ClInclude>
     <ClInclude Include="..\..\test\extra\musl-libm\mymath.h">
       <Filter>Header Files\extra\musl-libm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\extra\sha1\config.h">
-      <Filter>Header Files\extra\sha1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\extra\sha1\sha1.h">
-      <Filter>Header Files\extra\sha1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\graph\audit_buffer.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\graph\filter_validator.h">
-      <Filter>Header Files\graph</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\test\graph\mock_filter.h">
-      <Filter>Header Files\graph</Filter>
     </ClInclude>
     <ClInclude Include="..\..\test\extra\musl-libm\exp2f_data.h">
       <Filter>Header Files\extra\musl-libm</Filter>
@@ -280,6 +259,18 @@
     </ClInclude>
     <ClInclude Include="..\..\test\extra\musl-libm\powf_data.h">
       <Filter>Header Files\extra\musl-libm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h">
+      <Filter>Header Files\graphengine\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h">
+      <Filter>Header Files\graphengine\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h">
+      <Filter>Header Files\graphengine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\dynamic_type.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

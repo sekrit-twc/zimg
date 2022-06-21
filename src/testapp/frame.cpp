@@ -4,12 +4,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include "common/pixel.h"
 #include "common/static_map.h"
 #include "common/zassert.h"
-#include "graph/filtergraph.h"
-#include "graph/image_filter.h"
 #include "depth/depth.h"
+#include "graph/filtergraph.h"
+#include "graphengine/filter.h"
+#include "graphengine/graph.h"
 
 #include "frame.h"
 #include "mmap.h"
@@ -161,33 +163,18 @@ unsigned ImageFrame::subsample_w() const noexcept { return m_subsample_w; }
 unsigned ImageFrame::subsample_h() const noexcept { return m_subsample_h; }
 bool ImageFrame::is_yuv() const noexcept { return m_yuv; }
 
-zimg::graph::ImageBuffer<const void> ImageFrame::as_read_buffer(unsigned plane) const noexcept
-{
-	return const_cast<ImageFrame *>(this)->as_write_buffer(plane);
-}
-
-zimg::graph::ColorImageBuffer<const void> ImageFrame::as_read_buffer() const noexcept
-{
-	zimg::graph::ColorImageBuffer<const void> ret{};
-
-	for (unsigned p = 0; p < std::min(m_planes, 4U); ++p) {
-		ret[p] = as_read_buffer(p);
-	}
-	return ret;
-}
-
-zimg::graph::ImageBuffer<void> ImageFrame::as_write_buffer(unsigned plane) noexcept
+graphengine::BufferDescriptor ImageFrame::as_buffer(unsigned plane) const noexcept
 {
 	zassert(plane < m_planes, "plane index out of bounds");
-	return{ m_vector[plane].data() + m_offset[plane], width_to_stride(width(plane), m_pixel), zimg::graph::BUFFER_MAX };
+	return{ const_cast<unsigned char *>(m_vector[plane].data() + m_offset[plane]), width_to_stride(width(plane), m_pixel), graphengine::BUFFER_MAX };
 }
 
-zimg::graph::ColorImageBuffer<void> ImageFrame::as_write_buffer() noexcept
+std::array<graphengine::BufferDescriptor, 4>  ImageFrame::as_buffer() const noexcept
 {
-	zimg::graph::ColorImageBuffer<void> ret{};
+	std::array<graphengine::BufferDescriptor, 4>  ret{};
 
 	for (unsigned p = 0; p < std::min(m_planes, 4U); ++p) {
-		ret[p] = as_write_buffer(p);
+		ret[p] = as_buffer(p);
 	}
 	return ret;
 }
@@ -238,71 +225,76 @@ public:
 		}
 	}
 
-	zimg::graph::ColorImageBuffer<const void> as_read_buffer() const
+	std::array<graphengine::BufferDescriptor, 4> as_buffer()
 	{
-		return const_cast<MappedImageFile *>(this)->as_write_buffer();
-	}
-
-	zimg::graph::ColorImageBuffer<void> as_write_buffer()
-	{
-		return{
-			{ m_ptr[m_plane_order[0]], static_cast<ptrdiff_t>(m_linewidth[0]), zimg::graph::BUFFER_MAX },
-			{ m_ptr[m_plane_order[1]], static_cast<ptrdiff_t>(m_linewidth[1]), zimg::graph::BUFFER_MAX },
-			{ m_ptr[m_plane_order[2]], static_cast<ptrdiff_t>(m_linewidth[2]), zimg::graph::BUFFER_MAX },
-		};
+		return{ {
+			{ m_ptr[m_plane_order[0]], static_cast<ptrdiff_t>(m_linewidth[0]), graphengine::BUFFER_MAX },
+			{ m_ptr[m_plane_order[1]], static_cast<ptrdiff_t>(m_linewidth[1]), graphengine::BUFFER_MAX },
+			{ m_ptr[m_plane_order[2]], static_cast<ptrdiff_t>(m_linewidth[2]), graphengine::BUFFER_MAX },
+		} };
 	}
 };
 
 std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
-	using zimg::graph::invalid_id;
+	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
+	auto graph = std::make_unique<graphengine::GraphImpl>();
 
-	bool color = spec.planes >= 3;
+	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		planes[p].width = width >> (p == 1 || p == 2 ? spec.subsample_w : 0);
+		planes[p].height = height >> (p == 1 || p == 2 ? spec.subsample_h : 0);
+		planes[p].bytes_per_sample = zimg::pixel_size(type);
+	}
 
-	auto graph = std::make_unique<zimg::graph::FilterGraph>();
-	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
-	zimg::graph::node_id id_u = color ? id_y : invalid_id;
-	zimg::graph::node_id id_v = color ? id_y : invalid_id;
+	graphengine::node_id src_id = graph->add_source(spec.planes, planes.data());
+
+	std::vector<graphengine::node_dep_desc> ids(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		ids[p] = { src_id, p };
+	}
 
 	if (type != spec.type) {
-		zimg::PixelFormat src_format{ spec.type };
-		zimg::PixelFormat dst_format{ type };
-		src_format.fullrange = fullrange;
-		dst_format.fullrange = fullrange;
+		{
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width, height }
+				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
+				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, false })
+				.set_planes({ true, false, false, false })
+				.create();
+			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
+		}
 
-		auto conv = zimg::depth::DepthConversion{ width, height }
-			.set_pixel_in(src_format)
-			.set_pixel_out(dst_format);
+		if (spec.planes > 1) {
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
+				.set_pixel_in({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
+				.set_pixel_out({ type, zimg::pixel_depth(type), fullrange, spec.is_yuv })
+				.set_planes({ false, true, true, false })
+				.create();
 
-		id_y = graph->attach_filter(conv.create(), { id_y, invalid_id, invalid_id, invalid_id }, { true, false, false, false });
-
-		if (color) {
-			src_format.chroma = spec.is_yuv;
-			dst_format.chroma = spec.is_yuv;
-
-			conv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
-				.set_pixel_in(src_format)
-				.set_pixel_out(dst_format);
-			std::shared_ptr<zimg::graph::ImageFilter> f{ conv.create() };
-
-			id_u = graph->attach_filter(f, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
-			id_v = graph->attach_filter(f, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
+			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
+			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
 		}
 	}
 
-	graph->set_output({ id_y, id_u, id_v, -1 });
-	return graph;
+	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
+	return std::make_unique<zimg::graph::FilterGraph>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, width, height, false };
 	ImageFrame out_image{ width, height, type, spec.planes, spec.is_yuv, spec.subsample_w, spec.subsample_h };
 
-	graph->process(mapped_image.as_read_buffer(), out_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+	graph->process(mapped_image.as_buffer(), out_image.as_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 
 	return out_image;
 }
@@ -313,31 +305,30 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	ImageFrame out_image{ static_cast<unsigned>(bmp_image.width()), static_cast<unsigned>(bmp_image.height()), type, 3 };
 
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
-	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
+	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
+	zimg::AlignedVector<unsigned char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
 		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
-		line_buffer[p] = zimg::graph::ImageBuffer<void>{ ptr, bmp_image.width(), 0 };
+		line_buffer[p] = { ptr, bmp_image.width(), 0 };
 	}
 
 	struct callback_context_type {
 		const WindowsBitmap *bmp;
-		const zimg::graph::ImageBuffer<void> *buffer;
-	} callback_context = { &bmp_image, line_buffer };
+		const graphengine::BufferDescriptor *buffer;
+	} callback_context = { &bmp_image, line_buffer.data() };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 		const WindowsBitmap *bmp = cb_ctx->bmp;
 
 		const uint8_t *base = bmp->read_ptr() + static_cast<ptrdiff_t>(i) * bmp->stride();
 		unsigned step = bmp->bit_count() / 8;
 
-		uint8_t *dst_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
+		uint8_t *dst_ptr[3] = { cb_ctx->buffer[0].get_line<uint8_t>(i), cb_ctx->buffer[1].get_line<uint8_t>(i), cb_ctx->buffer[2].get_line<uint8_t>(i) };
 
 		for (unsigned j = left; j < right; ++j) {
 			dst_ptr[0][j] = base[j * step + 2];
@@ -348,11 +339,8 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 		return 0;
 	};
 
-	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
-	               out_image.as_write_buffer(),
-	               tmp.data(),
-	               { cb, &callback_context },
-	               nullptr);
+	zassert(graph->get_input_buffering() == 1, "unexpected buffering requirement");
+	graph->process(line_buffer, out_image.as_buffer(), tmp.data(), cb, &callback_context, nullptr, nullptr);
 
 	return out_image;
 }
@@ -368,10 +356,10 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		throw std::runtime_error{ "bad image size" };
 
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
-	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
+	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
+	zimg::AlignedVector<unsigned char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(width), 0 };
 	line_buffer[1] = { planar_tmp.data() + width, static_cast<ptrdiff_t>(width) / 2, 0 };
@@ -380,19 +368,18 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 	struct callback_context_type {
 		const void *src_base;
 		unsigned linesize;
-		const zimg::graph::ImageBuffer<void> *buffer;
-	} callback_context = { mmap_image.read_ptr(), mmap_linesize, line_buffer };
+		const graphengine::BufferDescriptor *buffer;
+	} callback_context = { mmap_image.read_ptr(), mmap_linesize, line_buffer.data()};
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBuffer<uint8_t> *buffer = zimg::graph::static_buffer_cast<uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
 		const uint8_t *base = static_cast<const uint8_t *>(cb_ctx->src_base) + static_cast<size_t>(i) * cb_ctx->linesize;
-		uint8_t *dst_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
+		uint8_t *dst_ptr[3] = { cb_ctx->buffer[0].get_line<uint8_t>(i), cb_ctx->buffer[1].get_line<uint8_t>(i), cb_ctx->buffer[2].get_line<uint8_t>(i) };
 
 		for (unsigned j = left; j < right; j += 2) {
 			dst_ptr[0][j + 0] = base[j * 2 + 0];
@@ -404,11 +391,8 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		return 0;
 	};
 
-	graph->process(zimg::graph::static_buffer_cast<const void>(line_buffer),
-	               out_image.as_write_buffer(),
-	               tmp.data(),
-	               { cb, &callback_context },
-	               nullptr);
+	zassert(graph->get_input_buffering() == 1, "unexpected buffering requirement");
+	graph->process(line_buffer, out_image.as_buffer(), tmp.data(), cb, &callback_context, nullptr, nullptr);
 
 	return out_image;
 }
@@ -430,54 +414,64 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 
 
 std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
-                                                            unsigned depth_in, bool fullrange)
+                                                             unsigned depth_in, bool fullrange)
 {
-	using zimg::graph::invalid_id;
+	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
+	auto graph = std::make_unique<graphengine::GraphImpl>();
 
-	bool color = spec.planes >= 3;
+	std::vector<graphengine::PlaneDescriptor> planes(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		planes[p].width = width >> (p == 1 || p == 2 ? spec.subsample_w : 0);
+		planes[p].height = height >> (p == 1 || p == 2 ? spec.subsample_h : 0);
+		planes[p].bytes_per_sample = zimg::pixel_size(type);
+	}
 
-	auto graph = std::make_unique<zimg::graph::FilterGraph>();
-	zimg::graph::node_id id_y = graph->add_source({ width, height, type }, color ? spec.subsample_w : 0, color ? spec.subsample_h : 0, { true, color, color, false });
-	zimg::graph::node_id id_u = color ? id_y : invalid_id;
-	zimg::graph::node_id id_v = color ? id_y : invalid_id;
+	graphengine::node_id src_id = graph->add_source(spec.planes, planes.data());
+
+	std::vector<graphengine::node_dep_desc> ids(spec.planes);
+	for (unsigned p = 0; p < spec.planes; ++p) {
+		ids[p] = { src_id, p };
+	}
 
 	if (type != spec.type || depth_in != zimg::pixel_depth(type)) {
-		zimg::PixelFormat src_format{ type, depth_in };
-		zimg::PixelFormat dst_format{ spec.type };
-		src_format.fullrange = fullrange;
-		dst_format.fullrange = fullrange;
+		{
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width, height }
+				.set_pixel_in({ type, depth_in, fullrange, false })
+				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, false })
+				.set_planes({ true, false, false, false })
+				.create();
+			ids[0] = { graph->add_transform(result.filter_refs[0], &ids[0]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
+		}
 
-		auto conv = zimg::depth::DepthConversion{ width, height }
-			.set_pixel_in(src_format)
-			.set_pixel_out(dst_format);
+		if (spec.planes > 1) {
+			zimg::depth::DepthConversion::result result = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
+				.set_pixel_in({ type, depth_in, fullrange, spec.is_yuv })
+				.set_pixel_out({ spec.type, zimg::pixel_depth(spec.type), fullrange, spec.is_yuv })
+				.set_planes({ false, true, true, false })
+				.create();
 
-		id_y = graph->attach_filter(conv.create(), { id_y, invalid_id, invalid_id, invalid_id }, { true, false, false, false });
-
-		if (color) {
-			src_format.chroma = spec.is_yuv;
-			dst_format.chroma = spec.is_yuv;
-
-			auto conv_uv = zimg::depth::DepthConversion{ width >> spec.subsample_w, height >> spec.subsample_h }
-				.set_pixel_in(src_format)
-				.set_pixel_out(dst_format);
-			std::shared_ptr<zimg::graph::ImageFilter> f{ conv_uv.create() };
-
-			id_u = graph->attach_filter(f, { invalid_id, id_u, invalid_id, invalid_id }, { false, true, false, false });
-			id_v = graph->attach_filter(f, { invalid_id, invalid_id, id_v, invalid_id }, { false, false, true, false });
+			ids[1] = { graph->add_transform(result.filter_refs[1], &ids[1]), 0 };
+			ids[2] = { graph->add_transform(result.filter_refs[2], &ids[2]), 0 };
+			for (auto &filter : result.filters) {
+				filter_instances.push_back(std::move(filter));
+			}
 		}
 	}
 
-	graph->set_output({ id_y, id_u, id_v, invalid_id });
-	return graph;
+	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
+	return std::make_unique<zimg::graph::FilterGraph>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, frame.width(), frame.height(), true };
-	graph->process(frame.as_read_buffer(), mapped_image.as_write_buffer(), tmp.data(), nullptr, nullptr);
+	graph->process(frame.as_buffer(), mapped_image.as_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
 }
 
 void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
@@ -485,31 +479,30 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 	WindowsBitmap bmp_image{ spec.path.c_str(), static_cast<int>(frame.width()), static_cast<int>(frame.height()), static_cast<int>(frame.planes()) * 8 };
 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
-	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
+	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
+	zimg::AlignedVector<unsigned char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
 		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
-		line_buffer[p] = zimg::graph::ImageBuffer<void>{ ptr, bmp_image.width(), 0 };
+		line_buffer[p] = { ptr, bmp_image.width(), 0 };
 	}
 
 	struct callback_context_type {
 		WindowsBitmap *bmp;
-		const zimg::graph::ImageBuffer<void> *buffer;
-	} callback_context = { &bmp_image, line_buffer };
+		const graphengine::BufferDescriptor *buffer;
+	} callback_context = { &bmp_image, line_buffer.data() };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
 		WindowsBitmap *bmp = cb_ctx->bmp;
-		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
 		uint8_t *base = bmp->write_ptr() + static_cast<ptrdiff_t>(i) * bmp->stride();
 		unsigned step = bmp->bit_count() / 8;
 
-		const uint8_t *src_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
+		const uint8_t *src_ptr[3] = { cb_ctx->buffer[0].get_line<uint8_t>(i), cb_ctx->buffer[1].get_line<uint8_t>(i), cb_ctx->buffer[2].get_line<uint8_t>(i) };
 
 		for (unsigned j = left; j < right; ++j) {
 			base[j * step + 0] = src_ptr[2][j];
@@ -520,7 +513,8 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 		return 0;
 	};
 
-	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, { cb, &callback_context });
+	zassert(graph->get_output_buffering() == 1, "unexpected buffering requirement");
+	graph->process(frame.as_buffer(), line_buffer, tmp.data(), nullptr, nullptr, cb, &callback_context);
 }
 
 void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
@@ -530,10 +524,10 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	MemoryMappedFile mmap_image{ spec.path.c_str(), static_cast<size_t>(mmap_linesize) * frame.height(), MemoryMappedFile::CREATE_TAG };
 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
-	zimg::graph::ImageBuffer<void> line_buffer[4];
-	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
+	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
+	zimg::AlignedVector<unsigned char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(frame.width()), 0 };
 	line_buffer[1] = { planar_tmp.data() + frame.width(), static_cast<ptrdiff_t>(frame.width()) / 2, 0 };
@@ -542,19 +536,18 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	struct callback_context_type {
 		void *dst_base;
 		unsigned linesize;
-		const zimg::graph::ImageBuffer<void> *buffer;
-	} callback_context = { mmap_image.write_ptr(), mmap_linesize, line_buffer };
+		const graphengine::BufferDescriptor *buffer;
+	} callback_context = { mmap_image.write_ptr(), mmap_linesize, line_buffer.data()};
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
 		callback_context_type *cb_ctx = static_cast<callback_context_type *>(user);
-		const zimg::graph::ImageBuffer<const uint8_t> *buffer = zimg::graph::static_buffer_cast<const uint8_t>(cb_ctx->buffer);
 
 		left = left % 2 ? left - 1 : left;
 		right = right % 2 ? right + 1 : right;
 
 		uint8_t *base = static_cast<uint8_t *>(cb_ctx->dst_base) + static_cast<size_t>(i) * cb_ctx->linesize;
-		const uint8_t *src_ptr[3] = { buffer[0].data(), buffer[1].data(), buffer[2].data() };
+		const uint8_t *src_ptr[3] = { cb_ctx->buffer[0].get_line<uint8_t>(i), cb_ctx->buffer[1].get_line<uint8_t>(i), cb_ctx->buffer[2].get_line<uint8_t>(i) };
 
 		for (unsigned j = left; j < right; j += 2) {
 			base[j * 2 + 0] = src_ptr[0][j + 0];
@@ -566,7 +559,8 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 		return 0;
 	};
 
-	graph->process(frame.as_read_buffer(), line_buffer, tmp.data(), nullptr, { cb, &callback_context });
+	zassert(graph->get_output_buffering() == 1, "unexpected buffering requirement");
+	graph->process(frame.as_buffer(), line_buffer, tmp.data(), nullptr, nullptr, cb, &callback_context);
 }
 
 } // namespace

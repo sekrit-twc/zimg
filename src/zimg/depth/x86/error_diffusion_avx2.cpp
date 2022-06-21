@@ -13,8 +13,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graph/image_buffer.h"
-#include "graph/image_filter.h"
+#include "graphengine/filter.h"
 #include "dither_x86.h"
 
 #include "common/x86/avx_util.h"
@@ -23,6 +22,16 @@ namespace zimg {
 namespace depth {
 
 namespace {
+
+template <class T>
+struct Buffer {
+	const graphengine::BufferDescriptor &buffer;
+
+	Buffer(const graphengine::BufferDescriptor &buffer) : buffer{ buffer } {}
+
+	T *operator[](unsigned i) const { return buffer.get_line<T>(i); }
+};
+
 
 struct error_state {
 	float err_left[8];
@@ -224,7 +233,7 @@ inline FORCE_INLINE void error_diffusion_wf_avx2_xiter(__m256 &v, unsigned j, co
 }
 
 template <PixelType SrcType, PixelType DstType, class T, class U>
-void error_diffusion_wf_avx2(const graph::ImageBuffer<const T> &src, const graph::ImageBuffer<U> &dst, unsigned i,
+void error_diffusion_wf_avx2(const Buffer<const T> &src, const Buffer<U> &dst, unsigned i,
                              const float *error_top, float *error_cur, error_state *state, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
@@ -304,7 +313,7 @@ void error_diffusion_wf_avx2(const graph::ImageBuffer<const T> &src, const graph
 }
 
 template <PixelType SrcType, PixelType DstType>
-void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i,
+void error_diffusion_avx2(const Buffer<const void> &src_, const Buffer<void> &dst_, unsigned i,
                           const float *error_top, float *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
@@ -313,20 +322,20 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	typedef typename src_traits::type src_type;
 	typedef typename dst_traits::type dst_type;
 
-	const graph::ImageBuffer<const src_type> &src_buf = graph::static_buffer_cast<const src_type>(src);
-	const graph::ImageBuffer<dst_type> &dst_buf = graph::static_buffer_cast<dst_type>(dst);
+	Buffer<const src_type> src = src_.buffer;
+	Buffer<dst_type> dst = dst_.buffer;
 
 	error_state state alignas(32) = {};
 	float error_tmp[7][24] = {};
 
 	// Prologue.
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 0], dst_buf[i + 0], error_top, error_tmp[0], scale, offset, bits, 14);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 1], dst_buf[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 12);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 2], dst_buf[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 10);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 3], dst_buf[i + 3], error_tmp[2], error_tmp[3], scale, offset, bits, 8);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 4], dst_buf[i + 4], error_tmp[3], error_tmp[4], scale, offset, bits, 6);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 5], dst_buf[i + 5], error_tmp[4], error_tmp[5], scale, offset, bits, 4);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 6], dst_buf[i + 6], error_tmp[5], error_tmp[6], scale, offset, bits, 2);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 0], dst[i + 0], error_top, error_tmp[0], scale, offset, bits, 14);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 1], dst[i + 1], error_tmp[0], error_tmp[1], scale, offset, bits, 12);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 2], dst[i + 2], error_tmp[1], error_tmp[2], scale, offset, bits, 10);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 3], dst[i + 3], error_tmp[2], error_tmp[3], scale, offset, bits, 8);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 4], dst[i + 4], error_tmp[3], error_tmp[4], scale, offset, bits, 6);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 5], dst[i + 5], error_tmp[4], error_tmp[5], scale, offset, bits, 4);
+	error_diffusion_scalar<SrcType, DstType>(src[i + 6], dst[i + 6], error_tmp[5], error_tmp[6], scale, offset, bits, 2);
 
 	// Wavefront.
 	state.err_left[0] = error_tmp[0][13 + 1];
@@ -366,7 +375,7 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	state.err_top_left[7] = 0.0f;
 
 	unsigned vec_count = floor_n(width - 14, 8);
-	error_diffusion_wf_avx2<SrcType, DstType>(src_buf, dst_buf, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
+	error_diffusion_wf_avx2<SrcType, DstType>(src, dst, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
 
 	error_tmp[0][13 + 1] = state.err_top_right[1];
 	error_tmp[0][12 + 1] = state.err_top[1];
@@ -397,21 +406,21 @@ void error_diffusion_avx2(const graph::ImageBuffer<const void> &src, const graph
 	error_tmp[6][0] = state.err_top_left[7];
 
 	// Epilogue.
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 0] + vec_count + 14, dst_buf[i + 0] + vec_count + 14, error_top + vec_count + 14, error_tmp[0] + 14,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 0] + vec_count + 14, dst[i + 0] + vec_count + 14, error_top + vec_count + 14, error_tmp[0] + 14,
 	                                         scale, offset, bits, width - vec_count - 14);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 1] + vec_count + 12, dst_buf[i + 1] + vec_count + 12, error_tmp[0] + 12, error_tmp[1] + 12,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 1] + vec_count + 12, dst[i + 1] + vec_count + 12, error_tmp[0] + 12, error_tmp[1] + 12,
 	                                         scale, offset, bits, width - vec_count - 12);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 2] + vec_count + 10, dst_buf[i + 2] + vec_count + 10, error_tmp[1] + 10, error_tmp[2] + 10,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 2] + vec_count + 10, dst[i + 2] + vec_count + 10, error_tmp[1] + 10, error_tmp[2] + 10,
 	                                         scale, offset, bits, width - vec_count - 10);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 3] + vec_count + 8, dst_buf[i + 3] + vec_count + 8, error_tmp[2] + 8, error_tmp[3] + 8,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 3] + vec_count + 8, dst[i + 3] + vec_count + 8, error_tmp[2] + 8, error_tmp[3] + 8,
 	                                         scale, offset, bits, width - vec_count - 8);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 4] + vec_count + 6, dst_buf[i + 4] + vec_count + 6, error_tmp[3] + 6, error_tmp[4] + 6,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 4] + vec_count + 6, dst[i + 4] + vec_count + 6, error_tmp[3] + 6, error_tmp[4] + 6,
 	                                         scale, offset, bits, width - vec_count - 6);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 5] + vec_count + 4, dst_buf[i + 5] + vec_count + 4, error_tmp[4] + 4, error_tmp[5] + 4,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 5] + vec_count + 4, dst[i + 5] + vec_count + 4, error_tmp[4] + 4, error_tmp[5] + 4,
 	                                         scale, offset, bits, width - vec_count - 4);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 6] + vec_count + 2, dst_buf[i + 6] + vec_count + 2, error_tmp[5] + 2, error_tmp[6] + 2,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 6] + vec_count + 2, dst[i + 6] + vec_count + 2, error_tmp[5] + 2, error_tmp[6] + 2,
 	                                         scale, offset, bits, width - vec_count - 2);
-	error_diffusion_scalar<SrcType, DstType>(src_buf[i + 7] + vec_count + 0, dst_buf[i + 7] + vec_count + 0, error_tmp[6] + 0, error_cur + vec_count + 0,
+	error_diffusion_scalar<SrcType, DstType>(src[i + 7] + vec_count + 0, dst[i + 7] + vec_count + 0, error_tmp[6] + 0, error_cur + vec_count + 0,
 	                                         scale, offset, bits, width - vec_count - 0);
 }
 
@@ -438,122 +447,97 @@ auto select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionAVX2 final : public graph::ImageFilter {
+class ErrorDiffusionAVX2 final : public graphengine::Filter {
+	graphengine::FilterDescriptor m_desc;
+
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
 	decltype(select_error_diffusion_avx2_func({}, {})) m_avx2_func;
-
-	PixelType m_pixel_in;
-	PixelType m_pixel_out;
 
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
 
-	unsigned m_width;
-	unsigned m_height;
-
 	void process_scalar(void *ctx, const void *src, void *dst, bool parity) const
 	{
 		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
 
 		float *error_top = parity ? ctx_a : ctx_b;
 		float *error_cur = parity ? ctx_b : ctx_a;
 
-		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
+		m_scalar_func(src, dst, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 
-	void process_vector(void *ctx, const graph::ImageBuffer<const void> &src, const graph::ImageBuffer<void> &dst, unsigned i) const
+	void process_vector(void *ctx, const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out, unsigned i) const
 	{
 		float *ctx_a = reinterpret_cast<float *>(ctx);
-		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + get_context_size() / 2);
+		float *ctx_b = reinterpret_cast<float *>(static_cast<unsigned char *>(ctx) + m_desc.context_size / 2);
 
 		float *error_top = (i / 8) % 2 ? ctx_a : ctx_b;
 		float *error_cur = (i / 8) % 2 ? ctx_b : ctx_a;
 
-		m_avx2_func(src, dst, i, error_top, error_cur, m_scale, m_offset, m_depth, m_width);
+		m_avx2_func(*in, *out, i, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 public:
-	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &format_in, const PixelFormat &format_out) :
-		m_scalar_func{ select_error_diffusion_scalar_func(format_in.type, format_out.type) },
-		m_avx2_func{ select_error_diffusion_avx2_func(format_in.type, format_out.type) },
-		m_pixel_in{ format_in.type },
-		m_pixel_out{ format_out.type },
+	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :
+		m_desc{},
+		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
+		m_avx2_func{ select_error_diffusion_avx2_func(pixel_in.type, pixel_out.type) },
 		m_scale{},
 		m_offset{},
-		m_depth{ format_out.depth },
-		m_width{ width },
-		m_height{ height }
+		m_depth{ pixel_out.depth }
 	{
-		zassert_d(width <= pixel_max_width(format_in.type), "overflow");
-		zassert_d(width <= pixel_max_width(format_out.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
+		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
-		if (!pixel_is_integer(format_out.type))
+		if (!pixel_is_integer(pixel_out.type))
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 
-		std::tie(m_scale, m_offset) = get_scale_offset(format_in, format_out);
+		m_desc.format = { width, height, pixel_size(pixel_out.type) };
+		m_desc.num_deps = 1;
+		m_desc.num_planes = 1;
+		m_desc.step = 8;
+		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
+
+		m_desc.flags.stateful = 1;
+		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
+		m_desc.flags.entire_row = 1;
+
+		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
+	} catch (const std::overflow_error &) {
+		error::throw_<error::OutOfMemory>();
 	}
 
-	filter_flags get_flags() const override
-	{
-		filter_flags flags{};
+	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-		flags.has_state = true;
-		flags.same_row = true;
-		flags.in_place = pixel_size(m_pixel_in) == pixel_size(m_pixel_out);
-		flags.entire_row = true;
-
-		return flags;
-	}
-
-	image_attributes get_image_attributes() const override
-	{
-		return{ m_width, m_height, m_pixel_out };
-	}
-
-	pair_unsigned get_required_row_range(unsigned i) const override
+	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override
 	{
 		unsigned last = std::min(i, UINT_MAX - 8) + 8;
-		return{ i, std::min(last, m_height) };
+		return{ i, std::min(last, m_desc.format.height) };
 	}
 
-	pair_unsigned get_required_col_range(unsigned, unsigned) const override
+	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override
 	{
-		return{ 0, get_image_attributes().width };
+		return{ 0, m_desc.format.width };
 	}
 
-	unsigned get_simultaneous_lines() const override { return 8; }
-
-	unsigned get_max_buffering() const override { return 8; }
-
-	size_t get_context_size() const override
+	void init_context(void *ctx) const noexcept override
 	{
-		try {
-			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
-			return size.get();
-		} catch (const std::overflow_error &) {
-			error::throw_<error::OutOfMemory>();
-		}
+		std::fill_n(static_cast<unsigned char *>(ctx), m_desc.context_size, 0);
 	}
 
-	size_t get_tmp_size(unsigned, unsigned) const override { return 0; }
-
-	void init_context(void *ctx, unsigned seq) const override
+	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+	             unsigned i, unsigned left, unsigned right, void *context, void *) const noexcept override
 	{
-		std::fill_n(static_cast<unsigned char *>(ctx), get_context_size(), 0);
-	}
-
-	void process(void *ctx, const graph::ImageBuffer<const void> *src, const graph::ImageBuffer<void> *dst, void *, unsigned i, unsigned, unsigned) const override
-	{
-		if (m_height - i < 8) {
+		if (m_desc.format.height - i < 8) {
 			bool parity = !!((i / 8) % 2);
 
-			for (unsigned ii = i; ii < m_height; ++ii) {
-				process_scalar(ctx, (*src)[ii], (*dst)[ii], parity);
+			for (unsigned ii = i; ii < m_desc.format.height; ++ii) {
+				process_scalar(context, in->get_line(ii), out->get_line(ii), parity);
 				parity = !parity;
 			}
 		} else {
-			process_vector(ctx, *src, *dst, i);
+			process_vector(context, in, out, i);
 		}
 	}
 };
@@ -561,7 +545,7 @@ public:
 } // namespace
 
 
-std::unique_ptr<graph::ImageFilter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
+std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 {
 	if (width < 14)
 		return nullptr;
