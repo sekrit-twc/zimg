@@ -303,13 +303,13 @@
     <ClInclude Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.h">
       <Filter>Header Files\graphengine\x86</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\graphbuilder2.h">
+    <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\basic_filter2.h">
+    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\filtergraph2.h">
+    <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
     <ClInclude Include="..\..\graphengine\include\graphengine\types.h">
@@ -524,13 +524,13 @@
     <ClCompile Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.cpp">
       <Filter>Source Files\graphengine\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\graphbuilder2.cpp">
+    <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\basic_filter2.cpp">
+    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\filtergraph2.cpp">
+    <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>

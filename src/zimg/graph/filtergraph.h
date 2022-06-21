@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_GRAPH_FILTERGRAPH2_H_
-#define ZIMG_GRAPH_FILTERGRAPH2_H_
+#ifndef ZIMG_GRAPH_FILTERGRAPH_H_
+#define ZIMG_GRAPH_FILTERGRAPH_H_
 
 #include <array>
 #include <memory>
@@ -23,18 +23,18 @@ class Graph;
 namespace zimg {
 namespace graph {
 
-class FilterGraph2 : public zimg_filter_graph {
+class FilterGraph : public zimg_filter_graph {
 	typedef int (*callback_type)(void *user, unsigned i, unsigned left, unsigned right);
 
 	std::unique_ptr<graphengine::Graph> m_graph;
 	std::shared_ptr<void> m_instance_data;
-	int m_source_id;
-	int m_sink_id;
+	graphengine::node_id m_source_id;
+	graphengine::node_id m_sink_id;
 	bool m_requires_64b;
 public:
-	FilterGraph2(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, int source_id, int sink_id);
+	FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, graphengine::node_id source_id, graphengine::node_id sink_id);
 
-	~FilterGraph2();
+	~FilterGraph();
 
 	size_t get_tmp_size() const;
 
@@ -56,4 +56,4 @@ public:
 } // namespace graph
 } // namespace zimg
 
-#endif // ZIMG_GRAPH_FILTERGRAPH2_H_
+#endif // ZIMG_GRAPH_FILTERGRAPH_H_

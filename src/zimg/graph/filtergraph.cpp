@@ -4,12 +4,12 @@
 #include "common/zassert.h"
 #include "graphengine/graph.h"
 #include "graphengine/types.h"
-#include "filtergraph2.h"
+#include "filtergraph.h"
 
 namespace zimg {
 namespace graph {
 
-FilterGraph2::FilterGraph2(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, int source_id, int sink_id) :
+FilterGraph::FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, graphengine::node_id source_id, graphengine::node_id sink_id) :
 	m_graph{ std::move(graph) },
 	m_instance_data{ std::move(instance_data) },
 	m_source_id{ source_id },
@@ -17,16 +17,16 @@ FilterGraph2::FilterGraph2(std::unique_ptr<graphengine::Graph> graph, std::share
 	m_requires_64b{}
 {}
 
-FilterGraph2::~FilterGraph2() = default;
+FilterGraph::~FilterGraph() = default;
 
-size_t FilterGraph2::get_tmp_size() const try
+size_t FilterGraph::get_tmp_size() const try
 {
 	return m_graph->get_tmp_size();
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_input_buffering() const try
+unsigned FilterGraph::get_input_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_source_id; });
@@ -36,7 +36,7 @@ unsigned FilterGraph2::get_input_buffering() const try
 	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_output_buffering() const try
+unsigned FilterGraph::get_output_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_sink_id; });
@@ -46,19 +46,19 @@ unsigned FilterGraph2::get_output_buffering() const try
 	error::throw_<error::InternalError>(e.what());
 }
 
-unsigned FilterGraph2::get_tile_width() const try
+unsigned FilterGraph::get_tile_width() const try
 {
 	return graphengine::GraphImpl::from(m_graph.get())->get_tile_width(false);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
 
-void FilterGraph2::set_tile_width(unsigned tile_width)
+void FilterGraph::set_tile_width(unsigned tile_width)
 {
 	graphengine::GraphImpl::from(m_graph.get())->set_tile_width(tile_width);
 }
 
-void FilterGraph2::process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
+void FilterGraph::process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
 {
 	graphengine::Graph::EndpointConfiguration endpoints{};
 

@@ -13,7 +13,7 @@
 struct FilterExecutor::data {
 	graphengine::GraphImpl graph;
 	graphengine::Graph::EndpointConfiguration endpoints;
-	zimg::AlignedVector<char> tmp;
+	zimg::AlignedVector<unsigned char> tmp;
 };
 
 FilterExecutor::FilterExecutor(const graphengine::Filter *filter, const ImageFrame *src_frame, ImageFrame *dst_frame) :

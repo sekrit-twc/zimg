@@ -12,9 +12,9 @@
 #include "resize/filter.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
-#include "basic_filter2.h"
-#include "filtergraph2.h"
-#include "graphbuilder2.h"
+#include "basic_filter.h"
+#include "filtergraph.h"
+#include "graphbuilder.h"
 
 
 #ifndef ZIMG_UNSAFE_IMAGE_SIZE
@@ -67,7 +67,7 @@ class DefaultFilterObserver : public FilterObserver {};
 
 
 // Offset of chroma sample from corresponding centered chroma sample in units of chroma pixels.
-double chroma_offset_w(GraphBuilder2::ChromaLocationW loc, double subsampling)
+double chroma_offset_w(GraphBuilder::ChromaLocationW loc, double subsampling)
 {
 	// 4:2:0
 	// x x x x
@@ -85,13 +85,13 @@ double chroma_offset_w(GraphBuilder2::ChromaLocationW loc, double subsampling)
 	//
 	// x = luma, L = left chroma, C = center chroma, R = right chroma
 
-	if (loc == GraphBuilder2::ChromaLocationW::LEFT)
+	if (loc == GraphBuilder::ChromaLocationW::LEFT)
 		return -0.5 + 0.5 * subsampling;
 	else
 		return 0.0;
 }
 
-double chroma_offset_h(GraphBuilder2::ChromaLocationH loc, double subsampling)
+double chroma_offset_h(GraphBuilder::ChromaLocationH loc, double subsampling)
 {
 	// 4:2:0 (chroma horizontally centered for illustration)
 	// xTx
@@ -106,16 +106,16 @@ double chroma_offset_h(GraphBuilder2::ChromaLocationH loc, double subsampling)
 	//
 	// x = luma, T = top chroma, C = center chroma, B = bottom chroma
 
-	if (loc == GraphBuilder2::ChromaLocationH::TOP)
+	if (loc == GraphBuilder::ChromaLocationH::TOP)
 		return -0.5 + 0.5 * subsampling;
-	else if (loc == GraphBuilder2::ChromaLocationH::BOTTOM)
+	else if (loc == GraphBuilder::ChromaLocationH::BOTTOM)
 		return 0.5 - 0.5 * subsampling;
 	else
 		return 0.0;
 }
 
 // Calculate the offset from a progressive frame with the same dimensions as a field.
-double chroma_offset_parity_adjustment(GraphBuilder2::FieldParity parity, double offset)
+double chroma_offset_parity_adjustment(GraphBuilder::FieldParity parity, double offset)
 {
 	// 4:2:2 (chroma horizontally centered for illustration)
 	// INTERLACED PROG_FRAME PROG_FIELD
@@ -159,15 +159,15 @@ double chroma_offset_parity_adjustment(GraphBuilder2::FieldParity parity, double
 	// T = top field luma, B = bottom field luma
 	// t = top field chroma, b = bottomm field chroma
 
-	if (parity == GraphBuilder2::FieldParity::TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		return -0.25 + offset / 2;
-	else if (parity == GraphBuilder2::FieldParity::BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		return 0.25 + offset / 2;
 	else
 		return offset;
 }
 
-double luma_parity_offset(GraphBuilder2::FieldParity parity)
+double luma_parity_offset(GraphBuilder::FieldParity parity)
 {
 	// INTERLACED PROG_FRAME PROG_FIELD
 	//  0 1 2      0 1 2      0 1 2
@@ -184,15 +184,15 @@ double luma_parity_offset(GraphBuilder2::FieldParity parity)
 	//
 	// x = progressive, T = top field, B = bottom field
 
-	if (parity == GraphBuilder2::FieldParity::TOP)
+	if (parity == GraphBuilder::FieldParity::TOP)
 		return -0.25;
-	else if (parity == GraphBuilder2::FieldParity::BOTTOM)
+	else if (parity == GraphBuilder::FieldParity::BOTTOM)
 		return 0.25;
 	else
 		return 0.0;
 }
 
-void validate_state(const GraphBuilder2::state &state)
+void validate_state(const GraphBuilder::state &state)
 {
 	if (!state.width || !state.height)
 		error::throw_<error::InvalidImageSize>("image dimensions must be non-zero");
@@ -201,26 +201,26 @@ void validate_state(const GraphBuilder2::state &state)
 	if (state.width > pixel_max_width(state.type))
 		error::throw_<error::InvalidImageSize>("image width exceeds memory addressing limit");
 
-	if (state.color == GraphBuilder2::ColorFamily::GREY) {
+	if (state.color == GraphBuilder::ColorFamily::GREY) {
 		if (state.subsample_w || state.subsample_h)
 			error::throw_<error::GreyscaleSubsampling>("cannot subsample greyscale image");
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("GREY color family cannot have RGB matrix coefficients");
 	}
 
-	if (state.color == GraphBuilder2::ColorFamily::RGB) {
+	if (state.color == GraphBuilder::ColorFamily::RGB) {
 		if (state.subsample_w || state.subsample_h)
 			error::throw_<error::UnsupportedSubsampling>("subsampled RGB image not supported");
 		if (state.colorspace.matrix != colorspace::MatrixCoefficients::UNSPECIFIED && state.colorspace.matrix != colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("RGB color family cannot have YUV matrix coefficients");
 	}
 
-	if (state.color == GraphBuilder2::ColorFamily::YUV) {
+	if (state.color == GraphBuilder::ColorFamily::YUV) {
 		if (state.colorspace.matrix == colorspace::MatrixCoefficients::RGB)
 			error::throw_<error::ColorFamilyMismatch>("YUV color family cannot have RGB matrix coefficients");
 	}
 
-	if (state.subsample_h > 1 && state.parity != GraphBuilder2::FieldParity::PROGRESSIVE)
+	if (state.subsample_h > 1 && state.parity != GraphBuilder::FieldParity::PROGRESSIVE)
 		error::throw_<error::UnsupportedSubsampling>("interlaced vertical subsampling greater than 2x is not supported");
 	if (state.subsample_w > 2 || state.subsample_h > 2)
 		error::throw_<error::UnsupportedSubsampling>("subsampling greater than 4x is not supported");
@@ -299,7 +299,7 @@ std::shared_ptr<void> SubGraph::release_filters_opaque()
 }
 
 
-struct GraphBuilder2::internal_state {
+struct GraphBuilder::internal_state {
 	struct plane {
 		unsigned width;
 		unsigned height;
@@ -434,7 +434,7 @@ public:
 };
 
 
-class GraphBuilder2::impl {
+class GraphBuilder::impl {
 private:
 	enum class ConnectMode {
 		LUMA,
@@ -1102,7 +1102,7 @@ public:
 		return result;
 	}
 
-	std::unique_ptr<FilterGraph2> build_graph()
+	std::unique_ptr<FilterGraph> build_graph()
 	{
 		state source_state = m_source_state;
 		unsigned num_sink_planes = 1 + (m_state.has_chroma() ? 2 : 0) + (m_state.has_alpha() ? 1 : 0);
@@ -1137,7 +1137,7 @@ public:
 
 		// Compile the final graph.
 		graphengine::node_id sink_id = real_graph->add_sink(num_sink_planes, real_sink_deps.data());
-		auto finished_graph = std::make_unique<FilterGraph2>(std::move(real_graph), subgraph.release_filters_opaque(), source_id, sink_id);
+		auto finished_graph = std::make_unique<FilterGraph>(std::move(real_graph), subgraph.release_filters_opaque(), source_id, sink_id);
 		if (m_requires_64b)
 			finished_graph->set_requires_64b_alignment();
 
@@ -1146,7 +1146,7 @@ public:
 };
 
 
-GraphBuilder2::params::params() noexcept :
+GraphBuilder::params::params() noexcept :
 	filter{},
 	filter_uv{},
 	unresize{},
@@ -1164,11 +1164,11 @@ GraphBuilder2::params::params() noexcept :
 }
 
 
-GraphBuilder2::GraphBuilder2() : m_impl(std::make_unique<impl>()) {}
+GraphBuilder::GraphBuilder() : m_impl(std::make_unique<impl>()) {}
 
-GraphBuilder2::~GraphBuilder2() = default;
+GraphBuilder::~GraphBuilder() = default;
 
-GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
+GraphBuilder &GraphBuilder::set_source(const state &source) try
 {
 	validate_state(source);
 	get_impl()->set_source(source);
@@ -1179,9 +1179,9 @@ GraphBuilder2 &GraphBuilder2::set_source(const state &source) try
 	error::throw_<error::InternalError>(e.what());
 }
 
-GraphBuilder2 &GraphBuilder2::connect(const state &target, const params *params, FilterObserver *observer) try
+GraphBuilder &GraphBuilder::connect(const state &target, const params *params, FilterObserver *observer) try
 {
-	static const GraphBuilder2::params default_params;
+	static const GraphBuilder::params default_params;
 	DefaultFilterObserver default_factory;
 
 	validate_state(target);
@@ -1201,7 +1201,7 @@ GraphBuilder2 &GraphBuilder2::connect(const state &target, const params *params,
 	error::throw_<error::InternalError>(e.what());
 }
 
-SubGraph GraphBuilder2::build_subgraph() try
+SubGraph GraphBuilder::build_subgraph() try
 {
 	return get_impl()->build_subgraph();
 } catch (const error::Exception &) {
@@ -1210,7 +1210,7 @@ SubGraph GraphBuilder2::build_subgraph() try
 	error::throw_<error::InternalError>(e.what());
 }
 
-std::unique_ptr<FilterGraph2> GraphBuilder2::build_graph() try
+std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
 {
 	return get_impl()->build_graph();
 } catch (const error::Exception &) {

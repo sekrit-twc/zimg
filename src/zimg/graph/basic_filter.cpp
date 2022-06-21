@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include "common/pixel.h"
-#include "basic_filter2.h"
+#include "basic_filter.h"
 
 namespace zimg {
 namespace graph {

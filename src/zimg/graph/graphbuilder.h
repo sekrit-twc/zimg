@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_GRAPH_GRAPHBUILDER2_H_
-#define ZIMG_GRAPH_GRAPHBUILDER2_H_
+#ifndef ZIMG_GRAPH_GRAPHBUILDER_H_
+#define ZIMG_GRAPH_GRAPHBUILDER_H_
 
 #include <array>
 #include <memory>
@@ -104,7 +104,7 @@ public:
 /**
  * Models a filter graph with one source node and one sink node.
  */
-class GraphBuilder2 {
+class GraphBuilder {
 	struct internal_state;
 public:
 	// Interpretation of the three color channels.
@@ -191,12 +191,12 @@ public:
 	/**
 	 * Default construct GraphBuilder, creating an empty graph.
 	 */
-	GraphBuilder2();
+	GraphBuilder();
 
 	/**
 	 * Destory builder.
 	 */
-	~GraphBuilder2();
+	~GraphBuilder();
 
 	/**
 	 * Set image format of the source node in the graph.
@@ -208,7 +208,7 @@ public:
 	 * @param source image format
 	 * @return reference to self
 	 */
-	GraphBuilder2 &set_source(const state &source);
+	GraphBuilder &set_source(const state &source);
 
 	/**
 	 * Convert current graph node to target format.
@@ -224,7 +224,7 @@ public:
 	 * @param params filter instantiation parameters
 	 * @params observer observer
 	 */
-	GraphBuilder2 &connect(const state &target, const params *params, FilterObserver *observer = nullptr);
+	GraphBuilder &connect(const state &target, const params *params, FilterObserver *observer = nullptr);
 
 	/**
 	 * Finalize and return a partial graph.
@@ -243,10 +243,10 @@ public:
 	 *
 	 * @return graph
 	 */
-	std::unique_ptr<FilterGraph2> build_graph();
+	std::unique_ptr<FilterGraph> build_graph();
 };
 
 } // namespace graph
 } // namespace zimg
 
-#endif // ZIMG_GRAPH_GRAPHBUILDER2_H_
+#endif // ZIMG_GRAPH_GRAPHBUILDER_H_

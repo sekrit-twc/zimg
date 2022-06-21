@@ -9,7 +9,7 @@
 #include "common/static_map.h"
 #include "common/zassert.h"
 #include "depth/depth.h"
-#include "graph/filtergraph2.h"
+#include "graph/filtergraph.h"
 #include "graphengine/filter.h"
 #include "graphengine/graph.h"
 
@@ -235,7 +235,7 @@ public:
 	}
 };
 
-std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
+std::unique_ptr<zimg::graph::FilterGraph> setup_read_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
 	auto graph = std::make_unique<graphengine::GraphImpl>();
@@ -283,13 +283,13 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_read_graph(const PathSpecifier 
 	}
 
 	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
-	return std::make_unique<zimg::graph::FilterGraph2>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
+	return std::make_unique<zimg::graph::FilterGraph>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 ImageFrame read_from_planar(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type, bool fullrange)
 {
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, width, height, false };
 	ImageFrame out_image{ width, height, type, spec.planes, spec.is_yuv, spec.subsample_w, spec.subsample_h };
@@ -305,10 +305,10 @@ ImageFrame read_from_bmp(const PathSpecifier &spec, zimg::PixelType type, bool f
 	ImageFrame out_image{ static_cast<unsigned>(bmp_image.width()), static_cast<unsigned>(bmp_image.height()), type, 3 };
 
 	auto graph = setup_read_graph(spec, bmp_image.width(), bmp_image.height(), type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
-	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
+	zimg::AlignedVector<unsigned char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
 		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
@@ -356,10 +356,10 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		throw std::runtime_error{ "bad image size" };
 
 	auto graph = setup_read_graph(spec, width, height, type, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
-	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
+	zimg::AlignedVector<unsigned char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(width), 0 };
 	line_buffer[1] = { planar_tmp.data() + width, static_cast<ptrdiff_t>(width) / 2, 0 };
@@ -413,7 +413,7 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 }
 
 
-std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
+std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
                                                              unsigned depth_in, bool fullrange)
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
@@ -462,13 +462,13 @@ std::unique_ptr<zimg::graph::FilterGraph2> setup_write_graph(const PathSpecifier
 	}
 
 	graphengine::node_id sink_id = graph->add_sink(spec.planes, ids.data());
-	return std::make_unique<zimg::graph::FilterGraph2>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
+	return std::make_unique<zimg::graph::FilterGraph>(std::move(graph), std::make_shared<std::vector<std::unique_ptr<graphengine::Filter>>>(std::move(filter_instances)), src_id, sink_id);
 }
 
 void write_to_planar(const ImageFrame &frame, const PathSpecifier &spec, unsigned depth_in, bool fullrange)
 {
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	MappedImageFile mapped_image{ spec, frame.width(), frame.height(), true };
 	graph->process(frame.as_buffer(), mapped_image.as_buffer(), tmp.data(), nullptr, nullptr, nullptr, nullptr);
@@ -479,10 +479,10 @@ void write_to_bmp(const ImageFrame &frame, const PathSpecifier &spec, unsigned d
 	WindowsBitmap bmp_image{ spec.path.c_str(), static_cast<int>(frame.width()), static_cast<int>(frame.height()), static_cast<int>(frame.planes()) * 8 };
 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
-	zimg::AlignedVector<char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
+	zimg::AlignedVector<unsigned char> planar_tmp(bmp_image.width() * (bmp_image.bit_count() / 8));
 
 	for (unsigned p = 0; p < 3; ++p) {
 		void *ptr = planar_tmp.data() + static_cast<size_t>(bmp_image.width()) * p;
@@ -524,10 +524,10 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 	MemoryMappedFile mmap_image{ spec.path.c_str(), static_cast<size_t>(mmap_linesize) * frame.height(), MemoryMappedFile::CREATE_TAG };
 
 	auto graph = setup_write_graph(spec, frame.width(), frame.height(), frame.pixel_type(), depth_in, fullrange);
-	zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+	zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 	std::array<graphengine::BufferDescriptor, 4> line_buffer{};
-	zimg::AlignedVector<char> planar_tmp(mmap_linesize);
+	zimg::AlignedVector<unsigned char> planar_tmp(mmap_linesize);
 
 	line_buffer[0] = { planar_tmp.data(), static_cast<ptrdiff_t>(frame.width()), 0 };
 	line_buffer[1] = { planar_tmp.data() + frame.width(), static_cast<ptrdiff_t>(frame.width()) / 2, 0 };

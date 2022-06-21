@@ -11,8 +11,8 @@
 #include "common/except.h"
 #include "common/static_map.h"
 #include "depth/depth.h"
-#include "graph/filtergraph2.h"
-#include "graph/graphbuilder2.h"
+#include "graph/filtergraph.h"
+#include "graph/graphbuilder.h"
 #include "resize/filter.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
@@ -103,31 +103,31 @@ json::Object read_graph_spec(const char *path)
 	return std::move(json::parse_document(spec_json).object());
 }
 
-void read_graph_state(zimg::graph::GraphBuilder2::state *state, const json::Object &obj)
+void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Object &obj)
 {
-	static const zimg::static_string_map<zimg::graph::GraphBuilder2::ColorFamily, 3> color_map{
-		{ "grey", zimg::graph::GraphBuilder2::ColorFamily::GREY },
-		{ "rgb",  zimg::graph::GraphBuilder2::ColorFamily::RGB },
-		{ "yuv",  zimg::graph::GraphBuilder2::ColorFamily::YUV },
+	static const zimg::static_string_map<zimg::graph::GraphBuilder::ColorFamily, 3> color_map{
+		{ "grey", zimg::graph::GraphBuilder::ColorFamily::GREY },
+		{ "rgb",  zimg::graph::GraphBuilder::ColorFamily::RGB },
+		{ "yuv",  zimg::graph::GraphBuilder::ColorFamily::YUV },
 	};
-	static const zimg::static_string_map<zimg::graph::GraphBuilder2::FieldParity, 3> parity_map{
-		{ "progressive", zimg::graph::GraphBuilder2::FieldParity::PROGRESSIVE },
-		{ "top",         zimg::graph::GraphBuilder2::FieldParity::TOP },
-		{ "bottom",      zimg::graph::GraphBuilder2::FieldParity::BOTTOM },
+	static const zimg::static_string_map<zimg::graph::GraphBuilder::FieldParity, 3> parity_map{
+		{ "progressive", zimg::graph::GraphBuilder::FieldParity::PROGRESSIVE },
+		{ "top",         zimg::graph::GraphBuilder::FieldParity::TOP },
+		{ "bottom",      zimg::graph::GraphBuilder::FieldParity::BOTTOM },
 	};
-	static const zimg::static_string_map<zimg::graph::GraphBuilder2::ChromaLocationW, 2> chromaloc_w_map{
-		{ "left",   zimg::graph::GraphBuilder2::ChromaLocationW::LEFT },
-		{ "center", zimg::graph::GraphBuilder2::ChromaLocationW::CENTER },
+	static const zimg::static_string_map<zimg::graph::GraphBuilder::ChromaLocationW, 2> chromaloc_w_map{
+		{ "left",   zimg::graph::GraphBuilder::ChromaLocationW::LEFT },
+		{ "center", zimg::graph::GraphBuilder::ChromaLocationW::CENTER },
 	};
-	static const zimg::static_string_map<zimg::graph::GraphBuilder2::ChromaLocationH, 3> chromaloc_h_map{
-		{ "center", zimg::graph::GraphBuilder2::ChromaLocationH::CENTER },
-		{ "top",    zimg::graph::GraphBuilder2::ChromaLocationH::TOP },
-		{ "bottom", zimg::graph::GraphBuilder2::ChromaLocationH::BOTTOM },
+	static const zimg::static_string_map<zimg::graph::GraphBuilder::ChromaLocationH, 3> chromaloc_h_map{
+		{ "center", zimg::graph::GraphBuilder::ChromaLocationH::CENTER },
+		{ "top",    zimg::graph::GraphBuilder::ChromaLocationH::TOP },
+		{ "bottom", zimg::graph::GraphBuilder::ChromaLocationH::BOTTOM },
 	};
-	static const zimg::static_string_map<zimg::graph::GraphBuilder2::AlphaType, 3> alpha_map{
-		{ "none",     zimg::graph::GraphBuilder2::AlphaType::NONE },
-		{ "straight", zimg::graph::GraphBuilder2::AlphaType::STRAIGHT },
-		{ "premul",   zimg::graph::GraphBuilder2::AlphaType::PREMULTIPLIED },
+	static const zimg::static_string_map<zimg::graph::GraphBuilder::AlphaType, 3> alpha_map{
+		{ "none",     zimg::graph::GraphBuilder::AlphaType::NONE },
+		{ "straight", zimg::graph::GraphBuilder::AlphaType::STRAIGHT },
+		{ "premul",   zimg::graph::GraphBuilder::AlphaType::PREMULTIPLIED },
 	};
 
 	if (const auto &val = obj["width"])
@@ -180,7 +180,7 @@ void read_graph_state(zimg::graph::GraphBuilder2::state *state, const json::Obje
 		state->alpha = alpha_map[val.string().c_str()];
 }
 
-void read_graph_params(zimg::graph::GraphBuilder2::params *params, const json::Object &obj, std::unique_ptr<zimg::resize::Filter> filters[2])
+void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Object &obj, std::unique_ptr<zimg::resize::Filter> filters[2])
 {
 	static const zimg::resize::BicubicFilter bicubic{};
 	static const zimg::resize::BilinearFilter bilinear{};
@@ -216,14 +216,14 @@ void read_graph_params(zimg::graph::GraphBuilder2::params *params, const json::O
 		params->cpu = g_cpu_table[val.string().c_str()];
 }
 
-std::unique_ptr<zimg::graph::FilterGraph2> create_graph(const json::Object &spec,
-                                                       zimg::graph::GraphBuilder2::state *src_state_out,
-                                                       zimg::graph::GraphBuilder2::state *dst_state_out,
+std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
+                                                       zimg::graph::GraphBuilder::state *src_state_out,
+                                                       zimg::graph::GraphBuilder::state *dst_state_out,
                                                        zimg::CPUClass cpu)
 {
-	zimg::graph::GraphBuilder2::state src_state{};
-	zimg::graph::GraphBuilder2::state dst_state{};
-	zimg::graph::GraphBuilder2::params params{};
+	zimg::graph::GraphBuilder::state src_state{};
+	zimg::graph::GraphBuilder::state dst_state{};
+	zimg::graph::GraphBuilder::params params{};
 	TracingObserver observer;
 	bool has_params = false;
 
@@ -251,28 +251,28 @@ std::unique_ptr<zimg::graph::FilterGraph2> create_graph(const json::Object &spec
 	*src_state_out = src_state;
 	*dst_state_out = dst_state;
 
-	zimg::graph::GraphBuilder2 builder;
+	zimg::graph::GraphBuilder builder;
 	return builder.set_source(src_state)
 		.connect(dst_state, has_params ? &params : nullptr, &observer)
 		.build_graph();
 }
 
-ImageFrame allocate_frame(const zimg::graph::GraphBuilder2::state &state)
+ImageFrame allocate_frame(const zimg::graph::GraphBuilder::state &state)
 {
 	return{
 		state.width,
 		state.height,
 		state.type,
-		(state.color != zimg::graph::GraphBuilder2::ColorFamily::GREY ? 3U : 1U) + (state.alpha != zimg::graph::GraphBuilder2::AlphaType::NONE ? 1U : 0U),
-		state.color != zimg::graph::GraphBuilder2::ColorFamily::RGB,
+		(state.color != zimg::graph::GraphBuilder::ColorFamily::GREY ? 3U : 1U) + (state.alpha != zimg::graph::GraphBuilder::AlphaType::NONE ? 1U : 0U),
+		state.color != zimg::graph::GraphBuilder::ColorFamily::RGB,
 		state.subsample_w,
 		state.subsample_h
 	};
 }
 
-void thread_target(const zimg::graph::FilterGraph2 *graph,
-                   const zimg::graph::GraphBuilder2::state *src_state,
-                   const zimg::graph::GraphBuilder2::state *dst_state,
+void thread_target(const zimg::graph::FilterGraph *graph,
+                   const zimg::graph::GraphBuilder::state *src_state,
+                   const zimg::graph::GraphBuilder::state *dst_state,
                    std::atomic_int *counter,
                    std::exception_ptr *eptr,
                    std::mutex *mutex)
@@ -280,7 +280,7 @@ void thread_target(const zimg::graph::FilterGraph2 *graph,
 	try {
 		ImageFrame src_frame = allocate_frame(*src_state);
 		ImageFrame dst_frame = allocate_frame(*dst_state);
-		zimg::AlignedVector<char> tmp(graph->get_tmp_size());
+		zimg::AlignedVector<unsigned char> tmp(graph->get_tmp_size());
 
 		while (true) {
 			if ((*counter)-- <= 0)
@@ -296,9 +296,9 @@ void thread_target(const zimg::graph::FilterGraph2 *graph,
 
 void execute(const json::Object &spec, unsigned times, unsigned threads, unsigned tile_width, zimg::CPUClass cpu)
 {
-	zimg::graph::GraphBuilder2::state src_state;
-	zimg::graph::GraphBuilder2::state dst_state;
-	std::unique_ptr<zimg::graph::FilterGraph2> graph = create_graph(spec, &src_state, &dst_state, cpu);
+	zimg::graph::GraphBuilder::state src_state;
+	zimg::graph::GraphBuilder::state dst_state;
+	std::unique_ptr<zimg::graph::FilterGraph> graph = create_graph(spec, &src_state, &dst_state, cpu);
 
 	if (tile_width)
 		graph->set_tile_width(tile_width);
