@@ -179,14 +179,14 @@ ResizeImplH::ResizeImplH(const FilterContext &filter, unsigned height, PixelType
 	m_desc.flags.entire_row = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
 }
 
-std::pair<unsigned, unsigned> ResizeImplH::get_row_deps(unsigned i) const noexcept
+auto ResizeImplH::get_row_deps(unsigned i) const noexcept -> pair_unsigned
 {
 	unsigned step = m_desc.step;
 	unsigned last = std::min(i, UINT_MAX - step) + step;
 	return{ i, std::min(last, m_desc.format.height) };
 }
 
-std::pair<unsigned, unsigned> ResizeImplH::get_col_deps(unsigned left, unsigned right) const noexcept
+auto ResizeImplH::get_col_deps(unsigned left, unsigned right) const noexcept -> pair_unsigned
 {
 	if (m_desc.flags.entire_row)
 		return{ 0, m_filter.input_width };
@@ -212,7 +212,7 @@ ResizeImplV::ResizeImplV(const FilterContext &filter, unsigned width, PixelType 
 	m_unsorted = !std::is_sorted(m_filter.left.begin(), m_filter.left.end());
 }
 
-std::pair<unsigned, unsigned> ResizeImplV::get_row_deps(unsigned i) const noexcept
+auto ResizeImplV::get_row_deps(unsigned i) const noexcept -> pair_unsigned
 {
 	if (m_unsorted)
 		return{ 0, m_filter.input_width };
@@ -226,7 +226,7 @@ std::pair<unsigned, unsigned> ResizeImplV::get_row_deps(unsigned i) const noexce
 	return{ top_dep, bot_dep + m_filter.filter_width };
 }
 
-std::pair<unsigned, unsigned> ResizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept
+auto ResizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept -> pair_unsigned
 {
 	return{ left, right };
 }

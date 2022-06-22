@@ -151,14 +151,14 @@ UnresizeImplH::UnresizeImplH(const BilinearContext &context, unsigned width, uns
 	m_desc.flags.entire_row = 1;
 }
 
-std::pair<unsigned, unsigned> UnresizeImplH::get_row_deps(unsigned i) const noexcept
+auto UnresizeImplH::get_row_deps(unsigned i) const noexcept -> pair_unsigned
 {
 	unsigned step = m_desc.step;
 	unsigned last = std::min(i, UINT_MAX - step) + step;
 	return{ i, std::min(last, m_desc.format.height) };
 }
 
-std::pair<unsigned, unsigned> UnresizeImplH::get_col_deps(unsigned, unsigned) const noexcept
+auto UnresizeImplH::get_col_deps(unsigned, unsigned) const noexcept -> pair_unsigned
 {
 	return{ 0, m_context.input_width  };
 }
@@ -178,12 +178,12 @@ UnresizeImplV::UnresizeImplV(const BilinearContext &context, unsigned width, uns
 	m_desc.flags.entire_col = 1;
 }
 
-std::pair<unsigned, unsigned> UnresizeImplV::get_row_deps(unsigned i) const noexcept
+auto UnresizeImplV::get_row_deps(unsigned i) const noexcept -> pair_unsigned
 {
 	return{ 0, m_context.input_width };
 }
 
-std::pair<unsigned, unsigned> UnresizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept
+auto UnresizeImplV::get_col_deps(unsigned left, unsigned right) const noexcept -> pair_unsigned
 {
 	return{ left, right };
 }

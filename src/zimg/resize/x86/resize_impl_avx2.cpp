@@ -1343,9 +1343,9 @@ public:
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override
+	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
 	{
 		if (m_desc.flags.entire_row)
 			return{ 0, m_context.input_width };
@@ -1442,9 +1442,9 @@ public:
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override
+	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
 	{
 		if (m_desc.flags.entire_row)
 			return{ 0, m_context.input_width };

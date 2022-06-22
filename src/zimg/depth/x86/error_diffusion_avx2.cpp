@@ -510,13 +510,13 @@ public:
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override
+	pair_unsigned get_row_deps(unsigned i) const noexcept override
 	{
 		unsigned last = std::min(i, UINT_MAX - 8) + 8;
 		return{ i, std::min(last, m_desc.format.height) };
 	}
 
-	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override
+	pair_unsigned get_col_deps(unsigned, unsigned) const noexcept override
 	{
 		return{ 0, m_desc.format.width };
 	}

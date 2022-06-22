@@ -29,9 +29,9 @@ size_t FilterGraph::get_tmp_size() const try
 unsigned FilterGraph::get_input_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
-	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_source_id; });
+	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.id == m_source_id; });
 	zassert(it != buffering.end(), "invalid node id");
-	return std::min(it->second, UINT_MAX - 1) + 1;
+	return std::min(it->mask, UINT_MAX - 1) + 1;
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
@@ -39,9 +39,9 @@ unsigned FilterGraph::get_input_buffering() const try
 unsigned FilterGraph::get_output_buffering() const try
 {
 	graphengine::Graph::BufferingRequirement buffering = m_graph->get_buffering_requirement();
-	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.first == m_sink_id; });
+	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.id == m_sink_id; });
 	zassert(it != buffering.end(), "invalid node id");
-	return std::min(it->second, UINT_MAX - 1) + 1;
+	return std::min(it->mask, UINT_MAX - 1) + 1;
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }

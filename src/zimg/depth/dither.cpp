@@ -265,16 +265,16 @@ public:
 		m_desc.step = 1;
 		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
-		
+
 		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	std::pair<unsigned, unsigned> get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-	
+	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
+
 	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
@@ -342,9 +342,9 @@ public:
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
-	std::pair<unsigned, unsigned> get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
+	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
-	std::pair<unsigned, unsigned> get_col_deps(unsigned, unsigned) const noexcept override { return{ 0, m_desc.format.width }; }
+	pair_unsigned get_col_deps(unsigned, unsigned) const noexcept override { return{ 0, m_desc.format.width }; }
 
 	void init_context(void *context) const noexcept override
 	{
