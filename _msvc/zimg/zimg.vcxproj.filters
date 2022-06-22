@@ -321,6 +321,9 @@
     <ClInclude Include="..\..\graphengine\include\graphengine\graph.h">
       <Filter>Header Files\graphengine\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\graph\graphengine_except.h">
+      <Filter>Header Files\graph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -531,6 +534,9 @@
       <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
+      <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\graphengine_except.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
   </ItemGroup>

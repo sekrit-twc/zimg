@@ -5,6 +5,7 @@
 #include "graphengine/graph.h"
 #include "graphengine/types.h"
 #include "filtergraph.h"
+#include "graphengine_except.h"
 
 namespace zimg {
 namespace graph {
@@ -22,8 +23,8 @@ FilterGraph::~FilterGraph() = default;
 size_t FilterGraph::get_tmp_size() const try
 {
 	return m_graph->get_tmp_size();
-} catch (const std::exception &e) {
-	error::throw_<error::InternalError>(e.what());
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 }
 
 unsigned FilterGraph::get_input_buffering() const try
@@ -32,8 +33,8 @@ unsigned FilterGraph::get_input_buffering() const try
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.id == m_source_id; });
 	zassert(it != buffering.end(), "invalid node id");
 	return std::min(it->mask, UINT_MAX - 1) + 1;
-} catch (const std::exception &e) {
-	error::throw_<error::InternalError>(e.what());
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 }
 
 unsigned FilterGraph::get_output_buffering() const try
@@ -42,15 +43,15 @@ unsigned FilterGraph::get_output_buffering() const try
 	auto it = std::find_if(buffering.begin(), buffering.end(), [=](const auto &entry) { return entry.id == m_sink_id; });
 	zassert(it != buffering.end(), "invalid node id");
 	return std::min(it->mask, UINT_MAX - 1) + 1;
-} catch (const std::exception &e) {
-	error::throw_<error::InternalError>(e.what());
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 }
 
 unsigned FilterGraph::get_tile_width() const try
 {
 	return graphengine::GraphImpl::from(m_graph.get())->get_tile_width(false);
-} catch (const std::exception &e) {
-	error::throw_<error::InternalError>(e.what());
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 }
 
 void FilterGraph::set_tile_width(unsigned tile_width)
@@ -70,10 +71,8 @@ void FilterGraph::process(const std::array<graphengine::BufferDescriptor, 4> &sr
 
 	try {
 		m_graph->run(endpoints, tmp);
-	} catch (const graphengine::Graph::CallbackError &) {
-		error::throw_<error::UserCallbackFailed>();
-	} catch (const std::exception &e) {
-		error::throw_<error::InternalError>(e.what());
+	} catch (const graphengine::Exception &e) {
+		rethrow_graphengine_exception(e);
 	}
 }
 

@@ -23,7 +23,7 @@ FilterExecutor::FilterExecutor(const graphengine::Filter *filter, const ImageFra
 			src_frame, dst_frame)
 {}
 
-FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame) :
+FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengine::Filter *>> &filters, const ImageFrame *src_frame, ImageFrame *dst_frame) try :
 	m_data{ std::make_unique<data>() }
 {
 	std::vector<graphengine::PlaneDescriptor> src_desc(src_frame->planes());
@@ -84,6 +84,8 @@ FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengin
 	}
 
 	m_data->tmp.resize(m_data->graph.get_tmp_size(false));
+} catch (const graphengine::Exception &e) {
+	throw std::runtime_error{ e.msg };
 }
 
 FilterExecutor::~FilterExecutor() = default;

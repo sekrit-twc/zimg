@@ -108,10 +108,12 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/depth/quantize.cpp \
 	src/zimg/graph/basic_filter.cpp \
 	src/zimg/graph/basic_filter.h \
-	src/zimg/graph/filtergraph.h \
 	src/zimg/graph/filtergraph.cpp \
-	src/zimg/graph/graphbuilder.h \
+	src/zimg/graph/filtergraph.h \
 	src/zimg/graph/graphbuilder.cpp \
+	src/zimg/graph/graphbuilder.h \
+	src/zimg/graph/graphengine_except.cpp \
+	src/zimg/graph/graphengine_except.h \
 	src/zimg/resize/filter.cpp \
 	src/zimg/resize/filter.h \
 	src/zimg/resize/resize.cpp \

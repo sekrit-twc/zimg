@@ -414,7 +414,7 @@ ImageFrame read_from_pathspec(const PathSpecifier &spec, unsigned width, unsigne
 
 
 std::unique_ptr<zimg::graph::FilterGraph> setup_write_graph(const PathSpecifier &spec, unsigned width, unsigned height, zimg::PixelType type,
-                                                             unsigned depth_in, bool fullrange)
+                                                            unsigned depth_in, bool fullrange)
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filter_instances;
 	auto graph = std::make_unique<graphengine::GraphImpl>();

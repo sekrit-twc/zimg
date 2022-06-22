@@ -15,6 +15,7 @@
 #include "basic_filter.h"
 #include "filtergraph.h"
 #include "graphbuilder.h"
+#include "graphengine_except.h"
 
 
 #ifndef ZIMG_UNSAFE_IMAGE_SIZE
@@ -263,11 +264,14 @@ const graphengine::Filter *SubGraph::save_filter(std::unique_ptr<graphengine::Fi
 
 graphengine::node_id SubGraph::add_transform(const graphengine::Filter *filter, const graphengine::node_dep_desc deps[])
 {
+	zassert_d(m_subgraph, "");
 	return m_subgraph->add_transform(filter, deps);
 }
 
 void SubGraph::set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[])
 {
+	zassert_d(m_subgraph, "");
+
 	for (unsigned p = 0; p < num_planes; ++p) {
 		m_sink_ids[p] = m_subgraph->add_sink(deps[p]);
 	}
@@ -275,6 +279,8 @@ void SubGraph::set_sink(unsigned num_planes, const graphengine::node_dep_desc de
 
 std::array<graphengine::node_dep_desc, 4> SubGraph::connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const
 {
+	zassert_d(m_subgraph, "");
+
 	graphengine::SubGraph::Mapping source_mapping[4];
 	source_mapping[0] = { m_source_ids[0], source_deps[0] };
 	source_mapping[1] = { m_source_ids[1], source_deps[1] };
@@ -300,7 +306,7 @@ std::array<graphengine::node_dep_desc, 4> SubGraph::connect(graphengine::Graph *
 std::vector<std::unique_ptr<graphengine::Filter>> SubGraph::release_filters()
 {
 	std::vector<std::unique_ptr<graphengine::Filter>> filters(std::move(m_filters));
-	*this = SubGraph();
+	m_subgraph.reset();
 	return filters;
 }
 
@@ -1175,7 +1181,13 @@ GraphBuilder::params::params() noexcept :
 }
 
 
-GraphBuilder::GraphBuilder() : m_impl(std::make_unique<impl>()) {}
+GraphBuilder::GraphBuilder() try : m_impl(std::make_unique<impl>())
+{
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
+} catch (const std::bad_alloc &) {
+	error::throw_<error::OutOfMemory>();
+}
 
 GraphBuilder::~GraphBuilder() = default;
 
@@ -1184,8 +1196,8 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 	validate_state(source);
 	get_impl()->set_source(source);
 	return *this;
-} catch (const error::Exception &) {
-	throw;
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
@@ -1206,8 +1218,8 @@ GraphBuilder &GraphBuilder::connect(const state &target, const params *params, F
 
 	get_impl()->connect(target, *params, *observer);
 	return *this;
-} catch (const error::Exception &) {
-	throw;
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
@@ -1215,8 +1227,8 @@ GraphBuilder &GraphBuilder::connect(const state &target, const params *params, F
 SubGraph GraphBuilder::build_subgraph() try
 {
 	return get_impl()->build_subgraph();
-} catch (const error::Exception &) {
-	throw;
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
@@ -1224,8 +1236,8 @@ SubGraph GraphBuilder::build_subgraph() try
 std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
 {
 	return get_impl()->build_graph();
-} catch (const error::Exception &) {
-	throw;
+} catch (const graphengine::Exception &e) {
+	rethrow_graphengine_exception(e);
 } catch (const std::exception &e) {
 	error::throw_<error::InternalError>(e.what());
 }
