@@ -239,12 +239,14 @@ void validate_state(const GraphBuilder::state &state)
 SubGraph::SubGraph() :
 	m_subgraph(std::make_unique<graphengine::SubGraphImpl>()),
 	m_source_ids{},
-	m_sink_id{ graphengine::null_node }
+	m_sink_ids{}
 {
 	m_source_ids[0] = m_subgraph->add_source();
 	m_source_ids[1] = m_subgraph->add_source();
 	m_source_ids[2] = m_subgraph->add_source();
 	m_source_ids[3] = m_subgraph->add_source();
+
+	std::fill_n(m_sink_ids, 4, graphengine::null_node);
 }
 
 SubGraph::SubGraph(SubGraph &&other) noexcept = default;
@@ -266,18 +268,33 @@ graphengine::node_id SubGraph::add_transform(const graphengine::Filter *filter, 
 
 void SubGraph::set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[])
 {
-	m_sink_id = m_subgraph->add_sink(num_planes, deps);
+	for (unsigned p = 0; p < num_planes; ++p) {
+		m_sink_ids[p] = m_subgraph->add_sink(deps[p]);
+	}
 }
 
-std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> SubGraph::connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const
+std::array<graphengine::node_dep_desc, 4> SubGraph::connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const
 {
-	graphengine::SubGraph::SourceMapping mapping[4];
-	mapping[0] = { m_source_ids[0], source_deps[0] };
-	mapping[1] = { m_source_ids[1], source_deps[1] };
-	mapping[2] = { m_source_ids[2], source_deps[2] };
-	mapping[3] = { m_source_ids[3], source_deps[3] };
+	graphengine::SubGraph::Mapping source_mapping[4];
+	source_mapping[0] = { m_source_ids[0], source_deps[0] };
+	source_mapping[1] = { m_source_ids[1], source_deps[1] };
+	source_mapping[2] = { m_source_ids[2], source_deps[2] };
+	source_mapping[3] = { m_source_ids[3], source_deps[3] };
 
-	return m_subgraph->connect(graph, 4, mapping);
+	graphengine::SubGraph::Mapping sink_mapping[4];
+	m_subgraph->connect(graph, 4, source_mapping, sink_mapping);
+
+	std::array<graphengine::node_dep_desc, 4> result{};
+	auto result_it = result.begin();
+
+	for (graphengine::node_id id : m_sink_ids) {
+		if (id < 0)
+			continue;
+
+		auto it = std::find_if(sink_mapping, sink_mapping + 4, [=](const graphengine::SubGraph::Mapping &m) { return m.internal_id == id; });
+		*result_it++ = it->external_dep;
+	}
+	return result;
 }
 
 std::vector<std::unique_ptr<graphengine::Filter>> SubGraph::release_filters()

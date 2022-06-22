@@ -72,7 +72,7 @@ private:
 	std::vector<std::unique_ptr<graphengine::Filter>> m_filters;
 	std::unique_ptr<graphengine::SubGraph> m_subgraph;
 	graphengine::node_id m_source_ids[4];
-	graphengine::node_id m_sink_id;
+	graphengine::node_id m_sink_ids[4];
 public:
 	SubGraph();
 
@@ -82,10 +82,10 @@ public:
 
 	SubGraph &operator=(SubGraph &&other) noexcept;
 
-	graphengine::node_dep_desc source_plane_0() { return{ m_source_ids[0], 0 }; }
-	graphengine::node_dep_desc source_plane_1() { return{ m_source_ids[1], 0 }; }
-	graphengine::node_dep_desc source_plane_2() { return{ m_source_ids[2], 0 }; }
-	graphengine::node_dep_desc source_plane_3() { return{ m_source_ids[3], 0 }; }
+	graphengine::node_dep_desc source_plane_0() const { return{ m_source_ids[0], 0 }; }
+	graphengine::node_dep_desc source_plane_1() const { return{ m_source_ids[1], 0 }; }
+	graphengine::node_dep_desc source_plane_2() const { return{ m_source_ids[2], 0 }; }
+	graphengine::node_dep_desc source_plane_3() const { return{ m_source_ids[3], 0 }; }
 
 	const graphengine::Filter *save_filter(std::unique_ptr<graphengine::Filter> filter);
 
@@ -93,7 +93,7 @@ public:
 
 	void set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[]);
 
-	std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const;
+	std::array<graphengine::node_dep_desc, 4> connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const;
 
 	std::vector<std::unique_ptr<graphengine::Filter>> release_filters();
 
