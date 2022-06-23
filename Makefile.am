@@ -4,6 +4,7 @@ SUBDIRS = $(CONFIG_SUBDIRS)
 
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS) $(PTHREAD_CFLAGS)
+graphengineflags = -I$(srcdir)graphengine/include -DGRAPHENGINE_IMPL_NAMESPACE=zimg
 AM_CXXFLAGS = -std=$(CXXSTD) $(commonflags)
 AM_CFLAGS = -std=c89 $(commonflags)
 LDADD = $(PTHREAD_LIBS)
@@ -127,7 +128,7 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/unresize/unresize_impl.cpp \
 	src/zimg/unresize/unresize_impl.h
 
-libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libzimg_internal_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 libzimg_internal_la_LIBADD =
 
 
@@ -158,7 +159,7 @@ libneon_la_SOURCES = \
 	src/zimg/resize/arm/resize_impl_neon.cpp
 
 libneon_la_CXXFLAGS = $(AM_CXXFLAGS) $(NEON_CFLAGS)
-libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libzimg_internal_la_LIBADD += libneon.la
 endif # ARMSIMD
@@ -195,7 +196,7 @@ libsse_la_SOURCES = \
 	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
-libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libsse_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libsse2_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_sse2.cpp \
@@ -206,19 +207,19 @@ libsse2_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_sse2.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
-libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libavx_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx.cpp \
 	src/zimg/resize/x86/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SNB_CFLAGS)
-libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libavx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libf16c_la_SOURCES = src/zimg/depth/x86/f16c_ivb.cpp
 
 libf16c_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx -mf16c $(IVB_CFLAGS)
-libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libf16c_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libavx2_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx2.cpp \
@@ -228,7 +229,7 @@ libavx2_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HSW_CFLAGS)
-libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libzimg_internal_la_LIBADD += libsse.la libsse2.la libavx.la libf16c.la libavx2.la
 endif # X86SIMD
@@ -246,11 +247,11 @@ libavx512_la_SOURCES = \
 	src/zimg/resize/x86/resize_impl_avx512_common.h
 
 libavx512_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq $(SKX_CFLAGS)
-libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libavx512_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libavx512_vnni_la_SOURCES = src/zimg/resize/x86/resize_impl_avx512_vnni.cpp
 libavx512_vnni_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512vnni $(CLX_CFLAGS)
-libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libzimg_internal_la_LIBADD += libavx512.la libavx512_vnni.la
 endif # X86SIMD_AVX512
@@ -306,7 +307,7 @@ endif # EXAMPLES
 if TESTAPP
 noinst_PROGRAMS += testapp
 noinst_LTLIBRARIES += libtestcommon.la
-testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon -I$(srcdir)/graphengine/include -Dgraphengine=zimg_graphengine
+testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon $(graphengineflags)
 
 testapp_SOURCES = \
 	src/testapp/apps.h \
@@ -365,11 +366,10 @@ test_libmusl_m_la_SOURCES = \
 test_unit_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(srcdir)/src/zimg \
-	-I$(srcdir)/graphengine/include \
 	-I$(srcdir)/test \
 	-I$(srcdir)/test/extra \
 	-I$(srcdir)/test/extra/googletest/googletest/include \
-	-Dgraphengine=zimg_graphengine
+	$(graphengineflags)
 
 test_unit_test_SOURCES = \
 	graphengine/filter_validation/filter_validation.cpp \

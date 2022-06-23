@@ -152,7 +152,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -169,7 +169,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -185,7 +185,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -201,7 +201,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -219,7 +219,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Strict</FloatingPointModel>
@@ -239,7 +239,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ProgramDataBaseFileName />
@@ -258,7 +258,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ProgramDataBaseFileName />
@@ -277,7 +277,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <PreprocessorDefinitions>graphengine=zimg_graphengine;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ProgramDataBaseFileName />
@@ -295,6 +295,7 @@
     <ClInclude Include="..\..\graphengine\graphengine\state.h" />
     <ClInclude Include="..\..\graphengine\include\graphengine\filter.h" />
     <ClInclude Include="..\..\graphengine\include\graphengine\graph.h" />
+    <ClInclude Include="..\..\graphengine\include\graphengine\namespace.h" />
     <ClInclude Include="..\..\graphengine\include\graphengine\types.h" />
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp" />
     <ClInclude Include="..\..\src\zimg\api\zimg.h" />
