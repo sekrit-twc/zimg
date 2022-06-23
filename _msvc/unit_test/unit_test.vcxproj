@@ -35,8 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\graphengine\filter_validation\filter_validation.cpp" />
-    <ClCompile Include="..\..\graphengine\filter_validation\sha1\sha1.c" />
     <ClCompile Include="..\..\test\api\api_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp" />
@@ -166,9 +164,6 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_sse_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h" />
-    <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h" />
-    <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h" />
     <ClInclude Include="..\..\test\dynamic_type.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\exp2f_data.h" />
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h" />
@@ -238,6 +233,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="..\..\graphengine\_msvc\filter_validation_srcs\filter_validation_srcs.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />

@@ -58,18 +58,6 @@
     <Filter Include="Source Files\colorspace\arm">
       <UniqueIdentifier>{9eb6313d-3d43-4c63-ac20-4c293b3ccd32}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\graphengine">
-      <UniqueIdentifier>{cff18b5e-acd4-469f-bdd8-54ecbbc8b887}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\graphengine">
-      <UniqueIdentifier>{72698991-7004-4c4d-a325-7313248c69e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\graphengine\sha1">
-      <UniqueIdentifier>{661fce63-18cb-478b-91a1-e491937c1cf4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\graphengine\sha1">
-      <UniqueIdentifier>{b7e45e61-fcd9-47fb-9d84-7ffca099177d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\colorspace\colorspace_test.cpp">
@@ -237,12 +225,6 @@
     <ClCompile Include="..\..\test\colorspace\arm\colorspace_neon_test.cpp">
       <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\graphengine\filter_validation\sha1\sha1.c">
-      <Filter>Source Files\graphengine\sha1</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\graphengine\filter_validation\filter_validation.cpp">
-      <Filter>Source Files\graphengine</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\extra\musl-libm\libm.h">
@@ -259,15 +241,6 @@
     </ClInclude>
     <ClInclude Include="..\..\test\extra\musl-libm\powf_data.h">
       <Filter>Header Files\extra\musl-libm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\filter_validation\sha1\config.h">
-      <Filter>Header Files\graphengine\sha1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\filter_validation\sha1\sha1.h">
-      <Filter>Header Files\graphengine\sha1</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\graphengine\include\graphengine\filter_validation.h">
-      <Filter>Header Files\graphengine</Filter>
     </ClInclude>
     <ClInclude Include="..\..\test\dynamic_type.h">
       <Filter>Header Files</Filter>

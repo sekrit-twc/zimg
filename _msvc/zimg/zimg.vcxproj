@@ -96,6 +96,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="..\..\graphengine\_msvc\graphengine_srcs\graphengine_srcs.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -289,14 +290,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.h" />
-    <ClInclude Include="..\..\graphengine\graphengine\cpuinfo.h" />
-    <ClInclude Include="..\..\graphengine\graphengine\node.h" />
-    <ClInclude Include="..\..\graphengine\graphengine\state.h" />
-    <ClInclude Include="..\..\graphengine\include\graphengine\filter.h" />
-    <ClInclude Include="..\..\graphengine\include\graphengine\graph.h" />
-    <ClInclude Include="..\..\graphengine\include\graphengine\namespace.h" />
-    <ClInclude Include="..\..\graphengine\include\graphengine\types.h" />
     <ClInclude Include="..\..\src\zimg\api\zimg++.hpp" />
     <ClInclude Include="..\..\src\zimg\api\zimg.h" />
     <ClInclude Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.h" />
@@ -358,37 +351,6 @@
     <ClInclude Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\graphengine\graphengine\cpuinfo.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)graphengine_cpuinfo.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\graphengine\graphengine\graph.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)graphengine_graph.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\graphengine\graphengine\node.cpp" />
-    <ClCompile Include="..\..\graphengine\graphengine\x86\cpuinfo_x86.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)graphengine_cpuinfo_x86.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_arm.cpp" />
     <ClCompile Include="..\..\src\zimg\colorspace\arm\operation_impl_neon.cpp" />
