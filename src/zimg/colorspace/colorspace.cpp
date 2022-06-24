@@ -54,6 +54,8 @@ public:
 		build_graph(in, out, params, cpu);
 	}
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }

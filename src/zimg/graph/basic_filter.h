@@ -18,6 +18,8 @@ class CopyFilter : public graphengine::Filter {
 public:
 	CopyFilter(unsigned width, unsigned height, PixelType type);
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
@@ -48,6 +50,8 @@ private:
 public:
 	ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val);
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
@@ -66,6 +70,8 @@ class PremultiplyFilter : public graphengine::Filter {
 public:
 	PremultiplyFilter(unsigned width, unsigned height);
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
@@ -83,6 +89,8 @@ class UnpremultiplyFilter : public graphengine::Filter {
 	graphengine::FilterDescriptor m_desc;
 public:
 	UnpremultiplyFilter(unsigned width, unsigned height);
+
+	int version() const noexcept override { return VERSION; }
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 

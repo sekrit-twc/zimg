@@ -21,6 +21,8 @@ protected:
 
 	UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;
@@ -37,6 +39,8 @@ protected:
 
 	UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;

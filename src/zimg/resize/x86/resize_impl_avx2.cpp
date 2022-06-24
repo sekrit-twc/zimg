@@ -1341,6 +1341,8 @@ public:
 		return ret;
 	}
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
@@ -1439,6 +1441,8 @@ public:
 		std::unique_ptr<graphengine::Filter> ret{ new ResizeImplH_Permute_FP_AVX2(std::move(context), height) };
 		return ret;
 	}
+
+	int version() const noexcept override { return VERSION; }
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 

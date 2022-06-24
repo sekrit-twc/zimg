@@ -126,6 +126,8 @@ public:
 		m_shift = pixel_out.depth - pixel_in.depth;
 	}
 
+	int version() const noexcept override { return VERSION; }
+
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
@@ -181,6 +183,8 @@ public:
 
 		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
+
+	int version() const noexcept override { return VERSION; }
 
 	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
