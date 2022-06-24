@@ -1158,6 +1158,11 @@ public:
 		if (m_requires_64b)
 			finished_graph->set_requires_64b_alignment();
 
+		if (num_source_planes == 2)
+			finished_graph->set_source_greyalpha();
+		if (num_sink_planes == 2)
+			finished_graph->set_sink_greyalpha();
+
 		return finished_graph;
 	}
 };

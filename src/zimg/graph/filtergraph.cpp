@@ -64,10 +64,20 @@ void FilterGraph::process(const std::array<graphengine::BufferDescriptor, 4> &sr
 	graphengine::Graph::EndpointConfiguration endpoints{};
 
 	endpoints[0] = { m_source_id, {}, {unpack_cb, unpack_user} };
-	std::copy_n(src.data(), 4, endpoints[0].buffer);
+	if (m_source_greyalpha) {
+		endpoints[0].buffer[0] = src[0];
+		endpoints[0].buffer[1] = src[3];
+	} else {
+		std::copy_n(src.begin(), 4, endpoints[0].buffer);
+	}
 
 	endpoints[1] = { m_sink_id, {}, {pack_cb, pack_user} };
-	std::copy_n(dst.data(), 4, endpoints[1].buffer);
+	if (m_sink_greyalpha) {
+		endpoints[1].buffer[0] = dst[0];
+		endpoints[1].buffer[1] = dst[3];
+	} else {
+		std::copy_n(dst.begin(), 4, endpoints[1].buffer);
+	}
 
 	try {
 		m_graph->run(endpoints, tmp);

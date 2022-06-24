@@ -31,6 +31,8 @@ class FilterGraph : public zimg_filter_graph {
 	graphengine::node_id m_source_id;
 	graphengine::node_id m_sink_id;
 	bool m_requires_64b;
+	bool m_source_greyalpha;
+	bool m_sink_greyalpha;
 public:
 	FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, graphengine::node_id source_id, graphengine::node_id sink_id);
 
@@ -49,6 +51,10 @@ public:
 	bool requires_64b_alignment() const { return m_requires_64b; }
 
 	void set_requires_64b_alignment() { m_requires_64b = true; }
+
+	void set_source_greyalpha() { m_source_greyalpha = true; }
+
+	void set_sink_greyalpha() { m_sink_greyalpha = true; }
 
 	void process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const;
 };
