@@ -4,7 +4,7 @@
 #include "depth/depth.h"
 
 #include "gtest/gtest.h"
-#include "graphengine/filter_validation.h"	
+#include "graphengine/filter_validation.h"
 
 namespace {
 
@@ -119,11 +119,11 @@ TEST(DepthConvertTest, test_float_to_half)
 TEST(DepthConvertTest, test_limited_luma)
 {
 	static const char *expected_sha1[] = {
-		{ "a7096d8251091eb2188bb2bec9fee9d0495faf2c" },
-		{ "705050fb0e56681004ede72126bd264d6c4268d9" },
+		"a7096d8251091eb2188bb2bec9fee9d0495faf2c",
+		"705050fb0e56681004ede72126bd264d6c4268d9",
 
-		{ "f8c1a8d19a442a5fb480d8b77a347a6326f3e640" },
-		{ "5c813b8fda21c1dd3505f165ea0e718eb9e8a427" },
+		"f8c1a8d19a442a5fb480d8b77a347a6326f3e640",
+		"5c813b8fda21c1dd3505f165ea0e718eb9e8a427",
 	};
 
 	test_case(false, false, false, expected_sha1);
@@ -133,11 +133,11 @@ TEST(DepthConvertTest, test_limited_luma)
 TEST(DepthConvertTest, test_limited_chroma)
 {
 	static const char *expected_sha1[] = {
-		{ "7c84d9bc8a271e543d8e6a503ffdeb651d9b60d9" },
-		{ "f0ab1d4b4fa8a87006137918c5bfb423a1020079" },
+		"7c84d9bc8a271e543d8e6a503ffdeb651d9b60d9",
+		"f0ab1d4b4fa8a87006137918c5bfb423a1020079",
 
-		{ "d87519b6603f966aef1b01e014c18909e3814918" },
-		{ "19c80a38e459f74fbfa53055aff6aeddbddd0f79" },
+		"d87519b6603f966aef1b01e014c18909e3814918",
+		"19c80a38e459f74fbfa53055aff6aeddbddd0f79",
 	};
 
 	test_case(false, true, false, expected_sha1);
@@ -146,11 +146,11 @@ TEST(DepthConvertTest, test_limited_chroma)
 TEST(DepthConvertTest, test_limited_chroma_ycgco)
 {
 	static const char *expected_sha1[] = {
-		{ "3eafedbfa0fcd9d99ad374db94d38f632015123e" },
-		{ "7f7f511df52314e078bc9b059fb7c6ae83926b7f" },
+		"3eafedbfa0fcd9d99ad374db94d38f632015123e",
+		"7f7f511df52314e078bc9b059fb7c6ae83926b7f",
 
-		{ "76b68d711e84b6c9a207c9534b8dd8fb93dbbe52" },
-		{ "2d517680820b26ac60d0bb4d2021cd8999dfbce5" },
+		"76b68d711e84b6c9a207c9534b8dd8fb93dbbe52",
+		"2d517680820b26ac60d0bb4d2021cd8999dfbce5",
 	};
 
 	test_case(false, true, true, expected_sha1);
@@ -159,11 +159,11 @@ TEST(DepthConvertTest, test_limited_chroma_ycgco)
 TEST(DepthConvertTest, test_full_luma)
 {
 	static const char *expected_sha1[] = {
-		{ "f0e4a68158eab0ab350c7161498a8eed3196c233" },
-		{ "20c77820ff7d4443a0de7991218e2f8eee551e8d" },
+		"f0e4a68158eab0ab350c7161498a8eed3196c233",
+		"20c77820ff7d4443a0de7991218e2f8eee551e8d",
 
-		{ "07b6aebbfe48004c8acb12a3c76137db57ba9a0b" },
-		{ "7ad2bc4ba1be92699ec22f489ae93a8b0dc89821" },
+		"07b6aebbfe48004c8acb12a3c76137db57ba9a0b",
+		"7ad2bc4ba1be92699ec22f489ae93a8b0dc89821",
 	};
 
 	test_case(true, false, false, expected_sha1);
@@ -173,11 +173,11 @@ TEST(DepthConvertTest, test_full_luma)
 TEST(DepthConvertTest, test_full_chroma)
 {
 	static const char *expected_sha1[] = {
-		{ "333be81b7364a126a2a6167522b539cfad599814" },
-		{ "48a95801578c440f7180c799bdc344a873c6d8d6" },
+		"333be81b7364a126a2a6167522b539cfad599814",
+		"48a95801578c440f7180c799bdc344a873c6d8d6",
 
-		{ "a4a5448b98ab83e68afde9582dec61d37eb610bb" },
-		{ "ad93453f70f4d010049bb6c9e29307ddeee4fa5b" },
+		"a4a5448b98ab83e68afde9582dec61d37eb610bb",
+		"ad93453f70f4d010049bb6c9e29307ddeee4fa5b",
 	};
 
 	test_case(true, true, false, expected_sha1);
@@ -189,7 +189,7 @@ TEST(DepthConvertTest, test_padding_bits)
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	zimg::PixelFormat src_format[] = {
+	static const zimg::PixelFormat src_format[] = {
 		{ zimg::PixelType::BYTE, 1,  true, false },
 		{ zimg::PixelType::BYTE, 7,  true, true },
 		{ zimg::PixelType::WORD, 9,  false, false },
@@ -198,12 +198,12 @@ TEST(DepthConvertTest, test_padding_bits)
 		{ zimg::PixelType::WORD, 15, true, true }
 	};
 	static const char *expected_sha1[] = {
-		{ "6a6a49a71b307303c68ec76e1e196736acc41730" },
-		{ "1ebf85f96a3d3cc00cfa6da71edbd9030e0d371e" },
-		{ "1451f96e1221f3194dce3b972dfc40fad74c5f80" },
-		{ "f28cfe65453b2c1bcb4988d1db9dd3c512d9bdb1" },
-		{ "62ca57c53cab818046b537449ad5418e7988cc68" },
-		{ "422e55781a043f20738685f22a8c8c3c116810dd" },
+		"6a6a49a71b307303c68ec76e1e196736acc41730",
+		"1ebf85f96a3d3cc00cfa6da71edbd9030e0d371e",
+		"1451f96e1221f3194dce3b972dfc40fad74c5f80",
+		"f28cfe65453b2c1bcb4988d1db9dd3c512d9bdb1",
+		"62ca57c53cab818046b537449ad5418e7988cc68",
+		"422e55781a043f20738685f22a8c8c3c116810dd",
 	};
 
 	unsigned sha1_idx = 0;
