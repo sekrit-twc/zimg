@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -511,7 +512,7 @@ unsigned zimg_select_buffer_mask(unsigned count)
 #if defined(_MSC_VER)
 	unsigned long msb;
 	_BitScanReverse(&msb, count - 1);
-	lzcnt = 31 - msb;
+	lzcnt = std::numeric_limits<unsigned>::digits - 1 - msb;
 #elif defined(__GNUC__)
 	lzcnt = __builtin_clz(count - 1);
 #else
