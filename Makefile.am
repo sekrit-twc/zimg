@@ -4,7 +4,7 @@ SUBDIRS = $(CONFIG_SUBDIRS)
 
 warningflags = -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 commonflags = -O2 $(warningflags) $(DEBUGCFLAGS) $(PTHREAD_CFLAGS)
-graphengineflags = -I$(srcdir)graphengine/include -DGRAPHENGINE_IMPL_NAMESPACE=zimg
+graphengineflags = -I$(srcdir)/graphengine/include -DGRAPHENGINE_IMPL_NAMESPACE=zimg
 AM_CXXFLAGS = -std=$(CXXSTD) $(commonflags)
 AM_CFLAGS = -std=c89 $(commonflags)
 LDADD = $(PTHREAD_LIBS)
@@ -63,6 +63,7 @@ libzimg_internal_la_SOURCES = \
 	graphengine/graphengine/x86/cpuinfo_x86.h \
 	graphengine/include/graphengine/filter.h \
 	graphengine/include/graphengine/graph.h \
+	graphengine/include/graphengine/namespace.h \
 	graphengine/include/graphengine/types.h \
 	src/zimg/api/zimg.cpp \
 	src/zimg/api/zimg.h \
