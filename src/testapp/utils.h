@@ -25,8 +25,10 @@ class ImageFrame;
 
 class FilterExecutor {
 public:
-	static constexpr int ALL_PLANES = -1;
-	static constexpr int CHROMA_PLANES = -2;
+	enum {
+		ALL_PLANES = -1,
+		CHROMA_PLANES = -2,
+	};
 private:
 	struct data;
 
