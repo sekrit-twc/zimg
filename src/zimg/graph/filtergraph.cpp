@@ -15,7 +15,9 @@ FilterGraph::FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_
 	m_instance_data{ std::move(instance_data) },
 	m_source_id{ source_id },
 	m_sink_id{ sink_id },
-	m_requires_64b{}
+	m_requires_64b{},
+	m_source_greyalpha{},
+	m_sink_greyalpha{}
 {}
 
 FilterGraph::~FilterGraph() = default;
