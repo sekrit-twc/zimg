@@ -63,22 +63,23 @@ void FilterGraph::set_tile_width(unsigned tile_width)
 
 void FilterGraph::process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const
 {
-	graphengine::Graph::EndpointConfiguration endpoints{};
+	graphengine::Graph::Endpoint endpoints[] = {
+		{ m_source_id, src.data(), { unpack_cb, unpack_user } },
+		{ m_sink_id, dst.data(), { pack_cb, pack_user } },
+	};
 
-	endpoints[0] = { m_source_id, {}, {unpack_cb, unpack_user} };
+	graphengine::BufferDescriptor src_reorder[2];
 	if (m_source_greyalpha) {
-		endpoints[0].buffer[0] = src[0];
-		endpoints[0].buffer[1] = src[3];
-	} else {
-		std::copy_n(src.begin(), 4, endpoints[0].buffer);
+		src_reorder[0] = src[0];
+		src_reorder[1] = src[3];
+		endpoints[0].buffer = src_reorder;
 	}
 
-	endpoints[1] = { m_sink_id, {}, {pack_cb, pack_user} };
+	graphengine::BufferDescriptor dst_reorder[2];
 	if (m_sink_greyalpha) {
-		endpoints[1].buffer[0] = dst[0];
-		endpoints[1].buffer[1] = dst[3];
-	} else {
-		std::copy_n(dst.begin(), 4, endpoints[1].buffer);
+		dst_reorder[0] = dst[0];
+		dst_reorder[1] = dst[3];
+		endpoints[1].buffer = dst_reorder;
 	}
 
 	try {

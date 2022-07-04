@@ -3,6 +3,7 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
+#include <array>
 #include "common/alloc.h"
 #include "graphengine/types.h"
 

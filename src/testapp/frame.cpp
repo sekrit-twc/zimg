@@ -169,9 +169,9 @@ graphengine::BufferDescriptor ImageFrame::as_buffer(unsigned plane) const noexce
 	return{ const_cast<unsigned char *>(m_vector[plane].data() + m_offset[plane]), width_to_stride(width(plane), m_pixel), graphengine::BUFFER_MAX };
 }
 
-std::array<graphengine::BufferDescriptor, 4>  ImageFrame::as_buffer() const noexcept
+std::array<graphengine::BufferDescriptor, 4> ImageFrame::as_buffer() const noexcept
 {
-	std::array<graphengine::BufferDescriptor, 4>  ret{};
+	std::array<graphengine::BufferDescriptor, 4> ret{};
 
 	for (unsigned p = 0; p < std::min(m_planes, 4U); ++p) {
 		ret[p] = as_buffer(p);

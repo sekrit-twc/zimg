@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <vector>
 #include "common/alloc.h"
@@ -12,7 +13,9 @@
 
 struct FilterExecutor::data {
 	graphengine::GraphImpl graph;
-	graphengine::Graph::EndpointConfiguration endpoints;
+	std::array<graphengine::BufferDescriptor, 4> src_buffer;
+	std::array<graphengine::BufferDescriptor, 4> sink_buffer;
+	graphengine::Graph::Endpoint endpoints[2];
 	zimg::AlignedVector<unsigned char> tmp;
 };
 
@@ -73,15 +76,10 @@ FilterExecutor::FilterExecutor(const std::vector<std::pair<int, const graphengin
 	}
 	graphengine::node_id sink_id = m_data->graph.add_sink(dst_frame->planes(), ids.data());
 
-	m_data->endpoints[0].id = src_id;
-	for (unsigned p = 0; p < src_frame->planes(); ++p) {
-		m_data->endpoints[0].buffer[p] = src_frame->as_buffer(p);
-	}
-
-	m_data->endpoints[1].id = sink_id;
-	for (unsigned p = 0; p < dst_frame->planes(); ++p) {
-		m_data->endpoints[1].buffer[p] = dst_frame->as_buffer(p);
-	}
+	m_data->src_buffer = src_frame->as_buffer();
+	m_data->sink_buffer = dst_frame->as_buffer();
+	m_data->endpoints[0] = { src_id, m_data->src_buffer.data() };
+	m_data->endpoints[1] = { sink_id, m_data->sink_buffer.data() };
 
 	m_data->tmp.resize(m_data->graph.get_tmp_size(false));
 } catch (const graphengine::Exception &e) {
