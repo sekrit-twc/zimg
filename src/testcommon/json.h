@@ -32,27 +32,26 @@ public:
 class Value;
 
 class Object : private std::map<std::string, Value> {
-	typedef std::map<std::string, Value> base_type;
 public:
-	using base_type::iterator;
-	using base_type::const_iterator;
+	using map::iterator;
+	using map::const_iterator;
 
-	using base_type::operator[];
-	using base_type::at;
-	using base_type::find;
+	using map::operator[];
+	using map::at;
+	using map::find;
 
-	using base_type::begin;
-	using base_type::end;
+	using map::begin;
+	using map::end;
 
-	using base_type::cbegin;
-	using base_type::cend;
+	using map::cbegin;
+	using map::cend;
 
-	using base_type::empty;
-	using base_type::size;
+	using map::empty;
+	using map::size;
 
-	using base_type::clear;
-	using base_type::erase;
-	using base_type::swap;
+	using map::clear;
+	using map::erase;
+	using map::swap;
 
 	const Value &operator[](const std::string &key) const noexcept;
 
