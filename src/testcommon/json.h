@@ -139,14 +139,13 @@ public:
 
 #define JSON_VALUE_GET_SET(T, name, tag) \
   const T &name() const { check_tag(tag); return as<T>(); } \
-  T &name() { check_tag(tag); return as<T>(); } \
-  static_assert(true, "")
+  T &name() { check_tag(tag); return as<T>(); }
 
-	JSON_VALUE_GET_SET(double, number, NUMBER);
-	JSON_VALUE_GET_SET(std::string, string, STRING);
-	JSON_VALUE_GET_SET(Array, array, ARRAY);
-	JSON_VALUE_GET_SET(Object, object, OBJECT);
-	JSON_VALUE_GET_SET(bool, boolean, BOOL_);
+	JSON_VALUE_GET_SET(double, number, NUMBER)
+	JSON_VALUE_GET_SET(std::string, string, STRING)
+	JSON_VALUE_GET_SET(Array, array, ARRAY)
+	JSON_VALUE_GET_SET(Object, object, OBJECT)
+	JSON_VALUE_GET_SET(bool, boolean, BOOL_)
 
 #undef JSON_VALUE_GET_SET
 
