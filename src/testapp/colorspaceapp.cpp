@@ -33,6 +33,7 @@ int decode_colorspace(const struct ArgparseOption *opt, void *out, const char *p
 		csp->transfer = g_transfer_table[match[2].str().c_str()];
 		csp->primaries = g_primaries_table[match[3].str().c_str()];
 	} catch (const std::exception &e) {
+		std::cerr << "error parsing colorspace: " << param << '\n';
 		std::cerr << e.what() << '\n';
 		return -1;
 	}

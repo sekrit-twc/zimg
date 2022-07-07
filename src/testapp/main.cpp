@@ -47,6 +47,7 @@ int arg_decode_cpu(const struct ArgparseOption *, void *out, const char *param, 
 		zimg::CPUClass *cpu = static_cast<zimg::CPUClass *>(out);
 		*cpu = g_cpu_table[param];
 	} catch (const std::exception &e) {
+		std::cerr << "error parsing cpu type: " << param << '\n';
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
@@ -73,6 +74,7 @@ int arg_decode_pixfmt(const struct ArgparseOption *, void *out, const char *para
 		if (match.size() >= 4 && match[4].length())
 			format->depth = std::stoi(match[4]);
 	} catch (const std::exception &e) {
+		std::cerr << "error parsing pixel format: " << param << '\n';
 		std::cerr << e.what() << '\n';
 		return -1;
 	}

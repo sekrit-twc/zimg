@@ -23,6 +23,7 @@ int decode_dither(const struct ArgparseOption *, void *out, const char *param, i
 		zimg::depth::DitherType *dither = static_cast<zimg::depth::DitherType *>(out);
 		*dither = g_dither_table[param];
 	} catch (const std::exception &e) {
+		std::cerr << "error parsing dither: " << param << '\n';
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
@@ -156,7 +157,7 @@ int depth_main(int argc, char **argv)
 		zimg::depth::DepthConversion::result luma_result = conv.create();
 		zimg::depth::DepthConversion::result chroma_result;
 		std::vector<std::pair<int, const graphengine::Filter *>> filters;
-		
+
 		if (luma_result.filter_refs[0])
 			filters.push_back({ 0, luma_result.filter_refs[0] });
 

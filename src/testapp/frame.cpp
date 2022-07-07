@@ -45,7 +45,7 @@ struct PathSpecifier {
 	std::string path;
 };
 
-PathSpecifier translate_pathspec_format(const char *format)
+PathSpecifier translate_pathspec_format(const char *format) try
 {
 #define ORDER_NUL { 0, 0, 0 }
 #define ORDER_DEF { 0, 1, 2 }
@@ -93,6 +93,8 @@ PathSpecifier translate_pathspec_format(const char *format)
 #undef ORDER_GBR
 #undef Z
 	return map[format];
+} catch (const std::out_of_range &) {
+	throw std::invalid_argument{ "invalid pathspec" };
 }
 
 PathSpecifier parse_path_specifier(const char *spec, const char *assumed)

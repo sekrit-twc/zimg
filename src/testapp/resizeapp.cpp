@@ -47,6 +47,7 @@ int decode_filter(const struct ArgparseOption *, void *out, const char *param, i
 
 		*filter = g_resize_table[filter_str.c_str()](param_a, param_b).release();
 	} catch (const std::exception &e) {
+		std::cerr << "error parsing filter: " << param << '\n';
 		std::cerr << e.what() << '\n';
 		return -1;
 	}
