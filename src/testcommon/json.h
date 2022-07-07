@@ -18,9 +18,9 @@ class JsonError : public std::runtime_error {
 public:
 	using std::runtime_error::runtime_error;
 
-	JsonError(const char *msg, int line, int col) noexcept;
+	JsonError(const char *msg, int line, int col);
 
-	JsonError(const JsonError &other) noexcept;
+	JsonError(const JsonError &other);
 
 	JsonError &operator=(const JsonError &other) noexcept;
 

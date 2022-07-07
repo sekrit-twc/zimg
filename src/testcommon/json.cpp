@@ -554,14 +554,12 @@ void uninitialized_move(void *src, void *dst) noexcept
 } // namespace
 
 
-JsonError::JsonError(const char *msg, int line, int col) noexcept :
-	std::runtime_error{ msg }
+JsonError::JsonError(const char *msg, int line, int col) : std::runtime_error{ msg }
 {
 	add_trace(line, col);
 }
 
-JsonError::JsonError(const JsonError &other) noexcept :
-	std::runtime_error{ other }
+JsonError::JsonError(const JsonError &other) : std::runtime_error{ other }
 {
 	try {
 		m_stack_trace = other.m_stack_trace;
