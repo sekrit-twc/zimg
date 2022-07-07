@@ -249,7 +249,7 @@ const T &static_map<Key, T, N, Compare>::at(const Key &key) const
 {
 	const_iterator it = find(key);
 	if (it == end())
-		throw std::out_of_range("");
+		throw std::out_of_range("invalid key");
 	return it->second;
 }
 

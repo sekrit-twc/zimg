@@ -92,6 +92,80 @@ public:
 };
 
 
+// Wrap json classes with tracking of current field name.
+class JsonValue;
+
+class JsonObject {
+	const json::Object &m_object;
+	const std::string m_name;
+public:
+	JsonObject(const json::Object &obj, const char *name) : m_object{ obj }, m_name{ name } {}
+
+	JsonValue at(const std::string &key) const;
+
+	JsonValue operator[](const std::string &key) const noexcept;
+
+	const char *name() const noexcept { return m_name.c_str(); }
+};
+
+class JsonValue {
+	const json::Value &m_value;
+	const std::string m_name;
+
+#define ACCESSOR(name1, name2, name_str) \
+  decltype(auto) name1() const try \
+  { \
+    return m_value.name2(); \
+  } catch (const std::invalid_argument &) { \
+	std::cerr << "expected " name_str ": " << m_name << '\n'; \
+    throw; \
+  }
+#define ACCESSOR2(name) ACCESSOR(name, name, #name)
+
+	ACCESSOR(object_, object, "dictionary")
+public:
+	JsonValue(const json::Value &val, const char *name) : m_value{ val }, m_name{ name } {}
+
+	explicit operator bool() const noexcept { return !!m_value; }
+
+	ACCESSOR2(number)
+	ACCESSOR2(string)
+	ACCESSOR2(boolean)
+	ACCESSOR2(integer)
+
+	JsonObject object() const { return{ object_(), m_name.c_str()}; }
+#undef ACCESSOR2
+#undef ACCESSOR
+
+	const char *name() const noexcept { return m_name.c_str(); }
+};
+
+JsonValue JsonObject::at(const std::string &key) const try
+{
+	return{ m_object.at(key), key.c_str() };
+} catch (const std::out_of_range &) {
+	std::cerr << m_name << ": field '" << key.c_str() << "' not set\n";
+	throw;
+}
+
+JsonValue JsonObject::operator[](const std::string &key) const noexcept
+{
+	return{ m_object[key], key.c_str() };
+}
+
+template <class Map>
+auto lookup(const Map &map, const JsonValue &key)
+{
+	const char *key_str = key.string().c_str();
+	try {
+		return map[key_str];
+	} catch (const std::out_of_range &) {
+		std::cerr << "invalid value: " << key.name() << '\n';
+		throw;
+	}
+}
+
+
 json::Object read_graph_spec(const char *path)
 {
 	std::ifstream f;
@@ -103,7 +177,7 @@ json::Object read_graph_spec(const char *path)
 	return std::move(json::parse_document(spec_json).object());
 }
 
-void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Object &obj)
+void read_graph_state(zimg::graph::GraphBuilder::state *state, const JsonObject &obj)
 {
 	static const zimg::static_string_map<zimg::graph::GraphBuilder::ColorFamily, 3> color_map{
 		{ "grey", zimg::graph::GraphBuilder::ColorFamily::GREY },
@@ -135,7 +209,7 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 	if (const auto &val = obj["height"])
 		state->height = static_cast<unsigned>(val.integer());
 	if (const auto &val = obj["type"])
-		state->type = g_pixel_table[val.string().c_str()];
+		state->type = lookup(g_pixel_table, val);
 
 	if (const auto &val = obj["subsample_w"])
 		state->subsample_w = static_cast<unsigned>(val.integer());
@@ -145,11 +219,11 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 	if (const auto &val = obj["color"])
 		state->color = color_map[val.string().c_str()];
 	if (const auto &val = obj["colorspace"]) {
-		const json::Object &colorspace_obj = val.object();
+		const JsonObject &colorspace_obj = val.object();
 
-		state->colorspace.matrix = g_matrix_table[colorspace_obj["matrix"].string().c_str()];
-		state->colorspace.transfer = g_transfer_table[colorspace_obj["transfer"].string().c_str()];
-		state->colorspace.primaries = g_primaries_table[colorspace_obj["primaries"].string().c_str()];
+		state->colorspace.matrix = lookup(g_matrix_table, colorspace_obj.at("matrix"));
+		state->colorspace.transfer = lookup(g_transfer_table, colorspace_obj.at("transfer"));
+		state->colorspace.primaries = lookup(g_primaries_table, colorspace_obj.at("primaries"));
 	}
 
 	if (const auto &val = obj["depth"])
@@ -158,17 +232,17 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 		state->fullrange = val.boolean();
 
 	if (const auto &val = obj["parity"])
-		state->parity = parity_map[val.string().c_str()];
+		state->parity = lookup(parity_map, val);
 	if (const auto &val = obj["chroma_location_w"])
-		state->chroma_location_w = chromaloc_w_map[val.string().c_str()];
+		state->chroma_location_w = lookup(chromaloc_w_map, val);
 	if (const auto &val = obj["chroma_location_h"])
-		state->chroma_location_h = chromaloc_h_map[val.string().c_str()];
+		state->chroma_location_h = lookup(chromaloc_h_map, val);
 
 	if (const auto &val = obj["active_region"]) {
-		state->active_left = val.object()["left"].number();
-		state->active_top = val.object()["top"].number();
-		state->active_width = val.object()["width"].number();
-		state->active_height = val.object()["height"].number();
+		state->active_left = val.object().at("left").number();
+		state->active_top = val.object().at("top").number();
+		state->active_width = val.object().at("width").number();
+		state->active_height = val.object().at("height").number();
 	} else {
 		state->active_left = 0.0;
 		state->active_top = 0.0;
@@ -180,15 +254,15 @@ void read_graph_state(zimg::graph::GraphBuilder::state *state, const json::Objec
 		state->alpha = alpha_map[val.string().c_str()];
 }
 
-void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Object &obj, std::unique_ptr<zimg::resize::Filter> filters[2])
+void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObject &obj, std::unique_ptr<zimg::resize::Filter> filters[2])
 {
 	static const zimg::resize::BicubicFilter bicubic{};
 	static const zimg::resize::BilinearFilter bilinear{};
 
 	if (const auto &val = obj["filter"]) {
-		const json::Object &filter_obj = val.object();
-		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
-		filters[0] = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		const JsonObject &filter_obj = val.object();
+		auto factory_func = lookup(g_resize_table, filter_obj.at("name"));
+		filters[0] = factory_func(filter_obj.at("param_a").number(), filter_obj.at("param_b").number());
 		params->filter = filters[0].get();
 		params->unresize = filter_obj["name"].string() == "unresize";
 	} else {
@@ -196,16 +270,16 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 	}
 
 	if (const auto &val = obj["filter_uv"]) {
-		const json::Object &filter_obj = val.object();
-		auto factory_func = g_resize_table[filter_obj["name"].string().c_str()];
-		filters[1] = factory_func(filter_obj["param_a"].number(), filter_obj["param_b"].number());
+		const JsonObject &filter_obj = val.object();
+		auto factory_func = lookup(g_resize_table, filter_obj.at("name"));
+		filters[1] = factory_func(filter_obj.at("param_a").number(), filter_obj.at("param_b").number());
 		params->filter_uv = filters[1].get();
 	} else {
 		params->filter_uv = &bilinear;
 	}
 
 	if (const auto &val = obj["dither_type"])
-		params->dither_type = g_dither_table[val.string().c_str()];
+		params->dither_type = lookup(g_dither_table, val);
 	if (const auto &val = obj["peak_luminance"])
 		params->peak_luminance = val.number();
 	if (const auto &val = obj["approximate_gamma"])
@@ -213,7 +287,7 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const json::Ob
 	if (const auto &val = obj["scene_referred"])
 		params->scene_referred = val.boolean();
 	if (const auto &val = obj["cpu"])
-		params->cpu = g_cpu_table[val.string().c_str()];
+		params->cpu = lookup(g_cpu_table, val);
 }
 
 std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
@@ -228,14 +302,15 @@ std::unique_ptr<zimg::graph::FilterGraph> create_graph(const json::Object &spec,
 	bool has_params = false;
 
 	std::unique_ptr<zimg::resize::Filter> filters[2];
+	JsonObject spec_obj{ spec, "root" };
 
 	try {
-		read_graph_state(&src_state, spec["source"].object());
+		read_graph_state(&src_state, spec_obj.at("source").object());
 
 		dst_state = src_state;
-		read_graph_state(&dst_state, spec["target"].object());
+		read_graph_state(&dst_state, spec_obj.at("target").object());
 
-		if (const auto &val = spec["params"]) {
+		if (const auto &val = spec_obj["params"]) {
 			read_graph_params(&params, val.object(), filters);
 			has_params = true;
 		}
