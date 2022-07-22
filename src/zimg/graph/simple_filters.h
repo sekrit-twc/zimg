@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include "graphengine/filter.h"
+#include "filter_base.h"
 
 namespace zimg {
 
@@ -13,29 +14,22 @@ enum class PixelType;
 namespace graph {
 
 // Copies a subrectangle.
-class CopyRectFilter : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class CopyRectFilter : public graph::FilterBase {
 	unsigned m_left;
 	unsigned m_top;
 public:
 	CopyRectFilter(unsigned left, unsigned top, unsigned width, unsigned height, PixelType type);
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ m_top + i, m_top + i + 1 }; }
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ m_left + left, m_left + right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Initializes a plane to a constant value.
-class ValueInitializeFilter : public graphengine::Filter {
+class ValueInitializeFilter : public PointFilter {
 public:
 	union value_type {
 		uint8_t b;
@@ -43,7 +37,6 @@ public:
 		float f;
 	};
 private:
-	graphengine::FilterDescriptor m_desc;
 	value_type m_value;
 
 	void fill_b(void *ptr, size_t n) const;
@@ -52,55 +45,23 @@ private:
 public:
 	ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val);
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
-
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Premultiplies an image.
-class PremultiplyFilter : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class PremultiplyFilter : public PointFilter {
 public:
 	PremultiplyFilter(unsigned width, unsigned height);
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
 // Unpremultiplies an image.
-class UnpremultiplyFilter : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class UnpremultiplyFilter : public PointFilter {
 public:
 	UnpremultiplyFilter(unsigned width, unsigned height);
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor in[2], const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;

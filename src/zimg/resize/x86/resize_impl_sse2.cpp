@@ -10,7 +10,6 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graphengine/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -467,7 +466,7 @@ constexpr auto resize_line_v_u16_sse2_jt_final = make_array(
 	resize_line_v_u16_sse2<8, V_ACCUM_FINAL>);
 
 
-class ResizeImplH_U16_SSE2 final : public ResizeImplH {
+class ResizeImplH_U16_SSE2 : public ResizeImplH {
 	decltype(resize_line8_h_u16_sse2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
@@ -513,7 +512,7 @@ public:
 };
 
 
-class ResizeImplV_U16_SSE2 final : public ResizeImplV {
+class ResizeImplV_U16_SSE2 : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplV_U16_SSE2(const FilterContext &filter, unsigned width, unsigned depth) try :

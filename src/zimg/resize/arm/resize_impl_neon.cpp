@@ -803,7 +803,7 @@ public:
 };
 
 
-class ResizeImplV_U16_Neon final : public ResizeImplV {
+class ResizeImplV_U16_Neon : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplV_U16_Neon(const FilterContext &filter, unsigned width, unsigned depth) try :
@@ -859,14 +859,14 @@ public:
 };
 
 
-class ResizeImplV_F32_Neon final : public ResizeImplV {
+class ResizeImplV_F32_Neon : public ResizeImplV {
 public:
 	ResizeImplV_F32_Neon(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, width, PixelType::FLOAT)
 	{}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
-	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override 
+	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
 		const float *filter_data = m_filter.data.data() + i * m_filter.stride;
 		unsigned filter_width = m_filter.filter_width;

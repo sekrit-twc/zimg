@@ -108,6 +108,8 @@ libzimg_internal_la_SOURCES = \
 	src/zimg/depth/dither.h \
 	src/zimg/depth/quantize.h \
 	src/zimg/depth/quantize.cpp \
+	src/zimg/graph/filter_base.cpp \
+	src/zimg/graph/filter_base.h \
 	src/zimg/graph/filtergraph.cpp \
 	src/zimg/graph/filtergraph.h \
 	src/zimg/graph/graphbuilder.cpp \

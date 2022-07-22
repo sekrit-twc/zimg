@@ -13,7 +13,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "dither_x86.h"
 
 #include "common/x86/avx_util.h"
@@ -447,9 +447,7 @@ auto select_error_diffusion_avx2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionAVX2 final : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
-
+class ErrorDiffusionAVX2 : public graph::FilterBase {
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
 	decltype(select_error_diffusion_avx2_func({}, {})) m_avx2_func;
 
@@ -480,7 +478,6 @@ class ErrorDiffusionAVX2 final : public graphengine::Filter {
 	}
 public:
 	ErrorDiffusionAVX2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) try :
-		m_desc{},
 		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
 		m_avx2_func{ select_error_diffusion_avx2_func(pixel_in.type, pixel_out.type) },
 		m_scale{},
@@ -507,10 +504,6 @@ public:
 	} catch (const std::overflow_error &) {
 		error::throw_<error::OutOfMemory>();
 	}
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override
 	{

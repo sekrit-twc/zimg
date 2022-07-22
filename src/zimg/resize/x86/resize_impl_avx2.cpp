@@ -13,7 +13,7 @@
 #include "common/make_array.h"
 #include "common/pixel.h"
 #include "common/x86/cpuinfo_x86.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -1153,7 +1153,7 @@ constexpr auto resize_line_v_fp_avx2_jt_cont = make_array(
 	resize_line_v_fp_avx2<Traits, 8, true>);
 
 
-class ResizeImplH_U16_AVX2 final : public ResizeImplH {
+class ResizeImplH_U16_AVX2 : public ResizeImplH {
 	decltype(resize_line8_h_u16_avx2_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
@@ -1200,7 +1200,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplH_FP_AVX2 final : public ResizeImplH {
+class ResizeImplH_FP_AVX2 : public ResizeImplH {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line8_h_fp_avx2_jt_small<Traits>)::value_type func_type;
 
@@ -1257,7 +1257,7 @@ public:
 };
 
 
-class ResizeImplH_Permute_U16_AVX2 final : public graphengine::Filter {
+class ResizeImplH_Permute_U16_AVX2 : public graph::FilterBase {
 	typedef decltype(resize_line_h_perm_u16_avx2_jt)::value_type func_type;
 
 	struct PermuteContext {
@@ -1269,13 +1269,11 @@ class ResizeImplH_Permute_U16_AVX2 final : public graphengine::Filter {
 		unsigned input_width;
 	};
 
-	graphengine::FilterDescriptor m_desc;
 	PermuteContext m_context;
 	uint16_t m_pixel_max;
 	func_type m_func;
 
 	ResizeImplH_Permute_U16_AVX2(PermuteContext context, unsigned height, unsigned depth) :
-		m_desc{},
 		m_context(std::move(context)),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
 		m_func{ resize_line_h_perm_u16_avx2_jt[(m_context.filter_width - 1) / 2] }
@@ -1341,10 +1339,6 @@ public:
 		return ret;
 	}
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
@@ -1358,8 +1352,6 @@ public:
 		return{ m_context.left[left / 8],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
-	void init_context(void *) const noexcept override {}
-
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
@@ -1369,7 +1361,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplH_Permute_FP_AVX2 final : public graphengine::Filter {
+class ResizeImplH_Permute_FP_AVX2 : public graph::FilterBase {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line_h_perm_fp_avx2_jt<Traits>)::value_type func_type;
 
@@ -1382,12 +1374,10 @@ class ResizeImplH_Permute_FP_AVX2 final : public graphengine::Filter {
 		unsigned input_width;
 	};
 
-	graphengine::FilterDescriptor m_desc;
 	PermuteContext m_context;
 	func_type m_func;
 
 	ResizeImplH_Permute_FP_AVX2(PermuteContext context, unsigned height) :
-		m_desc{},
 		m_context(std::move(context)),
 		m_func{ resize_line_h_perm_fp_avx2_jt<Traits>[m_context.filter_width - 1] }
 	{
@@ -1442,10 +1432,6 @@ public:
 		return ret;
 	}
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
@@ -1459,8 +1445,6 @@ public:
 		return{ m_context.left[left / 8],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
-	void init_context(void *) const noexcept override {}
-
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
@@ -1469,7 +1453,7 @@ public:
 };
 
 
-class ResizeImplV_U16_AVX2 final : public ResizeImplV {
+class ResizeImplV_U16_AVX2 : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplV_U16_AVX2(const FilterContext &filter, unsigned width, unsigned depth) try :
@@ -1524,7 +1508,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplV_FP_AVX2 final : public ResizeImplV {
+class ResizeImplV_FP_AVX2 : public ResizeImplV {
 	typedef typename Traits::pixel_type pixel_type;
 public:
 	ResizeImplV_FP_AVX2(const FilterContext &filter, unsigned width) :

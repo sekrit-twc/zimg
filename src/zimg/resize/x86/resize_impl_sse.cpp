@@ -9,7 +9,6 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graphengine/filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -267,7 +266,7 @@ constexpr auto resize_line_v_f32_sse_jt_cont = make_array(
 	resize_line_v_f32_sse<4, true>);
 
 
-class ResizeImplH_F32_SSE final : public ResizeImplH {
+class ResizeImplH_F32_SSE : public ResizeImplH {
 	decltype(resize_line4_h_f32_sse_jt_small)::value_type m_func;
 public:
 	ResizeImplH_F32_SSE(const FilterContext &filter, unsigned height) try :
@@ -313,7 +312,7 @@ public:
 };
 
 
-class ResizeImplV_F32_SSE final : public ResizeImplV {
+class ResizeImplV_F32_SSE : public ResizeImplV {
 public:
 	ResizeImplV_F32_SSE(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, width, PixelType::FLOAT)

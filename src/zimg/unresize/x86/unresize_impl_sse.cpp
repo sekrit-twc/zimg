@@ -8,7 +8,6 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graphengine/filter.h"
 #include "unresize/bilinear.h"
 #include "unresize/unresize_impl.h"
 #include "unresize_impl_x86.h"

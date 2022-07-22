@@ -12,7 +12,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -657,7 +657,7 @@ constexpr auto resize_line_v_fp_avx512_jt_cont = make_array(
 
 
 template <class Traits>
-class ResizeImplH_FP_AVX512 final : public ResizeImplH {
+class ResizeImplH_FP_AVX512 : public ResizeImplH {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line16_h_fp_avx512_jt_small<Traits>)::value_type func_type;
 
@@ -703,7 +703,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplH_Permute_FP_AVX512 final : public graphengine::Filter {
+class ResizeImplH_Permute_FP_AVX512 : public graph::FilterBase {
 	typedef typename Traits::pixel_type pixel_type;
 	typedef typename decltype(resize_line_h_perm_fp_avx512_jt<Traits>)::value_type func_type;
 
@@ -716,12 +716,10 @@ class ResizeImplH_Permute_FP_AVX512 final : public graphengine::Filter {
 		unsigned input_width;
 	};
 
-	graphengine::FilterDescriptor m_desc;
 	PermuteContext m_context;
 	func_type m_func;
 
 	ResizeImplH_Permute_FP_AVX512(PermuteContext context, unsigned height) :
-		m_desc{},
 		m_context(std::move(context)),
 		m_func{ resize_line_h_perm_fp_avx512_jt<Traits>[m_context.filter_width - 1] }
 	{
@@ -776,10 +774,6 @@ public:
 		return ret;
 	}
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
@@ -793,8 +787,6 @@ public:
 		return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
-	void init_context(void *) const noexcept override {}
-
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
@@ -804,7 +796,7 @@ public:
 
 
 template <class Traits>
-class ResizeImplV_FP_AVX512 final : public ResizeImplV {
+class ResizeImplV_FP_AVX512 : public ResizeImplV {
 	typedef typename Traits::pixel_type pixel_type;
 public:
 	ResizeImplV_FP_AVX512(const FilterContext &filter, unsigned width) :

@@ -335,6 +335,7 @@
     <ClInclude Include="..\..\src\zimg\depth\x86\depth_convert_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\f16c_x86.h" />
+    <ClInclude Include="..\..\src\zimg\graph\filter_base.h" />
     <ClInclude Include="..\..\src\zimg\graph\simple_filters.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h" />
@@ -461,6 +462,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\graph\filter_base.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\simple_filters.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp" />
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp" />

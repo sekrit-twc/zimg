@@ -4,7 +4,7 @@
 #define ZIMG_UNRESIZE_UNRESIZE_IMPL_H_
 
 #include <memory>
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "bilinear.h"
 
 namespace zimg {
@@ -14,40 +14,26 @@ enum class PixelType;
 
 namespace unresize {
 
-class UnresizeImplH : public graphengine::Filter {
+class UnresizeImplH : public graph::FilterBase {
 protected:
-	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
 
 	UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override;
-
-	void init_context(void *) const noexcept override {}
 };
 
-class UnresizeImplV : public graphengine::Filter {
+class UnresizeImplV : public graph::FilterBase {
 protected:
-	graphengine::FilterDescriptor m_desc;
 	BilinearContext m_context;
 
 	UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type);
 public:
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override;
-
-	void init_context(void *) const noexcept override {}
 };
 
 struct UnresizeImplBuilder {

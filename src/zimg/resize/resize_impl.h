@@ -5,7 +5,7 @@
 
 #include <memory>
 #include <utility>
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "filter.h"
 
 namespace zimg {
@@ -15,17 +15,12 @@ enum class PixelType;
 
 namespace resize {
 
-class ResizeImplH : public graphengine::Filter {
+class ResizeImplH : public graph::FilterBase {
 protected:
-	graphengine::FilterDescriptor m_desc;
 	FilterContext m_filter;
 
 	ResizeImplH(const FilterContext &filter, unsigned height, PixelType type);
 public:
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override;
@@ -33,18 +28,13 @@ public:
 	void init_context(void *) const noexcept override {}
 };
 
-class ResizeImplV : public graphengine::Filter {
+class ResizeImplV : public graph::FilterBase {
 protected:
-	graphengine::FilterDescriptor m_desc;
 	FilterContext m_filter;
 	bool m_unsorted;
 
 	ResizeImplV(const FilterContext &filter, unsigned width, PixelType type);
 public:
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override;
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override;

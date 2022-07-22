@@ -9,7 +9,6 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
-#include "graphengine/filter.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -334,7 +333,7 @@ constexpr auto resize_line_v_f32_avx_jt_cont = make_array(
 	resize_line_v_f32_avx<8, true>);
 
 
-class ResizeImplH_F32_AVX final : public ResizeImplH {
+class ResizeImplH_F32_AVX : public ResizeImplH {
 	decltype(resize_line8_h_f32_avx_jt_small)::value_type m_func;
 public:
 	ResizeImplH_F32_AVX(const FilterContext &filter, unsigned height) try :
@@ -388,7 +387,7 @@ public:
 };
 
 
-class ResizeImplV_F32_AVX final : public ResizeImplV {
+class ResizeImplV_F32_AVX : public ResizeImplV {
 public:
 	ResizeImplV_F32_AVX(const FilterContext &filter, unsigned width) :
 		ResizeImplV(filter, width, zimg::PixelType::FLOAT)

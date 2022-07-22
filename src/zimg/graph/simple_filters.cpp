@@ -7,7 +7,6 @@ namespace zimg {
 namespace graph {
 
 CopyRectFilter::CopyRectFilter(unsigned left, unsigned top, unsigned width, unsigned height, PixelType type) :
-	m_desc{},
 	m_left{ left },
 	m_top{ top }
 {
@@ -25,14 +24,13 @@ void CopyRectFilter::process(const graphengine::BufferDescriptor *in, const grap
 	std::copy_n(src_p, static_cast<size_t>(right - left) * m_desc.format.bytes_per_sample, dst_p);
 }
 
+
 ValueInitializeFilter::ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val) :
-	m_desc{},
+	PointFilter(width, height, type),
 	m_value(val)
 {
-	m_desc.format = { width, height, pixel_size(type) };
 	m_desc.num_deps = 0;
 	m_desc.num_planes = 1;
-	m_desc.step = 1;
 }
 
 void ValueInitializeFilter::fill_b(void *ptr, size_t n) const
@@ -69,12 +67,10 @@ void ValueInitializeFilter::process(const graphengine::BufferDescriptor *in, con
 }
 
 
-PremultiplyFilter::PremultiplyFilter(unsigned width, unsigned height) : m_desc{}
+PremultiplyFilter::PremultiplyFilter(unsigned width, unsigned height) : PointFilter(width, height, PixelType::FLOAT)
 {
-	m_desc.format = { width, height, pixel_size(PixelType::FLOAT) };
 	m_desc.num_deps = 2;
 	m_desc.num_planes = 1;
-	m_desc.step = 1;
 	m_desc.flags.in_place = 1;
 }
 
@@ -93,12 +89,10 @@ void PremultiplyFilter::process(const graphengine::BufferDescriptor in[2], const
 }
 
 
-UnpremultiplyFilter::UnpremultiplyFilter(unsigned width, unsigned height) : m_desc{}
+UnpremultiplyFilter::UnpremultiplyFilter(unsigned width, unsigned height) : PointFilter(width, height, PixelType::FLOAT)
 {
-	m_desc.format = { width, height, pixel_size(PixelType::FLOAT) };
 	m_desc.num_deps = 2;
 	m_desc.num_planes = 1;
-	m_desc.step = 1;
 	m_desc.flags.in_place = 1;
 }
 

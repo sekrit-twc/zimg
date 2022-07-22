@@ -165,7 +165,6 @@ public:
 
 
 ResizeImplH::ResizeImplH(const FilterContext &filter, unsigned height, PixelType type) :
-	m_desc{},
 	m_filter(filter)
 {
 	zassert_d(m_filter.input_width <= pixel_max_width(type), "overflow");
@@ -198,7 +197,6 @@ auto ResizeImplH::get_col_deps(unsigned left, unsigned right) const noexcept -> 
 
 
 ResizeImplV::ResizeImplV(const FilterContext &filter, unsigned width, PixelType type) :
-	m_desc{},
 	m_filter(filter),
 	m_unsorted{}
 {

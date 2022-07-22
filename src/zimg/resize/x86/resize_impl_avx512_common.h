@@ -11,7 +11,7 @@
 #include "common/checked_int.h"
 #include "common/make_array.h"
 #include "common/except.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "resize/resize_impl.h"
 
 #include "common/x86/sse2_util.h"
@@ -698,7 +698,7 @@ inline FORCE_INLINE void calculate_line_address(void *dst, const void *src, ptrd
 }
 
 
-class ResizeImplH_U16_AVX512 final : public ResizeImplH {
+class ResizeImplH_U16_AVX512 : public ResizeImplH {
 	decltype(resize_line16_h_u16_avx512_jt_small)::value_type m_func;
 	uint16_t m_pixel_max;
 public:
@@ -746,7 +746,7 @@ public:
 };
 
 
-class ResizeImplH_Permute_U16_AVX512 final : public graphengine::Filter {
+class ResizeImplH_Permute_U16_AVX512 : public graph::FilterBase {
 	typedef decltype(resize_line_h_perm_u16_avx512_jt)::value_type func_type;
 
 	struct PermuteContext {
@@ -758,13 +758,11 @@ class ResizeImplH_Permute_U16_AVX512 final : public graphengine::Filter {
 		unsigned input_width;
 	};
 
-	graphengine::FilterDescriptor m_desc;
 	PermuteContext m_context;
 	uint16_t m_pixel_max;
 	func_type m_func;
 
 	ResizeImplH_Permute_U16_AVX512(PermuteContext context, unsigned height, unsigned depth) :
-		m_desc{},
 		m_context(std::move(context)),
 		m_pixel_max{ static_cast<uint16_t>((1UL << depth) - 1) },
 		m_func{ resize_line_h_perm_u16_avx512_jt[(m_context.filter_width - 1) / 2] }
@@ -824,10 +822,6 @@ public:
 		return ret;
 	}
 
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
 	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
 
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override
@@ -841,8 +835,6 @@ public:
 		return{ m_context.left[left / 16],  right_base + std::min(input_width - right_base, iter_width) };
 	}
 
-	void init_context(void *) const noexcept override {}
-
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
 	{
@@ -851,7 +843,7 @@ public:
 };
 
 
-class ResizeImplV_U16_AVX512 final : public ResizeImplV {
+class ResizeImplV_U16_AVX512 : public ResizeImplV {
 	uint16_t m_pixel_max;
 public:
 	ResizeImplV_U16_AVX512(const FilterContext &filter, unsigned width, unsigned depth) try :

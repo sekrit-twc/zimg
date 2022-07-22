@@ -138,7 +138,6 @@ public:
 
 
 UnresizeImplH::UnresizeImplH(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
-	m_desc{},
 	m_context(context)
 {
 	zassert_d(m_context.input_width <= pixel_max_width(type), "overflow");
@@ -165,7 +164,6 @@ auto UnresizeImplH::get_col_deps(unsigned, unsigned) const noexcept -> pair_unsi
 
 
 UnresizeImplV::UnresizeImplV(const BilinearContext &context, unsigned width, unsigned height, PixelType type) :
-	m_desc{},
 	m_context(context)
 {
 	zassert_d(m_context.input_width <= pixel_max_width(type), "overflow");

@@ -4,7 +4,7 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "colorspace.h"
 #include "graph.h"
 #include "operation.h"
@@ -14,8 +14,7 @@ namespace colorspace {
 
 namespace {
 
-class ColorspaceConversionImpl : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class ColorspaceConversionImpl : public graph::PointFilter {
 	std::array<std::unique_ptr<Operation>, 6> m_operations;
 
 	void build_graph(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
@@ -39,30 +38,19 @@ class ColorspaceConversionImpl : public graphengine::Filter {
 		}
 	}
 public:
-	ColorspaceConversionImpl(unsigned width, unsigned height, const ColorspaceDefinition &in, const ColorspaceDefinition &out,
+	ColorspaceConversionImpl(unsigned width, unsigned height,
+	                         const ColorspaceDefinition &in, const ColorspaceDefinition &out,
 	                         const OperationParams &params, CPUClass cpu) :
-		m_desc{}
+		PointFilter(width, height, PixelType::FLOAT)
 	{
 		zassert_d(width <= pixel_max_width(PixelType::FLOAT), "overflow");
 
-		m_desc.format = { width, height, sizeof(float) };
 		m_desc.num_deps = 3;
 		m_desc.num_planes = 3;
-		m_desc.step = 1;
 		m_desc.flags.in_place = 1;
 
 		build_graph(in, out, params, cpu);
 	}
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor in[3], const graphengine::BufferDescriptor out[3],
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override

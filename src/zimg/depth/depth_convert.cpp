@@ -6,7 +6,7 @@
 #include "common/except.h"
 #include "common/pixel.h"
 #include "common/zassert.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "depth_convert.h"
 #include "quantize.h"
 
@@ -88,8 +88,7 @@ depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_o
 }
 
 
-class IntegerLeftShift : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class IntegerLeftShift : public graph::PointFilter {
 	left_shift_func m_func;
 	unsigned m_shift;
 
@@ -111,30 +110,18 @@ class IntegerLeftShift : public graphengine::Filter {
 	}
 public:
 	IntegerLeftShift(left_shift_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
-		m_desc{},
+		PointFilter(width, height, pixel_out.type),
 		m_func{ func },
 		m_shift{}
 	{
 		check_preconditions(width, pixel_in, pixel_out);
 
-		m_desc.format = { width, height, pixel_size(pixel_out.type) };
 		m_desc.num_deps = 1;
 		m_desc.num_planes = 1;
-		m_desc.step = 1;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
 
 		m_shift = pixel_out.depth - pixel_in.depth;
 	}
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override
@@ -144,8 +131,7 @@ public:
 };
 
 
-class ConvertToFloat : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
+class ConvertToFloat : public graph::PointFilter {
 	depth_convert_func m_func;
 	depth_f16c_func m_f16c;
 	float m_scale;
@@ -166,7 +152,7 @@ class ConvertToFloat : public graphengine::Filter {
 public:
 	ConvertToFloat(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
 	               const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
-		m_desc{},
+		PointFilter(width, height, pixel_out.type),
 		m_func{ func },
 		m_f16c{ f16c },
 		m_scale{},
@@ -174,25 +160,13 @@ public:
 	{
 		check_preconditions(width, pixel_in, pixel_out, !!f16c);
 
-		m_desc.format = { width, height, pixel_size(pixel_out.type) };
 		m_desc.num_deps = 1;
 		m_desc.num_planes = 1;
-		m_desc.step = 1;
 		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
 
 		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
 	}
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
-
-	pair_unsigned get_row_deps(unsigned i) const noexcept override { return{ i, i + 1 }; }
-
-	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override { return{ left, right }; }
-
-	void init_context(void *) const noexcept override {}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override

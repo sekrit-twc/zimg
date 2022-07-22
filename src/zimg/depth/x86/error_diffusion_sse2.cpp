@@ -13,7 +13,7 @@
 #include "common/pixel.h"
 #include "common/zassert.h"
 #include "depth/quantize.h"
-#include "graphengine/filter.h"
+#include "graph/filter_base.h"
 #include "dither_x86.h"
 
 #include "common/x86/sse2_util.h"
@@ -350,9 +350,7 @@ auto select_error_diffusion_sse2_func(PixelType pixel_in, PixelType pixel_out)
 }
 
 
-class ErrorDiffusionSSE2 : public graphengine::Filter {
-	graphengine::FilterDescriptor m_desc;
-
+class ErrorDiffusionSSE2 : public graph::FilterBase {
 	decltype(select_error_diffusion_scalar_func({}, {})) m_scalar_func;
 	decltype(select_error_diffusion_sse2_func({}, {})) m_sse2_func;
 	dither_f16c_func m_f16c;
@@ -388,7 +386,6 @@ class ErrorDiffusionSSE2 : public graphengine::Filter {
 	}
 public:
 	ErrorDiffusionSSE2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu) try :
-		m_desc{},
 		m_scalar_func{ select_error_diffusion_scalar_func(pixel_in.type, pixel_out.type) },
 		m_sse2_func{ select_error_diffusion_sse2_func(pixel_in.type, pixel_out.type) },
 		m_f16c{},
@@ -421,10 +418,6 @@ public:
 	} catch (const std::overflow_error &) {
 		error::throw_<error::OutOfMemory>();
 	}
-
-	int version() const noexcept override { return VERSION; }
-
-	const graphengine::FilterDescriptor &descriptor() const noexcept override { return m_desc; }
 
 	pair_unsigned get_row_deps(unsigned i) const noexcept override
 	{
