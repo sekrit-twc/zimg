@@ -668,10 +668,9 @@ private:
 
 		auto filter = std::make_unique<ValueInitializeFilter>(
 			target.planes[PLANE_U].width, target.planes[PLANE_U].height, format.type, val);
-		graphengine::node_id id = m_graph.add_transform(filter.get(), nullptr);
+		graphengine::node_id id = m_graph.add_transform(m_graph.save_filter(std::move(filter)), nullptr);
 		m_ids[PLANE_U] = { id, 0 };
 		m_ids[PLANE_V] = { id, 0 };
-		m_graph.save_filter(std::move(filter));
 
 		m_state.color = ColorFamily::YUV;
 		m_state.colorspace.matrix = target.colorspace.matrix;
@@ -735,8 +734,7 @@ private:
 
 		auto filter = std::make_unique<ValueInitializeFilter>(
 			m_state.planes[PLANE_Y].width, m_state.planes[PLANE_Y].height, format.type, val);
-		m_ids[PLANE_A] = { m_graph.add_transform(filter.get(), nullptr), 0 };
-		m_graph.save_filter(std::move(filter));
+		m_ids[PLANE_A] = { m_graph.add_transform(m_graph.save_filter(std::move(filter)), nullptr), 0 };
 
 		m_state.alpha = type;
 		m_state.alpha_from_luma();
@@ -834,14 +832,10 @@ private:
 			second = std::move(filter_list.second);
 		}
 
-		if (first) {
-			attach_greyscale_filter(first.get(), mask);
-			m_graph.save_filter(std::move(first));
-		}
-		if (second) {
-			attach_greyscale_filter(second.get(), mask);
-			m_graph.save_filter(std::move(second));
-		}
+		if (first)
+			attach_greyscale_filter(m_graph.save_filter(std::move(first)), mask);
+		if (second)
+			attach_greyscale_filter(m_graph.save_filter(std::move(second)), mask);
 
 		apply_mask(mask, [&](int q)
 		{
@@ -872,11 +866,10 @@ private:
 
 		auto filter = conv.create();
 		if (filter) {
-			graphengine::node_id id = m_graph.add_transform(filter.get(), m_ids.data());
+			graphengine::node_id id = m_graph.add_transform(m_graph.save_filter(std::move(filter)), m_ids.data());
 			m_ids[PLANE_Y] = { id, 0 };
 			m_ids[PLANE_U] = { id, 1 };
 			m_ids[PLANE_V] = { id, 2 };
-			m_graph.save_filter(std::move(filter));
 		}
 
 		if (csp.matrix == colorspace::MatrixCoefficients::RGB) {
@@ -958,8 +951,7 @@ private:
 			observer.subrectangle(left, top, tmp.planes[p].width, tmp.planes[p].height, p);
 
 			auto filter = std::make_unique<CopyRectFilter>(left, top, tmp.planes[p].width, tmp.planes[p].height, format.type);
-			attach_greyscale_filter(filter.get(), mask);
-			m_graph.save_filter(std::move(filter));
+			attach_greyscale_filter(m_graph.save_filter(std::move(filter)), mask);
 
 			apply_mask(mask, [&](int q)
 			{
