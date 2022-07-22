@@ -27,6 +27,11 @@
 namespace {
 class TracingObserver : public zimg::graph::FilterObserver {
 public:
+	void subrectangle(unsigned left, unsigned top, unsigned width, unsigned height, int plane) override
+	{
+		printf("subrectangle[%d]: [%u, %u, %u, %u]\n", plane, left, top, width, height);
+	}
+
 	void yuv_to_grey() override { puts("yuv_to_grey"); }
 
 	void grey_to_yuv() override { puts("grey_to_yuv"); }

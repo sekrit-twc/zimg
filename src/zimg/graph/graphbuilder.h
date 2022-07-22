@@ -48,6 +48,8 @@ class FilterObserver {
 public:
 	virtual ~FilterObserver() = default;
 
+	virtual void subrectangle(unsigned left, unsigned top, unsigned width, unsigned height, int plane) {}
+
 	virtual void yuv_to_grey() {}
 	virtual void grey_to_yuv() {}
 	virtual void grey_to_rgb() {}

@@ -559,6 +559,41 @@ private:
 		return false;
 	}
 
+	bool can_copy_tile(const internal_state &target, int p)
+	{
+		auto is_integer = [](double x) { return std::trunc(x) == x; };
+
+		const internal_state::plane &src_plane = m_state.planes[p];
+		const internal_state::plane &dst_plane = target.planes[p];
+
+		// Input must be a subrectangle.
+		if (src_plane.active_width == src_plane.width || src_plane.active_height == src_plane.height)
+			return false;
+
+		// Output must not be a subrectangle.
+		if (dst_plane.active_width != dst_plane.width || dst_plane.active_height != dst_plane.height)
+			return false;
+
+		// Input subrectangle must be equal to output size.
+		if (src_plane.active_width != dst_plane.width || src_plane.active_height != dst_plane.height)
+			return false;
+
+		double src_left = src_plane.active_left - dst_plane.active_left;
+		double src_top = src_plane.active_top - dst_plane.active_top;
+
+		// Input must be pixel-aligned.
+		if (!is_integer(src_left) || !is_integer(src_top))
+			return false;
+
+		// Input subrectangle is not out of bounds.
+		if (src_left < 0 || src_top < 0)
+			return false;
+		if (src_left + src_plane.active_width > src_plane.width || src_top + src_plane.active_height > src_plane.height)
+			return false;
+
+		return true;
+	}
+
 	bool needs_resize_plane(const internal_state &target, int p)
 	{
 		internal_state::plane plane = target.planes[p];
@@ -905,7 +940,7 @@ private:
 			PixelFormat src_format = m_state.planes[p].format;
 			PixelFormat dst_format = tmp.planes[p].format;
 
-			// Promote full-range BYTE inputs to a limited-range WORD with a left-shift operator it would not affect the output.
+			// Convert full-range BYTE to WORD by left-shifting if it would not affect the output.
 			if (src_format.type == PixelType::BYTE && src_format.fullrange && dst_format.fullrange &&
 			    src_format.depth == dst_format.depth)
 			{
@@ -913,6 +948,26 @@ private:
 				apply_mask(mask, [&](int p) { tmp.planes[p].format.fullrange = false; });
 				reinterpreted = true;
 			}
+		}
+
+		if (can_copy_tile(tmp, p)) {
+			PixelFormat format = m_state.planes[p].format;
+			unsigned left = static_cast<unsigned>(m_state.planes[p].active_left - tmp.planes[p].active_left);
+			unsigned top = static_cast<unsigned>(m_state.planes[p].active_top - tmp.planes[p].active_top);
+
+			observer.subrectangle(left, top, tmp.planes[p].width, tmp.planes[p].height, p);
+
+			auto filter = std::make_unique<CopyRectFilter>(left, top, tmp.planes[p].width, tmp.planes[p].height, format.type);
+			attach_greyscale_filter(filter.get(), mask);
+			m_graph.save_filter(std::move(filter));
+
+			apply_mask(mask, [&](int q)
+			{
+				m_state.planes[q] = tmp.planes[q];
+				m_state.planes[q].format = format;
+			});
+
+			iassert(!needs_resize_plane(tmp, p));
 		}
 
 		if (needs_resize_plane(tmp, p)) {

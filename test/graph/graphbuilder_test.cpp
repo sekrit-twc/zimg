@@ -26,6 +26,13 @@ class TracingObserver : public zimg::graph::FilterObserver {
 public:
 	const TraceList &trace() const { return m_trace; }
 
+	void subrectangle(unsigned left, unsigned top, unsigned width, unsigned height, int plane) override
+	{
+		char buffer[128];
+		sprintf(buffer, "subrectangle[%d]: [%u, %u, %u, %u]\n", plane, left, top, width, height);
+		m_trace.push_back(buffer);
+	}
+
 	void yuv_to_grey() override { m_trace.push_back("yuv_to_grey"); }
 
 	void grey_to_yuv() override { m_trace.push_back("grey_to_yuv"); }
@@ -681,11 +688,11 @@ TEST(GraphBuilderTest, test_straight_depth_tile)
 	target.depth = 16;
 
 	test_case(source, target, {
-		"resize[0]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"subrectangle[0]: [0, 0, 32, 24]",
 		"depth[0]: [3/32 l:l] => [1/16 l:l]",
-		"resize[1]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"subrectangle[1]: [0, 0, 32, 24]",
 		"depth[1]: [3/32 l:c] => [1/16 l:c]",
-		"resize[3]: [64, 48] => [32, 24] (0.000000, 0.000000, 32.000000, 24.000000)",
+		"subrectangle[3]: [0, 0, 32, 24]",
 		"depth[3]: [3/32 l:l] => [1/16 f:l]",
 	});
 }
@@ -706,7 +713,7 @@ TEST(GraphBuilderTest, test_subsample_noop_tile)
 	set_resolution(target, 32, 24);
 
 	test_case(source, target, {
-		"resize[0]: [64, 48] => [32, 24] (32.000000, 24.000000, 32.000000, 24.000000)",
-		"resize[1]: [32, 24] => [16, 12] (16.000000, 12.000000, 16.000000, 12.000000)",
+		"subrectangle[0]: [32, 24, 32, 24]",
+		"subrectangle[1]: [16, 12, 16, 12]",
 	});
 }

@@ -6,6 +6,25 @@
 namespace zimg {
 namespace graph {
 
+CopyRectFilter::CopyRectFilter(unsigned left, unsigned top, unsigned width, unsigned height, PixelType type) :
+	m_desc{},
+	m_left{ left },
+	m_top{ top }
+{
+	m_desc.format = { width, height, pixel_size(type) };
+	m_desc.num_deps = 1;
+	m_desc.num_planes = 1;
+	m_desc.step = 1;
+}
+
+void CopyRectFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
+                             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
+{
+	const unsigned char *src_p = in->get_line<unsigned char>(m_top + i) + static_cast<size_t>(m_left) * m_desc.format.bytes_per_sample;
+	unsigned char *dst_p = out->get_line<unsigned char>(i) + static_cast<size_t>(left) * m_desc.format.bytes_per_sample;
+	std::copy_n(src_p, static_cast<size_t>(right - left) * m_desc.format.bytes_per_sample, dst_p);
+}
+
 ValueInitializeFilter::ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val) :
 	m_desc{},
 	m_value(val)
