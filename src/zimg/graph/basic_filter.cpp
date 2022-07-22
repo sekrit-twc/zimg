@@ -6,26 +6,6 @@
 namespace zimg {
 namespace graph {
 
-CopyFilter::CopyFilter(unsigned width, unsigned height, PixelType type) : m_desc{}
-{
-	m_desc.format = { width, height, pixel_size(type) };
-	m_desc.num_deps = 1;
-	m_desc.num_planes = 1;
-	m_desc.step = 1;
-	m_desc.flags.in_place = 1;
-}
-
-void CopyFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
-	                     unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
-{
-	const uint8_t *src_p = in->get_line<uint8_t>(i);
-	uint8_t *dst_p = out->get_line<uint8_t>(i);
-	size_t left_byte = left * m_desc.format.bytes_per_sample;
-	size_t right_byte = right * m_desc.format.bytes_per_sample;
-	std::copy_n(src_p + left_byte, right_byte - left_byte, dst_p + left_byte);
-}
-
-
 ValueInitializeFilter::ValueInitializeFilter(unsigned width, unsigned height, PixelType type, value_type val) :
 	m_desc{},
 	m_value(val)
@@ -52,7 +32,7 @@ void ValueInitializeFilter::fill_f(void *ptr, size_t n) const
 }
 
 void ValueInitializeFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
-                                    unsigned i, unsigned left, unsigned right, void *, void *) const noexcept 
+                                    unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
 {
 	unsigned char *dst_p = out->get_line<unsigned char>(i) + static_cast<size_t>(left) * m_desc.format.bytes_per_sample;
 
