@@ -12,10 +12,10 @@
 #include "resize/filter.h"
 #include "resize/resize.h"
 #include "unresize/unresize.h"
-#include "basic_filter.h"
 #include "filtergraph.h"
 #include "graphbuilder.h"
 #include "graphengine_except.h"
+#include "simple_filters.h"
 
 
 #ifndef ZIMG_UNSAFE_IMAGE_SIZE

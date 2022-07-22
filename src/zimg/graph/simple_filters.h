@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_GRAPH_BASIC_FILTER_H_
-#define ZIMG_GRAPH_BASIC_FILTER_H_
+#ifndef ZIMG_GRAPH_SIMPLE_FILTERS_H_
+#define ZIMG_GRAPH_SIMPLE_FILTERS_H_
 
 #include <cstdint>
 #include "graphengine/filter.h"
@@ -109,4 +109,4 @@ public:
 } // namespace graph
 } // namespace zimg
 
-#endif // ZIMG_GRAPH_BASIC_FILTER_H_
+#endif // ZIMG_GRAPH_SIMPLE_FILTERS_H_

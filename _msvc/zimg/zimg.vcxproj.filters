@@ -279,7 +279,7 @@
     <ClInclude Include="..\..\src\zimg\graph\graphbuilder.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\graph\basic_filter.h">
+    <ClInclude Include="..\..\src\zimg\graph\simple_filters.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h">
@@ -482,7 +482,7 @@
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\graph\basic_filter.cpp">
+    <ClCompile Include="..\..\src\zimg\graph\simple_filters.cpp">
       <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\filtergraph.cpp">
