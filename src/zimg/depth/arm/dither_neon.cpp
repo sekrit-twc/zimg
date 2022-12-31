@@ -72,14 +72,30 @@ struct StoreU8 {
 		vst1_u8(ptr, vmovn_u16(x));
 	}
 
-	static inline FORCE_INLINE void store8_idxlo(uint8_t *ptr, uint16x8_t x, unsigned idx)
+	static inline FORCE_INLINE void store8_idxlo(uint8_t *ptr, uint16x8_t x_, unsigned idx)
 	{
-		neon_store_idxlo_u8(ptr, vcombine_u8(vmovn_u16(x), vdup_n_u8(0)), idx);
+		uint8x8_t x = vmovn_u16(x_);
+		uint8x8_t orig = vld1_u8(ptr);
+		uint8x8_t mask = vld1_u8(neon_mask_table[idx]);
+
+		orig = vbic_u8(orig, mask);
+		x = vand_u8(x, mask);
+		x = vorr_u8(x, orig);
+
+		vst1_u8(ptr, x);
 	}
 
-	static inline FORCE_INLINE void store8_idxhi(uint8_t *ptr, uint16x8_t x, unsigned idx)
+	static inline FORCE_INLINE void store8_idxhi(uint8_t *ptr, uint16x8_t x_, unsigned idx)
 	{
-		neon_store_idxhi_u8(ptr - 8, vcombine_u8(vdup_n_u8(0), vmovn_u16(x)), idx + 8);
+		uint8x8_t x = vmovn_u16(x_);
+		uint8x8_t orig = vld1_u8(ptr);
+		uint8x8_t mask = vld1_u8(neon_mask_table[idx]);
+		
+		orig = vand_u8(orig, mask);
+		x = vbic_u8(x, mask);
+		x = vorr_u8(x, orig);
+
+		vst1_u8(ptr, x);
 	}
 };
 
