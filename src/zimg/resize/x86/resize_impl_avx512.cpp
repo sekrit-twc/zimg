@@ -256,7 +256,7 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
 
-	if (!Taps || Taps >= 2)
+	if (Taps <= 0 || Taps >= 2)
 		accum0 = _mm512_add_ps(accum0, accum1);
 
 	return accum0;
