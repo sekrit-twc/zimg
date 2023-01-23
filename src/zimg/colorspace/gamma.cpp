@@ -275,6 +275,16 @@ float st_2084_inverse_eotf(float x) noexcept
 	return x;
 }
 
+float st_428_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.6f);
+}
+
+float st_428_inverse_eotf(float x) noexcept
+{
+	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.6f);
+}
+
 // Applies a per-channel correction instead of the iterative method specified in Rec.2100.
 float arib_b67_eotf(float x) noexcept
 {
@@ -344,6 +354,10 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 		func.to_gamma = scene_referred ? st_2084_oetf : st_2084_inverse_eotf;
 		func.to_linear_scale = static_cast<float>(ST2084_PEAK_LUMINANCE / peak_luminance);
 		func.to_gamma_scale = static_cast<float>(peak_luminance / ST2084_PEAK_LUMINANCE);
+		break;
+	case TransferCharacteristics::ST_428:
+		func.to_linear = st_428_eotf;
+		func.to_gamma = st_428_inverse_eotf;
 		break;
 	case TransferCharacteristics::ARIB_B67:
 		func.to_linear = scene_referred ? arib_b67_inverse_oetf : arib_b67_eotf;

@@ -44,6 +44,7 @@ enum class TransferCharacteristics {
 	XVYCC,
 	SRGB,
 	ST_2084,
+	ST_428,
 	ARIB_B67,
 };
 

@@ -317,6 +317,7 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_BT2020_10     = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_BT2020_12     = 15, /* Equivalent to 1. */
 	ZIMG_TRANSFER_ST2084        = 16,
+	ZIMG_TRANSFER_ST428         = 17,
 	ZIMG_TRANSFER_ARIB_B67      = 18
 #define ZIMG_TRANSFER_709     ZIMG_TRANSFER_BT709     /**< Deprecated. */
 #define ZIMG_TRANSFER_470_M   ZIMG_TRANSFER_BT470_M   /**< Deprecated. */

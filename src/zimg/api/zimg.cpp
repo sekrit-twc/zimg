@@ -267,7 +267,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static constexpr const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 15> map{
+	static constexpr const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 16> map{
 		{ ZIMG_TRANSFER_BT709,         TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED,   TransferCharacteristics::UNSPECIFIED },
 		{ ZIMG_TRANSFER_ST240_M,       TransferCharacteristics::SMPTE_240M },
@@ -282,6 +282,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 		{ ZIMG_TRANSFER_LOG_100,       TransferCharacteristics::LOG_100 },
 		{ ZIMG_TRANSFER_LOG_316,       TransferCharacteristics::LOG_316 },
 		{ ZIMG_TRANSFER_ST2084,        TransferCharacteristics::ST_2084 },
+		{ ZIMG_TRANSFER_ST428,         TransferCharacteristics::ST_428 },
 		{ ZIMG_TRANSFER_ARIB_B67,      TransferCharacteristics::ARIB_B67 },
 	};
 	return search_itu_enum_map(map, transfer, "unrecognized transfer characteristics");
