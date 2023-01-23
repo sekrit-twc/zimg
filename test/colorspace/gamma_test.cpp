@@ -118,7 +118,7 @@ TEST(GammaTest, test_log316)
 	test_monotonic(zimg::colorspace::log316_oetf, 1.0f, 2.0f, 1UL << 16);
 }
 
-TEST(GammaTest, test_rec_470m_470bg)
+TEST(GammaTest, test_rec_470m_470bg_st428)
 {
 	SCOPED_TRACE("470m");
 	test_accuracy(zimg::colorspace::rec_470m_oetf, zimg::colorspace::rec_470m_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
@@ -126,6 +126,9 @@ TEST(GammaTest, test_rec_470m_470bg)
 	SCOPED_TRACE("470bg");
 	test_accuracy(zimg::colorspace::rec_470bg_oetf, zimg::colorspace::rec_470bg_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
 	test_accuracy(zimg::colorspace::rec_470bg_inverse_oetf, zimg::colorspace::rec_470bg_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("st428");
+	test_accuracy(zimg::colorspace::st_428_eotf, zimg::colorspace::st_428_inverse_eotf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	test_accuracy(zimg::colorspace::st_428_inverse_eotf, zimg::colorspace::st_428_eotf, 0.0f, 1.0f, 1e-6f, 1e-6f);
 }
 
 TEST(GammaTest, test_smpte_240m)

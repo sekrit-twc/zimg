@@ -50,6 +50,9 @@ float srgb_inverse_eotf(float x) noexcept;
 float st_2084_eotf(float x) noexcept;
 float st_2084_inverse_eotf(float x) noexcept;
 
+float st_428_eotf(float x) noexcept;
+float st_428_inverse_eotf(float x) noexcept;
+
 // Derived functions.
 float arib_b67_eotf(float x) noexcept;
 float arib_b67_inverse_eotf(float x) noexcept;
