@@ -277,12 +277,12 @@ float st_2084_inverse_eotf(float x) noexcept
 
 float st_428_eotf(float x) noexcept
 {
-	return x < 0.0f ? 0.0f : zimg_x_powf(x, 2.6f);
+	return x < 0.0f ? 0.0f : 52.37f / 48.0f * zimg_x_powf(x, 2.6f);
 }
 
 float st_428_inverse_eotf(float x) noexcept
 {
-	return x < 0.0f ? 0.0f : zimg_x_powf(x, 1.0f / 2.6f);
+	return x < 0.0f ? 0.0f : zimg_x_powf(x * (48.0f / 52.37f), 1.0f / 2.6f);
 }
 
 // Applies a per-channel correction instead of the iterative method specified in Rec.2100.
