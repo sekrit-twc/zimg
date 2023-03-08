@@ -13,7 +13,7 @@ Requirements
 - Byte-addressable architecture
 - Two's complement integer encoding
 - 32-bit or greater machine word
-- C++11 compiler
+- C++14 compiler
 - Platforms: Microsoft Windows, POSIX
 
 Building
