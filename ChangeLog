@@ -1,3 +1,6 @@
+3.0.5
+api: add 'use_scene_referred' flag to zimg_graph_builder_params
+
 3.0.4
 colorspace: fix ARIB STD-B67 constant-luminance EOTF (introduced in 2.6)
 colorspace: filter negative values from sRGB-like transfer functions

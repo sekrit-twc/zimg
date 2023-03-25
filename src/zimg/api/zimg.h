@@ -632,6 +632,9 @@ typedef struct zimg_graph_builder_params {
 
 	/** Allow evaluating transfer functions at reduced precision (default false). */
 	char allow_approximate_gamma;
+
+	/** Use scene-referred transfer functions (default false).*/
+	char use_scene_referred;
 } zimg_graph_builder_params;
 
 /**
