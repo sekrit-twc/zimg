@@ -44,7 +44,7 @@ constexpr int PLANE_Y = 0;
 constexpr int PLANE_U = 1;
 constexpr int PLANE_V = 2;
 constexpr int PLANE_A = 3;
-static_assert(PLANE_NUM <= graphengine::NODE_MAX_PLANES, "");
+static_assert(PLANE_NUM <= graphengine::NODE_MAX_PLANES);
 
 typedef std::array<bool, PLANE_NUM> plane_mask;
 
