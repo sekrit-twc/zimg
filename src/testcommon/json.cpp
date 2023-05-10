@@ -1,9 +1,8 @@
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <climits>
 #include <iterator>
-#include <locale>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -378,14 +377,12 @@ std::string decode_string_literal(const Token &tok)
 
 double decode_number_literal(const Token &tok)
 {
-	std::istringstream ss{ std::string{ tok.str() } };
+	const char *first = tok.str().data();
+	const char *last = tok.str().data() + tok.str().size();
 	double x = 0.0;
 
-	ss.imbue(std::locale::classic());
-
-	if (!(ss >> x))
-		throw JsonError{ "bad number literal", tok.line(), tok.col() };
-	if (ss.peek() != std::istringstream::traits_type::eof())
+	auto result = std::from_chars(first, last, x);
+	if (result.ptr != last)
 		throw JsonError{ "bad number literal", tok.line(), tok.col() };
 
 	return x;
@@ -397,19 +394,10 @@ std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last);
 template <class ForwardIt>
 std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 {
-	int line = first->line();
-	int col = first->col();
-
 	double x = 0.0;
-	bool negative = false;
-
-	if (first->tag() == Token::MINUS) {
-		negative = true;
-		if (++first == last)
-			throw JsonError{ "unexpected EOF after '-'", line, col };
-	}
 
 	switch (first->tag()) {
+	case Token::MINUS:
 	case Token::NUMBER_LITERAL:
 		x = decode_number_literal(*first);
 		break;
@@ -424,7 +412,7 @@ std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 	}
 	++first;
 
-	return{ Value{ negative ? -x : x }, first };
+	return{ Value{ x }, first };
 }
 
 template <class ForwardIt>
