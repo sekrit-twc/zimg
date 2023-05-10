@@ -95,7 +95,7 @@ inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j,
 		src_p += 32;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k_end));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
@@ -103,26 +103,26 @@ inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j,
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
 		x = _mm256_load_ps(src_p + 8);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
 		x = _mm256_load_ps(src_p + 16);
 		x = _mm256_mul_ps(c, x);
 		accum0 = _mm256_add_ps(accum0, x);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
 		x = _mm256_load_ps(src_p + 24);
 		x = _mm256_mul_ps(c, x);
 		accum1 = _mm256_add_ps(accum1, x);
 	}
 
-	if (Taps <= 0 || Taps >= 2)
+	if constexpr (Taps <= 0 || Taps >= 2)
 		accum0 = _mm256_add_ps(accum0, accum1);
 
 	return accum0;
@@ -218,51 +218,51 @@ inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j,
 	__m256 accum3 = _mm256_setzero_ps();
 	__m256 x;
 
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = _mm256_load_ps(src_p0 + j);
 		x = _mm256_mul_ps(c0, x);
 		accum0 = Continue ? _mm256_add_ps(_mm256_load_ps(accum_p + j), x) : x;
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = _mm256_load_ps(src_p1 + j);
 		x = _mm256_mul_ps(c1, x);
 		accum1 = x;
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = _mm256_load_ps(src_p2 + j);
 		x = _mm256_mul_ps(c2, x);
 		accum0 = _mm256_add_ps(accum0, x);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = _mm256_load_ps(src_p3 + j);
 		x = _mm256_mul_ps(c3, x);
 		accum1 = _mm256_add_ps(accum1, x);
 	}
 
-	if (Taps >= 5) {
+	if constexpr (Taps >= 5) {
 		x = _mm256_load_ps(src_p4 + j);
 		x = _mm256_mul_ps(c4, x);
 		accum2 = x;
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x = _mm256_load_ps(src_p5 + j);
 		x = _mm256_mul_ps(c5, x);
 		accum3 = x;
 	}
-	if (Taps >= 7) {
+	if constexpr (Taps >= 7) {
 		x = _mm256_load_ps(src_p6 + j);
 		x = _mm256_mul_ps(c6, x);
 		accum2 = _mm256_add_ps(accum2, x);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x = _mm256_load_ps(src_p7 + j);
 		x = _mm256_mul_ps(c7, x);
 		accum3 = _mm256_add_ps(accum3, x);
 	}
 
-	accum0 = (Taps >= 2) ? _mm256_add_ps(accum0, accum1) : accum0;
-	accum2 = (Taps >= 6) ? _mm256_add_ps(accum2, accum3) : accum2;
-	accum0 = (Taps >= 4) ? _mm256_add_ps(accum0, accum2) : accum0;
+	if constexpr (Taps >= 2) accum0 = _mm256_add_ps(accum0, accum1);
+	if constexpr (Taps >= 6) accum2 = _mm256_add_ps(accum2, accum3);
+	if constexpr (Taps >= 4) accum0 = _mm256_add_ps(accum0, accum2);
 	return accum0;
 }
 

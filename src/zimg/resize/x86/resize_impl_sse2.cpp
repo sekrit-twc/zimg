@@ -149,7 +149,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		src_p += 64;
 	}
 
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k_end));
 
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
@@ -167,7 +167,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
 		x0 = _mm_load_si128((const __m128i *)(src_p + 16));
 		x1 = _mm_load_si128((const __m128i *)(src_p + 24));
@@ -183,7 +183,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 6) {
+	if constexpr (Tail >= 6) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
 		x0 = _mm_load_si128((const __m128i *)(src_p + 32));
 		x1 = _mm_load_si128((const __m128i *)(src_p + 40));
@@ -199,7 +199,7 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 8) {
+	if constexpr (Tail >= 8) {
 		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
 		x0 = _mm_load_si128((const __m128i *)(src_p + 48));
 		x1 = _mm_load_si128((const __m128i *)(src_p + 56));
@@ -318,7 +318,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 	__m128i accum_hi = _mm_setzero_si128();
 	__m128i x0, x1, xl, xh;
 
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x0 = _mm_load_si128((const __m128i *)(src_p0 + j));
 		x1 = _mm_load_si128((const __m128i *)(src_p1 + j));
 		x0 = _mm_add_epi16(x0, i16_min);
@@ -337,7 +337,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 			accum_hi = xh;
 		}
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x0 = _mm_load_si128((const __m128i *)(src_p2 + j));
 		x1 = _mm_load_si128((const __m128i *)(src_p3 + j));
 		x0 = _mm_add_epi16(x0, i16_min);
@@ -351,7 +351,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		accum_lo = _mm_add_epi32(accum_lo, xl);
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x0 = _mm_load_si128((const __m128i *)(src_p4 + j));
 		x1 = _mm_load_si128((const __m128i *)(src_p5 + j));
 		x0 = _mm_add_epi16(x0, i16_min);
@@ -365,7 +365,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		accum_lo = _mm_add_epi32(accum_lo, xl);
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x0 = _mm_load_si128((const __m128i *)(src_p6 + j));
 		x1 = _mm_load_si128((const __m128i *)(src_p7 + j));
 		x0 = _mm_add_epi16(x0, i16_min);
@@ -380,7 +380,7 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		accum_hi = _mm_add_epi32(accum_hi, xh);
 	}
 
-	if (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
+	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 0), accum_lo);
 		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 4), accum_hi);
 		return _mm_setzero_si128();
@@ -388,7 +388,6 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 		accum_lo = export_i30_u16(accum_lo, accum_hi);
 		accum_lo = _mm_min_epi16(accum_lo, lim);
 		accum_lo = _mm_sub_epi16(accum_lo, i16_min);
-
 		return accum_lo;
 	}
 }
@@ -421,7 +420,7 @@ void resize_line_v_u16_sse2(const int16_t * RESTRICT filter_data, const uint16_t
 	if (left != vec_left) {
 		out = XITER(vec_left - 8, XARGS);
 
-		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
+		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm_store_idxhi_epi16((__m128i *)(dst + vec_left - 8), out, left % 8);
 	}
 
@@ -435,7 +434,7 @@ void resize_line_v_u16_sse2(const int16_t * RESTRICT filter_data, const uint16_t
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
-		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
+		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm_store_idxlo_epi16((__m128i *)(dst + vec_right), out, right % 8);
 	}
 #undef XITER

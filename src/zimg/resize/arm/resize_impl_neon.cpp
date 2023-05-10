@@ -159,7 +159,7 @@ inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
 		src_p += 64;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = vld1q_s16(filter_coeffs + k_end);
 
 		c = vdupq_laneq_s16(coeffs, 0);
@@ -168,49 +168,49 @@ inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = vdupq_laneq_s16(coeffs, 1);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 8));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = vdupq_laneq_s16(coeffs, 2);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 16));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = vdupq_laneq_s16(coeffs, 3);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 24));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 5) {
+	if constexpr (Tail >= 5) {
 		c = vdupq_laneq_s16(coeffs, 4);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 32));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 6) {
+	if constexpr (Tail >= 6) {
 		c = vdupq_laneq_s16(coeffs, 5);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 40));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 7) {
+	if constexpr (Tail >= 7) {
 		c = vdupq_laneq_s16(coeffs, 6);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 48));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
 		accum_hi = vmlal_high_s16(accum_hi, x, c);
 	}
-	if (Tail >= 8) {
+	if constexpr (Tail >= 8) {
 		c = vdupq_laneq_s16(coeffs, 7);
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 56));
 		x = vaddq_s16(x, i16_min);
@@ -340,30 +340,30 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
 		src_p += 16;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = vld1q_f32(filter_coeffs + k_end);
 
 		c = vdupq_laneq_f32(coeffs, 0);
 		x = vld1q_f32(src_p + 0);
 		accum0 = vfmaq_f32(accum0, c, x);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = vdupq_laneq_f32(coeffs, 1);
 		x = vld1q_f32(src_p + 4);
 		accum1 = vfmaq_f32(accum1, c, x);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = vdupq_laneq_f32(coeffs, 2);
 		x = vld1q_f32(src_p + 8);
 		accum0 = vfmaq_f32(accum0, c, x);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = vdupq_laneq_f32(coeffs, 3);
 		x = vld1q_f32(src_p + 12);
 		accum1 = vfmaq_f32(accum1, c, x);
 	}
 
-	if (!Taps || Taps >= 2)
+	if constexpr (!Taps || Taps >= 2)
 		accum0 = vaddq_f32(accum0, accum1);
 
 	return accum0;
@@ -450,11 +450,11 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 	int32x4_t accum_hi = vdupq_n_s32(0);
 	int16x8_t x;
 
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p0 + j));
 		x = vaddq_s16(x, i16_min);
 
-		if (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
+		if constexpr (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
 			accum_lo = vmlal_s16(vld1q_s32(accum_p + j - accum_base + 0), vget_low_s16(c0), vget_low_s16(x));
 			accum_hi = vmlal_high_s16(vld1q_s32(accum_p + j - accum_base + 4), c0, x);
 		} else {
@@ -462,50 +462,50 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 			accum_hi = vmull_high_s16(c0, x);
 		}
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p1 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c1), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c1, x);
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p2 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c2), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c2, x);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p3 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c3), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c3, x);
 	}
-	if (Taps >= 5) {
+	if constexpr (Taps >= 5) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p4 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c4), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c4, x);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p5 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c5), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c5, x);
 	}
-	if (Taps >= 7) {
+	if constexpr (Taps >= 7) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p6 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c6), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c6, x);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x = vreinterpretq_s16_u16(vld1q_u16(src_p7 + j));
 		x = vaddq_s16(x, i16_min);
 		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c7), vget_low_s16(x));
 		accum_hi = vmlal_high_s16(accum_hi, c7, x);
 	}
 
-	if (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
+	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		vst1q_s32(accum_p + j - accum_base + 0, accum_lo);
 		vst1q_s32(accum_p + j - accum_base + 4, accum_hi);
 		return vdupq_n_u16(0);
@@ -607,40 +607,40 @@ inline FORCE_INLINE float32x4_t resize_line_v_f32_neon_xiter(unsigned j,
 	float32x4_t accum1 = vdupq_n_f32(0.0f);
 	float32x4_t x;
 
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = vld1q_f32(src_p0 + j);
 		accum0 = Continue ? vfmaq_f32(vld1q_f32(accum_p + j), c0, x) : vmulq_f32(c0, x);
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = vld1q_f32(src_p1 + j);
 		accum1 = vmulq_f32(c1, x);
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = vld1q_f32(src_p2 + j);
 		accum0 = vfmaq_f32(accum0, c2, x);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = vld1q_f32(src_p3 + j);
 		accum1 = vfmaq_f32(accum1, c3, x);
 	}
-	if (Taps >= 5) {
+	if constexpr (Taps >= 5) {
 		x = vld1q_f32(src_p4 + j);
 		accum0 = vfmaq_f32(accum0, c4, x);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x = vld1q_f32(src_p5 + j);
 		accum1 = vfmaq_f32(accum1, c5, x);
 	}
-	if (Taps >= 7) {
+	if constexpr (Taps >= 7) {
 		x = vld1q_f32(src_p6 + j);
 		accum0 = vfmaq_f32(accum0, c6, x);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x = vld1q_f32(src_p7 + j);
 		accum1 = vfmaq_f32(accum1, c7, x);
 	}
 
-	accum0 = (Taps >= 2) ? vaddq_f32(accum0, accum1) : accum0;
+	if constexpr (Taps >= 2) accum0 = vaddq_f32(accum0, accum1);
 	return accum0;
 }
 

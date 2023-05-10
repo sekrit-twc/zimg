@@ -233,30 +233,30 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 		src_p += 64;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = _mm512_broadcast_f32x4(_mm_load_ps(filter_coeffs + k_end));
 
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_AAAA);
 		x = Traits::load16(src_p + 0);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_BBBB);
 		x = Traits::load16(src_p + 16);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_CCCC);
 		x = Traits::load16(src_p + 32);
 		accum0 = _mm512_fmadd_ps(c, x, accum0);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm512_shuffle_ps(coeffs, coeffs, _MM_PERM_DDDD);
 		x = Traits::load16(src_p + 48);
 		accum1 = _mm512_fmadd_ps(c, x, accum1);
 	}
 
-	if (Taps <= 0 || Taps >= 2)
+	if constexpr (Taps <= 0 || Taps >= 2)
 		accum0 = _mm512_add_ps(accum0, accum1);
 
 	return accum0;
@@ -376,7 +376,7 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 		__m512 accum1 = _mm512_setzero_ps();
 		__m512 x, x0, x4, x8, x12, x16, coeffs;
 
-		if (Taps >= 1) {
+		if constexpr (Taps >= 1) {
 			x0 = Traits::load16(src + left + 0);
 
 			x = x0;
@@ -384,7 +384,7 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 0 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 2) {
+		if constexpr (Taps >= 2) {
 			x4 = Traits::load16(src + left + 4);
 
 			x = mm512_alignr_epi8_ps(x4, x0, 4);
@@ -392,25 +392,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 1 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 3) {
+		if constexpr (Taps >= 3) {
 			x = mm512_alignr_epi8_ps(x4, x0, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 2 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 4) {
+		if constexpr (Taps >= 4) {
 			x = mm512_alignr_epi8_ps(x4, x0, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 3 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 5) {
+		if constexpr (Taps >= 5) {
 			x = x4;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 4 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 6) {
+		if constexpr (Taps >= 6) {
 			x8 = Traits::load16(src + left + 8);
 
 			x = mm512_alignr_epi8_ps(x8, x4, 4);
@@ -418,25 +418,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 5 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 7) {
+		if constexpr (Taps >= 7) {
 			x = mm512_alignr_epi8_ps(x8, x4, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 6 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 8) {
+		if constexpr (Taps >= 8) {
 			x = mm512_alignr_epi8_ps(x8, x4, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 7 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 9) {
+		if constexpr (Taps >= 9) {
 			x = x8;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 8 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 10) {
+		if constexpr (Taps >= 10) {
 			x12 = Traits::load16(src + left + 12);
 
 			x = mm512_alignr_epi8_ps(x12, x8, 4);
@@ -444,25 +444,25 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 9 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 11) {
+		if constexpr (Taps >= 11) {
 			x = mm512_alignr_epi8_ps(x12, x8, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 10 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 12) {
+		if constexpr (Taps >= 12) {
 			x = mm512_alignr_epi8_ps(x12, x8, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 11 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 13) {
+		if constexpr (Taps >= 13) {
 			x = x12;
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 12 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 14) {
+		if constexpr (Taps >= 14) {
 			x16 = Traits::load16(src + left + 16);
 
 			x = mm512_alignr_epi8_ps(x16, x12, 4);
@@ -470,13 +470,13 @@ void resize_line_h_perm_fp_avx512(const unsigned * RESTRICT permute_left, const 
 			coeffs = _mm512_load_ps(data + 13 * 16);
 			accum1 = _mm512_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 15) {
+		if constexpr (Taps >= 15) {
 			x = mm512_alignr_epi8_ps(x16, x12, 8);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 14 * 16);
 			accum0 = _mm512_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 16) {
+		if constexpr (Taps >= 16) {
 			x = mm512_alignr_epi8_ps(x16, x12, 12);
 			x = _mm512_permutexvar_ps(mask, x);
 			coeffs = _mm512_load_ps(data + 15 * 16);
@@ -549,40 +549,43 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 	__m512 accum1 = _mm512_setzero_ps();
 	__m512 x;
 
-	if (Taps >= 0) {
+	if constexpr (Taps >= 0) {
 		x = Traits::load16(src_p0 + j);
-		accum0 = Continue ? _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j)) : _mm512_mul_ps(c0, x);
+		if constexpr (Continue)
+			accum0 = _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j));
+		else
+			accum0 = _mm512_mul_ps(c0, x);
 	}
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = Traits::load16(src_p1 + j);
 		accum1 = _mm512_mul_ps(c1, x);
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = Traits::load16(src_p2 + j);
 		accum0 = _mm512_fmadd_ps(c2, x, accum0);
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = Traits::load16(src_p3 + j);
 		accum1 = _mm512_fmadd_ps(c3, x, accum1);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = Traits::load16(src_p4 + j);
 		accum0 = _mm512_fmadd_ps(c4, x, accum0);
 	}
-	if (Taps >= 5) {
+	if constexpr (Taps >= 5) {
 		x = Traits::load16(src_p5 + j);
 		accum1 = _mm512_fmadd_ps(c5, x, accum1);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x = Traits::load16(src_p6 + j);
 		accum0 = _mm512_fmadd_ps(c6, x, accum0);
 	}
-	if (Taps >= 7) {
+	if constexpr (Taps >= 7) {
 		x = Traits::load16(src_p7 + j);
 		accum1 = _mm512_fmadd_ps(c7, x, accum1);
 	}
 
-	accum0 = (Taps >= 2) ? _mm512_add_ps(accum0, accum1) : accum0;
+	if constexpr (Taps >= 2) accum0 = _mm512_add_ps(accum0, accum1);
 	return accum0;
 }
 
