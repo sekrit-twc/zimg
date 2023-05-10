@@ -543,7 +543,7 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
                                                          const __m512 &c4, const __m512 &c5, const __m512 &c6, const __m512 &c7)
 {
 	typedef typename Traits::pixel_type pixel_type;
-	static_assert(std::is_same<pixel_type, T>::value, "must not specify T");
+	static_assert(std::is_same_v<pixel_type, T>, "must not specify T");
 
 	__m512 accum0 = _mm512_setzero_ps();
 	__m512 accum1 = _mm512_setzero_ps();

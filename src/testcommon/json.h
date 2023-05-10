@@ -118,7 +118,7 @@ public:
 	explicit Value(Object val) : m_tag{ OBJECT } { construct(std::move(val)); }
 	explicit Value(bool val) noexcept : m_tag{ BOOL_ } { construct(val); }
 
-	template <class T, class = std::enable_if_t<std::is_integral<T>::value>>
+	template <class T, class = std::enable_if_t<std::is_integral_v<T>>>
 	explicit Value(T val) noexcept : Value{ static_cast<double>(val) } {}
 
 	Value(const Value &other);

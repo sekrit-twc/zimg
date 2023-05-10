@@ -242,8 +242,8 @@ void error_diffusion_wf_avx2(const Buffer<const T> &src, const Buffer<U> &dst, u
 	typedef typename src_traits::type src_type;
 	typedef typename dst_traits::type dst_type;
 
-	static_assert(std::is_same<T, src_type>::value, "wrong type");
-	static_assert(std::is_same<U, dst_type>::value, "wrong type");
+	static_assert(std::is_same_v<T, src_type>);
+	static_assert(std::is_same_v<U, dst_type>);
 
 	const __m256 err_left_w = _mm256_set1_ps(7.0f / 16.0f);
 	const __m256 err_top_right_w = _mm256_set1_ps(3.0f / 16.0f);

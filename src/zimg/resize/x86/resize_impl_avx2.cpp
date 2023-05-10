@@ -1039,7 +1039,7 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
 	typedef typename Traits::pixel_type pixel_type;
-	static_assert(std::is_same<pixel_type, T>::value, "must not specify T");
+	static_assert(std::is_same_v<pixel_type, T>, "must not specify T");
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
