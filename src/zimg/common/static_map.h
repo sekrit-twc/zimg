@@ -4,9 +4,9 @@
 #define ZIMG_STATIC_MAP_H_
 
 #include <cstddef>
-#include <cstring>
 #include <functional>
 #include <initializer_list>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -124,15 +124,8 @@ public:
 	SM_CONSTEXPR_14 value_compare value_comp() const;
 };
 
-struct _static_map_strcmp {
-	bool operator()(const char *lhs, const char *rhs) const
-	{
-		return std::strcmp(lhs, rhs) < 0;
-	}
-};
-
 template <class T, size_t N>
-using static_string_map = static_map<const char *, T, N, _static_map_strcmp>;
+using static_string_map = static_map<std::string_view, T, N>;
 
 } // namespace zimg
 
