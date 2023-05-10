@@ -5,6 +5,7 @@
 #include <locale>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include "json.h"
 
@@ -36,21 +37,21 @@ private:
 	tag_type m_tag;
 	int m_line;
 	int m_col;
-	std::string m_str;
+	std::string_view m_str;
 public:
 	Token() noexcept : m_tag{ EMPTY }, m_line{}, m_col{} {}
 
-	Token(tag_type tag, int line, int col, std::string str = {}) :
+	Token(tag_type tag, int line, int col, std::string_view str = {}) :
 		m_tag{ tag },
 		m_line{ line },
 		m_col{ col },
-		m_str{ std::move(str) }
+		m_str{ str }
 	{}
 
 	tag_type tag() const noexcept { return m_tag; }
 	int line() const noexcept { return m_line; }
 	int col() const noexcept { return m_col; }
-	const std::string &str() const noexcept { return m_str; }
+	std::string_view str() const noexcept { return m_str; }
 };
 
 template <class ForwardIt>
@@ -185,7 +186,7 @@ std::pair<Token, TracingIterator<ForwardIt>> match_string_literal(TracingIterato
 	assert(*pos == '"');
 	++pos;
 
-	return{ { Token::STRING_LITERAL, line, col, { first, pos } }, pos };
+	return{ { Token::STRING_LITERAL, line, col, { &*first, static_cast<size_t>(&*pos - &*first) }}, pos};
 }
 
 template <class ForwardIt>
@@ -212,17 +213,17 @@ std::pair<Token, TracingIterator<ForwardIt>> match_number_literal(TracingIterato
 		pos = skip_while(first, last, is_json_digit);
 	}
 
-	return{ { Token::NUMBER_LITERAL, line, col, { first, pos } }, pos };
+	return{ { Token::NUMBER_LITERAL, line, col, { &*first, static_cast<size_t>(&*pos - &*first) }}, pos };
 }
 
 template <class ForwardIt>
 std::pair<Token, TracingIterator<ForwardIt>> match_keyword(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
 {
-	static const std::string keyword_infinity{ "Infinity" };
-	static const std::string keyword_nan{ "NaN" };
-	static const std::string keyword_true{ "true" };
-	static const std::string keyword_false{ "false" };
-	static const std::string keyword_null{ "null" };
+	static constexpr std::string_view keyword_infinity{ "Infinity" };
+	static constexpr std::string_view keyword_nan{ "NaN" };
+	static constexpr std::string_view keyword_true{ "true" };
+	static constexpr std::string_view keyword_false{ "false" };
+	static constexpr std::string_view keyword_null{ "null" };
 
 	int line = first.line();
 	int col = first.col();
@@ -377,7 +378,7 @@ std::string decode_string_literal(const Token &tok)
 
 double decode_number_literal(const Token &tok)
 {
-	std::istringstream ss{ tok.str() };
+	std::istringstream ss{ std::string{ tok.str() } };
 	double x = 0.0;
 
 	ss.imbue(std::locale::classic());
