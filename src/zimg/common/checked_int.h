@@ -11,15 +11,12 @@
 namespace zimg {
 
 template <class From, class To, class T = void>
-using _enable_if_convertible_t = std::enable_if_t<std::is_convertible<From, To>::value, T>;
-
-template <class T, class U>
-using _common_type_t = std::common_type_t<T, U>;
+using _enable_if_convertible_t = std::enable_if_t<std::is_convertible_v<From, To>, T>;
 
 // Integer wrapper that throws on overflow.
 template <class T>
 class checked_integer {
-	static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value, "must be built-in integer type");
+	static_assert(std::is_integral_v<T> && !std::is_same_v<T, bool>, "must be built-in integer type");
 
 	T m_value;
 public:
@@ -89,7 +86,7 @@ public:
 };
 
 template <class T, class U>
-using _checked_promoted_t = checked_integer<_common_type_t<T, U>>;
+using _checked_promoted_t = checked_integer<std::common_type_t<T, U>>;
 
 // (1) Returns the value of the argument.
 template <class T>
@@ -459,7 +456,7 @@ struct _checked_arithmetic<T, true> {
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::false_type, std::false_type)
 {
-	typedef _common_type_t<T, U> common_type;
+	typedef std::common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -471,7 +468,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::false_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::false_type, std::true_type)
 {
-	typedef _common_type_t<T, U> common_type;
+	typedef std::common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (value < U() || common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -483,7 +480,7 @@ T _checked_integer_cast(const U &value, std::false_type, std::true_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::true_type, std::false_type)
 {
-	typedef _common_type_t<T, U> common_type;
+	typedef std::common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) > common_type(std::numeric_limits<T>::max()))
@@ -495,7 +492,7 @@ T _checked_integer_cast(const U &value, std::true_type, std::false_type)
 template <class T, class U>
 T _checked_integer_cast(const U &value, std::true_type, std::true_type)
 {
-	typedef _common_type_t<T, U> common_type;
+	typedef std::common_type_t<T, U> common_type;
 
 	// coverity[result_independent_of_operands]
 	if (common_type(value) < common_type(std::numeric_limits<T>::min()) ||

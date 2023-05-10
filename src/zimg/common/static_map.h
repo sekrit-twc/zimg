@@ -12,14 +12,11 @@
 
 namespace zimg {
 
-template <class...>
-using _static_map_void_t = void;
-
 template <class Comp, class K, class = void>
 struct _static_map_is_transparent : std::false_type {};
 
 template <class Comp, class K>
-struct _static_map_is_transparent<Comp, K, _static_map_void_t<typename Comp::is_transparent>> : std::true_type {};
+struct _static_map_is_transparent<Comp, K, std::void_t<typename Comp::is_transparent>> : std::true_type {};
 
 // Read-only associative container that contains key-value pairs with multiple
 // entries with the same key permitted. Unlike std::map and std::unordered_map,
