@@ -9,20 +9,6 @@ on:
       - master
 
 jobs:
-  build_gcc_legacy:
-    runs-on: ubuntu-18.04
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - run: sudo apt-add-repository ppa:ubuntu-toolchain-r/test
-    - run: sudo apt install g++-5
-    - run: ./.travis-script.sh
-      env:
-        CC: gcc-5
-        CXX: g++-5
-
   build_gcc:
     runs-on: ubuntu-20.04
 
