@@ -38,7 +38,7 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 		float d = dither[(dither_offset + j) & dither_mask];
 
 		x += d;
-		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
+		x = std::clamp(x, 0.0f, static_cast<float>(1UL << bits) - 1);
 
 		dst_p[j] = static_cast<U>(std::lrint(x));
 	}
@@ -66,7 +66,7 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		err += error_top_p[j_err - 1] * (1.0f / 16.0f);
 
 		x += err;
-		x = std::min(std::max(x, 0.0f), static_cast<float>(1UL << bits) - 1);
+		x = std::clamp(x, 0.0f, static_cast<float>(1UL << bits) - 1);
 
 		U q = static_cast<U>(std::lrint(x));
 

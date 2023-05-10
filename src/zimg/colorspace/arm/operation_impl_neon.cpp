@@ -41,7 +41,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = left; j < vec_left; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
 		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
 		float32x4_t x;
@@ -61,7 +61,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = vec_right; j < right; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
 		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 

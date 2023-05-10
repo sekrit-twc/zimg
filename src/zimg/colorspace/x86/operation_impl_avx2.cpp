@@ -32,7 +32,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, _mm256_castps256_ps128(scale), _mm256_castps256_ps128(offset)));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		__m256 x;
@@ -49,7 +49,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, _mm256_castps256_ps128(scale), _mm256_castps256_ps128(offset)));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 

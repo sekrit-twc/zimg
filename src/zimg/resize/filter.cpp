@@ -284,7 +284,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 					real_pos = xpos;
 
 				// Clamp the position if it is still out of bounds.
-				real_pos = std::min(std::max(real_pos, 0.0), std::nextafter(src_dim, -INFINITY));
+				real_pos = std::clamp(real_pos, 0.0, std::nextafter(src_dim, -INFINITY));
 
 				size_t idx = static_cast<size_t>(std::floor(real_pos));
 				m[i][idx] += f((xpos - pos) * step) / total;
