@@ -15,8 +15,7 @@
 
 #include "common/arm/neon_util.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -936,7 +935,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_neon(const FilterConte
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_ARM

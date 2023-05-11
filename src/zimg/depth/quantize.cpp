@@ -1,7 +1,6 @@
 #include "quantize.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -144,5 +143,4 @@ uint16_t float_to_half(float f32) noexcept
 #undef FLOAT_HALF_MANT_SHIFT
 #undef FLOAT_HALF_EXP_ADJUST
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth

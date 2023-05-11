@@ -6,10 +6,10 @@
 #include "graphengine/filter.h"
 
 namespace zimg {
-
 enum class PixelType;
+}
 
-namespace graph {
+namespace zimg::graph {
 
 class FilterBase : public graphengine::Filter {
 protected:
@@ -32,7 +32,6 @@ protected:
 	pair_unsigned get_col_deps(unsigned left, unsigned right) const noexcept override final { return{ left, right }; }
 };
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph
 
 #endif // ZIMG_GRAPH_FILTER_BASE_H_

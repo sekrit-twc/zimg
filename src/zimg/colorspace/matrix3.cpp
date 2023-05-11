@@ -1,8 +1,7 @@
 #include <cstddef>
 #include "matrix3.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -107,5 +106,4 @@ Matrix3x3 transpose(const Matrix3x3 &m) noexcept
 	return ret;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

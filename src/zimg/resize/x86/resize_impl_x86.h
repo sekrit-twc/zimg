@@ -12,11 +12,11 @@ class Filter;
 }
 
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace resize {
+namespace zimg::resize {
 
 struct FilterContext;
 
@@ -45,8 +45,7 @@ DECLARE_IMPL_V(avx512_vnni)
 std::unique_ptr<graphengine::Filter> create_resize_impl_h_x86(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu);
 std::unique_ptr<graphengine::Filter> create_resize_impl_v_x86(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_X86_RESIZE_IMPL_X86_H_
 

@@ -34,8 +34,7 @@
 } while (0)
 
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 namespace {
 
@@ -1294,5 +1293,4 @@ std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
 	error::throw_<error::InternalError>(e.what());
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

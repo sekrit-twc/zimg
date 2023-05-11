@@ -8,8 +8,7 @@
 #define mm512_dpwssd_epi32(src, a, b) _mm512_dpwssd_epi32((src), (a), (b))
 #include "resize_impl_avx512_common.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 std::unique_ptr<graphengine::Filter> create_resize_impl_h_avx512_vnni(const FilterContext &context, unsigned height, PixelType type, unsigned depth)
 {
@@ -38,7 +37,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx512_vnni(const Filt
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_X86_AVX512

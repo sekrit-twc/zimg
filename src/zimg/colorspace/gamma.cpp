@@ -7,8 +7,7 @@
 #include "colorspace.h"
 #include "gamma.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace{
 
 namespace {
 
@@ -382,5 +381,4 @@ EnsureSinglePrecision::EnsureSinglePrecision() noexcept : m_fpu_word(_control87(
 EnsureSinglePrecision::~EnsureSinglePrecision() { _control87(m_fpu_word, _MCW_PC); }
 #endif
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

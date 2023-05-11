@@ -10,8 +10,7 @@
 #include "graph.h"
 #include "operation.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -243,5 +242,4 @@ std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in,
 	return path;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

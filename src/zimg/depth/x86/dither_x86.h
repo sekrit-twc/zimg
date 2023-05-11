@@ -12,8 +12,7 @@ namespace graphengine {
 class Filter;
 }
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 #define DECLARE_ORDERED_DITHER(x, cpu) \
 void ordered_dither_##x##_##cpu(const float *dither, unsigned dither_offset, unsigned dither_mask, \
@@ -57,8 +56,7 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width,
 
 std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_X86_DITHER_X86_H_
 

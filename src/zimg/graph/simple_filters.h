@@ -8,10 +8,10 @@
 #include "filter_base.h"
 
 namespace zimg {
-
 enum class PixelType;
+}
 
-namespace graph {
+namespace zimg::graph{
 
 // Copies a subrectangle.
 class CopyRectFilter : public graph::FilterBase {
@@ -67,7 +67,6 @@ public:
 	             unsigned i, unsigned left, unsigned right, void *, void *) const noexcept override;
 };
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph
 
 #endif // ZIMG_GRAPH_SIMPLE_FILTERS_H_

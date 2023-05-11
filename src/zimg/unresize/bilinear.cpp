@@ -8,8 +8,7 @@
 #include "common/zassert.h"
 #include "bilinear.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 namespace {
 
@@ -166,5 +165,4 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 	return ctx;
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize

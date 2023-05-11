@@ -11,8 +11,7 @@
 
 #include "common/x86/avx512_util.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -351,7 +350,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferF
 	return nullptr;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86_AVX512

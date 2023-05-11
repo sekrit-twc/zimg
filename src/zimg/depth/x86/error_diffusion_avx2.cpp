@@ -18,8 +18,7 @@
 
 #include "common/x86/avx_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -548,7 +547,6 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width,
 	return std::make_unique<ErrorDiffusionAVX2>(width, height, pixel_in, pixel_out);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

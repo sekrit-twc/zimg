@@ -14,8 +14,7 @@
 
 #include "common/x86/sse_util.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 namespace {
 
@@ -235,7 +234,6 @@ std::unique_ptr<graphengine::Filter> create_unresize_impl_v_sse(const BilinearCo
 	return std::make_unique<UnresizeImplV_F32_SSE>(context, width);
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize
 
 #endif

@@ -12,8 +12,7 @@
 #include "common/zassert.h"
 #include "filter.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -304,5 +303,4 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	}
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize

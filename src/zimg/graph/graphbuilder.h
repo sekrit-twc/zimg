@@ -18,26 +18,26 @@ class SubGraph;
 
 
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace depth {
+namespace zimg::depth{
 enum class DitherType;
 struct DepthConversion;
 }
 
-namespace resize {
+namespace zimg::resize {
 class Filter;
 struct ResizeConversion;
 }
 
-namespace unresize {
+namespace zimg::unresize {
 struct UnresizeConversion;
 }
 
 
-namespace graph {
+namespace zimg::graph {
 
 class FilterGraph2;
 
@@ -248,7 +248,6 @@ public:
 	std::unique_ptr<FilterGraph> build_graph();
 };
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph
 
 #endif // ZIMG_GRAPH_GRAPHBUILDER_H_

@@ -17,8 +17,7 @@
 #include "common/x86/sse2_util.h"
 #include "common/x86/avx512_util.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 namespace {
 
 inline FORCE_INLINE __m256i export_i30_u16(__m512i x)
@@ -889,7 +888,6 @@ public:
 };
 
 } // namespace
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_X86_RESIZE_IMPL_AVX512_COMMON_H_

@@ -8,8 +8,7 @@
 #include "common/x86/sse2_util.h"
 #include "common/x86/avx2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -209,7 +208,6 @@ void ordered_dither_f2w_avx2(const float *dither, unsigned dither_offset, unsign
 	ordered_dither_avx2_impl<LoadF32, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

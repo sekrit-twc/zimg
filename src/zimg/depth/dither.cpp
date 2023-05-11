@@ -21,8 +21,7 @@
   #include "arm/dither_arm.h"
 #endif
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -435,5 +434,4 @@ DepthConversion::result create_dither(DitherType type, unsigned width, unsigned 
 	return res;
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth

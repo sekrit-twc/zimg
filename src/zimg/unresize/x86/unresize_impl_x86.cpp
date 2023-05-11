@@ -5,8 +5,7 @@
 #include "graphengine/filter.h"
 #include "unresize_impl_x86.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 std::unique_ptr<graphengine::Filter> create_unresize_impl_h_x86(const BilinearContext &context, unsigned height, PixelType type, CPUClass cpu)
 {
@@ -40,7 +39,6 @@ std::unique_ptr<graphengine::Filter> create_unresize_impl_v_x86(const BilinearCo
 	return ret;
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize
 
 #endif // ZIMG_X86

@@ -7,8 +7,7 @@
 
 #include "depth/depth_convert.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 #define DECLARE_LEFT_SHIFT(x, cpu) \
 void left_shift_##x##_##cpu(const void *src, void *dst, unsigned shift, unsigned left, unsigned right)
@@ -36,8 +35,7 @@ depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu);
 
 bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_ARM_DEPTH_CONVERT_ARM_H_
 

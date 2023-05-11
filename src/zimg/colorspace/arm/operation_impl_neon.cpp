@@ -19,8 +19,7 @@
   #define vcvtnq_s32_f32_ vcvtnq_s32_f32
 #endif
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -263,7 +262,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFun
 	return std::make_unique<ToLinearLutOperationNeon>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_ARM

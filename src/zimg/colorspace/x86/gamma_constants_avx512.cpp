@@ -5,8 +5,7 @@
 #include <cmath>
 #include "gamma_constants_avx512.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 namespace avx512constants {
 
 const float Rec1886EOTF::horner[6] = {
@@ -317,7 +316,6 @@ float st_2084_inverse_eotf(float x)
 }
 
 } // namespace avx512constants
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86_AVX512

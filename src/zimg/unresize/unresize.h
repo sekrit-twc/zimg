@@ -10,13 +10,12 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace unresize {
+namespace zimg::unresize {
 
 /**
  * Unresize: reverses the effect of the bilinear scaling method.
@@ -114,7 +113,6 @@ struct UnresizeConversion {
 	filter_pair create() const;
 };
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize
 
 #endif // ZIMG_UNRESIZE_UNRESIZE_H_

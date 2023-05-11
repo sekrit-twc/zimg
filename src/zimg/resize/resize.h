@@ -10,13 +10,12 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace resize {
+namespace zimg::resize {
 
 class Filter;
 
@@ -44,7 +43,6 @@ struct ResizeConversion {
 	filter_pair create() const;
 };
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_RESIZE_H_

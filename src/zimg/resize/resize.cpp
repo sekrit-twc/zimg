@@ -5,8 +5,7 @@
 #include "resize.h"
 #include "resize_impl.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -102,5 +101,4 @@ auto ResizeConversion::create() const -> filter_pair try
 	error::throw_<error::OutOfMemory>();
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize

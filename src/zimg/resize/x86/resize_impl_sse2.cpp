@@ -15,8 +15,7 @@
 
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -589,7 +588,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_sse2(const FilterConte
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_X86

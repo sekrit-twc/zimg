@@ -10,8 +10,7 @@
 #include "colorspace/operation.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -147,7 +146,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFun
 	return std::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

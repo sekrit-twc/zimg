@@ -5,15 +5,13 @@
 
 #include <cstdint>
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 constexpr unsigned BLUE_NOISE_LEN = 64;
 constexpr unsigned BLUE_NOISE_SCALE = 255;
 
 extern const uint8_t blue_noise_table[BLUE_NOISE_LEN][BLUE_NOISE_LEN];
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_BLUE_H_
