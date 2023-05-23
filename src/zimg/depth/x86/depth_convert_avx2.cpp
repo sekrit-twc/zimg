@@ -11,8 +11,7 @@
 #include "common/x86/avx_util.h"
 #include "common/x86/avx2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -231,7 +230,6 @@ void depth_convert_w2f_avx2(const void *src, void *dst, float scale, float offse
 	depth_convert_avx2_impl<LoadU16, StoreF32>(src, dst, scale, offset, left, right);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

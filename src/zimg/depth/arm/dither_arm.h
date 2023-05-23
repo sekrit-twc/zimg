@@ -8,16 +8,7 @@
 #include <memory>
 #include "depth/dither.h"
 
-namespace zimg {
-
-namespace graph {
-
-class ImageFilter;
-
-} // namespace graph
-
-
-namespace depth {
+namespace zimg::depth {
 
 #define DECLARE_ORDERED_DITHER(x, cpu) \
 void ordered_dither_##x##_##cpu(const float *dither, unsigned dither_offset, unsigned dither_mask, \
@@ -40,8 +31,7 @@ dither_f16c_func select_dither_f16c_func_arm(CPUClass cpu);
 
 bool needs_dither_f16c_func_arm(CPUClass cpu);
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_ARM_DITHER_ARM_H_
 

@@ -3,8 +3,7 @@
 #include "common/pixel.h"
 #include "simple_filters.h"
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 CopyRectFilter::CopyRectFilter(unsigned left, unsigned top, unsigned width, unsigned height, PixelType type) :
 	m_left{ left },
@@ -83,7 +82,7 @@ void PremultiplyFilter::process(const graphengine::BufferDescriptor in[2], const
 
 	for (unsigned j = left; j < right; ++j) {
 		float a = alpha[j];
-		a = std::min(std::max(a, 0.0f), 1.0f);
+		a = std::clamp(a, 0.0f, 1.0f);
 		dst_p[j] = src_p[j] * alpha[j];
 	}
 }
@@ -105,10 +104,9 @@ void UnpremultiplyFilter::process(const graphengine::BufferDescriptor in[2], con
 
 	for (unsigned j = left; j < right; ++j) {
 		float a = alpha[j];
-		a = std::min(std::max(a, 0.0f), 1.0f);
+		a = std::clamp(a, 0.0f, 1.0f);
 		dst_p[j] = a == 0.0f ? 0.0f : src_p[j] / a;
 	}
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

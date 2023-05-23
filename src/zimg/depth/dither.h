@@ -10,15 +10,12 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
-
 struct PixelFormat;
+}
 
-
-namespace depth {
+namespace zimg::depth {
 
 enum class DitherType;
 
@@ -28,7 +25,6 @@ typedef void (*dither_f16c_func)(const void *src, void *dst, unsigned left, unsi
 
 DepthConversion::result create_dither(DitherType type, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, const bool planes[4], CPUClass cpu);
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_DITHER_H_

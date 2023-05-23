@@ -8,8 +8,7 @@
 #include "common/zassert.h"
 #include "bilinear.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 namespace {
 
@@ -71,8 +70,8 @@ RowMatrix<double> bilinear_weights(unsigned in, unsigned out, double shift)
 	double rightmost = in - 0.5 + shift;
 
 	// Indices corresponding to the samples stored at leftmost and rightmost.
-	unsigned leftmost_idx = static_cast<unsigned>(std::min(std::max(std::floor(leftmost), 0.0), in - 1.0));
-	unsigned rightmost_idx = static_cast<unsigned>(std::min(std::max(std::floor(rightmost), 0.0), in - 1.0));
+	unsigned leftmost_idx = static_cast<unsigned>(std::clamp(std::floor(leftmost), 0.0, in - 1.0));
+	unsigned rightmost_idx = static_cast<unsigned>(std::clamp(std::floor(rightmost), 0.0, in - 1.0));
 
 	for (unsigned i = 0; i < out; ++i) {
 		// Position of output sample on input grid.
@@ -166,5 +165,4 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 	return ctx;
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize

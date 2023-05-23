@@ -19,9 +19,7 @@ namespace graphengine {
 class Graph;
 }
 
-
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 class FilterGraph : public zimg_filter_graph {
 	typedef int (*callback_type)(void *user, unsigned i, unsigned left, unsigned right);
@@ -59,7 +57,6 @@ public:
 	void process(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst, void *tmp, callback_type unpack_cb, void *unpack_user, callback_type pack_cb, void *pack_user) const;
 };
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph
 
 #endif // ZIMG_GRAPH_FILTERGRAPH_H_

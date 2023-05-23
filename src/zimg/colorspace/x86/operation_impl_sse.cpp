@@ -8,8 +8,7 @@
 
 #include "common/x86/sse_util.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -120,7 +119,6 @@ std::unique_ptr<Operation> create_matrix_operation_sse(const Matrix3x3 &m)
 	return std::make_unique<MatrixOperationSSE>(m);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

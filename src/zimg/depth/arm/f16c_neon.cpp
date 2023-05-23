@@ -8,8 +8,7 @@
 
 #include "common/arm/neon_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 #if !defined(_MSC_VER) || defined(_M_ARM64)
 void f16c_half_to_float_neon(const void *src, void *dst, unsigned left, unsigned right)
@@ -61,7 +60,6 @@ void f16c_float_to_half_neon(const void *src, void *dst, unsigned left, unsigned
 }
 #endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_ARM

@@ -6,8 +6,7 @@
 #include "dither_arm.h"
 #include "f16c_arm.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -91,7 +90,6 @@ bool needs_dither_f16c_func_arm(CPUClass cpu)
 #endif
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_ARM

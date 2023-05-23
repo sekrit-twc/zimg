@@ -15,8 +15,7 @@
 
 #include "common/x86/sse_util.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -86,7 +85,7 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 		src_p += 16;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = _mm_load_ps(filter_coeffs + k_end);
 
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
@@ -94,26 +93,26 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
 		x = _mm_load_ps(src_p + 4);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
 		x = _mm_load_ps(src_p + 8);
 		x = _mm_mul_ps(c, x);
 		accum0 = _mm_add_ps(accum0, x);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
 		x = _mm_load_ps(src_p + 12);
 		x = _mm_mul_ps(c, x);
 		accum1 = _mm_add_ps(accum1, x);
 	}
 
-	if (Taps <= 0 || Taps >= 2)
+	if constexpr (Taps <= 0 || Taps >= 2)
 		accum0 = _mm_add_ps(accum0, accum1);
 
 	return accum0;
@@ -190,22 +189,22 @@ inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j,
 	__m128 accum1 = _mm_setzero_ps();
 	__m128 x;
 
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = _mm_load_ps(src_p0 + j);
 		x = _mm_mul_ps(c0, x);
 		accum0 = Continue ? _mm_add_ps(_mm_load_ps(accum_p + j), x) : x;
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = _mm_load_ps(src_p1 + j);
 		x = _mm_mul_ps(c1, x);
 		accum1 = x;
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = _mm_load_ps(src_p2 + j);
 		x = _mm_mul_ps(c2, x);
 		accum0 = _mm_add_ps(accum0, x);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = _mm_load_ps(src_p3 + j);
 		x = _mm_mul_ps(c3, x);
 		accum1 = _mm_add_ps(accum1, x);
@@ -377,7 +376,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_sse(const FilterContex
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_X86

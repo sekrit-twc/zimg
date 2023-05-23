@@ -3,8 +3,7 @@
 #ifndef ZIMG_COLORSPACE_GAMMA_H_
 #define ZIMG_COLORSPACE_GAMMA_H_
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 enum class TransferCharacteristics;
 
@@ -96,7 +95,6 @@ struct EnsureSinglePrecision {
 };
 #endif
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_GAMMA_H_

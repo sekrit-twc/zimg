@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <climits>
 #include <iterator>
-#include <locale>
-#include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include "json.h"
 
@@ -36,21 +36,21 @@ private:
 	tag_type m_tag;
 	int m_line;
 	int m_col;
-	std::string m_str;
+	std::string_view m_str;
 public:
 	Token() noexcept : m_tag{ EMPTY }, m_line{}, m_col{} {}
 
-	Token(tag_type tag, int line, int col, std::string str = {}) :
+	Token(tag_type tag, int line, int col, std::string_view str = {}) :
 		m_tag{ tag },
 		m_line{ line },
 		m_col{ col },
-		m_str{ std::move(str) }
+		m_str{ str }
 	{}
 
 	tag_type tag() const noexcept { return m_tag; }
 	int line() const noexcept { return m_line; }
 	int col() const noexcept { return m_col; }
-	const std::string &str() const noexcept { return m_str; }
+	std::string_view str() const noexcept { return m_str; }
 };
 
 template <class ForwardIt>
@@ -185,7 +185,7 @@ std::pair<Token, TracingIterator<ForwardIt>> match_string_literal(TracingIterato
 	assert(*pos == '"');
 	++pos;
 
-	return{ { Token::STRING_LITERAL, line, col, { first, pos } }, pos };
+	return{ { Token::STRING_LITERAL, line, col, { &*first, static_cast<size_t>(&*pos - &*first) }}, pos};
 }
 
 template <class ForwardIt>
@@ -212,17 +212,17 @@ std::pair<Token, TracingIterator<ForwardIt>> match_number_literal(TracingIterato
 		pos = skip_while(first, last, is_json_digit);
 	}
 
-	return{ { Token::NUMBER_LITERAL, line, col, { first, pos } }, pos };
+	return{ { Token::NUMBER_LITERAL, line, col, { &*first, static_cast<size_t>(&*pos - &*first) }}, pos };
 }
 
 template <class ForwardIt>
 std::pair<Token, TracingIterator<ForwardIt>> match_keyword(TracingIterator<ForwardIt> first, TracingIterator<ForwardIt> last)
 {
-	static const std::string keyword_infinity{ "Infinity" };
-	static const std::string keyword_nan{ "NaN" };
-	static const std::string keyword_true{ "true" };
-	static const std::string keyword_false{ "false" };
-	static const std::string keyword_null{ "null" };
+	static constexpr std::string_view keyword_infinity{ "Infinity" };
+	static constexpr std::string_view keyword_nan{ "NaN" };
+	static constexpr std::string_view keyword_true{ "true" };
+	static constexpr std::string_view keyword_false{ "false" };
+	static constexpr std::string_view keyword_null{ "null" };
 
 	int line = first.line();
 	int col = first.col();
@@ -377,14 +377,12 @@ std::string decode_string_literal(const Token &tok)
 
 double decode_number_literal(const Token &tok)
 {
-	std::istringstream ss{ tok.str() };
+	const char *first = tok.str().data();
+	const char *last = tok.str().data() + tok.str().size();
 	double x = 0.0;
 
-	ss.imbue(std::locale::classic());
-
-	if (!(ss >> x))
-		throw JsonError{ "bad number literal", tok.line(), tok.col() };
-	if (ss.peek() != std::istringstream::traits_type::eof())
+	auto result = std::from_chars(first, last, x);
+	if (result.ptr != last)
 		throw JsonError{ "bad number literal", tok.line(), tok.col() };
 
 	return x;
@@ -396,19 +394,10 @@ std::pair<Value, ForwardIt> parse_value(ForwardIt first, ForwardIt last);
 template <class ForwardIt>
 std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 {
-	int line = first->line();
-	int col = first->col();
-
 	double x = 0.0;
-	bool negative = false;
-
-	if (first->tag() == Token::MINUS) {
-		negative = true;
-		if (++first == last)
-			throw JsonError{ "unexpected EOF after '-'", line, col };
-	}
 
 	switch (first->tag()) {
+	case Token::MINUS:
 	case Token::NUMBER_LITERAL:
 		x = decode_number_literal(*first);
 		break;
@@ -423,7 +412,7 @@ std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 	}
 	++first;
 
-	return{ Value{ negative ? -x : x }, first };
+	return{ Value{ x }, first };
 }
 
 template <class ForwardIt>
@@ -609,120 +598,6 @@ std::string JsonError::error_details() const noexcept
 	}
 
 	return s;
-}
-
-void Value::move_helper(tag_type &src_tag, union_type &src_union,
-                        tag_type &dst_tag, union_type &dst_union) noexcept
-{
-	switch (src_tag) {
-	case UNDEFINED:
-	case NULL_:
-		break;
-	case NUMBER:
-		uninitialized_move<double>(&src_union, &dst_union);
-		break;
-	case STRING:
-		uninitialized_move<std::string>(&src_union, &dst_union);
-		break;
-	case OBJECT:
-		uninitialized_move<Object>(&src_union, &dst_union);
-		break;
-	case ARRAY:
-		uninitialized_move<Array>(&src_union, &dst_union);
-		break;
-	case BOOL_:
-		uninitialized_move<bool>(&src_union, &dst_union);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	dst_tag = src_tag;
-	src_tag = NULL_;
-}
-
-Value::Value(const Value &other) : m_tag{ UNDEFINED }
-{
-	switch (other.get_type()) {
-	case UNDEFINED:
-	case NULL_:
-		break;
-	case NUMBER:
-		construct<double>(other.number());
-		break;
-	case STRING:
-		construct<std::string>(other.string());
-		break;
-	case OBJECT:
-		construct<Object>(other.object());
-		break;
-	case ARRAY:
-		construct<Array>(other.array());
-		break;
-	case BOOL_:
-		construct<bool>(other.boolean());
-		break;
-	default:
-		assert(false);
-		break;
-	}
-	m_tag = other.get_type();
-}
-
-Value::Value(Value &&other) noexcept : m_tag{ UNDEFINED }
-{
-	swap(*this, other);
-}
-
-Value::~Value()
-{
-	switch (get_type()) {
-	case UNDEFINED:
-	case NULL_:
-		break;
-	case NUMBER:
-		destroy<double>();
-		break;
-	case STRING:
-		destroy<std::string>();
-		break;
-	case OBJECT:
-		destroy<Object>();
-		break;
-	case ARRAY:
-		destroy<Array>();
-		break;
-	case BOOL_:
-		destroy<bool>();
-		break;
-	default:
-		assert(false);
-		break;
-	}
-}
-
-Value &Value::operator=(const Value &other)
-{
-	Value tmp{ other };
-	swap(*this, tmp);
-	return *this;
-}
-
-Value &Value::operator=(Value &&other) noexcept
-{
-	swap(*this, other);
-	return *this;
-}
-
-void swap(Value &a, Value &b) noexcept
-{
-	Value::tag_type tag;
-	Value::union_type union_;
-
-	Value::move_helper(a.m_tag, a.m_union, tag, union_);
-	Value::move_helper(b.m_tag, b.m_union, a.m_tag, a.m_union);
-	Value::move_helper(tag, union_, b.m_tag, b.m_union);
 }
 
 Value parse_document(const std::string &str)

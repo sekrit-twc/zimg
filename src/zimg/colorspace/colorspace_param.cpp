@@ -4,8 +4,7 @@
 #include "colorspace_param.h"
 #include "matrix3.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -294,5 +293,4 @@ Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out)
 	return inverse(bradford) * m * bradford;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

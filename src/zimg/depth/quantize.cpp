@@ -1,7 +1,6 @@
 #include "quantize.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -9,7 +8,7 @@ template <class T, class U>
 T bit_cast(const U &x) noexcept
 {
 	static_assert(sizeof(T) == sizeof(U), "object sizes must match");
-	static_assert(std::is_pod<T>::value && std::is_pod<U>::value, "object types must be POD");
+	static_assert(std::is_pod_v<T> && std::is_pod_v<U>, "object types must be POD");
 
 	T ret;
 	std::copy_n(reinterpret_cast<const char *>(&x), sizeof(x), reinterpret_cast<char *>(&ret));
@@ -144,5 +143,4 @@ uint16_t float_to_half(float f32) noexcept
 #undef FLOAT_HALF_MANT_SHIFT
 #undef FLOAT_HALF_EXP_ADJUST
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth

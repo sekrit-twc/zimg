@@ -10,14 +10,13 @@
 #include "graph.h"
 #include "operation.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
 template <class T>
 class EnumRange {
-	static_assert(std::is_enum<T>::value, "not an enum");
+	static_assert(std::is_enum_v<T>);
 	typedef std::underlying_type_t<T> integer_type;
 
 	class iterator {
@@ -243,5 +242,4 @@ std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in,
 	return path;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

@@ -8,10 +8,10 @@
 #include <memory>
 
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace colorspace {
+namespace zimg::colorspace {
 
 struct Matrix3x3;
 struct OperationParams;
@@ -30,8 +30,7 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFun
 
 std::unique_ptr<Operation> create_inverse_gamma_operation_arm(const TransferFunction &transfer, const OperationParams &params, CPUClass cpu);
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_ARM_OPERATION_IMPL_ARM_H_
 

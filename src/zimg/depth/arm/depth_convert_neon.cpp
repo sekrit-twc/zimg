@@ -8,8 +8,7 @@
 
 #include "common/arm/neon_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -416,7 +415,6 @@ void depth_convert_w2f_neon(const void *src, void *dst, float scale, float offse
 #undef XARGS
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_ARM

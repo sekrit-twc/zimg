@@ -11,12 +11,11 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace depth {
+namespace zimg::depth {
 
 enum class DitherType {
 	NONE,
@@ -53,7 +52,6 @@ struct DepthConversion {
 	result create() const;
 };
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
-#endif // ZIMG_DEPTH_DEPTH2_H_
+#endif // ZIMG_DEPTH_DEPTH_H_

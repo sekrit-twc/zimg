@@ -5,8 +5,7 @@
 
 #include <array>
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 /**
  * Fixed size vector of 3 numbers.
@@ -108,7 +107,6 @@ Matrix3x3 inverse(const Matrix3x3 &m) noexcept;
  */
 Matrix3x3 transpose(const Matrix3x3 &m) noexcept;
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_MATRIX3_H_

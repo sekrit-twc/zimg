@@ -13,8 +13,8 @@
 template <class T, class U>
 bool assert_different_dynamic_type(const T *a, const U *b)
 {
-	static_assert(std::is_polymorphic<T>::value, "must be virtual");
-	static_assert(std::is_polymorphic<U>::value, "must be virtual");
+	static_assert(std::is_polymorphic_v<T>, "must be virtual");
+	static_assert(std::is_polymorphic_v<U>, "must be virtual");
 
 	const auto &tid_a = typeid(*a);
 	const auto &tid_b = typeid(*b);

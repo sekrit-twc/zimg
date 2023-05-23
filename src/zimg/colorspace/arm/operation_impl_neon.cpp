@@ -19,8 +19,7 @@
   #define vcvtnq_s32_f32_ vcvtnq_s32_f32
 #endif
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -41,7 +40,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = left; j < vec_left; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
 		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
 		float32x4_t x;
@@ -61,7 +60,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = vec_right; j < right; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
 		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 
@@ -263,7 +262,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFun
 	return std::make_unique<ToLinearLutOperationNeon>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_ARM

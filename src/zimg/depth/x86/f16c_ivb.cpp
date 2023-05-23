@@ -9,8 +9,7 @@
 #include "common/x86/sse2_util.h"
 #include "common/x86/avx_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned right)
 {
@@ -60,7 +59,6 @@ void f16c_float_to_half_ivb(const void *src, void *dst, unsigned left, unsigned 
 	}
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

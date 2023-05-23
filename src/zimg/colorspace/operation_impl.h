@@ -7,10 +7,10 @@
 #include "operation.h"
 
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace colorspace {
+namespace zimg::colorspace {
 
 struct Matrix3x3;
 struct TransferFunction;
@@ -77,7 +77,6 @@ std::unique_ptr<Operation> create_arib_b67_operation(const Matrix3x3 &m, const O
  */
 std::unique_ptr<Operation> create_inverse_arib_b67_operation(const Matrix3x3 &m, const OperationParams &params);
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_OPERATION_IMPL_H_

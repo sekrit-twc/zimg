@@ -5,8 +5,7 @@
 #include "unresize.h"
 #include "unresize_impl.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 namespace {
 
@@ -89,5 +88,4 @@ auto UnresizeConversion::create() const -> filter_pair try
 	error::throw_<error::OutOfMemory>();
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize

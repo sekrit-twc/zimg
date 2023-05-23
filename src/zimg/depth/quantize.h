@@ -9,8 +9,7 @@
 #include <utility>
 #include "common/pixel.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 constexpr int32_t numeric_max(int bits) noexcept
 {
@@ -50,7 +49,6 @@ float half_to_float(uint16_t f16w) noexcept;
 
 uint16_t float_to_half(float f32) noexcept;
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_QUANTIZE_H_

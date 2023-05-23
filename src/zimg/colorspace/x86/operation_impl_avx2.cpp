@@ -10,8 +10,7 @@
 #include "colorspace/operation.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -32,7 +31,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, _mm256_castps256_ps128(scale), _mm256_castps256_ps128(offset)));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
 		__m256 x;
@@ -49,7 +48,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, _mm256_castps256_ps128(scale), _mm256_castps256_ps128(offset)));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 
@@ -147,7 +146,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFun
 	return std::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

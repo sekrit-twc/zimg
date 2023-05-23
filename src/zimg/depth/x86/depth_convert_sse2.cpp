@@ -10,8 +10,7 @@
 #include "common/x86/sse_util.h"
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -355,7 +354,6 @@ void depth_convert_w2f_sse2(const void *src, void *dst, float scale, float offse
 #undef XARGS
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

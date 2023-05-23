@@ -7,10 +7,10 @@
 #include <memory>
 
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace colorspace {
+namespace zimg::colorspace {
 
 struct ColorspaceDefinition;
 
@@ -126,7 +126,6 @@ std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefini
  */
 std::unique_ptr<Operation> create_gamut_operation(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu);
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_OPERATION_H_

@@ -9,8 +9,7 @@
 #include "graph.h"
 #include "operation.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -119,5 +118,4 @@ std::unique_ptr<graphengine::Filter> ColorspaceConversion::create() const try
 	error::throw_<error::OutOfMemory>();
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

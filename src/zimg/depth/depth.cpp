@@ -6,8 +6,7 @@
 #include "depth_convert.h"
 #include "dither.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -67,5 +66,4 @@ DepthConversion::result DepthConversion::create() const try
 	error::throw_<error::OutOfMemory>();
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth

@@ -16,8 +16,7 @@
   #include "arm/depth_convert_arm.h"
 #endif
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -236,5 +235,4 @@ std::unique_ptr<graphengine::Filter> create_convert_to_float(unsigned width, uns
 	return std::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
