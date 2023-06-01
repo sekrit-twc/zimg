@@ -22,6 +22,16 @@ The officially supported build system is GNU autotools. Use the provided
 "autogen.sh" script to instantiate the familiar "configure" and "make" build
 system. Visual Studio project files are not stable and are subject to change.
 
+```
+git clone https://github.com/sekrit-twc/zimg.git
+cd zimg
+git submodule update --init --recursive
+./autogen.sh
+./configure
+make
+sudo make install
+```
+
 Capabilities
 -----
 ### Colorspace
