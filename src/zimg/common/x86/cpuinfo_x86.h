@@ -88,7 +88,7 @@ X86Capabilities query_x86_capabilities() noexcept;
  */
 X86CacheHierarchy query_x86_cache_hierarchy() noexcept;
 
-unsigned long cpu_cache_size_x86() noexcept;
+unsigned long cpu_cache_per_thread_x86() noexcept;
 
 bool cpu_has_fast_f16_x86(CPUClass cpu) noexcept;
 bool cpu_requires_64b_alignment_x86(CPUClass cpu) noexcept;
