@@ -548,38 +548,38 @@ inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j,
 	__m512 accum1 = _mm512_setzero_ps();
 	__m512 x;
 
-	if constexpr (Taps >= 0) {
+	if constexpr (Taps >= 1) {
 		x = Traits::load16(src_p0 + j);
 		if constexpr (Continue)
 			accum0 = _mm512_fmadd_ps(c0, x, Traits::load16(accum_p + j));
 		else
 			accum0 = _mm512_mul_ps(c0, x);
 	}
-	if constexpr (Taps >= 1) {
+	if constexpr (Taps >= 2) {
 		x = Traits::load16(src_p1 + j);
 		accum1 = _mm512_mul_ps(c1, x);
 	}
-	if constexpr (Taps >= 2) {
+	if constexpr (Taps >= 3) {
 		x = Traits::load16(src_p2 + j);
 		accum0 = _mm512_fmadd_ps(c2, x, accum0);
 	}
-	if constexpr (Taps >= 3) {
+	if constexpr (Taps >= 4) {
 		x = Traits::load16(src_p3 + j);
 		accum1 = _mm512_fmadd_ps(c3, x, accum1);
 	}
-	if constexpr (Taps >= 4) {
+	if constexpr (Taps >= 5) {
 		x = Traits::load16(src_p4 + j);
 		accum0 = _mm512_fmadd_ps(c4, x, accum0);
 	}
-	if constexpr (Taps >= 5) {
+	if constexpr (Taps >= 6) {
 		x = Traits::load16(src_p5 + j);
 		accum1 = _mm512_fmadd_ps(c5, x, accum1);
 	}
-	if constexpr (Taps >= 6) {
+	if constexpr (Taps >= 7) {
 		x = Traits::load16(src_p6 + j);
 		accum0 = _mm512_fmadd_ps(c6, x, accum0);
 	}
-	if constexpr (Taps >= 7) {
+	if constexpr (Taps >= 8) {
 		x = Traits::load16(src_p7 + j);
 		accum1 = _mm512_fmadd_ps(c7, x, accum1);
 	}
