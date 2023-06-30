@@ -96,15 +96,15 @@ X86BasicInfo do_query_x86_basic_info() noexcept
 	info.model = (regs[0] >> 4) & 0x0FU;
 	info.stepping = regs[0] & 0x0FU;
 
-	if (info.family == 0x0F) {
-		unsigned extended_family = (regs[0] >> 20) & 0xFFU;
-		info.family += extended_family;
-	}
 	if (info.family == 0x06 || info.family == 0x0F) {
+		unsigned extended_family = (regs[0] >> 20) & 0xFFU;
 		unsigned extended_model = (regs[0] >> 16) & 0x0FU;
+
+		if (info.family == 0x0F)
+			info.family += extended_family;
 		info.model += (extended_model) << 4;
 	}
-	TRACE("model %xh family %xh stepping %u\n", info.model, info.family, info.stepping);
+	TRACE("family %xh model %xh stepping %u\n", info.family, info.model, info.stepping);
 
 	do_cpuid(regs, 0x80000000, 0);
 	info.max_extended_feature = static_cast<unsigned>(regs[0]);
