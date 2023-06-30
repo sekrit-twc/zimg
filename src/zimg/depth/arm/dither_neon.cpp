@@ -90,7 +90,7 @@ struct StoreU8 {
 		uint8x8_t x = vmovn_u16(x_);
 		uint8x8_t orig = vld1_u8(ptr);
 		uint8x8_t mask = vld1_u8(neon_mask_table[idx]);
-		
+
 		orig = vand_u8(orig, mask);
 		x = vbic_u8(x, mask);
 		x = vorr_u8(x, orig);
