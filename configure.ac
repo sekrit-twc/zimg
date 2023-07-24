@@ -118,7 +118,12 @@ AM_CONDITIONAL([X86SIMD_AVX512], [test "x$enable_x86_simd_avx512" = "xyes"])
 
 AS_CASE([$host_os],
         [cygwin*], [AS_IF([test "x$BITS" = "x32"], [LDFLAGS="-Wl,--kill-at"])],
-        [mingw*],  [AS_IF([test "x$BITS" = "x32"], [LDFLAGS="-Wl,--kill-at"])])
+        [mingw*],  [
+            have_mingw_system=yes
+            AS_IF([test "x$BITS" = "x32"], [LDFLAGS="-Wl,--kill-at"])
+        ])
+
+AM_CONDITIONAL([HAVE_MINGW], [test "x$have_mingw_system" = "xyes"])
 
 AC_CONFIG_FILES([Makefile zimg.pc])
 AC_OUTPUT
