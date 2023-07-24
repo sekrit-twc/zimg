@@ -1,4 +1,3 @@
-LIBRARY z
 EXPORTS
 	zimg_get_version_info
 	zimg_get_api_version
