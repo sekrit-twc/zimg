@@ -50,7 +50,7 @@ include_HEADERS = \
 
 libzimg_la_SOURCES = dummy.cpp
 libzimg_la_LIBADD = libzimg_internal.la
-libzimg_la_LDFLAGS = -no-undefined -version-info 2
+libzimg_la_LDFLAGS = -no-undefined -version-info 2 -export-symbols-regex '^zimg_'
 
 libzimg_internal_la_SOURCES = \
 	graphengine/graphengine/cpuinfo.h \
