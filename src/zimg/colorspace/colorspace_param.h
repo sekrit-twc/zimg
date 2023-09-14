@@ -5,8 +5,7 @@
 
 #include "matrix3.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 enum class MatrixCoefficients;
 enum class ColorPrimaries;
@@ -108,7 +107,6 @@ Matrix3x3 gamut_xyz_to_rgb_matrix(ColorPrimaries primaries);
  */
 Matrix3x3 white_point_adaptation_matrix(ColorPrimaries in, ColorPrimaries out);
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_COLORSPACE_PARAM_H_

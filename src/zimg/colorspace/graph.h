@@ -8,10 +8,10 @@
 #include <vector>
 
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace colorspace {
+namespace zimg::colorspace {
 
 struct ColorspaceDefinition;
 struct OperationParams;
@@ -28,7 +28,6 @@ typedef std::function<std::unique_ptr<Operation>(const OperationParams &, CPUCla
  */
 std::vector<OperationFactory> get_operation_path(const ColorspaceDefinition &in, const ColorspaceDefinition &out);
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_COLORSPACE_GRAPH_H_

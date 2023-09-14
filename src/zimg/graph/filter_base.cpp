@@ -1,8 +1,7 @@
 #include "common/pixel.h"
 #include "filter_base.h"
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 PointFilter::PointFilter(unsigned width, unsigned height, PixelType type)
 {
@@ -10,5 +9,4 @@ PointFilter::PointFilter(unsigned width, unsigned height, PixelType type)
 	m_desc.step = 1;
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

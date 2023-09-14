@@ -1,5 +1,10 @@
 3.0.5
 api: add 'use_scene_referred' flag to zimg_graph_builder_params
+colorspace: add ST.428-1 (gamma 2.6) transfer function
+depth: fix AVX-512 integer to float border handling (introduced in 2.6)
+depth: fix NEON dither border handling (introduced in 3.0)
+graph: fix clipping in alpha premultiplication (introduced in 3.0)
+x86: optimizations for AMD Zen4 processors
 
 3.0.4
 colorspace: fix ARIB STD-B67 constant-luminance EOTF (introduced in 2.6)

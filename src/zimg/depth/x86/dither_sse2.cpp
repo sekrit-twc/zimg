@@ -8,8 +8,7 @@
 
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -483,7 +482,6 @@ void ordered_dither_f2w_sse2(const float *dither, unsigned dither_offset, unsign
 #undef XARGS
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

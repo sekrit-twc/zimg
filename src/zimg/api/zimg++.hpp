@@ -167,12 +167,12 @@ public:
 	{
 	}
 
-	FilterGraph(FilterGraph &&other) : m_graph(other.m_graph)
+	FilterGraph(FilterGraph &&other) noexcept : m_graph(other.m_graph)
 	{
 		other.m_graph = 0;
 	}
 
-	FilterGraph &operator=(FilterGraph &&other)
+	FilterGraph &operator=(FilterGraph &&other) noexcept
 	{
 		if (this != &other) {
 			zimg_filter_graph_free(m_graph);

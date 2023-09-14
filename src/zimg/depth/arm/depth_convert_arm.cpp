@@ -6,8 +6,7 @@
 #include "depth_convert_arm.h"
 #include "f16c_arm.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -115,7 +114,6 @@ bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &
 	return value;
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_ARM

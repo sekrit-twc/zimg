@@ -9,12 +9,11 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
+}
 
-namespace colorspace {
+namespace zimg::colorspace {
 
 enum class MatrixCoefficients {
 	UNSPECIFIED,
@@ -127,7 +126,6 @@ struct ColorspaceConversion {
 	std::unique_ptr<graphengine::Filter> create() const;
 };
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
-#endif // ZIMG_COLORSPACE_COLORSPACE2_H_
+#endif // ZIMG_COLORSPACE_COLORSPACE_H_

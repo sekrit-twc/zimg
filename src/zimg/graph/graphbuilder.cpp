@@ -34,8 +34,7 @@
 } while (0)
 
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 namespace {
 
@@ -44,7 +43,7 @@ constexpr int PLANE_Y = 0;
 constexpr int PLANE_U = 1;
 constexpr int PLANE_V = 2;
 constexpr int PLANE_A = 3;
-static_assert(PLANE_NUM <= graphengine::NODE_MAX_PLANES, "");
+static_assert(PLANE_NUM <= graphengine::NODE_MAX_PLANES);
 
 typedef std::array<bool, PLANE_NUM> plane_mask;
 
@@ -1294,5 +1293,4 @@ std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
 	error::throw_<error::InternalError>(e.what());
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

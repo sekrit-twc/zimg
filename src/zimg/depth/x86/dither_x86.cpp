@@ -7,8 +7,7 @@
 #include "dither_x86.h"
 #include "f16c_x86.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -160,7 +159,6 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, 
 	return ret;
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

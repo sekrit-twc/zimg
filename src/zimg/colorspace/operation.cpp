@@ -7,8 +7,7 @@
 #include "operation.h"
 #include "operation_impl.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -97,5 +96,4 @@ std::unique_ptr<Operation> create_gamut_operation(const ColorspaceDefinition &in
 	return create_matrix_operation(m, cpu);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

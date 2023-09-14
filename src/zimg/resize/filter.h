@@ -6,8 +6,7 @@
 #include <cstddef>
 #include "common/alloc.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 /**
  * Functor to compute filter taps.
@@ -177,7 +176,6 @@ struct FilterContext {
  */
 FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim, double shift, double width);
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_FILTER_H_

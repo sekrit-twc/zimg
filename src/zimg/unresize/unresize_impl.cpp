@@ -10,8 +10,7 @@
   #include "x86/unresize_impl_x86.h"
 #endif
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 namespace {
 
@@ -218,5 +217,4 @@ std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create() const
 	return ret;
 }
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize

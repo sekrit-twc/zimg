@@ -89,7 +89,7 @@ void show_arm_info()
 
 void show_generic_info()
 {
-	std::cout << "Per-thread effective cache size: " << zimg::cpu_cache_size() << '\n';
+	std::cout << "Per-thread effective cache size: " << zimg::cpu_cache_per_thread() << '\n';
 	std::cout << "Fast fp16 support: " << yes_no(zimg::cpu_has_fast_f16(zimg::CPUClass::AUTO)) << '\n';
 	std::cout << "64-byte (512-bit) instructions: " << yes_no(zimg::cpu_requires_64b_alignment(zimg::CPUClass::AUTO_64B)) << '\n';
 }

@@ -14,8 +14,7 @@
   #include "arm/operation_impl_arm.h"
 #endif
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -376,5 +375,4 @@ std::unique_ptr<Operation> create_cl_rgb_to_yuv_operation(const ColorspaceDefini
 	return std::make_unique<CLToYUVOperationC>(func.to_gamma, m[0][0], m[0][1], m[0][2], func.to_gamma_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace

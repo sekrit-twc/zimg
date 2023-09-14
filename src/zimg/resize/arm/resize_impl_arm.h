@@ -11,13 +11,12 @@ namespace graphengine {
 class Filter;
 }
 
-
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace resize {
+namespace zimg::resize {
 
 struct FilterContext;
 
@@ -37,8 +36,7 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_arm(const FilterContex
 
 std::unique_ptr<graphengine::Filter> create_resize_impl_v_arm(const FilterContext &context, unsigned width, PixelType type, unsigned depth, CPUClass cpu);
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_ARM_RESIZE_IMPL_ARM_H_
 

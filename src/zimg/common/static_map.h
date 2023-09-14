@@ -4,24 +4,19 @@
 #define ZIMG_STATIC_MAP_H_
 
 #include <cstddef>
-#include <cstring>
 #include <functional>
 #include <initializer_list>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
-#define SM_CONSTEXPR_14 constexpr
-
 namespace zimg {
-
-template <class...>
-using _static_map_void_t = void;
 
 template <class Comp, class K, class = void>
 struct _static_map_is_transparent : std::false_type {};
 
 template <class Comp, class K>
-struct _static_map_is_transparent<Comp, K, _static_map_void_t<typename Comp::is_transparent>> : std::true_type {};
+struct _static_map_is_transparent<Comp, K, std::void_t<typename Comp::is_transparent>> : std::true_type {};
 
 // Read-only associative container that contains key-value pairs with multiple
 // entries with the same key permitted. Unlike std::map and std::unordered_map,
@@ -52,10 +47,10 @@ public:
 		Compare comp;
 
 		// Initializes the internal instance of the comparator to c.
-		SM_CONSTEXPR_14 value_compare(Compare c);
+		constexpr value_compare(Compare c);
 	public:
 		// Compares lhs.first and rhs.first by calling the stored comparator.
-		SM_CONSTEXPR_14 bool operator()(const value_type &lhs, const value_type &rhs) const;
+		constexpr bool operator()(const value_type &lhs, const value_type &rhs) const;
 
 		friend class static_map;
 	};
@@ -70,7 +65,7 @@ private:
 	stored_value_type m_array[N ? N : 1];
 public:
 	// Constructs the container with the contents of the initializer list init.
-	SM_CONSTEXPR_14 explicit static_map(std::initializer_list<value_type> init, Compare comp = Compare());
+	constexpr explicit static_map(std::initializer_list<value_type> init, Compare comp = Compare());
 
 	static_map(const static_map &) = delete;
 	static_map &operator=(const static_map &) = delete;
@@ -88,13 +83,13 @@ public:
 	const_iterator cend() const noexcept;
 
 	// Checks if the container has no elements, i.e. whether begin() == end().
-	SM_CONSTEXPR_14 bool empty() const noexcept;
+	constexpr bool empty() const noexcept;
 
 	// Returns the number of elements in the container, i.e. std::distance(begin(), end()).
-	SM_CONSTEXPR_14 size_type size() const noexcept;
+	constexpr size_type size() const noexcept;
 
 	// Returns the maximum number of elements the container is able to hold.
-	SM_CONSTEXPR_14 size_type max_size() const noexcept;
+	constexpr size_type max_size() const noexcept;
 
 	// (1) Returns the number of elements with key |key|.
 	size_type count(const Key &key) const;
@@ -118,21 +113,14 @@ public:
 	equal_range(const K &x) const;
 
 	// Returns the function object that compares the keys.
-	SM_CONSTEXPR_14 key_compare key_comp() const;
+	constexpr key_compare key_comp() const;
 
 	// Returns a function object that compares objects of type ztd::static_map::value_type.
-	SM_CONSTEXPR_14 value_compare value_comp() const;
-};
-
-struct _static_map_strcmp {
-	bool operator()(const char *lhs, const char *rhs) const
-	{
-		return std::strcmp(lhs, rhs) < 0;
-	}
+	constexpr value_compare value_comp() const;
 };
 
 template <class T, size_t N>
-using static_string_map = static_map<const char *, T, N, _static_map_strcmp>;
+using static_string_map = static_map<std::string_view, T, N>;
 
 } // namespace zimg
 
@@ -169,7 +157,7 @@ struct static_map<Key, T, N, Compare>::xcompare {
 // Parameters
 // c - comparator to assign
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 static_map<Key, T, N, Compare>::value_compare::value_compare(Compare c) : comp(c) {}
+constexpr static_map<Key, T, N, Compare>::value_compare::value_compare(Compare c) : comp(c) {}
 
 // ztd::static_map<Key, T, N, Compare>::value_compare::operator()
 //
@@ -181,7 +169,7 @@ SM_CONSTEXPR_14 static_map<Key, T, N, Compare>::value_compare::value_compare(Com
 // Return value
 // comp(lhs.first, rhs.first).
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 bool static_map<Key, T, N, Compare>::value_compare::operator()(
+constexpr bool static_map<Key, T, N, Compare>::value_compare::operator()(
 	const value_type &lhs, const value_type &rhs) const
 {
 	return comp(lhs.first, rhs.first);
@@ -199,7 +187,7 @@ SM_CONSTEXPR_14 bool static_map<Key, T, N, Compare>::value_compare::operator()(
 // Exceptions
 // std::out_of_range if init contains more than N elements.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 static_map<Key, T, N, Compare>::static_map(std::initializer_list<value_type> init, Compare comp) :
+constexpr static_map<Key, T, N, Compare>::static_map(std::initializer_list<value_type> init, Compare comp) :
 	Compare(comp),
 	m_size(init.size()),
 	m_array{}
@@ -313,7 +301,7 @@ auto static_map<Key, T, N, Compare>::cend() const noexcept -> const_iterator
 // Complexity
 // Constant.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 bool static_map<Key, T, N, Compare>::empty() const noexcept
+constexpr bool static_map<Key, T, N, Compare>::empty() const noexcept
 {
 	return size() == 0;
 }
@@ -328,7 +316,7 @@ SM_CONSTEXPR_14 bool static_map<Key, T, N, Compare>::empty() const noexcept
 // Complexity
 // Constant.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::size() const noexcept -> size_type
+constexpr auto static_map<Key, T, N, Compare>::size() const noexcept -> size_type
 {
 	return m_size;
 }
@@ -344,7 +332,7 @@ SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::size() const noexcept -> si
 // Complexity
 // Constant.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::max_size() const noexcept -> size_type
+constexpr auto static_map<Key, T, N, Compare>::max_size() const noexcept -> size_type
 {
 	return N;
 }
@@ -478,7 +466,7 @@ auto static_map<Key, T, N, Compare>::equal_range(const K &x) const ->
 // Complexity
 // Constant.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::key_comp() const -> key_compare
+constexpr auto static_map<Key, T, N, Compare>::key_comp() const -> key_compare
 {
 	return Compare(*this);
 }
@@ -494,7 +482,7 @@ SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::key_comp() const -> key_com
 // Complexity
 // Constant.
 template <class Key, class T, std::size_t N, class Compare>
-SM_CONSTEXPR_14 auto static_map<Key, T, N, Compare>::value_comp() const -> value_compare
+constexpr auto static_map<Key, T, N, Compare>::value_comp() const -> value_compare
 {
 	return key_comp();
 }

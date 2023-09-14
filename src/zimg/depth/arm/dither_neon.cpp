@@ -14,8 +14,7 @@
   #define vcvtnq_u32_f32_ vcvtnq_u32_f32
 #endif
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -90,7 +89,7 @@ struct StoreU8 {
 		uint8x8_t x = vmovn_u16(x_);
 		uint8x8_t orig = vld1_u8(ptr);
 		uint8x8_t mask = vld1_u8(neon_mask_table[idx]);
-		
+
 		orig = vand_u8(orig, mask);
 		x = vbic_u8(x, mask);
 		x = vorr_u8(x, orig);
@@ -231,7 +230,6 @@ void ordered_dither_f2w_neon(const float *dither, unsigned dither_offset, unsign
 	ordered_dither_neon_impl<LoadF32, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_ARM

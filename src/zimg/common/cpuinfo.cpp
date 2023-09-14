@@ -6,11 +6,11 @@
 
 namespace zimg {
 
-unsigned long cpu_cache_size() noexcept
+unsigned long cpu_cache_per_thread() noexcept
 {
 	unsigned long ret = 0;
 #ifdef ZIMG_X86
-	ret = cpu_cache_size_x86();
+	ret = cpu_cache_per_thread_x86();
 #endif
 	return ret ? ret : 1024 * 1024UL;
 }

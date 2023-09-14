@@ -15,8 +15,7 @@
 
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -26,7 +25,7 @@ template <class T, class U>
 T bit_cast(const U &x) noexcept
 {
 	static_assert(sizeof(T) == sizeof(U), "object sizes must match");
-	static_assert(std::is_pod<T>::value && std::is_pod<U>::value, "object types must be POD");
+	static_assert(std::is_pod_v<T> && std::is_pod_v<U>, "object types must be POD");
 
 	T ret;
 	std::copy_n(reinterpret_cast<const char *>(&x), sizeof(x), reinterpret_cast<char *>(&ret));
@@ -49,7 +48,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_add_ss(_mm_mul_ss(x, scale), offset));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (ptrdiff_t j = vec_left; j < static_cast<ptrdiff_t>(vec_right); j += 4) {
 		__m128 x;
@@ -82,7 +81,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = _mm_load_ss(src + j);
 		int idx = _mm_cvt_ss2si(_mm_add_ss(_mm_mul_ss(x, scale), offset));
-		dst[j] = lut[std::min(std::max(idx, 0), lut_limit)];
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 
@@ -200,7 +199,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_sse2(const TransferFun
 	return std::make_unique<ToLinearLutOperationSSE2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

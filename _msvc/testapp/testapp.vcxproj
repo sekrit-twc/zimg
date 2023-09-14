@@ -148,6 +148,7 @@
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>TestCommon.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -163,6 +164,7 @@
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>TestCommon.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -178,6 +180,7 @@
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>TestCommon.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -193,6 +196,7 @@
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>TestCommon.lib;z.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -209,6 +213,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -227,6 +232,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -245,6 +251,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_ARM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -263,6 +270,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\src\testcommon;$(ProjectDir)..\..\graphengine\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;NOMINMAX;STRICT;WIN32_LEAN_AND_MEAN;ZIMG_X86;ZIMG_X86_AVX512;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -1,7 +1,6 @@
 #include "blue.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 // http://momentsingraphics.de/?p=127
 const uint8_t blue_noise_table[BLUE_NOISE_LEN][BLUE_NOISE_LEN] = {
@@ -71,5 +70,4 @@ const uint8_t blue_noise_table[BLUE_NOISE_LEN][BLUE_NOISE_LEN] = {
 	{  39,  98,   8,  75, 223, 187,   5, 239,  42, 161, 247,  74,  95,  41, 233,  52, 170, 204,  63,  96, 213, 135, 112, 208,  96, 138, 223, 178, 216, 251,   7, 116,  49,  86,  26,  75, 170,  53, 213,  21, 149,  46, 103, 142, 119,  37,  73, 227,  17, 108, 159, 216, 125, 233, 181,  99,  38, 118,  58, 137,  71, 251,  29, 133, },
 };
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth

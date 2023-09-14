@@ -13,7 +13,7 @@ Requirements
 - Byte-addressable architecture
 - Two's complement integer encoding
 - 32-bit or greater machine word
-- C++14 compiler
+- C++17 compiler
 - Platforms: Microsoft Windows, POSIX
 
 Building
@@ -21,6 +21,8 @@ Building
 The officially supported build system is GNU autotools. Use the provided
 "autogen.sh" script to instantiate the familiar "configure" and "make" build
 system. Visual Studio project files are not stable and are subject to change.
+Download all submodules before compiling by `git submodule update --init
+--recursive`.
 
 Capabilities
 -----

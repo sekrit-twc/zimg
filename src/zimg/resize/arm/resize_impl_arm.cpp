@@ -5,8 +5,7 @@
 #include "graphengine/filter.h"
 #include "resize_impl_arm.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 std::unique_ptr<graphengine::Filter> create_resize_impl_h_arm(const FilterContext &context, unsigned height, PixelType type, unsigned depth, CPUClass cpu)
 {
@@ -40,7 +39,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_arm(const FilterContex
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_ARM

@@ -7,8 +7,7 @@
 #include "filtergraph.h"
 #include "graphengine_except.h"
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 FilterGraph::FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_ptr<void> instance_data, graphengine::node_id source_id, graphengine::node_id sink_id) :
 	m_graph{ std::move(graph) },
@@ -89,5 +88,4 @@ void FilterGraph::process(const std::array<graphengine::BufferDescriptor, 4> &sr
 	}
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

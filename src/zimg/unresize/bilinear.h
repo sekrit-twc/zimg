@@ -5,8 +5,7 @@
 
 #include "common/alloc.h"
 
-namespace zimg {
-namespace unresize {
+namespace zimg::unresize {
 
 /**
  * Execution context for unresize algorithm.
@@ -72,7 +71,6 @@ struct BilinearContext {
  */
 BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift);
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize
 
 #endif // ZIMG_UNRESIZE_BILINEAR_H_

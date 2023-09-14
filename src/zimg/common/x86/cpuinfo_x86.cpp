@@ -96,15 +96,15 @@ X86BasicInfo do_query_x86_basic_info() noexcept
 	info.model = (regs[0] >> 4) & 0x0FU;
 	info.stepping = regs[0] & 0x0FU;
 
-	if (info.family == 0x0F) {
-		unsigned extended_family = (regs[0] >> 20) & 0xFFU;
-		info.family += extended_family;
-	}
 	if (info.family == 0x06 || info.family == 0x0F) {
+		unsigned extended_family = (regs[0] >> 20) & 0xFFU;
 		unsigned extended_model = (regs[0] >> 16) & 0x0FU;
+
+		if (info.family == 0x0F)
+			info.family += extended_family;
 		info.model += (extended_model) << 4;
 	}
-	TRACE("model %xh family %xh stepping %u\n", info.model, info.family, info.stepping);
+	TRACE("family %xh model %xh stepping %u\n", info.family, info.model, info.stepping);
 
 	do_cpuid(regs, 0x80000000, 0);
 	info.max_extended_feature = static_cast<unsigned>(regs[0]);
@@ -367,6 +367,28 @@ X86CacheHierarchy do_query_x86_cache_hierarchy() noexcept
 	return cache;
 }
 
+bool is_xeon() noexcept
+{
+	static constexpr unsigned xeon_models[] = {
+		0x57, // KNL
+		0x85, // KNM
+		0x55, // SKX, CLX, CPX
+		0x6A, // ICX-SP
+		0x6C, // ICX-DE
+		0x8F, // SPR
+	};
+
+	X86BasicInfo info = query_x86_basic_info();
+	if (info.vendor != GENUINEINTEL || info.family != 0x6)
+		return false;
+
+	for (unsigned model : xeon_models) {
+		if (info.model == model)
+			return true;
+	}
+	return false;
+}
+
 } // namespace
 
 
@@ -382,18 +404,15 @@ X86CacheHierarchy query_x86_cache_hierarchy() noexcept
 	return cache;
 }
 
-unsigned long cpu_cache_size_x86() noexcept
+unsigned long cpu_cache_per_thread_x86() noexcept
 {
-	const X86CacheHierarchy cache = query_x86_cache_hierarchy();
+	static const X86CacheHierarchy cache = query_x86_cache_hierarchy();
+	static const bool xeon = is_xeon();
 
 	if (!cache.valid)
 		return 0;
 
-	// Detect Skylake-SP cache hierarchy and report L2 size instead of L3.
-	if (cache.l3 && !cache.l3_inclusive && cache.l2 >= 1024 * 1024U && cache.l2_threads <= 2)
-		return cache.l2 / cache.l2_threads;
-
-	if (cache.l3)
+	if (cache.l3 && !xeon)
 		return cache.l3 / cache.l3_threads;
 	else if (cache.l2)
 		return cache.l2 / cache.l2_threads;

@@ -8,8 +8,7 @@
 
 #include "common/x86/avx_util.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 namespace {
 
@@ -120,7 +119,6 @@ std::unique_ptr<Operation> create_matrix_operation_avx(const Matrix3x3 &m)
 	return std::make_unique<MatrixOperationAVX>(m);
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

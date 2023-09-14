@@ -8,8 +8,7 @@
 #include "common/x86/sse_util.h"
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -173,7 +172,6 @@ void f16c_float_to_half_sse2(const void *src, void *dst, unsigned left, unsigned
 	}
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86

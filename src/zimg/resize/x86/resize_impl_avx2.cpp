@@ -23,8 +23,7 @@
 #include "common/x86/avx_util.h"
 #include "common/x86/avx2_util.h"
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -306,7 +305,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		src_p += 128;
 	}
 
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		coeffs = _mm256_broadcastsi128_si256(_mm_load_si128((const __m128i *)(filter_coeffs + k_end)));
 
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
@@ -324,7 +323,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
 		x0 = _mm256_load_si256((const __m256i *)(src_p + 32));
 		x1 = _mm256_load_si256((const __m256i *)(src_p + 48));
@@ -340,7 +339,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 6) {
+	if constexpr (Tail >= 6) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
 		x0 = _mm256_load_si256((const __m256i *)(src_p + 64));
 		x1 = _mm256_load_si256((const __m256i *)(src_p + 80));
@@ -356,7 +355,7 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
 
-	if (Tail >= 8) {
+	if constexpr (Tail >= 8) {
 		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
 		x0 = _mm256_load_si256((const __m256i *)(src_p + 96));
 		x1 = _mm256_load_si256((const __m256i *)(src_p + 112));
@@ -513,30 +512,30 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
 		src_p += 32;
 	}
 
-	if (Tail >= 1) {
+	if constexpr (Tail >= 1) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k_end));
 
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
 		x = Traits::load8(src_p + 0);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 	}
-	if (Tail >= 2) {
+	if constexpr (Tail >= 2) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
 		x = Traits::load8(src_p + 8);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
 	}
-	if (Tail >= 3) {
+	if constexpr (Tail >= 3) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
 		x = Traits::load8(src_p + 16);
 		accum0 = _mm256_fmadd_ps(c, x, accum0);
 	}
-	if (Tail >= 4) {
+	if constexpr (Tail >= 4) {
 		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
 		x = Traits::load8(src_p + 24);
 		accum1 = _mm256_fmadd_ps(c, x, accum1);
 	}
 
-	if (Taps <= 0 || Taps >= 2)
+	if constexpr (Taps <= 0 || Taps >= 2)
 		accum0 = _mm256_add_ps(accum0, accum1);
 
 	return accum0;
@@ -645,7 +644,7 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 		__m256i accum1 = _mm256_setzero_si256();
 		__m256i x, x0, x8, coeffs;
 
-		if (Taps >= 2) {
+		if constexpr (Taps >= 2) {
 			x0 = _mm256_loadu_si256((const __m256i *)(src + left + 0));
 			x0 = _mm256_add_epi16(x0, i16_min);
 
@@ -655,7 +654,7 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 			x = _mm256_madd_epi16(coeffs, x);
 			accum0 = _mm256_add_epi32(accum0, x);
 		}
-		if (Taps >= 4) {
+		if constexpr (Taps >= 4) {
 			x8 = _mm256_loadu_si256((const __m256i *)(src + left + 8));
 			x8 = _mm256_add_epi16(x8, i16_min);
 
@@ -665,21 +664,21 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 			x = _mm256_madd_epi16(coeffs, x);
 			accum1 = _mm256_add_epi32(accum1, x);
 		}
-		if (Taps >= 6) {
+		if constexpr (Taps >= 6) {
 			x = _mm256_alignr_epi8(x8, x0, 8);
 			x = _mm256_permutevar8x32_epi32(x, mask);
 			coeffs = _mm256_load_si256((const __m256i *)(data + 4 * 8));
 			x = _mm256_madd_epi16(coeffs, x);
 			accum0 = _mm256_add_epi32(accum0, x);
 		}
-		if (Taps >= 8) {
+		if constexpr (Taps >= 8) {
 			x = _mm256_alignr_epi8(x8, x0, 12);
 			x = _mm256_permutevar8x32_epi32(x, mask);
 			coeffs = _mm256_load_si256((const __m256i *)(data + 6 * 8));
 			x = _mm256_madd_epi16(coeffs, x);
 			accum1 = _mm256_add_epi32(accum1, x);
 		}
-		if (Taps >= 10) {
+		if constexpr (Taps >= 10) {
 			x = x8;
 			x = _mm256_permutevar8x32_epi32(x, mask);
 			coeffs = _mm256_load_si256((const __m256i *)(data + 8 * 8));
@@ -761,7 +760,7 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 		__m256 accum1 = _mm256_setzero_ps();
 		__m256 x, x0, x4, x8, coeffs;
 
-		if (Taps >= 1) {
+		if constexpr (Taps >= 1) {
 			x0 = Traits::load8(src + left + 0);
 
 			x = x0;
@@ -769,7 +768,7 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 			coeffs = _mm256_load_ps(data + 0 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 2) {
+		if constexpr (Taps >= 2) {
 			x4 = Traits::load8(src + left + 4);
 
 			x = mm256_alignr_epi8_ps(x4, x0, 4);
@@ -777,25 +776,25 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 			coeffs = _mm256_load_ps(data + 1 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 3) {
+		if constexpr (Taps >= 3) {
 			x = mm256_alignr_epi8_ps(x4, x0, 8);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 2 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 4) {
+		if constexpr (Taps >= 4) {
 			x = mm256_alignr_epi8_ps(x4, x0, 12);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 3 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 5) {
+		if constexpr (Taps >= 5) {
 			x = x4;
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 4 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 6) {
+		if constexpr (Taps >= 6) {
 			x8 = Traits::load8(src + left + 8);
 
 			x = mm256_alignr_epi8_ps(x8, x4, 4);
@@ -803,13 +802,13 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 			coeffs = _mm256_load_ps(data + 5 * 8);
 			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
 		}
-		if (Taps >= 7) {
+		if constexpr (Taps >= 7) {
 			x = mm256_alignr_epi8_ps(x8, x4, 8);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 6 * 8);
 			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
 		}
-		if (Taps >= 8) {
+		if constexpr (Taps >= 8) {
 			x = mm256_alignr_epi8_ps(x8, x4, 12);
 			x = _mm256_permutevar8x32_ps(x, mask);
 			coeffs = _mm256_load_ps(data + 7 * 8);
@@ -881,7 +880,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 	__m256i accum_hi = _mm256_setzero_si256();
 	__m256i x0, x1, xl, xh;
 
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x0 = _mm256_load_si256((const __m256i *)(src_p0 + j));
 		x1 = _mm256_load_si256((const __m256i *)(src_p1 + j));
 		x0 = _mm256_add_epi16(x0, i16_min);
@@ -900,7 +899,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 			accum_hi = xh;
 		}
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x0 = _mm256_load_si256((const __m256i *)(src_p2 + j));
 		x1 = _mm256_load_si256((const __m256i *)(src_p3 + j));
 		x0 = _mm256_add_epi16(x0, i16_min);
@@ -914,7 +913,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 		accum_lo = _mm256_add_epi32(accum_lo, xl);
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x0 = _mm256_load_si256((const __m256i *)(src_p4 + j));
 		x1 = _mm256_load_si256((const __m256i *)(src_p5 + j));
 		x0 = _mm256_add_epi16(x0, i16_min);
@@ -928,7 +927,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 		accum_lo = _mm256_add_epi32(accum_lo, xl);
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x0 = _mm256_load_si256((const __m256i *)(src_p6 + j));
 		x1 = _mm256_load_si256((const __m256i *)(src_p7 + j));
 		x0 = _mm256_add_epi16(x0, i16_min);
@@ -943,7 +942,7 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 		accum_hi = _mm256_add_epi32(accum_hi, xh);
 	}
 
-	if (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
+	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 0), accum_lo);
 		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 8), accum_hi);
 		return _mm256_setzero_si256();
@@ -951,7 +950,6 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 		accum_lo = export_i30_u16(accum_lo, accum_hi);
 		accum_lo = _mm256_min_epi16(accum_lo, lim);
 		accum_lo = _mm256_sub_epi16(accum_lo, i16_min);
-
 		return accum_lo;
 	}
 }
@@ -984,7 +982,7 @@ void resize_line_v_u16_avx2(const int16_t * RESTRICT filter_data, const uint16_t
 	if (left != vec_left) {
 		out = XITER(vec_left - 16, XARGS);
 
-		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
+		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm256_store_idxhi_epi16((__m256i *)(dst + vec_left - 16), out, left % 16);
 	}
 
@@ -998,7 +996,7 @@ void resize_line_v_u16_avx2(const int16_t * RESTRICT filter_data, const uint16_t
 	if (right != vec_right) {
 		out = XITER(vec_right, XARGS);
 
-		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
+		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm256_store_idxlo_epi16((__m256i *)(dst + vec_right), out, right % 16);
 	}
 #undef XITER
@@ -1039,46 +1037,46 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
 	typedef typename Traits::pixel_type pixel_type;
-	static_assert(std::is_same<pixel_type, T>::value, "must not specify T");
+	static_assert(std::is_same_v<pixel_type, T>, "must not specify T");
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
 	__m256 x;
 
-	if (Taps >= 1) {
+	if constexpr (Taps >= 1) {
 		x = Traits::load8(src_p0 + j);
 		accum0 = Continue ? _mm256_fmadd_ps(c0, x, Traits::load8(accum_p + j)) : _mm256_mul_ps(c0, x);
 	}
-	if (Taps >= 2) {
+	if constexpr (Taps >= 2) {
 		x = Traits::load8(src_p1 + j);
 		accum1 = _mm256_mul_ps(c1, x);
 	}
-	if (Taps >= 3) {
+	if constexpr (Taps >= 3) {
 		x = Traits::load8(src_p2 + j);
 		accum0 = _mm256_fmadd_ps(c2, x, accum0);
 	}
-	if (Taps >= 4) {
+	if constexpr (Taps >= 4) {
 		x = Traits::load8(src_p3 + j);
 		accum1 = _mm256_fmadd_ps(c3, x, accum1);
 	}
-	if (Taps >= 5) {
+	if constexpr (Taps >= 5) {
 		x = Traits::load8(src_p4 + j);
 		accum0 = _mm256_fmadd_ps(c4, x, accum0);
 	}
-	if (Taps >= 6) {
+	if constexpr (Taps >= 6) {
 		x = Traits::load8(src_p5 + j);
 		accum1 = _mm256_fmadd_ps(c5, x, accum1);
 	}
-	if (Taps >= 7) {
+	if constexpr (Taps >= 7) {
 		x = Traits::load8(src_p6 + j);
 		accum0 = _mm256_fmadd_ps(c6, x, accum0);
 	}
-	if (Taps >= 8) {
+	if constexpr (Taps >= 8) {
 		x = Traits::load8(src_p7 + j);
 		accum1 = _mm256_fmadd_ps(c7, x, accum1);
 	}
 
-	accum0 = (Taps >= 2) ? _mm256_add_ps(accum0, accum1) : accum0;
+	if constexpr (Taps >= 2) accum0 = _mm256_add_ps(accum0, accum1);
 	return accum0;
 }
 
@@ -1603,7 +1601,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx2(const FilterConte
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_X86

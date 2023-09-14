@@ -2,8 +2,7 @@
 #include "graphengine/types.h"
 #include "graphengine_except.h"
 
-namespace zimg {
-namespace graph {
+namespace zimg::graph {
 
 void rethrow_graphengine_exception(const graphengine::Exception &e)
 {
@@ -14,5 +13,4 @@ void rethrow_graphengine_exception(const graphengine::Exception &e)
 	}
 }
 
-} // namespace graph
-} // namespace zimg
+} // namespace zimg::graph

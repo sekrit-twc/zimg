@@ -9,11 +9,11 @@
 #include "filter.h"
 
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace resize {
+namespace zimg::resize {
 
 class ResizeImplH : public graph::FilterBase {
 protected:
@@ -62,7 +62,6 @@ struct ResizeImplBuilder {
 	std::unique_ptr<graphengine::Filter> create() const;
 };
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize
 
 #endif // ZIMG_RESIZE_RESIZE_IMPL_H_

@@ -8,11 +8,11 @@
 #include "bilinear.h"
 
 namespace zimg {
-
 enum class CPUClass;
 enum class PixelType;
+}
 
-namespace unresize {
+namespace zimg::unresize {
 
 class UnresizeImplH : public graph::FilterBase {
 protected:
@@ -53,7 +53,6 @@ struct UnresizeImplBuilder {
 	std::unique_ptr<graphengine::Filter> create() const;
 };
 
-} // namespace unresize
-} // namespace zimg
+} // namespace zimg::unresize
 
 #endif // ZIMG_UNRESIZE_UNRESIZE_IMPL_H_

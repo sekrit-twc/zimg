@@ -14,8 +14,7 @@
   #include "arm/resize_impl_arm.h"
 #endif
 
-namespace zimg {
-namespace resize {
+namespace zimg::resize {
 
 namespace {
 
@@ -267,5 +266,4 @@ std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create() const
 	return ret;
 }
 
-} // namespace resize
-} // namespace zimg
+} // namespace zimg::resize

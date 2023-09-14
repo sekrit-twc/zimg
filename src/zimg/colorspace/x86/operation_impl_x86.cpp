@@ -6,8 +6,7 @@
 #include "colorspace/operation_impl.h"
 #include "operation_impl_x86.h"
 
-namespace zimg {
-namespace colorspace {
+namespace zimg::colorspace {
 
 std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu)
 {
@@ -93,7 +92,6 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_x86(const TransferFunc
 	return ret;
 }
 
-} // namespace colorspace
-} // namespace zimg
+} // namespace zimg::colorspace
 
 #endif // ZIMG_X86

@@ -18,8 +18,7 @@
 
 #include "common/x86/sse2_util.h"
 
-namespace zimg {
-namespace depth {
+namespace zimg::depth {
 
 namespace {
 
@@ -472,7 +471,6 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_sse2(unsigned width,
 	return std::make_unique<ErrorDiffusionSSE2>(width, height, pixel_in, pixel_out, cpu);
 }
 
-} // namespace depth
-} // namespace zimg
+} // namespace zimg::depth
 
 #endif // ZIMG_X86
