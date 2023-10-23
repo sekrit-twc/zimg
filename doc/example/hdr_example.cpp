@@ -70,7 +70,7 @@ const ArgparseOption program_switches[] = {
 	{ OPTION_FLOAT,  "l", "luminance", offsetof(Arguments, luminance), nullptr, "legacy peak brightness (cd/m^2)" },
 	{ OPTION_USER1,  "k", "key",       offsetof(Arguments, mask_key),  decode_mask_key, "HDR color key (RRGGBB hex string)" },
 	{ OPTION_STRING, "m", "mask",      offsetof(Arguments, hdrpath),   nullptr, "HDR difference mask" },
-	{ OPTION_STRING, "s", "sceneref",  offsetof(Arguments, hdrpath),   nullptr, "use scene-referred transfer functions" },
+	{ OPTION_STRING, "s", "sceneref",  offsetof(Arguments, scene_referred),   nullptr, "use scene-referred transfer functions" },
 	{ OPTION_NULL }
 };
 
