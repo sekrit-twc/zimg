@@ -9,6 +9,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
+#include "common/unroll.h"
 #include "resize/filter.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
@@ -42,8 +43,7 @@ void transpose_line_4x4_ps(float * RESTRICT dst, const float *src_p0, const floa
 
 
 template <int Taps>
-inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
-                                                        const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j, const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                         const float * RESTRICT src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
@@ -55,61 +55,31 @@ inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j,
 
 	__m128 accum0 = _mm_setzero_ps();
 	__m128 accum1 = _mm_setzero_ps();
-	__m128 x, c, coeffs;
+	__m128 coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		__m128 &acc = kk % 2 ? accum1 : accum0;
+		__m128 c, x;
+
+		c = _mm_shuffle_ps(coeffs, coeffs, static_cast<unsigned>(_MM_SHUFFLE(kk, kk, kk, kk)));
+		x = _mm_load_ps(src_p + kk * 4);
+		x = _mm_mul_ps(c, x);
+
+		acc = _mm_add_ps(acc, x);
+	};
 
 	unsigned k_end = Taps >= 4 ? 4 : Taps > 0 ? 0 : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = _mm_load_ps(filter_coeffs + k);
-
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm_load_ps(src_p + 0);
-		x = _mm_mul_ps(c, x);
-		accum0 = _mm_add_ps(accum0, x);
-
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm_load_ps(src_p + 4);
-		x = _mm_mul_ps(c, x);
-		accum1 = _mm_add_ps(accum1, x);
-
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm_load_ps(src_p + 8);
-		x = _mm_mul_ps(c, x);
-		accum0 = _mm_add_ps(accum0, x);
-
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm_load_ps(src_p + 12);
-		x = _mm_mul_ps(c, x);
-		accum1 = _mm_add_ps(accum1, x);
-
+		unroll<4>(f);
 		src_p += 16;
 	}
 
-	if constexpr (Tail >= 1) {
+	if constexpr (Tail) {
 		coeffs = _mm_load_ps(filter_coeffs + k_end);
-
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = _mm_load_ps(src_p + 0);
-		x = _mm_mul_ps(c, x);
-		accum0 = _mm_add_ps(accum0, x);
-	}
-	if constexpr (Tail >= 2) {
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = _mm_load_ps(src_p + 4);
-		x = _mm_mul_ps(c, x);
-		accum1 = _mm_add_ps(accum1, x);
-	}
-	if constexpr (Tail >= 3) {
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = _mm_load_ps(src_p + 8);
-		x = _mm_mul_ps(c, x);
-		accum0 = _mm_add_ps(accum0, x);
-	}
-	if constexpr (Tail >= 4) {
-		c = _mm_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = _mm_load_ps(src_p + 12);
-		x = _mm_mul_ps(c, x);
-		accum1 = _mm_add_ps(accum1, x);
+		unroll<4>(f);
 	}
 
 	if constexpr (Taps <= 0 || Taps >= 2)
@@ -179,36 +149,27 @@ constexpr auto resize_line4_h_f32_sse_jt_large = make_array(
 
 
 template <unsigned Taps, bool Continue>
-inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j,
-                                                       const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3, const float * RESTRICT accum_p,
-                                                       const __m128 &c0, const __m128 &c1, const __m128 &c2, const __m128 &c3)
+inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j, const float * RESTRICT const srcp[4], const float * RESTRICT accum_p, const __m128 c[4])
 {
 	static_assert(Taps >= 1 && Taps <= 4, "must have between 1-4 taps");
 
-	__m128 accum0 = _mm_setzero_ps();
-	__m128 accum1 = _mm_setzero_ps();
-	__m128 x;
+	__m128 accum0, accum1;
 
-	if constexpr (Taps >= 1) {
-		x = _mm_load_ps(src_p0 + j);
-		x = _mm_mul_ps(c0, x);
-		accum0 = Continue ? _mm_add_ps(_mm_load_ps(accum_p + j), x) : x;
-	}
-	if constexpr (Taps >= 2) {
-		x = _mm_load_ps(src_p1 + j);
-		x = _mm_mul_ps(c1, x);
-		accum1 = x;
-	}
-	if constexpr (Taps >= 3) {
-		x = _mm_load_ps(src_p2 + j);
-		x = _mm_mul_ps(c2, x);
-		accum0 = _mm_add_ps(accum0, x);
-	}
-	if constexpr (Taps >= 4) {
-		x = _mm_load_ps(src_p3 + j);
-		x = _mm_mul_ps(c3, x);
-		accum1 = _mm_add_ps(accum1, x);
-	}
+	unroll<Taps>(ZIMG_UNROLL_FUNC(k)
+	{
+		__m128 &acc = k % 2 ? accum1 : accum0;
+		__m128 x;
+
+		x = _mm_load_ps(srcp[k] + j);
+		x = _mm_mul_ps(c[k], x);
+
+		if constexpr (k == 0 && Continue)
+			acc = _mm_add_ps(_mm_load_ps(accum_p + j), x);
+		else if constexpr (k == 0 || k == 1)
+			acc = x;
+		else
+			acc = _mm_add_ps(acc, x);
+	});
 
 	accum0 = (Taps >= 2) ? _mm_add_ps(accum0, accum1) : accum0;
 	return accum0;
@@ -217,23 +178,15 @@ inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j,
 template <unsigned Taps, bool Continue>
 void resize_line_v_f32_sse(const float * RESTRICT filter_data, const float * const * RESTRICT src, float * RESTRICT dst, unsigned left, unsigned right)
 {
-	const float *src_p0 = src[0];
-	const float *src_p1 = src[1];
-	const float *src_p2 = src[2];
-	const float *src_p3 = src[3];
-
+	const float *srcp[4] = { src[0], src[1], src[2], src[3] };
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	const __m128 c0 = _mm_set_ps1(filter_data[0]);
-	const __m128 c1 = _mm_set_ps1(filter_data[1]);
-	const __m128 c2 = _mm_set_ps1(filter_data[2]);
-	const __m128 c3 = _mm_set_ps1(filter_data[3]);
-
+	const __m128 c[4] = { _mm_set_ps1(filter_data[0]), _mm_set_ps1(filter_data[1]), _mm_set_ps1(filter_data[2]), _mm_set_ps1(filter_data[3]) };
 	__m128 accum;
 
 #define XITER resize_line_v_f32_sse_xiter<Taps, Continue>
-#define XARGS src_p0, src_p1, src_p2, src_p3, dst, c0, c1, c2, c3
+#define XARGS srcp, dst, c
 	if (left != vec_left) {
 		accum = XITER(vec_left - 4, XARGS);
 		mm_store_idxhi_ps(dst + vec_left - 4, accum, left % 4);

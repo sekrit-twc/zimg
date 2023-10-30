@@ -316,6 +316,7 @@
     <ClInclude Include="..\..\src\zimg\common\ccdep.h" />
     <ClInclude Include="..\..\src\zimg\common\pixel.h" />
     <ClInclude Include="..\..\src\zimg\common\static_map.h" />
+    <ClInclude Include="..\..\src\zimg\common\unroll.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx_util.h" />

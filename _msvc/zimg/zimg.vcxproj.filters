@@ -291,6 +291,9 @@
     <ClInclude Include="..\..\src\zimg\graph\filter_base.h">
       <Filter>Header Files\graph</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\common\unroll.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">

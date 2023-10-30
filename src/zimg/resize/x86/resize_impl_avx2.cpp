@@ -12,6 +12,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
+#include "common/unroll.h"
 #include "common/x86/cpuinfo_x86.h"
 #include "graph/filter_base.h"
 #include "resize/filter.h"
@@ -222,8 +223,7 @@ void transpose_line_16x16_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 
 
 template <int Taps>
-inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
-                                                          const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                           const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
@@ -239,136 +239,38 @@ inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j,
 
 	__m256i accum_lo = _mm256_setzero_si256();
 	__m256i accum_hi = _mm256_setzero_si256();
-	__m256i x0, x1, xl, xh, c, coeffs;
+	__m256i coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		__m256i c = _mm256_shuffle_epi32(coeffs, static_cast<unsigned>(_MM_SHUFFLE(kk, kk, kk, kk)));
+		__m256i x0, x1, xl, xh;
+
+		x0 = _mm256_load_si256((const __m256i *)(src_p + kk * 32 + 0));
+		x1 = _mm256_load_si256((const __m256i *)(src_p + kk * 32 + 16));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x1 = _mm256_add_epi16(x1, i16_min);
+
+		xl = _mm256_unpacklo_epi16(x0, x1);
+		xh = _mm256_unpackhi_epi16(x0, x1);
+		xl = _mm256_madd_epi16(c, xl);
+		xh = _mm256_madd_epi16(c, xh);
+
+		accum_lo = _mm256_add_epi32(accum_lo, xl);
+		accum_hi = _mm256_add_epi32(accum_hi, xh);
+	};
 
 	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm256_broadcastsi128_si256(_mm_load_si128((const __m128i *)(filter_coeffs + k)));
-
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 0));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 16));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 32));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 48));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 64));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 80));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 96));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 112));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-
+		unroll<4>(f);
 		src_p += 128;
 	}
 
-	if constexpr (Tail >= 2) {
+	if constexpr (Tail) {
 		coeffs = _mm256_broadcastsi128_si256(_mm_load_si128((const __m128i *)(filter_coeffs + k_end)));
-
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 0));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 16));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 4) {
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 32));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 48));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 6) {
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 64));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 80));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 8) {
-		c = _mm256_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm256_load_si256((const __m256i *)(src_p + 96));
-		x1 = _mm256_load_si256((const __m256i *)(src_p + 112));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c, xl);
-		xh = _mm256_madd_epi16(c, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
+		unroll<Tail / 2>(f);
 	}
 
 	accum_lo = export_i30_u16(accum_lo, accum_hi);
@@ -471,8 +373,7 @@ constexpr auto resize_line8_h_u16_avx2_jt_large = make_array(
 
 
 template <class Traits, int Taps>
-inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
-                                                        const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                         const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
@@ -486,53 +387,27 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j,
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
-	__m256 x, c, coeffs;
+	__m256 coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		__m256 &acc = kk % 2 ? accum1 : accum0;
+		__m256 c = _mm256_shuffle_ps(coeffs, coeffs, static_cast<unsigned>(_MM_SHUFFLE(kk, kk, kk, kk)));
+		__m256 x = Traits::load8(src_p + kk * 8);
+		acc = _mm256_fmadd_ps(c, x, acc);
+	};
 
 	unsigned k_end = Taps >= 4 ? 4 : Taps > 0 ? 0 : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k));
-
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = Traits::load8(src_p + 0);
-		accum0 = _mm256_fmadd_ps(c, x, accum0);
-
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = Traits::load8(src_p + 8);
-		accum1 = _mm256_fmadd_ps(c, x, accum1);
-
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = Traits::load8(src_p + 16);
-		accum0 = _mm256_fmadd_ps(c, x, accum0);
-
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = Traits::load8(src_p + 24);
-		accum1 = _mm256_fmadd_ps(c, x, accum1);
-
+		unroll<4>(f);
 		src_p += 32;
 	}
 
-	if constexpr (Tail >= 1) {
+	if constexpr (Tail) {
 		coeffs = _mm256_broadcast_ps((const __m128 *)(filter_coeffs + k_end));
-
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x = Traits::load8(src_p + 0);
-		accum0 = _mm256_fmadd_ps(c, x, accum0);
-	}
-	if constexpr (Tail >= 2) {
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x = Traits::load8(src_p + 8);
-		accum1 = _mm256_fmadd_ps(c, x, accum1);
-	}
-	if constexpr (Tail >= 3) {
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x = Traits::load8(src_p + 16);
-		accum0 = _mm256_fmadd_ps(c, x, accum0);
-	}
-	if constexpr (Tail >= 4) {
-		c = _mm256_shuffle_ps(coeffs, coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x = Traits::load8(src_p + 24);
-		accum1 = _mm256_fmadd_ps(c, x, accum1);
+		unroll<Tail>(f);
 	}
 
 	if constexpr (Taps <= 0 || Taps >= 2)
@@ -642,49 +517,23 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 
 		__m256i accum0 = _mm256_setzero_si256();
 		__m256i accum1 = _mm256_setzero_si256();
-		__m256i x, x0, x8, coeffs;
 
-		if constexpr (Taps >= 2) {
-			x0 = _mm256_loadu_si256((const __m256i *)(src + left + 0));
-			x0 = _mm256_add_epi16(x0, i16_min);
+		__m256i x0 = _mm256_loadu_si256((const __m256i *)(src + left + 0));
+		__m256i x8 = _mm256_loadu_si256((const __m256i *)(src + left + 8));
+		x0 = _mm256_add_epi16(x0, i16_min);
+		x8 = _mm256_add_epi16(x8, i16_min);
 
-			x = x0;
-			x = _mm256_permutevar8x32_epi32(x, mask);
-			coeffs = _mm256_load_si256((__m256i *)(data + 0 * 8));
-			x = _mm256_madd_epi16(coeffs, x);
-			accum0 = _mm256_add_epi32(accum0, x);
-		}
-		if constexpr (Taps >= 4) {
-			x8 = _mm256_loadu_si256((const __m256i *)(src + left + 8));
-			x8 = _mm256_add_epi16(x8, i16_min);
+		unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+		{
+			__m256i &acc = k % 2 ? accum1 : accum0;
 
-			x = _mm256_alignr_epi8(x8, x0, 4);
+			__m256i x = k == 0 ? x0 : k == 4 ? x8 : _mm256_alignr_epi8(x8, x0, static_cast<unsigned>(k * 4));
+			__m256i coeffs = _mm256_load_si256((const __m256i *)(data + k * 16));
+
 			x = _mm256_permutevar8x32_epi32(x, mask);
-			coeffs = _mm256_load_si256((const __m256i *)(data + 2 * 8));
 			x = _mm256_madd_epi16(coeffs, x);
-			accum1 = _mm256_add_epi32(accum1, x);
-		}
-		if constexpr (Taps >= 6) {
-			x = _mm256_alignr_epi8(x8, x0, 8);
-			x = _mm256_permutevar8x32_epi32(x, mask);
-			coeffs = _mm256_load_si256((const __m256i *)(data + 4 * 8));
-			x = _mm256_madd_epi16(coeffs, x);
-			accum0 = _mm256_add_epi32(accum0, x);
-		}
-		if constexpr (Taps >= 8) {
-			x = _mm256_alignr_epi8(x8, x0, 12);
-			x = _mm256_permutevar8x32_epi32(x, mask);
-			coeffs = _mm256_load_si256((const __m256i *)(data + 6 * 8));
-			x = _mm256_madd_epi16(coeffs, x);
-			accum1 = _mm256_add_epi32(accum1, x);
-		}
-		if constexpr (Taps >= 10) {
-			x = x8;
-			x = _mm256_permutevar8x32_epi32(x, mask);
-			coeffs = _mm256_load_si256((const __m256i *)(data + 8 * 8));
-			x = _mm256_madd_epi16(coeffs, x);
-			accum0 = _mm256_add_epi32(accum0, x);
-		}
+			acc = _mm256_add_epi32(acc, x);
+		});
 
 		accum0 = _mm256_add_epi32(accum0, accum1);
 		accum0 = export_i30_u16(accum0, accum0);
@@ -758,62 +607,26 @@ void resize_line_h_perm_fp_avx2(const unsigned * RESTRICT permute_left, const un
 
 		__m256 accum0 = _mm256_setzero_ps();
 		__m256 accum1 = _mm256_setzero_ps();
-		__m256 x, x0, x4, x8, coeffs;
 
-		if constexpr (Taps >= 1) {
-			x0 = Traits::load8(src + left + 0);
+		__m256 x0 = Traits::load8(src + left + 0);
+		__m256 x4 = Traits::load8(src + left + 4);
+		__m256 x8 = Taps >= 6 ? Traits::load8(src + left + 8) : _mm256_setzero_ps();
 
-			x = x0;
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 0 * 8);
-			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
-		}
-		if constexpr (Taps >= 2) {
-			x4 = Traits::load8(src + left + 4);
+		unroll<Taps>(ZIMG_UNROLL_FUNC(k)
+		{
+			__m256 &acc = k % 2 ? accum1 : accum0;
 
-			x = mm256_alignr_epi8_ps(x4, x0, 4);
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 1 * 8);
-			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
-		}
-		if constexpr (Taps >= 3) {
-			x = mm256_alignr_epi8_ps(x4, x0, 8);
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 2 * 8);
-			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
-		}
-		if constexpr (Taps >= 4) {
-			x = mm256_alignr_epi8_ps(x4, x0, 12);
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 3 * 8);
-			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
-		}
-		if constexpr (Taps >= 5) {
-			x = x4;
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 4 * 8);
-			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
-		}
-		if constexpr (Taps >= 6) {
-			x8 = Traits::load8(src + left + 8);
+			__m256 coeffs = _mm256_load_ps(data + k * 8);
+			__m256 x;
 
-			x = mm256_alignr_epi8_ps(x8, x4, 4);
+			if constexpr (k >= 4)
+				x = k % 4 ? mm256_alignr_epi8_ps(x8, x4, (k % 4) * 4) : x4;
+			else
+				x = k % 4 ? mm256_alignr_epi8_ps(x4, x0, (k % 4) * 4) : x0;
+
 			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 5 * 8);
-			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
-		}
-		if constexpr (Taps >= 7) {
-			x = mm256_alignr_epi8_ps(x8, x4, 8);
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 6 * 8);
-			accum0 = _mm256_fmadd_ps(coeffs, x, accum0);
-		}
-		if constexpr (Taps >= 8) {
-			x = mm256_alignr_epi8_ps(x8, x4, 12);
-			x = _mm256_permutevar8x32_ps(x, mask);
-			coeffs = _mm256_load_ps(data + 7 * 8);
-			accum1 = _mm256_fmadd_ps(coeffs, x, accum1);
-		}
+			acc = _mm256_fmadd_ps(coeffs, x, acc);
+		});
 
 		accum0 = _mm256_add_ps(accum0, accum1);
 		Traits::store8(dst + j, accum0);
@@ -865,10 +678,8 @@ constexpr unsigned V_ACCUM_UPDATE = 2;
 constexpr unsigned V_ACCUM_FINAL = 3;
 
 template <unsigned Taps, unsigned AccumMode>
-inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base,
-                                                         const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
-                                                         const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
-                                                         uint32_t * RESTRICT accum_p, const __m256i &c01, const __m256i &c23, const __m256i &c45, const __m256i &c67, uint16_t limit)
+inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned accum_base, const uint16_t * const srcp[8],
+                                                         uint32_t * RESTRICT accum_p, const __m256i c[4], uint16_t limit)
 {
 	static_assert(Taps >= 2 && Taps <= 8, "must have between 2-8 taps");
 	static_assert(Taps % 2 == 0, "tap count must be even");
@@ -878,69 +689,32 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 
 	__m256i accum_lo = _mm256_setzero_si256();
 	__m256i accum_hi = _mm256_setzero_si256();
-	__m256i x0, x1, xl, xh;
 
-	if constexpr (Taps >= 2) {
-		x0 = _mm256_load_si256((const __m256i *)(src_p0 + j));
-		x1 = _mm256_load_si256((const __m256i *)(src_p1 + j));
+	unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+	{
+		__m256i x0, x1, xl, xh;
+
+		x0 = _mm256_load_si256((const __m256i *)(srcp[k * 2 + 0] + j));
+		x1 = _mm256_load_si256((const __m256i *)(srcp[k * 2 + 1] + j));
 		x0 = _mm256_add_epi16(x0, i16_min);
 		x1 = _mm256_add_epi16(x1, i16_min);
 
 		xl = _mm256_unpacklo_epi16(x0, x1);
 		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c01, xl);
-		xh = _mm256_madd_epi16(c01, xh);
+		xl = _mm256_madd_epi16(c[k], xl);
+		xh = _mm256_madd_epi16(c[k], xh);
 
-		if (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
+		if constexpr (k == 0 && (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL)) {
 			accum_lo = _mm256_add_epi32(_mm256_load_si256((const __m256i *)(accum_p + j - accum_base + 0)), xl);
 			accum_hi = _mm256_add_epi32(_mm256_load_si256((const __m256i *)(accum_p + j - accum_base + 8)), xh);
-		} else {
+		} else if (k == 0) {
 			accum_lo = xl;
 			accum_hi = xh;
+		} else {
+			accum_lo = _mm256_add_epi32(accum_lo, xl);
+			accum_hi = _mm256_add_epi32(accum_hi, xh);
 		}
-	}
-	if constexpr (Taps >= 4) {
-		x0 = _mm256_load_si256((const __m256i *)(src_p2 + j));
-		x1 = _mm256_load_si256((const __m256i *)(src_p3 + j));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c23, xl);
-		xh = _mm256_madd_epi16(c23, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
-	if constexpr (Taps >= 6) {
-		x0 = _mm256_load_si256((const __m256i *)(src_p4 + j));
-		x1 = _mm256_load_si256((const __m256i *)(src_p5 + j));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c45, xl);
-		xh = _mm256_madd_epi16(c45, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
-	if constexpr (Taps >= 8) {
-		x0 = _mm256_load_si256((const __m256i *)(src_p6 + j));
-		x1 = _mm256_load_si256((const __m256i *)(src_p7 + j));
-		x0 = _mm256_add_epi16(x0, i16_min);
-		x1 = _mm256_add_epi16(x1, i16_min);
-
-		xl = _mm256_unpacklo_epi16(x0, x1);
-		xh = _mm256_unpackhi_epi16(x0, x1);
-		xl = _mm256_madd_epi16(c67, xl);
-		xh = _mm256_madd_epi16(c67, xh);
-
-		accum_lo = _mm256_add_epi32(accum_lo, xl);
-		accum_hi = _mm256_add_epi32(accum_hi, xh);
-	}
+	});
 
 	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm256_store_si256((__m256i *)(accum_p + j - accum_base + 0), accum_lo);
@@ -957,44 +731,37 @@ inline FORCE_INLINE __m256i resize_line_v_u16_avx2_xiter(unsigned j, unsigned ac
 template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_avx2(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t *src_p0 = src[0];
-	const uint16_t *src_p1 = src[1];
-	const uint16_t *src_p2 = src[2];
-	const uint16_t *src_p3 = src[3];
-	const uint16_t *src_p4 = src[4];
-	const uint16_t *src_p5 = src[5];
-	const uint16_t *src_p6 = src[6];
-	const uint16_t *src_p7 = src[7];
+	const uint16_t *srcp[8] = { src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7] };
 
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
 	unsigned accum_base = floor_n(left, 16);
 
-	const __m256i c01 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[0]), _mm256_set1_epi16(filter_data[1]));
-	const __m256i c23 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[2]), _mm256_set1_epi16(filter_data[3]));
-	const __m256i c45 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[4]), _mm256_set1_epi16(filter_data[5]));
-	const __m256i c67 = _mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[6]), _mm256_set1_epi16(filter_data[7]));
-
-	__m256i out;
+	const __m256i c[4] = {
+		_mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[0]), _mm256_set1_epi16(filter_data[1])),
+		_mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[2]), _mm256_set1_epi16(filter_data[3])),
+		_mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[4]), _mm256_set1_epi16(filter_data[5])),
+		_mm256_unpacklo_epi16(_mm256_set1_epi16(filter_data[6]), _mm256_set1_epi16(filter_data[7])),
+	};
 
 #define XITER resize_line_v_u16_avx2_xiter<Taps, AccumMode>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
+#define XARGS accum_base, srcp, accum, c, limit
 	if (left != vec_left) {
-		out = XITER(vec_left - 16, XARGS);
+		__m256i out = XITER(vec_left - 16, XARGS);
 
 		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm256_store_idxhi_epi16((__m256i *)(dst + vec_left - 16), out, left % 16);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 16) {
-		out = XITER(j, XARGS);
+		__m256i out = XITER(j, XARGS);
 
-		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
+		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm256_store_si256((__m256i *)(dst + j), out);
 	}
 
 	if (right != vec_right) {
-		out = XITER(vec_right, XARGS);
+		__m256i out = XITER(vec_right, XARGS);
 
 		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm256_store_idxlo_epi16((__m256i *)(dst + vec_right), out, right % 16);
@@ -1028,11 +795,7 @@ constexpr auto resize_line_v_u16_avx2_jt_final = make_array(
 
 
 template <class Traits, unsigned Taps, bool Continue, class T = typename Traits::pixel_type>
-inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
-                                                       const T *src_p0, const T *src_p1, const T *src_p2, const T *src_p3,
-                                                       const T *src_p4, const T *src_p5, const T *src_p6, const T *src_p7, T * RESTRICT accum_p,
-                                                       const __m256 &c0, const __m256 &c1, const __m256 &c2, const __m256 &c3,
-                                                       const __m256 &c4, const __m256 &c5, const __m256 &c6, const __m256 &c7)
+inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j, const T * RESTRICT const srcp[8], T * RESTRICT accum_p, const __m256 c[8])
 {
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
@@ -1041,40 +804,21 @@ inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j,
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
-	__m256 x;
 
-	if constexpr (Taps >= 1) {
-		x = Traits::load8(src_p0 + j);
-		accum0 = Continue ? _mm256_fmadd_ps(c0, x, Traits::load8(accum_p + j)) : _mm256_mul_ps(c0, x);
-	}
-	if constexpr (Taps >= 2) {
-		x = Traits::load8(src_p1 + j);
-		accum1 = _mm256_mul_ps(c1, x);
-	}
-	if constexpr (Taps >= 3) {
-		x = Traits::load8(src_p2 + j);
-		accum0 = _mm256_fmadd_ps(c2, x, accum0);
-	}
-	if constexpr (Taps >= 4) {
-		x = Traits::load8(src_p3 + j);
-		accum1 = _mm256_fmadd_ps(c3, x, accum1);
-	}
-	if constexpr (Taps >= 5) {
-		x = Traits::load8(src_p4 + j);
-		accum0 = _mm256_fmadd_ps(c4, x, accum0);
-	}
-	if constexpr (Taps >= 6) {
-		x = Traits::load8(src_p5 + j);
-		accum1 = _mm256_fmadd_ps(c5, x, accum1);
-	}
-	if constexpr (Taps >= 7) {
-		x = Traits::load8(src_p6 + j);
-		accum0 = _mm256_fmadd_ps(c6, x, accum0);
-	}
-	if constexpr (Taps >= 8) {
-		x = Traits::load8(src_p7 + j);
-		accum1 = _mm256_fmadd_ps(c7, x, accum1);
-	}
+	unroll<Taps>(ZIMG_UNROLL_FUNC(k)
+	{
+		__m256 &acc = k % 2 ? accum1 : accum0;
+		__m256 x;
+
+		x = Traits::load8(srcp[k] + j);
+
+		if constexpr (k == 0 && Continue)
+			acc = _mm256_fmadd_ps(c[k], x, Traits::load8(accum_p + j));
+		else if constexpr (k == 0 || k == 1)
+			acc = _mm256_mul_ps(c[k], x);
+		else
+			acc = _mm256_fmadd_ps(c[k], x, acc);
+	});
 
 	if constexpr (Taps >= 2) accum0 = _mm256_add_ps(accum0, accum1);
 	return accum0;
@@ -1085,43 +829,35 @@ void resize_line_v_fp_avx2(const float * RESTRICT filter_data, const typename Tr
 {
 	typedef typename Traits::pixel_type pixel_type;
 
-	const pixel_type *src_p0 = src[0];
-	const pixel_type *src_p1 = src[1];
-	const pixel_type *src_p2 = src[2];
-	const pixel_type *src_p3 = src[3];
-	const pixel_type *src_p4 = src[4];
-	const pixel_type *src_p5 = src[5];
-	const pixel_type *src_p6 = src[6];
-	const pixel_type *src_p7 = src[7];
-
+	const pixel_type *srcp[8] = {src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7]};
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
-	const __m256 c0 = _mm256_broadcast_ss(filter_data + 0);
-	const __m256 c1 = _mm256_broadcast_ss(filter_data + 1);
-	const __m256 c2 = _mm256_broadcast_ss(filter_data + 2);
-	const __m256 c3 = _mm256_broadcast_ss(filter_data + 3);
-	const __m256 c4 = _mm256_broadcast_ss(filter_data + 4);
-	const __m256 c5 = _mm256_broadcast_ss(filter_data + 5);
-	const __m256 c6 = _mm256_broadcast_ss(filter_data + 6);
-	const __m256 c7 = _mm256_broadcast_ss(filter_data + 7);
-
-	__m256 accum;
+	const __m256 c[8] = {
+		_mm256_broadcast_ss(filter_data + 0),
+		_mm256_broadcast_ss(filter_data + 1),
+		_mm256_broadcast_ss(filter_data + 2),
+		_mm256_broadcast_ss(filter_data + 3),
+		_mm256_broadcast_ss(filter_data + 4),
+		_mm256_broadcast_ss(filter_data + 5),
+		_mm256_broadcast_ss(filter_data + 6),
+		_mm256_broadcast_ss(filter_data + 7),
+	};
 
 #define XITER resize_line_v_fp_avx2_xiter<Traits, Taps, Continue>
-#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
+#define XARGS srcp, dst, c
 	if (left != vec_left) {
-		accum = XITER(vec_left - 8, XARGS);
+		__m256 accum = XITER(vec_left - 8, XARGS);
 		Traits::store_idxhi(dst + vec_left - 8, accum, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
-		accum = XITER(j, XARGS);
+		__m256 accum = XITER(j, XARGS);
 		Traits::store8(dst + j, accum);
 	}
 
 	if (right != vec_right) {
-		accum = XITER(vec_right, XARGS);
+		__m256 accum = XITER(vec_right, XARGS);
 		Traits::store_idxlo(dst + vec_right, accum, right % 8);
 	}
 #undef XITER

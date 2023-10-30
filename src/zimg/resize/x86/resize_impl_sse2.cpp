@@ -10,6 +10,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
+#include "common/unroll.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_x86.h"
 
@@ -65,8 +66,7 @@ inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi)
 
 
 template <int Taps>
-inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
-                                                          const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
                                                           const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
@@ -82,136 +82,38 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j,
 
 	__m128i accum_lo = _mm_setzero_si128();
 	__m128i accum_hi = _mm_setzero_si128();
-	__m128i x0, x1, xl, xh, c, coeffs;
+	__m128i coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		__m128i c = _mm_shuffle_epi32(coeffs, static_cast<unsigned>(_MM_SHUFFLE(kk, kk, kk, kk)));
+		__m128i x0, x1, xl, xh;
+
+		x0 = _mm_load_si128((const __m128i *)(src_p + kk * 16 + 0));
+		x1 = _mm_load_si128((const __m128i *)(src_p + kk * 16 + 8));
+		x0 = _mm_add_epi16(x0, i16_min);
+		x1 = _mm_add_epi16(x1, i16_min);
+
+		xl = _mm_unpacklo_epi16(x0, x1);
+		xh = _mm_unpackhi_epi16(x0, x1);
+		xl = _mm_madd_epi16(c, xl);
+		xh = _mm_madd_epi16(c, xh);
+
+		accum_lo = _mm_add_epi32(accum_lo, xl);
+		accum_hi = _mm_add_epi32(accum_hi, xh);
+	};
 
 	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k));
-
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 0));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 8));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 16));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 24));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 32));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 40));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 48));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 56));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-
+		unroll<4>(f);
 		src_p += 64;
 	}
 
-	if constexpr (Tail >= 2) {
+	if constexpr (Tail) {
 		coeffs = _mm_load_si128((const __m128i *)(filter_coeffs + k_end));
-
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(0, 0, 0, 0));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 0));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 8));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 4) {
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(1, 1, 1, 1));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 16));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 24));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 6) {
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(2, 2, 2, 2));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 32));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 40));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
-
-	if constexpr (Tail >= 8) {
-		c = _mm_shuffle_epi32(coeffs, _MM_SHUFFLE(3, 3, 3, 3));
-		x0 = _mm_load_si128((const __m128i *)(src_p + 48));
-		x1 = _mm_load_si128((const __m128i *)(src_p + 56));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c, xl);
-		xh = _mm_madd_epi16(c, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
+		unroll<Tail / 2>(f);
 	}
 
 	accum_lo = export_i30_u16(accum_lo, accum_hi);
@@ -302,10 +204,8 @@ constexpr unsigned V_ACCUM_UPDATE = 2;
 constexpr unsigned V_ACCUM_FINAL = 3;
 
 template <unsigned Taps, unsigned AccumMode>
-inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned accum_base,
-                                                         const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
-                                                         const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
-                                                         uint32_t * RESTRICT accum_p, const __m128i &c01, const __m128i &c23, const __m128i &c45, const __m128i &c67, uint16_t limit)
+inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned accum_base, const uint16_t * const srcp[8],
+                                                         uint32_t * RESTRICT accum_p, const __m128i c[4], uint16_t limit)
 {
 	static_assert(Taps >= 2 && Taps <= 8, "must have between 2-8 taps");
 	static_assert(Taps % 2 == 0, "tap count must be even");
@@ -313,71 +213,33 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 	const __m128i i16_min = _mm_set1_epi16(INT16_MIN);
 	const __m128i lim = _mm_set1_epi16(limit + INT16_MIN);
 
-	__m128i accum_lo = _mm_setzero_si128();
-	__m128i accum_hi = _mm_setzero_si128();
-	__m128i x0, x1, xl, xh;
+	__m128i accum_lo, accum_hi;
 
-	if constexpr (Taps >= 2) {
-		x0 = _mm_load_si128((const __m128i *)(src_p0 + j));
-		x1 = _mm_load_si128((const __m128i *)(src_p1 + j));
+	unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+	{
+		__m128i x0, x1, xl, xh;
+
+		x0 = _mm_load_si128((const __m128i *)(srcp[k * 2 + 0] + j));
+		x1 = _mm_load_si128((const __m128i *)(srcp[k * 2 + 1] + j));
 		x0 = _mm_add_epi16(x0, i16_min);
 		x1 = _mm_add_epi16(x1, i16_min);
 
 		xl = _mm_unpacklo_epi16(x0, x1);
 		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c01, xl);
-		xh = _mm_madd_epi16(c01, xh);
+		xl = _mm_madd_epi16(c[k], xl);
+		xh = _mm_madd_epi16(c[k], xh);
 
-		if (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
+		if constexpr (k == 0 && (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL)) {
 			accum_lo = _mm_add_epi32(_mm_load_si128((const __m128i *)(accum_p + j - accum_base + 0)), xl);
 			accum_hi = _mm_add_epi32(_mm_load_si128((const __m128i *)(accum_p + j - accum_base + 4)), xh);
-		} else {
+		} else if constexpr (k == 0) {
 			accum_lo = xl;
 			accum_hi = xh;
+		} else {
+			accum_lo = _mm_add_epi32(accum_lo, xl);
+			accum_hi = _mm_add_epi32(accum_hi, xh);
 		}
-	}
-	if constexpr (Taps >= 4) {
-		x0 = _mm_load_si128((const __m128i *)(src_p2 + j));
-		x1 = _mm_load_si128((const __m128i *)(src_p3 + j));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c23, xl);
-		xh = _mm_madd_epi16(c23, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
-	if constexpr (Taps >= 6) {
-		x0 = _mm_load_si128((const __m128i *)(src_p4 + j));
-		x1 = _mm_load_si128((const __m128i *)(src_p5 + j));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c45, xl);
-		xh = _mm_madd_epi16(c45, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
-	if constexpr (Taps >= 8) {
-		x0 = _mm_load_si128((const __m128i *)(src_p6 + j));
-		x1 = _mm_load_si128((const __m128i *)(src_p7 + j));
-		x0 = _mm_add_epi16(x0, i16_min);
-		x1 = _mm_add_epi16(x1, i16_min);
-
-		xl = _mm_unpacklo_epi16(x0, x1);
-		xh = _mm_unpackhi_epi16(x0, x1);
-		xl = _mm_madd_epi16(c67, xl);
-		xh = _mm_madd_epi16(c67, xh);
-
-		accum_lo = _mm_add_epi32(accum_lo, xl);
-		accum_hi = _mm_add_epi32(accum_hi, xh);
-	}
+	});
 
 	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm_store_si128((__m128i *)(accum_p + j - accum_base + 0), accum_lo);
@@ -394,44 +256,36 @@ inline FORCE_INLINE __m128i resize_line_v_u16_sse2_xiter(unsigned j, unsigned ac
 template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_sse2(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t * RESTRICT src_p0 = src[0];
-	const uint16_t * RESTRICT src_p1 = src[1];
-	const uint16_t * RESTRICT src_p2 = src[2];
-	const uint16_t * RESTRICT src_p3 = src[3];
-	const uint16_t * RESTRICT src_p4 = src[4];
-	const uint16_t * RESTRICT src_p5 = src[5];
-	const uint16_t * RESTRICT src_p6 = src[6];
-	const uint16_t * RESTRICT src_p7 = src[7];
-
+	const uint16_t *srcp[8] = { src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7] };
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 	unsigned accum_base = floor_n(left, 8);
 
-	const __m128i c01 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[0]), _mm_set1_epi16(filter_data[1]));
-	const __m128i c23 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[2]), _mm_set1_epi16(filter_data[3]));
-	const __m128i c45 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[4]), _mm_set1_epi16(filter_data[5]));
-	const __m128i c67 = _mm_unpacklo_epi16(_mm_set1_epi16(filter_data[6]), _mm_set1_epi16(filter_data[7]));
-
-	__m128i out;
+	const __m128i c[4] = {
+		_mm_unpacklo_epi16(_mm_set1_epi16(filter_data[0]), _mm_set1_epi16(filter_data[1])),
+		_mm_unpacklo_epi16(_mm_set1_epi16(filter_data[2]), _mm_set1_epi16(filter_data[3])),
+		_mm_unpacklo_epi16(_mm_set1_epi16(filter_data[4]), _mm_set1_epi16(filter_data[5])),
+		_mm_unpacklo_epi16(_mm_set1_epi16(filter_data[6]), _mm_set1_epi16(filter_data[7])),
+	};
 
 #define XITER resize_line_v_u16_sse2_xiter<Taps, AccumMode>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
+#define XARGS accum_base, srcp, accum, c, limit
 	if (left != vec_left) {
-		out = XITER(vec_left - 8, XARGS);
+		__m128i out = XITER(vec_left - 8, XARGS);
 
 		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm_store_idxhi_epi16((__m128i *)(dst + vec_left - 8), out, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
-		out = XITER(j, XARGS);
+		__m128i out = XITER(j, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm_store_si128((__m128i *)(dst + j), out);
 	}
 
 	if (right != vec_right) {
-		out = XITER(vec_right, XARGS);
+		__m128i out = XITER(vec_right, XARGS);
 
 		if constexpr (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			mm_store_idxlo_epi16((__m128i *)(dst + vec_right), out, right % 8);

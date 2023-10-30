@@ -10,7 +10,8 @@
 #include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/make_array.h"
-#include "common/except.h"
+#include "common/make_array.h"
+#include "common/unroll.h"
 #include "graph/filter_base.h"
 #include "resize/resize_impl.h"
 
@@ -49,74 +50,26 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 		__m512i x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
 		__m512i x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31;
 
-		x0 = _mm512_load_si512(src[0] + j);
-		x1 = _mm512_load_si512(src[1] + j);
-		x2 = _mm512_load_si512(src[2] + j);
-		x3 = _mm512_load_si512(src[3] + j);
-		x4 = _mm512_load_si512(src[4] + j);
-		x5 = _mm512_load_si512(src[5] + j);
-		x6 = _mm512_load_si512(src[6] + j);
-		x7 = _mm512_load_si512(src[7] + j);
-		x8 = _mm512_load_si512(src[8] + j);
-		x9 = _mm512_load_si512(src[9] + j);
-		x10 = _mm512_load_si512(src[10] + j);
-		x11 = _mm512_load_si512(src[11] + j);
-		x12 = _mm512_load_si512(src[12] + j);
-		x13 = _mm512_load_si512(src[13] + j);
-		x14 = _mm512_load_si512(src[14] + j);
-		x15 = _mm512_load_si512(src[15] + j);
-		x16 = _mm512_load_si512(src[16] + j);
-		x17 = _mm512_load_si512(src[17] + j);
-		x18 = _mm512_load_si512(src[18] + j);
-		x19 = _mm512_load_si512(src[19] + j);
-		x20 = _mm512_load_si512(src[20] + j);
-		x21 = _mm512_load_si512(src[21] + j);
-		x22 = _mm512_load_si512(src[22] + j);
-		x23 = _mm512_load_si512(src[23] + j);
-		x24 = _mm512_load_si512(src[24] + j);
-		x25 = _mm512_load_si512(src[25] + j);
-		x26 = _mm512_load_si512(src[26] + j);
-		x27 = _mm512_load_si512(src[27] + j);
-		x28 = _mm512_load_si512(src[28] + j);
-		x29 = _mm512_load_si512(src[29] + j);
-		x30 = _mm512_load_si512(src[30] + j);
-		x31 = _mm512_load_si512(src[31] + j);
+		 x0 = _mm512_load_si512(src[0] + j);   x1 = _mm512_load_si512(src[1] + j);   x2 = _mm512_load_si512(src[2] + j);  x3 = _mm512_load_si512(src[3] + j);
+		 x4 = _mm512_load_si512(src[4] + j);   x5 = _mm512_load_si512(src[5] + j);   x6 = _mm512_load_si512(src[6] + j);  x7 = _mm512_load_si512(src[7] + j);
+		 x8 = _mm512_load_si512(src[8] + j);   x9 = _mm512_load_si512(src[9] + j);  x10 = _mm512_load_si512(src[10] + j); x11 = _mm512_load_si512(src[11] + j);
+		x12 = _mm512_load_si512(src[12] + j); x13 = _mm512_load_si512(src[13] + j); x14 = _mm512_load_si512(src[14] + j); x15 = _mm512_load_si512(src[15] + j);
+		x16 = _mm512_load_si512(src[16] + j); x17 = _mm512_load_si512(src[17] + j); x18 = _mm512_load_si512(src[18] + j); x19 = _mm512_load_si512(src[19] + j);
+		x20 = _mm512_load_si512(src[20] + j); x21 = _mm512_load_si512(src[21] + j); x22 = _mm512_load_si512(src[22] + j); x23 = _mm512_load_si512(src[23] + j);
+		x24 = _mm512_load_si512(src[24] + j); x25 = _mm512_load_si512(src[25] + j); x26 = _mm512_load_si512(src[26] + j); x27 = _mm512_load_si512(src[27] + j);
+		x28 = _mm512_load_si512(src[28] + j); x29 = _mm512_load_si512(src[29] + j); x30 = _mm512_load_si512(src[30] + j); x31 = _mm512_load_si512(src[31] + j);
 
 		mm512_transpose32_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 		                        x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31);
 
-		_mm512_store_si512(dst + 0, x0);
-		_mm512_store_si512(dst + 32, x1);
-		_mm512_store_si512(dst + 64, x2);
-		_mm512_store_si512(dst + 96, x3);
-		_mm512_store_si512(dst + 128, x4);
-		_mm512_store_si512(dst + 160, x5);
-		_mm512_store_si512(dst + 192, x6);
-		_mm512_store_si512(dst + 224, x7);
-		_mm512_store_si512(dst + 256, x8);
-		_mm512_store_si512(dst + 288, x9);
-		_mm512_store_si512(dst + 320, x10);
-		_mm512_store_si512(dst + 352, x11);
-		_mm512_store_si512(dst + 384, x12);
-		_mm512_store_si512(dst + 416, x13);
-		_mm512_store_si512(dst + 448, x14);
-		_mm512_store_si512(dst + 480, x15);
-		_mm512_store_si512(dst + 512, x16);
-		_mm512_store_si512(dst + 544, x17);
-		_mm512_store_si512(dst + 576, x18);
-		_mm512_store_si512(dst + 608, x19);
-		_mm512_store_si512(dst + 640, x20);
-		_mm512_store_si512(dst + 672, x21);
-		_mm512_store_si512(dst + 704, x22);
-		_mm512_store_si512(dst + 736, x23);
-		_mm512_store_si512(dst + 768, x24);
-		_mm512_store_si512(dst + 800, x25);
-		_mm512_store_si512(dst + 832, x26);
-		_mm512_store_si512(dst + 864, x27);
-		_mm512_store_si512(dst + 896, x28);
-		_mm512_store_si512(dst + 928, x29);
-		_mm512_store_si512(dst + 960, x30);
-		_mm512_store_si512(dst + 992, x31);
+		_mm512_store_si512(dst + 0, x0);    _mm512_store_si512(dst + 32, x1);   _mm512_store_si512(dst + 64, x2);   _mm512_store_si512(dst + 96, x3);
+		_mm512_store_si512(dst + 128, x4);  _mm512_store_si512(dst + 160, x5);  _mm512_store_si512(dst + 192, x6);  _mm512_store_si512(dst + 224, x7);
+		_mm512_store_si512(dst + 256, x8);  _mm512_store_si512(dst + 288, x9);  _mm512_store_si512(dst + 320, x10); _mm512_store_si512(dst + 352, x11);
+		_mm512_store_si512(dst + 384, x12); _mm512_store_si512(dst + 416, x13); _mm512_store_si512(dst + 448, x14); _mm512_store_si512(dst + 480, x15);
+		_mm512_store_si512(dst + 512, x16); _mm512_store_si512(dst + 544, x17); _mm512_store_si512(dst + 576, x18); _mm512_store_si512(dst + 608, x19);
+		_mm512_store_si512(dst + 640, x20); _mm512_store_si512(dst + 672, x21); _mm512_store_si512(dst + 704, x22); _mm512_store_si512(dst + 736, x23);
+		_mm512_store_si512(dst + 768, x24); _mm512_store_si512(dst + 800, x25); _mm512_store_si512(dst + 832, x26); _mm512_store_si512(dst + 864, x27);
+		_mm512_store_si512(dst + 896, x28); _mm512_store_si512(dst + 928, x29); _mm512_store_si512(dst + 960, x30); _mm512_store_si512(dst + 992, x31);
 
 		dst += 1024;
 	}
@@ -124,8 +77,8 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 
 template <int Taps>
 inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
-                                                             const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                             const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
+	const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+	const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -6, "only up to 6 taps in epilogue");
@@ -140,112 +93,35 @@ inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
 
 	__m512i accum_lo = _mm512_setzero_si512();
 	__m512i accum_hi = _mm512_setzero_si512();
-	__m512i x0, x1, xl, xh, c, coeffs;
+	__m512i coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		__m512i c = _mm512_shuffle_epi32(coeffs, static_cast<_MM_PERM_ENUM>(_MM_SHUFFLE(kk, kk, kk, kk)));
+		__m512i x0, x1, xl, xh;
+
+		x0 = _mm512_load_si512((const __m256i *)(src_p + kk * 64 + 0));
+		x1 = _mm512_load_si512((const __m256i *)(src_p + kk * 64 + 32));
+		x0 = _mm512_add_epi16(x0, i16_min);
+		x1 = _mm512_add_epi16(x1, i16_min);
+
+		xl = _mm512_unpacklo_epi16(x0, x1);
+		xh = _mm512_unpackhi_epi16(x0, x1);
+		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
+		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
+	};
 
 	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = _mm512_broadcast_i32x4(_mm_load_si128((const __m128i *)(filter_coeffs + k)));
-
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_AAAA);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 0));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 32));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_BBBB);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 64));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 96));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_CCCC);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 128));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 160));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_DDDD);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 192));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 224));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-
+		unroll<4>(f);
 		src_p += 256;
 	}
 
-	if constexpr (Tail >= 2) {
+	if constexpr (Tail) {
 		coeffs = _mm512_broadcast_i32x4(_mm_load_si128((const __m128i *)(filter_coeffs + k_end)));
-
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_AAAA);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 0));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 32));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-	}
-
-	if constexpr (Tail >= 4) {
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_BBBB);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 64));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 96));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-	}
-
-	if constexpr (Tail >= 6) {
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_CCCC);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 128));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 160));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
-	}
-
-	if constexpr (Tail >= 8) {
-		c = _mm512_shuffle_epi32(coeffs, _MM_PERM_DDDD);
-		x0 = _mm512_load_si512((const __m256i *)(src_p + 192));
-		x1 = _mm512_load_si512((const __m256i *)(src_p + 224));
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c, xh);
+		unroll<Tail / 2>(f);
 	}
 
 	accum_lo = export2_i30_u16(accum_lo, accum_hi);
@@ -282,74 +158,26 @@ void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int
 			_mm512_store_si512(cache[jj - j], x);
 		}
 
-		x0 = _mm512_load_si512(cache[0]);
-		x1 = _mm512_load_si512(cache[1]);
-		x2 = _mm512_load_si512(cache[2]);
-		x3 = _mm512_load_si512(cache[3]);
-		x4 = _mm512_load_si512(cache[4]);
-		x5 = _mm512_load_si512(cache[5]);
-		x6 = _mm512_load_si512(cache[6]);
-		x7 = _mm512_load_si512(cache[7]);
-		x8 = _mm512_load_si512(cache[8]);
-		x9 = _mm512_load_si512(cache[9]);
-		x10 = _mm512_load_si512(cache[10]);
-		x11 = _mm512_load_si512(cache[11]);
-		x12 = _mm512_load_si512(cache[12]);
-		x13 = _mm512_load_si512(cache[13]);
-		x14 = _mm512_load_si512(cache[14]);
-		x15 = _mm512_load_si512(cache[15]);
-		x16 = _mm512_load_si512(cache[16]);
-		x17 = _mm512_load_si512(cache[17]);
-		x18 = _mm512_load_si512(cache[18]);
-		x19 = _mm512_load_si512(cache[19]);
-		x20 = _mm512_load_si512(cache[20]);
-		x21 = _mm512_load_si512(cache[21]);
-		x22 = _mm512_load_si512(cache[22]);
-		x23 = _mm512_load_si512(cache[23]);
-		x24 = _mm512_load_si512(cache[24]);
-		x25 = _mm512_load_si512(cache[25]);
-		x26 = _mm512_load_si512(cache[26]);
-		x27 = _mm512_load_si512(cache[27]);
-		x28 = _mm512_load_si512(cache[28]);
-		x29 = _mm512_load_si512(cache[29]);
-		x30 = _mm512_load_si512(cache[30]);
-		x31 = _mm512_load_si512(cache[31]);
+		 x0 = _mm512_load_si512(cache[0]);   x1 = _mm512_load_si512(cache[1]);   x2 = _mm512_load_si512(cache[2]);   x3 = _mm512_load_si512(cache[3]);
+		 x4 = _mm512_load_si512(cache[4]);   x5 = _mm512_load_si512(cache[5]);   x6 = _mm512_load_si512(cache[6]);   x7 = _mm512_load_si512(cache[7]);
+		 x8 = _mm512_load_si512(cache[8]);   x9 = _mm512_load_si512(cache[9]);  x10 = _mm512_load_si512(cache[10]); x11 = _mm512_load_si512(cache[11]);
+		x12 = _mm512_load_si512(cache[12]); x13 = _mm512_load_si512(cache[13]); x14 = _mm512_load_si512(cache[14]); x15 = _mm512_load_si512(cache[15]);
+		x16 = _mm512_load_si512(cache[16]); x17 = _mm512_load_si512(cache[17]); x18 = _mm512_load_si512(cache[18]); x19 = _mm512_load_si512(cache[19]);
+		x20 = _mm512_load_si512(cache[20]); x21 = _mm512_load_si512(cache[21]); x22 = _mm512_load_si512(cache[22]); x23 = _mm512_load_si512(cache[23]);
+		x24 = _mm512_load_si512(cache[24]); x25 = _mm512_load_si512(cache[25]); x26 = _mm512_load_si512(cache[26]); x27 = _mm512_load_si512(cache[27]);
+		x28 = _mm512_load_si512(cache[28]); x29 = _mm512_load_si512(cache[29]); x30 = _mm512_load_si512(cache[30]); x31 = _mm512_load_si512(cache[31]);
 
 		mm512_transpose32_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 		                        x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31);
 
-		_mm512_store_si512(dst[0] + j, x0);
-		_mm512_store_si512(dst[1] + j, x1);
-		_mm512_store_si512(dst[2] + j, x2);
-		_mm512_store_si512(dst[3] + j, x3);
-		_mm512_store_si512(dst[4] + j, x4);
-		_mm512_store_si512(dst[5] + j, x5);
-		_mm512_store_si512(dst[6] + j, x6);
-		_mm512_store_si512(dst[7] + j, x7);
-		_mm512_store_si512(dst[8] + j, x8);
-		_mm512_store_si512(dst[9] + j, x9);
-		_mm512_store_si512(dst[10] + j, x10);
-		_mm512_store_si512(dst[11] + j, x11);
-		_mm512_store_si512(dst[12] + j, x12);
-		_mm512_store_si512(dst[13] + j, x13);
-		_mm512_store_si512(dst[14] + j, x14);
-		_mm512_store_si512(dst[15] + j, x15);
-		_mm512_store_si512(dst[16] + j, x16);
-		_mm512_store_si512(dst[17] + j, x17);
-		_mm512_store_si512(dst[18] + j, x18);
-		_mm512_store_si512(dst[19] + j, x19);
-		_mm512_store_si512(dst[20] + j, x20);
-		_mm512_store_si512(dst[21] + j, x21);
-		_mm512_store_si512(dst[22] + j, x22);
-		_mm512_store_si512(dst[23] + j, x23);
-		_mm512_store_si512(dst[24] + j, x24);
-		_mm512_store_si512(dst[25] + j, x25);
-		_mm512_store_si512(dst[26] + j, x26);
-		_mm512_store_si512(dst[27] + j, x27);
-		_mm512_store_si512(dst[28] + j, x28);
-		_mm512_store_si512(dst[29] + j, x29);
-		_mm512_store_si512(dst[30] + j, x30);
-		_mm512_store_si512(dst[31] + j, x31);
+		_mm512_store_si512(dst[0] + j, x0);   _mm512_store_si512(dst[1] + j, x1);   _mm512_store_si512(dst[2] + j, x2);   _mm512_store_si512(dst[3] + j, x3);
+		_mm512_store_si512(dst[4] + j, x4);   _mm512_store_si512(dst[5] + j, x5);   _mm512_store_si512(dst[6] + j, x6);   _mm512_store_si512(dst[7] + j, x7);
+		_mm512_store_si512(dst[8] + j, x8);   _mm512_store_si512(dst[9] + j, x9);   _mm512_store_si512(dst[10] + j, x10); _mm512_store_si512(dst[11] + j, x11);
+		_mm512_store_si512(dst[12] + j, x12); _mm512_store_si512(dst[13] + j, x13); _mm512_store_si512(dst[14] + j, x14); _mm512_store_si512(dst[15] + j, x15);
+		_mm512_store_si512(dst[16] + j, x16); _mm512_store_si512(dst[17] + j, x17); _mm512_store_si512(dst[18] + j, x18); _mm512_store_si512(dst[19] + j, x19);
+		_mm512_store_si512(dst[20] + j, x20); _mm512_store_si512(dst[21] + j, x21); _mm512_store_si512(dst[22] + j, x22); _mm512_store_si512(dst[23] + j, x23);
+		_mm512_store_si512(dst[24] + j, x24); _mm512_store_si512(dst[25] + j, x25); _mm512_store_si512(dst[26] + j, x26); _mm512_store_si512(dst[27] + j, x27);
+		_mm512_store_si512(dst[28] + j, x28); _mm512_store_si512(dst[29] + j, x29); _mm512_store_si512(dst[30] + j, x30); _mm512_store_si512(dst[31] + j, x31);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
@@ -400,7 +228,7 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 	for (unsigned j = floor_n(left, 16); j < vec_right; j += 16) {
 		unsigned left = permute_left[j / 16];
 
-		if (input_width - left < 64) {
+		if (input_width - left < (Taps >= 12 ? 48 : 40)) {
 			fallback_idx = j;
 			break;
 		}
@@ -410,65 +238,30 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 
 		__m512i accum0 = _mm512_setzero_si512();
 		__m512i accum1 = _mm512_setzero_si512();
-		__m512i x, x0, x8, x16, coeffs;
 
-		if constexpr (Taps >= 2) {
-			x0 = _mm512_loadu_si512(src + left + 0);
-			x0 = _mm512_add_epi16(x0, i16_min);
+		__m512i x0 = _mm512_loadu_si512(src + left + 0);
+		__m512i x8 = _mm512_loadu_si512(src + left + 8);
+		__m512i x16 = Taps >= 12 ? _mm512_loadu_si512(src + left + 16) : _mm512_setzero_si512();
 
-			x = x0;
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 0 * 16);
-			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
-		}
-		if constexpr (Taps >= 4) {
-			x8 = _mm512_loadu_si512(src + left + 8);
-			x8 = _mm512_add_epi16(x8, i16_min);
+		x0 = _mm512_add_epi16(x0, i16_min);
+		x8 = _mm512_add_epi16(x8, i16_min);
+		x16 = Taps >= 12 ? _mm512_add_epi16(x16, i16_min) : _mm512_setzero_si512();
 
-			x = _mm512_alignr_epi8(x8, x0, 4);
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 2 * 16);
-			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
-		}
-		if constexpr (Taps >= 6) {
-			x = _mm512_alignr_epi8(x8, x0, 8);
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 4 * 16);
-			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
-		}
-		if constexpr (Taps >= 8) {
-			x = _mm512_alignr_epi8(x8, x0, 12);
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 6 * 16);
-			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
-		}
-		if constexpr (Taps >= 10) {
-			x = x8;
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 8 * 16);
-			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
-		}
-		if constexpr (Taps >= 12) {
-			x16 = _mm512_loadu_si512(src + left + 16);
-			x16 = _mm512_add_epi16(x16, i16_min);
+		unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+		{
+			__m512i &acc = k % 2 ? accum1 : accum0;
 
-			x = _mm512_alignr_epi8(x16, x8, 4);
+			__m512i coeffs = _mm512_load_si512(data + k * 32);
+			__m512i x;
+
+			if constexpr (k >= 4)
+				x = k % 4 ? _mm512_alignr_epi8(x16, x8, (k % 4) * 4) : x8;
+			else
+				x = k % 4 ? _mm512_alignr_epi8(x8, x0, (k % 4) * 4) : x0;
+
 			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 10 * 16);
-			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
-		}
-		if constexpr (Taps >= 14) {
-			x = _mm512_alignr_epi8(x16, x8, 8);
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 12 * 16);
-			accum0 = mm512_dpwssd_epi32(accum0, coeffs, x);
-		}
-		if constexpr (Taps >= 16) {
-			x = _mm512_alignr_epi8(x16, x8, 12);
-			x = _mm512_permutexvar_epi16(mask, x);
-			coeffs = _mm512_load_si512(data + 14 * 16);
-			accum1 = mm512_dpwssd_epi32(accum1, coeffs, x);
-		}
+			acc = mm512_dpwssd_epi32(acc, coeffs, x);
+		});
 
 		accum0 = _mm512_add_epi32(accum0, accum1);
 
@@ -521,10 +314,8 @@ constexpr unsigned V_ACCUM_UPDATE = 2;
 constexpr unsigned V_ACCUM_FINAL = 3;
 
 template <unsigned Taps, unsigned AccumMode>
-inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base,
-                                                           const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
-                                                           const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7,
-                                                           uint32_t * RESTRICT accum_p, const __m512i &c01, const __m512i &c23, const __m512i &c45, const __m512i &c67, uint16_t limit)
+inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base, const uint16_t *const srcp[8],
+                                                           uint32_t * RESTRICT accum_p, const __m512i c[4], uint16_t limit)
 {
 	static_assert(Taps >= 2 && Taps <= 8, "must have between 2-8 taps");
 	static_assert(Taps % 2 == 0, "tap count must be even");
@@ -534,61 +325,30 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 
 	__m512i accum_lo = _mm512_setzero_si512();
 	__m512i accum_hi = _mm512_setzero_si512();
-	__m512i x0, x1, xl, xh;
 
-	if constexpr (Taps >= 2) {
-		x0 = _mm512_load_si512(src_p0 + j);
-		x1 = _mm512_load_si512(src_p1 + j);
+	unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+	{
+		__m512i x0, x1, xl, xh;
+
+		x0 = _mm512_load_si512(srcp[k * 2 + 0] + j);
+		x1 = _mm512_load_si512(srcp[k * 2 + 1] + j);
 		x0 = _mm512_add_epi16(x0, i16_min);
 		x1 = _mm512_add_epi16(x1, i16_min);
 
 		xl = _mm512_unpacklo_epi16(x0, x1);
 		xh = _mm512_unpackhi_epi16(x0, x1);
 
-		if constexpr (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
-			accum_lo = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 0), c01, xl);
-			accum_hi = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 16), c01, xh);
+		if constexpr (k == 0 && (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL)) {
+			accum_lo = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 0), c[k], xl);
+			accum_hi = mm512_dpwssd_epi32(_mm512_load_si512(accum_p + j - accum_base + 16), c[k], xh);
+		} else if constexpr (k == 0) {
+			accum_lo = _mm512_madd_epi16(c[k], xl);
+			accum_hi = _mm512_madd_epi16(c[k], xh);
 		} else {
-			accum_lo = _mm512_madd_epi16(c01, xl);
-			accum_hi = _mm512_madd_epi16(c01, xh);
+			accum_lo = mm512_dpwssd_epi32(accum_lo, c[k], xl);
+			accum_hi = mm512_dpwssd_epi32(accum_hi, c[k], xh);
 		}
-	}
-	if constexpr (Taps >= 4) {
-		x0 = _mm512_load_si512(src_p2 + j);
-		x1 = _mm512_load_si512(src_p3 + j);
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c23, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c23, xh);
-	}
-	if constexpr (Taps >= 6) {
-		x0 = _mm512_load_si512(src_p4 + j);
-		x1 = _mm512_load_si512(src_p5 + j);
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c45, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c45, xh);
-	}
-	if constexpr (Taps >= 8) {
-		x0 = _mm512_load_si512(src_p6 + j);
-		x1 = _mm512_load_si512(src_p7 + j);
-		x0 = _mm512_add_epi16(x0, i16_min);
-		x1 = _mm512_add_epi16(x1, i16_min);
-
-		xl = _mm512_unpacklo_epi16(x0, x1);
-		xh = _mm512_unpackhi_epi16(x0, x1);
-
-		accum_lo = mm512_dpwssd_epi32(accum_lo, c67, xl);
-		accum_hi = mm512_dpwssd_epi32(accum_hi, c67, xh);
-	}
+	});
 
 	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		_mm512_store_si512(accum_p + j - accum_base + 0, accum_lo);
@@ -606,44 +366,36 @@ template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_avx512(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, uint32_t * RESTRICT accum,
                               unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t *src_p0 = src[0];
-	const uint16_t *src_p1 = src[1];
-	const uint16_t *src_p2 = src[2];
-	const uint16_t *src_p3 = src[3];
-	const uint16_t *src_p4 = src[4];
-	const uint16_t *src_p5 = src[5];
-	const uint16_t *src_p6 = src[6];
-	const uint16_t *src_p7 = src[7];
-
+	const uint16_t *srcp[8] = { src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7] };
 	unsigned vec_left = ceil_n(left, 32);
 	unsigned vec_right = floor_n(right, 32);
 	unsigned accum_base = floor_n(left, 32);
 
-	const __m512i c01 = _mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[0]), _mm512_set1_epi16(filter_data[1]));
-	const __m512i c23 = _mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[2]), _mm512_set1_epi16(filter_data[3]));
-	const __m512i c45 = _mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[4]), _mm512_set1_epi16(filter_data[5]));
-	const __m512i c67 = _mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[6]), _mm512_set1_epi16(filter_data[7]));
-
-	__m512i out;
+	const __m512i c[4] = {
+		_mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[0]), _mm512_set1_epi16(filter_data[1])),
+		_mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[2]), _mm512_set1_epi16(filter_data[3])),
+		_mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[4]), _mm512_set1_epi16(filter_data[5])),
+		_mm512_unpacklo_epi16(_mm512_set1_epi16(filter_data[6]), _mm512_set1_epi16(filter_data[7])),
+	};
 
 #define XITER resize_line_v_u16_avx512_xiter<Taps, AccumMode>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c01, c23, c45, c67, limit
+#define XARGS accum_base, srcp, accum, c, limit
 	if (left != vec_left) {
-		out = XITER(vec_left - 32, XARGS);
+		__m512i out = XITER(vec_left - 32, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_mask_storeu_epi16(dst + vec_left - 32, mmask32_set_hi(vec_left - left), out);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 32) {
-		out = XITER(j, XARGS);
+		__m512i out = XITER(j, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_store_si512(dst + j, out);
 	}
 
 	if (right != vec_right) {
-		out = XITER(vec_right, XARGS);
+		__m512i out = XITER(vec_right, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			_mm512_mask_storeu_epi16(dst + vec_right, mmask32_set_lo(right - vec_right), out);
