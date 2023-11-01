@@ -10,6 +10,7 @@
 #include "common/except.h"
 #include "common/make_array.h"
 #include "common/pixel.h"
+#include "common/unroll.h"
 #include "resize/resize_impl.h"
 #include "resize_impl_arm.h"
 
@@ -84,9 +85,8 @@ inline FORCE_INLINE int16x8_t export_i30_u16(int32x4_t lo, int32x4_t hi)
 
 
 template <int Taps>
-inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
-                                                             const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                             const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
+inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j, const unsigned *filter_left, const int16_t *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                             const uint16_t *src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -7, "only up to 7 taps in epilogue");
@@ -100,121 +100,30 @@ inline FORCE_INLINE uint16x8_t resize_line8_h_u16_neon_xiter(unsigned j,
 
 	int32x4_t accum_lo = vdupq_n_s32(0);
 	int32x4_t accum_hi = vdupq_n_s32(0);
-	int16x8_t x, c, coeffs;
+	int16x8_t coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		int16x8_t c, x;
+
+		c = vdupq_laneq_s16(coeffs, static_cast<unsigned>(kk));
+		x = vreinterpretq_s16_u16(vld1q_u16(src_p + kk * 8));
+		x = vaddq_s16(x, i16_min);
+		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
+		accum_hi = vmlal_high_s16(accum_hi, x, c);
+	};
 
 	unsigned k_end = Taps > 0 ? 0 : floor_n(filter_width + 1, 8);
 
 	for (unsigned k = 0; k < k_end; k += 8) {
 		coeffs = vld1q_s16(filter_coeffs + k);
-
-		c = vdupq_laneq_s16(coeffs, 0);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 0));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 1);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 8));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 2);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 16));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 3);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 24));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 4);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 32));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 5);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 40));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 6);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 48));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
-		c = vdupq_laneq_s16(coeffs, 7);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 56));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-
+		unroll<8>(f);
 		src_p += 64;
 	}
 
-	if constexpr (Tail >= 1) {
+	if constexpr (Tail) {
 		coeffs = vld1q_s16(filter_coeffs + k_end);
-
-		c = vdupq_laneq_s16(coeffs, 0);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 0));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 2) {
-		c = vdupq_laneq_s16(coeffs, 1);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 8));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 3) {
-		c = vdupq_laneq_s16(coeffs, 2);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 16));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 4) {
-		c = vdupq_laneq_s16(coeffs, 3);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 24));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 5) {
-		c = vdupq_laneq_s16(coeffs, 4);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 32));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 6) {
-		c = vdupq_laneq_s16(coeffs, 5);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 40));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 7) {
-		c = vdupq_laneq_s16(coeffs, 6);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 48));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
-	}
-	if constexpr (Tail >= 8) {
-		c = vdupq_laneq_s16(coeffs, 7);
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p + 56));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(x), vget_low_s16(c));
-		accum_hi = vmlal_high_s16(accum_hi, x, c);
+		unroll<Tail>(f);
 	}
 
 	int16x8_t result = export_i30_u16(accum_lo, accum_hi);
@@ -230,20 +139,11 @@ void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
-	uint16_t *dst_p0 = dst[0];
-	uint16_t *dst_p1 = dst[1];
-	uint16_t *dst_p2 = dst[2];
-	uint16_t *dst_p3 = dst[3];
-	uint16_t *dst_p4 = dst[4];
-	uint16_t *dst_p5 = dst[5];
-	uint16_t *dst_p6 = dst[6];
-	uint16_t *dst_p7 = dst[7];
-
 #define XITER resize_line8_h_u16_neon_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		uint16x8_t x = XITER(j, XARGS);
-		neon_scatter_u16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		neon_scatter_u16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -260,19 +160,19 @@ void resize_line8_h_u16_neon(const unsigned * RESTRICT filter_left, const int16_
 
 		neon_transpose8_u16(x0, x1, x2, x3, x4, x5, x6, x7);
 
-		vst1q_u16(dst_p0 + j, x0);
-		vst1q_u16(dst_p1 + j, x1);
-		vst1q_u16(dst_p2 + j, x2);
-		vst1q_u16(dst_p3 + j, x3);
-		vst1q_u16(dst_p4 + j, x4);
-		vst1q_u16(dst_p5 + j, x5);
-		vst1q_u16(dst_p6 + j, x6);
-		vst1q_u16(dst_p7 + j, x7);
+		vst1q_u16(dst[0] + j, x0);
+		vst1q_u16(dst[1] + j, x1);
+		vst1q_u16(dst[2] + j, x2);
+		vst1q_u16(dst[3] + j, x3);
+		vst1q_u16(dst[4] + j, x4);
+		vst1q_u16(dst[5] + j, x5);
+		vst1q_u16(dst[6] + j, x6);
+		vst1q_u16(dst[7] + j, x7);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		uint16x8_t x = XITER(j, XARGS);
-		neon_scatter_u16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		neon_scatter_u16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 #undef XITER
 #undef XARGS
@@ -300,9 +200,8 @@ constexpr auto resize_line8_h_u16_neon_jt_large = make_array(
 
 
 template <int Taps>
-inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
-                                                              const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                              const float * RESTRICT src, unsigned src_base)
+inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j, const unsigned *filter_left, const float *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                              const float *src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
@@ -313,53 +212,28 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j,
 
 	float32x4_t accum0 = vdupq_n_f32(0.0f);
 	float32x4_t accum1 = vdupq_n_f32(0.0f);
-	float32x4_t x, c, coeffs;
+	float32x4_t coeffs;
+
+	auto f = ZIMG_UNROLL_FUNC(kk)
+	{
+		float32x4_t &acc = kk % 2 ? accum1 : accum0;
+
+		float32x4_t c = vdupq_laneq_f32(coeffs, 0);
+		float32x4_t x = vld1q_f32(src_p + 0);
+		acc = vfmaq_f32(acc, c, x);
+	};
 
 	unsigned k_end = Taps >= 4 ? 4 : Taps > 0 ? 0 : floor_n(filter_width, 4);
 
 	for (unsigned k = 0; k < k_end; k += 4) {
 		coeffs = vld1q_f32(filter_coeffs + k);
-
-		c = vdupq_laneq_f32(coeffs, 0);
-		x = vld1q_f32(src_p + 0);
-		accum0 = vfmaq_f32(accum0, c, x);
-
-		c = vdupq_laneq_f32(coeffs, 1);
-		x = vld1q_f32(src_p + 4);
-		accum1 = vfmaq_f32(accum1, c, x);
-
-		c = vdupq_laneq_f32(coeffs, 2);
-		x = vld1q_f32(src_p + 8);
-		accum0 = vfmaq_f32(accum0, c, x);
-
-		c = vdupq_laneq_f32(coeffs, 3);
-		x = vld1q_f32(src_p + 12);
-		accum1 = vfmaq_f32(accum1, c, x);
-
+		unroll<4>(f);
 		src_p += 16;
 	}
 
 	if constexpr (Tail >= 1) {
 		coeffs = vld1q_f32(filter_coeffs + k_end);
-
-		c = vdupq_laneq_f32(coeffs, 0);
-		x = vld1q_f32(src_p + 0);
-		accum0 = vfmaq_f32(accum0, c, x);
-	}
-	if constexpr (Tail >= 2) {
-		c = vdupq_laneq_f32(coeffs, 1);
-		x = vld1q_f32(src_p + 4);
-		accum1 = vfmaq_f32(accum1, c, x);
-	}
-	if constexpr (Tail >= 3) {
-		c = vdupq_laneq_f32(coeffs, 2);
-		x = vld1q_f32(src_p + 8);
-		accum0 = vfmaq_f32(accum0, c, x);
-	}
-	if constexpr (Tail >= 4) {
-		c = vdupq_laneq_f32(coeffs, 3);
-		x = vld1q_f32(src_p + 12);
-		accum1 = vfmaq_f32(accum1, c, x);
+		unroll<Tail>(f);
 	}
 
 	if constexpr (!Taps || Taps >= 2)
@@ -375,16 +249,11 @@ void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float 
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	float *dst_p0 = dst[0];
-	float *dst_p1 = dst[1];
-	float *dst_p2 = dst[2];
-	float *dst_p3 = dst[3];
-
 #define XITER resize_line4_h_f32_neon_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		float32x4_t x = XITER(j, XARGS);
-		neon_scatter_f32(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		neon_scatter_f32(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -397,15 +266,15 @@ void resize_line4_h_f32_neon(const unsigned * RESTRICT filter_left, const float 
 
 		neon_transpose4_f32(x0, x1, x2, x3);
 
-		vst1q_f32(dst_p0 + j, x0);
-		vst1q_f32(dst_p1 + j, x1);
-		vst1q_f32(dst_p2 + j, x2);
-		vst1q_f32(dst_p3 + j, x3);
+		vst1q_f32(dst[0] + j, x0);
+		vst1q_f32(dst[1] + j, x1);
+		vst1q_f32(dst[2] + j, x2);
+		vst1q_f32(dst[3] + j, x3);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		float32x4_t x = XITER(j, XARGS);
-		neon_scatter_f32(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		neon_scatter_f32(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, x);
 	}
 #undef XITER
 #undef XARGS
@@ -434,75 +303,35 @@ constexpr unsigned V_ACCUM_UPDATE = 2;
 constexpr unsigned V_ACCUM_FINAL = 3;
 
 template <unsigned Taps, unsigned AccumMode>
-inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned accum_base,
-                                                            const uint16_t *src_p0, const uint16_t *src_p1, const uint16_t *src_p2, const uint16_t *src_p3,
-                                                            const uint16_t *src_p4, const uint16_t *src_p5, const uint16_t *src_p6, const uint16_t *src_p7, int32_t * RESTRICT accum_p,
-                                                            const int16x8_t &c0, const int16x8_t &c1, const int16x8_t &c2, const int16x8_t &c3,
-                                                            const int16x8_t &c4, const int16x8_t &c5, const int16x8_t &c6, const int16x8_t &c7, uint16_t limit)
+inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned accum_base, const uint16_t * const srcp[8],
+                                                            int32_t * RESTRICT accum_p, const int16x8_t c[8], uint16_t limit)
 {
-	static_assert(Taps >= 1 && Taps <= 8, "must have between 2-8 taps");
+	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
 	const int16x8_t i16_min = vdupq_n_s16(INT16_MIN);
 	const int16x8_t lim = vdupq_n_s16(limit + INT16_MIN);
 
 	int32x4_t accum_lo = vdupq_n_s32(0);
 	int32x4_t accum_hi = vdupq_n_s32(0);
-	int16x8_t x;
 
-	if constexpr (Taps >= 1) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p0 + j));
+	unroll<Taps>(ZIMG_UNROLL_FUNC(k)
+	{
+		int16x8_t x;
+
+		x = vreinterpretq_s16_u16(vld1q_u16(srcp[k] + j));
 		x = vaddq_s16(x, i16_min);
 
-		if constexpr (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL) {
-			accum_lo = vmlal_s16(vld1q_s32(accum_p + j - accum_base + 0), vget_low_s16(c0), vget_low_s16(x));
-			accum_hi = vmlal_high_s16(vld1q_s32(accum_p + j - accum_base + 4), c0, x);
+		if constexpr (k == 0 && (AccumMode == V_ACCUM_UPDATE || AccumMode == V_ACCUM_FINAL)) {
+			accum_lo = vmlal_s16(vld1q_s32(accum_p + j - accum_base + 0), vget_low_s16(c[k]), vget_low_s16(x));
+			accum_hi = vmlal_high_s16(vld1q_s32(accum_p + j - accum_base + 4), c[k], x);
+		} else if constexpr (k == 0) {
+			accum_lo = vmull_s16(vget_low_s16(c[k]), vget_low_s16(x));
+			accum_hi = vmull_high_s16(c[k], x);
 		} else {
-			accum_lo = vmull_s16(vget_low_s16(c0), vget_low_s16(x));
-			accum_hi = vmull_high_s16(c0, x);
+			accum_lo = vmlal_s16(accum_lo, vget_low_s16(c[k]), vget_low_s16(x));
+			accum_hi = vmlal_high_s16(accum_hi, c[k], x);
 		}
-	}
-	if constexpr (Taps >= 2) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p1 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c1), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c1, x);
-	}
-	if constexpr (Taps >= 3) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p2 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c2), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c2, x);
-	}
-	if constexpr (Taps >= 4) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p3 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c3), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c3, x);
-	}
-	if constexpr (Taps >= 5) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p4 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c4), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c4, x);
-	}
-	if constexpr (Taps >= 6) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p5 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c5), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c5, x);
-	}
-	if constexpr (Taps >= 7) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p6 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c6), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c6, x);
-	}
-	if constexpr (Taps >= 8) {
-		x = vreinterpretq_s16_u16(vld1q_u16(src_p7 + j));
-		x = vaddq_s16(x, i16_min);
-		accum_lo = vmlal_s16(accum_lo, vget_low_s16(c7), vget_low_s16(x));
-		accum_hi = vmlal_high_s16(accum_hi, c7, x);
-	}
+	});
 
 	if constexpr (AccumMode == V_ACCUM_INITIAL || AccumMode == V_ACCUM_UPDATE) {
 		vst1q_s32(accum_p + j - accum_base + 0, accum_lo);
@@ -519,48 +348,40 @@ inline FORCE_INLINE uint16x8_t resize_line_v_u16_neon_xiter(unsigned j, unsigned
 template <unsigned Taps, unsigned AccumMode>
 void resize_line_v_u16_neon(const int16_t * RESTRICT filter_data, const uint16_t * const * RESTRICT src, uint16_t * RESTRICT dst, int32_t * RESTRICT accum, unsigned left, unsigned right, uint16_t limit)
 {
-	const uint16_t * RESTRICT src_p0 = src[0];
-	const uint16_t * RESTRICT src_p1 = src[1];
-	const uint16_t * RESTRICT src_p2 = src[2];
-	const uint16_t * RESTRICT src_p3 = src[3];
-	const uint16_t * RESTRICT src_p4 = src[4];
-	const uint16_t * RESTRICT src_p5 = src[5];
-	const uint16_t * RESTRICT src_p6 = src[6];
-	const uint16_t * RESTRICT src_p7 = src[7];
-
+	const uint16_t *srcp[8] = {src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7]};
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 	unsigned accum_base = floor_n(left, 8);
 
-	const int16x8_t c0 = vdupq_n_s16(filter_data[0]);
-	const int16x8_t c1 = vdupq_n_s16(filter_data[1]);
-	const int16x8_t c2 = vdupq_n_s16(filter_data[2]);
-	const int16x8_t c3 = vdupq_n_s16(filter_data[3]);
-	const int16x8_t c4 = vdupq_n_s16(filter_data[4]);
-	const int16x8_t c5 = vdupq_n_s16(filter_data[5]);
-	const int16x8_t c6 = vdupq_n_s16(filter_data[6]);
-	const int16x8_t c7 = vdupq_n_s16(filter_data[7]);
-
-	uint16x8_t out;
+	const int16x8_t c[8] = {
+		vdupq_n_s16(filter_data[0]),
+		vdupq_n_s16(filter_data[1]),
+		vdupq_n_s16(filter_data[2]),
+		vdupq_n_s16(filter_data[3]),
+		vdupq_n_s16(filter_data[4]),
+		vdupq_n_s16(filter_data[5]),
+		vdupq_n_s16(filter_data[6]),
+		vdupq_n_s16(filter_data[7]),
+	};
 
 #define XITER resize_line_v_u16_neon_xiter<Taps, AccumMode>
-#define XARGS accum_base, src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, accum, c0, c1, c2, c3, c4, c5, c6, c7, limit
+#define XARGS accum_base, srcp, accum, c, limit
 	if (left != vec_left) {
-		out = XITER(vec_left - 8, XARGS);
+		uint16x8_t out = XITER(vec_left - 8, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			neon_store_idxhi_u16(dst + vec_left - 8, out, left % 8);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
-		out = XITER(j, XARGS);
+		uint16x8_t out = XITER(j, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			vst1q_u16(dst + j, out);
 	}
 
 	if (right != vec_right) {
-		out = XITER(vec_right, XARGS);
+		uint16x8_t out = XITER(vec_right, XARGS);
 
 		if (AccumMode == V_ACCUM_NONE || AccumMode == V_ACCUM_FINAL)
 			neon_store_idxlo_u16(dst + vec_right, out, right % 8);
@@ -594,50 +415,27 @@ constexpr auto resize_line_v_u16_neon_jt_final = make_array(
 
 
 template <unsigned Taps, bool Continue>
-inline FORCE_INLINE float32x4_t resize_line_v_f32_neon_xiter(unsigned j,
-                                                             const float *src_p0, const float *src_p1, const float *src_p2, const float *src_p3,
-                                                             const float *src_p4, const float *src_p5, const float *src_p6, const float *src_p7, float * RESTRICT accum_p,
-                                                             const float32x4_t &c0, const float32x4_t &c1, const float32x4_t &c2, const float32x4_t &c3,
-                                                             const float32x4_t &c4, const float32x4_t &c5, const float32x4_t &c6, const float32x4_t &c7)
+inline FORCE_INLINE float32x4_t resize_line_v_f32_neon_xiter(unsigned j, const float * const srcp[8], const float *accum_p, const float32x4_t c[8])
 {
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
 	float32x4_t accum0 = vdupq_n_f32(0.0f);
 	float32x4_t accum1 = vdupq_n_f32(0.0f);
-	float32x4_t x;
 
-	if constexpr (Taps >= 1) {
-		x = vld1q_f32(src_p0 + j);
-		accum0 = Continue ? vfmaq_f32(vld1q_f32(accum_p + j), c0, x) : vmulq_f32(c0, x);
-	}
-	if constexpr (Taps >= 2) {
-		x = vld1q_f32(src_p1 + j);
-		accum1 = vmulq_f32(c1, x);
-	}
-	if constexpr (Taps >= 3) {
-		x = vld1q_f32(src_p2 + j);
-		accum0 = vfmaq_f32(accum0, c2, x);
-	}
-	if constexpr (Taps >= 4) {
-		x = vld1q_f32(src_p3 + j);
-		accum1 = vfmaq_f32(accum1, c3, x);
-	}
-	if constexpr (Taps >= 5) {
-		x = vld1q_f32(src_p4 + j);
-		accum0 = vfmaq_f32(accum0, c4, x);
-	}
-	if constexpr (Taps >= 6) {
-		x = vld1q_f32(src_p5 + j);
-		accum1 = vfmaq_f32(accum1, c5, x);
-	}
-	if constexpr (Taps >= 7) {
-		x = vld1q_f32(src_p6 + j);
-		accum0 = vfmaq_f32(accum0, c6, x);
-	}
-	if constexpr (Taps >= 8) {
-		x = vld1q_f32(src_p7 + j);
-		accum1 = vfmaq_f32(accum1, c7, x);
-	}
+	unroll<Taps>(ZIMG_UNROLL_FUNC(k)
+	{
+		float32x4_t &acc = k % 2 ? accum1 : accum0;
+		float32x4_t x;
+
+		x = vld1q_f32(srcp[k] + j);
+
+		if constexpr (k == 0 && Continue)
+			acc = vfmaq_f32(vld1q_f32(accum_p + j), c[k], x);
+		else if constexpr (k == 0 || k == 1)
+			acc = vmulq_f32(c[k], x);
+		else
+			acc = vfmaq_f32(acc, c[k], x);
+	});
 
 	if constexpr (Taps >= 2) accum0 = vaddq_f32(accum0, accum1);
 	return accum0;
@@ -646,43 +444,35 @@ inline FORCE_INLINE float32x4_t resize_line_v_f32_neon_xiter(unsigned j,
 template <unsigned Taps, bool Continue>
 void resize_line_v_f32_neon(const float * RESTRICT filter_data, const float * const * RESTRICT src, float * RESTRICT dst, unsigned left, unsigned right)
 {
-	const float *src_p0 = src[0];
-	const float *src_p1 = src[1];
-	const float *src_p2 = src[2];
-	const float *src_p3 = src[3];
-	const float *src_p4 = src[4];
-	const float *src_p5 = src[5];
-	const float *src_p6 = src[6];
-	const float *src_p7 = src[7];
-
+	const float *srcp[8] = { src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7] };
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	const float32x4_t c0 = vdupq_n_f32(filter_data[0]);
-	const float32x4_t c1 = vdupq_n_f32(filter_data[1]);
-	const float32x4_t c2 = vdupq_n_f32(filter_data[2]);
-	const float32x4_t c3 = vdupq_n_f32(filter_data[3]);
-	const float32x4_t c4 = vdupq_n_f32(filter_data[4]);
-	const float32x4_t c5 = vdupq_n_f32(filter_data[5]);
-	const float32x4_t c6 = vdupq_n_f32(filter_data[6]);
-	const float32x4_t c7 = vdupq_n_f32(filter_data[7]);
-
-	float32x4_t accum;
+	const float32x4_t c[8] = {
+		vdupq_n_f32(filter_data[0]),
+		vdupq_n_f32(filter_data[1]),
+		vdupq_n_f32(filter_data[2]),
+		vdupq_n_f32(filter_data[3]),
+		vdupq_n_f32(filter_data[4]),
+		vdupq_n_f32(filter_data[5]),
+		vdupq_n_f32(filter_data[6]),
+		vdupq_n_f32(filter_data[7]),
+	};
 
 #define XITER resize_line_v_f32_neon_xiter<Taps, Continue>
-#define XARGS src_p0, src_p1, src_p2, src_p3, src_p4, src_p5, src_p6, src_p7, dst, c0, c1, c2, c3, c4, c5, c6, c7
+#define XARGS srcp, dst, c
 	if (left != vec_left) {
-		accum = XITER(vec_left - 4, XARGS);
+		float32x4_t accum = XITER(vec_left - 4, XARGS);
 		neon_store_idxhi_f32(dst + vec_left - 4, accum, left % 4);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
-		accum = XITER(j, XARGS);
+		float32x4_t accum = XITER(j, XARGS);
 		vst1q_f32(dst + j, accum);
 	}
 
 	if (right != vec_right) {
-		accum = XITER(vec_right, XARGS);
+		float32x4_t accum = XITER(vec_right, XARGS);
 		neon_store_idxlo_f32(dst + vec_right, accum, right % 4);
 	}
 #undef XITER
