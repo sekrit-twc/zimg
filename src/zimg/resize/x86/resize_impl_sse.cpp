@@ -43,8 +43,8 @@ void transpose_line_4x4_ps(float * RESTRICT dst, const float *src_p0, const floa
 
 
 template <int Taps>
-inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j, const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                        const float * RESTRICT src, unsigned src_base)
+inline FORCE_INLINE __m128 resize_line4_h_f32_sse_xiter(unsigned j, const unsigned *filter_left, const float *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const float *src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
@@ -95,16 +95,11 @@ void resize_line4_h_f32_sse(const unsigned * RESTRICT filter_left, const float *
 	unsigned vec_left = ceil_n(left, 4);
 	unsigned vec_right = floor_n(right, 4);
 
-	float *dst_p0 = dst[0];
-	float *dst_p1 = dst[1];
-	float *dst_p2 = dst[2];
-	float *dst_p3 = dst[3];
-
 #define XITER resize_line4_h_f32_sse_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128 x = XITER(j, XARGS);
-		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		mm_scatter_ps(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -117,15 +112,15 @@ void resize_line4_h_f32_sse(const unsigned * RESTRICT filter_left, const float *
 
 		_MM_TRANSPOSE4_PS(x0, x1, x2, x3);
 
-		_mm_store_ps(dst_p0 + j, x0);
-		_mm_store_ps(dst_p1 + j, x1);
-		_mm_store_ps(dst_p2 + j, x2);
-		_mm_store_ps(dst_p3 + j, x3);
+		_mm_store_ps(dst[0] + j, x0);
+		_mm_store_ps(dst[1] + j, x1);
+		_mm_store_ps(dst[2] + j, x2);
+		_mm_store_ps(dst[3] + j, x3);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128 x = XITER(j, XARGS);
-		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, x);
+		mm_scatter_ps(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, x);
 	}
 #undef XITER
 #undef XARGS
@@ -149,7 +144,7 @@ constexpr auto resize_line4_h_f32_sse_jt_large = make_array(
 
 
 template <unsigned Taps, bool Continue>
-inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j, const float * RESTRICT const srcp[4], const float * RESTRICT accum_p, const __m128 c[4])
+inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j, const float * const srcp[4], const float *accum_p, const __m128 c[4])
 {
 	static_assert(Taps >= 1 && Taps <= 4, "must have between 1-4 taps");
 
@@ -171,7 +166,7 @@ inline FORCE_INLINE __m128 resize_line_v_f32_sse_xiter(unsigned j, const float *
 			acc = _mm_add_ps(acc, x);
 	});
 
-	accum0 = (Taps >= 2) ? _mm_add_ps(accum0, accum1) : accum0;
+	if constexpr (Taps >= 2) accum0 = _mm_add_ps(accum0, accum1);
 	return accum0;
 }
 

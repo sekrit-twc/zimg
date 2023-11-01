@@ -150,41 +150,25 @@ void transpose_line_16x16(T * RESTRICT dst, const T * const * RESTRICT src, unsi
 	for (unsigned j = left; j < right; j += 16) {
 		vec16_type x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
 
-		x0 = Traits::load16_raw(src[0] + j);
-		x1 = Traits::load16_raw(src[1] + j);
-		x2 = Traits::load16_raw(src[2] + j);
-		x3 = Traits::load16_raw(src[3] + j);
-		x4 = Traits::load16_raw(src[4] + j);
-		x5 = Traits::load16_raw(src[5] + j);
-		x6 = Traits::load16_raw(src[6] + j);
-		x7 = Traits::load16_raw(src[7] + j);
-		x8 = Traits::load16_raw(src[8] + j);
-		x9 = Traits::load16_raw(src[9] + j);
-		x10 = Traits::load16_raw(src[10] + j);
-		x11 = Traits::load16_raw(src[11] + j);
-		x12 = Traits::load16_raw(src[12] + j);
-		x13 = Traits::load16_raw(src[13] + j);
-		x14 = Traits::load16_raw(src[14] + j);
-		x15 = Traits::load16_raw(src[15] + j);
+		x0  = Traits::load16_raw(src[0] + j);  x1  = Traits::load16_raw(src[1] + j);
+		x2  = Traits::load16_raw(src[2] + j);  x3  = Traits::load16_raw(src[3] + j);
+		x4  = Traits::load16_raw(src[4] + j);  x5  = Traits::load16_raw(src[5] + j);
+		x6  = Traits::load16_raw(src[6] + j);  x7  = Traits::load16_raw(src[7] + j);
+		x8  = Traits::load16_raw(src[8] + j);  x9  = Traits::load16_raw(src[9] + j);
+		x10 = Traits::load16_raw(src[10] + j); x11 = Traits::load16_raw(src[11] + j);
+		x12 = Traits::load16_raw(src[12] + j); x13 = Traits::load16_raw(src[13] + j);
+		x14 = Traits::load16_raw(src[14] + j); x15 = Traits::load16_raw(src[15] + j);
 
 		Traits::transpose16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
 
-		Traits::store16_raw(dst + 0, x0);
-		Traits::store16_raw(dst + 16, x1);
-		Traits::store16_raw(dst + 32, x2);
-		Traits::store16_raw(dst + 48, x3);
-		Traits::store16_raw(dst + 64, x4);
-		Traits::store16_raw(dst + 80, x5);
-		Traits::store16_raw(dst + 96, x6);
-		Traits::store16_raw(dst + 112, x7);
-		Traits::store16_raw(dst + 128, x8);
-		Traits::store16_raw(dst + 144, x9);
-		Traits::store16_raw(dst + 160, x10);
-		Traits::store16_raw(dst + 176, x11);
-		Traits::store16_raw(dst + 192, x12);
-		Traits::store16_raw(dst + 208, x13);
-		Traits::store16_raw(dst + 224, x14);
-		Traits::store16_raw(dst + 240, x15);
+		Traits::store16_raw(dst + 0,   x0);  Traits::store16_raw(dst + 16,  x1);
+		Traits::store16_raw(dst + 32,  x2);  Traits::store16_raw(dst + 48,  x3);
+		Traits::store16_raw(dst + 64,  x4);  Traits::store16_raw(dst + 80,  x5);
+		Traits::store16_raw(dst + 96,  x6);  Traits::store16_raw(dst + 112, x7);
+		Traits::store16_raw(dst + 128, x8);  Traits::store16_raw(dst + 144, x9);
+		Traits::store16_raw(dst + 160, x10); Traits::store16_raw(dst + 176, x11);
+		Traits::store16_raw(dst + 192, x12); Traits::store16_raw(dst + 208, x13);
+		Traits::store16_raw(dst + 224, x14); Traits::store16_raw(dst + 240, x15);
 
 		dst += 256;
 	}
@@ -192,9 +176,8 @@ void transpose_line_16x16(T * RESTRICT dst, const T * const * RESTRICT src, unsi
 
 
 template <class Traits, int Taps>
-inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
-                                                           const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                           const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
+inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j, const unsigned *filter_left, const float *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                           const typename Traits::pixel_type *src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
@@ -239,7 +222,7 @@ inline FORCE_INLINE __m512 resize_line16_h_fp_avx512_xiter(unsigned j,
 
 template <class Traits, int Taps>
 void resize_line16_h_fp_avx512(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                               const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
+                               const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 16);
 	unsigned vec_right = floor_n(right, 16);
@@ -261,41 +244,25 @@ void resize_line16_h_fp_avx512(const unsigned * RESTRICT filter_left, const floa
 			_mm512_store_ps(cache[jj - j], x);
 		}
 
-		x0 = _mm512_load_ps(cache[0]);
-		x1 = _mm512_load_ps(cache[1]);
-		x2 = _mm512_load_ps(cache[2]);
-		x3 = _mm512_load_ps(cache[3]);
-		x4 = _mm512_load_ps(cache[4]);
-		x5 = _mm512_load_ps(cache[5]);
-		x6 = _mm512_load_ps(cache[6]);
-		x7 = _mm512_load_ps(cache[7]);
-		x8 = _mm512_load_ps(cache[8]);
-		x9 = _mm512_load_ps(cache[9]);
-		x10 = _mm512_load_ps(cache[10]);
-		x11 = _mm512_load_ps(cache[11]);
-		x12 = _mm512_load_ps(cache[12]);
-		x13 = _mm512_load_ps(cache[13]);
-		x14 = _mm512_load_ps(cache[14]);
-		x15 = _mm512_load_ps(cache[15]);
+		x0  = _mm512_load_ps(cache[0]);  x1  = _mm512_load_ps(cache[1]);
+		x2  = _mm512_load_ps(cache[2]);  x3  = _mm512_load_ps(cache[3]);
+		x4  = _mm512_load_ps(cache[4]);  x5  = _mm512_load_ps(cache[5]);
+		x6  = _mm512_load_ps(cache[6]);  x7  = _mm512_load_ps(cache[7]);
+		x8  = _mm512_load_ps(cache[8]);  x9  = _mm512_load_ps(cache[9]);
+		x10 = _mm512_load_ps(cache[10]); x11 = _mm512_load_ps(cache[11]);
+		x12 = _mm512_load_ps(cache[12]); x13 = _mm512_load_ps(cache[13]);
+		x14 = _mm512_load_ps(cache[14]); x15 = _mm512_load_ps(cache[15]);
 
 		mm512_transpose16_ps(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
 
-		Traits::store16(dst[0] + j, x0);
-		Traits::store16(dst[1] + j, x1);
-		Traits::store16(dst[2] + j, x2);
-		Traits::store16(dst[3] + j, x3);
-		Traits::store16(dst[4] + j, x4);
-		Traits::store16(dst[5] + j, x5);
-		Traits::store16(dst[6] + j, x6);
-		Traits::store16(dst[7] + j, x7);
-		Traits::store16(dst[8] + j, x8);
-		Traits::store16(dst[9] + j, x9);
-		Traits::store16(dst[10] + j, x10);
-		Traits::store16(dst[11] + j, x11);
-		Traits::store16(dst[12] + j, x12);
-		Traits::store16(dst[13] + j, x13);
-		Traits::store16(dst[14] + j, x14);
-		Traits::store16(dst[15] + j, x15);
+		Traits::store16(dst[0] + j,  x0);  Traits::store16(dst[1] + j,  x1);
+		Traits::store16(dst[2] + j,  x2);  Traits::store16(dst[3] + j,  x3);
+		Traits::store16(dst[4] + j,  x4);  Traits::store16(dst[5] + j,  x5);
+		Traits::store16(dst[6] + j,  x6);  Traits::store16(dst[7] + j,  x7);
+		Traits::store16(dst[8] + j,  x8);  Traits::store16(dst[9] + j,  x9);
+		Traits::store16(dst[10] + j, x10); Traits::store16(dst[11] + j, x11);
+		Traits::store16(dst[12] + j, x12); Traits::store16(dst[13] + j, x13);
+		Traits::store16(dst[14] + j, x14); Traits::store16(dst[15] + j, x15);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
@@ -431,7 +398,7 @@ constexpr auto resize_line_h_perm_fp_avx512_jt = make_array(
 
 
 template <class Traits, unsigned Taps, bool Continue, class T = typename Traits::pixel_type>
-inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j, const T * RESTRICT const srcp[8], T * RESTRICT accum_p, const __m512 c[8])
+inline FORCE_INLINE __m512 resize_line_v_fp_avx512_xiter(unsigned j, const T * const srcp[8], const T *accum_p, const __m512 c[8])
 {
 	typedef typename Traits::pixel_type pixel_type;
 	static_assert(std::is_same_v<pixel_type, T>, "must not specify T");

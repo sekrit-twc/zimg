@@ -223,8 +223,8 @@ void transpose_line_16x16_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 
 
 template <int Taps>
-inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                          const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
+inline FORCE_INLINE __m256i resize_line8_h_u16_avx2_xiter(unsigned j, const unsigned *filter_left, const int16_t *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                          const uint16_t *src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -6, "only up to 6 taps in epilogue");
@@ -373,8 +373,8 @@ constexpr auto resize_line8_h_u16_avx2_jt_large = make_array(
 
 
 template <class Traits, int Taps>
-inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                        const typename Traits::pixel_type * RESTRICT src, unsigned src_base)
+inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j, const unsigned *filter_left, const float *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const typename Traits::pixel_type *src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
@@ -418,27 +418,16 @@ inline FORCE_INLINE __m256 resize_line8_h_fp_avx2_xiter(unsigned j, const unsign
 
 template <class Traits, int Taps>
 void resize_line8_h_fp_avx2(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                            const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right)
+                            const typename Traits::pixel_type * RESTRICT src, typename Traits::pixel_type * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right)
 {
-	typedef typename Traits::pixel_type pixel_type;
-
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
-
-	pixel_type *dst_p0 = dst[0];
-	pixel_type *dst_p1 = dst[1];
-	pixel_type *dst_p2 = dst[2];
-	pixel_type *dst_p3 = dst[3];
-	pixel_type *dst_p4 = dst[4];
-	pixel_type *dst_p5 = dst[5];
-	pixel_type *dst_p6 = dst[6];
-	pixel_type *dst_p7 = dst[7];
 
 #define XITER resize_line8_h_fp_avx2_xiter<Traits, Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256 x = XITER(j, XARGS);
-		Traits::scatter8(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		Traits::scatter8(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -455,19 +444,19 @@ void resize_line8_h_fp_avx2(const unsigned * RESTRICT filter_left, const float *
 
 		mm256_transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
-		Traits::store8(dst_p0 + j, x0);
-		Traits::store8(dst_p1 + j, x1);
-		Traits::store8(dst_p2 + j, x2);
-		Traits::store8(dst_p3 + j, x3);
-		Traits::store8(dst_p4 + j, x4);
-		Traits::store8(dst_p5 + j, x5);
-		Traits::store8(dst_p6 + j, x6);
-		Traits::store8(dst_p7 + j, x7);
+		Traits::store8(dst[0] + j, x0);
+		Traits::store8(dst[1] + j, x1);
+		Traits::store8(dst[2] + j, x2);
+		Traits::store8(dst[3] + j, x3);
+		Traits::store8(dst[4] + j, x4);
+		Traits::store8(dst[5] + j, x5);
+		Traits::store8(dst[6] + j, x6);
+		Traits::store8(dst[7] + j, x7);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m256 x = XITER(j, XARGS);
-		Traits::scatter8(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		Traits::scatter8(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 #undef XITER
 #undef XARGS
@@ -496,7 +485,8 @@ template <unsigned Taps>
 void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const unsigned * RESTRICT permute_mask, const int16_t * RESTRICT filter_data, unsigned input_width,
                                  const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, unsigned left, unsigned right, uint16_t limit)
 {
-	static_assert(Taps <= 10, "permuted resampler only supports up to 10 taps");
+	static_assert(Taps >= 2 && Taps <= 10, "permuted resampler only supports up to 10 taps");
+	static_assert(Taps % 2 == 0, "tap count must be even");
 
 	const __m256i i16_min = _mm256_set1_epi16(INT16_MIN);
 	const __m256i lim = _mm256_set1_epi16(limit + INT16_MIN);
@@ -795,7 +785,7 @@ constexpr auto resize_line_v_u16_avx2_jt_final = make_array(
 
 
 template <class Traits, unsigned Taps, bool Continue, class T = typename Traits::pixel_type>
-inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j, const T * RESTRICT const srcp[8], T * RESTRICT accum_p, const __m256 c[8])
+inline FORCE_INLINE __m256 resize_line_v_fp_avx2_xiter(unsigned j, const T * const srcp[8], const T *accum_p, const __m256 c[8])
 {
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 

@@ -50,9 +50,9 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 		__m512i x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
 		__m512i x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31;
 
-		 x0 = _mm512_load_si512(src[0] + j);   x1 = _mm512_load_si512(src[1] + j);   x2 = _mm512_load_si512(src[2] + j);  x3 = _mm512_load_si512(src[3] + j);
-		 x4 = _mm512_load_si512(src[4] + j);   x5 = _mm512_load_si512(src[5] + j);   x6 = _mm512_load_si512(src[6] + j);  x7 = _mm512_load_si512(src[7] + j);
-		 x8 = _mm512_load_si512(src[8] + j);   x9 = _mm512_load_si512(src[9] + j);  x10 = _mm512_load_si512(src[10] + j); x11 = _mm512_load_si512(src[11] + j);
+		x0  = _mm512_load_si512(src[0] + j);  x1  = _mm512_load_si512(src[1] + j);  x2  = _mm512_load_si512(src[2] + j);  x3  = _mm512_load_si512(src[3] + j);
+		x4  = _mm512_load_si512(src[4] + j);  x5  = _mm512_load_si512(src[5] + j);  x6  = _mm512_load_si512(src[6] + j);  x7  = _mm512_load_si512(src[7] + j);
+		x8  = _mm512_load_si512(src[8] + j);  x9  = _mm512_load_si512(src[9] + j);  x10 = _mm512_load_si512(src[10] + j); x11 = _mm512_load_si512(src[11] + j);
 		x12 = _mm512_load_si512(src[12] + j); x13 = _mm512_load_si512(src[13] + j); x14 = _mm512_load_si512(src[14] + j); x15 = _mm512_load_si512(src[15] + j);
 		x16 = _mm512_load_si512(src[16] + j); x17 = _mm512_load_si512(src[17] + j); x18 = _mm512_load_si512(src[18] + j); x19 = _mm512_load_si512(src[19] + j);
 		x20 = _mm512_load_si512(src[20] + j); x21 = _mm512_load_si512(src[21] + j); x22 = _mm512_load_si512(src[22] + j); x23 = _mm512_load_si512(src[23] + j);
@@ -62,7 +62,7 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 		mm512_transpose32_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 		                        x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31);
 
-		_mm512_store_si512(dst + 0, x0);    _mm512_store_si512(dst + 32, x1);   _mm512_store_si512(dst + 64, x2);   _mm512_store_si512(dst + 96, x3);
+		_mm512_store_si512(dst + 0,   x0);  _mm512_store_si512(dst + 32,  x1);  _mm512_store_si512(dst + 64,  x2);  _mm512_store_si512(dst + 96,  x3);
 		_mm512_store_si512(dst + 128, x4);  _mm512_store_si512(dst + 160, x5);  _mm512_store_si512(dst + 192, x6);  _mm512_store_si512(dst + 224, x7);
 		_mm512_store_si512(dst + 256, x8);  _mm512_store_si512(dst + 288, x9);  _mm512_store_si512(dst + 320, x10); _mm512_store_si512(dst + 352, x11);
 		_mm512_store_si512(dst + 384, x12); _mm512_store_si512(dst + 416, x13); _mm512_store_si512(dst + 448, x14); _mm512_store_si512(dst + 480, x15);
@@ -76,9 +76,8 @@ void transpose_line_32x32_epi16(uint16_t * RESTRICT dst, const uint16_t * const 
 }
 
 template <int Taps>
-inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j,
-	const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-	const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
+inline FORCE_INLINE __m512i resize_line16_h_u16_avx512_xiter(unsigned j, const unsigned *filter_left, const int16_t *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                             const uint16_t *src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -6, "only up to 6 taps in epilogue");
@@ -158,9 +157,9 @@ void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int
 			_mm512_store_si512(cache[jj - j], x);
 		}
 
-		 x0 = _mm512_load_si512(cache[0]);   x1 = _mm512_load_si512(cache[1]);   x2 = _mm512_load_si512(cache[2]);   x3 = _mm512_load_si512(cache[3]);
-		 x4 = _mm512_load_si512(cache[4]);   x5 = _mm512_load_si512(cache[5]);   x6 = _mm512_load_si512(cache[6]);   x7 = _mm512_load_si512(cache[7]);
-		 x8 = _mm512_load_si512(cache[8]);   x9 = _mm512_load_si512(cache[9]);  x10 = _mm512_load_si512(cache[10]); x11 = _mm512_load_si512(cache[11]);
+		x0  = _mm512_load_si512(cache[0]);  x1  = _mm512_load_si512(cache[1]);  x2  = _mm512_load_si512(cache[2]);  x3  = _mm512_load_si512(cache[3]);
+		x4  = _mm512_load_si512(cache[4]);  x5  = _mm512_load_si512(cache[5]);  x6  = _mm512_load_si512(cache[6]);  x7  = _mm512_load_si512(cache[7]);
+		x8  = _mm512_load_si512(cache[8]);  x9  = _mm512_load_si512(cache[9]);  x10 = _mm512_load_si512(cache[10]); x11 = _mm512_load_si512(cache[11]);
 		x12 = _mm512_load_si512(cache[12]); x13 = _mm512_load_si512(cache[13]); x14 = _mm512_load_si512(cache[14]); x15 = _mm512_load_si512(cache[15]);
 		x16 = _mm512_load_si512(cache[16]); x17 = _mm512_load_si512(cache[17]); x18 = _mm512_load_si512(cache[18]); x19 = _mm512_load_si512(cache[19]);
 		x20 = _mm512_load_si512(cache[20]); x21 = _mm512_load_si512(cache[21]); x22 = _mm512_load_si512(cache[22]); x23 = _mm512_load_si512(cache[23]);
@@ -170,9 +169,9 @@ void resize_line16_h_u16_avx512(const unsigned * RESTRICT filter_left, const int
 		mm512_transpose32_epi16(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 		                        x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31);
 
-		_mm512_store_si512(dst[0] + j, x0);   _mm512_store_si512(dst[1] + j, x1);   _mm512_store_si512(dst[2] + j, x2);   _mm512_store_si512(dst[3] + j, x3);
-		_mm512_store_si512(dst[4] + j, x4);   _mm512_store_si512(dst[5] + j, x5);   _mm512_store_si512(dst[6] + j, x6);   _mm512_store_si512(dst[7] + j, x7);
-		_mm512_store_si512(dst[8] + j, x8);   _mm512_store_si512(dst[9] + j, x9);   _mm512_store_si512(dst[10] + j, x10); _mm512_store_si512(dst[11] + j, x11);
+		_mm512_store_si512(dst[0] + j,  x0);  _mm512_store_si512(dst[1] + j,  x1);  _mm512_store_si512(dst[2] + j,  x2);  _mm512_store_si512(dst[3] + j,  x3);
+		_mm512_store_si512(dst[4] + j,  x4);  _mm512_store_si512(dst[5] + j,  x5);  _mm512_store_si512(dst[6] + j,  x6);  _mm512_store_si512(dst[7] + j,  x7);
+		_mm512_store_si512(dst[8] + j,  x8);  _mm512_store_si512(dst[9] + j,  x9);  _mm512_store_si512(dst[10] + j, x10); _mm512_store_si512(dst[11] + j, x11);
 		_mm512_store_si512(dst[12] + j, x12); _mm512_store_si512(dst[13] + j, x13); _mm512_store_si512(dst[14] + j, x14); _mm512_store_si512(dst[15] + j, x15);
 		_mm512_store_si512(dst[16] + j, x16); _mm512_store_si512(dst[17] + j, x17); _mm512_store_si512(dst[18] + j, x18); _mm512_store_si512(dst[19] + j, x19);
 		_mm512_store_si512(dst[20] + j, x20); _mm512_store_si512(dst[21] + j, x21); _mm512_store_si512(dst[22] + j, x22); _mm512_store_si512(dst[23] + j, x23);
@@ -217,7 +216,8 @@ template <unsigned Taps>
 void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const uint16_t * RESTRICT permute_mask, const int16_t * RESTRICT filter_data, unsigned input_width,
                                    const uint16_t * RESTRICT src, uint16_t * RESTRICT dst, unsigned left, unsigned right, uint16_t limit)
 {
-	static_assert(Taps <= 16, "permuted resampler only supports up to 16 taps");
+	static_assert(Taps >= 2 && Taps <= 16, "permuted resampler only supports up to 16 taps");
+	static_assert(Taps % 2 == 0, "tap count must be even");
 
 	const __m512i i16_min = _mm512_set1_epi16(INT16_MIN);
 	const __m512i lim = _mm512_set1_epi16(limit + INT16_MIN);
@@ -247,7 +247,7 @@ void resize_line_h_perm_u16_avx512(const unsigned * RESTRICT permute_left, const
 		x8 = _mm512_add_epi16(x8, i16_min);
 		x16 = Taps >= 12 ? _mm512_add_epi16(x16, i16_min) : _mm512_setzero_si512();
 
-		unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+		unroll<(Taps + 1) / 2>(ZIMG_UNROLL_FUNC(k)
 		{
 			__m512i &acc = k % 2 ? accum1 : accum0;
 
@@ -314,7 +314,7 @@ constexpr unsigned V_ACCUM_UPDATE = 2;
 constexpr unsigned V_ACCUM_FINAL = 3;
 
 template <unsigned Taps, unsigned AccumMode>
-inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base, const uint16_t *const srcp[8],
+inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned accum_base, const uint16_t * const srcp[8],
                                                            uint32_t * RESTRICT accum_p, const __m512i c[4], uint16_t limit)
 {
 	static_assert(Taps >= 2 && Taps <= 8, "must have between 2-8 taps");
@@ -326,7 +326,7 @@ inline FORCE_INLINE __m512i resize_line_v_u16_avx512_xiter(unsigned j, unsigned 
 	__m512i accum_lo = _mm512_setzero_si512();
 	__m512i accum_hi = _mm512_setzero_si512();
 
-	unroll<Taps / 2>(ZIMG_UNROLL_FUNC(k)
+	unroll<(Taps + 1) / 2>(ZIMG_UNROLL_FUNC(k)
 	{
 		__m512i x0, x1, xl, xh;
 

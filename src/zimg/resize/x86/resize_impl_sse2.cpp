@@ -66,8 +66,8 @@ inline FORCE_INLINE __m128i export_i30_u16(__m128i lo, __m128i hi)
 
 
 template <int Taps>
-inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j, const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                          const uint16_t * RESTRICT src, unsigned src_base, uint16_t limit)
+inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j, const unsigned *filter_left, const int16_t *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                          const uint16_t *src, unsigned src_base, uint16_t limit)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -6, "only up to 6 taps in epilogue");
@@ -124,25 +124,16 @@ inline FORCE_INLINE __m128i resize_line8_h_u16_sse2_xiter(unsigned j, const unsi
 
 template <int Taps>
 void resize_line8_h_u16_sse2(const unsigned * RESTRICT filter_left, const int16_t * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                             const uint16_t * RESTRICT src, uint16_t * const * RESTRICT dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
+                             const uint16_t * RESTRICT src, uint16_t * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right, uint16_t limit)
 {
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
-
-	uint16_t *dst_p0 = dst[0];
-	uint16_t *dst_p1 = dst[1];
-	uint16_t *dst_p2 = dst[2];
-	uint16_t *dst_p3 = dst[3];
-	uint16_t *dst_p4 = dst[4];
-	uint16_t *dst_p5 = dst[5];
-	uint16_t *dst_p6 = dst[6];
-	uint16_t *dst_p7 = dst[7];
 
 #define XITER resize_line8_h_u16_sse2_xiter<Taps>
 #define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base, limit
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m128i x = XITER(j, XARGS);
-		mm_scatter_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -159,19 +150,19 @@ void resize_line8_h_u16_sse2(const unsigned * RESTRICT filter_left, const int16_
 
 		mm_transpose8_epi16(x0, x1, x2, x3, x4, x5, x6, x7);
 
-		_mm_store_si128((__m128i *)(dst_p0 + j), x0);
-		_mm_store_si128((__m128i *)(dst_p1 + j), x1);
-		_mm_store_si128((__m128i *)(dst_p2 + j), x2);
-		_mm_store_si128((__m128i *)(dst_p3 + j), x3);
-		_mm_store_si128((__m128i *)(dst_p4 + j), x4);
-		_mm_store_si128((__m128i *)(dst_p5 + j), x5);
-		_mm_store_si128((__m128i *)(dst_p6 + j), x6);
-		_mm_store_si128((__m128i *)(dst_p7 + j), x7);
+		_mm_store_si128((__m128i *)(dst[0] + j), x0);
+		_mm_store_si128((__m128i *)(dst[1] + j), x1);
+		_mm_store_si128((__m128i *)(dst[2] + j), x2);
+		_mm_store_si128((__m128i *)(dst[3] + j), x3);
+		_mm_store_si128((__m128i *)(dst[4] + j), x4);
+		_mm_store_si128((__m128i *)(dst[5] + j), x5);
+		_mm_store_si128((__m128i *)(dst[6] + j), x6);
+		_mm_store_si128((__m128i *)(dst[7] + j), x7);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m128i x = XITER(j, XARGS);
-		mm_scatter_epi16(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, x);
+		mm_scatter_epi16(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, x);
 	}
 #undef XITER
 #undef XARGS

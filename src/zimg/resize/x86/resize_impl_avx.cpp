@@ -52,15 +52,15 @@ void transpose_line_8x8_ps(float * RESTRICT dst, const float * const * RESTRICT 
 
 
 template <int Taps>
-inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j, const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-                                                        const float * RESTRICT src_ptr, unsigned src_base)
+inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j, const unsigned *filter_left, const float *filter_data, unsigned filter_stride, unsigned filter_width,
+                                                        const float *src, unsigned src_base)
 {
 	static_assert(Taps <= 8, "only up to 8 taps can be unrolled");
 	static_assert(Taps >= -3, "only up to 3 taps in epilogue");
 	constexpr int Tail = Taps >= 4 ? Taps - 4 : Taps > 0 ? Taps : -Taps;
 
 	const float *filter_coeffs = filter_data + j * filter_stride;
-	const float *src_p = src_ptr + (filter_left[j] - src_base) * 8;
+	const float *src_p = src + (filter_left[j] - src_base) * 8;
 
 	__m256 accum0 = _mm256_setzero_ps();
 	__m256 accum1 = _mm256_setzero_ps();
@@ -99,26 +99,18 @@ inline FORCE_INLINE __m256 resize_line8_h_f32_avx_xiter(unsigned j, const unsign
 }
 
 template <int Taps>
-void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
-							const float * RESTRICT src_ptr, float * const *dst_ptr, unsigned src_base, unsigned left, unsigned right)
+void resize_line8_h_f32_avx(const unsigned * RESTRICT filter_left, const float * RESTRICT filter_data, unsigned filter_stride, unsigned filter_width,
+							const float * RESTRICT src, float * const * /* RESTRICT */ dst, unsigned src_base, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
 
-	float * RESTRICT dst_p0 = dst_ptr[0];
-	float * RESTRICT dst_p1 = dst_ptr[1];
-	float * RESTRICT dst_p2 = dst_ptr[2];
-	float * RESTRICT dst_p3 = dst_ptr[3];
-	float * RESTRICT dst_p4 = dst_ptr[4];
-	float * RESTRICT dst_p5 = dst_ptr[5];
-	float * RESTRICT dst_p6 = dst_ptr[6];
-	float * RESTRICT dst_p7 = dst_ptr[7];
 #define XITER resize_line8_h_f32_avx_xiter<Taps>
-#define XARGS filter_left, filter_data, filter_stride, filter_width, src_ptr, src_base
+#define XARGS filter_left, filter_data, filter_stride, filter_width, src, src_base
 	for (unsigned j = left; j < vec_left; ++j) {
 		__m256 x = XITER(j, XARGS);
-		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, _mm256_castps256_ps128(x));
-		mm_scatter_ps(dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, _mm256_extractf128_ps(x, 1));
+		mm_scatter_ps(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, _mm256_castps256_ps128(x));
+		mm_scatter_ps(dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm256_extractf128_ps(x, 1));
 	}
 
 	for (unsigned j = vec_left; j < vec_right; j += 8) {
@@ -135,20 +127,20 @@ void resize_line8_h_f32_avx(const unsigned *filter_left, const float * RESTRICT 
 
 		mm256_transpose8_ps(x0, x1, x2, x3, x4, x5, x6, x7);
 
-		_mm256_store_ps(dst_p0 + j, x0);
-		_mm256_store_ps(dst_p1 + j, x1);
-		_mm256_store_ps(dst_p2 + j, x2);
-		_mm256_store_ps(dst_p3 + j, x3);
-		_mm256_store_ps(dst_p4 + j, x4);
-		_mm256_store_ps(dst_p5 + j, x5);
-		_mm256_store_ps(dst_p6 + j, x6);
-		_mm256_store_ps(dst_p7 + j, x7);
+		_mm256_store_ps(dst[0] + j, x0);
+		_mm256_store_ps(dst[1] + j, x1);
+		_mm256_store_ps(dst[2] + j, x2);
+		_mm256_store_ps(dst[3] + j, x3);
+		_mm256_store_ps(dst[4] + j, x4);
+		_mm256_store_ps(dst[5] + j, x5);
+		_mm256_store_ps(dst[6] + j, x6);
+		_mm256_store_ps(dst[7] + j, x7);
 	}
 
 	for (unsigned j = vec_right; j < right; ++j) {
 		__m256 x = XITER(j, XARGS);
-		mm_scatter_ps(dst_p0 + j, dst_p1 + j, dst_p2 + j, dst_p3 + j, _mm256_castps256_ps128(x));
-		mm_scatter_ps(dst_p4 + j, dst_p5 + j, dst_p6 + j, dst_p7 + j, _mm256_extractf128_ps(x, 1));
+		mm_scatter_ps(dst[0] + j, dst[1] + j, dst[2] + j, dst[3] + j, _mm256_castps256_ps128(x));
+		mm_scatter_ps(dst[4] + j, dst[5] + j, dst[6] + j, dst[7] + j, _mm256_extractf128_ps(x, 1));
 	}
 #undef XITER
 #undef XARGS
@@ -172,7 +164,7 @@ constexpr auto resize_line8_h_f32_avx_jt_large = make_array(
 
 
 template <unsigned Taps, bool Continue>
-inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j, const float * RESTRICT const srcp[8], const float * RESTRICT accum_p, const __m256 c[8])
+inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j, const float * const srcp[8], const float *accum_p, const __m256 c[8])
 {
 	static_assert(Taps >= 1 && Taps <= 8, "must have between 1-8 taps");
 
@@ -205,7 +197,7 @@ inline FORCE_INLINE __m256 resize_line_v_f32_avx_xiter(unsigned j, const float *
 }
 
 template <unsigned Taps, bool Continue>
-void resize_line_v_f32_avx(const float *filter_data, const float * const *src, float * RESTRICT dst, unsigned left, unsigned right)
+void resize_line_v_f32_avx(const float * RESTRICT filter_data, const float * const * RESTRICT src, float * RESTRICT dst, unsigned left, unsigned right)
 {
 	const float *srcp[8] = { src[0], src[1], src[2], src[3], src[4], src[5], src[6], src[7] };
 	unsigned vec_left = ceil_n(left, 8);
