@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
@@ -236,83 +237,61 @@ void validate_state(const GraphBuilder::state &state)
 } // namespace
 
 
-SubGraph::SubGraph() :
-	m_subgraph(std::make_unique<graphengine::SubGraphImpl>()),
-	m_source_ids{},
-	m_sink_ids{}
-{
-	m_source_ids[0] = m_subgraph->add_source();
-	m_source_ids[1] = m_subgraph->add_source();
-	m_source_ids[2] = m_subgraph->add_source();
-	m_source_ids[3] = m_subgraph->add_source();
+/**
+ * Holds a subgraph that can be inserted into an actual graph instance.
+ */
+class SubGraphBuilder {
+private:
+	std::vector<std::unique_ptr<graphengine::Filter>> m_filters;
+	std::unique_ptr<graphengine::SubGraph> m_subgraph;
+	graphengine::node_id m_source_ids[4];
+	graphengine::node_id m_sink_ids[4];
+public:
+	SubGraphBuilder() :
+		m_subgraph(std::make_unique<graphengine::SubGraphImpl>()),
+		m_source_ids{},
+		m_sink_ids{}
+	{
+		m_source_ids[0] = m_subgraph->add_source();
+		m_source_ids[1] = m_subgraph->add_source();
+		m_source_ids[2] = m_subgraph->add_source();
+		m_source_ids[3] = m_subgraph->add_source();
 
-	std::fill_n(m_sink_ids, 4, graphengine::null_node);
-}
-
-SubGraph::SubGraph(SubGraph &&other) noexcept = default;
-
-SubGraph::~SubGraph() = default;
-
-SubGraph &SubGraph::operator=(SubGraph &&other) noexcept = default;
-
-const graphengine::Filter *SubGraph::save_filter(std::unique_ptr<graphengine::Filter> filter)
-{
-	m_filters.push_back(std::move(filter));
-	return m_filters.back().get();
-}
-
-graphengine::node_id SubGraph::add_transform(const graphengine::Filter *filter, const graphengine::node_dep_desc deps[])
-{
-	zassert_d(m_subgraph, "");
-	return m_subgraph->add_transform(filter, deps);
-}
-
-void SubGraph::set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[])
-{
-	zassert_d(m_subgraph, "");
-
-	for (unsigned p = 0; p < num_planes; ++p) {
-		m_sink_ids[p] = m_subgraph->add_sink(deps[p]);
+		std::fill_n(m_sink_ids, 4, graphengine::null_node);
 	}
-}
 
-std::array<graphengine::node_dep_desc, 4> SubGraph::connect(graphengine::Graph *graph, const graphengine::node_dep_desc source_deps[4]) const
-{
-	zassert_d(m_subgraph, "");
+	graphengine::node_id source_id(unsigned p) const { return m_source_ids[p]; }
+	graphengine::node_id sink_id(unsigned p) const { return m_sink_ids[p]; }
 
-	graphengine::SubGraph::Mapping source_mapping[4];
-	source_mapping[0] = { m_source_ids[0], source_deps[0] };
-	source_mapping[1] = { m_source_ids[1], source_deps[1] };
-	source_mapping[2] = { m_source_ids[2], source_deps[2] };
-	source_mapping[3] = { m_source_ids[3], source_deps[3] };
-
-	graphengine::SubGraph::Mapping sink_mapping[4];
-	m_subgraph->connect(graph, 4, source_mapping, sink_mapping);
-
-	std::array<graphengine::node_dep_desc, 4> result{};
-	auto result_it = result.begin();
-
-	for (graphengine::node_id id : m_sink_ids) {
-		if (id < 0)
-			continue;
-
-		auto it = std::find_if(sink_mapping, sink_mapping + 4, [=](const graphengine::SubGraph::Mapping &m) { return m.internal_id == id; });
-		*result_it++ = it->external_dep;
+	const graphengine::Filter *save_filter(std::unique_ptr<graphengine::Filter> filter)
+	{
+		m_filters.push_back(std::move(filter));
+		return m_filters.back().get();
 	}
-	return result;
-}
 
-std::vector<std::unique_ptr<graphengine::Filter>> SubGraph::release_filters()
-{
-	std::vector<std::unique_ptr<graphengine::Filter>> filters(std::move(m_filters));
-	m_subgraph.reset();
-	return filters;
-}
+	graphengine::node_id add_transform(const graphengine::Filter *filter, const graphengine::node_dep_desc deps[])
+	{
+		zassert_d(!!m_subgraph, "");
+		return m_subgraph->add_transform(filter, deps);
+	}
 
-std::shared_ptr<void> SubGraph::release_filters_opaque()
-{
-	return std::make_unique<decltype(release_filters())>(release_filters());
-}
+	void set_sink(unsigned num_planes, const graphengine::node_dep_desc deps[])
+	{
+		zassert_d(!!m_subgraph, "");
+
+		for (unsigned p = 0; p < num_planes; ++p) {
+			m_sink_ids[p] = m_subgraph->add_sink(deps[p]);
+		}
+	}
+
+	std::pair<std::unique_ptr<graphengine::SubGraph>, std::shared_ptr<void>> release()
+	{
+		std::shared_ptr<void> opaque = std::make_shared<decltype(m_filters)>(std::move(m_filters));
+		auto ret = std::make_pair(std::move(m_subgraph), std::move(opaque));
+		*this = SubGraphBuilder{};
+		return ret;
+	}
+};
 
 
 struct GraphBuilder::internal_state {
@@ -458,7 +437,7 @@ private:
 		ALPHA,
 	};
 
-	SubGraph m_graph;
+	SubGraphBuilder m_graph;
 	std::array<graphengine::node_dep_desc, PLANE_NUM> m_ids;
 	state m_source_state;
 	internal_state m_state;
@@ -1110,13 +1089,13 @@ public:
 		m_state = internal_state{ source };
 		m_requires_64b = false;
 
-		m_ids[PLANE_Y] = m_graph.source_plane_0();
+		m_ids[PLANE_Y] = { m_graph.source_id(PLANE_Y), 0 };
 		if (m_state.has_chroma()) {
-			m_ids[PLANE_U] = m_graph.source_plane_1();
-			m_ids[PLANE_V] = m_graph.source_plane_2();
+			m_ids[PLANE_U] = { m_graph.source_id(PLANE_U), 0 };
+			m_ids[PLANE_V] = { m_graph.source_id(PLANE_V), 0 };
 		}
 		if (m_state.has_alpha())
-			m_ids[PLANE_A] = m_graph.source_plane_3();
+			m_ids[PLANE_A] = { m_graph.source_id(PLANE_A), 0 };
 	}
 
 	void connect(const state &target, const params &params, FilterObserver &observer)
@@ -1136,11 +1115,35 @@ public:
 		}
 	}
 
-	SubGraph build_subgraph()
+	std::unique_ptr<SubGraph> build_subgraph()
 	{
 		if (!m_state.planes[0].width)
 			error::throw_<error::InternalError>("graph not initialized");
 
+		// Count input planes.
+		std::array<graphengine::PlaneDescriptor, graphengine::NODE_MAX_PLANES> source_desc{};
+		std::array<graphengine::node_id, graphengine::NODE_MAX_PLANES> source_ids;
+		std::fill(source_ids.begin(), source_ids.end(), graphengine::null_node);
+
+		{
+			auto source_desc_it = source_desc.begin();
+			auto source_ids_it = source_ids.begin();
+
+			*source_desc_it++ = { m_source_state.width, m_source_state.height, zimg::pixel_size(m_source_state.type) };
+			*source_ids_it++ = m_graph.source_id(PLANE_Y);
+			if (m_source_state.color != ColorFamily::GREY) {
+				*source_desc_it++ = { m_source_state.width >> m_source_state.subsample_w, m_source_state.height >> m_source_state.subsample_h, zimg::pixel_size(m_source_state.type) };
+				*source_desc_it++ = { m_source_state.width >> m_source_state.subsample_w, m_source_state.height >> m_source_state.subsample_h, zimg::pixel_size(m_source_state.type) };
+				*source_ids_it++ = m_graph.source_id(PLANE_U);
+				*source_ids_it++ = m_graph.source_id(PLANE_V);
+			}
+			if (m_source_state.alpha != AlphaType::NONE) {
+				*source_desc_it++ = { m_source_state.width, m_source_state.height, zimg::pixel_size(m_source_state.type) };
+				*source_ids_it++ = m_graph.source_id(PLANE_A);
+			}
+		}
+
+		// Count output planes.
 		std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> sink_deps;
 		std::fill(sink_deps.begin(), sink_deps.end(), graphengine::null_dep);
 
@@ -1158,58 +1161,23 @@ public:
 
 			num_sink_deps = static_cast<unsigned>(sink_deps_it - sink_deps.begin());
 		}
+
+		// Set sink planes.
 		m_graph.set_sink(num_sink_deps, sink_deps.data());
 
-		SubGraph result = std::move(m_graph);
+		std::array<graphengine::node_id, graphengine::NODE_MAX_PLANES> sink_ids;
+		std::fill(sink_ids.begin(), sink_ids.end(), graphengine::null_node);
+
+		for (unsigned p = 0; p < num_sink_deps; ++p) {
+			sink_ids[p] = m_graph.sink_id(p);
+		}
+
+		std::unique_ptr<graphengine::SubGraph> subgraph;
+		std::shared_ptr<void> opaque;
+		std::tie(subgraph, opaque) = m_graph.release();
+
 		*this = impl();
-		return result;
-	}
-
-	std::unique_ptr<FilterGraph> build_graph()
-	{
-		state source_state = m_source_state;
-		unsigned num_sink_planes = 1 + (m_state.has_chroma() ? 2 : 0) + (m_state.has_alpha() ? 1 : 0);
-
-		SubGraph subgraph = build_subgraph();
-		std::unique_ptr<graphengine::Graph> real_graph = std::make_unique<graphengine::GraphImpl>();
-
-		// Set the source node.
-		std::array<graphengine::PlaneDescriptor, PLANE_NUM> source_desc{};
-		unsigned num_source_planes;
-		{
-			auto source_desc_it = source_desc.begin();
-
-			*source_desc_it++ = { source_state.width, source_state.height, zimg::pixel_size(source_state.type) };
-			if (source_state.color != ColorFamily::GREY) {
-				*source_desc_it++ = { source_state.width >> source_state.subsample_w, source_state.height >> source_state.subsample_h, zimg::pixel_size(source_state.type) };
-				*source_desc_it++ = { source_state.width >> source_state.subsample_w, source_state.height >> source_state.subsample_h, zimg::pixel_size(source_state.type) };
-			}
-			if (source_state.alpha != AlphaType::NONE)
-				*source_desc_it++ = { source_state.width, source_state.height, zimg::pixel_size(source_state.type) };
-
-			num_source_planes = static_cast<unsigned>(source_desc_it - source_desc.begin());
-		}
-		graphengine::node_id source_id = real_graph->add_source(num_source_planes, source_desc.data());
-
-		// Apply the partial graph to the real graph.
-		std::array<graphengine::node_dep_desc, graphengine::NODE_MAX_PLANES> source_deps;
-		for (unsigned p = 0; p < graphengine::NODE_MAX_PLANES; ++p) {
-			source_deps[p] = { source_id, p };
-		}
-		auto real_sink_deps = subgraph.connect(real_graph.get(), source_deps.data());
-
-		// Compile the final graph.
-		graphengine::node_id sink_id = real_graph->add_sink(num_sink_planes, real_sink_deps.data());
-		auto finished_graph = std::make_unique<FilterGraph>(std::move(real_graph), subgraph.release_filters_opaque(), source_id, sink_id);
-		if (m_requires_64b)
-			finished_graph->set_requires_64b_alignment();
-
-		if (num_source_planes == 2)
-			finished_graph->set_source_greyalpha();
-		if (num_sink_planes == 2)
-			finished_graph->set_sink_greyalpha();
-
-		return finished_graph;
+		return std::make_unique<SubGraph>(std::move(subgraph), std::move(opaque), source_desc, source_ids, sink_ids);
 	}
 };
 
@@ -1230,7 +1198,6 @@ GraphBuilder::params::params() noexcept :
 	filter = &bicubic;
 	filter_uv = &bilinear;
 }
-
 
 GraphBuilder::GraphBuilder() try : m_impl(std::make_unique<impl>())
 {
@@ -1275,7 +1242,7 @@ GraphBuilder &GraphBuilder::connect(const state &target, const params *params, F
 	error::throw_<error::InternalError>(e.what());
 }
 
-SubGraph GraphBuilder::build_subgraph() try
+std::unique_ptr<SubGraph> GraphBuilder::build_subgraph() try
 {
 	return get_impl()->build_subgraph();
 } catch (const graphengine::Exception &e) {
@@ -1284,13 +1251,9 @@ SubGraph GraphBuilder::build_subgraph() try
 	error::throw_<error::InternalError>(e.what());
 }
 
-std::unique_ptr<FilterGraph> GraphBuilder::build_graph() try
+std::unique_ptr<FilterGraph> GraphBuilder::build_graph()
 {
-	return get_impl()->build_graph();
-} catch (const graphengine::Exception &e) {
-	rethrow_graphengine_exception(e);
-} catch (const std::exception &e) {
-	error::throw_<error::InternalError>(e.what());
+	return build_subgraph()->build_full_graph();
 }
 
 } // namespace zimg::graph
