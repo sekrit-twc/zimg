@@ -677,3 +677,51 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		return nullptr;
 	}
 }
+
+void zimg_subgraph_free(zimg_subgraph *graph)
+{
+	delete graph;
+}
+
+void zimg_subgraph_get_endpoint_ids(const zimg_subgraph *ptr, unsigned *num_sources, unsigned *num_sinks, int source_ids[4], int sink_ids[4])
+{
+	zassert_d(ptr, "null pointer");
+	zassert_d(num_sources, "null pointer");
+	zassert_d(num_sinks, "null pointer");
+	zassert_d(source_ids, "null pointer");
+	zassert_d(sink_ids, "null pointer");
+	std::tie(*num_sources, *num_sinks) = assert_dynamic_type<const zimg::graph::SubGraph>(ptr)->get_endpoint_ids(source_ids, sink_ids);
+}
+
+const void *zimg_subgraph_get_subgraph(const zimg_subgraph *ptr)
+{
+	zassert_d(ptr, "null pointer");
+	return assert_dynamic_type<const zimg::graph::SubGraph>(ptr)->get_subgraph();
+}
+
+zimg_subgraph *zimg_subgraph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params)
+{
+	zassert_d(src_format, "null pointer");
+	zassert_d(dst_format, "null pointer");
+
+	try {
+		zimg::graph::GraphBuilder::state src_state;
+		zimg::graph::GraphBuilder::state dst_state;
+		zimg::graph::GraphBuilder::params graph_params;
+
+		std::unique_ptr<zimg::resize::Filter> filters[2];
+
+		std::tie(src_state, dst_state) = import_graph_state(*src_format, *dst_format);
+		if (params)
+			graph_params = import_graph_params(*params, filters);
+
+		zimg::graph::GraphBuilder builder;
+		return builder.set_source(src_state)
+			.connect(dst_state, params ? &graph_params : nullptr)
+			.build_subgraph()
+			.release();
+	} catch (...) {
+		handle_exception(std::current_exception());
+		return nullptr;
+	}
+}

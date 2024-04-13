@@ -28,8 +28,13 @@ extern "C" {
  * does not access memory beyond the end of the structure.
  */
 #define ZIMG_MAKE_API_VERSION(x, y) (((x) << 8) | (y))
+#ifdef ZIMG_GRAPHENGINE_API
+#define ZIMG_API_VERSION_MAJOR 2
+#define ZIMG_API_VERSION_MINOR 255
+#else
 #define ZIMG_API_VERSION_MAJOR 2
 #define ZIMG_API_VERSION_MINOR 4
+#endif
 #define ZIMG_API_VERSION ZIMG_MAKE_API_VERSION(ZIMG_API_VERSION_MAJOR, ZIMG_API_VERSION_MINOR)
 
 /**
@@ -665,6 +670,68 @@ void zimg_graph_builder_params_default(zimg_graph_builder_params *ptr, unsigned 
  */
 ZIMG_VISIBILITY
 zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params);
+
+
+#ifdef ZIMG_GRAPHENGINE_API
+/**
+ * Handle to an incomplete filter graph.
+ *
+ * The partial graph implements the graphengine:SubGraph API and can be combined
+ * with external filters to implement user-defined format conversions.
+ */
+typedef struct zimg_subgraph zimg_subgraph;
+
+/**
+ * Delete the subgraph.
+ *
+ * @param ptr graph handle, may be NULL
+ */
+ZIMG_VISIBILITY
+void zimg_subgraph_free(zimg_subgraph *ptr);
+
+/**
+ * Query the node ids of the input and output planes.
+ *
+ * Note that the plane index semantics of graphengine differ from
+ * {@link zimg_image_buffer}. The alpha plane of grey+alpha formats is plane 1,
+ * not plane 3.
+ *
+ * @param ptr graph handle
+ * @param[out] num_sources set to the number of input planes/source nodes
+ * @param[out] num_sinks set to the number of output planes/sink nodes
+ * @param[out] source_ids source node ids
+ * @param[out] sink_ids sink node ids
+ */
+ZIMG_VISIBILITY
+void zimg_subgraph_get_endpoint_ids(const zimg_subgraph *ptr, unsigned *num_sources, unsigned *num_sinks, int source_ids[4], int sink_ids[4]);
+
+/**
+ * Retrieve the graphengine::SubGraph handle.
+ *
+ * The graphengine handle and any graphs to which it is connected are valid
+ * only during the lifetime of zimg_subgraph, which manages the lifecycle of the
+ * filters referenced by the graph.
+ *
+ * @param ptr graph handle {@see graphengine::SubGraph}
+ * @return pointer graphengine handle
+ */
+ZIMG_VISIBILITY
+const void *zimg_subgraph_get_subgraph(const zimg_subgraph *ptr);
+
+/**
+ * Create a partial filter graph converting the specified formats.
+ *
+ * Upon failure, a NULL pointer is returned. The function
+ * {@link zimg_get_last_error} may be called to obtain the failure reason.
+ *
+ * @param[in] src_format input image format
+ * @param[in] dst_format output image format
+ * @param[in] params filter parameters, may be NULL
+ * @return subgraph handle, or NULL on failure
+ */
+ZIMG_VISIBILITY
+zimg_subgraph *zimg_subgraph_build(const zimg_image_format *src_format, const zimg_image_format *dst_format, const zimg_graph_builder_params *params);
+#endif /* ZIMG_GRAPHENGINE_API */
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -242,4 +242,94 @@ public:
 
 } // namespace zimgxx
 
+#ifdef ZIMG_GRAPHENGINE_API
+namespace graphengine {
+class SubGraph;
+}
+
+namespace ZIMGXX_NAMESPACE {
+
+class SubGraph {
+	struct pair_unsigned { unsigned first; unsigned second; };
+
+	zimg_subgraph *m_graph;
+
+	SubGraph(const SubGraph &);
+
+	SubGraph &operator=(const SubGraph &);
+public:
+	explicit SubGraph(zimg_subgraph *graph) : m_graph(graph)
+	{
+	}
+
+	~SubGraph()
+	{
+		zimg_subgraph_free(m_graph);
+	}
+
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+	SubGraph() : m_graph()
+	{
+	}
+
+	SubGraph(SubGraph &&other) noexcept : m_graph(other.m_graph)
+	{
+		other.m_graph = 0;
+	}
+
+	SubGraph &operator=(SubGraph &&other) noexcept
+	{
+		if (this != &other) {
+			zimg_subgraph_free(m_graph);
+			m_graph = other.m_graph;
+			other.m_graph = 0;
+		}
+
+		return *this;
+	}
+
+	explicit operator bool() const
+	{
+		return m_graph != 0;
+	}
+#endif
+
+	pair_unsigned get_endpoint_ids(int source_ids[4], int sink_ids[4]) const
+	{
+		pair_unsigned ret;
+		zimg_subgraph_get_endpoint_ids(m_graph, &ret.first, &ret.second, source_ids, sink_ids);
+		return ret;
+	}
+
+	const graphengine::SubGraph *get_subgraph() const
+	{
+		return static_cast<const graphengine::SubGraph *>(zimg_subgraph_get_subgraph(m_graph));
+	}
+
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600)
+	static SubGraph build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_graph_builder_params *params = 0)
+	{
+		zimg_subgraph *graph;
+
+		if (!(graph = zimg_subgraph_build(&src_format, &dst_format, params)))
+			throw zerror();
+
+		return SubGraph(graph);
+	}
+#else
+	static zimg_subgraph *build(const zimg_image_format &src_format, const zimg_image_format &dst_format, const zimg_graph_builder_params *params = 0)
+	{
+		zimg_subgraph *graph;
+
+		if (!(graph = zimg_subgraph_build(&src_format, &dst_format, params)))
+			throw zerror();
+
+		return graph;
+	}
+#endif
+};
+
+} // namespace zimgxx
+#endif ZIMG_GRAPHENGINE_API // ZIMG_GRAPHENGINE_API
+
 #endif // ZIMGPLUSPLUS_HPP_
