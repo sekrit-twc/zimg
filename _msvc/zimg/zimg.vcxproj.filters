@@ -123,9 +123,6 @@
     <ClInclude Include="..\..\src\zimg\colorspace\colorspace_param.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\colorspace\graph.h">
-      <Filter>Header Files\colorspace</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\colorspace\matrix3.h">
       <Filter>Header Files\colorspace</Filter>
     </ClInclude>
@@ -294,6 +291,9 @@
     <ClInclude Include="..\..\src\zimg\common\unroll.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\zimg\colorspace\colorspace_graph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\zimg\api\zimg.cpp">
@@ -303,9 +303,6 @@
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace_param.cpp">
-      <Filter>Source Files\colorspace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\graph.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\matrix3.cpp">
@@ -499,6 +496,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\filter_base.cpp">
       <Filter>Source Files\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\colorspace\colorspace_graph.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

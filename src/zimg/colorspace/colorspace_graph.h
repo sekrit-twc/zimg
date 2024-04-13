@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ZIMG_COLORSPACE_GRAPH_H_
-#define ZIMG_COLORSPACE_GRAPH_H_
+#ifndef ZIMG_COLORSPACE_COLORSPACE_GRAPH_H_
+#define ZIMG_COLORSPACE_COLORSPACE_GRAPH_H_
 
 #include <functional>
 #include <memory>

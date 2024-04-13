@@ -6,7 +6,7 @@
 #include "common/zassert.h"
 #include "graph/filter_base.h"
 #include "colorspace.h"
-#include "graph.h"
+#include "colorspace_graph.h"
 #include "operation.h"
 
 namespace zimg::colorspace {

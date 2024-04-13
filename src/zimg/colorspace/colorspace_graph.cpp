@@ -7,7 +7,7 @@
 #include "common/except.h"
 #include "common/zassert.h"
 #include "colorspace.h"
-#include "graph.h"
+#include "colorspace_graph.h"
 #include "operation.h"
 
 namespace zimg::colorspace {
