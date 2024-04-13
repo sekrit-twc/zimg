@@ -44,6 +44,9 @@ public:
 
 	~FilterGraph();
 
+	// For API use only.
+	const FilterGraph *check_alignment(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst) const;
+
 	size_t get_tmp_size() const;
 
 	unsigned get_input_buffering() const;
@@ -53,8 +56,6 @@ public:
 	unsigned get_tile_width() const;
 
 	void set_tile_width(unsigned tile_width);
-
-	bool requires_64b_alignment() const { return m_requires_64b; }
 
 	void set_requires_64b_alignment() { m_requires_64b = true; }
 

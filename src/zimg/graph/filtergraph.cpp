@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <climits>
 #include <tuple>
+#include "common/align.h"
 #include "common/except.h"
 #include "common/zassert.h"
 #include "graphengine/graph.h"
@@ -21,6 +22,36 @@ FilterGraph::FilterGraph(std::unique_ptr<graphengine::Graph> graph, std::shared_
 {}
 
 FilterGraph::~FilterGraph() = default;
+
+const FilterGraph *FilterGraph::check_alignment(const std::array<graphengine::BufferDescriptor, 4> &src, const std::array<graphengine::BufferDescriptor, 4> &dst) const
+{
+#define POINTER_ALIGNMENT_ASSERT(x) zassert_d(!(x) || reinterpret_cast<uintptr_t>(x) % alignment == 0, "pointer not aligned")
+#define STRIDE_ALIGNMENT_ASSERT(x) zassert_d((x) % alignment == 0, "stride not aligned")
+	const int alignment = m_requires_64b ? zimg::ALIGNMENT : zimg::ALIGNMENT_RELAXED;
+
+	POINTER_ALIGNMENT_ASSERT(src[0].ptr);
+	POINTER_ALIGNMENT_ASSERT(src[1].ptr);
+	POINTER_ALIGNMENT_ASSERT(src[2].ptr);
+	POINTER_ALIGNMENT_ASSERT(src[3].ptr);
+
+	STRIDE_ALIGNMENT_ASSERT(src[0].stride);
+	STRIDE_ALIGNMENT_ASSERT(src[1].stride);
+	STRIDE_ALIGNMENT_ASSERT(src[2].stride);
+	STRIDE_ALIGNMENT_ASSERT(src[3].stride);
+
+	POINTER_ALIGNMENT_ASSERT(dst[0].ptr);
+	POINTER_ALIGNMENT_ASSERT(dst[1].ptr);
+	POINTER_ALIGNMENT_ASSERT(dst[2].ptr);
+	POINTER_ALIGNMENT_ASSERT(dst[3].ptr);
+
+	STRIDE_ALIGNMENT_ASSERT(dst[0].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst[1].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst[2].stride);
+	STRIDE_ALIGNMENT_ASSERT(dst[3].stride);
+#undef POINTER_ALIGNMENT_ASSERT
+#undef STRIDE_ALIGNMENT_ASSERT
+	return this;
+}
 
 size_t FilterGraph::get_tmp_size() const try
 {
