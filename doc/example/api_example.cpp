@@ -378,7 +378,7 @@ void pack_yuy2(const void * const planar[3], void *yuy2, unsigned left, unsigned
 int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
-	const void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
+	const void *img = static_cast<uint8_t *>(cb->file->image_base) + static_cast<ptrdiff_t>(i) * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	void *buf_data[4] = { 0 };
@@ -409,7 +409,7 @@ int unpack_image(void *user, unsigned i, unsigned left, unsigned right)
 int pack_image(void *user, unsigned i, unsigned left, unsigned right)
 {
 	const Callback *cb = static_cast<Callback *>(user);
-	void *img = static_cast<uint8_t *>(cb->file->image_base) + i * cb->file->stride;
+	void *img = static_cast<uint8_t *>(cb->file->image_base) + static_cast<ptrdiff_t>(i) * cb->file->stride;
 	const zimgxx::zimage_buffer &buf = *cb->buffer;
 	FileFormat fmt = cb->file->fmt;
 	const void *buf_data[4] = { 0 };
