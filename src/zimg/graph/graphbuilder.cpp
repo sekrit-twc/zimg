@@ -1106,13 +1106,10 @@ public:
 		internal_state internal_target{ target };
 		connect_internal(internal_target, params, observer);
 
-		if (true
 #ifdef ZIMG_X86
-		    && (params.cpu == CPUClass::AUTO_64B || params.cpu >= CPUClass::X86_AVX512)
-#endif
-		) {
+		if (params.cpu == CPUClass::AUTO_64B || params.cpu >= CPUClass::X86_AVX512)
 			m_requires_64b = true;
-		}
+#endif
 	}
 
 	std::unique_ptr<SubGraph> build_subgraph()
