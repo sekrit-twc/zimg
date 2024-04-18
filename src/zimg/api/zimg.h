@@ -295,15 +295,20 @@ typedef enum zimg_matrix_coefficients_e {
 	ZIMG_MATRIX_YCGCO                    = 8,
 	ZIMG_MATRIX_BT2020_NCL               = 9,
 	ZIMG_MATRIX_BT2020_CL                = 10,
+	ZIMG_MATRIX_ST2085_YDZDX             = 11,
 	ZIMG_MATRIX_CHROMATICITY_DERIVED_NCL = 12, /* Requires primaries to be set. */
 	ZIMG_MATRIX_CHROMATICITY_DERIVED_CL  = 13, /* Requires primaries to be set. */
-	ZIMG_MATRIX_ICTCP                    = 14
-#define ZIMG_MATRIX_709      ZIMG_MATRIX_BT709      /**< Deprecated. */
-#define ZIMG_MATRIX_470BG    ZIMG_MATRIX_BT470_BG   /**< Deprecated. */
-#define ZIMG_MATRIX_170M     ZIMG_MATRIX_ST170_M    /**< Deprecated. */
-#define ZIMG_MATRIX_240M     ZIMG_MATRIX_ST240_M    /**< Deprecated. */
-#define ZIMG_MATRIX_2020_NCL ZIMG_MATRIX_BT2020_NCL /**< Deprecated. */
-#define ZIMG_MATRIX_2020_CL  ZIMG_MATRIX_BT2020_CL  /**< Deprecated. */
+	ZIMG_MATRIX_BT2100_ICTCP             = 14,
+	ZIMG_MATRIX_ST2128_IPT_C2            = 15,
+	ZIMG_MATRIX_YCGCO_RE                 = 16,
+	ZIMG_MATRIX_YCGCO_RO                 = 17
+#define ZIMG_MATRIX_709      ZIMG_MATRIX_BT709        /**< Deprecated. */
+#define ZIMG_MATRIX_470BG    ZIMG_MATRIX_BT470_BG     /**< Deprecated. */
+#define ZIMG_MATRIX_170M     ZIMG_MATRIX_ST170_M      /**< Deprecated. */
+#define ZIMG_MATRIX_240M     ZIMG_MATRIX_ST240_M      /**< Deprecated. */
+#define ZIMG_MATRIX_2020_NCL ZIMG_MATRIX_BT2020_NCL   /**< Deprecated. */
+#define ZIMG_MATRIX_2020_CL  ZIMG_MATRIX_BT2020_CL    /**< Deprecated. */
+#define ZIMG_MATRIX_ICTCP    ZIMG_MATRIX_BT2100_ICTCP /**< Deprecated. */
 } zimg_matrix_coefficients_e;
 
 typedef enum zimg_transfer_characteristics_e {
@@ -318,6 +323,7 @@ typedef enum zimg_transfer_characteristics_e {
 	ZIMG_TRANSFER_LOG_100       = 9,
 	ZIMG_TRANSFER_LOG_316       = 10,
 	ZIMG_TRANSFER_IEC_61966_2_4 = 11,
+	ZIMG_TRANSFER_BT1361        = 12,
 	ZIMG_TRANSFER_IEC_61966_2_1 = 13,
 	ZIMG_TRANSFER_BT2020_10     = 14, /* Equivalent to 1. */
 	ZIMG_TRANSFER_BT2020_12     = 15, /* Equivalent to 1. */
