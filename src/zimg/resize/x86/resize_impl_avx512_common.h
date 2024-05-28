@@ -797,7 +797,7 @@ public:
 				left_min = std::min(left_min, filter.left[ii]);
 				left_max = std::max(left_max, filter.left[ii]);
 			}
-			if (left_max - left_min >= 32)
+			if (left_max - left_min >= 31)
 				return nullptr;
 
 			for (unsigned ii = i; ii < std::min(i + 16, context.filter_rows); ++ii) {
