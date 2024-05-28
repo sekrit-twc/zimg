@@ -29,7 +29,7 @@ int decode_filter(const struct ArgparseOption *, void *out, const char *param, i
 {
 	try {
 		zimg::resize::Filter **filter = static_cast<zimg::resize::Filter **>(out);
-		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };
+		std::regex filter_regex{ R"(^(point|bilinear|bicubic|spline16|spline36|spline64|lanczos)(?::([\w.+-]+)(?::([\w.+-]+))?)?$)" };
 		std::cmatch match;
 		std::string filter_str;
 		double param_a = NAN;
@@ -107,7 +107,7 @@ const ArgparseOption program_positional[] = {
 
 const char help_str[] =
 "Resampling filter specifier: filter[:param_a[:param_b]]\n"
-"filter: point, bilinear, bicubic, spline16, spline36, lanczos\n"
+"filter: point, bilinear, bicubic, spline16, spline36, spline64, lanczos\n"
 "\n"
 PIXFMT_SPECIFIER_HELP_STR
 "\n"
