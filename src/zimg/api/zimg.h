@@ -682,8 +682,8 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 /**
  * Handle to an incomplete filter graph.
  *
- * The partial graph implements the graphengine:SubGraph API and can be combined
- * with external filters to implement user-defined format conversions.
+ * The partial graph implements the graphengine::SubGraph API and can be
+ * combined with external filters to implement user-defined format conversions.
  */
 typedef struct zimg_subgraph zimg_subgraph;
 
