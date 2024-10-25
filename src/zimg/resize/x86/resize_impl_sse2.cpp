@@ -404,7 +404,7 @@ public:
 			}
 
 			gather_8_lines(top + k_end);
-			resize_line_v_u16_sse2_jt_final[filter_width % 8](filter_data + k_end, XARGS);
+			resize_line_v_u16_sse2_jt_final[filter_width - k_end - 1](filter_data + k_end, XARGS);
 		}
 #undef XARGS
 	}
