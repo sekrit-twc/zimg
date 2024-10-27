@@ -9,7 +9,11 @@ namespace zimg {
  * 64-byte alignment allows the use of instructions up to AVX-512.
  */
 #if defined(ZIMG_X86)
+#if defined(__AVX512F__)
 constexpr int ALIGNMENT = 64;
+#else
+constexpr int ALIGNMENT = 32;
+#endif
 constexpr int ALIGNMENT_RELAXED = 32;
 #elif defined(ZIMG_ARM)
 constexpr int ALIGNMENT = 16;
