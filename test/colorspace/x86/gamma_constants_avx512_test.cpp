@@ -1,5 +1,3 @@
-#ifdef ZIMG_X86_AVX512
-
 #include <cmath>
 
 #include "colorspace/x86/gamma_constants_avx512.h"
@@ -102,5 +100,3 @@ TEST(GammaConstantsAVX512Test, test_st_2084)
 	SCOPED_TRACE("reverse");
 	test_linear_to_gamma(st_2084_inverse_eotf, avx512constants::st_2084_inverse_eotf, -31, 0, 1e-5f, 1e-7f);
 }
-
-#endif // ZIMG_X86_AVX512

@@ -267,7 +267,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <FloatingPointModel>Strict</FloatingPointModel>
@@ -300,7 +300,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -334,7 +334,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Strict</FloatingPointModel>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -373,7 +373,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src\zimg;$(ProjectDir)..\..\graphengine\include;$(ProjectDir)..\..\test;$(ProjectDir)..\..\test\extra;$(ProjectDir)..\..\test\extra\googletest\googletest\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;ZIMG_X86_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GRAPHENGINE_IMPL_NAMESPACE=zimg;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ZIMG_X86;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

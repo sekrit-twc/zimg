@@ -54,7 +54,6 @@ dither_convert_func select_ordered_dither_func_avx2(PixelType pixel_in, PixelTyp
 		return nullptr;
 }
 
-#ifdef ZIMG_X86_AVX512
 dither_convert_func select_ordered_dither_func_avx512(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
@@ -76,7 +75,6 @@ dither_convert_func select_ordered_dither_func_avx512(PixelType pixel_in, PixelT
 	else
 		return nullptr;
 }
-#endif
 
 } // namespace
 
@@ -87,19 +85,15 @@ dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, 
 	dither_convert_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
 			func = select_ordered_dither_func_avx512(pixel_in.type, pixel_out.type);
-#endif
 		if (!func && caps.avx2 && caps.fma)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
 		if (!func && caps.sse2)
 			func = select_ordered_dither_func_sse2(pixel_in.type, pixel_out.type);
 	} else {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu >= CPUClass::X86_AVX512)
 			func = select_ordered_dither_func_avx512(pixel_in.type, pixel_out.type);
-#endif
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
 		if (!func && cpu >= CPUClass::X86_SSE2)

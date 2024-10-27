@@ -1,5 +1,3 @@
-#ifdef ZIMG_X86_AVX512
-
 #include <algorithm>
 #include <climits>
 #include <cstdint>
@@ -703,5 +701,3 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx512(const FilterCon
 }
 
 } // namespace zimg::resize
-
-#endif // ZIMG_X86_AVX512

@@ -1,7 +1,5 @@
 #pragma once
 
-#ifdef ZIMG_X86_AVX512
-
 #ifndef ZIMG_X86_AVX512_UTIL_H_
 #define ZIMG_X86_AVX512_UTIL_H_
 
@@ -178,5 +176,3 @@ static inline FORCE_INLINE void mm512_transpose32_epi16(
 } // namespace zimg
 
 #endif // ZIMG_X86_AVX512_UTIL_H_
-
-#endif // ZIMG_X86_AVX512

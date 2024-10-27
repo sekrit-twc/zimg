@@ -38,7 +38,6 @@ left_shift_func select_left_shift_func_avx2(PixelType pixel_in, PixelType pixel_
 		return nullptr;
 }
 
-#ifdef ZIMG_X86_AVX512
 left_shift_func select_left_shift_func_avx512(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
@@ -52,7 +51,6 @@ left_shift_func select_left_shift_func_avx512(PixelType pixel_in, PixelType pixe
 	else
 		return nullptr;
 }
-#endif
 
 depth_convert_func select_depth_convert_func_sse2(PixelType pixel_in, PixelType pixel_out)
 {
@@ -81,7 +79,6 @@ depth_convert_func select_depth_convert_func_avx2(PixelType pixel_in, PixelType 
 		return nullptr;
 }
 
-#ifdef ZIMG_X86_AVX512
 depth_convert_func select_depth_convert_func_avx512(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::HALF)
@@ -95,7 +92,6 @@ depth_convert_func select_depth_convert_func_avx512(PixelType pixel_in, PixelTyp
 	else
 		return nullptr;
 }
-#endif // ZIMG_X86_AVX512
 
 } // namespace
 
@@ -106,19 +102,15 @@ left_shift_func select_left_shift_func_x86(PixelType pixel_in, PixelType pixel_o
 	left_shift_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
 			func = select_left_shift_func_avx512(pixel_in, pixel_out);
-#endif
 		if (!func && caps.avx2)
 			func = select_left_shift_func_avx2(pixel_in, pixel_out);
 		if (!func && caps.sse2)
 			func = select_left_shift_func_sse2(pixel_in, pixel_out);
 	} else {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu >= CPUClass::X86_AVX512)
 			func = select_left_shift_func_avx512(pixel_in, pixel_out);
-#endif
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_left_shift_func_avx2(pixel_in, pixel_out);
 		if (!func && cpu >= CPUClass::X86_SSE2)
@@ -134,19 +126,15 @@ depth_convert_func select_depth_convert_func_x86(const PixelFormat &pixel_in, co
 	depth_convert_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu == CPUClass::AUTO_64B && caps.avx512f && caps.avx512bw && caps.avx512vl)
 			func = select_depth_convert_func_avx512(pixel_in.type, pixel_out.type);
-#endif
 		if (!func && caps.avx2 && caps.fma)
 			func = select_depth_convert_func_avx2(pixel_in.type, pixel_out.type);
 		if (!func && caps.sse2)
 			func = select_depth_convert_func_sse2(pixel_in.type, pixel_out.type);
 	} else {
-#ifdef ZIMG_X86_AVX512
 		if (!func && cpu >= CPUClass::X86_AVX512)
 			func = select_depth_convert_func_avx512(pixel_in.type, pixel_out.type);
-#endif
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_depth_convert_func_avx2(pixel_in.type, pixel_out.type);
 		if (!func && cpu >= CPUClass::X86_SSE2)

@@ -1,5 +1,3 @@
-#ifdef ZIMG_X86_AVX512
-
 #include <cmath>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
@@ -136,5 +134,3 @@ TEST(DepthConvertAVX512Test, test_depth_convert_w2f)
 
 	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
-
-#endif // ZIMG_X86_AVX512

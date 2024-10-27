@@ -1,5 +1,3 @@
-#ifdef ZIMG_X86_AVX512
-
 #include <cstdint>
 #include <immintrin.h>
 #include "common/align.h"
@@ -173,5 +171,3 @@ void ordered_dither_f2w_avx512(const float *dither, unsigned dither_offset, unsi
 }
 
 } // namespace zimg::depth
-
-#endif // ZIMG_X86_AVX512

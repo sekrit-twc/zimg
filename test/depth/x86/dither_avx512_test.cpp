@@ -1,5 +1,3 @@
-#ifdef ZIMG_X86_AVX512
-
 #include <cmath>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
@@ -120,5 +118,3 @@ TEST(DitherAVX512Test, test_ordered_dither_f2w)
 	// The use of FMA changes the rounding of the result at 16-bits.
 	test_case(pixel_in, pixel_out, expected_sha1, 120.0);
 }
-
-#endif // ZIMG_X86_AVX512
