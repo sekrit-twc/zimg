@@ -111,6 +111,8 @@ struct PowerFunction {
 		if (Prescale)
 			x = _mm512_mul_ps(x, scale);
 
+		x = _mm512_max_ps(x, _mm512_setzero_ps());
+
 		orig = x;
 		x = _mm512_range_ps(x, two_minus_eps, 0x08); // fabs(min(x, 2.0))
 
@@ -160,6 +162,8 @@ struct SRGBPowerFunction {
 
 		if (Prescale)
 			x = _mm512_mul_ps(x, scale);
+
+		x = _mm512_max_ps(x, _mm512_setzero_ps());
 
 		orig = x;
 		x = _mm512_range_ps(x, two_minus_eps, 0x08); // fabs(min(x, 2.0))
