@@ -5,22 +5,6 @@
 #include <cstdint>
 #include "common/ccdep.h"
 
-// A32 compatibility macros
-#if defined(_M_ARM) || defined(__arm__)
-  #define vmovl_high_u8(x) vmovl_u8(vget_high_u8(x))
-  #define vmovl_high_u16(x) vmovl_u16(vget_high_u16(x))
-  #define vmovn_high_u16(r, a) vcombine_u8(r, vmovn_u16(a))
-  #define vqmovn_high_u32(r, a) vcombine_u16(r, vqmovn_u32(a))
-  #define vqmovn_high_s32(r, a) vcombine_s16(r, vqmovn_s32(a))
-  #define vcvt_high_f16_f32(r, a) vcombine_f16(r, vcvt_f16_f32(a))
-  #define vcvt_high_f32_f16(a) vcvt_f32_f16(vget_high_f16(a))
-  #define vmull_high_s16(a, v) vmull_s16(vget_high_s16(a), vget_high_s16(v))
-  #define vmlal_high_s16(a, b, v) vmlal_s16(a, vget_high_s16(b), vget_high_s16(v))
-  #define vfmaq_f32(a, b, c) vmlaq_f32(a, b, c)
-  #define vdupq_laneq_s16(vec, lane) ((lane) >= 4 ? vdupq_lane_s16(vget_high_s16(vec), (lane) % 4) : vdupq_lane_s16(vget_low_s16(vec), (lane) % 4))
-  #define vdupq_laneq_f32(vec, lane) ((lane) >= 2 ? vdupq_lane_f32(vget_high_f32(vec), (lane) % 2) : vdupq_lane_f32(vget_low_f32(vec), (lane) % 2))
-#endif
-
 #if defined(_MSC_VER) && defined(_M_ARM64)
   #define __fp16 uint16_t
   #define float16x8_t uint16x8_t
@@ -71,7 +55,6 @@ static inline FORCE_INLINE void neon_store_idxhi_u16(uint16_t *dst, uint16x8_t x
 	neon_store_idxhi_u8(reinterpret_cast<uint8_t *>(dst), vreinterpretq_u8_u16(x), idx * 2);
 }
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 // Store from [x] into [dst] the 16-bit elements with index less than [idx].
 static inline FORCE_INLINE void neon_store_idxlo_f16(__fp16 *dst, float16x8_t x, unsigned idx)
 {
@@ -83,7 +66,6 @@ static inline FORCE_INLINE void neon_store_idxhi_f16(__fp16 *dst, float16x8_t x,
 {
 	neon_store_idxhi_u8(reinterpret_cast<uint8_t *>(dst), vreinterpretq_u8_f16(x), idx * 2);
 }
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 // Store from [x] into [dst] the 32-bit elements with index less than [idx].
 static inline FORCE_INLINE void neon_store_idxlo_f32(float *dst, float32x4_t x, unsigned idx)
@@ -150,7 +132,6 @@ static inline FORCE_INLINE void neon_transpose8_u16(uint16x8_t &row0, uint16x8_t
     uint32x4_t tt6 = tt6_tt7.val[0];
     uint32x4_t tt7 = tt6_tt7.val[1];
 
-#if defined(__aarch64__) || defined(_M_ARM64)
     row0 = vreinterpretq_u16_u64(vzip1q_u64(vreinterpretq_u64_u32(tt0), vreinterpretq_u64_u32(tt4)));
     row1 = vreinterpretq_u16_u64(vzip1q_u64(vreinterpretq_u64_u32(tt2), vreinterpretq_u64_u32(tt6)));
     row2 = vreinterpretq_u16_u64(vzip1q_u64(vreinterpretq_u64_u32(tt1), vreinterpretq_u64_u32(tt5)));
@@ -159,16 +140,6 @@ static inline FORCE_INLINE void neon_transpose8_u16(uint16x8_t &row0, uint16x8_t
     row5 = vreinterpretq_u16_u64(vzip2q_u64(vreinterpretq_u64_u32(tt2), vreinterpretq_u64_u32(tt6)));
     row6 = vreinterpretq_u16_u64(vzip2q_u64(vreinterpretq_u64_u32(tt1), vreinterpretq_u64_u32(tt5)));
     row7 = vreinterpretq_u16_u64(vzip2q_u64(vreinterpretq_u64_u32(tt3), vreinterpretq_u64_u32(tt7)));
-#else
-    row0 = vreinterpretq_u16_u32(vcombine_u32(vget_low_u32(tt0), vget_low_u32(tt4)));
-    row1 = vreinterpretq_u16_u32(vcombine_u32(vget_low_u32(tt2), vget_low_u32(tt6)));
-    row2 = vreinterpretq_u16_u32(vcombine_u32(vget_low_u32(tt1), vget_low_u32(tt5)));
-    row3 = vreinterpretq_u16_u32(vcombine_u32(vget_low_u32(tt3), vget_low_u32(tt7)));
-    row4 = vreinterpretq_u16_u32(vcombine_u32(vget_high_u32(tt0), vget_high_u32(tt4)));
-    row5 = vreinterpretq_u16_u32(vcombine_u32(vget_high_u32(tt2), vget_high_u32(tt6)));
-    row6 = vreinterpretq_u16_u32(vcombine_u32(vget_high_u32(tt1), vget_high_u32(tt5)));
-    row7 = vreinterpretq_u16_u32(vcombine_u32(vget_high_u32(tt3), vget_high_u32(tt7)));
-#endif
 }
 
 
@@ -181,17 +152,10 @@ static inline FORCE_INLINE void neon_transpose4_f32(float32x4_t &row0, float32x4
 	float32x4_t t1 = t0_t1.val[1];
 	float32x4_t t2 = t2_t3.val[0];
 	float32x4_t t3 = t2_t3.val[1];
-#if defined(__aarch64__) || defined(_M_ARM64)
 	row0 = vreinterpretq_f32_f64(vzip1q_f64(vreinterpretq_f64_f32(t0), vreinterpretq_f64_f32(t2)));
 	row1 = vreinterpretq_f32_f64(vzip1q_f64(vreinterpretq_f64_f32(t1), vreinterpretq_f64_f32(t3)));
 	row2 = vreinterpretq_f32_f64(vzip2q_f64(vreinterpretq_f64_f32(t0), vreinterpretq_f64_f32(t2)));
 	row3 = vreinterpretq_f32_f64(vzip2q_f64(vreinterpretq_f64_f32(t1), vreinterpretq_f64_f32(t3)));
-#else
-	row0 = vcombine_f32(vget_low_f32(t0), vget_low_f32(t2));
-	row1 = vcombine_f32(vget_low_f32(t1), vget_low_f32(t3));
-	row2 = vcombine_f32(vget_high_f32(t0), vget_high_f32(t2));
-	row3 = vcombine_f32(vget_high_f32(t1), vget_high_f32(t3));
-#endif
 }
 
 } // namespace

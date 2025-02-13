@@ -209,7 +209,6 @@ void left_shift_w2w_neon(const void *src, void *dst, unsigned shift, unsigned le
 	}
 }
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 void depth_convert_b2h_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
 	const uint8_t *src_p = static_cast<const uint8_t *>(src);
@@ -261,7 +260,6 @@ void depth_convert_b2h_neon(const void *src, void *dst, float scale, float offse
 #undef XITER
 #undef XARGS
 }
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 void depth_convert_b2f_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
@@ -330,7 +328,6 @@ void depth_convert_b2f_neon(const void *src, void *dst, float scale, float offse
 #undef XARGS
 }
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 void depth_convert_w2h_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
 	const uint16_t *src_p = static_cast<const uint16_t *>(src);
@@ -366,7 +363,6 @@ void depth_convert_w2h_neon(const void *src, void *dst, float scale, float offse
 #undef XITER
 #undef XARGS
 }
-#endif
 
 void depth_convert_w2f_neon(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {

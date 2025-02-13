@@ -62,21 +62,11 @@ TEST(ColorspaceConversionNeonTest, test_matrix)
 	using namespace zimg::colorspace;
 
 	const char *expected_sha1[3] = {
-#if defined(_M_ARM64) || defined(__aarch64__)
 		"749f74428406c019b1b727fa30352fcd1f0141ed",
 		"334cfa73375f8afef8423a163f3cff8f8a196762",
 		"aa3aab12d52e67b4d6765b4e8c03205a5375d8d9"
-#else
-		"1d559e4b2812a5940839b064f5bd74bc4fe0a2f9",
-		"b32a33c4bbbf3901f89458f914e6d03cc81f2c1d",
-		"4aadd644fae30cfd2098bb8d2b9f98483c8821fd"
-#endif
 	};
-#if defined(_M_ARM64) || defined(__aarch64__)
 	const double expected_snr = 120.0;
-#else
-	const double expected_snr = INFINITY;
-#endif
 
 	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
 	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
@@ -89,15 +79,9 @@ TEST(ColorspaceConversionNeonTest, test_transfer_lut)
 
 	const char *expected_sha1[][3] = {
 		{
-#if defined(_M_ARM64) || defined(__aarch64__)
 			"23d012fcb280f601e2e3c349229d0108e3cd632a",
 			"7ae186215d5fa45065f7aeac74ab2dc74b556696",
 			"bad84d4e0de8572c81df6d9f91fef05b1576f9e5"
-#else
-			"52451877e62e9fc31eb10b1e37c5f95fdd8851db",
-			"06bc0aff436bbbf4ba633b2255dd096e628a129c",
-			"a20570af1c05291029ea7d6b4215c451f4a9187a"
-#endif
 		},
 		{
 			"011ee645ad30bb6ad6d93d8980d89a3e3e073c19",
@@ -105,15 +89,9 @@ TEST(ColorspaceConversionNeonTest, test_transfer_lut)
 			"84b20f8fa27c23a668540566b9df26c4b42c9afa"
 		},
 		{
-#if defined(_M_ARM64) || defined(__aarch64__)
 			"8206be2ae5e8a0fc003daeec4178189eecf82a13",
 			"24843f17600dd7bf9870f5c778549bd96c333427",
 			"26a6b00801b41da17d849e02217bf69add6324a6"
-#else
-			"905d4d54eeae6458e8e0975c9cea66b25edcc234",
-			"d380f54820f1e269ea54a1d552b0cb704f83dd7b",
-			"552579149674b5e37f0d443ad19a59593fdca057"
-#endif
 		},
 		{
 			"16f2274ffac90927de0438114f0ea22e650981a0",

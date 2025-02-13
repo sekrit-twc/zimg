@@ -13,12 +13,6 @@
 
 #include "common/arm/neon_util.h"
 
-#if defined(_M_ARM) || defined(__arm__)
-  #define vcvtnq_s32_f32_(x) vcvtq_s32_f32(vaddq_f32(x, vdupq_n_f32(0.49999997f)))
-#else
-  #define vcvtnq_s32_f32_ vcvtnq_s32_f32
-#endif
-
 namespace zimg::colorspace {
 
 namespace {
@@ -39,7 +33,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 
 	for (unsigned j = left; j < vec_left; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
-		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
+		int idx = vgetq_lane_s32(vcvtnq_s32_f32(vfmaq_f32(offset, x, scale)), 0);
 		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 	for (unsigned j = vec_left; j < vec_right; j += 4) {
@@ -48,7 +42,7 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 
 		x = vld1q_f32(src + j);
 		x = vfmaq_f32(offset, x, scale);
-		xi = vcvtnq_s32_f32_(x);
+		xi = vcvtnq_s32_f32(x);
 		xi = vmaxq_s32(xi, zero);
 		xi = vminq_s32(xi, limit);
 
@@ -59,12 +53,11 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	}
 	for (unsigned j = vec_right; j < right; ++j) {
 		float32x4_t x = vdupq_n_f32(src[j]);
-		int idx = vgetq_lane_s32(vcvtnq_s32_f32_(vfmaq_f32(offset, x, scale)), 0);
+		int idx = vgetq_lane_s32(vcvtnq_s32_f32(vfmaq_f32(offset, x, scale)), 0);
 		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
 	}
 }
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float *dst, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 4);
@@ -93,7 +86,6 @@ void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float
 		dst[j] = lut[idx];
 	}
 }
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 
 inline FORCE_INLINE void matrix_filter_line_neon_xiter(unsigned j, const float *src0, const float *src1, const float *src2,
@@ -199,7 +191,6 @@ public:
 	}
 };
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 class ToGammaLutOperationNeon final : public Operation {
 	std::vector<float> m_lut;
 public:
@@ -220,7 +211,6 @@ public:
 		to_gamma_lut_filter_line(m_lut.data(), src[2], dst[2], left, right);
 	}
 };
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 class MatrixOperationNeon final : public MatrixOperationImpl {
 public:
@@ -244,14 +234,10 @@ std::unique_ptr<Operation> create_matrix_operation_neon(const Matrix3x3 &m)
 
 std::unique_ptr<Operation> create_gamma_operation_neon(const TransferFunction &transfer, const OperationParams &params)
 {
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 	if (!params.approximate_gamma)
 		return nullptr;
 
 	return std::make_unique<ToGammaLutOperationNeon>(transfer.to_gamma, transfer.to_gamma_scale);
-#else
-	return nullptr;
-#endif
 }
 
 std::unique_ptr<Operation> create_inverse_gamma_operation_neon(const TransferFunction &transfer, const OperationParams &params)

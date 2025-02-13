@@ -62,10 +62,6 @@ ARM="no"
 X86="no"
 
 AS_CASE([$host_cpu],
-        [armv7*],  [
-                      BITS="32" ARM="yes" NEON_CFLAGS="-march=armv7-a -mfpu=neon-vfpv4"
-                      AX_CHECK_COMPILE_FLAG([-mfp16-format=ieee], [NEON_CFLAGS="$NEON_CFLAGS -mfp16-format=ieee"])
-                   ],
         [aarch64], [BITS="64" ARM="yes"],
         [i?86],    [BITS="32" X86="yes"],
         [x86_64],  [BITS="64" X86="yes"])

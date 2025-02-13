@@ -8,12 +8,6 @@
 
 #include "common/arm/neon_util.h"
 
-#if defined(_M_ARM) || defined(__arm__)
-  #define vcvtnq_u32_f32_(x) vcvtq_u32_f32(vaddq_f32(x, vdupq_n_f32(0.49999997f)))
-#else
-  #define vcvtnq_u32_f32_ vcvtnq_u32_f32
-#endif
-
 namespace zimg::depth {
 
 namespace {
@@ -40,7 +34,6 @@ struct LoadU16 {
 	}
 };
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 struct LoadF16 {
 	typedef __fp16 type;
 
@@ -51,7 +44,6 @@ struct LoadF16 {
 		hi = vcvt_high_f32_f16(x);
 	}
 };
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 struct LoadF32 {
 	typedef float type;
@@ -133,8 +125,8 @@ inline FORCE_INLINE uint16x8_t ordered_dither_neon_xiter(float32x4_t lo, float32
 	hi = vfmaq_f32(offset, hi, scale);
 	hi = vaddq_f32(hi, dith);
 
-	lo_dw = vcvtnq_u32_f32_(lo);
-	hi_dw = vcvtnq_u32_f32_(hi);
+	lo_dw = vcvtnq_u32_f32(lo);
+	hi_dw = vcvtnq_u32_f32(hi);
 
 	x = vqmovn_high_u32(vqmovn_u32(lo_dw), hi_dw);
 	x = vminq_u16(x, out_max);
@@ -204,7 +196,6 @@ void ordered_dither_w2w_neon(const float *dither, unsigned dither_offset, unsign
 	ordered_dither_neon_impl<LoadU16, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
 }
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 void ordered_dither_h2b_neon(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
@@ -216,7 +207,6 @@ void ordered_dither_h2w_neon(const float *dither, unsigned dither_offset, unsign
 {
 	ordered_dither_neon_impl<LoadF16, StoreU16>(dither, dither_offset, dither_mask, src, dst, scale, offset, bits, left, right);
 }
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 void ordered_dither_f2b_neon(const float *dither, unsigned dither_offset, unsigned dither_mask,
                              const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)

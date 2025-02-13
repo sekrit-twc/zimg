@@ -179,9 +179,6 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_AVX512_SNC = 1014, /**< PMC + VPOPCNTDQ + BITALG + VBMI2 + VNNI */
 	ZIMG_CPU_X86_AVX512_WLC = 1015, /**< SNC + VP2INTERSECT */
 	ZIMG_CPU_X86_AVX512_GLC = 1016  /**< WLC + FP16 + BF16 */
-#elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || defined(_M_ARM64)
-	,ZIMG_CPU_ARM_NEON_VFPv3 = 2000, /**< ARMv7-A baseline. */
-	ZIMG_CPU_ARM_NEON_VFPv4  = 2001  /**< ARMv7-A with VFPv4 (e.g. Cortex-A7) or ARMv8-A. */
 #endif
 } zimg_cpu_type_e;
 

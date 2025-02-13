@@ -139,17 +139,10 @@ TEST(ResizeImplNeonTest, test_resize_h_f32)
 	const zimg::PixelType format = zimg::PixelType::FLOAT;
 
 	const char *expected_sha1[] = {
-#if defined(_M_ARM64) || defined(__aarch64__)
 		"1b2e37a345d315b0fa4d11e3532c70cb57b1e569",
 		"2d0582a2f6af8a480e8f053fbd89eac0668b33f3",
 		"967f921dc3fd2b3d166a276fe671105c3fac0756",
 		"166dfd1881724fe546571c2d7ac959e6433623be"
-#else
-		"1b2e37a345d315b0fa4d11e3532c70cb57b1e569",
-		"df391f7157d8c283abd408b35894139ca1903872",
-		"81fcfbdb9a3b31c625a3cdff1cf46da06f8af735",
-		"389b609ac62a8b9276e00fdcd39b921535196a07"
-#endif
 	};
 	const double expected_snr = 120.0;
 
@@ -168,17 +161,10 @@ TEST(ResizeImplNeonTest, test_resize_v_f32)
 	const zimg::PixelType type = zimg::PixelType::FLOAT;
 
 	const char *expected_sha1[] = {
-#if defined(_M_ARM64) || defined(__aarch64__)
 		"6b7507617dc89d5d3077f9cc4c832b261dea2be0",
 		"46283014e580fa47deacae5e0cec1ce952973f51",
 		"47946b5a3aba5e9ee6967659e8aeb26070ae80d6",
 		"bcedc16781dc7781557d744b75ccac510a98a3ac"
-#else
-		"6b7507617dc89d5d3077f9cc4c832b261dea2be0",
-		"d07a8c6f3452ada7bd865a3283dc308176541db3",
-		"6a15c26ad08e7576b415b70a3681f2a38667b301",
-		"f1cc0dea71ca9fa3d9090ecdf21369aa5e0fb0be"
-#endif
 	};
 	const double expected_snr = 120.0;
 

@@ -61,17 +61,9 @@ TEST(DitherNeonTest, test_ordered_dither_b2w)
 	zimg::PixelFormat pixel_in{ zimg::PixelType::BYTE, 8, true, false };
 	zimg::PixelFormat pixel_out{ zimg::PixelType::WORD, 9, true, false };
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	const char *expected_sha1 = "267b1039372fab31c14ebf09911da9493ecea95e";
-#else
-	const char *expected_sha1 = "5cf2428d1af1e316f292fa71cc8a78a658acb546";
-#endif
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
-#else
-	test_case(pixel_in, pixel_out, expected_sha1, 90.0);
-#endif
 }
 
 TEST(DitherNeonTest, test_ordered_dither_w2b)
@@ -99,17 +91,9 @@ TEST(DitherNeonTest, test_ordered_dither_h2b)
 	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
 	zimg::PixelFormat pixel_out = zimg::PixelType::BYTE;
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	const char *expected_sha1 = "708482e7450ab5b770bc820b08810b98df2f4b98";
-#else
-	const char *expected_sha1 = "865ca02e1b3bcd29f237a5698ce005116e1f992a";
-#endif
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
-#else
-	test_case(pixel_in, pixel_out, expected_sha1, 90.0);
-#endif
 }
 
 TEST(DitherNeonTest, test_ordered_dither_h2w)
@@ -117,17 +101,9 @@ TEST(DitherNeonTest, test_ordered_dither_h2w)
 	zimg::PixelFormat pixel_in = zimg::PixelType::HALF;
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	const char *expected_sha1 = "8db2cf8d8ffa46eb351e5615bd6d684801431bf9";
-#else
-	const char *expected_sha1 = "f4ea5e3bbe05b668180a74a8701c5fdcb01d78ae";
-#endif
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	test_case(pixel_in, pixel_out, expected_sha1, INFINITY);
-#else
-	test_case(pixel_in, pixel_out, expected_sha1, 90.0);
-#endif
 }
 
 TEST(DitherNeonTest, test_ordered_dither_f2b)
@@ -145,17 +121,9 @@ TEST(DitherNeonTest, test_ordered_dither_f2w)
 	zimg::PixelFormat pixel_in = zimg::PixelType::FLOAT;
 	zimg::PixelFormat pixel_out = zimg::PixelType::WORD;
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	const char *expected_sha1 = "126fbca2f0d0027ba7a98d7e86b58596288655c6";
-#else
-	const char *expected_sha1 = "dc8d5ed5955003310eb9d74c0baa48fbe6bd5135";
-#endif
 
-#if defined(_M_ARM64) || defined(__aarch64__)
 	test_case(pixel_in, pixel_out, expected_sha1, 120.0);
-#else
-	test_case(pixel_in, pixel_out, expected_sha1, 110.0);
-#endif
 }
 
 #endif // ZIMG_ARM

@@ -10,7 +10,6 @@
 
 namespace zimg::depth {
 
-#if !defined(_MSC_VER) || defined(_M_ARM64)
 void f16c_half_to_float_neon(const void *src, void *dst, unsigned left, unsigned right)
 {
 	const __fp16 *src_p = static_cast<const __fp16 *>(src);
@@ -58,7 +57,6 @@ void f16c_float_to_half_neon(const void *src, void *dst, unsigned left, unsigned
 		neon_store_idxlo_f16(dst_p + vec_right, vcombine_f16(x, vreinterpret_f16_u16(vdup_n_u16(0))), right % 4);
 	}
 }
-#endif // !defined(_MSC_VER) || defined(_M_ARM64)
 
 } // namespace zimg::depth
 
