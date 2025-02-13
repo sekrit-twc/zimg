@@ -16,7 +16,7 @@ std::unique_ptr<graphengine::Filter> create_unresize_impl_h_x86(const BilinearCo
 		if (!ret && caps.sse)
 			return create_unresize_impl_h_sse(context, height, type);
 	} else {
-		if (!ret && cpu >= CPUClass::X86_SSE)
+		if (!ret && cpu >= CPUClass::X86_AVX2)
 			return create_unresize_impl_h_sse(context, height, type);
 	}
 
@@ -32,7 +32,7 @@ std::unique_ptr<graphengine::Filter> create_unresize_impl_v_x86(const BilinearCo
 		if (!ret && caps.sse)
 			return create_unresize_impl_v_sse(context, width, type);
 	} else {
-		if (cpu >= CPUClass::X86_SSE)
+		if (cpu >= CPUClass::X86_AVX2)
 			return create_unresize_impl_v_sse(context, width, type);
 	}
 

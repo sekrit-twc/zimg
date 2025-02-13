@@ -13,10 +13,6 @@ enum class CPUClass {
 	AUTO,
 	AUTO_64B,
 #if defined(ZIMG_X86)
-	X86_SSE,
-	X86_SSE2,
-	X86_AVX,
-	X86_F16C,
 	X86_AVX2,
 	X86_AVX512, // F, CD, BW, DQ, VL
 	X86_AVX512_CLX, // VNNI

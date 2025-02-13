@@ -46,10 +46,6 @@ const zimg::static_string_map<CPUClass, 9> g_cpu_table{
 	{ "none", CPUClass::NONE },
 	{ "auto", CPUClass::AUTO_64B },
 #if defined(ZIMG_X86)
-	{ "sse",        CPUClass::X86_SSE },
-	{ "sse2",       CPUClass::X86_SSE2 },
-	{ "avx",        CPUClass::X86_AVX },
-	{ "f16c",       CPUClass::X86_F16C },
 	{ "avx2",       CPUClass::X86_AVX2 },
 	{ "avx512",     CPUClass::X86_AVX512 },
 	{ "avx512_clx", CPUClass::X86_AVX512_CLX },
