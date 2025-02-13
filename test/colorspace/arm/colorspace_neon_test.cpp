@@ -24,11 +24,6 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "neon not available, skipping";
-		return;
-	}
-
 	zimg::PixelFormat format = zimg::PixelType::FLOAT;
 	auto builder = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)

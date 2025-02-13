@@ -25,11 +25,6 @@ void test_case(const zimg::PixelFormat &pixel_in, const zimg::PixelFormat &pixel
 	const unsigned h = 480;
 	const zimg::depth::DitherType dither = zimg::depth::DitherType::ORDERED;
 
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "sse2 not available, skipping";
-		return;
-	}
-
 	bool planes[] = { true, false, false, false };
 	auto result_c = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::NONE);
 	auto result_neon = zimg::depth::create_dither(dither, w, h, pixel_in, pixel_out, planes, zimg::CPUClass::ARM_NEON);

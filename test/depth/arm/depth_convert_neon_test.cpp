@@ -17,11 +17,6 @@ void test_case_left_shift(const zimg::PixelFormat &pixel_in, const zimg::PixelFo
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "sse2 not available, skipping";
-		return;
-	}
-
 	auto filter_c = zimg::depth::create_left_shift(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_neon = zimg::depth::create_left_shift(w, h, pixel_in, pixel_out, zimg::CPUClass::ARM_NEON);
 
@@ -37,11 +32,6 @@ void test_case_depth_convert(const zimg::PixelFormat &pixel_in, const zimg::Pixe
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
-
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "sse2 not available, skipping";
-		return;
-	}
 
 	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_neon = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::ARM_NEON);

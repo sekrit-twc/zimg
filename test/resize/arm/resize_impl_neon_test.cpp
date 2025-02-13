@@ -16,11 +16,6 @@ namespace {
 void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src_w, unsigned src_h, unsigned dst_w, unsigned dst_h,
 	           const zimg::PixelFormat &format, const char *expected_sha1, double expected_snr)
 {
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "sse not available, skipping";
-		return;
-	}
-
 	SCOPED_TRACE(filter.support());
 	SCOPED_TRACE(horizontal ? static_cast<double>(dst_w) / src_w : static_cast<double>(dst_h) / src_h);
 

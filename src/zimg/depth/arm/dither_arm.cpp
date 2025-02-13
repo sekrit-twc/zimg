@@ -41,8 +41,7 @@ dither_convert_func select_ordered_dither_func_arm(const PixelFormat &pixel_in, 
 	dither_convert_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.neon && caps.vfpv4)
-			func = select_ordered_dither_func_neon(pixel_in.type, pixel_out.type);
+		func = select_ordered_dither_func_neon(pixel_in.type, pixel_out.type);
 	} else {
 		if (!func && cpu >= CPUClass::ARM_NEON)
 			func = select_ordered_dither_func_neon(pixel_in.type, pixel_out.type);
@@ -57,8 +56,7 @@ dither_f16c_func select_dither_f16c_func_arm(CPUClass cpu)
 	dither_f16c_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.neon && caps.vfpv4)
-			func = f16c_half_to_float_neon;
+		func = f16c_half_to_float_neon;
 	} else {
 		if (!func && cpu >= CPUClass::ARM_NEON)
 			func = f16c_half_to_float_neon;
@@ -71,10 +69,7 @@ bool needs_dither_f16c_func_arm(CPUClass cpu)
 {
 	ARMCapabilities caps = query_arm_capabilities();
 
-	if (cpu_is_autodetect(cpu))
-		return !caps.neon || !caps.vfpv4;
-	else
-		return cpu < CPUClass::ARM_NEON;
+	return !cpu_is_autodetect(cpu) && cpu < CPUClass::ARM_NEON;
 }
 
 } // namespace zimg::depth

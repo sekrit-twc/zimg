@@ -17,11 +17,6 @@ void test_case(zimg::PixelType pixel_in, zimg::PixelType pixel_out, const char *
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	if (!zimg::query_arm_capabilities().neon) {
-		SUCCEED() << "f16c not available, skipping";
-		return;
-	}
-
 	auto filter_c = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::NONE);
 	auto filter_neon = zimg::depth::create_convert_to_float(w, h, pixel_in, pixel_out, zimg::CPUClass::ARM_NEON);
 

@@ -81,8 +81,6 @@ void show_arm_info()
 	const zimg::ARMCapabilities caps = zimg::query_arm_capabilities();
 
 	std::cout << "Supported instruction set extensions:\n";
-	std::cout << "NEON:  " << yes_no(caps.neon) << '\n';
-	std::cout << "VFPv4: " << yes_no(caps.vfpv4) << '\n';
 	std::cout << '\n';
 }
 #endif // ZIMG_ARM

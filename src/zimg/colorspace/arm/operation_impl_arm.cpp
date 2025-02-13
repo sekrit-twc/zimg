@@ -14,8 +14,7 @@ std::unique_ptr<Operation> create_matrix_operation_arm(const Matrix3x3 &m, CPUCl
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.neon && caps.vfpv4)
-			ret = create_matrix_operation_neon(m);
+		ret = create_matrix_operation_neon(m);
 	} else {
 		if (!ret && cpu >= CPUClass::ARM_NEON)
 			ret = create_matrix_operation_neon(m);
@@ -30,8 +29,7 @@ std::unique_ptr<Operation> create_gamma_operation_arm(const TransferFunction &tr
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.neon && caps.vfpv4)
-			ret = create_gamma_operation_neon(transfer, params);
+		ret = create_gamma_operation_neon(transfer, params);
 	} else {
 		if (!ret && cpu >= CPUClass::ARM_NEON)
 			ret = create_gamma_operation_neon(transfer, params);
@@ -46,8 +44,7 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_arm(const TransferFunc
 	std::unique_ptr<Operation> ret;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.neon && caps.vfpv4)
-			ret = create_inverse_gamma_operation_neon(transfer, params);
+		ret = create_inverse_gamma_operation_neon(transfer, params);
 	} else {
 		if (!ret && cpu >= CPUClass::ARM_NEON)
 			ret = create_inverse_gamma_operation_neon(transfer, params);

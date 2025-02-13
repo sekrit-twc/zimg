@@ -11,8 +11,6 @@ namespace zimg {
  * Bitfield of selected ARM feature flags.
  */
 struct ARMCapabilities {
-	unsigned neon  : 1;
-	unsigned vfpv4 : 1;
 };
 
 ARMCapabilities query_arm_capabilities() noexcept;

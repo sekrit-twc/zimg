@@ -13,8 +13,7 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_arm(const FilterContex
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.neon && caps.vfpv4)
-			ret = create_resize_impl_h_neon(context, height, type, depth);
+		ret = create_resize_impl_h_neon(context, height, type, depth);
 	} else {
 		if (!ret && cpu >= CPUClass::ARM_NEON)
 			ret = create_resize_impl_h_neon(context, height, type, depth);
@@ -29,8 +28,7 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_arm(const FilterContex
 	std::unique_ptr<graphengine::Filter> ret;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!ret && caps.neon && caps.vfpv4)
-			ret = create_resize_impl_v_neon(context, width, type, depth);
+		ret = create_resize_impl_v_neon(context, width, type, depth);
 	} else {
 		if (!ret && cpu >= CPUClass::ARM_NEON)
 			ret = create_resize_impl_v_neon(context, width, type, depth);

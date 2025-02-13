@@ -47,8 +47,7 @@ left_shift_func select_left_shift_func_arm(PixelType pixel_in, PixelType pixel_o
 	left_shift_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.neon)
-			func = select_left_shift_func_neon(pixel_in, pixel_out);
+		func = select_left_shift_func_neon(pixel_in, pixel_out);
 	} else {
 		if (!func && cpu >= CPUClass::ARM_NEON)
 			func = select_left_shift_func_neon(pixel_in, pixel_out);
@@ -63,8 +62,7 @@ depth_convert_func select_depth_convert_func_arm(const PixelFormat &format_in, c
 	depth_convert_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.neon && caps.vfpv4)
-			func = select_depth_convert_func_neon(format_in.type, format_out.type);
+		func = select_depth_convert_func_neon(format_in.type, format_out.type);
 	} else {
 		if (!func && cpu >= CPUClass::ARM_NEON)
 			func = select_depth_convert_func_neon(format_in.type, format_out.type);
@@ -79,8 +77,7 @@ depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu)
 	depth_f16c_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.neon && caps.vfpv4)
-			func = to_half ? f16c_float_to_half_neon : f16c_half_to_float_neon;
+		func = to_half ? f16c_float_to_half_neon : f16c_half_to_float_neon;
 	} else {
 		if (!func && cpu >= CPUClass::ARM_NEON)
 			func = to_half ? f16c_float_to_half_neon : f16c_half_to_float_neon;
@@ -92,12 +89,8 @@ depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu)
 bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu)
 {
 	ARMCapabilities caps = query_arm_capabilities();
-	bool value = format_in.type == PixelType::HALF || format_out.type == PixelType::HALF;
 
-	if ((cpu_is_autodetect(cpu) && caps.neon && caps.vfpv4) || cpu >= CPUClass::ARM_NEON)
-		value = value && pixel_is_float(format_in.type) && pixel_is_float(format_out.type);
-
-	return value;
+	return (format_in.type == PixelType::HALF || format_out.type == PixelType::HALF) && !cpu_is_autodetect(cpu) && cpu < CPUClass::ARM_NEON;
 }
 
 } // namespace zimg::depth

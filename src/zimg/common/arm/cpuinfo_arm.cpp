@@ -18,12 +18,7 @@ namespace {
 
 ARMCapabilities do_query_arm_capabilities() noexcept
 {
-	ARMCapabilities caps = { 0 };
-
-	// NEON is required for ARMv8a.
-	caps.neon  = 1;
-	caps.vfpv4 = 1;
-	return caps;
+	return{};
 }
 
 } // namespace
