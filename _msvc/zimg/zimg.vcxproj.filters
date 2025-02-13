@@ -356,9 +356,6 @@
     <ClCompile Include="..\..\src\zimg\colorspace\gamma.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_avx.cpp">
-      <Filter>Source Files\colorspace\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_avx2.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>

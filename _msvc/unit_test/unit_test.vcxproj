@@ -33,7 +33,6 @@
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx512_test.cpp" />
-    <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\depth_convert_neon_test.cpp" />

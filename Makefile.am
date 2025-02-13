@@ -206,7 +206,6 @@ libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
 libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
 libavx_la_SOURCES = \
-	src/zimg/colorspace/x86/operation_impl_avx.cpp \
 	src/zimg/resize/x86/resize_impl_avx.cpp
 
 libavx_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx $(SNB_CFLAGS)
@@ -389,7 +388,6 @@ endif # ARMSIMD
 
 if X86SIMD
 test_unit_test_SOURCES += \
-	test/colorspace/x86/colorspace_avx_test.cpp \
 	test/colorspace/x86/colorspace_avx2_test.cpp \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
 	test/colorspace/x86/colorspace_sse2_test.cpp \

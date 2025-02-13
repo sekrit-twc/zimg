@@ -111,9 +111,6 @@
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp">
       <Filter>Source Files\colorspace</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx_test.cpp">
-      <Filter>Source Files\colorspace\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx2_test.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>

@@ -18,7 +18,7 @@ struct OperationParams;
 struct TransferFunction;
 class Operation;
 
-std::unique_ptr<Operation> create_matrix_operation_avx(const Matrix3x3 &m);
+std::unique_ptr<Operation> create_matrix_operation_avx2(const Matrix3x3 &m);
 std::unique_ptr<Operation> create_matrix_operation_avx512(const Matrix3x3 &m);
 
 std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUClass cpu);

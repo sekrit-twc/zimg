@@ -17,12 +17,12 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f)
 			ret = create_matrix_operation_avx512(m);
 		if (!ret && caps.avx)
-			ret = create_matrix_operation_avx(m);
+			ret = create_matrix_operation_avx2(m);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX512)
 			ret = create_matrix_operation_avx512(m);
-		if (!ret && cpu >= CPUClass::X86_AVX)
-			ret = create_matrix_operation_avx(m);
+		if (!ret && cpu >= CPUClass::X86_AVX2)
+			ret = create_matrix_operation_avx2(m);
 	}
 
 	return ret;

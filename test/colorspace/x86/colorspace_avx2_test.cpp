@@ -51,6 +51,22 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 } // namespace
 
 
+TEST(ColorspaceConversionAVX2Test, test_matrix)
+{
+	using namespace zimg::colorspace;
+
+	static const char *expected_sha1[3] = {
+		"749f74428406c019b1b727fa30352fcd1f0141ed",
+		"334cfa73375f8afef8423a163f3cff8f8a196762",
+		"aa3aab12d52e67b4d6765b4e8c03205a5375d8d9"
+	};
+	const double expected_snr = 120.0;
+
+	test_case({ MatrixCoefficients::RGB, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
+	          { MatrixCoefficients::REC_709, TransferCharacteristics::UNSPECIFIED, ColorPrimaries::UNSPECIFIED },
+	          expected_sha1, expected_snr);
+}
+
 TEST(ColorspaceConversionAVX2Test, test_transfer_lut)
 {
 	using namespace zimg::colorspace;
