@@ -6,6 +6,7 @@
 #include <immintrin.h>
 #include "common/align.h"
 #include "common/ccdep.h"
+#include "common/x86/cpuinfo_x86.h"
 #include "colorspace/gamma.h"
 #include "colorspace/operation.h"
 #include "colorspace/operation_impl.h"
@@ -18,6 +19,25 @@ namespace zimg::colorspace {
 namespace {
 
 constexpr unsigned LUT_DEPTH = 16;
+
+
+inline FORCE_INLINE void copylut_i32_ps(float *dst, const float *lut, __m128i idx)
+{
+#if SIZE_MAX >= UINT64_MAX
+	uint64_t tmp0 = _mm_cvtsi128_si64(idx);
+	uint64_t tmp1 = _mm_extract_epi64(idx, 1);
+
+	dst[0] = lut[tmp0 & 0xFFFFFFFFU];
+	dst[1] = lut[tmp0 >> 32];
+	dst[2] = lut[tmp1 & 0xFFFFFFFFU];
+	dst[3] = lut[tmp1 >> 32];
+#else
+	dst[0] = lut[_mm_cvtsi128_si32(idx)];
+	dst[1] = lut[_mm_extract_epi32(idx, 1)];
+	dst[2] = lut[_mm_extract_epi32(idx, 2)];
+	dst[3] = lut[_mm_extract_epi32(idx, 3)];
+#endif
+}
 
 
 inline FORCE_INLINE void matrix_filter_line_avx2_xiter(unsigned j, const float *src0, const float *src1, const float *src2,
@@ -99,7 +119,7 @@ void matrix_filter_line_avx2(const float *matrix, const float * const * RESTRICT
 #undef XARGS
 }
 
-void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, const float *src, float *dst, unsigned left, unsigned right)
+void to_linear_lut_filter_line_gather(const float *RESTRICT lut, unsigned lut_depth, const float *src, float *dst, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -135,7 +155,43 @@ void to_linear_lut_filter_line(const float *RESTRICT lut, unsigned lut_depth, co
 	}
 }
 
-void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float *dst, unsigned left, unsigned right)
+void to_linear_lut_filter_line_nogather(const float *RESTRICT lut, unsigned lut_depth, const float *src, float *dst, unsigned left, unsigned right)
+{
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
+
+	const int32_t lut_limit = static_cast<int32_t>(1) << lut_depth;
+
+	const __m128 scale = _mm_set_ps1(0.5f * lut_limit);
+	const __m128 offset = _mm_set_ps1(0.25f * lut_limit);
+	const __m128i zero = _mm_setzero_si128();
+	const __m128i limit = _mm_set1_epi32(lut_limit);
+
+	for (unsigned j = left; j < vec_left; ++j) {
+		__m128 x = _mm_load_ss(src + j);
+		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, scale, offset));
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
+	}
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
+		__m128 x;
+		__m128i xi;
+
+		x = _mm_load_ps(src + j);
+		x = _mm_fmadd_ps(x, scale, offset);
+		xi = _mm_cvtps_epi32(x);
+		xi = _mm_max_epi32(xi, zero);
+		xi = _mm_min_epi32(xi, limit);
+
+		copylut_i32_ps(dst + j, lut, xi);
+	}
+	for (unsigned j = vec_right; j < right; ++j) {
+		__m128 x = _mm_load_ss(src + j);
+		int idx = _mm_cvt_ss2si(_mm_fmadd_ss(x, scale, offset));
+		dst[j] = lut[std::clamp(idx, 0, lut_limit)];
+	}
+}
+
+void to_gamma_lut_filter_line_gather(const float *RESTRICT lut, const float *src, float *dst, unsigned left, unsigned right)
 {
 	unsigned vec_left = ceil_n(left, 8);
 	unsigned vec_right = floor_n(right, 8);
@@ -161,6 +217,31 @@ void to_gamma_lut_filter_line(const float *RESTRICT lut, const float *src, float
 	}
 }
 
+void to_gamma_lut_filter_line_nogather(const float *RESTRICT lut, const float *src, float *dst, unsigned left, unsigned right)
+{
+	unsigned vec_left = ceil_n(left, 4);
+	unsigned vec_right = floor_n(right, 4);
+
+	for (unsigned j = left; j < vec_left; ++j) {
+		__m128 x = _mm_load_ss(src + j);
+		int idx = _mm_extract_epi16(_mm_cvtps_ph(x, 0), 0);
+		dst[j] = lut[idx];
+	}
+	for (unsigned j = vec_left; j < vec_right; j += 4) {
+		__m128 x;
+		__m128i xi;
+
+		x = _mm_load_ps(src + j);
+		xi = _mm_cvtepu16_epi32(_mm_cvtps_ph(x, 0));
+		copylut_i32_ps(dst + j, lut, xi);
+	}
+	for (unsigned j = vec_right; j < right; ++j) {
+		__m128 x = _mm_load_ss(src + j);
+		int idx = _mm_extract_epi16(_mm_cvtps_ph(x, 0), 0);
+		dst[j] = lut[idx];
+	}
+}
+
 
 class MatrixOperationAVX2 final : public MatrixOperationImpl {
 public:
@@ -175,10 +256,11 @@ public:
 	}
 };
 
-class ToLinearLutOperationAVX2 final : public Operation {
+class ToLinearLutOperationAVX2 : public Operation {
+public:
 	std::vector<float> m_lut;
 	unsigned m_lut_depth;
-public:
+
 	ToLinearLutOperationAVX2(gamma_func func, unsigned lut_depth, float postscale) :
 		m_lut((1UL << lut_depth) + 1),
 		m_lut_depth{ lut_depth }
@@ -191,18 +273,36 @@ public:
 			m_lut[i] = func(x) * postscale;
 		}
 	}
+};
+
+class ToLinearLutOperationAVX2Gather final : public ToLinearLutOperationAVX2 {
+public:
+	using ToLinearLutOperationAVX2::ToLinearLutOperationAVX2;
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
-		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[1], dst[1], left, right);
-		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[2], dst[2], left, right);
+		to_linear_lut_filter_line_gather(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
+		to_linear_lut_filter_line_gather(m_lut.data(), m_lut_depth, src[1], dst[1], left, right);
+		to_linear_lut_filter_line_gather(m_lut.data(), m_lut_depth, src[2], dst[2], left, right);
 	}
 };
 
-class ToGammaLutOperationAVX2 final : public Operation {
-	std::vector<float> m_lut;
+class ToLinearLutOperationAVX2NoGather final : public ToLinearLutOperationAVX2 {
 public:
+	using ToLinearLutOperationAVX2::ToLinearLutOperationAVX2;
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		to_linear_lut_filter_line_nogather(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
+		to_linear_lut_filter_line_nogather(m_lut.data(), m_lut_depth, src[1], dst[1], left, right);
+		to_linear_lut_filter_line_nogather(m_lut.data(), m_lut_depth, src[2], dst[2], left, right);
+	}
+};
+
+class ToGammaLutOperationAVX2 : public Operation {
+public:
+	std::vector<float> m_lut;
+
 	ToGammaLutOperationAVX2(gamma_func func, float prescale) :
 		m_lut(static_cast<uint32_t>(UINT16_MAX) + 1)
 	{
@@ -214,12 +314,29 @@ public:
 			m_lut[i] = func(x * prescale);
 		}
 	}
+};
+
+class ToGammaLutOperationAVX2Gather final : public ToGammaLutOperationAVX2 {
+public:
+	using ToGammaLutOperationAVX2::ToGammaLutOperationAVX2;
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
-		to_gamma_lut_filter_line(m_lut.data(), src[0], dst[0], left, right);
-		to_gamma_lut_filter_line(m_lut.data(), src[1], dst[1], left, right);
-		to_gamma_lut_filter_line(m_lut.data(), src[2], dst[2], left, right);
+		to_gamma_lut_filter_line_gather(m_lut.data(), src[0], dst[0], left, right);
+		to_gamma_lut_filter_line_gather(m_lut.data(), src[1], dst[1], left, right);
+		to_gamma_lut_filter_line_gather(m_lut.data(), src[2], dst[2], left, right);
+	}
+};
+
+class ToGammaLutOperationAVX2NoGather final : public ToGammaLutOperationAVX2 {
+public:
+	using ToGammaLutOperationAVX2::ToGammaLutOperationAVX2;
+
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	{
+		to_gamma_lut_filter_line_nogather(m_lut.data(), src[0], dst[0], left, right);
+		to_gamma_lut_filter_line_nogather(m_lut.data(), src[1], dst[1], left, right);
+		to_gamma_lut_filter_line_nogather(m_lut.data(), src[2], dst[2], left, right);
 	}
 };
 
@@ -236,7 +353,12 @@ std::unique_ptr<Operation> create_gamma_operation_avx2(const TransferFunction &t
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return std::make_unique<ToGammaLutOperationAVX2>(transfer.to_gamma, transfer.to_gamma_scale);
+	X86Capabilities caps = query_x86_capabilities();
+
+	if (cpu_has_slow_gather(caps))
+		return std::make_unique<ToGammaLutOperationAVX2NoGather>(transfer.to_gamma, transfer.to_gamma_scale);
+	else
+		return std::make_unique<ToGammaLutOperationAVX2Gather>(transfer.to_gamma, transfer.to_gamma_scale);
 }
 
 std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFunction &transfer, const OperationParams &params)
@@ -244,7 +366,12 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx2(const TransferFun
 	if (!params.approximate_gamma)
 		return nullptr;
 
-	return std::make_unique<ToLinearLutOperationAVX2>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
+	X86Capabilities caps = query_x86_capabilities();
+
+	if (cpu_has_slow_gather(caps))
+		return std::make_unique<ToLinearLutOperationAVX2NoGather>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
+	else
+		return std::make_unique<ToLinearLutOperationAVX2Gather>(transfer.to_linear, LUT_DEPTH, transfer.to_linear_scale);
 }
 
 } // namespace zimg::colorspace
