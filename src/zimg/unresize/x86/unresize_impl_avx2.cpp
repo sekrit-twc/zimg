@@ -12,8 +12,8 @@
 #include "unresize/unresize_impl.h"
 #include "unresize_impl_x86.h"
 
-#include "common/x86/avx_util.h"
-#include "common/x86/sse_util.h"
+#include "common/x86/avx2_util.h"
+#include "common/x86/sse2_util.h"
 
 namespace zimg::unresize {
 

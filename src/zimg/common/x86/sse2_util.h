@@ -49,6 +49,32 @@ static inline FORCE_INLINE void mm_store_idxhi_epi16(__m128i *dst, __m128i x, un
 	mm_store_idxhi_epi8(dst, x, idx * 2);
 }
 
+// Store from [x] into [dst] the 32-bit elements with index less than [idx].
+static inline FORCE_INLINE void mm_store_idxlo_ps(float *dst, __m128 x, unsigned idx)
+{
+	__m128 orig = _mm_load_ps(dst);
+	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[idx * 4]));
+
+	orig = _mm_andnot_ps(mask, orig);
+	x = _mm_and_ps(mask, x);
+	x = _mm_or_ps(x, orig);
+
+	_mm_store_ps(dst, x);
+}
+
+// Store from [x] into [dst] the 32-bit elements with index greater than or equal to [idx]
+static inline FORCE_INLINE void mm_store_idxhi_ps(float *dst, __m128 x, unsigned idx)
+{
+	__m128 orig = _mm_load_ps(dst);
+	__m128 mask = _mm_load_ps((const float *)(&xmm_mask_table[idx * 4]));
+
+	orig = _mm_and_ps(mask, orig);
+	x = _mm_andnot_ps(mask, x);
+	x = _mm_or_ps(x, orig);
+
+	_mm_store_ps(dst, x);
+}
+
 // Stores the elements of [x] into [dst0]-[dst7].
 static inline FORCE_INLINE void mm_scatter_epi16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
                                                  uint16_t *dst4, uint16_t *dst5, uint16_t *dst6, uint16_t *dst7, __m128i x)
@@ -61,6 +87,15 @@ static inline FORCE_INLINE void mm_scatter_epi16(uint16_t *dst0, uint16_t *dst1,
 	*dst5 = _mm_extract_epi16(x, 5);
 	*dst6 = _mm_extract_epi16(x, 6);
 	*dst7 = _mm_extract_epi16(x, 7);
+}
+
+// Stores the elements of [x] into [dst0]-[dst3].
+static inline FORCE_INLINE void mm_scatter_ps(float *dst0, float *dst1, float *dst2, float *dst3, __m128 x)
+{
+	_mm_store_ss(dst0, x);
+	_mm_store_ss(dst1, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 1)));
+	_mm_store_ss(dst2, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 2)));
+	_mm_store_ss(dst3, _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 2, 1, 3)));
 }
 
 // Transpose in-place the 8x8 matrix stored in [row0]-[row7].
