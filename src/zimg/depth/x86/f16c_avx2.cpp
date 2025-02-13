@@ -11,7 +11,7 @@
 
 namespace zimg::depth {
 
-void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned right)
+void f16c_half_to_float_avx2(const void *src, void *dst, unsigned left, unsigned right)
 {
 	const uint16_t *src_p = static_cast<const uint16_t *>(src);
 	float *dst_p = static_cast<float *>(dst);
@@ -35,7 +35,7 @@ void f16c_half_to_float_ivb(const void *src, void *dst, unsigned left, unsigned 
 	}
 }
 
-void f16c_float_to_half_ivb(const void *src, void *dst, unsigned left, unsigned right)
+void f16c_float_to_half_avx2(const void *src, void *dst, unsigned left, unsigned right)
 {
 	const float *src_p = static_cast<const float *>(src);
 	uint16_t *dst_p = static_cast<uint16_t *>(dst);

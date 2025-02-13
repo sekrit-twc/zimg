@@ -401,7 +401,7 @@
     <ClCompile Include="..\..\src\zimg\depth\x86\error_diffusion_sse2.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\f16c_ivb.cpp">
+    <ClCompile Include="..\..\src\zimg\depth\x86\f16c_avx2.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\x86\f16c_sse2.cpp">

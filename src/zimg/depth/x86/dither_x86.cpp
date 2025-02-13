@@ -109,13 +109,13 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu)
 	dither_f16c_func func = nullptr;
 
 	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.avx && caps.f16c)
-			func = f16c_half_to_float_ivb;
+		if (!func && caps.avx2)
+			func = f16c_half_to_float_avx2;
 		if (!func && caps.sse2)
 			func = f16c_half_to_float_sse2;
 	} else {
-		if (!func && cpu >= CPUClass::X86_F16C)
-			func = f16c_half_to_float_ivb;
+		if (!func && cpu >= CPUClass::X86_AVX2)
+			func = f16c_half_to_float_avx2;
 		if (!func && cpu >= CPUClass::X86_SSE2)
 			func = f16c_half_to_float_sse2;
 	}
