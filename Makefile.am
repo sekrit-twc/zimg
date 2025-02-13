@@ -168,8 +168,7 @@ libzimg_internal_la_LIBADD += libneon.la
 endif # ARMSIMD
 
 if X86SIMD
-noinst_LTLIBRARIES += libsse.la libsse2.la libavx.la libf16c.la \
-	libavx512.la libavx512_vnni.la
+noinst_LTLIBRARIES += libavx2.la libavx512.la libavx512_vnni.la
 
 libzimg_internal_la_SOURCES += \
 	src/zimg/colorspace/x86/operation_impl_x86.cpp \
@@ -193,19 +192,14 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/unresize/x86/unresize_impl_x86.cpp \
 	src/zimg/unresize/x86/unresize_impl_x86.h
 
-libsse2_la_SOURCES = \
-	src/zimg/unresize/x86/unresize_impl_sse.cpp
-
-libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
-libsse2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
-
 libavx2_la_SOURCES = \
 	src/zimg/colorspace/x86/operation_impl_avx2.cpp \
 	src/zimg/depth/x86/depth_convert_avx2.cpp \
 	src/zimg/depth/x86/dither_avx2.cpp \
 	src/zimg/depth/x86/error_diffusion_avx2.cpp \
 	src/zimg/depth/x86/f16c_avx2.cpp \
-	src/zimg/resize/x86/resize_impl_avx2.cpp
+	src/zimg/resize/x86/resize_impl_avx2.cpp \
+	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HSW_CFLAGS)
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
@@ -226,7 +220,7 @@ libavx512_vnni_la_SOURCES = src/zimg/resize/x86/resize_impl_avx512_vnni.cpp
 libavx512_vnni_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512vnni $(CLX_CFLAGS)
 libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 
-libzimg_internal_la_LIBADD += libsse2.la libavx2.la libavx512.la libavx512_vnni.la
+libzimg_internal_la_LIBADD += libavx2.la libavx512.la libavx512_vnni.la
 endif # X86SIMD
 
 
