@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <cmath>
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
@@ -128,3 +130,5 @@ TEST(ResizeImplAVX512VNNITest, test_resize_v_u16)
 	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, src_h, w, dst_h, format, expected_sha1[2], expected_snr);
 	test_case(zimg::resize::LanczosFilter{ 4 }, false, w, dst_h, w, src_h, format, expected_sha1[3], expected_snr);
 }
+
+#endif // ZIMG_X86

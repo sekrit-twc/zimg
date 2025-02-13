@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <cmath>
 #include "colorspace/colorspace.h"
 #include "common/cpuinfo.h"
@@ -151,3 +153,5 @@ TEST(ColorspaceConversionAVX512Test, test_transfer_st_2084)
 	          { MatrixCoefficients::RGB, TransferCharacteristics::ST_2084, ColorPrimaries::UNSPECIFIED },
 	          expected_sha1[1], expected_togamma_snr);
 }
+
+#endif // ZIMG_X86

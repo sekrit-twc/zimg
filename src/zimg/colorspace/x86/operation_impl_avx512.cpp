@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <cfloat>
 #include <immintrin.h>
 #include "common/align.h"
@@ -353,3 +355,5 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_avx512(const TransferF
 }
 
 } // namespace zimg::colorspace
+
+#endif // ZIMG_X86

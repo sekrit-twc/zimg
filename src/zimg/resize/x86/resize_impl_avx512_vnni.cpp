@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <memory>
 #include <immintrin.h>
 #include "common/pixel.h"
@@ -36,3 +38,5 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_avx512_vnni(const Filt
 }
 
 } // namespace zimg::resize
+
+#endif // ZIMG_X86

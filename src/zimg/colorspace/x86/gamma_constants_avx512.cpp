@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -315,3 +317,5 @@ float st_2084_inverse_eotf(float x)
 
 } // namespace avx512constants
 } // namespace zimg::colorspace
+
+#endif // ZIMG_X86

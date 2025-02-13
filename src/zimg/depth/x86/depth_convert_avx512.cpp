@@ -1,3 +1,5 @@
+#ifdef ZIMG_X86
+
 #include <cstdint>
 #include <immintrin.h>
 #include "common/align.h"
@@ -186,3 +188,5 @@ void depth_convert_w2f_avx512(const void *src, void *dst, float scale, float off
 }
 
 } // namespace zimg::depth
+
+#endif // ZIMG_X86
