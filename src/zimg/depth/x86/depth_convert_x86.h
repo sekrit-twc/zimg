@@ -14,10 +14,6 @@ void left_shift_##x##_##cpu(const void *src, void *dst, unsigned shift, unsigned
 #define DECLARE_DEPTH_CONVERT(x, cpu) \
 void depth_convert_##x##_##cpu(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 
-DECLARE_LEFT_SHIFT(b2b, sse2);
-DECLARE_LEFT_SHIFT(b2w, sse2);
-DECLARE_LEFT_SHIFT(w2b, sse2);
-DECLARE_LEFT_SHIFT(w2w, sse2);
 DECLARE_LEFT_SHIFT(b2b, avx2);
 DECLARE_LEFT_SHIFT(b2w, avx2);
 DECLARE_LEFT_SHIFT(w2b, avx2);
@@ -27,8 +23,6 @@ DECLARE_LEFT_SHIFT(b2w, avx512);
 DECLARE_LEFT_SHIFT(w2b, avx512);
 DECLARE_LEFT_SHIFT(w2w, avx512);
 
-DECLARE_DEPTH_CONVERT(b2f, sse2);
-DECLARE_DEPTH_CONVERT(w2f, sse2);
 DECLARE_DEPTH_CONVERT(b2h, avx2);
 DECLARE_DEPTH_CONVERT(b2f, avx2);
 DECLARE_DEPTH_CONVERT(w2h, avx2);

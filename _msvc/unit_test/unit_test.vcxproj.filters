@@ -117,16 +117,10 @@
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx512_test.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse2_test.cpp">
-      <Filter>Source Files\colorspace\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\depth\x86\depth_convert_avx2_test.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\depth\x86\depth_convert_avx512_test.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\x86\depth_convert_sse2_test.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\depth\x86\dither_avx2_test.cpp">
@@ -145,9 +139,6 @@
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\depth\x86\f16c_avx2_test.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\depth\x86\f16c_sse2_test.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx2_test.cpp">

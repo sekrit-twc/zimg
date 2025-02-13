@@ -33,7 +33,6 @@
     <ClCompile Include="..\..\test\colorspace\gamma_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx512_test.cpp" />
-    <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse2_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\depth_convert_neon_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\dither_neon_test.cpp" />
@@ -42,14 +41,10 @@
     <ClCompile Include="..\..\test\depth\dither_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\depth_convert_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\depth_convert_avx512_test.cpp" />
-    <ClCompile Include="..\..\test\depth\x86\depth_convert_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\dither_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\dither_avx512_test.cpp" />
-    <ClCompile Include="..\..\test\depth\x86\dither_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\error_diffusion_avx2_test.cpp" />
-    <ClCompile Include="..\..\test\depth\x86\error_diffusion_sse2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\f16c_avx2_test.cpp" />
-    <ClCompile Include="..\..\test\depth\x86\f16c_sse2_test.cpp" />
     <ClCompile Include="..\..\test\extra\musl-libm\cos.c">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4116;4244</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4116;4244</DisableSpecificWarnings>
@@ -133,7 +128,6 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx2_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_vnni_test.cpp" />
-    <ClCompile Include="..\..\test\resize\x86\resize_impl_sse2_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\dynamic_type.h" />

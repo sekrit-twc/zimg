@@ -194,12 +194,6 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/unresize/x86/unresize_impl_x86.h
 
 libsse2_la_SOURCES = \
-	src/zimg/colorspace/x86/operation_impl_sse2.cpp \
-	src/zimg/depth/x86/depth_convert_sse2.cpp \
-	src/zimg/depth/x86/dither_sse2.cpp \
-	src/zimg/depth/x86/error_diffusion_sse2.cpp \
-	src/zimg/depth/x86/f16c_sse2.cpp \
-	src/zimg/resize/x86/resize_impl_sse2.cpp \
 	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libsse2_la_CXXFLAGS = $(AM_CXXFLAGS) -msse2
@@ -380,22 +374,16 @@ if X86SIMD
 test_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx2_test.cpp \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
-	test/colorspace/x86/colorspace_sse2_test.cpp \
 	test/colorspace/x86/gamma_constants_avx512_test.cpp \
 	test/depth/x86/depth_convert_avx2_test.cpp \
 	test/depth/x86/depth_convert_avx512_test.cpp \
-	test/depth/x86/depth_convert_sse2_test.cpp \
 	test/depth/x86/dither_avx2_test.cpp \
 	test/depth/x86/dither_avx512_test.cpp \
-	test/depth/x86/dither_sse2_test.cpp \
 	test/depth/x86/error_diffusion_avx2_test.cpp \
-	test/depth/x86/error_diffusion_sse2_test.cpp \
-	test/depth/x86/f16c_sse2_test.cpp \
 	test/depth/x86/f16c_avx2_test.cpp \
 	test/resize/x86/resize_impl_avx2_test.cpp \
 	test/resize/x86/resize_impl_avx512_test.cpp \
 	test/resize/x86/resize_impl_avx512_vnni_test.cpp
-	test/resize/x86/resize_impl_sse2_test.cpp
 endif # X86SIMD
 
 test/extra/googletest/build/lib/libgtest.a: .FAKE

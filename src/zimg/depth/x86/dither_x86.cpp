@@ -11,27 +11,6 @@ namespace zimg::depth {
 
 namespace {
 
-dither_convert_func select_ordered_dither_func_sse2(PixelType pixel_in, PixelType pixel_out)
-{
-	if (pixel_in == PixelType::HALF)
-		pixel_in = PixelType::FLOAT;
-
-	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
-		return ordered_dither_b2b_sse2;
-	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::WORD)
-		return ordered_dither_b2w_sse2;
-	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::BYTE)
-		return ordered_dither_w2b_sse2;
-	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
-		return ordered_dither_w2w_sse2;
-	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::BYTE)
-		return ordered_dither_f2b_sse2;
-	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
-		return ordered_dither_f2w_sse2;
-	else
-		return nullptr;
-}
-
 dither_convert_func select_ordered_dither_func_avx2(PixelType pixel_in, PixelType pixel_out)
 {
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
@@ -89,15 +68,11 @@ dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, 
 			func = select_ordered_dither_func_avx512(pixel_in.type, pixel_out.type);
 		if (!func && caps.avx2 && caps.fma)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
-		if (!func && caps.sse2)
-			func = select_ordered_dither_func_sse2(pixel_in.type, pixel_out.type);
 	} else {
 		if (!func && cpu >= CPUClass::X86_AVX512)
 			func = select_ordered_dither_func_avx512(pixel_in.type, pixel_out.type);
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = select_ordered_dither_func_avx2(pixel_in.type, pixel_out.type);
-		if (!func && cpu >= CPUClass::X86_SSE2)
-			func = select_ordered_dither_func_sse2(pixel_in.type, pixel_out.type);
 	}
 
 	return func;
@@ -111,13 +86,9 @@ dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu)
 	if (cpu_is_autodetect(cpu)) {
 		if (!func && caps.avx2)
 			func = f16c_half_to_float_avx2;
-		if (!func && caps.sse2)
-			func = f16c_half_to_float_sse2;
 	} else {
 		if (!func && cpu >= CPUClass::X86_AVX2)
 			func = f16c_half_to_float_avx2;
-		if (!func && cpu >= CPUClass::X86_SSE2)
-			func = f16c_half_to_float_sse2;
 	}
 
 	return func;
@@ -141,13 +112,9 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, 
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && caps.avx2 && caps.f16c && caps.fma)
 			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
-		if (!ret && caps.sse2)
-			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_error_diffusion_avx2(width, height, pixel_in, pixel_out);
-		if (!ret && cpu >= CPUClass::X86_SSE2)
-			ret = create_error_diffusion_sse2(width, height, pixel_in, pixel_out, cpu);
 	}
 
 	return ret;

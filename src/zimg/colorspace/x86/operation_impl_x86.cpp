@@ -38,15 +38,11 @@ std::unique_ptr<Operation> create_gamma_operation_x86(const TransferFunction &tr
 			ret = create_gamma_operation_avx512(transfer, params);
 		if (!ret && caps.avx2)
 			ret = create_gamma_operation_avx2(transfer, params);
-		if (!ret && caps.sse2)
-			ret = create_gamma_operation_sse2(transfer, params);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX512)
 			ret = create_gamma_operation_avx512(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_gamma_operation_avx2(transfer, params);
-		if (!ret && cpu >= CPUClass::X86_SSE2)
-			ret = create_gamma_operation_sse2(transfer, params);
 	}
 
 	return ret;
@@ -62,15 +58,11 @@ std::unique_ptr<Operation> create_inverse_gamma_operation_x86(const TransferFunc
 			ret = create_inverse_gamma_operation_avx512(transfer, params);
 		if (!ret && caps.avx2)
 			ret = create_inverse_gamma_operation_avx2(transfer, params);
-		if (!ret && caps.sse2)
-			ret = create_inverse_gamma_operation_sse2(transfer, params);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX512)
 			ret = create_inverse_gamma_operation_avx512(transfer, params);
 		if (!ret && cpu >= CPUClass::X86_AVX2)
 			ret = create_inverse_gamma_operation_avx2(transfer, params);
-		if (!ret && cpu >= CPUClass::X86_SSE2)
-			ret = create_inverse_gamma_operation_sse2(transfer, params);
 	}
 
 	return ret;
