@@ -16,7 +16,7 @@ std::unique_ptr<Operation> create_matrix_operation_x86(const Matrix3x3 &m, CPUCl
 	if (cpu_is_autodetect(cpu)) {
 		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f)
 			ret = create_matrix_operation_avx512(m);
-		if (!ret && caps.avx && !cpu_has_slow_avx(caps))
+		if (!ret && caps.avx)
 			ret = create_matrix_operation_avx(m);
 		if (!ret && caps.sse)
 			ret = create_matrix_operation_sse(m);
