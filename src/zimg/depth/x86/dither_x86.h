@@ -40,10 +40,6 @@ DECLARE_ORDERED_DITHER(f2w, avx512)
 
 dither_convert_func select_ordered_dither_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-dither_f16c_func select_dither_f16c_func_x86(CPUClass cpu);
-
-bool needs_dither_f16c_func_x86(CPUClass cpu);
-
 std::unique_ptr<graphengine::Filter> create_error_diffusion_avx2(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out);
 
 std::unique_ptr<graphengine::Filter> create_error_diffusion_x86(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);

@@ -25,15 +25,26 @@ namespace zimg::depth {
 
 namespace {
 
-template <class T, class U>
+template <bool F16C, class T>
+float load_float(T val)
+{
+	if constexpr (F16C)
+		return half_to_float(val);
+	else
+		return static_cast<float>(val);
+}
+
+template <class T, class U, bool F16C = false>
 void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither_mask,
                     const void *src, void *dst, float scale, float offset, unsigned bits, unsigned left, unsigned right)
 {
+	static_assert(!F16C || std::is_same_v<T, uint16_t>, "f16c must be uint16_t");
+
 	const T *src_p = static_cast<const T *>(src);
 	U *dst_p = static_cast<U *>(dst);
 
 	for (unsigned j = left; j < right; ++j) {
-		float x = static_cast<float>(src_p[j]) * scale + offset;
+		float x = load_float<F16C>(src_p[j]) * scale + offset;
 		float d = dither[(dither_offset + j) & dither_mask];
 
 		x += d;
@@ -43,9 +54,11 @@ void dither_ordered(const float *dither, unsigned dither_offset, unsigned dither
 	}
 }
 
-template <class T, class U>
+template <class T, class U, bool F16C = false>
 void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width)
 {
+	static_assert(!F16C || std::is_same_v<T, uint16_t>, "f16c must be uint16_t");
+
 	const float *error_top_p = static_cast<const float *>(error_top);
 	float *error_cur_p = static_cast<float *>(error_cur);
 
@@ -56,7 +69,8 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 		// Error array is padded by one on each side.
 		unsigned j_err = j + 1;
 
-		float x = static_cast<float>(src_p[j]) * scale + offset;
+		float x= load_float<F16C>(src_p[j]) * scale + offset;
+
 		float err = 0;
 
 		err += error_cur_p[j_err - 1] * (7.0f / 16.0f);
@@ -74,20 +88,9 @@ void dither_ed(const void *src, void *dst, void *error_top, void *error_cur, flo
 	}
 }
 
-void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
-{
-	const uint16_t *src_p = static_cast<const uint16_t *>(src);
-	float *dst_p = static_cast<float *>(dst);
-
-	std::transform(src_p + left, src_p + right, dst_p + left, half_to_float);
-}
-
 
 dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pixel_out)
 {
-	if (pixel_in == PixelType::HALF)
-		pixel_in = PixelType::FLOAT;
-
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
 		return dither_ordered<uint8_t, uint8_t>;
 	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::WORD)
@@ -96,6 +99,10 @@ dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pix
 		return dither_ordered<uint16_t, uint8_t>;
 	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
 		return dither_ordered<uint16_t, uint16_t>;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::BYTE)
+		return dither_ordered<uint16_t, uint8_t, true>;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::WORD)
+		return dither_ordered<uint16_t, uint16_t, true>;
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::BYTE)
 		return dither_ordered<float, uint8_t>;
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
@@ -106,9 +113,6 @@ dither_convert_func select_ordered_dither_func(PixelType pixel_in, PixelType pix
 
 auto select_error_diffusion_func(PixelType pixel_in, PixelType pixel_out)
 {
-	if (pixel_in == PixelType::HALF)
-		pixel_in = PixelType::FLOAT;
-
 	if (pixel_in == PixelType::BYTE && pixel_out == PixelType::BYTE)
 		return dither_ed<uint8_t, uint8_t>;
 	else if (pixel_in == PixelType::BYTE && pixel_out == PixelType::WORD)
@@ -117,6 +121,10 @@ auto select_error_diffusion_func(PixelType pixel_in, PixelType pixel_out)
 		return dither_ed<uint16_t, uint8_t>;
 	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::WORD)
 		return dither_ed<uint16_t, uint16_t>;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::BYTE)
+		return dither_ed<uint16_t, uint8_t, true>;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::WORD)
+		return dither_ed<uint16_t, uint16_t, true>;
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::BYTE)
 		return dither_ed<float, uint8_t>;
 	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::WORD)
@@ -229,7 +237,6 @@ public:
 class OrderedDither : public graph::PointFilter {
 	std::shared_ptr<OrderedDitherTable> m_dither_table;
 	dither_convert_func m_func;
-	dither_f16c_func m_f16c;
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
@@ -244,12 +251,11 @@ class OrderedDither : public graph::PointFilter {
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 	}
 public:
-	OrderedDither(std::shared_ptr<OrderedDitherTable> table, dither_convert_func func, dither_f16c_func f16c, unsigned width, unsigned height,
+	OrderedDither(std::shared_ptr<OrderedDitherTable> table, dither_convert_func func, unsigned width, unsigned height,
 	              const PixelFormat &pixel_in, const PixelFormat &pixel_out, unsigned plane) :
 		PointFilter(width, height, pixel_out.type),
 		m_dither_table{ std::move(table) },
 		m_func{ func },
-		m_f16c{ f16c },
 		m_scale{},
 		m_offset{},
 		m_depth{ pixel_out.depth },
@@ -259,7 +265,6 @@ public:
 
 		m_desc.num_deps = 1;
 		m_desc.num_planes = 1;
-		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
 
 		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
@@ -273,11 +278,6 @@ public:
 		const void *src_line = in->get_line(i);
 		void *dst_line = out->get_line(i);
 
-		if (m_f16c) {
-			m_f16c(src_line, tmp, left, right);
-			src_line = tmp;
-		}
-
 		m_func(std::get<0>(dither), std::get<1>(dither), std::get<2>(dither), src_line, dst_line, m_scale, m_offset, m_depth, left, right);
 	}
 };
@@ -288,7 +288,6 @@ public:
 	typedef void (*ed_func)(const void *src, void *dst, void *error_top, void *error_cur, float scale, float offset, unsigned bits, unsigned width);
 private:
 	ed_func m_func;
-	dither_f16c_func m_f16c;
 	float m_scale;
 	float m_offset;
 	unsigned m_depth;
@@ -302,9 +301,8 @@ private:
 			error::throw_<error::InternalError>("cannot dither to non-integer format");
 	}
 public:
-	ErrorDiffusion(ed_func func, dither_f16c_func f16c, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+	ErrorDiffusion(ed_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		m_func{ func },
-		m_f16c{ f16c },
 		m_scale{},
 		m_offset{},
 		m_depth{ pixel_out.depth }
@@ -317,7 +315,6 @@ public:
 		m_desc.step = 1;
 
 		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
-		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
 
 		m_desc.flags.stateful = 1;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
@@ -347,11 +344,6 @@ public:
 		void *error_top = i % 2 ? error_a : error_b;
 		void *error_cur = i % 2 ? error_b : error_a;
 
-		if (m_f16c) {
-			m_f16c(src_p, tmp, 0, m_desc.format.width);
-			src_p = tmp;
-		}
-
 		m_func(src_p, dst_p, error_top, error_cur, m_scale, m_offset, m_depth, m_desc.format.width);
 	}
 };
@@ -379,15 +371,11 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion(unsigned width, unsi
 #endif
 
 	ErrorDiffusion::ed_func func = nullptr;
-	dither_f16c_func f16c = nullptr;
-	bool needs_f16c = (pixel_in.type == PixelType::HALF);
 
 	if (!func)
 		func = select_error_diffusion_func(pixel_in.type, pixel_out.type);
-	if (needs_f16c && !f16c)
-		f16c = half_to_float_n;
 
-	return std::make_unique<ErrorDiffusion>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ErrorDiffusion>(func, width, height, pixel_in, pixel_out);
 }
 
 } // namespace
@@ -399,28 +387,14 @@ DepthConversion::result create_dither(DitherType type, unsigned width, unsigned 
 		return{ create_error_diffusion(width, height, pixel_in, pixel_out, cpu), planes };
 
 	dither_convert_func func = nullptr;
-	dither_f16c_func f16c = nullptr;
-	bool needs_f16c = (pixel_in.type == PixelType::HALF);
 
 #if defined(ZIMG_X86)
 	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
-	needs_f16c = needs_f16c && needs_dither_f16c_func_x86(cpu);
 #elif defined(ZIMG_ARM)
 	func = select_ordered_dither_func_arm(pixel_in, pixel_out, cpu);
-	needs_f16c = needs_f16c && needs_dither_f16c_func_arm(cpu);
 #endif
 	if (!func)
 		func = select_ordered_dither_func(pixel_in.type, pixel_out.type);
-
-	if (needs_f16c) {
-#if defined(ZIMG_X86)
-		f16c = select_dither_f16c_func_x86(cpu);
-#elif defined(ZIMG_ARM)
-		f16c = select_dither_f16c_func_arm(cpu);
-#endif
-		if (!f16c)
-			f16c = half_to_float_n;
-	}
 
 	std::shared_ptr<OrderedDitherTable> table = create_dither_table(type, width, height);
 	DepthConversion::result res{};
@@ -428,7 +402,7 @@ DepthConversion::result create_dither(DitherType type, unsigned width, unsigned 
 		if (!planes[p])
 			continue;
 
-		res.filters[p] = std::make_unique<OrderedDither>(table, func, f16c, width, height, pixel_in, pixel_out, p);
+		res.filters[p] = std::make_unique<OrderedDither>(table, func, width, height, pixel_in, pixel_out, p);
 		res.filter_refs[p] = res.filters[p].get();
 	}
 	return res;

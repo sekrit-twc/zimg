@@ -4,7 +4,6 @@
 #include "common/arm/cpuinfo_arm.h"
 #include "common/pixel.h"
 #include "depth_convert_arm.h"
-#include "f16c_arm.h"
 
 namespace zimg::depth {
 
@@ -34,6 +33,10 @@ depth_convert_func select_depth_convert_func_neon(PixelType pixel_in, PixelType 
 		return depth_convert_w2h_neon;
 	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::FLOAT)
 		return depth_convert_w2f_neon;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::FLOAT)
+		return half_to_float_neon;
+	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::HALF)
+		return float_to_half_neon;
 	else
 		return nullptr;
 }
@@ -69,28 +72,6 @@ depth_convert_func select_depth_convert_func_arm(const PixelFormat &format_in, c
 	}
 
 	return func;
-}
-
-depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu)
-{
-	ARMCapabilities caps = query_arm_capabilities();
-	depth_f16c_func func = nullptr;
-
-	if (cpu_is_autodetect(cpu)) {
-		func = to_half ? f16c_float_to_half_neon : f16c_half_to_float_neon;
-	} else {
-		if (!func && cpu >= CPUClass::ARM_NEON)
-			func = to_half ? f16c_float_to_half_neon : f16c_half_to_float_neon;
-	}
-
-	return func;
-}
-
-bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu)
-{
-	ARMCapabilities caps = query_arm_capabilities();
-
-	return (format_in.type == PixelType::HALF || format_out.type == PixelType::HALF) && !cpu_is_autodetect(cpu) && cpu < CPUClass::ARM_NEON;
 }
 
 } // namespace zimg::depth

@@ -27,13 +27,12 @@ DECLARE_DEPTH_CONVERT(w2f, neon);
 #undef DECLARE_LEFT_SHIFT
 #undef DECLARE_DEPTH_CONVERT
 
+void half_to_float_neon(const void *src, void *dst, float, float, unsigned left, unsigned right);
+void float_to_half_neon(const void *src, void *dst, float, float, unsigned left, unsigned right);
+
 left_shift_func select_left_shift_func_arm(PixelType pixel_in, PixelType pixel_out, CPUClass cpu);
 
 depth_convert_func select_depth_convert_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
-
-depth_f16c_func select_depth_f16c_func_arm(bool to_half, CPUClass cpu);
-
-bool needs_depth_f16c_func_arm(const PixelFormat &format_in, const PixelFormat &format_out, CPUClass cpu);
 
 } // namespace zimg::depth
 

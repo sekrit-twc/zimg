@@ -4,7 +4,6 @@
 #include "common/x86/cpuinfo_x86.h"
 #include "common/pixel.h"
 #include "depth_convert_x86.h"
-#include "f16c_x86.h"
 
 namespace zimg::depth {
 
@@ -49,6 +48,10 @@ depth_convert_func select_depth_convert_func_avx2(PixelType pixel_in, PixelType 
 		return depth_convert_w2h_avx2;
 	else if (pixel_in == PixelType::WORD && pixel_out == PixelType::FLOAT)
 		return depth_convert_w2f_avx2;
+	else if (pixel_in == PixelType::HALF && pixel_out == PixelType::FLOAT)
+		return half_to_float_avx2;
+	else if (pixel_in == PixelType::FLOAT && pixel_out == PixelType::HALF)
+		return float_to_half_avx2;
 	else
 		return nullptr;
 }
@@ -108,33 +111,6 @@ depth_convert_func select_depth_convert_func_x86(const PixelFormat &pixel_in, co
 	}
 
 	return func;
-}
-
-depth_f16c_func select_depth_f16c_func_x86(bool to_half, CPUClass cpu)
-{
-	X86Capabilities caps = query_x86_capabilities();
-	depth_f16c_func func = nullptr;
-
-	if (cpu_is_autodetect(cpu)) {
-		if (!func && caps.avx2)
-			func = to_half ? f16c_float_to_half_avx2 : f16c_half_to_float_avx2;
-	} else {
-		if (!func && cpu >= CPUClass::X86_AVX2)
-			func = to_half ? f16c_float_to_half_avx2 : f16c_half_to_float_avx2;
-	}
-
-	return func;
-}
-
-bool needs_depth_f16c_func_x86(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
-{
-	X86Capabilities caps = query_x86_capabilities();
-	bool value = pixel_in.type == PixelType::HALF || pixel_out.type == PixelType::HALF;
-
-	if ((cpu_is_autodetect(cpu) && caps.avx2) || cpu >= CPUClass::X86_AVX2)
-		value = value && pixel_is_float(pixel_in.type) && pixel_is_float(pixel_out.type);
-
-	return value;
 }
 
 } // namespace zimg::depth

@@ -36,7 +36,6 @@
     <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\depth_convert_neon_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\dither_neon_test.cpp" />
-    <ClCompile Include="..\..\test\depth\arm\f16c_neon_test.cpp" />
     <ClCompile Include="..\..\test\depth\depth_convert_test.cpp" />
     <ClCompile Include="..\..\test\depth\dither_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\depth_convert_avx2_test.cpp" />
@@ -44,7 +43,6 @@
     <ClCompile Include="..\..\test\depth\x86\dither_avx2_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\dither_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\x86\error_diffusion_avx2_test.cpp" />
-    <ClCompile Include="..\..\test\depth\x86\f16c_avx2_test.cpp" />
     <ClCompile Include="..\..\test\extra\musl-libm\cos.c">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4116;4244</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4116;4244</DisableSpecificWarnings>

@@ -27,10 +27,6 @@ DECLARE_ORDERED_DITHER(f2w, neon);
 
 dither_convert_func select_ordered_dither_func_arm(const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu);
 
-dither_f16c_func select_dither_f16c_func_arm(CPUClass cpu);
-
-bool needs_dither_f16c_func_arm(CPUClass cpu);
-
 } // namespace zimg::depth
 
 #endif // ZIMG_DEPTH_ARM_DITHER_ARM_H_

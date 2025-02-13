@@ -259,7 +259,6 @@
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
     <ClInclude Include="..\..\src\zimg\depth\arm\depth_convert_arm.h" />
     <ClInclude Include="..\..\src\zimg\depth\arm\dither_arm.h" />
-    <ClInclude Include="..\..\src\zimg\depth\arm\f16c_arm.h" />
     <ClInclude Include="..\..\src\zimg\depth\blue.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth.h" />
     <ClInclude Include="..\..\src\zimg\depth\depth_convert.h" />
@@ -267,7 +266,6 @@
     <ClInclude Include="..\..\src\zimg\depth\quantize.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\depth_convert_x86.h" />
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h" />
-    <ClInclude Include="..\..\src\zimg\depth\x86\f16c_x86.h" />
     <ClInclude Include="..\..\src\zimg\graph\filter_base.h" />
     <ClInclude Include="..\..\src\zimg\graph\simple_filters.h" />
     <ClInclude Include="..\..\src\zimg\graph\filtergraph.h" />
@@ -320,7 +318,6 @@
     <ClCompile Include="..\..\src\zimg\depth\arm\depth_convert_neon.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\arm\dither_arm.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\arm\dither_neon.cpp" />
-    <ClCompile Include="..\..\src\zimg\depth\arm\f16c_neon.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\blue.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\depth_convert.cpp" />
@@ -353,12 +350,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\x86\dither_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\depth\x86\error_diffusion_avx2.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\f16c_avx2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>

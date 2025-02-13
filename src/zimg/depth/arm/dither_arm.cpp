@@ -4,7 +4,6 @@
 #include "common/pixel.h"
 #include "common/arm/cpuinfo_arm.h"
 #include "dither_arm.h"
-#include "f16c_arm.h"
 
 namespace zimg::depth {
 
@@ -48,28 +47,6 @@ dither_convert_func select_ordered_dither_func_arm(const PixelFormat &pixel_in, 
 	}
 
 	return func;
-}
-
-dither_f16c_func select_dither_f16c_func_arm(CPUClass cpu)
-{
-	ARMCapabilities caps = query_arm_capabilities();
-	dither_f16c_func func = nullptr;
-
-	if (cpu_is_autodetect(cpu)) {
-		func = f16c_half_to_float_neon;
-	} else {
-		if (!func && cpu >= CPUClass::ARM_NEON)
-			func = f16c_half_to_float_neon;
-	}
-
-	return func;
-}
-
-bool needs_dither_f16c_func_arm(CPUClass cpu)
-{
-	ARMCapabilities caps = query_arm_capabilities();
-
-	return !cpu_is_autodetect(cpu) && cpu < CPUClass::ARM_NEON;
 }
 
 } // namespace zimg::depth

@@ -137,4 +137,18 @@ TEST(DepthConvertAVX2Test, test_depth_convert_w2f)
 	test_case_depth_convert(pixel_in, pixel_out, expected_sha1, INFINITY);
 }
 
+TEST(F16CAVX2Test, test_half_to_float)
+{
+	const char *expected_sha1 = "68442b2c5704fd2792d92b15fa2e259a51c601dc";
+
+	test_case_depth_convert(zimg::PixelType::HALF, zimg::PixelType::FLOAT, expected_sha1, INFINITY);
+}
+
+TEST(F16CAVX2Test, test_float_to_half)
+{
+	const char *expected_sha1 = "8907defd10af0b7c71abfb9c20147adc1b0a1f70";
+
+	test_case_depth_convert(zimg::PixelType::FLOAT, zimg::PixelType::HALF, expected_sha1, INFINITY);
+}
+
 #endif // ZIMG_X86

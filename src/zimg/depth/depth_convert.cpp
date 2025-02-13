@@ -30,6 +30,15 @@ void integer_to_integer(const void *src, void *dst, unsigned shift, unsigned lef
 }
 
 template <class T>
+void integer_to_half(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
+{
+	const T *src_p = static_cast<const T *>(src);
+	uint16_t *dst_p = static_cast<uint16_t *>(dst);
+
+	std::transform(src_p + left, src_p + right, dst_p + left, [=](T x) { return float_to_half(static_cast<float>(x) * scale + offset); });
+}
+
+template <class T>
 void integer_to_float(const void *src, void *dst, float scale, float offset, unsigned left, unsigned right)
 {
 	const T *src_p = static_cast<const T *>(src);
@@ -38,7 +47,7 @@ void integer_to_float(const void *src, void *dst, float scale, float offset, uns
 	std::transform(src_p + left, src_p + right, dst_p + left, [=](T x){ return static_cast<float>(x) * scale + offset; });
 }
 
-void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
+void half_to_float_n(const void *src, void *dst, float, float, unsigned left, unsigned right)
 {
 	const uint16_t *src_p = static_cast<const uint16_t *>(src);
 	float *dst_p = static_cast<float *>(dst);
@@ -46,7 +55,7 @@ void half_to_float_n(const void *src, void *dst, unsigned left, unsigned right)
 	std::transform(src_p + left, src_p + right, dst_p + left, half_to_float);
 }
 
-void float_to_half_n(const void *src, void *dst, unsigned left, unsigned right)
+void float_to_half_n(const void *src, void *dst, float, float, unsigned left, unsigned right)
 {
 	const float *src_p = static_cast<const float *>(src);
 	uint16_t *dst_p = static_cast<uint16_t *>(dst);
@@ -71,15 +80,20 @@ left_shift_func select_left_shift_func(PixelType pixel_in, PixelType pixel_out)
 
 depth_convert_func select_depth_convert_func(PixelType type_in, PixelType type_out)
 {
-	if (type_in == PixelType::HALF)
-		type_in = PixelType::FLOAT;
-	if (type_out == PixelType::HALF)
-		type_out = PixelType::FLOAT;
-
-	if (type_in == PixelType::BYTE && type_out == PixelType::FLOAT)
+	if (type_in == PixelType::BYTE && type_out == PixelType::HALF)
+		return integer_to_half<uint8_t>;
+	else if (type_in == PixelType::BYTE && type_out == PixelType::FLOAT)
 		return integer_to_float<uint8_t>;
+	else if (type_in == PixelType::WORD && type_out == PixelType::HALF)
+		return integer_to_half<uint16_t>;
 	else if (type_in == PixelType::WORD && type_out == PixelType::FLOAT)
 		return integer_to_float<uint16_t>;
+	else if (type_in == PixelType::HALF && type_out == PixelType::HALF)
+		return nullptr;
+	else if (type_in == PixelType::HALF && type_out == PixelType::FLOAT)
+		return half_to_float_n;
+	else if (type_in == PixelType::FLOAT && type_out == PixelType::HALF)
+		return float_to_half_n;
 	else if (type_in == PixelType::FLOAT && type_out == PixelType::FLOAT)
 		return nullptr;
 	else
@@ -132,36 +146,30 @@ public:
 
 class ConvertToFloat : public graph::PointFilter {
 	depth_convert_func m_func;
-	depth_f16c_func m_f16c;
 	float m_scale;
 	float m_offset;
 
-	void check_preconditions(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out, bool has_f16c)
+	void check_preconditions(unsigned width, const PixelFormat &pixel_in, const PixelFormat &pixel_out)
 	{
 		zassert_d(width <= pixel_max_width(pixel_in.type), "overflow");
 		zassert_d(width <= pixel_max_width(pixel_out.type), "overflow");
 
 		if (pixel_in == pixel_out)
 			error::throw_<error::InternalError>("cannot perform no-op conversion");
-		if (has_f16c && pixel_in.type != PixelType::HALF && pixel_out.type != PixelType::HALF)
-			error::throw_<error::InternalError>("cannot provide f16c function for non-HALF types");
 		if (!pixel_is_float(pixel_out.type))
 			error::throw_<error::InternalError>("DepthConvert only converts to floating point types");
 	}
 public:
-	ConvertToFloat(depth_convert_func func, depth_f16c_func f16c, unsigned width, unsigned height,
-	               const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
+	ConvertToFloat(depth_convert_func func, unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out) :
 		PointFilter(width, height, pixel_out.type),
 		m_func{ func },
-		m_f16c{ f16c },
 		m_scale{},
 		m_offset{}
 	{
-		check_preconditions(width, pixel_in, pixel_out, !!f16c);
+		check_preconditions(width, pixel_in, pixel_out);
 
 		m_desc.num_deps = 1;
 		m_desc.num_planes = 1;
-		m_desc.scratchpad_size = m_f16c ? (static_cast<checked_size_t>(width) * sizeof(float)).get() : 0;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
 
 		std::tie(m_scale, m_offset) = get_scale_offset(pixel_in, pixel_out);
@@ -170,19 +178,7 @@ public:
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
 	             unsigned i, unsigned left, unsigned right, void *, void *tmp) const noexcept override
 	{
-		const void *src_line = in->get_line(i);
-		void *dst_line = out->get_line(i);
-
-		if (m_f16c) {
-			if (m_func) {
-				m_func(src_line, tmp, m_scale, m_offset, left, right);
-				m_f16c(tmp, dst_line, left, right);
-			} else {
-				m_f16c(src_line, dst_line, left, right);
-			}
-		} else {
-			m_func(src_line, dst_line, m_scale, m_offset, left, right);
-		}
+		m_func(in->get_line(i), out->get_line(i), m_scale, m_offset, left, right);
 	}
 };
 
@@ -207,32 +203,17 @@ std::unique_ptr<graphengine::Filter> create_left_shift(unsigned width, unsigned 
 std::unique_ptr<graphengine::Filter> create_convert_to_float(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
 {
 	depth_convert_func func = nullptr;
-	depth_f16c_func f16c = nullptr;
-	bool needs_f16c = (pixel_in.type == PixelType::HALF || pixel_out.type == PixelType::HALF);
 
 #if defined(ZIMG_X86)
 	func = select_depth_convert_func_x86(pixel_in, pixel_out, cpu);
-	needs_f16c = needs_f16c && needs_depth_f16c_func_x86(pixel_in, pixel_out, cpu);
 #elif defined(ZIMG_ARM)
 	func = select_depth_convert_func_arm(pixel_in, pixel_out, cpu);
-	needs_f16c = needs_f16c && needs_depth_f16c_func_arm(pixel_in, pixel_out, cpu);
 #endif
 	if (!func)
 		func = select_depth_convert_func(pixel_in.type, pixel_out.type);
 
-	if (needs_f16c) {
-#if defined(ZIMG_X86)
-		f16c = select_depth_f16c_func_x86(pixel_out.type == PixelType::HALF, cpu);
-#elif defined(ZIMG_ARM)
-		f16c = select_depth_f16c_func_arm(pixel_out.type == PixelType::HALF, cpu);
-#endif
-		if (!f16c && pixel_in.type == zimg::PixelType::HALF)
-			f16c = half_to_float_n;
-		if (!f16c && pixel_out.type == zimg::PixelType::HALF)
-			f16c = float_to_half_n;
-	}
 
-	return std::make_unique<ConvertToFloat>(func, f16c, width, height, pixel_in, pixel_out);
+	return std::make_unique<ConvertToFloat>(func, width, height, pixel_in, pixel_out);
 }
 
 } // namespace zimg::depth
