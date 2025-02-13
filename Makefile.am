@@ -194,8 +194,6 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/unresize/x86/unresize_impl_x86.h
 
 libsse_la_SOURCES = \
-	src/zimg/colorspace/x86/operation_impl_sse.cpp \
-	src/zimg/resize/x86/resize_impl_sse.cpp \
 	src/zimg/unresize/x86/unresize_impl_sse.cpp
 
 libsse_la_CXXFLAGS = $(AM_CXXFLAGS) -msse
@@ -399,7 +397,6 @@ test_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx_test.cpp \
 	test/colorspace/x86/colorspace_avx2_test.cpp \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
-	test/colorspace/x86/colorspace_sse_test.cpp \
 	test/colorspace/x86/colorspace_sse2_test.cpp \
 	test/colorspace/x86/gamma_constants_avx512_test.cpp \
 	test/depth/x86/depth_convert_avx2_test.cpp \
@@ -416,7 +413,6 @@ test_unit_test_SOURCES += \
 	test/resize/x86/resize_impl_avx2_test.cpp \
 	test/resize/x86/resize_impl_avx512_test.cpp \
 	test/resize/x86/resize_impl_avx512_vnni_test.cpp
-	test/resize/x86/resize_impl_sse_test.cpp \
 	test/resize/x86/resize_impl_sse2_test.cpp
 endif # X86SIMD
 

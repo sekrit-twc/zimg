@@ -35,7 +35,6 @@
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx512_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_avx_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse2_test.cpp" />
-    <ClCompile Include="..\..\test\colorspace\x86\colorspace_sse_test.cpp" />
     <ClCompile Include="..\..\test\colorspace\x86\gamma_constants_avx512_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\depth_convert_neon_test.cpp" />
     <ClCompile Include="..\..\test\depth\arm\dither_neon_test.cpp" />
@@ -137,7 +136,6 @@
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx512_vnni_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx_test.cpp" />
     <ClCompile Include="..\..\test\resize\x86\resize_impl_sse2_test.cpp" />
-    <ClCompile Include="..\..\test\resize\x86\resize_impl_sse_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\dynamic_type.h" />

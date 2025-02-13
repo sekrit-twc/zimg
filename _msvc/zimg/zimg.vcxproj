@@ -314,10 +314,6 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_sse.cpp">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -437,7 +433,6 @@
       <AdditionalOptions Condition="'$(Platform)'=='Win32' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni</AdditionalOptions>
       <AdditionalOptions Condition="'$(Platform)'=='x64' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse.cpp" />
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse2.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

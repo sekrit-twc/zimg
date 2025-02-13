@@ -25,8 +25,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_x86(const FilterContex
 			ret = create_resize_impl_h_avx(context, height, type, depth);
 		if (!ret && caps.sse2)
 			ret = create_resize_impl_h_sse2(context, height, type, depth);
-		if (!ret && caps.sse)
-			ret = create_resize_impl_h_sse(context, height, type, depth);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX512_CLX)
 			ret = create_resize_impl_h_avx512_vnni(context, height, type, depth);
@@ -38,8 +36,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_x86(const FilterContex
 			ret = create_resize_impl_h_avx(context, height, type, depth);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_resize_impl_h_sse2(context, height, type, depth);
-		if (!ret && cpu >= CPUClass::X86_SSE)
-			ret = create_resize_impl_h_sse(context, height, type, depth);
 	}
 
 	return ret;
@@ -63,8 +59,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_x86(const FilterContex
 			ret = create_resize_impl_v_avx(context, width, type, depth);
 		if (!ret && caps.sse2)
 			ret = create_resize_impl_v_sse2(context, width, type, depth);
-		if (!ret && caps.sse)
-			ret = create_resize_impl_v_sse(context, width, type, depth);
 	} else {
 		if (!ret && cpu >= CPUClass::X86_AVX512_CLX)
 			ret = create_resize_impl_v_avx512_vnni(context, width, type, depth);
@@ -76,8 +70,6 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_v_x86(const FilterContex
 			ret = create_resize_impl_v_avx(context, width, type, depth);
 		if (!ret && cpu >= CPUClass::X86_SSE2)
 			ret = create_resize_impl_v_sse2(context, width, type, depth);
-		if (!ret && cpu >= CPUClass::X86_SSE)
-			ret = create_resize_impl_v_sse(context, width, type, depth);
 	}
 
 	return ret;

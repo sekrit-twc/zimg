@@ -365,9 +365,6 @@
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_avx512.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_sse.cpp">
-      <Filter>Source Files\colorspace\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_sse2.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
@@ -420,9 +417,6 @@
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx512.cpp">
-      <Filter>Source Files\resize\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse2.cpp">
