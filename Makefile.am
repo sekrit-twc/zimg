@@ -175,7 +175,6 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/common/x86/avx512_util.h \
 	src/zimg/common/x86/cpuinfo_x86.cpp \
 	src/zimg/common/x86/cpuinfo_x86.h \
-	src/zimg/common/x86/sse2_util.h \
 	src/zimg/common/x86/x86util.cpp \
 	src/zimg/common/x86/x86util.h \
 	src/zimg/depth/x86/depth_convert_x86.cpp \

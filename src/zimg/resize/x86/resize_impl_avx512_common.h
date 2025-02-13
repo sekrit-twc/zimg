@@ -15,7 +15,7 @@
 #include "graph/filter_base.h"
 #include "resize/resize_impl.h"
 
-#include "common/x86/sse2_util.h"
+#include "common/x86/avx2_util.h"
 #include "common/x86/avx512_util.h"
 
 namespace zimg::resize {

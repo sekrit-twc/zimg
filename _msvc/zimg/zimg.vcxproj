@@ -252,7 +252,6 @@
     <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\avx512_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h" />
-    <ClInclude Include="..\..\src\zimg\common\x86\sse2_util.h" />
     <ClInclude Include="..\..\src\zimg\common\x86\x86util.h" />
     <ClInclude Include="..\..\src\zimg\common\zassert.h" />
     <ClInclude Include="..\..\src\zimg\depth\arm\depth_convert_arm.h" />
