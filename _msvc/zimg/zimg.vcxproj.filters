@@ -407,9 +407,6 @@
     <ClCompile Include="..\..\src\zimg\depth\x86\f16c_sse2.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx.cpp">
-      <Filter>Source Files\resize\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx2.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>

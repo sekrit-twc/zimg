@@ -150,9 +150,6 @@
     <ClCompile Include="..\..\test\depth\x86\f16c_sse2_test.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\resize\x86\resize_impl_avx_test.cpp">
-      <Filter>Source Files\resize\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\resize\x86\resize_impl_avx2_test.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>

@@ -26,13 +26,11 @@ std::unique_ptr<graphengine::Filter> create_resize_impl_h_##cpu(const FilterCont
 std::unique_ptr<graphengine::Filter> create_resize_impl_v_##cpu(const FilterContext &context, unsigned width, PixelType type, unsigned depth);
 
 DECLARE_IMPL_H(sse2)
-DECLARE_IMPL_H(avx)
 DECLARE_IMPL_H(avx2)
 DECLARE_IMPL_H(avx512)
 DECLARE_IMPL_H(avx512_vnni)
 
 DECLARE_IMPL_V(sse2)
-DECLARE_IMPL_V(avx)
 DECLARE_IMPL_V(avx2)
 DECLARE_IMPL_V(avx512)
 DECLARE_IMPL_V(avx512_vnni)
