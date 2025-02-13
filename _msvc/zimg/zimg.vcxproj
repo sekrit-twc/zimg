@@ -393,7 +393,7 @@
     <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\unresize_impl.cpp" />
-    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_sse.cpp" />
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_avx2.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

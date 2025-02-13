@@ -195,7 +195,7 @@ libavx2_la_SOURCES = \
 	src/zimg/depth/x86/dither_avx2.cpp \
 	src/zimg/depth/x86/error_diffusion_avx2.cpp \
 	src/zimg/resize/x86/resize_impl_avx2.cpp \
-	src/zimg/unresize/x86/unresize_impl_sse.cpp
+	src/zimg/unresize/x86/unresize_impl_avx2.cpp
 
 libavx2_la_CXXFLAGS = $(AM_CXXFLAGS) -mavx2 -mf16c -mfma $(HSW_CFLAGS)
 libavx2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)

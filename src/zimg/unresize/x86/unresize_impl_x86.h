@@ -25,8 +25,8 @@ std::unique_ptr<graphengine::Filter> create_unresize_impl_h_##cpu(const Bilinear
 #define DECLARE_IMPL_V(cpu) \
 std::unique_ptr<graphengine::Filter> create_unresize_impl_v_##cpu(const BilinearContext &context, unsigned width, PixelType type);
 
-DECLARE_IMPL_H(sse)
-DECLARE_IMPL_V(sse)
+DECLARE_IMPL_H(avx2)
+DECLARE_IMPL_V(avx2)
 
 #undef DECLARE_IMPL_H
 #undef DECLARE_IMPL_V
