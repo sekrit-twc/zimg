@@ -330,6 +330,6 @@ public:
 };
 
 } // namespace zimgxx
-#endif ZIMG_GRAPHENGINE_API // ZIMG_GRAPHENGINE_API
+#endif // ZIMG_GRAPHENGINE_API
 
 #endif // ZIMGPLUSPLUS_HPP_
