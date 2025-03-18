@@ -10,6 +10,7 @@
   #include <Windows.h>
 #else
   #include <cerrno>
+  #include <cstdint>
 
   #include <fcntl.h>
   #include <unistd.h>
