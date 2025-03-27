@@ -55,7 +55,19 @@ AS_IF([test "x$enable_debug" = "xyes"],
       [AC_SUBST([DEBUGCFLAGS], ["-O0 -g3 -ggdb"])],
       [AC_SUBST([DEBUGCFLAGS], ["-DNDEBUG"])])
 
-AS_IF([test "x$STL_LIBS" = "x"], [STL_LIBS="-lstdc++"])
+AC_LANG_PUSH([C++])
+AC_MSG_CHECKING(for the C++ standard library)
+AS_IF([test "x$STL_LIBS" = "x"],
+      [
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+          #include <cstddef>
+          #ifndef _LIBCPP_VERSION
+          #error libc++ not in use
+          #endif
+        ], [;])], [STL_LIBS="-lc++"], [STL_LIBS="-lstdc++"])
+      ])
+AC_LANG_POP([C++])
+AC_MSG_RESULT($STL_LIBS)
 AC_SUBST([STL_LIBS], [$STL_LIBS])
 
 ARM="no"
