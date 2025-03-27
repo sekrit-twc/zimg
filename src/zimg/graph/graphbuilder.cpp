@@ -32,7 +32,7 @@
 #define iassert(cond) do { \
   if (!(cond)) \
     error::throw_<error::InternalError>("invalid graph state L" STRINGIFY(__LINE__) ": " #cond); \
-} while (0)
+  } while (0)
 
 
 namespace zimg::graph {
