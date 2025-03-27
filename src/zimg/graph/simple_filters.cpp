@@ -18,7 +18,7 @@ CopyRectFilter::CopyRectFilter(unsigned left, unsigned top, unsigned width, unsi
 void CopyRectFilter::process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
                              unsigned i, unsigned left, unsigned right, void *, void *) const noexcept
 {
-	const unsigned char *src_p = in->get_line<unsigned char>(m_top + i) + static_cast<size_t>(m_left) * m_desc.format.bytes_per_sample;
+	const unsigned char *src_p = in->get_line<unsigned char>(m_top + i) + (static_cast<size_t>(left) + static_cast<size_t>(m_left)) * m_desc.format.bytes_per_sample;
 	unsigned char *dst_p = out->get_line<unsigned char>(i) + static_cast<size_t>(left) * m_desc.format.bytes_per_sample;
 	std::copy_n(src_p, static_cast<size_t>(right - left) * m_desc.format.bytes_per_sample, dst_p);
 }
