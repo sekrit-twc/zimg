@@ -219,7 +219,7 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j, const 
 		float32x4_t &acc = kk % 2 ? accum1 : accum0;
 
 		float32x4_t c = vdupq_laneq_f32(coeffs, static_cast<int>(kk));
-		float32x4_t x = vld1q_f32(src_p + 4 * static_cast<int>(kk)); 
+		float32x4_t x = vld1q_f32(src_p + 4 * static_cast<int>(kk));
 		acc = vfmaq_f32(acc, c, x);
 	};
 
@@ -231,12 +231,12 @@ inline FORCE_INLINE float32x4_t resize_line4_h_f32_neon_xiter(unsigned j, const 
 		src_p += 16;
 	}
 
-	if constexpr (Tail >= 1) {
+	if constexpr (Tail) {
 		coeffs = vld1q_f32(filter_coeffs + k_end);
 		unroll<Tail>(f);
 	}
 
-	if constexpr (!Taps || Taps >= 2)
+	if constexpr (Taps <= 0 || Taps >= 2)
 		accum0 = vaddq_f32(accum0, accum1);
 
 	return accum0;
