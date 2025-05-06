@@ -213,22 +213,10 @@
     <ClInclude Include="..\..\src\zimg\depth\x86\dither_x86.h">
       <Filter>Header Files\depth\x86</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\zimg\depth\x86\f16c_x86.h">
-      <Filter>Header Files\depth\x86</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\zimg\resize\x86\resize_impl_x86.h">
       <Filter>Header Files\resize\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86\cpuinfo_x86.h">
-      <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\x86\sse_util.h">
-      <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\x86\sse2_util.h">
-      <Filter>Header Files\common\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\common\x86\avx_util.h">
       <Filter>Header Files\common\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\common\x86\avx2_util.h">
@@ -256,9 +244,6 @@
       <Filter>Header Files\common\arm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\depth\arm\dither_arm.h">
-      <Filter>Header Files\depth\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\zimg\depth\arm\f16c_arm.h">
       <Filter>Header Files\depth\arm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\zimg\resize\arm\resize_impl_arm.h">
@@ -362,9 +347,6 @@
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_avx512.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_sse2.cpp">
-      <Filter>Source Files\colorspace\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\x86\operation_impl_x86.cpp">
       <Filter>Source Files\colorspace\x86</Filter>
     </ClCompile>
@@ -377,9 +359,6 @@
     <ClCompile Include="..\..\src\zimg\depth\x86\depth_convert_avx512.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\depth_convert_sse2.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\x86\depth_convert_x86.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
@@ -389,31 +368,16 @@
     <ClCompile Include="..\..\src\zimg\depth\x86\dither_avx512.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\dither_sse2.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\x86\dither_x86.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\depth\x86\error_diffusion_avx2.cpp">
       <Filter>Source Files\depth\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\error_diffusion_sse2.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\f16c_avx2.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\x86\f16c_sse2.cpp">
-      <Filter>Source Files\depth\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx2.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_avx512.cpp">
-      <Filter>Source Files\resize\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_sse2.cpp">
       <Filter>Source Files\resize\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_x86.cpp">
@@ -449,9 +413,6 @@
     <ClCompile Include="..\..\src\zimg\depth\arm\dither_neon.cpp">
       <Filter>Source Files\depth\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\zimg\depth\arm\f16c_neon.cpp">
-      <Filter>Source Files\depth\arm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\arm\resize_impl_arm.cpp">
       <Filter>Source Files\resize\arm</Filter>
     </ClCompile>
@@ -465,9 +426,6 @@
       <Filter>Source Files\colorspace\arm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_x86.cpp">
-      <Filter>Source Files\unresize\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_sse.cpp">
       <Filter>Source Files\unresize\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\graph\graphbuilder.cpp">
@@ -486,7 +444,10 @@
       <Filter>Source Files\graph</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\colorspace\colorspace_graph.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\colorspace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zimg\unresize\x86\unresize_impl_avx2.cpp">
+      <Filter>Source Files\unresize\x86</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
