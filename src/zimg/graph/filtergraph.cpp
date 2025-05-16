@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <climits>
+#include <cstdint>
 #include <tuple>
 #include "common/align.h"
 #include "common/except.h"
