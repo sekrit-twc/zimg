@@ -383,8 +383,8 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
-      <AdditionalOptions Condition="'$(Platform)'=='Win32' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Platform)'=='x64' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'=='Win32' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'=='x64' And $(PlatformToolset.Contains('ClangCL'))">/clang:-mavx512vnni %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\x86\resize_impl_x86.cpp" />
     <ClCompile Include="..\..\src\zimg\unresize\bilinear.cpp" />
