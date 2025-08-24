@@ -3,6 +3,7 @@ colorspace: fix AVX-512 sRGB/709 with negative input (introduced in 2.8)
 resize: fix AVX-512 downscaling with certain tap counts (introduced in 2.6)
 
 3.0.5
+api: add 'use_scene_referred' flag to zimg_graph_builder_params
 colorspace: add ST.428-1 (gamma 2.6) transfer function
 depth: fix AVX-512 integer to float border handling (introduced in 2.6)
 depth: fix NEON dither border handling (introduced in 3.0)
