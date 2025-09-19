@@ -112,7 +112,7 @@ void left_shift_b2w_neon(const void *src, void *dst, unsigned shift, unsigned le
 			neon_store_idxhi_u16(dst_p + vec_left - 16, lo, left % 8);
 			vst1q_u16(dst_p + vec_left - 8, hi);
 		} else {
-			neon_store_idxhi_u16(dst_p + vec_left - 8, lo, left % 8);
+			neon_store_idxhi_u16(dst_p + vec_left - 8, hi, left % 8);
 		}
 	}
 
