@@ -24,10 +24,10 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 	const unsigned w = 640;
 	const unsigned h = 480;
 
-	zimg::PixelFormat format = zimg::PixelType::FLOAT;
 	auto builder = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)
-		.set_csp_out(csp_out);
+		.set_csp_out(csp_out)
+		.set_approximate_gamma(true);
 
 	auto filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 	auto filter_neon = builder.set_cpu(zimg::CPUClass::ARM_NEON).create();

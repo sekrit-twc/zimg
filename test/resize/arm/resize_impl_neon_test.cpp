@@ -22,6 +22,7 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 	auto builder = zimg::resize::ResizeImplBuilder{ src_w, src_h, format.type }
 		.set_horizontal(horizontal)
 		.set_dst_dim(horizontal ? dst_w : dst_h)
+		.set_depth(format.depth)
 		.set_filter(&filter)
 		.set_shift(0.0)
 		.set_subwidth(horizontal ? src_w : src_h);
