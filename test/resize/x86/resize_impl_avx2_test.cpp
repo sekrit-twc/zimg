@@ -46,7 +46,6 @@ void test_case(const zimg::resize::Filter &filter, bool horizontal, unsigned src
 		filter_c = builder.set_cpu(zimg::CPUClass::NONE).create();
 		ASSERT_TRUE(assert_different_dynamic_type(filter_c.get(), filter_avx2.get()));
 		validation.set_reference_filter(filter_c.get(), expected_snr);
-
 	}
 
 	validation.run();
