@@ -60,6 +60,7 @@ struct Arguments {
 	char fast;
 	char hlg;
 	char wcg;
+	char scene_referred;
 };
 
 const ArgparseOption program_switches[] = {
@@ -69,6 +70,7 @@ const ArgparseOption program_switches[] = {
 	{ OPTION_FLOAT,  "l", "luminance", offsetof(Arguments, luminance), nullptr, "legacy peak brightness (cd/m^2)" },
 	{ OPTION_USER1,  "k", "key",       offsetof(Arguments, mask_key),  decode_mask_key, "HDR color key (RRGGBB hex string)" },
 	{ OPTION_STRING, "m", "mask",      offsetof(Arguments, hdrpath),   nullptr, "HDR difference mask" },
+	{ OPTION_STRING, "s", "sceneref",  offsetof(Arguments, scene_referred),   nullptr, "use scene-referred transfer functions" },
 	{ OPTION_NULL }
 };
 
@@ -241,6 +243,7 @@ void execute(const Arguments &args)
 	zimgxx::zfilter_graph_builder_params params;
 	params.nominal_peak_luminance = args.luminance;
 	params.allow_approximate_gamma = !!args.fast;
+	params.use_scene_referred = !!args.scene_referred;
 
 	// HDR10 specification.
 	zimgxx::zimage_format src_format;
