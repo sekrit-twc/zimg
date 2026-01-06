@@ -305,10 +305,10 @@ endif # TESTAPP
 
 
 if UNIT_TEST
-TESTS = test/unit_test
+TESTS = test/zimg_unit_test
 
 check_LTLIBRARIES = test/libmusl_m.la
-check_PROGRAMS = test/unit_test
+check_PROGRAMS = test/zimg_unit_test
 
 test_libmusl_m_la_CFLAGS = $(AM_CFLAGS) -std=c99 -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable
 
@@ -338,7 +338,7 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/powf_data.h \
 	test/extra/musl-libm/sin.c
 
-test_unit_test_CPPFLAGS = \
+test_zimg_unit_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(srcdir)/src/zimg \
 	-I$(srcdir)/test \
@@ -346,7 +346,7 @@ test_unit_test_CPPFLAGS = \
 	-I$(srcdir)/test/extra/googletest/googletest/include \
 	$(graphengineflags)
 
-test_unit_test_SOURCES = \
+test_zimg_unit_test_SOURCES = \
 	graphengine/filter_validation/filter_validation.cpp \
 	graphengine/filter_validation/sha1/config.h \
 	graphengine/filter_validation/sha1/sha1.c \
@@ -364,7 +364,7 @@ test_unit_test_SOURCES = \
 	test/resize/resize_impl_test.cpp
 
 if ARMSIMD
-test_unit_test_SOURCES += \
+test_zimg_unit_test_SOURCES += \
 	test/colorspace/arm/colorspace_neon_test.cpp \
 	test/depth/arm/depth_convert_neon_test.cpp \
 	test/depth/arm/dither_neon_test.cpp \
@@ -372,7 +372,7 @@ test_unit_test_SOURCES += \
 endif # ARMSIMD
 
 if X86SIMD
-test_unit_test_SOURCES += \
+test_zimg_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx2_test.cpp \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
 	test/colorspace/x86/gamma_constants_avx512_test.cpp \
@@ -391,10 +391,15 @@ test/extra/googletest/build/lib/libgtest.a: .FAKE
 
 .FAKE:
 
-test_unit_test_LDADD = \
+test_zimg_unit_test_LDADD = \
 	test/extra/googletest/build/lib/libgtest.a \
 	test/libmusl_m.la \
 	libzimg_internal.la
+
+if INSTALL_TESTS
+bin_PROGRAMS += test/zimg_unit_test
+endif # INSTALL_TESTS
+
 endif # UNIT_TEST
 
 
