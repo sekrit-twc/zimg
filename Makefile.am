@@ -232,36 +232,43 @@ libtestcommon_la_SOURCES = \
 
 
 if EXAMPLES
-noinst_PROGRAMS += \
-	doc/example/api_example \
-	doc/example/api_example_c \
-	doc/example/hdr_example \
-	doc/example/interlace_example \
-	doc/example/tile_example
+example_progs = \
+	doc/example/zimg_api_example \
+	doc/example/zimg_api_example_c \
+	doc/example/zimg_hdr_example \
+	doc/example/zimg_interlace_example \
+	doc/example/zimg_tile_example
+
+if INSTALL_EXAMPLES
+bin_PROGRAMS += $(example_progs)
+else # INSTALL_EXAMPLES
+noinst_PROGRAMS += $(example_progs)
+endif # INSTALL_EXAMPLES
+
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
 EXAMPLE_LDADD = libtestcommon.la libzimg.la
 
-doc_example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_api_example_SOURCES = doc/example/api_example.cpp
-doc_example_api_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_api_example_SOURCES = doc/example/api_example.cpp
+doc_example_zimg_api_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
-doc_example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
+doc_example_zimg_api_example_c_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_hdr_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_hdr_example_SOURCES = doc/example/hdr_example.cpp
-doc_example_hdr_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_hdr_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_hdr_example_SOURCES = doc/example/hdr_example.cpp
+doc_example_zimg_hdr_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_interlace_example_SOURCES = doc/example/interlace_example.cpp
-doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_interlace_example_SOURCES = doc/example/interlace_example.cpp
+doc_example_zimg_interlace_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_tile_example_SOURCES = doc/example/tile_example.cpp
-doc_example_tile_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_tile_example_SOURCES = doc/example/tile_example.cpp
+doc_example_zimg_tile_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 
