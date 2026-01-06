@@ -40,6 +40,7 @@ dist_examplemisc_DATA = \
 	src/testcommon/win32_bitmap.h
 
 
+bin_PROGRAMS =
 noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
 noinst_LTLIBRARIES = libzimg_internal.la
@@ -265,11 +266,18 @@ endif # EXAMPLES
 
 
 if TESTAPP
-noinst_PROGRAMS += testapp
-noinst_LTLIBRARIES += libtestcommon.la
-testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon $(graphengineflags)
+testapp_progs = zimg_testapp
 
-testapp_SOURCES = \
+if INSTALL_TESTAPP
+bin_PROGRAMS += $(testapp_progs)
+else # INSTALL_TESTAPP
+noinst_PROGRAMS += $(testapp_progs)
+endif # INSTALL_TESTAPP
+
+noinst_LTLIBRARIES += libtestcommon.la
+zimg_testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon $(graphengineflags)
+
+zimg_testapp_SOURCES = \
 	src/testapp/apps.h \
 	src/testapp/colorspaceapp.cpp \
 	src/testapp/cpuinfoapp.cpp \
@@ -285,7 +293,7 @@ testapp_SOURCES = \
 	src/testapp/utils.cpp \
 	src/testapp/utils.h
 
-testapp_LDADD = libtestcommon.la libzimg_internal.la
+zimg_testapp_LDADD = libtestcommon.la libzimg_internal.la
 endif # TESTAPP
 
 
