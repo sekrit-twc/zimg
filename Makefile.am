@@ -40,6 +40,7 @@ dist_examplemisc_DATA = \
 	src/testcommon/win32_bitmap.h
 
 
+bin_PROGRAMS =
 noinst_PROGRAMS =
 lib_LTLIBRARIES = libzimg.la
 noinst_LTLIBRARIES = libzimg_internal.la
@@ -231,45 +232,59 @@ libtestcommon_la_SOURCES = \
 
 
 if EXAMPLES
-noinst_PROGRAMS += \
-	doc/example/api_example \
-	doc/example/api_example_c \
-	doc/example/hdr_example \
-	doc/example/interlace_example \
-	doc/example/tile_example
+example_progs = \
+	doc/example/zimg_api_example \
+	doc/example/zimg_api_example_c \
+	doc/example/zimg_hdr_example \
+	doc/example/zimg_interlace_example \
+	doc/example/zimg_tile_example
+
+if INSTALL_EXAMPLES
+bin_PROGRAMS += $(example_progs)
+else # INSTALL_EXAMPLES
+noinst_PROGRAMS += $(example_progs)
+endif # INSTALL_EXAMPLES
+
 noinst_LTLIBRARIES += libtestcommon.la
 
 EXAMPLE_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg/api -I$(srcdir)/src/testcommon
 EXAMPLE_LDADD = libtestcommon.la libzimg.la
 
-doc_example_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_api_example_SOURCES = doc/example/api_example.cpp
-doc_example_api_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_api_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_api_example_SOURCES = doc/example/api_example.cpp
+doc_example_zimg_api_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
-doc_example_api_example_c_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_api_example_c_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_api_example_c_SOURCES = doc/example/api_example_c.c dummy.cpp
+doc_example_zimg_api_example_c_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_hdr_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_hdr_example_SOURCES = doc/example/hdr_example.cpp
-doc_example_hdr_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_hdr_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_hdr_example_SOURCES = doc/example/hdr_example.cpp
+doc_example_zimg_hdr_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_interlace_example_SOURCES = doc/example/interlace_example.cpp
-doc_example_interlace_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_interlace_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_interlace_example_SOURCES = doc/example/interlace_example.cpp
+doc_example_zimg_interlace_example_LDADD = $(EXAMPLE_LDADD)
 
-doc_example_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
-doc_example_tile_example_SOURCES = doc/example/tile_example.cpp
-doc_example_tile_example_LDADD = $(EXAMPLE_LDADD)
+doc_example_zimg_tile_example_CPPFLAGS = $(EXAMPLE_CPPFLAGS)
+doc_example_zimg_tile_example_SOURCES = doc/example/tile_example.cpp
+doc_example_zimg_tile_example_LDADD = $(EXAMPLE_LDADD)
 endif # EXAMPLES
 
 
 if TESTAPP
-noinst_PROGRAMS += testapp
-noinst_LTLIBRARIES += libtestcommon.la
-testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon $(graphengineflags)
+testapp_progs = zimg_testapp
 
-testapp_SOURCES = \
+if INSTALL_TESTAPP
+bin_PROGRAMS += $(testapp_progs)
+else # INSTALL_TESTAPP
+noinst_PROGRAMS += $(testapp_progs)
+endif # INSTALL_TESTAPP
+
+noinst_LTLIBRARIES += libtestcommon.la
+zimg_testapp_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg -I$(srcdir)/src/testcommon $(graphengineflags)
+
+zimg_testapp_SOURCES = \
 	src/testapp/apps.h \
 	src/testapp/colorspaceapp.cpp \
 	src/testapp/cpuinfoapp.cpp \
@@ -285,15 +300,15 @@ testapp_SOURCES = \
 	src/testapp/utils.cpp \
 	src/testapp/utils.h
 
-testapp_LDADD = libtestcommon.la libzimg_internal.la
+zimg_testapp_LDADD = libtestcommon.la libzimg_internal.la
 endif # TESTAPP
 
 
 if UNIT_TEST
-TESTS = test/unit_test
+TESTS = test/zimg_unit_test
 
 check_LTLIBRARIES = test/libmusl_m.la
-check_PROGRAMS = test/unit_test
+check_PROGRAMS = test/zimg_unit_test
 
 test_libmusl_m_la_CFLAGS = $(AM_CFLAGS) -std=c99 -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable
 
@@ -323,7 +338,7 @@ test_libmusl_m_la_SOURCES = \
 	test/extra/musl-libm/powf_data.h \
 	test/extra/musl-libm/sin.c
 
-test_unit_test_CPPFLAGS = \
+test_zimg_unit_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(srcdir)/src/zimg \
 	-I$(srcdir)/test \
@@ -331,7 +346,7 @@ test_unit_test_CPPFLAGS = \
 	-I$(srcdir)/test/extra/googletest/googletest/include \
 	$(graphengineflags)
 
-test_unit_test_SOURCES = \
+test_zimg_unit_test_SOURCES = \
 	graphengine/filter_validation/filter_validation.cpp \
 	graphengine/filter_validation/sha1/config.h \
 	graphengine/filter_validation/sha1/sha1.c \
@@ -349,7 +364,7 @@ test_unit_test_SOURCES = \
 	test/resize/resize_impl_test.cpp
 
 if ARMSIMD
-test_unit_test_SOURCES += \
+test_zimg_unit_test_SOURCES += \
 	test/colorspace/arm/colorspace_neon_test.cpp \
 	test/depth/arm/depth_convert_neon_test.cpp \
 	test/depth/arm/dither_neon_test.cpp \
@@ -357,7 +372,7 @@ test_unit_test_SOURCES += \
 endif # ARMSIMD
 
 if X86SIMD
-test_unit_test_SOURCES += \
+test_zimg_unit_test_SOURCES += \
 	test/colorspace/x86/colorspace_avx2_test.cpp \
 	test/colorspace/x86/colorspace_avx512_test.cpp \
 	test/colorspace/x86/gamma_constants_avx512_test.cpp \
@@ -376,10 +391,15 @@ test/extra/googletest/build/lib/libgtest.a: .FAKE
 
 .FAKE:
 
-test_unit_test_LDADD = \
+test_zimg_unit_test_LDADD = \
 	test/extra/googletest/build/lib/libgtest.a \
 	test/libmusl_m.la \
 	libzimg_internal.la
+
+if INSTALL_TESTS
+bin_PROGRAMS += test/zimg_unit_test
+endif # INSTALL_TESTS
+
 endif # UNIT_TEST
 
 
