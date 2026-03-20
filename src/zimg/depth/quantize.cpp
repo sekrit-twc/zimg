@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <type_traits>
 #include "quantize.h"
 
 namespace zimg::depth {
