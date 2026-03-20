@@ -260,7 +260,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 {
 	using zimg::colorspace::TransferCharacteristics;
 
-	static constexpr const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 16> map{
+	static constexpr const zimg::static_map<zimg_transfer_characteristics_e, TransferCharacteristics, 17> map{
 		{ ZIMG_TRANSFER_BT709,         TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_UNSPECIFIED,   TransferCharacteristics::UNSPECIFIED },
 		{ ZIMG_TRANSFER_ST240_M,       TransferCharacteristics::SMPTE_240M },
@@ -268,6 +268,7 @@ zimg::colorspace::TransferCharacteristics translate_transfer(zimg_transfer_chara
 		{ ZIMG_TRANSFER_BT470_M,       TransferCharacteristics::REC_470_M },
 		{ ZIMG_TRANSFER_BT470_BG,      TransferCharacteristics::REC_470_BG },
 		{ ZIMG_TRANSFER_IEC_61966_2_4, TransferCharacteristics::XVYCC },
+		{ ZIMG_TRANSFER_BT1361,        TransferCharacteristics::REC_1361 },
 		{ ZIMG_TRANSFER_IEC_61966_2_1, TransferCharacteristics::SRGB },
 		{ ZIMG_TRANSFER_BT2020_10,     TransferCharacteristics::REC_709 },
 		{ ZIMG_TRANSFER_BT2020_12,     TransferCharacteristics::REC_709 },

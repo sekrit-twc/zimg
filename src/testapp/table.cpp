@@ -76,7 +76,7 @@ const zimg::static_string_map<MatrixCoefficients, 12> g_matrix_table{
 	{ "ictcp",      MatrixCoefficients::REC_2100_ICTCP },
 };
 
-const zimg::static_string_map<TransferCharacteristics, 13> g_transfer_table{
+const zimg::static_string_map<TransferCharacteristics, 14> g_transfer_table{
 	{ "unspec",   TransferCharacteristics::UNSPECIFIED },
 	{ "linear",   TransferCharacteristics::LINEAR },
 	{ "log100",   TransferCharacteristics::LOG_100 },
@@ -85,6 +85,7 @@ const zimg::static_string_map<TransferCharacteristics, 13> g_transfer_table{
 	{ "709",      TransferCharacteristics::REC_709 },
 	{ "470m",     TransferCharacteristics::REC_470_M },
 	{ "470bg",    TransferCharacteristics::REC_470_BG },
+	{ "1361",     TransferCharacteristics::REC_1361 },
 	{ "xvycc",    TransferCharacteristics::XVYCC },
 	{ "srgb",     TransferCharacteristics::SRGB },
 	{ "st_2084",  TransferCharacteristics::ST_2084 },

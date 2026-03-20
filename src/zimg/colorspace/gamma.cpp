@@ -158,6 +158,22 @@ float xvycc_inverse_oetf(float x) noexcept
 	return std::copysign(rec_709_inverse_oetf(std::fabs(x)), x);
 }
 
+float rec_1361_oetf(float x) noexcept
+{
+	if (x >= 0.0f)
+		return rec_709_oetf(x);
+	else
+		return -rec_709_oetf(-x * 4.0f) / 4.0f;
+}
+
+float rec_1361_inverse_oetf(float x) noexcept
+{
+	if (x >= 0.0f)
+		return rec_709_inverse_oetf(x);
+	else
+		return -rec_709_inverse_oetf(-x * 4.0f) / 4.0f;
+}
+
 float arib_b67_oetf(float x) noexcept
 {
 	// Prevent negative pixels from yielding NAN.
@@ -220,6 +236,22 @@ float srgb_inverse_eotf(float x) noexcept
 }
 
 // Handle values in the range [0.0-1.0] such that they match a legacy CRT.
+float rec_1361_eotf(float x) noexcept
+{
+	if (x < 0.0f || x > 1.0f)
+		return rec_1361_inverse_oetf(x);
+	else
+		return rec_1886_eotf(x);
+}
+
+float rec_1361_inverse_eotf(float x) noexcept
+{
+	if (x < 0.0f || x > 1.0f)
+		return rec_1361_oetf(x);
+	else
+		return rec_1886_inverse_eotf(x);
+}
+
 float xvycc_eotf(float x) noexcept
 {
 	if (x < 0.0f || x > 1.0f)
@@ -339,6 +371,10 @@ TransferFunction select_transfer_function(TransferCharacteristics transfer, doub
 	case TransferCharacteristics::SMPTE_240M:
 		func.to_linear = scene_referred ? smpte_240m_inverse_oetf : rec_1886_eotf;
 		func.to_gamma = scene_referred ? smpte_240m_oetf : rec_1886_inverse_eotf;
+		break;
+	case TransferCharacteristics::REC_1361:
+		func.to_linear = scene_referred ? rec_1361_inverse_oetf : rec_1361_eotf;
+		func.to_gamma = scene_referred ? rec_1361_oetf : rec_1361_inverse_eotf;
 		break;
 	case TransferCharacteristics::XVYCC:
 		func.to_linear = scene_referred ? xvycc_inverse_oetf : xvycc_eotf;

@@ -41,6 +41,7 @@ enum class TransferCharacteristics {
 	REC_470_BG,
 	SMPTE_240M,
 	XVYCC,
+	REC_1361,
 	SRGB,
 	ST_2084,
 	ST_428,
