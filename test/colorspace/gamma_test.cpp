@@ -208,14 +208,14 @@ TEST(GammaTest, test_srgb)
 
 TEST(GammaTest, test_xvycc)
 {
-	SCOPED_TRACE("oetf forward");
+	SCOPED_TRACE("oetf forward vs 709");
 	test_accuracy(zimg::colorspace::xvycc_oetf, zimg::colorspace::rec_709_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
-	SCOPED_TRACE("oetf reverse");
+	SCOPED_TRACE("oetf reverse vs 709");
 	test_accuracy(zimg::colorspace::xvycc_inverse_oetf, zimg::colorspace::rec_709_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
-	SCOPED_TRACE("eotf forward");
-	test_accuracy(zimg::colorspace::xvycc_oetf, zimg::colorspace::rec_709_inverse_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
-	SCOPED_TRACE("eotf reverse");
-	test_accuracy(zimg::colorspace::xvycc_inverse_oetf, zimg::colorspace::rec_709_oetf, 0.0f, 1.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("oetf forward->reverse");
+	test_accuracy(zimg::colorspace::xvycc_oetf, zimg::colorspace::xvycc_inverse_oetf, -1.0f, 2.0f, 1e-6f, 1e-6f);
+	SCOPED_TRACE("oetf reverse->forward");
+	test_accuracy(zimg::colorspace::xvycc_inverse_oetf, zimg::colorspace::xvycc_oetf, -1.0f, 2.0f, 1e-6f, 1e-6f);
 
 	SCOPED_TRACE("oetf wtw");
 	test_monotonic(zimg::colorspace::xvycc_oetf, 1.0f, 2.0f, 1UL << 16);
@@ -228,7 +228,7 @@ TEST(GammaTest, test_xvycc)
 	test_monotonic(zimg::colorspace::xvycc_inverse_oetf, -1.0f, 0.0f, 1UL << 16);
 	SCOPED_TRACE("eotf btb");
 	test_monotonic(zimg::colorspace::xvycc_inverse_eotf, -1.0f, 0.0f, 1UL << 16);
-	test_monotonic(zimg::colorspace::xvycc_eotf, -1.0f, 1.0f, 1UL << 16);
+	test_monotonic(zimg::colorspace::xvycc_eotf, -1.0f, 0.0f, 1UL << 16);
 }
 
 TEST(GammaTest, test_st_2084)

@@ -223,17 +223,17 @@ float srgb_inverse_eotf(float x) noexcept
 float xvycc_eotf(float x) noexcept
 {
 	if (x < 0.0f || x > 1.0f)
-		return std::copysign(rec_709_inverse_oetf(std::fabs(x)), x);
+		return xvycc_inverse_oetf(x);
 	else
-		return std::copysign(rec_1886_eotf(std::fabs(x)), x);
+		return rec_1886_eotf(x);
 }
 
 float xvycc_inverse_eotf(float x) noexcept
 {
 	if (x < 0.0f || x > 1.0f)
-		return std::copysign(rec_709_oetf(std::fabs(x)), x);
+		return xvycc_oetf(x);
 	else
-		return std::copysign(rec_1886_inverse_eotf(std::fabs(x)), x);
+		return rec_1886_inverse_eotf(x);
 }
 
 float st_2084_eotf(float x) noexcept
