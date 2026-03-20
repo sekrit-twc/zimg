@@ -369,6 +369,10 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion(unsigned width, unsi
 	if (auto ret = create_error_diffusion_x86(width, height, pixel_in, pixel_out, cpu))
 		return ret;
 #endif
+#ifdef ZIMG_ARM
+	if (auto ret = create_error_diffusion_arm(width, height, pixel_in, pixel_out, cpu))
+		return ret;
+#endif
 
 	ErrorDiffusion::ed_func func = nullptr;
 

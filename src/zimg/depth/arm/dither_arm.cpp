@@ -3,6 +3,7 @@
 #include "common/cpuinfo.h"
 #include "common/pixel.h"
 #include "common/arm/cpuinfo_arm.h"
+#include "graphengine/filter.h"
 #include "dither_arm.h"
 
 namespace zimg::depth {
@@ -47,6 +48,23 @@ dither_convert_func select_ordered_dither_func_arm(const PixelFormat &pixel_in, 
 	}
 
 	return func;
+}
+
+std::unique_ptr<graphengine::Filter> create_error_diffusion_arm(unsigned width, unsigned height, const PixelFormat &pixel_in, const PixelFormat &pixel_out, CPUClass cpu)
+{
+	ARMCapabilities caps = query_arm_capabilities();
+	std::unique_ptr<graphengine::Filter> ret;
+
+	(void)caps;
+
+	if (cpu_is_autodetect(cpu)) {
+		ret = create_error_diffusion_neon(width, height, pixel_in, pixel_out);
+	} else {
+		if (!ret && cpu >= CPUClass::ARM_NEON)
+			ret = create_error_diffusion_neon(width, height, pixel_in, pixel_out);
+	}
+
+	return ret;
 }
 
 } // namespace zimg::depth

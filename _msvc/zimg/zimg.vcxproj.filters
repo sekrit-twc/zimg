@@ -413,6 +413,9 @@
     <ClCompile Include="..\..\src\zimg\depth\arm\dither_neon.cpp">
       <Filter>Source Files\depth\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\zimg\depth\arm\error_diffusion_neon.cpp">
+      <Filter>Source Files\depth\arm</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\zimg\resize\arm\resize_impl_arm.cpp">
       <Filter>Source Files\resize\arm</Filter>
     </ClCompile>
