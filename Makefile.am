@@ -157,6 +157,7 @@ libneon_la_SOURCES = \
 	src/zimg/colorspace/arm/operation_impl_neon.cpp \
 	src/zimg/depth/arm/depth_convert_neon.cpp \
 	src/zimg/depth/arm/dither_neon.cpp \
+	src/zimg/depth/arm/error_diffusion_neon.cpp \
 	src/zimg/resize/arm/resize_impl_neon.cpp
 
 libneon_la_CXXFLAGS = $(AM_CXXFLAGS) $(NEON_CFLAGS)
@@ -353,6 +354,7 @@ test_unit_test_SOURCES += \
 	test/colorspace/arm/colorspace_neon_test.cpp \
 	test/depth/arm/depth_convert_neon_test.cpp \
 	test/depth/arm/dither_neon_test.cpp \
+	test/depth/arm/error_diffusion_neon_test.cpp \
 	test/resize/arm/resize_impl_neon_test.cpp
 endif # ARMSIMD
 
