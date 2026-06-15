@@ -744,7 +744,7 @@ private:
 
 		// Promote BYTE to WORD if dithering would not be required.
 		if (is_supported_type(PixelType::WORD) && src_format.type == PixelType::BYTE && !src_format.fullrange)
-			return { PixelType::WORD, 16, false, src_format.chroma, src_format.ycgco };
+			return{ PixelType::WORD, 16, false, src_format.chroma, src_format.ycgco };
 
 		// FLOAT is always supported.
 		return PixelType::FLOAT;
@@ -1220,7 +1220,7 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 GraphBuilder &GraphBuilder::connect(const state &target, const params *params, FilterObserver *observer) try
 {
 	static const GraphBuilder::params default_params;
-	DefaultFilterObserver default_factory;
+	DefaultFilterObserver default_observer;
 
 	validate_state(target);
 	if (target.active_left != 0 || target.active_top != 0 || target.active_width != target.width || target.active_height != target.height)
@@ -1229,7 +1229,7 @@ GraphBuilder &GraphBuilder::connect(const state &target, const params *params, F
 	if (!params)
 		params = &default_params;
 	if (!observer)
-		observer = &default_factory;
+		observer = &default_observer;
 
 	get_impl()->connect(target, *params, *observer);
 	return *this;
