@@ -35,19 +35,25 @@ public:
 	ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, unsigned planes,
 	           bool yuv = false, unsigned subsample_w = 0, unsigned subsample_h = 0);
 
-	unsigned width(unsigned plane = 0) const noexcept;
+	unsigned width(unsigned plane = 0) const noexcept
+	{
+		return m_width >> ((plane == 1 || plane == 2) ? m_subsample_w : 0);
+	}
 
-	unsigned height(unsigned plane = 0) const noexcept;
+	unsigned height(unsigned plane = 0) const noexcept
+	{
+		return m_height >> ((plane == 1 || plane == 2) ? m_subsample_h : 0);
+	}
 
-	zimg::PixelType pixel_type() const noexcept;
+	zimg::PixelType pixel_type() const noexcept { return m_pixel; }
 
-	unsigned planes() const noexcept;
+	unsigned planes() const noexcept { return m_planes; }
 
-	unsigned subsample_w() const noexcept;
+	unsigned subsample_w() const noexcept { return m_subsample_w; }
 
-	unsigned subsample_h() const noexcept;
+	unsigned subsample_h() const noexcept { return m_subsample_h; }
 
-	bool is_yuv() const noexcept;
+	bool is_yuv() const noexcept { return m_yuv; }
 
 	graphengine::BufferDescriptor as_buffer(unsigned plane) const noexcept;
 

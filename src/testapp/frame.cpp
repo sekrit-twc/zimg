@@ -149,22 +149,6 @@ ImageFrame::ImageFrame(unsigned width, unsigned height, zimg::PixelType pixel, u
 	}
 }
 
-unsigned ImageFrame::width(unsigned plane) const noexcept
-{
-	return m_width >> ((plane == 1 || plane == 2) ? m_subsample_w : 0);
-}
-
-unsigned ImageFrame::height(unsigned plane) const noexcept
-{
-	return m_height >> ((plane == 1 || plane == 2) ? m_subsample_h : 0);
-}
-
-zimg::PixelType ImageFrame::pixel_type() const noexcept { return m_pixel; }
-unsigned ImageFrame::planes() const noexcept { return m_planes; }
-unsigned ImageFrame::subsample_w() const noexcept { return m_subsample_w; }
-unsigned ImageFrame::subsample_h() const noexcept { return m_subsample_h; }
-bool ImageFrame::is_yuv() const noexcept { return m_yuv; }
-
 graphengine::BufferDescriptor ImageFrame::as_buffer(unsigned plane) const noexcept
 {
 	zassert(plane < m_planes, "plane index out of bounds");
@@ -371,7 +355,7 @@ ImageFrame read_from_yuy2(const PathSpecifier &spec, unsigned width, unsigned he
 		const void *src_base;
 		unsigned linesize;
 		const graphengine::BufferDescriptor *buffer;
-	} callback_context = { mmap_image.read_ptr(), mmap_linesize, line_buffer.data()};
+	} callback_context = { mmap_image.read_ptr(), mmap_linesize, line_buffer.data() };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
@@ -539,7 +523,7 @@ void write_to_yuy2(const ImageFrame &frame, const PathSpecifier &spec, unsigned 
 		void *dst_base;
 		unsigned linesize;
 		const graphengine::BufferDescriptor *buffer;
-	} callback_context = { mmap_image.write_ptr(), mmap_linesize, line_buffer.data()};
+	} callback_context = { mmap_image.write_ptr(), mmap_linesize, line_buffer.data() };
 
 	auto cb = [](void *user, unsigned i, unsigned left, unsigned right) -> int
 	{
