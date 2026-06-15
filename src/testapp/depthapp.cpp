@@ -1,6 +1,5 @@
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <regex>
 #include <utility>
 #include "common/except.h"

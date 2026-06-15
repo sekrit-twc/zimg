@@ -3,7 +3,6 @@
 #endif // _WIN32
 
 #include <climits>
-#include <cstring>
 #include <system_error>
 
 #ifdef _WIN32
