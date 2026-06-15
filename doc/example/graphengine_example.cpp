@@ -36,7 +36,7 @@ struct Arguments {
 
 const ArgparseOption program_switches[] = {
 	{ OPTION_FLAG, "f", "half",  offsetof(Arguments, half), nullptr,  "half precision intermediate" },
-	{ OPTION_FLAG, "g", "gamma", offsetof(Arguments, gamma), nullptr, "scale in gamma domain instead of linnear" },
+	{ OPTION_FLAG, "g", "gamma", offsetof(Arguments, gamma), nullptr, "scale in gamma domain instead of linear" },
 	{ OPTION_NULL },
 };
 
