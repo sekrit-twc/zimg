@@ -40,6 +40,9 @@ AS_IF([test "x$enable_unit_test" = "xyes"],
         AS_CASE([$host_cpu],
                 [armv7*],  [],
                 [aarch64], [],
+                [riscv32*], [],
+                [riscv64*], [],
+                [riscv*],   [],
                 [i?86],    [CFLAGS="$CFLAGS -mfpmath=sse -msse2" CXXFLAGS="$CXXFLAGS -mfpmath=sse -msse2"],
                 [x86_64],  [],
                 [AC_MSG_WARN([Could not determine how to enable IEEE-754 compliance on host. Tests may fail.])])
@@ -71,12 +74,19 @@ AC_MSG_RESULT($STL_LIBS)
 AC_SUBST([STL_LIBS], [$STL_LIBS])
 
 ARM="no"
+RISCV="no"
 X86="no"
 
 AS_CASE([$host_cpu],
         [aarch64], [BITS="64" ARM="yes"],
+        [riscv32*], [BITS="32" RISCV="yes"],
+        [riscv64*], [BITS="64" RISCV="yes"],
+        [riscv*], [RISCV="yes"],
         [i?86],    [BITS="32" X86="yes"],
         [x86_64],  [BITS="64" X86="yes"])
+
+AS_IF([test "x$RISCV" = "xyes"],
+      [AC_DEFINE([ZIMG_RISCV], [1], [Define to 1 when building for RISC-V.])])
 
 AS_IF([test "x$ARM" = "xyes" && test "x$enable_simd" != "xno"],
       [
