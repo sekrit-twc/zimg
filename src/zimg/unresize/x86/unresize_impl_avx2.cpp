@@ -185,7 +185,7 @@ public:
 		UnresizeImplH(context, context.output_width, height, PixelType::FLOAT)
 	{
 		m_desc.step = 8;
-		m_desc.scratchpad_size = ((static_cast<checked_size_t>(m_context.input_width) + m_context.output_width) * 8 * sizeof(float)).get();
+		m_desc.scratchpad_size = ((ceil_n(checked_size_t{ m_context.input_width }, 8) + m_context.output_width) * 8 * sizeof(float)).get();
 	}
 
 	void process(const graphengine::BufferDescriptor *in, const graphengine::BufferDescriptor *out,
@@ -194,7 +194,7 @@ public:
 		const float *src_ptr[8] = { 0 };
 		float *dst_ptr[8] = { 0 };
 		float *transpose_buf = static_cast<float *>(tmp);
-		float *transpose_buf2 = transpose_buf + m_context.input_width * 8;
+		float *transpose_buf2 = transpose_buf + ceil_n(static_cast<size_t>(m_context.input_width), 8) * 8;
 		unsigned height = m_desc.format.height;
 
 		src_ptr[0] = in->get_line<float>(std::min(i + 0, height - 1));
