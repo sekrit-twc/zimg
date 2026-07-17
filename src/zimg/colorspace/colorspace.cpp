@@ -18,17 +18,7 @@ class ColorspaceConversionImpl : public graph::PointFilter {
 
 	void build_graph(const ColorspaceDefinition &in, const ColorspaceDefinition &out, const OperationParams &params, CPUClass cpu)
 	{
-		ColorspaceDefinition csp_in = in;
-		ColorspaceDefinition csp_out = out;
-
-		if (!params.scene_referred) {
-			if (csp_in.transfer == TransferCharacteristics::SMPTE_240M)
-				csp_in.transfer = TransferCharacteristics::REC_709;
-			if (csp_out.transfer == TransferCharacteristics::SMPTE_240M)
-				csp_out.transfer = TransferCharacteristics::REC_709;
-		}
-
-		auto path = get_operation_path(csp_in, csp_out);
+		auto path = get_operation_path(in, out);
 		zassert(!path.empty(), "empty path");
 		zassert(path.size() <= 6, "too many operations");
 
@@ -105,7 +95,17 @@ std::unique_ptr<graphengine::Filter> ColorspaceConversion::create() const try
 	if (width > pixel_max_width(PixelType::FLOAT))
 		error::throw_<error::OutOfMemory>();
 
-	if (csp_in == csp_out)
+	ColorspaceDefinition csp_in_effective = csp_in;
+	ColorspaceDefinition csp_out_effective = csp_out;
+
+	if (!scene_referred) {
+		if (csp_in.transfer == TransferCharacteristics::SMPTE_240M)
+			csp_in_effective.transfer = TransferCharacteristics::REC_709;
+		if (csp_out.transfer == TransferCharacteristics::SMPTE_240M)
+			csp_out_effective.transfer = TransferCharacteristics::REC_709;
+	}
+
+	if (csp_in_effective == csp_out_effective)
 		return nullptr;
 
 	OperationParams params;
@@ -113,7 +113,7 @@ std::unique_ptr<graphengine::Filter> ColorspaceConversion::create() const try
 	      .set_approximate_gamma(approximate_gamma)
 	      .set_scene_referred(scene_referred);
 
-	return std::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
+	return std::make_unique<ColorspaceConversionImpl>(width, height, csp_in_effective, csp_out_effective, params, cpu);
 } catch (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
 }

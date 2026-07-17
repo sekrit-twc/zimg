@@ -61,7 +61,7 @@ EnumRange<TransferCharacteristics> all_transfer()
 
 EnumRange<ColorPrimaries> all_primaries()
 {
-	return{ ColorPrimaries::UNSPECIFIED, ColorPrimaries::DCI_P3_D65 };
+	return{ ColorPrimaries::UNSPECIFIED, ColorPrimaries::EBU_3213_E };
 }
 
 constexpr bool is_valid_2020cl(const ColorspaceDefinition &csp)
