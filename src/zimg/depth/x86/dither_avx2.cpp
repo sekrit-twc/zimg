@@ -136,7 +136,7 @@ inline FORCE_INLINE void ordered_dither_avx2_impl(const float *dither, unsigned 
 
 #define XARGS dither, dither_offset, dither_mask, scale_ps, offset_ps, out_max
 	if (left != vec_left) {
-		__m256 lo = Load::load8(src_p + vec_left - 16 + 0);
+		__m256 lo = vec_left - left > 8 ? Load::load8(src_p + vec_left - 16 + 0) : _mm256_setzero_ps();
 		__m256 hi = Load::load8(src_p + vec_left - 16 + 8);
 		__m256i x = ordered_dither_avx2_xiter(lo, hi, vec_left - 16, XARGS);
 		Store::store16_idxhi(dst_p + vec_left - 16, x, left % 16);
@@ -149,7 +149,7 @@ inline FORCE_INLINE void ordered_dither_avx2_impl(const float *dither, unsigned 
 	}
 	if (right != vec_right) {
 		__m256 lo = Load::load8(src_p + vec_right + 0);
-		__m256 hi = Load::load8(src_p + vec_right + 8);
+		__m256 hi = right - vec_right > 8 ? Load::load8(src_p + vec_right + 8) : _mm256_setzero_ps();
 		__m256i x = ordered_dither_avx2_xiter(lo, hi, vec_right, XARGS);
 		Store::store16_idxlo(dst_p + vec_right, x, right % 16);
 	}
