@@ -153,7 +153,8 @@ void create_new_file(const char *path, size_t size)
 
 	if (ftruncate(fd, size) < 0)
 		posix::trap_error("error truncating file");
-	if (close(fd) < 0)
+
+	if (close(fd_uptr.release()) < 0)
 		posix::trap_error("error closing file");
 }
 
