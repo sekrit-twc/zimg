@@ -208,7 +208,7 @@ std::pair<Token, TracingIterator<ForwardIt>> match_number_literal(TracingIterato
 		if (pos == last)
 			throw JsonError{ "expected digits following exponent indicator", line, col };
 
-		pos = skip_while(first, last, is_json_digit);
+		pos = skip_while(pos, last, is_json_digit);
 	}
 
 	return{ { Token::NUMBER_LITERAL, line, col, { &*first, static_cast<size_t>(&*pos - &*first) }}, pos };
@@ -394,9 +394,15 @@ template <class ForwardIt>
 std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 {
 	double x = 0.0;
+	bool negative = false;
+
+	if (first->tag() == Token::MINUS) {
+		negative = true;
+		if (++first == last)
+			throw JsonError{ "unexpected end of document following '-'" };
+	}
 
 	switch (first->tag()) {
-	case Token::MINUS:
 	case Token::NUMBER_LITERAL:
 		x = decode_number_literal(*first);
 		break;
@@ -411,7 +417,7 @@ std::pair<Value, ForwardIt> parse_number(ForwardIt first, ForwardIt last)
 	}
 	++first;
 
-	return{ Value{ x }, first };
+	return{ Value{ negative ? -x : x }, first };
 }
 
 template <class ForwardIt>
