@@ -135,7 +135,7 @@ void error_diffusion_scalar(const void *src, void *dst, const float * RESTRICT e
 	float err_top_left = error_top[0];
 
 	for (unsigned j = 0; j < width; ++j) {
-		// Error array is padded by one on each side.
+		// Error array is padded by one on the left and two on the right.
 		unsigned j_err = j + 1;
 		err_top_right = error_top[j_err + 1];
 
@@ -533,7 +533,7 @@ public:
 		m_desc.num_deps = 1;
 		m_desc.num_planes = 1;
 		m_desc.step = 8;
-		m_desc.context_size = ((static_cast<checked_size_t>(width) + 2) * sizeof(float) * 2).get();
+		m_desc.context_size = ((static_cast<checked_size_t>(width) + 3) * sizeof(float) * 2).get();
 
 		m_desc.flags.stateful = 1;
 		m_desc.flags.in_place = pixel_size(pixel_in.type) == pixel_size(pixel_out.type);
