@@ -16,7 +16,7 @@ TEST(APITest, test_api_2_0_compat)
 
 	zimg_image_format_default(&format, API_2_0);
 	EXPECT_EQ(API_2_0, format.version);
-	for (size_t i = extra_off; i < extra_len; ++i) {
+	for (size_t i = extra_off; i < extra_off + extra_len; ++i) {
 		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&format) + i));
 	}
 
@@ -50,7 +50,7 @@ TEST(APITest, test_api_2_1_compat)
 
 	zimg_graph_builder_params_default(&params, API_2_1);
 	EXPECT_EQ(API_2_1, params.version);
-	for (size_t i = extra_off; i < extra_len; ++i) {
+	for (size_t i = extra_off; i < extra_off + extra_len; ++i) {
 		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&params) + i));
 	}
 }
@@ -66,7 +66,7 @@ TEST(APITest, test_api_2_3_compat)
 
 	zimg_image_format_default(&format, API_2_3);
 	EXPECT_EQ(API_2_3, format.version);
-	for (size_t i = extra_off; i < extra_len; ++i) {
+	for (size_t i = extra_off; i < extra_off + extra_len; ++i) {
 		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&format) + i));
 	}
 }
