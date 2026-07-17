@@ -543,8 +543,8 @@ void resize_line_h_perm_u16_avx2(const unsigned * RESTRICT permute_left, const u
 			for (unsigned kk = 0; kk < 8; ++kk) {
 				unsigned idx = left + permute_mask[j + kk] * 2 + k;
 
-				tmp[kk * 2 + 0] = src[idx + 0];
-				tmp[kk * 2 + 1] = src[std::min(idx + 1, input_width)];
+				tmp[kk * 2 + 0] = src[std::min(idx + 0, input_width - 1)];
+				tmp[kk * 2 + 1] = src[std::min(idx + 1, input_width - 1)];
 			}
 
 			x = _mm256_loadu_si256((const __m256i *)tmp);
