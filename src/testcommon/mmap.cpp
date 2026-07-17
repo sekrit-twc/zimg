@@ -3,6 +3,7 @@
 #endif // _WIN32
 
 #include <climits>
+#include <memory>
 #include <system_error>
 
 #ifdef _WIN32
@@ -21,8 +22,6 @@
 
 #include "mmap.h"
 
-using std::nullptr_t;
-
 namespace {
 
 #ifdef _WIN32
@@ -32,13 +31,13 @@ class close_handle {
 	struct handle {
 		::HANDLE h = INVALID_HANDLE_VALUE;
 
-		handle(nullptr_t x = nullptr) noexcept {}
+		handle(std::nullptr_t x = nullptr) noexcept {}
 		handle(::HANDLE h) noexcept : h{ h } {}
 
 		operator ::HANDLE() const noexcept { return h; }
 
-		bool operator==(nullptr_t) const noexcept { return h != 0 && h != INVALID_HANDLE_VALUE; }
-		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
+		bool operator==(std::nullptr_t) const noexcept { return h != 0 && h != INVALID_HANDLE_VALUE; }
+		bool operator!=(std::nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef handle pointer;
@@ -87,13 +86,13 @@ class close_fd {
 	struct descriptor {
 		int fd = -1;
 
-		descriptor(nullptr_t x = nullptr) noexcept {}
+		descriptor(std::nullptr_t x = nullptr) noexcept {}
 		descriptor(int fd) noexcept : fd{ fd } {}
 
 		operator int() const noexcept { return fd; }
 
-		bool operator==(nullptr_t) const noexcept { return fd < 0; }
-		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
+		bool operator==(std::nullptr_t) const noexcept { return fd < 0; }
+		bool operator!=(std::nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef descriptor pointer;
@@ -105,13 +104,13 @@ class munmap_file {
 	struct map_pointer {
 		void *ptr = MAP_FAILED;
 
-		map_pointer(nullptr_t x = nullptr) noexcept {}
+		map_pointer(std::nullptr_t x = nullptr) noexcept {}
 		map_pointer(void *ptr) noexcept : ptr{ ptr } {}
 
 		operator void *() const noexcept { return ptr; }
 
-		bool operator==(nullptr_t) const noexcept { return ptr == MAP_FAILED; }
-		bool operator!=(nullptr_t) const noexcept { return !(*this == nullptr); }
+		bool operator==(std::nullptr_t) const noexcept { return ptr == MAP_FAILED; }
+		bool operator!=(std::nullptr_t) const noexcept { return !(*this == nullptr); }
 	};
 public:
 	typedef map_pointer pointer;
