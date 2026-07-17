@@ -111,6 +111,7 @@ public:
 class LanczosFilter : public Filter {
 public:
 	static constexpr unsigned DEFAULT_TAPS = 3;
+	static constexpr unsigned MAX_TAPS = 16;
 private:
 	unsigned taps;
 public:

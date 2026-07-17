@@ -233,6 +233,8 @@ LanczosFilter::LanczosFilter(unsigned taps) : taps{ taps }
 {
 	if (taps <= 0)
 		error::throw_<error::IllegalArgument>("lanczos tap count must be positive");
+	if (taps >= MAX_TAPS)
+		error::throw_<error::IllegalArgument>("lanczos tap count too high");
 }
 
 unsigned LanczosFilter::support() const { return taps; }
