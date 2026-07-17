@@ -101,12 +101,12 @@ constexpr bool is_valid_csp(const ColorspaceDefinition &csp)
 
 
 struct ColorspaceHash {
-	bool operator()(const ColorspaceDefinition &csp) const
+	size_t operator()(const ColorspaceDefinition &csp) const
 	{
-		return std::hash<unsigned>{}(
-			(static_cast<unsigned>(csp.matrix) << 16) |
-			(static_cast<unsigned>(csp.transfer) << 8) |
-			(static_cast<unsigned>(csp.primaries)));
+		return std::hash<unsigned long>{}(
+			(static_cast<unsigned long>(csp.matrix) << 16) |
+			(static_cast<unsigned long>(csp.transfer) << 8) |
+			(static_cast<unsigned long>(csp.primaries)));
 	}
 };
 
