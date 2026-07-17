@@ -169,7 +169,7 @@ void left_shift_w2b_neon(const void *src, void *dst, unsigned shift, unsigned le
 
 	if (right != vec_right) {
 		uint16x8_t lo = vld1q_u16(src_p + vec_right + 0);
-		uint16x8_t hi = vld1q_u16(src_p + vec_right + 8);
+		uint16x8_t hi = right - vec_right > 8 ? vld1q_u16(src_p + vec_right + 8) : vdupq_n_u16(0);
 		uint8x16_t x = vmovn_high_u16(vmovn_u16(lo), hi);
 		x = vshlq_u8(x, count);
 
