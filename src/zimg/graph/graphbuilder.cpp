@@ -1173,8 +1173,13 @@ public:
 		std::shared_ptr<void> opaque;
 		std::tie(subgraph, opaque) = m_graph.release();
 
+		bool requires_64b = m_requires_64b;
 		*this = impl();
-		return std::make_unique<SubGraph>(std::move(subgraph), std::move(opaque), source_desc, source_ids, sink_ids);
+
+		auto ret = std::make_unique<SubGraph>(std::move(subgraph), std::move(opaque), source_desc, source_ids, sink_ids);
+		if (requires_64b)
+			ret->set_requires_64b_alignment();
+		return ret;
 	}
 };
 
