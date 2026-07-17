@@ -99,7 +99,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 			f32_err = static_cast<double>(coeff_f32) - coeff_expected_f32;
 			i16_err = static_cast<double>(coeff_i16) - coeff_expected_i16;
 
-			if (std::abs(coeff_i16) > i16_greatest) {
+			if (std::abs(coeff_i16) > std::abs(i16_greatest)) {
 				i16_greatest = coeff_i16;
 				i16_greatest_idx = j;
 			}
