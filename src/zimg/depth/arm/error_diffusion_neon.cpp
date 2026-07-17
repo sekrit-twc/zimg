@@ -197,11 +197,9 @@ struct wf_error_state {
 	float32x4_t err_top_left_hi;
 };
 
-inline FORCE_INLINE uint16x8_t error_diffusion_wf_neon_xiter(float32x4_t v_lo, float32x4_t v_hi, unsigned j,
-                                                             const float *error_top, float *error_cur, const float *error_top_end, const float32x4_t &max_val,
-                                                             const float32x4_t &err_left_w, const float32x4_t &err_top_right_w,
-                                                             const float32x4_t &err_top_w, const float32x4_t &err_top_left_w,
-                                                             const uint16x8_t &out_max, wf_error_state &state)
+inline FORCE_INLINE uint16x8_t error_diffusion_wf_neon_xiter(float32x4_t v_lo, float32x4_t v_hi, unsigned j, const float *error_top, float *error_cur, const float32x4_t &max_val,
+                                                             const float32x4_t &err_left_w, const float32x4_t &err_top_right_w, const float32x4_t &err_top_w, const float32x4_t &err_top_left_w,
+                                                             wf_error_state &state)
 {
 	unsigned j_err = j + 1;
 
@@ -245,14 +243,9 @@ inline FORCE_INLINE uint16x8_t error_diffusion_wf_neon_xiter(float32x4_t v_lo, f
 	vst1q_lane_f32(error_cur + j_err + 0, err_rot_lo, 0);
 
 	// Insert the next error into the low position.
-	{
-		unsigned idx = j_err + 16;
-		const float *next_err = error_top + idx;
-		err_rot_lo = vsetq_lane_f32(next_err < error_top_end ? *next_err : 0.0f, err_rot_lo, 0);
-	}
+	err_rot_lo = vsetq_lane_f32(error_top[j_err + 14 + 2], err_rot_lo, 0);
 
 	uint16x8_t q = vqmovn_high_u32(vqmovn_u32(q_lo), q_hi);
-	q = vminq_u16(q, out_max);
 
 	state.err_left_lo = err0_lo;
 	state.err_left_hi = err0_hi;
@@ -268,8 +261,7 @@ inline FORCE_INLINE uint16x8_t error_diffusion_wf_neon_xiter(float32x4_t v_lo, f
 
 template <PixelType SrcType, PixelType DstType, class T, class U>
 void error_diffusion_wf_neon(const Buffer<const T> &src, const Buffer<U> &dst, unsigned i,
-                             const float *error_top, float *error_cur, const float *error_top_end,
-                             error_state *state, float scale, float offset, unsigned bits, unsigned width)
+                             const float *error_top, float *error_cur, error_state *state, float scale, float offset, unsigned bits, unsigned width)
 {
 	typedef error_diffusion_traits<SrcType> src_traits;
 	typedef error_diffusion_traits<DstType> dst_traits;
@@ -288,7 +280,6 @@ void error_diffusion_wf_neon(const Buffer<const T> &src, const Buffer<U> &dst, u
 	const float32x4_t scale_ps = vdupq_n_f32(scale);
 	const float32x4_t offset_ps = vdupq_n_f32(offset);
 	const float32x4_t max_val = vdupq_n_f32(static_cast<float>((1UL << bits) - 1));
-	const uint16x8_t out_max = vdupq_n_u16(static_cast<uint16_t>((1UL << bits) - 1));
 
 	wf_error_state st{};
 	st.err_left_lo = vld1q_f32(state->err_left + 0);
@@ -327,7 +318,7 @@ void error_diffusion_wf_neon(const Buffer<const T> &src, const Buffer<U> &dst, u
 		const float32x4_t diag_hi[8] = { row_lo[4], row_lo[5], row_lo[6], row_lo[7], row_hi[4], row_hi[5], row_hi[6], row_hi[7] };
 
 #define XITER error_diffusion_wf_neon_xiter
-#define XARGS error_top, error_cur, error_top_end, max_val, err_left_w, err_top_right_w, err_top_w, err_top_left_w, out_max, st
+#define XARGS error_top, error_cur, max_val, err_left_w, err_top_right_w, err_top_w, err_top_left_w, st
 		uint16x8_t out0 = XITER(diag_lo[0], diag_hi[0], j + 0, XARGS);
 		uint16x8_t out1 = XITER(diag_lo[1], diag_hi[1], j + 1, XARGS);
 		uint16x8_t out2 = XITER(diag_lo[2], diag_hi[2], j + 2, XARGS);
@@ -424,7 +415,7 @@ void error_diffusion_neon(const Buffer<const void> &src_, const Buffer<void> &ds
 	state.err_top_left[7] = 0.0f;
 
 	unsigned vec_count = floor_n(width - 14, 8);
-	error_diffusion_wf_neon<SrcType, DstType>(src, dst, i, error_top, error_cur, error_top + (width + 2), &state, scale, offset, bits, vec_count);
+	error_diffusion_wf_neon<SrcType, DstType>(src, dst, i, error_top, error_cur, &state, scale, offset, bits, vec_count);
 
 	error_tmp[0][13 + 1] = state.err_top_right[1];
 	error_tmp[0][12 + 1] = state.err_top[1];
