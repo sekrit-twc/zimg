@@ -104,7 +104,7 @@ ImageBuffer allocate_buffer(unsigned width, unsigned height, unsigned subsample_
 	ImageBuffer buf;
 
 	buf.buffer.stride(0) = align(width * bytes_per_pel);
-	buf.buffer.stride(1) = align((width >> subsample_h) * bytes_per_pel);
+	buf.buffer.stride(1) = align((width >> subsample_w) * bytes_per_pel);
 	buf.buffer.stride(2) = align((width >> subsample_w) * bytes_per_pel);
 	buf.buffer.mask(0) = ZIMG_BUFFER_MAX;
 	buf.buffer.mask(1) = ZIMG_BUFFER_MAX;
