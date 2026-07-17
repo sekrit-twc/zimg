@@ -33,6 +33,12 @@ TridiagonalLU<T> tridiagonal_decompose(const RowMatrix<T> &m)
 {
 	size_t n = m.rows();
 	TridiagonalLU<T> lu{ n };
+
+	if (n == 1) {
+		lu.l[0] = m[0][0];
+		return lu;
+	}
+
 	T zero = static_cast<T>(0);
 	T eps = epsilon<T>();
 
