@@ -51,7 +51,7 @@ struct LoadF32 {
 	static inline FORCE_INLINE void load8(const float *ptr, float32x4_t &lo, float32x4_t &hi, unsigned n = 8)
 	{
 		lo = vld1q_f32(ptr);
-		hi = n >= 4 ? vld1q_f32(ptr + 4) : vdupq_n_f32(0.0f);
+		hi = n > 4 ? vld1q_f32(ptr + 4) : vdupq_n_f32(0.0f);
 	}
 };
 
