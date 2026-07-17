@@ -155,7 +155,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 		ctx.lu_u.resize(rows);
 		for (size_t i = 0; i < rows; ++i) {
 			ctx.lu_c[i] = static_cast<float>(lu.c[i]);
-			ctx.lu_l[i] = static_cast<float>((1.0 / (lu.l[i] + epsilon<float>()))); // Pre-invert this value, as it is used in division.
+			ctx.lu_l[i] = static_cast<float>((1.0 / (lu.l[i] + epsilon<double>()))); // Pre-invert this value, as it is used in division.
 			ctx.lu_u[i] = static_cast<float>(lu.u[i]);
 		}
 	} catch (const std::length_error &) {
