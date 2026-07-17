@@ -175,6 +175,7 @@ void RowMatrix<T>::compress()
 		if (right - left) {
 			row_data.erase(row_data.begin() + right, row_data.end());
 			row_data.erase(row_data.begin(), row_data.begin() + left);
+			m_offsets[i] += left;
 		} else {
 			row_data.clear();
 			m_offsets[i] = 0;
