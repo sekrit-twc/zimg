@@ -1,10 +1,10 @@
+#include <climits>
 #include <cmath>
 #include <cstring>
 #include <limits>
 #include <memory>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include "common/cpuinfo.h"
 #include "common/except.h"
