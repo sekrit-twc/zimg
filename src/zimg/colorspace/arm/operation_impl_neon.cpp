@@ -185,7 +185,7 @@ public:
 
 	unsigned alignment_mask() const noexcept override { return 0x3; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
 		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[1], dst[1], left, right);
@@ -208,7 +208,7 @@ public:
 
 	unsigned alignment_mask() const noexcept override { return 0x3; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		to_gamma_lut_filter_line(m_lut.data(), src[0], dst[0], left, right);
 		to_gamma_lut_filter_line(m_lut.data(), src[1], dst[1], left, right);
@@ -224,7 +224,7 @@ public:
 
 	unsigned alignment_mask() const noexcept override { return 0x3; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		matrix_filter_line_neon(static_cast<const float *>(&m_matrix[0][0]), src, dst, left, right);
 	}
