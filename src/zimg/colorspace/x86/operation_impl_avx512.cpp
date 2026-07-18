@@ -298,7 +298,7 @@ public:
 
 	unsigned alignment_mask() const noexcept { return 0xF; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		matrix_filter_line_avx512(static_cast<const float *>(&m_matrix[0][0]), src, dst, left, right);
 	}
@@ -312,7 +312,7 @@ public:
 
 	unsigned alignment_mask() const noexcept { return 0xF; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		gamma_filter_line_avx512<Op>(src[0], dst[0], m_scale, left, right);
 		gamma_filter_line_avx512<Op>(src[1], dst[1], m_scale, left, right);

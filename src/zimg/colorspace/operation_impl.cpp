@@ -24,7 +24,7 @@ public:
 
 	unsigned alignment_mask() const noexcept { return 0; }
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		for (unsigned i = left; i < right; ++i) {
 			float a, b, c;
@@ -61,7 +61,7 @@ public:
 		m_postscale{ postscale }
 	{}
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		EnsureSinglePrecision x87;
 
@@ -89,7 +89,7 @@ public:
 		m_scale{ scale }
 	{}
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		EnsureSinglePrecision x87;
 
@@ -127,7 +127,7 @@ public:
 		m_scale{ scale }
 	{}
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		EnsureSinglePrecision x87;
 
@@ -187,7 +187,7 @@ public:
 		m_pr = 1.0f - to_gamma(static_cast<float>(kr));
 	}
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		EnsureSinglePrecision x87;
 
@@ -252,7 +252,7 @@ public:
 		m_pr = 1.0f - func(static_cast<float>(kr));
 	}
 
-	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
+	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const noexcept override
 	{
 		EnsureSinglePrecision x87;
 
