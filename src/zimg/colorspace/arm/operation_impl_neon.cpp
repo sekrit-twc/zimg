@@ -183,6 +183,8 @@ public:
 		}
 	}
 
+	unsigned alignment_mask() const noexcept override { return 0x3; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		to_linear_lut_filter_line(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
@@ -204,6 +206,8 @@ public:
 		}
 	}
 
+	unsigned alignment_mask() const noexcept override { return 0x3; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		to_gamma_lut_filter_line(m_lut.data(), src[0], dst[0], left, right);
@@ -217,6 +221,8 @@ public:
 	explicit MatrixOperationNeon(const Matrix3x3 &m) :
 		MatrixOperationImpl(m)
 	{}
+
+	unsigned alignment_mask() const noexcept override { return 0x3; }
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{

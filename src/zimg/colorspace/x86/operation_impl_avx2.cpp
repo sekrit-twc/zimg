@@ -245,10 +245,9 @@ void to_gamma_lut_filter_line_nogather(const float *RESTRICT lut, const float *s
 
 class MatrixOperationAVX2 final : public MatrixOperationImpl {
 public:
-	explicit MatrixOperationAVX2(const Matrix3x3 &m) :
-		MatrixOperationImpl(m)
-	{
-	}
+	explicit MatrixOperationAVX2(const Matrix3x3 &m) : MatrixOperationImpl(m) {}
+
+	unsigned alignment_mask() const noexcept override { return 0x7; }
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -279,6 +278,8 @@ class ToLinearLutOperationAVX2Gather final : public ToLinearLutOperationAVX2 {
 public:
 	using ToLinearLutOperationAVX2::ToLinearLutOperationAVX2;
 
+	unsigned alignment_mask() const noexcept override { return 0x7; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		to_linear_lut_filter_line_gather(m_lut.data(), m_lut_depth, src[0], dst[0], left, right);
@@ -290,6 +291,8 @@ public:
 class ToLinearLutOperationAVX2NoGather final : public ToLinearLutOperationAVX2 {
 public:
 	using ToLinearLutOperationAVX2::ToLinearLutOperationAVX2;
+
+	unsigned alignment_mask() const noexcept override { return 0x3; }
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
@@ -320,6 +323,8 @@ class ToGammaLutOperationAVX2Gather final : public ToGammaLutOperationAVX2 {
 public:
 	using ToGammaLutOperationAVX2::ToGammaLutOperationAVX2;
 
+	unsigned alignment_mask() const noexcept override { return 0x7; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		to_gamma_lut_filter_line_gather(m_lut.data(), src[0], dst[0], left, right);
@@ -331,6 +336,8 @@ public:
 class ToGammaLutOperationAVX2NoGather final : public ToGammaLutOperationAVX2 {
 public:
 	using ToGammaLutOperationAVX2::ToGammaLutOperationAVX2;
+
+	unsigned alignment_mask() const noexcept override { return 0x3; }
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
