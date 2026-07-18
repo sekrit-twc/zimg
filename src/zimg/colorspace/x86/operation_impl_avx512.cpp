@@ -296,6 +296,8 @@ public:
 	{
 	}
 
+	unsigned alignment_mask() const noexcept { return 0xF; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		matrix_filter_line_avx512(static_cast<const float *>(&m_matrix[0][0]), src, dst, left, right);
@@ -307,6 +309,8 @@ class GammaOperationAVX512 final : public Operation {
 	float m_scale;
 public:
 	explicit GammaOperationAVX512(float scale) : m_scale{ scale } {}
+
+	unsigned alignment_mask() const noexcept { return 0xF; }
 
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{

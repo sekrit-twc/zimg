@@ -49,6 +49,13 @@ public:
 	virtual ~Operation() = 0;
 
 	/**
+	 * Get required alignment.
+	 *
+	 * @return alignment mask
+	 */
+	virtual unsigned alignment_mask() const noexcept = 0;
+
+	/**
 	 * Apply operation to pixels.
 	 *
 	 * @param src pointer to pointer to input channels

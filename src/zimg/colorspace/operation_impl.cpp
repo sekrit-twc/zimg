@@ -22,6 +22,8 @@ class MatrixOperationC final : public MatrixOperationImpl {
 public:
 	explicit MatrixOperationC(const Matrix3x3 &m) : MatrixOperationImpl(m) {}
 
+	unsigned alignment_mask() const noexcept { return 0; }
+
 	void process(const float * const *src, float * const *dst, unsigned left, unsigned right) const override
 	{
 		for (unsigned i = left; i < right; ++i) {
@@ -43,7 +45,12 @@ public:
 	}
 };
 
-class GammaOperationC final : public Operation {
+class OperationC : public Operation {
+public:
+	unsigned alignment_mask() const noexcept { return 0; }
+};
+
+class GammaOperationC final : public OperationC {
 	gamma_func m_func;
 	float m_prescale;
 	float m_postscale;
@@ -69,7 +76,7 @@ public:
 	}
 };
 
-class AribB67OperationC final : public Operation {
+class AribB67OperationC final : public OperationC {
 	float m_kr;
 	float m_kg;
 	float m_kb;
@@ -107,7 +114,7 @@ public:
 	}
 };
 
-class AribB67InverseOperationC final : public Operation {
+class AribB67InverseOperationC final : public OperationC {
 	float m_kr;
 	float m_kg;
 	float m_kb;
@@ -150,7 +157,7 @@ public:
 	}
 };
 
-class CLToRGBOperationC final : public Operation {
+class CLToRGBOperationC final : public OperationC {
 	gamma_func m_func;
 	float m_kr;
 	float m_kg;
@@ -215,7 +222,7 @@ public:
 	}
 };
 
-class CLToYUVOperationC final : public Operation {
+class CLToYUVOperationC final : public OperationC {
 	gamma_func m_func;
 	float m_kr;
 	float m_kg;

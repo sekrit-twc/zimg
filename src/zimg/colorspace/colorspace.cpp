@@ -24,6 +24,7 @@ class ColorspaceConversionImpl : public graph::PointFilter {
 
 		for (size_t i = 0; i < path.size(); ++i) {
 			m_operations[i] = path[i](params, cpu);
+			m_desc.alignment_mask = std::max(m_desc.alignment_mask, m_operations[i]->alignment_mask());
 		}
 	}
 public:
