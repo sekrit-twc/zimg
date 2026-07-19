@@ -11,7 +11,6 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 {
 	const unsigned w = 640;
 	const unsigned h = 480;
-	bool yuv = csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB;
 
 	auto filter = zimg::colorspace::ColorspaceConversion{ w, h }
 		.set_csp_in(csp_in)
@@ -22,11 +21,11 @@ void test_case(const zimg::colorspace::ColorspaceDefinition &csp_in, const zimg:
 
 	graphengine::FilterValidation(filter.get(), { w, h, zimg::pixel_size(zimg::PixelType::FLOAT) })
 		.set_input_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
-		.set_input_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, yuv })
-		.set_input_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, yuv })
+		.set_input_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_input_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_in.matrix != zimg::colorspace::MatrixCoefficients::RGB })
 		.set_output_pixel_format(0, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, false })
-		.set_output_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, yuv })
-		.set_output_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, yuv })
+		.set_output_pixel_format(1, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
+		.set_output_pixel_format(2, { zimg::pixel_depth(zimg::PixelType::FLOAT), true, csp_out.matrix != zimg::colorspace::MatrixCoefficients::RGB })
 		.set_sha1(0, expected_sha1[0])
 		.set_sha1(1, expected_sha1[1])
 		.set_sha1(2, expected_sha1[2])
