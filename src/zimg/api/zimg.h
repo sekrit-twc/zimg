@@ -640,6 +640,10 @@ typedef struct zimg_graph_builder_params {
 
 	/** Allow evaluating transfer functions at reduced precision (default false). */
 	char allow_approximate_gamma;
+	/** Evaluate transfer functions using OETFs instead of EOTFs (default false). Since API 2.5. */
+	char scene_referred;
+	/** Apply chromatic adaptation when changing white points (default false). */
+	char chromatic_adaptation;
 } zimg_graph_builder_params;
 
 /**

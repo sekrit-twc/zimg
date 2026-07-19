@@ -259,9 +259,9 @@ TEST(ColorspaceConversionTest, test_matrix_transfer_primaries)
 			"1933b6721e782b7517fe4f06f3ee80d5402dfbbb"
 		},
 		{
-			"4971289327f7bc4272d517135bca80e84e9f0d5c",
-			"24bf2884101730eab35134cd5d2b05daf578a3b5",
-			"b05ed2186e3c810477bd12db5851b14a2a8205b8"
+			"54a0ab760c15e4e8b09df785fb0396e9e514e586",
+			"fa86613f2f78de0a4376c7349f9b4a8d7e66c0a0",
+			"65b16cad9b862d89d55ee2e66c29d07aa20c10d3"
 		},
 	};
 

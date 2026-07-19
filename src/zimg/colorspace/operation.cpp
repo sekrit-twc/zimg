@@ -92,7 +92,12 @@ std::unique_ptr<Operation> create_gamut_operation(const ColorspaceDefinition &in
 	zassert_d(in.matrix == MatrixCoefficients::RGB && in.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
 	zassert_d(out.matrix == MatrixCoefficients::RGB && out.transfer == TransferCharacteristics::LINEAR, "must be linear RGB");
 
-	Matrix3x3 m = gamut_xyz_to_rgb_matrix(out.primaries) * white_point_adaptation_matrix(in.primaries, out.primaries) * gamut_rgb_to_xyz_matrix(in.primaries);
+	Matrix3x3 m;
+	if (params.chromatic_adaptation)
+		m = gamut_xyz_to_rgb_matrix(out.primaries) * white_point_adaptation_matrix(in.primaries, out.primaries) * gamut_rgb_to_xyz_matrix(in.primaries);
+	else
+		m = gamut_xyz_to_rgb_matrix(out.primaries) * gamut_rgb_to_xyz_matrix(in.primaries);
+
 	return create_matrix_operation(m, cpu);
 }
 

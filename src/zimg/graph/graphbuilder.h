@@ -139,6 +139,7 @@ public:
 		double peak_luminance;
 		bool approximate_gamma;
 		bool scene_referred;
+		bool chromatic_adaptation;
 		CPUClass cpu;
 
 		params() noexcept;
