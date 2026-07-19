@@ -119,6 +119,7 @@ struct ColorspaceConversion {
 	BUILDER_MEMBER(double, peak_luminance)
 	BUILDER_MEMBER(bool, approximate_gamma)
 	BUILDER_MEMBER(bool, scene_referred)
+	BUILDER_MEMBER(bool, chromatic_adaptation)
 	BUILDER_MEMBER(CPUClass, cpu)
 #undef BUILDER_MEMBER
 

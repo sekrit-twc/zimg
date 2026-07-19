@@ -88,6 +88,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	peak_luminance{ 100.0 },
 	approximate_gamma{},
 	scene_referred{},
+	chromatic_adaptation{},
 	cpu{ CPUClass::NONE }
 {}
 
@@ -112,7 +113,8 @@ std::unique_ptr<graphengine::Filter> ColorspaceConversion::create() const try
 	OperationParams params;
 	params.set_peak_luminance(peak_luminance)
 	      .set_approximate_gamma(approximate_gamma)
-	      .set_scene_referred(scene_referred);
+	      .set_scene_referred(scene_referred)
+	      .set_chromatic_adaptation(chromatic_adaptation);
 
 	return std::make_unique<ColorspaceConversionImpl>(width, height, csp_in_effective, csp_out_effective, params, cpu);
 } catch (const std::bad_alloc &) {

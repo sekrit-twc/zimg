@@ -72,22 +72,24 @@ struct Arguments {
 	double peak_luminance;
 	char approximate_gamma;
 	char scene_referred;
+	char chromatic_adaptation;
 	const char *visualise_path;
 	unsigned times;
 	zimg::CPUClass cpu;
 };
 
 const ArgparseOption program_switches[] = {
-	{ OPTION_UINT,   "w",     "width",          offsetof(Arguments, width),             nullptr, "image width" },
-	{ OPTION_UINT,   "h",     "height",         offsetof(Arguments, height),            nullptr, "image height" },
-	{ OPTION_FLAG,   nullptr, "fullrange-in",   offsetof(Arguments, fullrange_in),      nullptr, "input is PC range" },
-	{ OPTION_FLAG,   nullptr, "fullrange-out",  offsetof(Arguments, fullrange_out),     nullptr, "output is PC range" },
-	{ OPTION_FLOAT,  nullptr, "peak-luminance", offsetof(Arguments, peak_luminance),    nullptr, "nominal peak luminance for SDR (cd/m^2)" },
-	{ OPTION_FLAG,   nullptr, "lut",            offsetof(Arguments, approximate_gamma), nullptr, "use LUT to evaluate transfer functions" },
-	{ OPTION_FLAG,   "s",     "scene-referred", offsetof(Arguments, scene_referred),    nullptr, "use scene-referred transfer functions" },
-	{ OPTION_STRING, nullptr, "visualise",      offsetof(Arguments, visualise_path),    nullptr, "path to BMP file for visualisation" },
-	{ OPTION_UINT,   nullptr, "times",          offsetof(Arguments, times),             nullptr, "number of benchmark cycles" },
-	{ OPTION_USER1,  nullptr, "cpu",            offsetof(Arguments, cpu),               arg_decode_cpu, "select CPU type" },
+	{ OPTION_UINT,   "w",     "width",                offsetof(Arguments, width),                nullptr, "image width" },
+	{ OPTION_UINT,   "h",     "height",               offsetof(Arguments, height),               nullptr, "image height" },
+	{ OPTION_FLAG,   nullptr, "fullrange-in",         offsetof(Arguments, fullrange_in),         nullptr, "input is PC range" },
+	{ OPTION_FLAG,   nullptr, "fullrange-out",        offsetof(Arguments, fullrange_out),        nullptr, "output is PC range" },
+	{ OPTION_FLOAT,  nullptr, "peak-luminance",       offsetof(Arguments, peak_luminance),       nullptr, "nominal peak luminance for SDR (cd/m^2)" },
+	{ OPTION_FLAG,   nullptr, "lut",                  offsetof(Arguments, approximate_gamma),    nullptr, "use LUT to evaluate transfer functions" },
+	{ OPTION_FLAG,   "s",     "scene-referred",       offsetof(Arguments, scene_referred),       nullptr, "use scene-referred transfer functions" },
+	{ OPTION_FLAG,   "c",     "chromatic-adaptation", offsetof(Arguments, chromatic_adaptation), nullptr, "use chromatic adaptation" },
+	{ OPTION_STRING, nullptr, "visualise",            offsetof(Arguments, visualise_path),       nullptr, "path to BMP file for visualisation" },
+	{ OPTION_UINT,   nullptr, "times",                offsetof(Arguments, times),                nullptr, "number of benchmark cycles" },
+	{ OPTION_USER1,  nullptr, "cpu",                  offsetof(Arguments, cpu),                  arg_decode_cpu, "select CPU type" },
 	{ OPTION_NULL }
 };
 
@@ -135,10 +137,11 @@ int colorspace_main(int argc, char **argv)
 
 		zimg::colorspace::ColorspaceConversion conv{ src_frame.width(), src_frame.height() };
 		conv.set_csp_in(args.csp_in)
-		    .set_csp_out(args.csp_out)
-		    .set_approximate_gamma(!!args.approximate_gamma)
-		    .set_scene_referred(!!args.scene_referred)
-		    .set_cpu(args.cpu);
+			.set_csp_out(args.csp_out)
+			.set_approximate_gamma(!!args.approximate_gamma)
+			.set_scene_referred(!!args.scene_referred)
+			.set_chromatic_adaptation(!!args.chromatic_adaptation)
+			.set_cpu(args.cpu);
 		if (!std::isnan(args.peak_luminance))
 			conv.set_peak_luminance(args.peak_luminance);
 

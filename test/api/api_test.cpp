@@ -70,3 +70,19 @@ TEST(APITest, test_api_2_3_compat)
 		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&format) + i));
 	}
 }
+
+TEST(APITest, test_api_2_4_compat)
+{
+	const unsigned API_2_4 = ZIMG_MAKE_API_VERSION(2, 4);
+	const size_t extra_off = offsetof(zimg_graph_builder_params, scene_referred);
+	const size_t extra_len = sizeof(zimg_graph_builder_params) - extra_off;
+
+	zimg_graph_builder_params format;
+	std::memset(reinterpret_cast<unsigned char *>(&format) + extra_off, 0xCC, extra_len);
+
+	zimg_graph_builder_params_default(&format, API_2_4);
+	EXPECT_EQ(API_2_4, format.version);
+	for (size_t i = extra_off; i < extra_off + extra_len; ++i) {
+		EXPECT_EQ(0xCC, *(reinterpret_cast<unsigned char *>(&format) + i));
+	}
+}

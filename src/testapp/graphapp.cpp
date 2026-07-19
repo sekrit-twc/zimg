@@ -291,6 +291,8 @@ void read_graph_params(zimg::graph::GraphBuilder::params *params, const JsonObje
 		params->approximate_gamma = val.boolean();
 	if (const auto &val = obj["scene_referred"])
 		params->scene_referred = val.boolean();
+	if (const auto &val = obj["chromatic_adaptation"])
+		params->chromatic_adaptation = val.boolean();
 	if (const auto &val = obj["cpu"])
 		params->cpu = lookup(g_cpu_table, val);
 }
