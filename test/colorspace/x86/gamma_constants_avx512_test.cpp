@@ -89,7 +89,7 @@ TEST(GammaConstantsAVX512Test, test_srgb)
 	SCOPED_TRACE("forward");
 	test_gamma_to_linear(srgb_eotf, avx512constants::srgb_eotf, avx512constants::SRGBEOTF::knee, 1.0f, 1e-6f, 1e-7f);
 	SCOPED_TRACE("reverse");
-	test_linear_to_gamma(srgb_inverse_eotf, avx512constants::srgb_inverse_eotf, avx512constants::SRGBInverseEOTF::knee, 1.0f, 1e-6f, 1e-7f);
+	test_linear_to_gamma(srgb_inverse_eotf, avx512constants::srgb_inverse_eotf, std::log2(avx512constants::SRGBInverseEOTF::knee), 1, 1e-6f, 1e-7f);
 }
 
 TEST(GammaConstantsAVX512Test, test_st_2084)
