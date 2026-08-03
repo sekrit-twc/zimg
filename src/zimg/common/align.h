@@ -14,6 +14,9 @@ constexpr int ALIGNMENT_RELAXED = 32;
 #elif defined(ZIMG_ARM)
 constexpr int ALIGNMENT = 16;
 constexpr int ALIGNMENT_RELAXED = 16;
+#elif defined(ZIMG_LOONGARCH)
+constexpr int ALIGNMENT = 16;
+constexpr int ALIGNMENT_RELAXED = 16;
 #else
 constexpr int ALIGNMENT = alignof(long double);
 constexpr int ALIGNMENT_RELAXED = alignof(long double);

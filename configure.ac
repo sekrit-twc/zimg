@@ -72,11 +72,13 @@ AC_SUBST([STL_LIBS], [$STL_LIBS])
 
 ARM="no"
 X86="no"
+LOONGARCH="no"
 
 AS_CASE([$host_cpu],
         [aarch64], [BITS="64" ARM="yes"],
         [i?86],    [BITS="32" X86="yes"],
-        [x86_64],  [BITS="64" X86="yes"])
+        [x86_64],  [BITS="64" X86="yes"],
+        [loongarch64], [BITS="64" LOONGARCH="yes"])
 
 AS_IF([test "x$ARM" = "xyes" && test "x$enable_simd" != "xno"],
       [
@@ -95,6 +97,13 @@ AS_IF([test "x$X86" = "xyes" && test "x$enable_simd" != "xno"],
         AX_CHECK_COMPILE_FLAG([-mtune=cascadelake], AC_SUBST([CLX_CFLAGS], [-mtune=cascadelake]))
       ])
 
+AS_IF([test "x$LOONGARCH" = "xyes" && test "x$enable_simd" != "xno"],
+      [
+        AC_DEFINE([ZIMG_LOONGARCH])
+        AC_SUBST([LSX_CFLAGS], [-mlsx])
+        enable_loongarch_simd=yes
+      ])
+
 
 AM_CONDITIONAL([TESTAPP],        [test "x$enable_testapp" = "xyes"])
 AM_CONDITIONAL([EXAMPLES],       [test "x$enable_example" = "xyes"])
@@ -102,6 +111,7 @@ AM_CONDITIONAL([UNIT_TEST],      [test "x$enable_unit_test" = "xyes"])
 AM_CONDITIONAL([ARMSIMD],        [test "x$enable_arm_simd" = "xyes"])
 AM_CONDITIONAL([X86SIMD],        [test "x$enable_x86_simd" = "xyes"])
 AM_CONDITIONAL([X86SIMD_AVX512], [test "x$enable_x86_simd_avx512" = "xyes"])
+AM_CONDITIONAL([LOONGARCHSIMD],  [test "x$enable_loongarch_simd" = "xyes"])
 
 AS_CASE([$host_os],
         [cygwin*], [AS_IF([test "x$BITS" = "x32"], [LDFLAGS="-Wl,--kill-at"])],

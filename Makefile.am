@@ -166,6 +166,26 @@ libneon_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
 libzimg_internal_la_LIBADD += libneon.la
 endif # ARMSIMD
 
+if LOONGARCHSIMD
+noinst_LTLIBRARIES += liblsx.la
+
+libzimg_internal_la_SOURCES += \
+	src/zimg/common/loongarch/cpuinfo_loongarch.cpp \
+	src/zimg/common/loongarch/cpuinfo_loongarch.h \
+	src/zimg/common/loongarch/lsx_util.cpp \
+	src/zimg/common/loongarch/lsx_util.h \
+	src/zimg/resize/loongarch/resize_impl_loongarch.cpp \
+	src/zimg/resize/loongarch/resize_impl_loongarch.h
+
+liblsx_la_SOURCES = \
+	src/zimg/resize/loongarch/resize_impl_lsx.cpp
+
+liblsx_la_CXXFLAGS = $(AM_CXXFLAGS) $(LSX_CFLAGS)
+liblsx_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphengineflags)
+
+libzimg_internal_la_LIBADD += liblsx.la
+endif # LOONGARCHSIMD
+
 if X86SIMD
 noinst_LTLIBRARIES += libavx2.la libavx512.la libavx512_vnni.la
 
@@ -357,6 +377,11 @@ test_unit_test_SOURCES += \
 	test/depth/arm/error_diffusion_neon_test.cpp \
 	test/resize/arm/resize_impl_neon_test.cpp
 endif # ARMSIMD
+
+if LOONGARCHSIMD
+test_unit_test_SOURCES += \
+	test/resize/loongarch/resize_impl_lsx_test.cpp
+endif # LOONGARCHSIMD
 
 if X86SIMD
 test_unit_test_SOURCES += \
