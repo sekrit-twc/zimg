@@ -12,6 +12,8 @@
   #include "x86/resize_impl_x86.h"
 #elif defined(ZIMG_ARM)
   #include "arm/resize_impl_arm.h"
+#elif defined(ZIMG_LOONGARCH)
+  #include "loongarch/resize_impl_loongarch.h"
 #endif
 
 namespace zimg::resize {
@@ -257,6 +259,10 @@ std::unique_ptr<graphengine::Filter> ResizeImplBuilder::create() const
 	ret = horizontal ?
 		create_resize_impl_h_arm(filter_ctx, src_height, type, depth, cpu) :
 		create_resize_impl_v_arm(filter_ctx, src_width, type, depth, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	ret = horizontal ?
+		create_resize_impl_h_loongarch(filter_ctx, src_height, type, depth, cpu) :
+		create_resize_impl_v_loongarch(filter_ctx, src_width, type, depth, cpu);
 #endif
 	if (!ret && horizontal)
 		ret = std::make_unique<ResizeImplH_C>(filter_ctx, src_height, type, depth);
