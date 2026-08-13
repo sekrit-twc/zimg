@@ -19,6 +19,8 @@
   #include "x86/dither_x86.h"
 #elif defined(ZIMG_ARM)
   #include "arm/dither_arm.h"
+#elif defined(ZIMG_LOONGARCH)
+  #include "loongarch/dither_loongarch.h"
 #endif
 
 namespace zimg::depth {
@@ -373,6 +375,10 @@ std::unique_ptr<graphengine::Filter> create_error_diffusion(unsigned width, unsi
 	if (auto ret = create_error_diffusion_arm(width, height, pixel_in, pixel_out, cpu))
 		return ret;
 #endif
+#ifdef ZIMG_LOONGARCH
+	if (auto ret = create_error_diffusion_loongarch(width, height, pixel_in, pixel_out, cpu))
+		return ret;
+#endif
 
 	ErrorDiffusion::ed_func func = nullptr;
 
@@ -396,6 +402,8 @@ DepthConversion::result create_dither(DitherType type, unsigned width, unsigned 
 	func = select_ordered_dither_func_x86(pixel_in, pixel_out, cpu);
 #elif defined(ZIMG_ARM)
 	func = select_ordered_dither_func_arm(pixel_in, pixel_out, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	func = select_ordered_dither_func_loongarch(pixel_in, pixel_out, cpu);
 #endif
 	if (!func)
 		func = select_ordered_dither_func(pixel_in.type, pixel_out.type);

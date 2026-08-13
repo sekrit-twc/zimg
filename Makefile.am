@@ -176,11 +176,18 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/common/loongarch/cpuinfo_loongarch.h \
 	src/zimg/common/loongarch/lsx_util.cpp \
 	src/zimg/common/loongarch/lsx_util.h \
+	src/zimg/depth/loongarch/depth_convert_loongarch.cpp \
+	src/zimg/depth/loongarch/depth_convert_loongarch.h \
+	src/zimg/depth/loongarch/dither_loongarch.cpp \
+	src/zimg/depth/loongarch/dither_loongarch.h \
 	src/zimg/resize/loongarch/resize_impl_loongarch.cpp \
 	src/zimg/resize/loongarch/resize_impl_loongarch.h
 
 liblsx_la_SOURCES = \
 	src/zimg/colorspace/loongarch/operation_impl_lsx.cpp \
+	src/zimg/depth/loongarch/depth_convert_lsx.cpp \
+	src/zimg/depth/loongarch/dither_lsx.cpp \
+	src/zimg/depth/loongarch/error_diffusion_lsx.cpp \
 	src/zimg/resize/loongarch/resize_impl_lsx.cpp
 
 liblsx_la_CXXFLAGS = $(AM_CXXFLAGS) $(LSX_CFLAGS)
@@ -383,7 +390,10 @@ endif # ARMSIMD
 if LOONGARCHSIMD
 test_unit_test_SOURCES += \
 	test/colorspace/loongarch/colorspace_lsx_test.cpp \
-	test/resize/loongarch/resize_impl_lsx_test.cpp \
+	test/depth/loongarch/depth_convert_lsx_test.cpp \
+	test/depth/loongarch/dither_lsx_test.cpp \
+	test/depth/loongarch/error_diffusion_lsx_test.cpp \
+	test/resize/loongarch/resize_impl_lsx_test.cpp
 endif # LOONGARCHSIMD
 
 if X86SIMD

@@ -148,6 +148,8 @@ zimg::CPUClass translate_cpu(zimg_cpu_type_e cpu)
 		{ ZIMG_CPU_X86_AVX512_SNC, CPUClass::X86_AVX512_CLX },
 		{ ZIMG_CPU_X86_AVX512_WLC, CPUClass::X86_AVX512_CLX },
 		{ ZIMG_CPU_X86_AVX512_GLC, CPUClass::X86_AVX512_CLX },
+#elif defined(ZIMG_LOONGARCH)
+		{ ZIMG_CPU_LOONGARCH_LSX,  CPUClass::LOONGARCH_LSX },
 #endif
 	};
 	return search_enum_map(map, cpu, "unrecognized cpu type");
