@@ -8,6 +8,8 @@
 
 #if defined(ZIMG_X86)
   #include "x86/unresize_impl_x86.h"
+#elif defined(ZIMG_LOONGARCH)
+  #include "loongarch/unresize_impl_loongarch.h"
 #endif
 
 namespace zimg::unresize {
@@ -207,6 +209,10 @@ std::unique_ptr<graphengine::Filter> UnresizeImplBuilder::create() const
 	ret = horizontal ?
 		create_unresize_impl_h_x86(context, up_height, type, cpu) :
 		create_unresize_impl_v_x86(context, up_width, type, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	ret = horizontal ?
+		create_unresize_impl_h_loongarch(context, up_height, type, cpu) :
+		create_unresize_impl_v_loongarch(context, up_width, type, cpu);
 #endif
 
 	if (!ret && horizontal)
