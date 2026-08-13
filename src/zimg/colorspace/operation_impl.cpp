@@ -12,6 +12,8 @@
   #include "x86/operation_impl_x86.h"
 #elif defined(ZIMG_ARM)
   #include "arm/operation_impl_arm.h"
+#elif defined(ZIMG_LOONGARCH)
+  #include "loongarch/operation_impl_loongarch.h"
 #endif
 
 namespace zimg::colorspace {
@@ -305,6 +307,8 @@ std::unique_ptr<Operation> create_matrix_operation(const Matrix3x3 &m, CPUClass 
 	ret = create_matrix_operation_x86(m, cpu);
 #elif defined(ZIMG_ARM)
 	ret = create_matrix_operation_arm(m, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	ret = create_matrix_operation_loongarch(m, cpu);
 #endif
 	if (!ret)
 		ret = std::make_unique<MatrixOperationC>(m);
@@ -320,6 +324,8 @@ std::unique_ptr<Operation> create_gamma_operation(const TransferFunction &transf
 	ret = create_gamma_operation_x86(transfer, params, cpu);
 #elif defined(ZIMG_ARM)
 	ret = create_gamma_operation_arm(transfer, params, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	ret = create_gamma_operation_loongarch(transfer, params, cpu);
 #endif
 	if (!ret)
 		ret = std::make_unique<GammaOperationC>(transfer.to_gamma, transfer.to_gamma_scale, 1.0f);
@@ -335,6 +341,8 @@ std::unique_ptr<Operation> create_inverse_gamma_operation(const TransferFunction
 	ret = create_inverse_gamma_operation_x86(transfer, params, cpu);
 #elif defined(ZIMG_ARM)
 	ret = create_inverse_gamma_operation_arm(transfer, params, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	ret = create_inverse_gamma_operation_loongarch(transfer, params, cpu);
 #endif
 	if (!ret)
 		ret = std::make_unique<GammaOperationC>(transfer.to_linear, 1.0f, transfer.to_linear_scale);

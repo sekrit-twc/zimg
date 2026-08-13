@@ -11,6 +11,8 @@ namespace zimg {
  * Bitfield of selected LoongArch feature flags.
  */
 struct LoongArchCapabilities {
+	unsigned lsx  : 1;
+	unsigned lasx : 1;
 };
 
 LoongArchCapabilities query_loongarch_capabilities() noexcept;
