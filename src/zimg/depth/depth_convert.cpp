@@ -14,6 +14,8 @@
   #include "x86/depth_convert_x86.h"
 #elif defined(ZIMG_ARM)
   #include "arm/depth_convert_arm.h"
+#elif defined(ZIMG_LOONGARCH)
+  #include "loongarch/depth_convert_loongarch.h"
 #endif
 
 namespace zimg::depth {
@@ -193,6 +195,8 @@ std::unique_ptr<graphengine::Filter> create_left_shift(unsigned width, unsigned 
 	func = select_left_shift_func_x86(pixel_in.type, pixel_out.type, cpu);
 #elif defined(ZIMG_ARM)
 	func = select_left_shift_func_arm(pixel_in.type, pixel_out.type, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	func = select_left_shift_func_loongarch(pixel_in.type, pixel_out.type, cpu);
 #endif
 	if (!func)
 		func = select_left_shift_func(pixel_in.type, pixel_out.type);
@@ -208,6 +212,8 @@ std::unique_ptr<graphengine::Filter> create_convert_to_float(unsigned width, uns
 	func = select_depth_convert_func_x86(pixel_in, pixel_out, cpu);
 #elif defined(ZIMG_ARM)
 	func = select_depth_convert_func_arm(pixel_in, pixel_out, cpu);
+#elif defined(ZIMG_LOONGARCH)
+	func = select_depth_convert_func_loongarch(pixel_in, pixel_out, cpu);
 #endif
 	if (!func)
 		func = select_depth_convert_func(pixel_in.type, pixel_out.type);
