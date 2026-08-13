@@ -1,14 +1,33 @@
 #ifdef ZIMG_LOONGARCH
 
+#include <cstdint>
 #include "cpuinfo_loongarch.h"
+
+#if defined(__linux__)
+#include <sys/auxv.h>
+#endif
 
 namespace zimg {
 
 namespace {
 
+#if defined(__linux__)
+#ifndef HWCAP_LOONGARCH_LSX
+#define HWCAP_LOONGARCH_LSX (1 << 4)
+#endif
+#endif
+
 LoongArchCapabilities do_query_loongarch_capabilities() noexcept
 {
-	return{};
+	LoongArchCapabilities caps = {};
+
+#if defined(__linux__)
+	unsigned long hwcap = getauxval(AT_HWCAP);
+
+	caps.lsx = (hwcap & HWCAP_LOONGARCH_LSX) != 0;
+#endif
+
+	return caps;
 }
 
 } // namespace

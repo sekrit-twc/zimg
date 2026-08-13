@@ -380,8 +380,9 @@ double decode_number_literal(const Token &tok)
 	const char *last = tok.str().data() + tok.str().size();
 	double x = 0.0;
 
-	auto result = std::from_chars(first, last, x);
-	if (result.ptr != last)
+	char *end = nullptr;
+	x = std::strtod(first, &end);
+	if (end != last)
 		throw JsonError{ "bad number literal", tok.line(), tok.col() };
 
 	return x;
