@@ -51,6 +51,8 @@ const zimg::static_string_map<CPUClass, 9> g_cpu_table{
 	{ "avx512_clx", CPUClass::X86_AVX512_CLX },
 #elif defined (ZIMG_ARM)
 	{ "neon",       CPUClass::ARM_NEON },
+#elif defined(ZIMG_LOONGARCH)
+	{ "lsx",        CPUClass::LOONGARCH_LSX },
 #endif
 };
 
