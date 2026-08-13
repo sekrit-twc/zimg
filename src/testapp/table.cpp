@@ -42,7 +42,7 @@ filter_uptr make_null_filter(double, double) { return nullptr; }
 } // namespace
 
 
-const zimg::static_string_map<CPUClass, 9> g_cpu_table{
+const zimg::static_string_map<CPUClass, 6> g_cpu_table{
 	{ "none", CPUClass::NONE },
 	{ "auto", CPUClass::AUTO_64B },
 #if defined(ZIMG_X86)
@@ -51,6 +51,8 @@ const zimg::static_string_map<CPUClass, 9> g_cpu_table{
 	{ "avx512_clx", CPUClass::X86_AVX512_CLX },
 #elif defined (ZIMG_ARM)
 	{ "neon",       CPUClass::ARM_NEON },
+#elif defined(ZIMG_LOONGARCH)
+	{ "lsx",        CPUClass::LOONGARCH_LSX },
 #endif
 };
 

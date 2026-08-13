@@ -170,6 +170,8 @@ if LOONGARCHSIMD
 noinst_LTLIBRARIES += liblsx.la
 
 libzimg_internal_la_SOURCES += \
+	src/zimg/colorspace/loongarch/operation_impl_loongarch.cpp \
+	src/zimg/colorspace/loongarch/operation_impl_loongarch.h \
 	src/zimg/common/loongarch/cpuinfo_loongarch.cpp \
 	src/zimg/common/loongarch/cpuinfo_loongarch.h \
 	src/zimg/common/loongarch/lsx_util.cpp \
@@ -178,6 +180,7 @@ libzimg_internal_la_SOURCES += \
 	src/zimg/resize/loongarch/resize_impl_loongarch.h
 
 liblsx_la_SOURCES = \
+	src/zimg/colorspace/loongarch/operation_impl_lsx.cpp \
 	src/zimg/resize/loongarch/resize_impl_lsx.cpp
 
 liblsx_la_CXXFLAGS = $(AM_CXXFLAGS) $(LSX_CFLAGS)
@@ -236,7 +239,6 @@ libavx512_vnni_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/src/zimg $(graphenginefl
 
 libzimg_internal_la_LIBADD += libavx2.la libavx512.la libavx512_vnni.la
 endif # X86SIMD
-
 
 libtestcommon_la_SOURCES = \
 	src/testcommon/aligned_malloc.h \
@@ -380,7 +382,8 @@ endif # ARMSIMD
 
 if LOONGARCHSIMD
 test_unit_test_SOURCES += \
-	test/resize/loongarch/resize_impl_lsx_test.cpp
+	test/colorspace/loongarch/colorspace_lsx_test.cpp \
+	test/resize/loongarch/resize_impl_lsx_test.cpp \
 endif # LOONGARCHSIMD
 
 if X86SIMD

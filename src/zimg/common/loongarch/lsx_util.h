@@ -44,14 +44,34 @@ static inline FORCE_INLINE void lsx_store_idxhi_u16(uint16_t *dst, __m128i x, un
 	lsx_store_idxhi_u8(reinterpret_cast<uint8_t *>(dst), x, idx * 2);
 }
 
-static inline FORCE_INLINE void lsx_store_idxlo_f32(float *dst, __m128 x, unsigned idx)
+// Store from [v] into [dst] the 32-bit elements with index less than [idx].
+static inline FORCE_INLINE void lsx_store_idxlo_f32(float *dst, __m128 v, unsigned idx)
 {
-	lsx_store_idxlo_u8(reinterpret_cast<uint8_t *>(dst), (__m128i)x, idx * 4);
+	switch (idx) {
+	case 4:
+		__lsx_vstelm_w((__m128i)v, dst, 12, 3);
+	case 3:
+		__lsx_vstelm_w((__m128i)v, dst, 8, 2);
+	case 2:
+		__lsx_vstelm_w((__m128i)v, dst, 4, 1);
+	case 1:
+		__lsx_vstelm_w((__m128i)v, dst, 0, 0);
+	}
 }
 
-static inline FORCE_INLINE void lsx_store_idxhi_f32(float *dst, __m128 x, unsigned idx)
+// Store from [v] into [dst] the 32-bit elements with index greater than or equal to [idx].
+static inline FORCE_INLINE void lsx_store_idxhi_f32(float *dst, __m128 v, unsigned idx)
 {
-	lsx_store_idxhi_u8(reinterpret_cast<uint8_t *>(dst), (__m128i)x, idx * 4);
+	switch (idx) {
+	case 0:
+		__lsx_vstelm_w((__m128i)v, dst, 0, 0);
+	case 1:
+		__lsx_vstelm_w((__m128i)v, dst, 4, 1);
+	case 2:
+		__lsx_vstelm_w((__m128i)v, dst, 8, 2);
+	case 3:
+		__lsx_vstelm_w((__m128i)v, dst, 12, 3);
+	}
 }
 
 static inline FORCE_INLINE void lsx_scatter_u16(uint16_t *dst0, uint16_t *dst1, uint16_t *dst2, uint16_t *dst3,
