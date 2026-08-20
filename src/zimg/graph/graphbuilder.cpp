@@ -836,6 +836,7 @@ private:
 			.set_csp_out(csp)
 			.set_approximate_gamma(params.approximate_gamma)
 			.set_scene_referred(params.scene_referred)
+			.set_chromatic_adaptation(params.chromatic_adaptation)
 			.set_cpu(params.cpu);
 		if (!std::isnan(params.peak_luminance))
 			conv.set_peak_luminance(params.peak_luminance);
