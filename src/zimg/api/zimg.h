@@ -179,6 +179,8 @@ typedef enum zimg_cpu_type_e {
 	ZIMG_CPU_X86_AVX512_SNC = 1014, /**< PMC + VPOPCNTDQ + BITALG + VBMI2 + VNNI */
 	ZIMG_CPU_X86_AVX512_WLC = 1015, /**< SNC + VP2INTERSECT */
 	ZIMG_CPU_X86_AVX512_GLC = 1016  /**< WLC + FP16 + BF16 */
+#elif defined(__loongarch__) || defined(__loongarch64)
+	,ZIMG_CPU_LOONGARCH_LSX = 1017  /**< LoongArch LSX (128-bit SIMD). */
 #endif
 } zimg_cpu_type_e;
 
